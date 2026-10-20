@@ -65,11 +65,11 @@ function calcStopsSurcharge(
 const API_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 
 const STATUS_STEPS = [
-  { key: 'PENDING', label: 'Mencari Rider' },
-  { key: 'ACCEPTED', label: 'Rider Ditugaskan' },
-  { key: 'ARRIVED', label: 'Rider Tiba' },
-  { key: 'IN_TRANSIT', label: 'Dalam Perjalanan' },
-  { key: 'COMPLETED', label: 'Selesai' },
+  { key: 'PENDING' },
+  { key: 'ACCEPTED' },
+  { key: 'ARRIVED' },
+  { key: 'IN_TRANSIT' },
+  { key: 'COMPLETED' },
 ];
 
 // -------------------------------------------------------
@@ -83,6 +83,7 @@ interface SOSConfirmModalProps {
   onCancel: () => void;
 }
 function SOSConfirmModal({ show, klkPhone, onConfirm, onCancel }: SOSConfirmModalProps) {
+  const { t } = useTranslation(['gig', 'common']);
   const [countdown, setCountdown] = useState(3);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const hasConfirmedRef = useRef(false);
@@ -125,18 +126,18 @@ function SOSConfirmModal({ show, klkPhone, onConfirm, onCancel }: SOSConfirmModa
             animate={{ scale: 1 }}
             className="text-center"
           >
-            <div className="text-8xl mb-4 animate-pulse">🚨</div>
-            <h1 className="text-4xl font-black text-white mb-2">SOS KECEMASAN</h1>
-            <p className="text-red-100 text-lg mb-8">Isyarat akan dihantar dalam...</p>
+            <ShieldAlert className="w-24 h-24 text-white mx-auto mb-4 animate-pulse" />
+            <h1 className="text-4xl font-black text-white mb-2">{t('gig:sos_emergency_title', 'SOS KECEMASAN')}</h1>
+            <p className="text-red-100 text-lg mb-8">{t('gig:sos_countdown_msg', 'Isyarat akan dihantar dalam...')}</p>
             <div className="w-28 h-28 rounded-full bg-white/20 border-4 border-white flex items-center justify-center mx-auto mb-8">
               <span className="text-6xl font-black text-white">{countdown}</span>
             </div>
-            <p className="text-red-100 text-sm mb-6">KLK dan Pentadbir JPP akan dimaklumkan serta-merta</p>
+            <p className="text-red-100 text-sm mb-6">{t('gig:sos_notify_authorities', 'KLK dan Pentadbir JPP akan dimaklumkan serta-merta')}</p>
             <button
               onClick={onCancel}
               className="w-full py-5 bg-white text-red-600 font-black text-xl rounded-2xl shadow-xl active:scale-95 transition-transform"
             >
-              BATAL — Tekan Untuk Batalkan
+              {t('gig:sos_cancel_btn', 'BATAL — Tekan Untuk Batalkan')}
             </button>
             {klkPhone && (
               <a
@@ -144,7 +145,7 @@ function SOSConfirmModal({ show, klkPhone, onConfirm, onCancel }: SOSConfirmModa
                 className="mt-4 flex items-center justify-center gap-2 text-white/80 text-sm py-3"
               >
                 <Phone className="w-4 h-4" />
-                Hubungi KLK Terus: {klkPhone}
+                {t('gig:sos_call_klk_direct', 'Hubungi KLK Terus:')} {klkPhone}
               </a>
             )}
           </motion.div>
@@ -171,6 +172,7 @@ interface RatingModalProps {
   disabled: boolean;
 }
 function RatingModal({ show, stars, note, tip, onStars, onNote, onTip, onSubmit, onSkip, disabled }: RatingModalProps) {
+  const { t } = useTranslation(['gig', 'common']);
   return createPortal(
     <AnimatePresence>
       {show && (
@@ -179,31 +181,31 @@ function RatingModal({ show, stars, note, tip, onStars, onNote, onTip, onSubmit,
           <motion.div initial={{ y: 60, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 60, opacity: 0 }}
             className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 w-full max-w-sm max-h-[85dvh] overflow-y-auto">
             <div className="text-center mb-6">
-              <div className="text-4xl mb-2">🎉</div>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white">Perjalanan Selesai!</h2>
-              <p className="text-sm text-slate-500 dark:text-white/50 mt-1">Bagaimana pengalaman anda dengan rider ini?</p>
+              <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto mb-2" />
+              <h2 className="text-xl font-black text-slate-900 dark:text-white">{t('gig:trip_completed_title', 'Perjalanan Selesai!')}</h2>
+              <p className="text-sm text-slate-500 dark:text-white/50 mt-1">{t('gig:trip_rate_experience', 'Bagaimana pengalaman anda dengan rider ini?')}</p>
             </div>
             {/* Stars */}
             <div className="flex justify-center gap-3 mb-4">
               {[1, 2, 3, 4, 5].map(s => (
                 <button key={s} onClick={() => onStars(s)}
                   className={`text-3xl transition-transform ${s <= stars ? 'scale-110' : 'opacity-30'}`}>
-                  ⭐
+                  <Star className={`w-7 h-7 ${s <= stars ? 'fill-amber-400 text-amber-400' : 'text-slate-300 dark:text-zinc-600'}`} />
                 </button>
               ))}
             </div>
             {/* Tip Section */}
             <div className="mb-4">
-              <p className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider text-center mb-2">Tambah Tip? (Opsional)</p>
+              <p className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-wider text-center mb-2">{t('gig:add_tip_optional', 'Tambah Tip? (Opsional)')}</p>
               <div className="flex justify-center gap-2">
-                {[0, 0.5, 1, 2].map(t => (
-                  <button key={t} onClick={() => onTip(t)}
+                {[0, 0.5, 1, 2].map(tipOption => (
+                  <button key={tipOption} onClick={() => onTip(tipOption)}
                     className={`px-3 py-2 rounded-xl text-sm font-bold border-2 transition-all ${
-                      tip === t
+                      tip === tipOption
                         ? 'border-amber-500 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400'
                         : 'border-slate-100 dark:border-white/10 text-slate-500 dark:text-white/40'
                     }`}>
-                    {t === 0 ? 'Tiada' : `RM${t.toFixed(2)}`}
+                    {tipOption === 0 ? t('gig:tip_none', 'Tiada') : `RM${tipOption.toFixed(2)}`}
                   </button>
                 ))}
               </div>
@@ -211,17 +213,17 @@ function RatingModal({ show, stars, note, tip, onStars, onNote, onTip, onSubmit,
             <textarea
               value={note}
               onChange={e => onNote(e.target.value)}
-              placeholder="Ulasan ringkas (opsional)..."
+              placeholder={t('gig:rating_review_placeholder', 'Ulasan ringkas (opsional)...')}
               className="w-full bg-slate-50 dark:bg-zinc-800 border-none rounded-2xl p-4 text-sm mb-4 resize-none h-20 focus:ring-2 focus:ring-amber-500"
             />
             <div className="space-y-2">
               <button onClick={onSubmit} disabled={disabled || stars === 0}
                 className="w-full py-4 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-white font-bold rounded-2xl transition-colors">
-                {tip > 0 ? `Hantar Penilaian + Tip RM${tip.toFixed(2)} 🎁` : 'Hantar Penilaian'}
+                {tip > 0 ? t('gig:submit_rating_with_tip', 'Hantar Penilaian + Tip RM{{tip}} 🎁', { tip: tip.toFixed(2) }) : t('gig:submit_rating', 'Hantar Penilaian')}
               </button>
               <button onClick={onSkip}
                 className="w-full py-3 text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white text-sm font-bold transition-colors">
-                Langkau
+                {t('gig:skip', 'Langkau')}
               </button>
             </div>
           </motion.div>
@@ -313,13 +315,13 @@ export function PolyRiderHome() {
   // Auto-detect customer's current location for pickup
   const detectCurrentLocation = useCallback(async () => {
     if (!navigator.geolocation) {
-      toast.error('GPS tidak disokong oleh peranti/pelayar ini.');
+      toast.error(t('gig:gps_not_supported', 'GPS tidak disokong oleh peranti/pelayar ini.'));
       return;
     }
     // Geolocation only works on HTTPS or localhost — not plain HTTP via IP
     const isSecure = window.location.protocol === 'https:' || window.location.hostname === 'localhost';
     if (!isSecure) {
-      toast('📍 Auto-detect GPS memerlukan HTTPS. Sila cari lokasi secara manual atau gunakan peta.', {
+      toast(t('gig:gps_https_required', '📍 Auto-detect GPS memerlukan HTTPS. Sila cari lokasi secara manual atau gunakan peta.'), {
         duration: 5000,
         icon: '⚠️',
       });
@@ -361,7 +363,7 @@ export function PolyRiderHome() {
       }
     } catch {
       // GPS denied or unavailable
-      toast('GPS dinafikan. Sila cari lokasi anda secara manual.', { icon: '📍', duration: 4000 });
+      toast(t('gig:gps_denied_manual', 'GPS dinafikan. Sila cari lokasi anda secara manual.'), { icon: '📍', duration: 4000 });
     } finally {
       setIsDetectingLocation(false);
     }
@@ -489,9 +491,9 @@ export function PolyRiderHome() {
       if (diff <= 0) { 
         setExpiresIn('Tamat'); 
         if (isSearching && activeJob.status === 'PENDING') {
-          supabase.rpc('cancel_polyrider_job', { p_job_id: activeJob.id, p_reason: 'Sistem: Tiada rider ditemui selepas 15 minit' })
+          supabase.rpc('cancel_polyrider_job', { p_job_id: activeJob.id, p_reason: t('gig:system_no_rider_found', 'Sistem: Tiada rider ditemui selepas 15 minit') })
             .then(() => {
-               toast.error('Tiada rider ditemui selepas 15 minit. Sila cuba sebentar lagi.');
+               toast.error(t('gig:no_rider_found_toast', 'Tiada rider ditemui selepas 15 minit. Sila cuba sebentar lagi.'));
                setIsSearching(false); setActiveJob(null); setBids([]); setShowNudge(false);
                searchStartTime.current = null;
             });
@@ -510,14 +512,14 @@ export function PolyRiderHome() {
   // Helper: save current dropoff as favourite
   const saveCurrentDropoff = async () => {
     if (!user || !dropoff || !dropoffPos) return;
-    if (savedLocations.length >= 5) { toast.error('Had 5 lokasi kegemaran sudah dicapai.'); return; }
+    if (savedLocations.length >= 5) { toast.error(t('gig:fav_locations_limit_reached', 'Had 5 lokasi kegemaran sudah dicapai.')); return; }
     const { data, error } = await supabase
       .from('polyrider_saved_locations')
       .insert({ user_id: user.id, label: dropoff, lat: dropoffPos[0], lng: dropoffPos[1] })
       .select('id, label, lat, lng').single();
     if (error) { toast.error(error.message); return; }
     setSavedLocations(prev => [...prev, data]);
-    toast.success(`"${dropoff}" disimpan!`);
+    toast.success(t('gig:location_saved_toast', '"{{name}}" disimpan!', { name: dropoff }));
   };
 
   // Helper: delete saved location
@@ -548,11 +550,11 @@ export function PolyRiderHome() {
 
       if (jobData.status === 'ACCEPTED' && isSearching) {
         setIsSearching(false); setShowNudge(false); searchStartTime.current = null;
-        toast.success('Rider Ditemui! 🏍️');
+        toast.success(t('gig:rider_found_toast', 'Rider Ditemui! 🏍️'));
       } else if (jobData.status === 'COMPLETED') {
         setCompletedJob(jobData); setShowRatingModal(true); setActiveJob(null);
       } else if (jobData.status === 'CANCELLED') {
-        toast.error('Perjalanan atau permintaan anda dibatalkan.'); setIsSearching(false); setActiveJob(null);
+        toast.error(t('gig:trip_cancelled_toast', 'Perjalanan atau permintaan anda dibatalkan.')); setIsSearching(false); setActiveJob(null);
       } else if (jobData.status === 'PENDING' && !isSearching) {
         // Jika status bertukar dari GATHERING ke PENDING, mula papar "Mencari Rider"
         setIsSearching(true); searchStartTime.current = Date.now();
@@ -631,13 +633,13 @@ export function PolyRiderHome() {
 
     // When joining a carpool, pickup is required — show a clear error if missing
     if (!pickup) {
-      toast.error('Sila isi lokasi pickup anda dahulu.');
+      toast.error(t('gig:fill_pickup_first', 'Sila isi lokasi pickup anda dahulu.'));
       return;
     }
 
     if (!studentGender) {
       setGenderError(true);
-      toast.error('Sila pilih Jantina (L/P) sebelum minta rider.');
+      toast.error(t('gig:select_gender_before_request', 'Sila pilih Jantina (L/P) sebelum minta rider.'));
       return;
     }
 
@@ -648,12 +650,12 @@ export function PolyRiderHome() {
       .eq('user_id', user.id);
 
     if (sosError) {
-      toast.error('Gagal menyemak maklumat kecemasan. Cuba lagi.');
+      toast.error(t('gig:check_emergency_info_failed', 'Gagal menyemak maklumat kecemasan. Cuba lagi.'));
       return;
     }
 
     if (count === 0) {
-      toast.error('WAJIB: Sila tambah sekurang-kurangnya 1 nombor kecemasan SOS sebelum menempah perjalanan!');
+      toast.error(t('gig:mandatory_sos_contact_toast', 'WAJIB: Sila tambah sekurang-kurangnya 1 nombor kecemasan SOS sebelum menempah perjalanan!'));
       setShowManageContacts(true);
       return;
     }
@@ -691,7 +693,7 @@ export function PolyRiderHome() {
     const job = Array.isArray(data) ? data[0] : data;
     if (error || !job) {
       console.error('[handleBook] RPC error:', error?.message, error?.details, error?.hint);
-      toast.error(error?.message || 'Gagal menempah. Cuba lagi.');
+      toast.error(error?.message || t('gig:booking_failed_try_again', 'Gagal menempah. Cuba lagi.'));
       setIsSearching(false);
       return;
     }
@@ -708,7 +710,7 @@ export function PolyRiderHome() {
       notifyAllActiveRiders(
         session?.access_token ?? '',
         supabase,
-        '🏍️ PolyRider Baru!',
+        t('gig:notif_new_polyrider_title', '🏍️ PolyRider Baru!'),
         `${pickup} → ${dropoff} · RM${proposedPrice.toFixed(2)}`,
         { tag: 'polyrider-new-job', url: '/polyrider/rider' }
       );
@@ -722,8 +724,10 @@ export function PolyRiderHome() {
       notifyUsers(
         session?.access_token ?? '',
         [joiningCarpool.student_id],
-        '🚗 Permintaan Carpool Baru!',
-        `${myProfile?.full_name || 'Seorang pelajar'} ingin menyertai carpool anda.`,
+        t('gig:notif_new_carpool_req_title', '🚗 Permintaan Carpool Baru!'),
+        t('gig:carpool_join_request_msg', '{{name}} ingin menyertai carpool anda.', {
+          name: myProfile?.full_name || t('gig:student_someone', 'Seorang pelajar')
+        }),
         { tag: 'polyrider-carpool-request', url: '/polyrider' }
       );
     }
@@ -804,7 +808,7 @@ export function PolyRiderHome() {
       toast.error(error.message);
       setProcessingRequestId(null);
     } else {
-      toast.success('Berjaya menerima penumpang');
+      toast.success(t('gig:passenger_accepted_toast', 'Berjaya menerima penumpang'));
       setCarpoolRequests(prev => prev.filter(r => r.id !== requestId));
       setProcessingRequestId(null);
 
@@ -814,8 +818,8 @@ export function PolyRiderHome() {
         notifyUsers(
           session?.access_token ?? '',
           [req.student_id],
-          '✅ Permintaan Carpool Diterima!',
-          `Permintaan anda untuk menyertai carpool telah diterima. Sila semak status anda.`,
+          t('gig:carpool_accepted_notif_title', '✅ Permintaan Carpool Diterima!'),
+          t('gig:carpool_accepted_notification', 'Permintaan anda untuk menyertai carpool telah diterima. Sila semak status anda.'),
           { tag: 'polyrider-carpool-accepted', url: '/polyrider' }
         );
       }
@@ -835,7 +839,7 @@ export function PolyRiderHome() {
       toast.error(error.message);
       setProcessingRequestId(null);
     } else {
-      toast.success('Permintaan ditolak');
+      toast.success(t('gig:request_rejected_toast', 'Permintaan ditolak'));
       setCarpoolRequests(prev => prev.filter(r => r.id !== requestId));
       setProcessingRequestId(null);
 
@@ -845,8 +849,8 @@ export function PolyRiderHome() {
         notifyUsers(
           session?.access_token ?? '',
           [req.student_id],
-          '❌ Permintaan Carpool Ditolak',
-          `Permintaan anda untuk menyertai carpool telah ditolak oleh ketua kumpulan.`,
+          t('gig:carpool_request_rejected_title', '❌ Permintaan Carpool Ditolak'),
+          t('gig:carpool_request_rejected_msg', 'Permintaan anda untuk menyertai carpool telah ditolak oleh ketua kumpulan.'),
           { tag: 'polyrider-carpool-rejected', url: '/polyrider' }
         );
       }
@@ -858,7 +862,7 @@ export function PolyRiderHome() {
     const { error } = await supabase.rpc('lock_polyrider_carpool', { p_group_id: activeJob.carpool_group_id });
     if (error) toast.error(error.message);
     else {
-      toast.success('Kumpulan dikunci. Mula mencari rider...');
+      toast.success(t('gig:group_locked_toast', 'Kumpulan dikunci. Mula mencari rider...'));
       setIsSearching(true);
       searchStartTime.current = Date.now();
       setActiveJob({ ...activeJob, status: 'PENDING' });
@@ -893,7 +897,7 @@ export function PolyRiderHome() {
 
     if (error) {
       console.error('[handleCancelJob]', error);
-      toast.error('Gagal membatalkan. Cuba lagi.');
+      toast.error(t('gig:cancel_failed_try_again', 'Gagal membatalkan. Cuba lagi.'));
       return;
     }
     
@@ -901,7 +905,7 @@ export function PolyRiderHome() {
     if (user?.id) {
       const { data: myProfile } = await supabase.from('profiles').select('full_name, matric_no, polyrider_suspended_until').eq('id', user.id).single();
       if (myProfile?.polyrider_suspended_until && new Date(myProfile.polyrider_suspended_until) > new Date()) {
-        await notifyKLKOnSuspension(supabase, myProfile.full_name, myProfile.matric_no, `Amaran Sistem: Kekerapan membatalkan pesanan (3 kali / jam). Sebab akhir: ${reason}`);
+        await notifyKLKOnSuspension(supabase, myProfile.full_name, myProfile.matric_no, t('gig:klk_suspension_warning', 'Amaran Sistem: Kekerapan membatalkan pesanan (3 kali / jam). Sebab akhir: {{reason}}', { reason }));
       }
     }
 
@@ -912,15 +916,17 @@ export function PolyRiderHome() {
       notifyUsers(
         session?.access_token ?? '',
         [groupOwnerId],
-        'ℹ️ Penumpang Menarik Diri',
-        `${myProfile?.full_name || 'Seorang penumpang'} telah menarik diri dari kumpulan carpool anda.`,
+        t('gig:passenger_withdrew_title', 'ℹ️ Penumpang Menarik Diri'),
+        t('gig:passenger_withdrew_msg', '{{name}} telah menarik diri dari kumpulan carpool anda.', {
+          name: myProfile?.full_name || t('gig:passenger_someone', 'Seorang penumpang')
+        }),
         { tag: 'polyrider-carpool-leave', url: '/polyrider' }
       );
     }
 
     setIsSearching(false); setActiveJob(null); setBids([]); setShowNudge(false);
     searchStartTime.current = null;
-    toast('Dibatalkan.');
+    toast(t('gig:cancelled_toast', 'Dibatalkan.'));
 
     // Only notify bidding riders if this was a PENDING job
     if (activeJob.status === 'PENDING') {
@@ -929,8 +935,8 @@ export function PolyRiderHome() {
         session?.access_token ?? '',
         supabase,
         activeJob.id,
-        '❌ Job Dibatalkan',
-        'Pelajar telah membatalkan carian. Job ini tidak lagi tersedia.',
+        t('gig:job_cancelled_notification_title', '❌ Job Dibatalkan'),
+        t('gig:job_cancelled_notification_msg', 'Pelajar telah membatalkan carian. Job ini tidak lagi tersedia.'),
         { tag: 'polyrider-job-cancelled', url: '/polyrider/rider' }
       );
     }
@@ -941,38 +947,38 @@ export function PolyRiderHome() {
   const [counterAmount, setCounterAmount] = useState<number>(0);
 
   const submitCounterOffer = async (bidId: string, riderId: string) => {
-    if (counterAmount < 1) { toast.error('Masukkan amaun tawaran balas yang sah.'); return; }
+    if (counterAmount < 1) { toast.error(t('gig:valid_counter_offer_amount', 'Masukkan amaun tawaran balas yang sah.')); return; }
     const { error } = await supabase
       .from('polyrider_bids')
       .update({ counter_amount: counterAmount, counter_status: 'PENDING_RIDER' })
       .eq('id', bidId)
       .eq('job_id', activeJob?.id);
-    if (error) { toast.error('Gagal hantar tawaran balas.'); return; }
+    if (error) { toast.error(t('gig:counter_offer_failed', 'Gagal hantar tawaran balas.')); return; }
     setCounteringBidId(null);
     // Notify rider
     const { data: { session } } = await supabase.auth.getSession();
     notifyUsers(session?.access_token ?? '', [riderId],
-      '💬 Tawaran Balas Diterima!',
-      `Pelajar menawar balik RM${counterAmount.toFixed(2)}. Semak sekarang!`,
+      t('gig:counter_offer_received_title', '💬 Tawaran Balas Diterima!'),
+      t('gig:counter_offer_received_msg', 'Pelajar menawar balik RM{{amount}}. Semak sekarang!', { amount: counterAmount.toFixed(2) }),
       { tag: 'polyrider-counter-offer', url: '/polyrider/rider' }
     );
-    toast.success('Tawaran balas dihantar!');
+    toast.success(t('gig:counter_offer_sent_toast', 'Tawaran balas dihantar!'));
   };
 
   const acceptBid = async (bid: any) => {
     if (!activeJob || !user) return;
     const { data, error } = await supabase.rpc('accept_polyrider_bid', { p_bid_id: bid.id, p_student_id: user.id });
     const job = Array.isArray(data) ? data[0] : data;
-    if (error || !job) { toast.error(error?.message || 'Gagal terima bidaan. Cuba lagi.'); return; }
+    if (error || !job) { toast.error(error?.message || t('gig:accept_bid_failed', 'Gagal terima bidaan. Cuba lagi.')); return; }
     setActiveJob(job); setIsSearching(false); setBids([]); setShowNudge(false);
-    toast.success('Rider dipilih! Menunggu ketibaan rider. 🏍️');
+    toast.success(t('gig:rider_selected_waiting_toast', 'Rider dipilih! Menunggu ketibaan rider. 🏍️'));
     // Notify the specific WINNING rider
     const { data: { session } } = await supabase.auth.getSession();
     notifyUsers(
       session?.access_token ?? '',
       [bid.rider_id],
-      '🎉 Bidaan Diterima!',
-      `Pelajar bersetuju dengan RM${bid.bid_amount.toFixed(2)}. Pergi ke lokasi pickup sekarang!`,
+      t('gig:bid_accepted_notification_title', '🎉 Bidaan Diterima!'),
+      t('gig:bid_accepted_notification_msg', 'Pelajar bersetuju dengan RM{{amount}}. Pergi ke lokasi pickup sekarang!', { amount: bid.bid_amount.toFixed(2) }),
       { tag: 'polyrider-bid-accepted', url: '/polyrider/rider' }
     );
   };
@@ -987,15 +993,15 @@ export function PolyRiderHome() {
     if (ratingTip > 0 && completedJob.rider_id) {
       const { data: { session } } = await supabase.auth.getSession();
       notifyUsers(session?.access_token ?? '', [completedJob.rider_id],
-        `🎁 Tip RM${ratingTip.toFixed(2)} Diterima!`,
-        'Pelajar menghargai perkhidmatan anda. Terima kasih!',
+        t('gig:tip_received_title', '🎁 Tip RM{{amount}} Diterima!', { amount: ratingTip.toFixed(2) }),
+        t('gig:service_appreciated_msg', 'Pelajar menghargai perkhidmatan anda. Terima kasih!'),
         { tag: 'polyrider-tip', url: '/polyrider/rider' }
       );
     }
     const job = { ...completedJob, tip_amount: ratingTip };
     setShowRatingModal(false); setRatingStars(0); setRatingNote(''); setRatingTip(0);
     setReceiptJob(job); setShowReceiptModal(true); setCompletedJob(null);
-    toast.success('Terima kasih atas penilaian anda! ⭐');
+    toast.success(t('gig:rating_thank_you_toast', 'Terima kasih atas penilaian anda! ⭐'));
   };
 
   const applyNudge = async (bump: number) => {
@@ -1009,13 +1015,13 @@ export function PolyRiderHome() {
         session?.access_token ?? '',
         supabase,
         activeJob.id,
-        '💰 Harga Dinaikkan!',
-        `Pelajar menaikkan tawaran kepada RM${newPrice.toFixed(2)}. Semak sekarang!`,
+        t('gig:price_increased_title', '💰 Harga Dinaikkan!'),
+        t('gig:student_raised_offer', 'Pelajar menaikkan tawaran kepada RM{{price}}. Semak sekarang!', { price: newPrice.toFixed(2) }),
         { tag: 'polyrider-nudge', url: '/polyrider/rider' }
       );
     }
     setShowNudge(false);
-    toast.success(`Tawaran dinaikkan ke RM${newPrice.toFixed(2)}!`);
+    toast.success(t('gig:offer_raised_toast', 'Tawaran dinaikkan ke RM{{price}}!', { price: newPrice.toFixed(2) }));
   };
 
   const triggerSOS = async () => {
@@ -1081,7 +1087,7 @@ export function PolyRiderHome() {
     setShowSOSModal(false);
     // Auto-show contacts sheet after a short delay
     setTimeout(() => setShowSOSContactsSheet(true), 800);
-    toast.error('🚨 Isyarat SOS dihantar! KLK dan Pentadbir dimaklumkan.', { duration: 8000 });
+    toast.error(t('gig:sos_signal_sent', '🚨 Isyarat SOS dihantar! KLK dan Pentadbir dimaklumkan.'), { duration: 8000 });
   };
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -1118,8 +1124,8 @@ export function PolyRiderHome() {
                   <Bug className="w-4 h-4 text-rose-500" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-slate-900 dark:text-white">Lapor Ralat</p>
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">Tech Support</p>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">{t('gig:report_error', 'Lapor Ralat')}</p>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">{t('gig:tech_support', 'Tech Support')}</p>
                 </div>
               </a>
               <div className="h-px bg-slate-100 dark:bg-white/5 w-full my-0.5" />
@@ -1134,8 +1140,8 @@ export function PolyRiderHome() {
                   <MessageCircle className="w-4 h-4 text-emerald-500" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-slate-900 dark:text-white">Admin PolyRider</p>
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">Exco KLK</p>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">{t('gig:admin_polyrider', 'Admin PolyRider')}</p>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">{t('gig:exco_klk', 'Exco KLK')}</p>
                 </div>
               </a>
             </motion.div>
@@ -1145,7 +1151,7 @@ export function PolyRiderHome() {
         <button
           onClick={() => setShowContactMenu(!showContactMenu)}
           className="bg-emerald-500 text-white p-3.5 rounded-full shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-          title="Hubungi JPP / Lapor Bug"
+          title={t('gig:contact_jpp_bug', 'Hubungi JPP / Lapor Bug')}
         >
           {showContactMenu ? <X className="w-6 h-6" /> : <Phone className="w-6 h-6" />}
         </button>
@@ -1242,7 +1248,7 @@ export function PolyRiderHome() {
             const updatedAt = new Date(activeJob.rider_location_updated_at);
             const agoMs = Date.now() - updatedAt.getTime();
             const agoMin = Math.floor(agoMs / 60000);
-            const agoLabel = agoMin < 1 ? 'Baru sahaja' : `${agoMin} minit lepas`;
+            const agoLabel = agoMin < 1 ? t('gig:just_now', 'Baru sahaja') : t('gig:minutes_ago', '{{count}} minit lepas', { count: agoMin });
             // Haversine distance from rider to pickup
             const toRad = (d: number) => d * Math.PI / 180;
             let distLabel = '';
@@ -1252,7 +1258,7 @@ export function PolyRiderHome() {
               const dLng = toRad(activeJob.pickup_lng - activeJob.rider_lng);
               const a = Math.sin(dLat/2)**2 + Math.cos(toRad(activeJob.rider_lat))*Math.cos(toRad(activeJob.pickup_lat))*Math.sin(dLng/2)**2;
               const km = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-              distLabel = `~${km.toFixed(1)} km dari pickup anda`;
+              distLabel = t('gig:distance_from_pickup', '~{{km}} km dari pickup anda', { km: km.toFixed(1) });
             }
             const wazeUrl = `https://waze.com/ul?ll=${activeJob.rider_lat},${activeJob.rider_lng}&navigate=yes`;
             return (
@@ -1262,7 +1268,7 @@ export function PolyRiderHome() {
               >
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 flex items-center gap-1">
-                    <Navigation className="w-3 h-3" /> Lokasi Rider Semasa
+                    <Navigation className="w-3 h-3" /> {t('gig:current_rider_location', 'Lokasi Rider Semasa')}
                   </p>
                   <span className="text-[9px] font-bold text-blue-400 dark:text-blue-300/60">{agoLabel}</span>
                 </div>
@@ -1275,7 +1281,7 @@ export function PolyRiderHome() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-black rounded-lg transition-colors"
                 >
-                  🔵 Lihat di Waze
+                  {t('gig:view_in_waze', '🔵 Lihat di Waze')}
                 </a>
               </motion.div>
             );
@@ -1283,9 +1289,9 @@ export function PolyRiderHome() {
 
           {/* Chat */}
           <div className="flex-1 flex flex-col mb-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 mb-2 flex items-center gap-1"><MessageCircle className="w-3 h-3" /> Chat Rider</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 mb-2 flex items-center gap-1"><MessageCircle className="w-3 h-3" /> {t('gig:chat_rider_title', 'Chat Rider')}</p>
             <div ref={chatContainerRef} className="flex-1 bg-slate-50 dark:bg-zinc-950/50 rounded-2xl p-3 border border-slate-100 dark:border-white/5 overflow-y-auto space-y-2 mb-2 max-h-[28vh]">
-              {chatMessages.length === 0 ? <p className="text-xs text-center text-slate-400 dark:text-white/40 mt-6">Berhubung dengan rider di sini.</p> : (
+              {chatMessages.length === 0 ? <p className="text-xs text-center text-slate-400 dark:text-white/40 mt-6">{t('gig:chat_rider_placeholder', 'Berhubung dengan rider di sini.')}</p> : (
                 chatMessages.map(msg => (
                   <div key={msg.id} className={`flex ${msg.sender_id === user!.id ? 'justify-end' : 'justify-start'}`}>
                     <div className={`px-3 py-2 rounded-2xl max-w-[85%] text-xs font-semibold ${msg.sender_id === user!.id ? 'bg-amber-500 text-white rounded-tr-sm' : 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white border border-slate-100 dark:border-white/5 rounded-tl-sm'
@@ -1295,7 +1301,7 @@ export function PolyRiderHome() {
               )}
             </div>
             <form onSubmit={sendMessage} className="flex gap-2">
-              <input type="text" value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Mesej..."
+              <input type="text" value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder={t('gig:chat_message_placeholder', 'Mesej...')}
                 className="flex-1 bg-slate-50 dark:bg-zinc-950/50 border border-slate-200 dark:border-white/10 rounded-xl px-4 text-sm focus:outline-none focus:border-amber-500 text-slate-900 dark:text-white h-12" />
               <button type="submit" className="w-12 h-12 bg-amber-500 hover:bg-amber-600 text-white rounded-xl flex items-center justify-center shrink-0"><Send className="w-5 h-5" /></button>
             </form>
@@ -1307,7 +1313,7 @@ export function PolyRiderHome() {
 
           <div className="mt-4">
              <Button variant="outline" className="w-full border-red-200 text-red-600 hover:bg-red-50" onClick={() => setIsCancelModalOpen(true)}>
-                Batal Pesanan
+                {t('gig:cancel_order', 'Batal Pesanan')}
              </Button>
           </div>
 
@@ -1351,9 +1357,9 @@ export function PolyRiderHome() {
                 <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                   <ShieldAlert className="w-10 h-10 text-red-500" />
                 </div>
-                <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">Tindakan Diperlukan</h2>
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-2">{t('gig:action_required', 'Tindakan Diperlukan')}</h2>
                 <p className="text-sm font-medium text-slate-500 dark:text-white/60 mb-8 leading-relaxed">
-                  Sistem mewajibkan pendaftaran <strong className="text-slate-900 dark:text-white">sekurang-kurangnya 1 kenalan kecemasan</strong> sebelum menggunakan PolyRider demi keselamatan anda.
+                  {t('gig:emergency_contact_required_desc', 'Sistem mewajibkan pendaftaran sekurang-kurangnya 1 kenalan kecemasan sebelum menggunakan PolyRider demi keselamatan anda.')}
                 </p>
 
                 <button
@@ -1363,7 +1369,7 @@ export function PolyRiderHome() {
                   }}
                   className="w-full py-4 bg-red-500 hover:bg-red-600 text-white font-black rounded-2xl shadow-lg shadow-red-500/20 transition-all flex items-center justify-center gap-2"
                 >
-                  Daftar Kenalan SOS <ChevronRight className="w-5 h-5" />
+                  {t('gig:register_sos_contact', 'Daftar Kenalan SOS')} <ChevronRight className="w-5 h-5" />
                 </button>
               </motion.div>
             </motion.div>
@@ -1398,8 +1404,8 @@ export function PolyRiderHome() {
         {showNudge && (
           <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
             className="fixed top-4 left-1/2 -translate-x-1/2 z-50 bg-white dark:bg-zinc-900 border border-amber-200 dark:border-amber-500/30 rounded-2xl shadow-xl px-5 py-4 w-[90vw] max-w-sm">
-            <p className="text-sm font-black text-slate-900 dark:text-white mb-1">Tiada rider berbidaan lagi 🤔</p>
-            <p className="text-xs text-slate-500 dark:text-white/50 mb-3">Cuba naikkan harga tawaran anda sedikit.</p>
+            <p className="text-sm font-black text-slate-900 dark:text-white mb-1">{t('gig:no_bidding_riders_yet', 'Tiada rider berbidaan lagi 🤔')}</p>
+            <p className="text-xs text-slate-500 dark:text-white/50 mb-3">{t('gig:raise_offer_hint', 'Cuba naikkan harga tawaran anda sedikit.')}</p>
             <div className="flex gap-2">
               <button onClick={() => applyNudge(0.5)} className="flex-1 py-2 bg-amber-50 dark:bg-amber-500/10 text-amber-600 font-bold rounded-xl text-sm">+RM 0.50</button>
               <button onClick={() => applyNudge(1.0)} className="flex-1 py-2 bg-amber-500 text-white font-bold rounded-xl text-sm">+RM 1.00</button>
@@ -1599,7 +1605,7 @@ export function PolyRiderHome() {
                     onClick={saveCurrentDropoff}
                     className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 dark:text-white/40 hover:text-amber-500 dark:hover:text-amber-400 transition-colors"
                   >
-                    <Star className="w-3 h-3" /> Simpan "{dropoff}" sebagai kegemaran
+                    <Star className="w-3 h-3" /> {t('gig:save_as_favourite', 'Simpan "{{name}}" sebagai kegemaran', { name: dropoff })}
                   </button>
                 )}
               </div>
@@ -1648,16 +1654,16 @@ export function PolyRiderHome() {
                   <motion.div key="solo-nudge" initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="bg-blue-50/50 dark:bg-blue-500/10 border border-blue-100 dark:border-blue-500/20 rounded-lg p-2 flex gap-2 items-start">
                     <span className="text-blue-500 text-xs shrink-0 mt-0.5">💡</span>
                     <p className="text-[10px] font-semibold text-blue-800 dark:text-blue-200 leading-snug">
-                      <span className="font-black uppercase tracking-wider text-[9px] block mb-0.5">Tips Tambang</span>
-                      Tukar ke Carpool untuk tawar harga yang lebih rendah. So anda boleh <strong className="font-black">JIMAT KAW!</strong>
+                      <span className="font-black uppercase tracking-wider text-[9px] block mb-0.5">{t('gig:fare_tips', 'Tips Tambang')}</span>
+                      {t('gig:switch_to_carpool_tip', 'Tukar ke Carpool untuk tawar harga yang lebih rendah. So anda boleh JIMAT KAW!')}
                     </p>
                   </motion.div>
                 ) : (
                   <motion.div key="carpool-nudge" initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="bg-emerald-50/50 dark:bg-emerald-500/10 border border-emerald-100 dark:border-emerald-500/20 rounded-lg p-2 flex gap-2 items-start">
                     <span className="text-emerald-500 text-xs shrink-0 mt-0.5">🔥</span>
                     <p className="text-[10px] font-semibold text-emerald-800 dark:text-emerald-200 leading-snug">
-                      <span className="font-black uppercase tracking-wider text-[9px] block mb-0.5">Mod Jimat Aktif</span>
-                      Anda boleh <strong className="font-black">Cipta Kumpulan Baru</strong> (masukkan destinasi & tekan Minta Rider) ATAU <strong className="font-black">Sertai Kumpulan</strong> di bawah. Tambang akan digabungkan untuk lebih cepat dapat rider!
+                      <span className="font-black uppercase tracking-wider text-[9px] block mb-0.5">{t('gig:save_mode_active', 'Mod Jimat Aktif')}</span>
+                      {t('gig:carpool_mode_desc', 'Anda boleh Cipta Kumpulan Baru (masukkan destinasi & tekan Minta Rider) ATAU Sertai Kumpulan di bawah. Tambang akan digabungkan untuk lebih cepat dapat rider!')}
                     </p>
                   </motion.div>
                 )}
@@ -1748,15 +1754,15 @@ export function PolyRiderHome() {
                   return (
                     <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl p-3 border border-amber-200 dark:border-amber-500/20">
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">Tambang Asas (~{distKm.toFixed(1)}km)</span>
+                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">{t('gig:base_fare_dist', 'Tambang Asas (~{{dist}}km)', { dist: distKm.toFixed(1) })}</span>
                         <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold">RM{proposedPrice.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center mb-2 pb-2 border-b border-amber-200/60 dark:border-amber-500/20">
-                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">+ Caj {stops.filter(s => s.lat).length} Hentian (~{detourKm}km)</span>
+                        <span className="text-[10px] text-amber-700 dark:text-amber-400 font-medium">{t('gig:stops_surcharge_dist', '+ Caj {{count}} Hentian (~{{detour}}km)', { count: stops.filter(s => s.lat).length, detour: detourKm })}</span>
                         <span className="text-[10px] text-amber-700 dark:text-amber-400 font-bold">RM{surcharge.toFixed(2)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-xs font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">Jumlah Keseluruhan</span>
+                        <span className="text-xs font-black text-amber-900 dark:text-amber-300 uppercase tracking-wider">{t('gig:total_overall', 'Jumlah Keseluruhan')}</span>
                         <span className="text-lg font-black text-amber-600 dark:text-amber-400">RM{(proposedPrice + surcharge).toFixed(2)}</span>
                       </div>
                     </div>
@@ -1769,7 +1775,7 @@ export function PolyRiderHome() {
                 const high = (est * 1.1).toFixed(2);
                 return (
                   <p className="text-[10px] text-slate-500 dark:text-white/50 text-center font-medium">
-                    Jarak lurus ~{distKm.toFixed(1)} km · Anggaran biasa <strong className="text-amber-600 dark:text-amber-400">RM{low} - RM{high}</strong>
+                    {t('gig:distance_estimate_hint', 'Jarak lurus ~{{dist}} km · Anggaran biasa', { dist: distKm.toFixed(1) })} <strong className="text-amber-600 dark:text-amber-400">RM{low} - RM{high}</strong>
                   </p>
                 );
               })()}
@@ -1797,19 +1803,19 @@ export function PolyRiderHome() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <span className="text-white text-base">🔥</span>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-100">Carpool Tersedia!</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-100">{t('gig:carpool_available', 'Carpool Tersedia!')}</p>
                     </div>
                     <p className="text-white font-black text-sm">
-                      {matches.length} kumpulan ke destinasi sama
+                      {t('gig:groups_same_destination', '{{count}} kumpulan ke destinasi sama', { count: matches.length })}
                     </p>
                     {saving !== null && saving > 0 && (
                       <p className="text-emerald-100 text-[10px] font-bold mt-0.5">
-                        Jimat sehingga RM{saving.toFixed(2)} jika tumpang!
+                        {t('gig:save_up_to_carpool', 'Jimat sehingga RM{{amount}} jika tumpang!', { amount: saving.toFixed(2) })}
                       </p>
                     )}
                   </div>
                   <div className="bg-white/20  rounded-xl px-3 py-2 flex items-center gap-1.5">
-                    <span className="text-white font-black text-xs">Sertai</span>
+                    <span className="text-white font-black text-xs">{t('gig:join_btn', 'Sertai')}</span>
                     <ChevronRight className="w-4 h-4 text-white" />
                   </div>
                 </div>
@@ -1820,7 +1826,7 @@ export function PolyRiderHome() {
           {isCarpoolOpen && (
             <div className="bg-emerald-50/50 dark:bg-emerald-900/10 rounded-xl p-3 border border-emerald-100 dark:border-emerald-500/10">
               <h3 className="text-[9px] font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                <Users className="w-3 h-3" /> Kumpulan Aktif Berdekatan
+                <Users className="w-3 h-3" /> {t('gig:active_groups_nearby', 'Kumpulan Aktif Berdekatan')}
               </h3>
               {openCarpools.length > 0 ? (
                 <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1 custom-scrollbar">
@@ -1828,23 +1834,23 @@ export function PolyRiderHome() {
                     <div key={carpool.id} className="bg-white dark:bg-zinc-900 rounded-lg p-2.5 border border-emerald-100 dark:border-emerald-500/20 shadow-sm flex items-center justify-between">
                       <div className="truncate pr-2">
                         <div className="flex items-center gap-2 mb-0.5">
-                          <p className="text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-500 truncate">Oleh {carpool.student?.full_name?.split(' ')[0]}</p>
+                          <p className="text-[9px] font-black uppercase text-emerald-600 dark:text-emerald-500 truncate">{t('gig:carpool_by_student', 'Oleh {{name}}', { name: carpool.student?.full_name?.split(' ')[0] })}</p>
                           <span className="text-[8px] bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 font-bold px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
-                            🔥 Jimat
+                            🔥 {t('gig:badge_save', 'Jimat')}
                           </span>
                         </div>
                         <p className="font-bold text-slate-900 dark:text-white text-[11px] truncate">{carpool.pickup_name} → {carpool.dropoff_name}</p>
                       </div>
                       <button onClick={() => openJoinCarpoolModal(carpool)} className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg text-[11px] shrink-0 transition-colors shadow-sm shadow-emerald-500/20">
-                        Sertai
+                        {t('gig:join_btn', 'Sertai')}
                       </button>
                     </div>
                   ))}
                 </div>
               ) : (
                 <div className="py-2 text-center">
-                  <p className="text-[10px] font-bold text-slate-600 dark:text-white/60">Tiada kumpulan carpool sedia ada.</p>
-                  <p className="text-[9px] text-slate-500 dark:text-white/40 mt-0.5">Teruskan untuk cipta kumpulan baru.</p>
+                  <p className="text-[10px] font-bold text-slate-600 dark:text-white/60">{t('gig:no_carpools_found', 'Tiada kumpulan carpool sedia ada.')}</p>
+                  <p className="text-[9px] text-slate-500 dark:text-white/40 mt-0.5">{t('gig:continue_new_carpool', 'Teruskan untuk cipta kumpulan baru.')}</p>
                 </div>
               )}
             </div>
@@ -1913,7 +1919,7 @@ export function PolyRiderHome() {
                 <div>
                   <div className="flex justify-between items-start mb-3">
                     <p className="text-[9px] font-black uppercase text-slate-400 dark:text-white/40">
-                      Oleh {carpool.student?.full_name?.split(' ')[0] || 'Pelajar'}
+                      {t('gig:carpool_by_student', 'Oleh {{name}}', { name: carpool.student?.full_name?.split(' ')[0] || t('gig:student_default', 'Pelajar') })}
                     </p>
                     <span className="text-[9px] font-black text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-100 dark:border-amber-500/20">
                       ~RM{(carpool.proposed_price / 2).toFixed(2)} / pax
@@ -1992,7 +1998,7 @@ export function PolyRiderHome() {
                 <div>
                   <h3 className="font-black text-xl text-slate-900 dark:text-white">{t('gig:join_carpool_title', 'Tumpang Carpool')}</h3>
                   <p className="text-xs font-medium text-slate-500 dark:text-white/50 mt-1">
-                    Bersama {joiningCarpool.student?.full_name?.split(' ')[0]} · {joiningCarpool.pickup_name} → {joiningCarpool.dropoff_name}
+                    {t('gig:with_student_route', 'Bersama {{name}} · {{from}} → {{to}}', { name: joiningCarpool.student?.full_name?.split(' ')[0], from: joiningCarpool.pickup_name, to: joiningCarpool.dropoff_name })}
                   </p>
                 </div>
                 <button onClick={closeJoinCarpoolModal} className="w-8 h-8 rounded-full bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-500 dark:text-white/50">
@@ -2010,7 +2016,7 @@ export function PolyRiderHome() {
                       <LocationSearchInput
                         label={t('gig:from_label', 'Dari')}
                         color="blue"
-                        placeholder={isDetectingLocation ? 'Mengesan lokasi GPS...' : 'Cari lokasi pickup anda...'}
+                        placeholder={isDetectingLocation ? t('gig:detecting_gps_location', 'Mengesan lokasi GPS...') : t('gig:search_pickup_placeholder', 'Cari lokasi pickup anda...')}
                         value={pickup}
                         onChange={(text) => { setPickup(text); if (!text) setPickupPos(null); }}
                         onSelect={(r) => { setPickup(r.name); setPickupPos([r.lat, r.lng]); }}
@@ -2021,7 +2027,7 @@ export function PolyRiderHome() {
                     <button
                       onClick={detectCurrentLocation}
                       disabled={isDetectingLocation}
-                      title="Guna lokasi GPS semasa"
+                      title={t('gig:use_current_gps_location', 'Guna lokasi GPS semasa')}
                       className={`p-2 rounded-xl shrink-0 transition-all ${
                         isDetectingLocation ? 'text-blue-400 animate-pulse'
                         : pickupPos ? 'bg-blue-500 text-white shadow-md shadow-blue-500/20'
@@ -2035,7 +2041,7 @@ export function PolyRiderHome() {
                     {/* Map Picker Button */}
                     <button
                       onClick={() => setActiveMapPicker('pickup')}
-                      title="Pilih dari peta"
+                      title={t('gig:choose_from_map', 'Pilih dari peta')}
                       className={`p-2 rounded-xl shrink-0 transition-all ${
                         pickupPos ? 'bg-blue-500/20 text-blue-500' : 'bg-slate-100 dark:bg-zinc-800 text-slate-400 hover:text-blue-500 dark:hover:text-blue-400'
                       }`}
@@ -2046,7 +2052,7 @@ export function PolyRiderHome() {
                   {pickupPos && (
                     <p className="text-[9px] text-blue-500 font-bold mt-1.5 flex items-center gap-1">
                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block" />
-                      Koordinat tersimpan
+                      {t('gig:coordinates_saved', 'Koordinat tersimpan')}
                     </p>
                   )}
                 </div>
@@ -2059,7 +2065,7 @@ export function PolyRiderHome() {
                       <LocationSearchInput
                         label={t('gig:to_label', 'Ke')}
                         color="rose"
-                        placeholder="Destinasi..."
+                        placeholder={t('gig:destination_placeholder', 'Destinasi...')}
                         value={dropoff}
                         onChange={(text) => { setDropoff(text); if (!text) setDropoffPos(null); }}
                         onSelect={(r) => { setDropoff(r.name); setDropoffPos([r.lat, r.lng]); }}
@@ -2068,7 +2074,7 @@ export function PolyRiderHome() {
                     </div>
                   </div>
                   <p className="text-[9px] text-slate-400 dark:text-white/30 font-medium mt-1.5">
-                    💡 Telah diisi mengikut destinasi kumpulan. Boleh ubah jika perlu.
+                    {t('gig:prefilled_destination_hint', '💡 Telah diisi mengikut destinasi kumpulan. Boleh ubah jika perlu.')}
                   </p>
                 </div>
 
@@ -2080,16 +2086,16 @@ export function PolyRiderHome() {
                     <div className="bg-amber-50 dark:bg-amber-500/10 rounded-xl border border-amber-200 dark:border-amber-500/20 p-3">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-0.5">Anggaran Sumbangan</p>
+                          <p className="text-[9px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest mb-0.5">{t('gig:estimated_contribution', 'Anggaran Sumbangan')}</p>
                           <p className="text-xs text-amber-700 dark:text-amber-300 font-semibold">
-                            ~{dist.toFixed(1)} km dari titik pickup kumpulan
+                            {t('gig:distance_from_group_pickup', '~{{dist}} km dari titik pickup kumpulan', { dist: dist.toFixed(1) })}
                           </p>
                         </div>
                         <button
                           onClick={() => setProposedPrice(parseFloat(est.toFixed(2)))}
                           className="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-[10px] font-black rounded-lg transition-colors"
                         >
-                          Guna ~RM{est.toFixed(2)}
+                          {t('gig:use_estimated_price', 'Guna ~RM{{price}}', { price: est.toFixed(2) })}
                         </button>
                       </div>
                     </div>
@@ -2120,7 +2126,7 @@ export function PolyRiderHome() {
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{t('gig:passenger_gender', 'Jantina Penumpang')}</p>
                     {!studentGender && (
-                      <p className="text-[10px] text-amber-500 font-bold animate-pulse">Mesti Pilih!</p>
+                      <p className="text-[10px] text-amber-500 font-bold animate-pulse">{t('gig:must_select_gender', 'Mesti Pilih!')}</p>
                     )}
                   </div>
                   <div className="flex gap-2">
@@ -2157,7 +2163,7 @@ export function PolyRiderHome() {
               </button>
               {!pickupPos && (
                 <p className="text-center text-[10px] text-slate-400 dark:text-white/30 font-medium mt-2">
-                  Tekan ikon GPS atau cari lokasi pickup anda untuk meneruskan.
+                  {t('gig:gps_hint_proceed', 'Tekan ikon GPS atau cari lokasi pickup anda untuk meneruskan.')}
                 </p>
               )}
             </motion.div>
@@ -2173,13 +2179,13 @@ export function PolyRiderHome() {
           const stopData = isStopPicker ? stops[stopIndex] : null;
 
           const getMapTitle = () => {
-            if (isStopPicker) return `Hentian ${stopIndex + 1}`;
-            return activeMapPicker === 'pickup' ? 'Pickup' : 'Destinasi';
+            if (isStopPicker) return t('gig:stop_title', 'Hentian {{index}}', { index: stopIndex + 1 });
+            return activeMapPicker === 'pickup' ? t('gig:pickup_title', 'Pickup') : t('gig:dropoff_title', 'Destinasi');
           };
 
           const getMapSubtitle = () => {
-            if (isStopPicker) return '📍 Ketik peta untuk tetapkan hentian';
-            return activeMapPicker === 'pickup' ? '📍 Ketik peta atau pin lokasi anda sekarang' : '🏁 Ketik pada peta untuk tetapkan destinasi';
+            if (isStopPicker) return t('gig:tap_map_set_stop', '📍 Ketik peta untuk tetapkan hentian');
+            return activeMapPicker === 'pickup' ? t('gig:tap_map_or_pin', '📍 Ketik peta atau pin lokasi anda sekarang') : t('gig:tap_map_set_destination', '🏁 Ketik pada peta untuk tetapkan destinasi');
           };
 
           const getMapPosition = (): [number, number] | null => {
@@ -2193,8 +2199,8 @@ export function PolyRiderHome() {
           };
 
           const getConfirmText = () => {
-            if (isStopPicker) return stops[stopIndex]?.name || `Lokasi Hentian ${stopIndex + 1}`;
-            return activeMapPicker === 'pickup' ? (pickup || 'Lokasi Pickup') : (dropoff || 'Lokasi Destinasi');
+            if (isStopPicker) return stops[stopIndex]?.name || t('gig:stop_location_title', 'Lokasi Hentian {{index}}', { index: stopIndex + 1 });
+            return activeMapPicker === 'pickup' ? (pickup || t('gig:pickup_location_title', 'Lokasi Pickup')) : (dropoff || t('gig:destination_location_title', 'Lokasi Destinasi'));
           };
 
           return (
@@ -2208,7 +2214,7 @@ export function PolyRiderHome() {
               >
                 <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-white/5 shrink-0">
                   <div>
-                    <h3 className="font-black text-slate-900 dark:text-white">Pilih Lokasi {getMapTitle()}</h3>
+                    <h3 className="font-black text-slate-900 dark:text-white">{t('gig:choose_location_title', 'Pilih Lokasi')} {getMapTitle()}</h3>
                     <p className="text-[10px] text-slate-400 dark:text-white/40 font-semibold mt-0.5">
                       {getMapSubtitle()}
                     </p>
@@ -2239,7 +2245,7 @@ export function PolyRiderHome() {
                     disabled={isConfirmDisabled()}
                     className="w-full py-3.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-40 text-white font-black rounded-xl transition-colors flex items-center justify-center gap-2"
                   >
-                    ✓ Sahkan {getConfirmText()}
+                    ✓ {t('gig:confirm_btn', 'Sahkan')} {getConfirmText()}
                   </button>
                 </div>
               </motion.div>
@@ -2266,16 +2272,19 @@ export function PolyRiderHome() {
                   </div>
                   <h3 className="text-xl font-black text-slate-900 dark:text-white">{t('gig:searching_rider_title', 'Mencari Rider...')}</h3>
                   <p className="text-sm font-medium text-slate-500 dark:text-white/60">{t('gig:searching_rider_desc', 'Tawaran anda dihantar kepada semua rider. Sila semak bidaan balas di bawah.')}</p>
-                  {expiresIn && (
-                    <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-full text-[11px] font-black ${
-                      expiresIn === 'Tamat' || expiresIn < '1:00'
-                        ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400'
-                        : 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
-                    }`}>
-                      <Clock className="w-3.5 h-3.5" />
-                      {expiresIn === 'Tamat' ? t('gig:time_expired', 'Tempoh Tamat') : t('gig:expires_in', 'Tamat dalam {{time}}', { time: expiresIn })}
-                    </div>
-                  )}
+                  {expiresIn && (() => {
+                    const isUrgentOrExpired = expiresIn === 'Tamat' || expiresIn < '1:00';
+                    return (
+                      <div className={`inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-full text-[11px] font-black ${
+                        isUrgentOrExpired
+                          ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400'
+                          : 'bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400'
+                      }`}>
+                        <Clock className="w-3.5 h-3.5" />
+                        {expiresIn === 'Tamat' ? t('gig:time_expired', 'Tempoh Tamat') : t('gig:expires_in', 'Tamat dalam {{time}}', { time: expiresIn })}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Bids List */}
@@ -2312,7 +2321,7 @@ export function PolyRiderHome() {
                                   const rating = Number(bid.rider?.avg_rating || 0);
                                   if (trips >= 50) return <span className="text-[9px] font-black bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded-full">🏆 Pro</span>;
                                   if (rating >= 4.8 && trips >= 5) return <span className="text-[9px] font-black bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-400 px-1.5 py-0.5 rounded-full">⭐ Top</span>;
-                                  if (trips < 5) return <span className="text-[9px] font-black bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-white/50 px-1.5 py-0.5 rounded-full">🆕 Baru</span>;
+                                  if (trips < 5) return <span className="text-[9px] font-black bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-white/50 px-1.5 py-0.5 rounded-full">{t('gig:new_rider_badge', '🆕 Baru')}</span>;
                                   return null;
                                 })()}
                               </div>
@@ -2322,13 +2331,13 @@ export function PolyRiderHome() {
                             <p className="text-xl font-black text-emerald-500">RM {Number(bid.bid_amount).toFixed(2)}</p>
                             {/* Counter-offer status badge */}
                             {bid.counter_status === 'PENDING_RIDER' && (
-                              <span className="text-[9px] font-black bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full block mt-1">⏳ Menunggu Rider</span>
+                              <span className="text-[9px] font-black bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 px-2 py-0.5 rounded-full block mt-1">{t('gig:waiting_rider_badge', '⏳ Menunggu Rider')}</span>
                             )}
                             {bid.counter_status === 'ACCEPTED' && (
-                              <span className="text-[9px] font-black bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full block mt-1">✓ Rider Setuju</span>
+                              <span className="text-[9px] font-black bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full block mt-1">{t('gig:rider_agreed_badge', '✓ Rider Setuju')}</span>
                             )}
                             {bid.counter_status === 'REJECTED' && (
-                              <span className="text-[9px] font-black bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-white/50 px-2 py-0.5 rounded-full block mt-1">✗ Rider Tolak</span>
+                              <span className="text-[9px] font-black bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-white/50 px-2 py-0.5 rounded-full block mt-1">{t('gig:rider_rejected_badge', '✗ Rider Tolak')}</span>
                             )}
                             {(!bid.counter_status || bid.counter_status === 'REJECTED') && (
                               <div className="flex flex-col gap-1 mt-1">
@@ -2346,7 +2355,7 @@ export function PolyRiderHome() {
                             {bid.counter_status === 'ACCEPTED' && (
                               <button onClick={() => acceptBid({ ...bid, bid_amount: bid.counter_amount })}
                                 className="mt-1 bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-4 py-2 rounded-xl text-xs transition-colors flex items-center gap-1">
-                                Sahkan RM{Number(bid.counter_amount).toFixed(2)} <CheckCircle className="w-3.5 h-3.5" />
+                                {t('gig:confirm_counter_amount', 'Sahkan RM{{amount}}', { amount: Number(bid.counter_amount).toFixed(2) })} <CheckCircle className="w-3.5 h-3.5" />
                               </button>
                             )}
                           </div>
@@ -2368,7 +2377,7 @@ export function PolyRiderHome() {
                             </div>
                             <button onClick={() => submitCounterOffer(bid.id, bid.rider_id)}
                               className="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-xl text-xs transition-colors">
-                              Hantar
+                              {t('gig:send_btn', 'Hantar')}
                             </button>
                             <button onClick={() => setCounteringBidId(null)}
                               className="px-3 py-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-white border border-slate-200 dark:border-white/10 rounded-xl text-xs transition-colors">
@@ -2418,61 +2427,61 @@ export function PolyRiderHome() {
                 <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/20 rounded-full flex items-center justify-center mx-auto mb-3">
                   <CheckCircle className="w-8 h-8 text-emerald-500" />
                 </div>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white">Perjalanan Selesai!</h3>
-                <p className="text-xs text-slate-400 dark:text-white/40 font-medium mt-1">Terima kasih kerana menggunakan PolyRider</p>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white">{t('gig:trip_completed_title', 'Perjalanan Selesai!')}</h3>
+                <p className="text-xs text-slate-400 dark:text-white/40 font-medium mt-1">{t('gig:thank_you_polyrider', 'Terima kasih kerana menggunakan PolyRider')}</p>
               </div>
 
               {/* Receipt Card */}
               <div className="bg-slate-50 dark:bg-zinc-800 rounded-2xl p-4 space-y-3 border border-slate-200 dark:border-white/10 mb-4">
                 <div className="flex justify-between items-center pb-3 border-b border-dashed border-slate-200 dark:border-white/10">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Rider</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{t('gig:rider_label', 'Rider')}</span>
                   <span className="text-sm font-black text-slate-900 dark:text-white">{receiptJob.rider?.profiles?.full_name || '—'}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Plat</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{t('gig:plate_label', 'Plat')}</span>
                   <span className="text-sm font-bold text-slate-700 dark:text-white/80">{receiptJob.rider?.plate_number || '—'}</span>
                 </div>
                 <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Dari</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{t('gig:from_label', 'Dari')}</span>
                   <span className="text-sm font-bold text-slate-700 dark:text-white/80 text-right max-w-[60%]">{receiptJob.pickup_name}</span>
                 </div>
                 <div className="flex justify-between items-start">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Ke</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{t('gig:to_label', 'Ke')}</span>
                   <span className="text-sm font-bold text-slate-700 dark:text-white/80 text-right max-w-[60%]">{receiptJob.dropoff_name}</span>
                 </div>
                 <div className="flex justify-between items-center pb-3 border-b border-dashed border-slate-200 dark:border-white/10">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Tarikh</span>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{t('gig:date_label', 'Tarikh')}</span>
                   <span className="text-sm font-bold text-slate-700 dark:text-white/80">
                     {new Date(receiptJob.created_at).toLocaleString('ms-MY', { dateStyle: 'medium', timeStyle: 'short' })}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pt-1">
-                  <span className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">Tambang</span>
+                  <span className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white">{t('gig:fare_label', 'Tambang')}</span>
                   <span className="text-xl font-black text-slate-900 dark:text-white">RM {Number(receiptJob.proposed_price).toFixed(2)}</span>
                 </div>
                 {receiptJob.tip_amount > 0 && (
                   <div className="flex justify-between items-center">
-                    <span className="text-sm font-bold text-slate-500 dark:text-white/50">Tip Rider 🎁</span>
+                    <span className="text-sm font-bold text-slate-500 dark:text-white/50">{t('gig:rider_tip_label', 'Tip Rider')} 🎁</span>
                     <span className="text-sm font-black text-amber-500">+RM {Number(receiptJob.tip_amount).toFixed(2)}</span>
                   </div>
                 )}
                 {receiptJob.tip_amount > 0 && (
                   <div className="flex justify-between items-center pt-2 border-t border-slate-200 dark:border-white/10">
-                    <span className="text-sm font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Jumlah</span>
+                    <span className="text-sm font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">{t('gig:total_label', 'Jumlah')}</span>
                     <span className="text-2xl font-black text-emerald-500">RM {(Number(receiptJob.proposed_price) + Number(receiptJob.tip_amount)).toFixed(2)}</span>
                   </div>
                 )}
               </div>
 
               <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-xl px-4 py-3 text-center mb-4">
-                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">✅ STATUS SELESAI — Bayaran Tunai</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">{t('gig:status_completed_cash', '✅ STATUS SELESAI — Bayaran Tunai')}</p>
               </div>
 
               <button
                 onClick={() => setShowReceiptModal(false)}
                 className="w-full py-3.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-black rounded-xl"
               >
-                Tutup
+                {t('gig:close_btn', 'Tutup')}
               </button>
             </motion.div>
           </motion.div>
@@ -2496,14 +2505,14 @@ export function PolyRiderHome() {
                     <Users className="w-8 h-8 text-blue-500" />
                   </div>
                   <h3 className="text-xl font-black text-slate-900 dark:text-white">
-                    {activeJob.status === 'CARPOOL_REQUEST' ? 'Menunggu Persetujuan...' : 'Bilik Carpool'}
+                    {activeJob.status === 'CARPOOL_REQUEST' ? t('gig:waiting_approval_title', 'Menunggu Persetujuan...') : t('gig:carpool_room_title', 'Bilik Carpool')}
                   </h3>
                   <p className="text-sm font-medium text-slate-500 dark:text-white/60 mt-1">
                     {activeJob.status === 'CARPOOL_REQUEST'
-                      ? 'Owner sedang meneliti permintaan anda.'
+                      ? t('gig:owner_reviewing_request', 'Owner sedang meneliti permintaan anda.')
                       : activeJob.id === activeJob.carpool_group_id
-                        ? 'Menunggu penumpang lain menyertai carpool anda.'
-                        : 'Menunggu owner memulakan perjalanan.'}
+                        ? t('gig:waiting_other_passengers', 'Menunggu penumpang lain menyertai carpool anda.')
+                        : t('gig:waiting_owner_start', 'Menunggu owner memulakan perjalanan.')}
                   </p>
                 </div>
 
@@ -2511,13 +2520,13 @@ export function PolyRiderHome() {
                   <div className="flex-1 overflow-y-auto space-y-4 mb-4">
                     <div>
                       <h4 className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest mb-2">
-                        Ahli Kumpulan ({carpoolMembers.length}/3)
+                        {t('gig:group_members_count', 'Ahli Kumpulan ({{current}}/{{max}})', { current: carpoolMembers.length, max: 3 })}
                       </h4>
                       <div className="space-y-2">
                         {carpoolMembers.map(m => (
                           <div key={m.id} className="bg-slate-50 dark:bg-zinc-800 p-3 rounded-xl flex items-center justify-between border border-slate-100 dark:border-white/5">
                             <div>
-                              <p className="font-bold text-sm text-slate-900 dark:text-white">{m.student?.full_name || 'Penumpang'}</p>
+                              <p className="font-bold text-sm text-slate-900 dark:text-white">{m.student?.full_name || t('gig:passenger_default', 'Penumpang')}</p>
                               <p className="text-xs text-slate-500 dark:text-white/50">{m.passenger_gender}</p>
                             </div>
                             {m.id === activeJob.carpool_group_id && (
@@ -2531,13 +2540,13 @@ export function PolyRiderHome() {
                     {activeJob.id === activeJob.carpool_group_id && carpoolRequests.length > 0 && (
                       <div>
                         <h4 className="text-xs font-bold text-orange-500 uppercase tracking-widest mb-2 mt-4">
-                          Permintaan Baru ({carpoolRequests.length})
+                          {t('gig:new_requests_count', 'Permintaan Baru ({{count}})', { count: carpoolRequests.length })}
                         </h4>
                         <div className="space-y-2">
                           {carpoolRequests.map(req => (
                             <div key={req.id} className="bg-orange-50 dark:bg-orange-500/10 p-3 rounded-xl flex items-center justify-between border border-orange-200 dark:border-orange-500/20">
                               <div>
-                                <p className="font-bold text-sm text-slate-900 dark:text-white">{req.student?.full_name || 'Penumpang'}</p>
+                                <p className="font-bold text-sm text-slate-900 dark:text-white">{req.student?.full_name || t('gig:passenger_default', 'Penumpang')}</p>
                                 <p className="text-xs text-slate-500 dark:text-white/50">{req.passenger_gender}</p>
                               </div>
                               <div className="flex items-center gap-2">
@@ -2567,7 +2576,7 @@ export function PolyRiderHome() {
                 {activeJob.status === 'CARPOOL_REQUEST' && (
                   <div className="flex-1 flex flex-col items-center justify-center">
                     <div className="w-10 h-10 border-4 border-slate-200 dark:border-zinc-800 border-t-blue-500 rounded-full animate-spin mb-4" />
-                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">Harap Bersabar</p>
+                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">{t('gig:please_be_patient', 'Harap Bersabar')}</p>
                   </div>
                 )}
 
@@ -2577,7 +2586,7 @@ export function PolyRiderHome() {
                       onClick={handleLockCarpool}
                       className="w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-2xl transition-colors"
                     >
-                      Tutup Carpool & Cari Rider
+                      {t('gig:close_carpool_find_rider', 'Tutup Carpool & Cari Rider')}
                     </button>
                   )}
 
@@ -2585,7 +2594,7 @@ export function PolyRiderHome() {
                     onClick={() => setIsCancelModalOpen(true)}
                     className="w-full py-4 rounded-xl font-bold text-slate-500 dark:text-white/50 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 transition-colors"
                   >
-                    Batal {activeJob.status === 'CARPOOL_REQUEST' ? 'Permintaan' : 'Carpool'}
+                    {t('gig:cancel_btn', 'Batal')} {activeJob.status === 'CARPOOL_REQUEST' ? t('gig:request_word', 'Permintaan') : t('gig:carpool_word', 'Carpool')}
                   </button>
                 </div>
 
@@ -2608,46 +2617,49 @@ export function PolyRiderHome() {
       {tripHistory.length > 0 && !isSearching && !activeJob && (
         <div className="mt-8">
           <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 mb-3 flex items-center gap-2">
-            <History className="w-3 h-3" /> Perjalanan Terkini
+            <History className="w-3 h-3" /> {t('gig:recent_trips', 'Perjalanan Terkini')}
           </p>
           <div className="flex gap-3 overflow-x-auto pb-4 snap-x snap-mandatory hide-scrollbar">
-            {tripHistory.map(t => (
-              <div key={t.id} className="min-w-[240px] w-[240px] shrink-0 snap-center bg-white dark:bg-zinc-900 border border-slate-100 dark:border-white/5 shadow-sm rounded-2xl p-4 flex flex-col relative overflow-hidden">
-                {/* Background decorative blob */}
-                <div className={`absolute -right-6 -top-6 w-20 h-20 rounded-full  opacity-20 ${t.status === 'COMPLETED' ? 'bg-emerald-500' : 'bg-red-500'}`} />
-                
-                <div className="flex justify-between items-start mb-4 relative z-10">
-                  <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${
-                    t.status === 'COMPLETED' 
-                      ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
-                      : 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'
-                  }`}>
-                    {t.status === 'COMPLETED' ? 'Selesai' : 'Batal'}
-                  </div>
-                  <p className="text-[10px] font-bold text-slate-400 dark:text-white/40">
-                    {new Date(t.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' })}
-                  </p>
-                </div>
-
-                <div className="flex-1 flex flex-col gap-3 relative z-10">
-                  <div className="absolute left-[5px] top-2 bottom-2 w-[2px] bg-slate-100 dark:bg-white/10" />
+            {tripHistory.map(trip => {
+              const isTripCompleted = trip.status === 'COMPLETED';
+              return (
+                <div key={trip.id} className="min-w-[240px] w-[240px] shrink-0 snap-center bg-white dark:bg-zinc-900 border border-slate-100 dark:border-white/5 shadow-sm rounded-2xl p-4 flex flex-col relative overflow-hidden">
+                  {/* Background decorative blob */}
+                  <div className={`absolute -right-6 -top-6 w-20 h-20 rounded-full  opacity-20 ${isTripCompleted ? 'bg-emerald-500' : 'bg-red-500'}`} />
                   
-                  <div className="flex items-start gap-3 relative z-10">
-                     <div className="w-3 h-3 rounded-full bg-blue-500 ring-4 ring-white dark:ring-zinc-900 mt-0.5 shrink-0" />
-                     <p className="text-xs font-bold text-slate-700 dark:text-white/80 line-clamp-2 leading-tight">{t.pickup_name}</p>
+                  <div className="flex justify-between items-start mb-4 relative z-10">
+                    <div className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${
+                      isTripCompleted 
+                        ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' 
+                        : 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400'
+                    }`}>
+                      {isTripCompleted ? t('gig:status_completed', 'Selesai') : t('gig:status_cancelled', 'Batal')}
+                    </div>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-white/40">
+                      {new Date(trip.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short' })}
+                    </p>
                   </div>
-                  <div className="flex items-start gap-3 relative z-10">
-                     <div className="w-3 h-3 rounded-full bg-rose-500 ring-4 ring-white dark:ring-zinc-900 mt-0.5 shrink-0" />
-                     <p className="text-xs font-bold text-slate-700 dark:text-white/80 line-clamp-2 leading-tight">{t.dropoff_name}</p>
-                  </div>
-                </div>
 
-                <div className="mt-4 pt-3 border-t border-slate-50 dark:border-white/5 flex justify-between items-end relative z-10">
-                  <span className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest">Tambang</span>
-                  <span className="text-sm font-black text-slate-900 dark:text-white leading-none">RM {Number(t.proposed_price).toFixed(2)}</span>
+                  <div className="flex-1 flex flex-col gap-3 relative z-10">
+                    <div className="absolute left-[5px] top-2 bottom-2 w-[2px] bg-slate-100 dark:bg-white/10" />
+                    
+                    <div className="flex items-start gap-3 relative z-10">
+                       <div className="w-3 h-3 rounded-full bg-blue-500 ring-4 ring-white dark:ring-zinc-900 mt-0.5 shrink-0" />
+                       <p className="text-xs font-bold text-slate-700 dark:text-white/80 line-clamp-2 leading-tight">{trip.pickup_name}</p>
+                    </div>
+                    <div className="flex items-start gap-3 relative z-10">
+                       <div className="w-3 h-3 rounded-full bg-rose-500 ring-4 ring-white dark:ring-zinc-900 mt-0.5 shrink-0" />
+                       <p className="text-xs font-bold text-slate-700 dark:text-white/80 line-clamp-2 leading-tight">{trip.dropoff_name}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-slate-50 dark:border-white/5 flex justify-between items-end relative z-10">
+                    <span className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest">{t('gig:fare_label', 'Tambang')}</span>
+                    <span className="text-sm font-black text-slate-900 dark:text-white leading-none">RM {Number(trip.proposed_price).toFixed(2)}</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

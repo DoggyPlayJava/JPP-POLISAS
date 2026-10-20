@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
   Award,
+  Building2,
+  Lightbulb,
   CheckCircle2,
   AlertCircle,
   FileText,
@@ -235,7 +237,7 @@ export default function MakmpPublicFormPage({
         setCategories(cats);
         setAwards(awds);
       } catch (err: any) {
-        setErrorMessage('Gagal memuat turun maklumat anugerah: ' + err.message);
+        setErrorMessage(t('makmp:err_failed_download_awards', 'Gagal memuat turun maklumat anugerah:') + ' ' + err.message);
       } finally {
         setLoadingInitial(false);
       }
@@ -336,7 +338,7 @@ export default function MakmpPublicFormPage({
       const doneCode = sessionStorage.getItem('makmp_submitted_code');
       if (doneCode) {
         sessionStorage.removeItem('makmp_submitted_code');
-        navigate(`/makmp/status?code=${encodeURIComponent(doneCode)}`, { replace: true });
+        navigate('/makmp/status?code=' + encodeURIComponent(doneCode), { replace: true });
       }
     } catch { /* abaikan */ }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -491,7 +493,7 @@ export default function MakmpPublicFormPage({
           p_identifier: emailToUse,
         });
         if (rpcErr || !resolved || resolved.length === 0) {
-          throw new Error('No. Matrik tidak dijumpai dalam pangkalan data POLISAS.');
+          throw new Error(t('makmp:err_matric_not_found', 'No. Matrik tidak dijumpai dalam pangkalan data POLISAS.'));
         }
         if (resolved[0].error) throw new Error(resolved[0].error);
         emailToUse = resolved[0].email;
@@ -504,7 +506,7 @@ export default function MakmpPublicFormPage({
 
       if (authErr) {
         if (authErr.message === 'Invalid login credentials') {
-          throw new Error('No. Matrik / Emel atau kata laluan tidak tepat.');
+          throw new Error(t('makmp:err_invalid_credentials', 'No. Matrik / Emel atau kata laluan tidak tepat.'));
         }
         throw authErr;
       }
@@ -515,7 +517,7 @@ export default function MakmpPublicFormPage({
         setLoginPassword('');
       }
     } catch (err: any) {
-      setLoginError(err.message || 'Log masuk gagal. Sila cuba lagi.');
+      setLoginError(err.message || t('makmp:err_login_failed', 'Log masuk gagal. Sila cuba lagi.'));
     } finally {
       setIsLoggingIn(false);
     }
@@ -653,8 +655,7 @@ export default function MakmpPublicFormPage({
           `Profil anda kekal ${existingMatric}.`
         );
         setLoginError(
-          `No. Matrik borang (${dMatric}) tidak sepadan dengan akaun anda (${existingMatric}). ` +
-          `Profil anda dikekalkan - tiada perubahan dibuat pada No. Matrik.`
+          t('makmp:err_matric_mismatch_profile', 'No. Matrik borang ({{dMatric}}) tidak sepadan dengan akaun anda ({{existingMatric}}). Profil anda dikekalkan - tiada perubahan dibuat pada No. Matrik.', { dMatric, existingMatric })
         );
       } else {
         console.log('✅ Profil dilengkapkan dari data MAKMP untuk', dMatric);
@@ -678,7 +679,7 @@ export default function MakmpPublicFormPage({
       if (error) throw error;
     } catch (err: any) {
       console.error('[MAKMP Google link error]', err);
-      setLoginError(err.message || 'Gagal menyambung ke Google.');
+      setLoginError(err.message || t('makmp:err_google_connect_failed', 'Gagal menyambung ke Google.'));
       setIsGoogleLinking(false);
     }
   };
@@ -698,7 +699,7 @@ export default function MakmpPublicFormPage({
     let mappedType: MakmpPencapaianType = 'PESERTA';
     const nUpper = (cert.nama_pencapaian || '').toUpperCase();
     if (nUpper.includes('JOHAN') && !nUpper.includes('NAIB')) mappedType = 'JOHAN';
-    else if (nUpper.includes('NAIB JOHAN') || nUpper.includes('KEDUA')) mappedType = 'NAIB_JOHAN';
+    else if ((nUpper.includes('NAIB') && nUpper.includes('JOHAN')) || nUpper.includes('KEDUA')) mappedType = 'NAIB_JOHAN';
     else if (nUpper.includes('KETIGA')) mappedType = 'KETIGA';
     else if (nUpper.includes('EMAS') || nUpper.includes('GOLD')) mappedType = 'EMAS';
     else if (nUpper.includes('PERAK') || nUpper.includes('SILVER')) mappedType = 'PERAK';
@@ -735,7 +736,7 @@ export default function MakmpPublicFormPage({
         const aw = awards.find((a) => a.id === certPickerTargetAwardId);
         const limit = aw?.max_certificates || 5;
         if (awardDocs.length >= limit) {
-          alert(`Had maksimum ${limit} dokumen untuk anugerah ini telah dicapai.`);
+          alert(t('makmp:alert_max_docs_reached', 'Had maksimum {{limit}} dokumen untuk anugerah ini telah dicapai.', { limit }));
           return prev;
         }
         const newSlot: CertFormItem = {
@@ -790,7 +791,7 @@ export default function MakmpPublicFormPage({
         [award.id]: [
           {
             id: crypto.randomUUID(),
-            nama_pencapaian: isReport ? `Laporan ${award?.name || 'Anugerah'}` : '',
+            nama_pencapaian: isReport ? t('makmp:report_award_prefix', 'Laporan {{awardName}}', { awardName: award?.name || t('makmp:award_default', 'Anugerah') }) : '',
             document_type: isReport ? 'LAPORAN' : 'SIJIL',
             peringkat: isReport ? 'POLITEKNIK' : 'KEBANGSAAN',
             pencapaian_type: isReport ? 'PESERTA' : 'PESERTA',
@@ -901,19 +902,19 @@ export default function MakmpPublicFormPage({
 
   // Validasi Step 1
   const validateStep1 = () => {
-    if (!fullName.trim()) return 'Sila masukkan Nama Penuh anda.';
-    if (!matricNo.trim()) return 'Sila masukkan No. Matrik POLISAS yang sah.';
-    if (!phone.trim()) return 'Sila masukkan No. Telefon / WhatsApp untuk dihubungi.';
-    if (!department) return 'Sila pilih Jabatan akademik anda.';
-    if (!intakeYear) return 'Sila pilih Tahun Pengambilan anda.';
-    if (!intakePeriod) return 'Sila pilih Sesi Pengambilan anda.';
+    if (!fullName.trim()) return t('makmp:val_err_fullname_required', 'Sila masukkan Nama Penuh anda.');
+    if (!matricNo.trim()) return t('makmp:val_err_matric_required', 'Sila masukkan No. Matrik POLISAS yang sah.');
+    if (!phone.trim()) return t('makmp:val_err_phone_required', 'Sila masukkan No. Telefon / WhatsApp untuk dihubungi.');
+    if (!department) return t('makmp:val_err_dept_required', 'Sila pilih Jabatan akademik anda.');
+    if (!intakeYear) return t('makmp:val_err_intake_year_required', 'Sila pilih Tahun Pengambilan anda.');
+    if (!intakePeriod) return t('makmp:val_err_intake_period_required', 'Sila pilih Sesi Pengambilan anda.');
     return null;
   };
 
   // Validasi Step 2
   const validateStep2 = () => {
     if (selectedAwardIds.length === 0) {
-      return 'Sila pilih sekurang-kurangnya satu anugerah yang ingin dimohon.';
+      return t('makmp:val_err_at_least_one_award', 'Sila pilih sekurang-kurangnya satu anugerah yang ingin dimohon.');
     }
     // Periksa anugerah ENTITY memerlukan nama entiti
     for (const awardId of selectedAwardIds) {
@@ -921,7 +922,7 @@ export default function MakmpPublicFormPage({
       if (aw && aw.target_type === 'ENTITY') {
         const entData = awardEntityData[awardId];
         if (!entData?.entity_name?.trim()) {
-          return `Sila nyatakan Nama Kelab / Syarikat / Projek bagi anugerah "${aw.name}".`;
+          return t('makmp:val_err_entity_name_required', 'Sila nyatakan Nama Kelab / Syarikat / Projek bagi anugerah "{{awardName}}".', { awardName: aw.name });
         }
       }
     }
@@ -934,22 +935,24 @@ export default function MakmpPublicFormPage({
       const aw = awards.find((a) => a.id === awardId);
       const docs = awardDocuments[awardId] || [];
       if (docs.length === 0) {
-        return `Sila muat naik sekurang-kurangnya satu fail dokumen untuk "${aw?.name || 'anugerah'}".`;
+        return t('makmp:val_err_at_least_one_doc', 'Sila muat naik sekurang-kurangnya satu fail dokumen untuk "{{awardName}}".', { awardName: aw?.name || t('makmp:award_default', 'anugerah') });
       }
 
       for (let i = 0; i < docs.length; i++) {
         const d = docs[i];
         if (!d.nama_pencapaian.trim()) {
-          return `${aw?.name} - Dokumen #${i + 1}: Sila nyatakan tajuk dokumen / aktiviti.`;
+          return t('makmp:val_err_doc_title_required', '{{awardName}} - Dokumen #{{num}}: Sila nyatakan tajuk dokumen / aktiviti.', { awardName: aw?.name, num: i + 1 });
         }
         if (!d.file && !d.uploadedUrl) {
-          return `${aw?.name} - Dokumen #${i + 1}: Sila pilih fail PDF atau gambar sijil.`;
+          return t('makmp:val_err_doc_file_required', '{{awardName}} - Dokumen #{{num}}: Sila pilih fail PDF atau gambar sijil.', { awardName: aw?.name, num: i + 1 });
         }
         if (d.file && d.file.size > 100 * 1024 * 1024) {
-          return `${aw?.name} - Dokumen #${i + 1}: Saiz fail "${d.file.name}" (${(
-            d.file.size /
-            (1024 * 1024)
-          ).toFixed(1)}MB) melebihi had maksimum 100MB. Sila pilih fail yang lebih kecil.`;
+          return t('makmp:val_err_file_size_exceeded', '{{awardName}} - Dokumen #{{num}}: Saiz fail "{{fileName}}" ({{size}}MB) melebihi had maksimum 100MB. Sila pilih fail yang lebih kecil.', {
+            awardName: aw?.name,
+            num: i + 1,
+            fileName: d.file.name,
+            size: (d.file.size / (1024 * 1024)).toFixed(1)
+          });
         }
       }
     }
@@ -963,7 +966,7 @@ export default function MakmpPublicFormPage({
 
     // Double-submission guard: kalau dah berjaya submit, jangan hantar lagi.
     if (submissionResult) {
-      setErrorMessage('Permohonan anda telah dihantar. Semak status menggunakan kod rujukan di bawah.');
+      setErrorMessage(t('makmp:err_already_submitted', 'Permohonan anda telah dihantar. Semak status menggunakan kod rujukan di bawah.'));
       setStep(4);
       scrollToTop();
       return;
@@ -978,14 +981,14 @@ export default function MakmpPublicFormPage({
     }
 
     if (!edition) {
-      setErrorMessage('Maklumat edisi anugerah tidak lengkap.');
+      setErrorMessage(t('makmp:err_edition_incomplete', 'Maklumat edisi anugerah tidak lengkap.'));
       return;
     }
 
     // Gating tempoh (defense-in-depth): halang permohonan BARU selepas deadline.
     // Edit (kemaskini) TIDAK dihalang di sini - hanya permohonan baru.
     if (!isEditMode && isDeadlinePassed) {
-      setErrorMessage('Tempoh permohonan telah tamat. Permohonan baharu tidak lagi diterima.');
+      setErrorMessage(t('makmp:err_app_period_ended', 'Tempoh permohonan telah tamat. Permohonan baharu tidak lagi diterima.'));
       scrollToError();
       return;
     }
@@ -1040,7 +1043,7 @@ export default function MakmpPublicFormPage({
       let completedUploads = 0;
       setUploadProgressText(
         pendingUploads.length > 0
-          ? `Memuat naik ${pendingUploads.length} fail secara serentak...`
+          ? t('makmp:uploading_files_parallel', 'Memuat naik {{count}} fail secara serentak...', { count: pendingUploads.length })
           : ''
       );
 
@@ -1052,11 +1055,11 @@ export default function MakmpPublicFormPage({
               uploadResults[pu.key] = res;
               completedUploads++;
               setUploadProgressText(
-                `Memuat naik fail ${completedUploads} / ${pendingUploads.length}...`
+                t('makmp:uploading_files_progress', 'Memuat naik fail {{current}} / {{total}}...', { current: completedUploads, total: pendingUploads.length })
               );
             })
             .catch((e) => {
-              throw new Error(`Gagal memuat naik fail: ${e?.message || 'ralat tidak diketahui'}`);
+              throw new Error(t('makmp:err_upload_file_failed', 'Gagal memuat naik fail: {{error}}', { error: e?.message || t('makmp:unknown_error', 'ralat tidak diketahui') }));
             })
         )
       );
@@ -1083,7 +1086,7 @@ export default function MakmpPublicFormPage({
           }
 
           if (!fileUrl) {
-            throw new Error(`Gagal memuat naik fail untuk ${aw?.name || 'anugerah'} (#${i + 1}).`);
+            throw new Error(t('makmp:err_upload_file_for_award', 'Gagal memuat naik fail untuk {{awardName}} (#{{num}}).', { awardName: aw?.name || t('makmp:award_default', 'anugerah'), num: i + 1 }));
           }
 
           uploadedItemsForAward.push({
@@ -1114,7 +1117,7 @@ export default function MakmpPublicFormPage({
 
       // ── EDIT MODE: kemaskini submission sedia ada (bukan hantar baru) ──
       if (isEditMode && existingSubmissionId) {
-        setUploadProgressText('Menyimpan kemaskini sijil...');
+        setUploadProgressText(t('makmp:saving_certs_update', 'Menyimpan kemaskini sijil...'));
 
         // Hantar SEMUA anugerah (termasuk anugerah BARU yang ditambah semasa edit).
         // RPC `save_makmp_submission_edit` akan cipta rekod anugerah baru + bind
@@ -1143,21 +1146,21 @@ export default function MakmpPublicFormPage({
         const updResult = await saveMakmpSubmissionEdit(existingSubmissionId, awardsPayload);
 
         if (!updResult.success) {
-          throw new Error(updResult.message || 'Gagal mengemaskini permohonan.');
+          throw new Error(updResult.message || t('makmp:err_update_app_failed', 'Gagal mengemaskini permohonan.'));
         }
 
         // Berjaya - bawa ke halaman status (bukan resit baru).
         // tracking_code sedia ada kekal sama.
         if (existingTrackingCode) {
-          navigate(`/makmp/status?code=${encodeURIComponent(existingTrackingCode)}`, { replace: true });
+          navigate('/makmp/status?code=' + encodeURIComponent(existingTrackingCode), { replace: true });
         } else {
-          setErrorMessage('Permohonan berjaya dikemaskini. Sila semak status anda.');
+          setErrorMessage(t('makmp:app_update_success', 'Permohonan berjaya dikemaskini. Sila semak status anda.'));
         }
         scrollToTop();
         return;
       }
 
-      setUploadProgressText('Menyimpan rekod permohonan berbilang anugerah...');
+      setUploadProgressText(t('makmp:saving_multi_award_record', 'Menyimpan rekod permohonan berbilang anugerah...'));
       const trackingCode = generateTrackingCode(edition.year);
 
       // 2. Simpan permohonan ke pangkalan data
@@ -1191,7 +1194,7 @@ export default function MakmpPublicFormPage({
       scrollToTop();
     } catch (err: any) {
       console.error('[MAKMP Multi-Award Submission Error]', err);
-      setErrorMessage(err.message || 'Berlaku ralat semasa menghantar permohonan. Sila cuba lagi.');
+      setErrorMessage(err.message || t('makmp:err_submit_failed', 'Berlaku ralat semasa menghantar permohonan. Sila cuba lagi.'));
       scrollToTop();
     } finally {
       setIsSubmitting(false);
@@ -1213,7 +1216,7 @@ export default function MakmpPublicFormPage({
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 transition-colors">
         <Loader2 className="w-10 h-10 text-amber-500 dark:text-amber-400 animate-spin mb-4" />
-        <p className="text-slate-600 dark:text-slate-400 font-medium">Memuat turun maklumat anugerah POLISAS...</p>
+        <p className="text-slate-600 dark:text-slate-400 font-medium">{t('makmp:loading_awards_info', 'Memuat turun maklumat anugerah POLISAS...')}</p>
       </div>
     );
   }
@@ -1248,7 +1251,7 @@ export default function MakmpPublicFormPage({
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 transition-colors">
         <Loader2 className="w-10 h-10 text-amber-500 dark:text-amber-400 animate-spin mb-4" />
-        <p className="text-slate-600 dark:text-slate-400 font-medium">Menyemak permohonan sedia ada...</p>
+        <p className="text-slate-600 dark:text-slate-400 font-medium">{t('makmp:checking_existing_app', 'Menyemak permohonan sedia ada...')}</p>
       </div>
     );
   }
@@ -1263,7 +1266,7 @@ export default function MakmpPublicFormPage({
         </p>
         {edition?.submission_deadline && (
           <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
-            Tarikh tutup: {new Date(edition.submission_deadline).toLocaleString('ms-MY', {
+            {t('makmp:closing_date_label', 'Tarikh tutup:')} {new Date(edition.submission_deadline).toLocaleString('ms-MY', {
               dateStyle: 'long',
               timeStyle: 'short',
             })}
@@ -1290,7 +1293,7 @@ export default function MakmpPublicFormPage({
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-amber-500 selection:text-slate-950 transition-colors">
 
-      <MakmpJppHeader subtitle="Majlis Anugerah Kecemerlangan" />
+      <MakmpJppHeader subtitle={t('makmp:header_subtitle_ceremony', 'Majlis Anugerah Kecemerlangan')} />
       {/* Header Bar */}
       <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/60  sticky top-0 z-30 transition-colors">
         <div className="max-w-4xl mx-auto px-4 py-3.5 flex items-center justify-between">
@@ -1331,14 +1334,14 @@ export default function MakmpPublicFormPage({
             </div>
             <div className="flex-1">
               <div className="font-bold text-sm text-sky-900 dark:text-sky-200 flex items-center gap-2">
-                Mod Kemaskini Permohonan
+                {t('makmp:edit_mode_title', 'Mod Kemaskini Permohonan')}
               </div>
               <p className="text-xs text-sky-700 dark:text-sky-300/80 mt-0.5">
-                Anda sedang mengemaskini permohonan sedia ada
+                {t('makmp:edit_mode_desc_prefix', 'Anda sedang mengemaskini permohonan sedia ada')}
                 {existingTrackingCode && (
                   <span className="ml-1 font-mono font-semibold text-sky-800 dark:text-sky-200">({existingTrackingCode})</span>
                 )}.
-                Kod rujukan anda kekal sama. Sila semak & simpan perubahan sebelum juri mula menyemak.
+                {' '}{t('makmp:edit_mode_desc_suffix', 'Kod rujukan anda kekal sama. Sila semak & simpan perubahan sebelum juri mula menyemak.')}
               </p>
             </div>
           </div>
@@ -1375,11 +1378,11 @@ export default function MakmpPublicFormPage({
                   </div>
                   <div className="p-2 rounded-lg bg-amber-50/50 dark:bg-slate-900 border border-amber-200/50 dark:border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase block">{t('co_curriculum_points')}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">Maks 50 Merit</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{t('makmp:max_50_merit', 'Maks 50 Merit')}</span>
                   </div>
                   <div className="p-2 rounded-lg bg-amber-50/50 dark:bg-slate-900 border border-amber-200/50 dark:border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase block">{t('leadership_points')}</span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200">JPP & Kelab</span>
+                    <span className="font-bold text-slate-800 dark:text-slate-200">{t('makmp:jpp_and_clubs', 'JPP & Kelab')}</span>
                   </div>
                   <div className="p-2 rounded-lg bg-amber-50/50 dark:bg-slate-900 border border-amber-200/50 dark:border-slate-800">
                     <span className="text-[10px] text-slate-400 uppercase block">{t('community_service')}</span>
@@ -1393,7 +1396,7 @@ export default function MakmpPublicFormPage({
                 <div className="grid grid-cols-4 gap-1.5 sm:gap-3">
                   {[
                     { num: 1, label: t('nom_step_applicant', 'Biodata'), fullLabel: t('nom_step_applicant', 'Maklumat Calon') },
-                    { num: 2, label: `${t('nom_step_awards', 'Anugerah')} (${selectedAwardIds.length})`, fullLabel: `${t('nom_step_awards', 'Pilihan Anugerah')} (${selectedAwardIds.length})` },
+                    { num: 2, label: t('makmp:nom_step_awards', 'Anugerah') + ' (' + selectedAwardIds.length + ')', fullLabel: t('makmp:nom_step_awards', 'Pilihan Anugerah') + ' (' + selectedAwardIds.length + ')' },
                     { num: 3, label: t('nom_step_documents', 'Dokumen'), fullLabel: t('nom_step_documents', 'Muat Naik Sijil') },
                     { num: 4, label: t('nom_step_review', 'Hantar'), fullLabel: t('nom_step_review', 'Pengesahan & Hantar') },
                   ].map((s) => {
@@ -1542,12 +1545,12 @@ export default function MakmpPublicFormPage({
                   <div className="flex items-start gap-2.5">
                     <AlertCircle className="w-5 h-5 text-amber-500 dark:text-amber-400 shrink-0 mt-0.5" />
                     <div className="text-sm">
-                      <div className="font-bold text-amber-900 dark:text-amber-200">Emel Google berbeza dengan emel borang</div>
+                      <div className="font-bold text-amber-900 dark:text-amber-200">{t('makmp:google_email_mismatch_title', 'Emel Google berbeza dengan emel borang')}</div>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                        Akaun Google anda (<span className="font-mono font-semibold text-amber-700 dark:text-amber-300">{emailMismatch.google}</span>) tidak sama dengan emel yang anda isi dalam borang (<span className="font-mono font-semibold text-amber-700 dark:text-amber-300">{emailMismatch.form}</span>).
+                        {t('makmp:google_email_mismatch_desc', 'Akaun Google anda ({{google}}) tidak sama dengan emel yang anda isi dalam borang ({{form}}).', { google: emailMismatch.google, form: emailMismatch.form })}
                       </p>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                        Jika No. Matrik anda betul, tekan <b>Sahkan & Link</b>. Jika ini akaun Google yang salah, tekan <b>Tukar Akaun</b>.
+                        {t('makmp:google_email_mismatch_instructions', 'Jika No. Matrik anda betul, tekan Sahkan & Link. Jika ini akaun Google yang salah, tekan Tukar Akaun.')}
                       </p>
                     </div>
                   </div>
@@ -1557,14 +1560,14 @@ export default function MakmpPublicFormPage({
                       onClick={confirmEmailMismatchLink}
                       className="flex-1 px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shadow-sm"
                     >
-                      Sahkan & Link Akaun
+                      {t('makmp:confirm_and_link_account', 'Sahkan & Link Akaun')}
                     </button>
                     <button
                       type="button"
                       onClick={cancelEmailMismatch}
                       className="flex-1 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-semibold text-xs transition border border-slate-200 dark:border-transparent"
                     >
-                      Tukar Akaun Google
+                      {t('makmp:switch_google_account', 'Tukar Akaun Google')}
                     </button>
                   </div>
                 </div>
@@ -1641,7 +1644,7 @@ export default function MakmpPublicFormPage({
                           required
                           value={loginIdentifier}
                           onChange={(e) => setLoginIdentifier(e.target.value)}
-                          placeholder="cth: 02DNS22F1001 atau emel"
+                          placeholder={t('makmp:login_identifier_placeholder', 'cth: 02DNS22F1001 atau emel')}
                           className="w-full px-3.5 py-2 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-xs"
                         />
                       </div>
@@ -1655,7 +1658,7 @@ export default function MakmpPublicFormPage({
                             required
                             value={loginPassword}
                             onChange={(e) => setLoginPassword(e.target.value)}
-                            placeholder="Kata laluan portal"
+                            placeholder={t('makmp:login_password_placeholder', 'Kata laluan portal')}
                             className="w-full px-3.5 py-2 pr-10 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-700 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-xs"
                           />
                           <button
@@ -1726,8 +1729,9 @@ export default function MakmpPublicFormPage({
                       </>
                     )}
                   </button>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
-                    💡 Daftar dengan Google supaya sijil & merit MAKMP anda auto-link ke akaun JPP Portal dan profil diisi automatik.
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed flex items-center gap-1.5">
+                    <Lightbulb className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+                    <span>{t('makmp:google_register_benefit_hint', 'Daftar dengan Google supaya sijil & merit MAKMP anda auto-link ke akaun JPP Portal dan profil diisi automatik.')}</span>
                   </p>
 
                   <div className="pt-3 border-t border-slate-200 dark:border-slate-800/80">
@@ -1737,7 +1741,7 @@ export default function MakmpPublicFormPage({
                     </label>
                     <StudentSearchCombobox
                       onSelectStudent={handleSelectStudent}
-                      placeholder="Taip Nama atau No. Matrik (cth: 02DNS...)"
+                      placeholder={t('makmp:search_student_placeholder', 'Taip Nama atau No. Matrik (cth: 02DNS...)')}
                     />
                   </div>
                 </div>
@@ -1747,7 +1751,7 @@ export default function MakmpPublicFormPage({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Nama Penuh (seperti dalam Kad Pelajar) <span className="text-rose-500 dark:text-rose-400">*</span>
+                    {t('makmp:fullname_as_in_ic', 'Nama Penuh (seperti dalam Kad Pelajar)')} <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -1761,7 +1765,7 @@ export default function MakmpPublicFormPage({
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Nombor Matrik <span className="text-rose-500 dark:text-rose-400">*</span>
+                    {t('makmp:nom_matric_no', 'Nombor Matrik')} <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <input
                     type="text"
@@ -1789,7 +1793,7 @@ export default function MakmpPublicFormPage({
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Emel Pelajar
+                    {t('makmp:nom_email', 'Emel Pelajar')}
                   </label>
                   <input
                     type="email"
@@ -1802,7 +1806,7 @@ export default function MakmpPublicFormPage({
 
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                    Jabatan Pengajian <span className="text-rose-500 dark:text-rose-400">*</span>
+                    {t('makmp:nom_department', 'Jabatan Pengajian')} <span className="text-rose-500 dark:text-rose-400">*</span>
                   </label>
                   <select
                     value={department}
@@ -1820,7 +1824,7 @@ export default function MakmpPublicFormPage({
                 <div className="grid grid-cols-2 gap-3 sm:col-span-2">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                      Kod Program
+                      {t('makmp:nom_program_code', 'Kod Program')}
                     </label>
                     <input
                       type="text"
@@ -1832,14 +1836,14 @@ export default function MakmpPublicFormPage({
                   </div>
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                      Tahun Pengambilan <span className="text-rose-500 dark:text-rose-400">*</span>
+                      {t('makmp:nom_intake_year', 'Tahun Pengambilan')} <span className="text-rose-500 dark:text-rose-400">*</span>
                     </label>
                     <select
                       value={intakeYear}
                       onChange={(e) => setIntakeYear(e.target.value ? Number(e.target.value) : '')}
                       className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 transition shadow-xs"
                     >
-                      <option value="">Pilih tahun...</option>
+                      <option value="">{t('makmp:select_year_placeholder', 'Pilih tahun...')}</option>
                       {INTAKE_YEARS().map((y) => (
                         <option key={y} value={y}>
                           {y}
@@ -1864,7 +1868,7 @@ export default function MakmpPublicFormPage({
                       }`}
                     >
                       Intake 1
-                      <span className="block text-[10px] font-normal opacity-70">Pertengahan Tahun</span>
+                      <span className="block text-[10px] font-normal opacity-70">{t('makmp:intake_mid_year', 'Pertengahan Tahun')}</span>
                     </button>
                     <button
                       type="button"
@@ -1876,12 +1880,12 @@ export default function MakmpPublicFormPage({
                       }`}
                     >
                       Intake 2
-                      <span className="block text-[10px] font-normal opacity-70">Awal Tahun</span>
+                      <span className="block text-[10px] font-normal opacity-70">{t('makmp:intake_early_year', 'Awal Tahun')}</span>
                     </button>
                   </div>
                   {intakeYear && intakePeriod && (
                     <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 font-medium">
-                      Semasa: Semester {semester}
+                      {t('makmp:current_semester_prefix', 'Semasa: Semester')} {semester}
                     </p>
                   )}
                 </div>
@@ -1927,11 +1931,11 @@ export default function MakmpPublicFormPage({
                     {t('award_categories')}
                   </h2>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    Anda boleh memilih lebih daripada satu anugerah. Tanda anugerah yang ingin dimohon mengikut kategori di bawah.
+                    {t('makmp:select_multiple_awards_desc', 'Anda boleh memilih lebih daripada satu anugerah. Tanda anugerah yang ingin dimohon mengikut kategori di bawah.')}
                   </p>
                 </div>
                 <div className="px-3 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-amber-800 dark:text-amber-300 font-bold text-xs shrink-0">
-                  {selectedAwardIds.length} Anugerah Dipilih
+                  {selectedAwardIds.length} {t('makmp:awards_selected_badge', 'Anugerah Dipilih')}
                 </div>
               </div>
 
@@ -1961,7 +1965,7 @@ export default function MakmpPublicFormPage({
                           <div>
                             <span className="font-bold text-sm text-slate-900 dark:text-white">{groupName}</span>
                             <span className="text-[11px] text-slate-500 dark:text-slate-400 ml-2">
-                              ({groupAwardList.length} Anugerah)
+                              ({groupAwardList.length} {t('makmp:awards_count_suffix', 'Anugerah')})
                             </span>
                           </div>
                         </div>
@@ -2015,7 +2019,7 @@ export default function MakmpPublicFormPage({
                                       )}
                                       {isReport && (
                                         <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-500/30 font-semibold">
-                                          Laporan Projek
+                                          {t('makmp:project_report_badge', 'Laporan Projek')}
                                         </span>
                                       )}
                                     </div>
@@ -2039,7 +2043,7 @@ export default function MakmpPublicFormPage({
                                 <div className="mt-3 pt-3 border-t border-amber-200 dark:border-amber-500/20 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                   <div>
                                     <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                      Nama Kelab / Syarikat / Pasukan / Projek <span className="text-rose-500 dark:text-rose-400">*</span>
+                                      {t('makmp:entity_name_label', 'Nama Kelab / Syarikat / Pasukan / Projek')} <span className="text-rose-500 dark:text-rose-400">*</span>
                                     </label>
                                     <input
                                       type="text"
@@ -2054,14 +2058,14 @@ export default function MakmpPublicFormPage({
                                           },
                                         }))
                                       }
-                                      placeholder="cth: Kelab Robotik POLISAS / RichTech Enterprise"
+                                      placeholder={t('makmp:entity_name_placeholder', 'cth: Kelab Robotik POLISAS / RichTech Enterprise')}
                                       className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                                     />
                                   </div>
 
                                   <div>
                                     <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                                      Jawatan / Peranan Anda
+                                      {t('makmp:applicant_role_label', 'Jawatan / Peranan Anda')}
                                     </label>
                                     <input
                                       type="text"
@@ -2075,7 +2079,7 @@ export default function MakmpPublicFormPage({
                                           },
                                         }))
                                       }
-                                      placeholder="cth: Yang Dipertua / Pengarah Projek / Pengasas"
+                                      placeholder={t('makmp:applicant_role_placeholder', 'cth: Yang Dipertua / Pengarah Projek / Pengasas')}
                                       className="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                                     />
                                   </div>
@@ -2188,7 +2192,7 @@ export default function MakmpPublicFormPage({
                       </h3>
                       {awardEntityData[currentAward.id]?.entity_name && (
                         <p className="text-xs text-purple-700 dark:text-purple-300 mt-0.5">
-                          🏢 Entiti: <strong>{awardEntityData[currentAward.id].entity_name}</strong>
+                          <Building2 className="w-3.5 h-3.5 inline text-purple-600 mr-1" /> {t('makmp:entity_label', 'Entiti')}: <strong>{awardEntityData[currentAward.id].entity_name}</strong>
                           {awardEntityData[currentAward.id].applicant_role && (
                             <span> ({awardEntityData[currentAward.id].applicant_role})</span>
                           )}
@@ -2212,7 +2216,7 @@ export default function MakmpPublicFormPage({
                           <span>{t('makmp:official_template_provided', 'Templat Laporan Rasmi Disediakan')}</span>
                         </div>
                         <p className="text-xs text-slate-600 dark:text-slate-300">
-                          Unit penganjur menyediakan templat format laporan rasmi ({currentAward.template_name || 'Format Laporan'}). Sila muat turun dan lengkapkan laporan sebelum memuat naik sebagai fail PDF di bawah.
+                          {t('makmp:official_template_desc', 'Unit penganjur menyediakan templat format laporan rasmi ({{name}}). Sila muat turun dan lengkapkan laporan sebelum memuat naik sebagai fail PDF di bawah.', { name: currentAward.template_name || t('makmp:report_format_default', 'Format Laporan') })}
                         </p>
                       </div>
 
@@ -2244,7 +2248,7 @@ export default function MakmpPublicFormPage({
                           </div>
                           <div className="text-[11px] text-slate-500 dark:text-slate-400">
                             {studentAkademikCerts.length > 0
-                              ? `${studentAkademikCerts.length} sijil e-Akademik dikesan untuk profil ini.`
+                              ? t('makmp:akademik_certs_detected', '{{count}} sijil e-Akademik dikesan untuk profil ini.', { count: studentAkademikCerts.length })
                               : t('makmp:import_akademik_desc', 'Pilih terus sijil sedia ada daripada portal tanpa perlu muat naik semula fail.')}
                           </div>
                         </div>
@@ -2319,18 +2323,17 @@ export default function MakmpPublicFormPage({
                           {isReportFile && (
                             <div className="p-3 rounded-lg bg-sky-100/60 dark:bg-sky-500/10 border border-sky-200 dark:border-sky-500/30 text-xs text-sky-900 dark:text-sky-100/90 leading-relaxed space-y-1">
                               <p className="font-semibold text-sky-900 dark:text-sky-200">
-                                📄 {t('makmp:what_to_upload_title', 'Apa yang perlu dimuat naik?')}
+                                <FileText className="w-3.5 h-3.5 inline mr-1" /> {t('makmp:what_to_upload_title', 'Apa yang perlu dimuat naik?')}
                               </p>
                               <p>
                                 {t('makmp:what_to_upload_desc', 'Muat naik laporan lengkap dalam format PDF')}{' '}
                                 {currentAward?.template_url
-                                  ? <>mengikut templat rasmi ({currentAward?.template_name || 'Format Laporan'}).{' '}</>
-                                  : <><strong>tiada templat khusus</strong> - gunakan format laporan anda sendiri.{' '}</>}
+                                  ? <>mengikut templat rasmi ({currentAward?.template_name || t('makmp:report_format_default', 'Format Laporan')}).{' '}</>
+                                  : <><strong>{t('makmp:no_specific_template', 'tiada templat khusus')}</strong> - {t('makmp:use_own_report_format', 'gunakan format laporan anda sendiri.')}{' '}</>}
                                 {currentAward?.doc_instructions || ''}
                               </p>
                               <p className="text-sky-700 dark:text-sky-200/70">
-                                Anda <strong>tidak perlu</strong> isi markah atau tahap pencapaian - penilaian akan
-                                diberikan oleh juri/pegawai (markah 0-100).
+                                {t('makmp:no_score_needed_note_full', 'Anda tidak perlu isi markah atau tahap pencapaian - penilaian akan diberikan oleh juri/pegawai (markah 0-100).')}
                               </p>
                             </div>
                           )}
@@ -2358,8 +2361,8 @@ export default function MakmpPublicFormPage({
                                 }
                                 placeholder={
                                   isReportFile
-                                    ? 'cth: Laporan Tahunan Perusahaan RichTech Solutions 2025/2026'
-                                    : 'cth: Kejohanan Olahraga Politeknik Malaysia (SUKIPT)'
+                                    ? t('makmp:sample_report_placeholder', 'cth: Laporan Tahunan Perusahaan RichTech Solutions 2025/2026')
+                                    : t('makmp:sample_cert_placeholder', 'cth: Kejohanan Olahraga Politeknik Malaysia (SUKIPT)')
                                 }
                                 className="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                               />
@@ -2370,7 +2373,7 @@ export default function MakmpPublicFormPage({
                               <>
                                 <div>
                                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                    Peringkat <span className="text-rose-500 dark:text-rose-400">*</span>
+                                    {t('makmp:nom_cert_level', 'Peringkat')} <span className="text-rose-500 dark:text-rose-400">*</span>
                                   </label>
                                   <select
                                     value={doc.peringkat}
@@ -2394,7 +2397,7 @@ export default function MakmpPublicFormPage({
 
                                 <div>
                                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
-                                    Tahap Kejayaan <span className="text-rose-500 dark:text-rose-400">*</span>
+                                    {t('makmp:nom_cert_achievement_level', 'Tahap Kejayaan')} <span className="text-rose-500 dark:text-rose-400">*</span>
                                   </label>
                                   <select
                                     value={doc.pencapaian_type}
@@ -2427,7 +2430,7 @@ export default function MakmpPublicFormPage({
                                     : t('makmp:upload_cert_doc', 'Muat Naik Sijil / Dokumen Bukti (PDF / Gambar) *')}
                                 </label>
                                 <span className="text-[10px] text-slate-500 dark:text-slate-400">
-                                  {doc.source === 'E_AKADEMIK' ? 'Sumber: e-Akademik' : 'Maksimum 100MB'}
+                                  {doc.source === 'E_AKADEMIK' ? t('makmp:source_e_akademik', 'Sumber: e-Akademik') : t('makmp:max_100mb', 'Maksimum 100MB')}
                                 </span>
                               </div>
 
@@ -2440,7 +2443,7 @@ export default function MakmpPublicFormPage({
                                     <div className="min-w-0">
                                       <div className="flex items-center gap-2">
                                         <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-100 dark:bg-amber-500/30 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-500/40">
-                                          ✨ e-Akademik
+                                          e-Akademik
                                         </span>
                                         <span className="text-xs text-slate-900 dark:text-white font-medium truncate">
                                           {doc.filePreviewName || doc.nama_pencapaian}
@@ -2460,7 +2463,7 @@ export default function MakmpPublicFormPage({
                                               className="text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 font-semibold"
                                             >
                                               <ExternalLink className="w-3 h-3" />
-                                              <span>Papar Sijil</span>
+                                              <span>{t('makmp:view_cert_btn', 'Papar Sijil')}</span>
                                             </a>
                                           </>
                                         )}
@@ -2491,11 +2494,12 @@ export default function MakmpPublicFormPage({
                                     <Upload className="w-4 h-4 text-amber-500 dark:text-amber-400 shrink-0" />
                                     <span className="truncate">
                                       {doc.file
-                                        ? `Dipilih (baharu): ${doc.file.name} (${(doc.file.size / 1024).toFixed(
-                                            0
-                                          )} KB)`
+                                        ? t('makmp:file_selected_new', 'Dipilih (baharu): {{fileName}} ({{size}} KB)', {
+                                            fileName: doc.file.name,
+                                            size: (doc.file.size / 1024).toFixed(0)
+                                          })
                                         : doc.uploadedUrl
-                                        ? 'Sijil sedia ada - klik untuk tukar fail baharu'
+                                        ? t('makmp:existing_cert_click_replace', 'Sijil sedia ada - klik untuk tukar fail baharu')
                                         : isReportFile
                                         ? t('makmp:select_report_file', 'Pilih Fail Laporan Projek (PDF mengikut templat)...')
                                         : t('makmp:select_cert_file', 'Pilih Fail Sijil / Bukti (PDF / Gambar)...')}
@@ -2524,10 +2528,10 @@ export default function MakmpPublicFormPage({
                                         const f = e.target.files?.[0] || null;
                                         if (f && f.size > 100 * 1024 * 1024) {
                                           alert(
-                                            `Fail "${f.name}" berukuran ${(
-                                              f.size /
-                                              (1024 * 1024)
-                                            ).toFixed(1)}MB melebihi had maksimum 100MB.`
+                                            t('makmp:val_err_file_size_limit', 'Fail "{{fileName}}" berukuran {{size}}MB melebihi had maksimum 100MB.', {
+                                              fileName: f.name,
+                                              size: (f.size / (1024 * 1024)).toFixed(1)
+                                            })
                                           );
                                           e.target.value = '';
                                           return;
@@ -2545,7 +2549,7 @@ export default function MakmpPublicFormPage({
                                   {!isReportFile && (
                                     <button
                                       type="button"
-                                      title="Import daripada e-Akademik"
+                                      title={t('makmp:import_from_akademik_title', 'Import daripada e-Akademik')}
                                       onClick={() => {
                                         setCertPickerTargetAwardId(currentAward.id);
                                         setCertPickerTargetDocId(doc.id);
@@ -2618,12 +2622,12 @@ export default function MakmpPublicFormPage({
                 {isSubmitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>{uploadProgressText || (isEditMode ? 'Mengemaskini...' : 'Memproses Permohonan...')}</span>
+                    <span>{uploadProgressText || (isEditMode ? t('makmp:updating_btn', 'Mengemaskini...') : t('makmp:processing_app_btn', 'Memproses Permohonan...'))}</span>
                   </>
                 ) : (
                   <>
                     {isEditMode ? <Save className="w-4 h-4" /> : <ShieldCheck className="w-4 h-4" />}
-                    <span>{isEditMode ? t('makmp:update_nomination_btn', 'Kemaskini Permohonan') : `${t('makmp:submit_nomination_btn', 'Hantar Permohonan')} (${selectedAwardIds.length} ${t('makmp:nom_step_awards', 'Anugerah')})`}</span>
+                    <span>{isEditMode ? t('makmp:update_nomination_btn', 'Kemaskini Permohonan') : (t('makmp:submit_nomination_btn', 'Hantar Permohonan') + ' (' + selectedAwardIds.length + ' ' + t('makmp:nom_step_awards', 'Anugerah') + ')')}</span>
                   </>
                 )}
               </button>
@@ -2677,7 +2681,7 @@ export default function MakmpPublicFormPage({
                   ) : (
                     <>
                       <Copy className="w-3.5 h-3.5 text-slate-400" />
-                      <span>Salin Kod</span>
+                      <span>{t('makmp:nom_copy_code', 'Salin Kod')}</span>
                     </>
                   )}
                 </button>
@@ -2686,23 +2690,21 @@ export default function MakmpPublicFormPage({
               {/* QR Code */}
               <div className="p-4 rounded-xl bg-white border border-slate-200 dark:border-slate-800 max-w-[200px] mx-auto shadow-md">
                 <QRCode
-                  value={`${window.location.origin}/makmp/status?code=${encodeURIComponent(
-                    submissionResult.tracking_code
-                  )}`}
+                  value={window.location.origin + '/makmp/status?code=' + encodeURIComponent(submissionResult.tracking_code)}
                   size={168}
                   style={{ height: 'auto', maxWidth: '100%', width: '100%' }}
                   viewBox={`0 0 256 256`}
                 />
                 <div className="text-[10px] text-slate-600 dark:text-slate-700 font-semibold mt-2">
-                  Imbas untuk semak status
+                  {t('makmp:scan_to_check_status', 'Imbas untuk semak status')}
                 </div>
               </div>
 
               {/* Senarai Anugerah yang Dimohon */}
               <div className="text-left p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 space-y-3 text-xs">
                 <div className="font-bold text-slate-900 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center justify-between">
-                  <span>Senarai Anugerah Yang Dihantar:</span>
-                  <span className="text-amber-600 dark:text-amber-400">{selectedAwardIds.length} Anugerah</span>
+                  <span>{t('makmp:submitted_awards_list', 'Senarai Anugerah Yang Dihantar:')}</span>
+                  <span className="text-amber-600 dark:text-amber-400">{selectedAwardIds.length} {t('makmp:nom_step_awards', 'Anugerah')}</span>
                 </div>
 
                 <div className="space-y-2">
@@ -2730,7 +2732,7 @@ export default function MakmpPublicFormPage({
                         </div>
 
                         <span className="text-[11px] px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-transparent">
-                          {docs.length} dokumen
+                          {docs.length} {t('makmp:documents_count_suffix', 'dokumen')}
                         </span>
                       </div>
                     );
@@ -2738,11 +2740,11 @@ export default function MakmpPublicFormPage({
                 </div>
 
                 <div className="flex justify-between pt-2 border-t border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400">
-                  <span>Nama Pemohon:</span>
+                  <span>{t('makmp:applicant_name_label', 'Nama Pemohon:')}</span>
                   <span className="font-semibold text-slate-900 dark:text-white">{submissionResult.full_name}</span>
                 </div>
                 <div className="flex justify-between text-slate-500 dark:text-slate-400">
-                  <span>No. Matrik:</span>
+                  <span>{t('makmp:matric_no_colon', 'No. Matrik:')}</span>
                   <span className="font-semibold text-amber-600 dark:text-amber-400 font-mono">
                     {submissionResult.matric_no}
                   </span>
@@ -2758,10 +2760,10 @@ export default function MakmpPublicFormPage({
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-                        Belum ada akaun JPP Portal?
+                        {t('makmp:no_portal_account_yet_prompt', 'Belum ada akaun JPP Portal?')}
                       </h4>
                       <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-                        Daftar dengan Google sekarang supaya sijil & merit MAKMP ini auto-link ke dokumen peribadi e-akademik anda, dan profil diisi automatik daripada data borang ini.
+                        {t('makmp:register_google_benefit_desc', 'Daftar dengan Google sekarang supaya sijil & merit MAKMP ini auto-link ke dokumen peribadi e-akademik anda, dan profil diisi automatik daripada data borang ini.')}
                       </p>
                     </div>
                   </div>
@@ -2796,7 +2798,7 @@ export default function MakmpPublicFormPage({
                 <a
                   href={getMakmpWhatsAppUrl(
                     submissionResult,
-                    `${selectedAwardIds.length} Anugerah Dipohon`
+                    t('makmp:applied_awards_count', '{{count}} Anugerah Dipohon', { count: selectedAwardIds.length })
                   )}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -2807,7 +2809,7 @@ export default function MakmpPublicFormPage({
                 </a>
 
                 <Link
-                  to={`/makmp/status?code=${encodeURIComponent(submissionResult.tracking_code)}`}
+                  to={'/makmp/status?code=' + encodeURIComponent(submissionResult.tracking_code)}
                   className="flex-1 py-3 px-4 rounded-xl bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-white font-semibold text-sm transition flex items-center justify-center gap-2 border border-slate-200 dark:border-transparent shadow-sm"
                 >
                   <Search className="w-4 h-4 text-amber-500 dark:text-amber-400" />
@@ -2817,7 +2819,7 @@ export default function MakmpPublicFormPage({
 
               {/* Note */}
               <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed max-w-lg mx-auto">
-                💡 <span className="text-slate-700 dark:text-slate-300 font-medium">{t('makmp:important_note', 'Nota Penting:')}</span> {t('makmp:important_note_desc', 'Setiap anugerah akan dinilai secara bebas oleh juri berkaitan (cth: Unit Keusahawanan untuk anugerah keusahawanan, Unit Sukan untuk anugerah sukan). Merit yang diluluskan akan terus diselaraskan dengan e-akademik anda.')}
+                <Lightbulb className="w-3.5 h-3.5 inline text-amber-500 mr-1" /> <span className="text-slate-700 dark:text-slate-300 font-medium">{t('makmp:important_note', 'Nota Penting:')}</span> {t('makmp:important_note_desc', 'Setiap anugerah akan dinilai secara bebas oleh juri berkaitan (cth: Unit Keusahawanan untuk anugerah keusahawanan, Unit Sukan untuk anugerah sukan). Merit yang diluluskan akan terus diselaraskan dengan e-akademik anda.')}
               </p>
             </div>
           </div>
@@ -2834,10 +2836,10 @@ export default function MakmpPublicFormPage({
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                    Pilih Sijil Dari e-Akademik
+                    {t('makmp:select_cert_from_akademik_title', 'Pilih Sijil Dari e-Akademik')}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    Import terus sijil pencapaian yang pernah didaftarkan ke dalam sistem.
+                    {t('makmp:select_cert_from_akademik_desc', 'Import terus sijil pencapaian yang pernah didaftarkan ke dalam sistem.')}
                   </p>
                 </div>
               </div>
@@ -2866,7 +2868,7 @@ export default function MakmpPublicFormPage({
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent'
                   }`}
                 >
-                  Tahun Edisi ({edition?.year || 2026})
+                  {t('makmp:edition_year_tab', 'Tahun Edisi ({{year}})', { year: edition?.year || 2026 })}
                 </button>
                 <button
                   type="button"
@@ -2877,7 +2879,7 @@ export default function MakmpPublicFormPage({
                       : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-transparent'
                   }`}
                 >
-                  Semua Sijil ({studentAkademikCerts.length})
+                  {t('makmp:all_certs_tab', 'Semua Sijil ({{count}})', { count: studentAkademikCerts.length })}
                 </button>
               </div>
 
@@ -2887,7 +2889,7 @@ export default function MakmpPublicFormPage({
                   type="text"
                   value={certPickerSearch}
                   onChange={(e) => setCertPickerSearch(e.target.value)}
-                  placeholder="Cari nama aktiviti atau penganjur..."
+                  placeholder={t('makmp:search_cert_placeholder', 'Cari nama aktiviti atau penganjur...')}
                   className="w-full pl-9 pr-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 transition shadow-xs"
                 />
               </div>
@@ -2898,7 +2900,7 @@ export default function MakmpPublicFormPage({
               {loadingAkademikCerts ? (
                 <div className="py-12 text-center text-slate-500 dark:text-slate-400 space-y-2">
                   <Loader2 className="w-6 h-6 animate-spin mx-auto text-amber-500 dark:text-amber-400" />
-                  <div className="text-xs">Memuat turun rekod sijil e-Akademik...</div>
+                  <div className="text-xs">{t('makmp:loading_akademik_records', 'Memuat turun rekod sijil e-Akademik...')}</div>
                 </div>
               ) : (() => {
                 const targetYear = edition?.year || 2026;
@@ -2926,12 +2928,12 @@ export default function MakmpPublicFormPage({
                       </div>
                       <div>
                         <div className="text-sm font-bold text-slate-900 dark:text-white">
-                          Tiada Sijil Dijumpai
+                          {t('makmp:no_certs_found_title', 'Tiada Sijil Dijumpai')}
                         </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
                           {certPickerYearFilter === 'EDITION'
-                            ? `Tiada rekod sijil bagi tahun ${targetYear}. Anda boleh menukar ke tab 'Semua Sijil' atau memuat naik fail PDF sijil secara manual.`
-                            : 'Tiada rekod sijil dijumpai untuk akaun ini. Sila muat naik secara manual.'}
+                            ? t('makmp:no_certs_for_year_hint', 'Tiada rekod sijil bagi tahun {{year}}. Anda boleh menukar ke tab \'Semua Sijil\' atau memuat naik fail PDF sijil secara manual.', { year: targetYear })
+                            : t('makmp:no_certs_for_account_hint', 'Tiada rekod sijil dijumpai untuk akaun ini. Sila muat naik secara manual.')}
                         </p>
                       </div>
                       {certPickerYearFilter === 'EDITION' && studentAkademikCerts.length > 0 && (
@@ -2940,7 +2942,7 @@ export default function MakmpPublicFormPage({
                           onClick={() => setCertPickerYearFilter('ALL')}
                           className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-amber-700 dark:text-amber-400 transition border border-slate-200 dark:border-transparent"
                         >
-                          Lihat Sijil Semua Tahun ({studentAkademikCerts.length})
+                          {t('makmp:view_all_years_certs', 'Lihat Sijil Semua Tahun ({{count}})', { count: studentAkademikCerts.length })}
                         </button>
                       )}
                     </div>
@@ -2961,19 +2963,18 @@ export default function MakmpPublicFormPage({
                         <div className="space-y-1 min-w-0">
                           <div className="flex flex-wrap items-center gap-1.5">
                             <span
-                              className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                                cert.status === 'DISAHKAN'
-                                  ? 'bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
-                                  : cert.status === 'DITOLAK'
-                                  ? 'bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30'
-                                  : 'bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
-                              }`}
+                              className={cn(
+                                "text-[10px] font-bold px-2 py-0.5 rounded border",
+                                cert.status === 'DISAHKAN' && "bg-emerald-50 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30",
+                                cert.status === 'DITOLAK' && "bg-rose-50 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30",
+                                cert.status !== 'DISAHKAN' && cert.status !== 'DITOLAK' && "bg-amber-50 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30"
+                              )}
                             >
                               {cert.status === 'DISAHKAN'
-                                ? 'Disahkan EXCO'
+                                ? t('makmp:status_exco_verified', 'Disahkan EXCO')
                                 : cert.status === 'DITOLAK'
-                                ? 'Ditolak'
-                                : 'Menunggu Pengesahan'}
+                                ? t('makmp:status_rejected', 'Ditolak')
+                                : t('makmp:status_pending_verification', 'Menunggu Pengesahan')}
                             </span>
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-mono border border-slate-200 dark:border-transparent">
                               {certYear}
@@ -2983,13 +2984,13 @@ export default function MakmpPublicFormPage({
                             {cert.nama_pencapaian}
                           </h4>
                           <div className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-wrap items-center gap-2">
-                            <span>Peringkat: <strong className="text-slate-800 dark:text-slate-200">{cert.peringkat}</strong></span>
+                            <span>{t('makmp:level_label', 'Peringkat:')} <strong className="text-slate-800 dark:text-slate-200">{cert.peringkat}</strong></span>
                             <span>•</span>
-                            <span>Pencapaian: <strong className="text-slate-800 dark:text-slate-200">{cert.jenis}</strong></span>
+                            <span>{t('makmp:achievement_label', 'Pencapaian:')} <strong className="text-slate-800 dark:text-slate-200">{cert.jenis}</strong></span>
                             {cert.penganjur && (
                               <>
                                 <span>•</span>
-                                <span>Penganjur: {cert.penganjur}</span>
+                                <span>{t('makmp:organizer_label', 'Penganjur:')} {cert.penganjur}</span>
                               </>
                             )}
                           </div>
@@ -3000,7 +3001,7 @@ export default function MakmpPublicFormPage({
                           onClick={() => handleSelectAkademikCert(cert)}
                           className="px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs transition shrink-0 shadow-md shadow-amber-500/20"
                         >
-                          Pilih Sijil Ini
+                          {t('makmp:select_this_cert_btn', 'Pilih Sijil Ini')}
                         </button>
                       </div>
 
@@ -3013,7 +3014,7 @@ export default function MakmpPublicFormPage({
                             className="text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 font-semibold"
                           >
                             <ExternalLink className="w-3 h-3" />
-                            <span>Papar Pratonton Sijil Asal</span>
+                            <span>{t('makmp:view_original_cert_preview', 'Papar Pratonton Sijil Asal')}</span>
                           </a>
                         </div>
                       )}
@@ -3026,7 +3027,7 @@ export default function MakmpPublicFormPage({
             {/* Footer */}
             <div className="p-3 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-950/60 flex items-center justify-between">
               <span className="text-[11px] text-slate-500 dark:text-slate-400">
-                Peringatan: Juri MAKMP akan menyemak sijil secara bebas.
+                {t('makmp:jury_independent_review_warning', 'Peringatan: Juri MAKMP akan menyemak sijil secara bebas.')}
               </span>
               <button
                 type="button"
@@ -3037,7 +3038,7 @@ export default function MakmpPublicFormPage({
                 }}
                 className="px-3.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 transition border border-slate-200 dark:border-transparent"
               >
-                Tutup
+                {t('makmp:close_btn', 'Tutup')}
               </button>
             </div>
           </div>

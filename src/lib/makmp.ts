@@ -252,6 +252,18 @@ export const MAKMP_DEFAULT_AWARDS_2026: Omit<MakmpAwardDefinition, 'id' | 'editi
   },
 ];
 
+export const PRESET_CATEGORY_GROUPS: string[] = [
+  'ANUGERAH UTAMA',
+  'ANUGERAH AKADEMIK',
+  'ANUGERAH SUKAN',
+  'ANUGERAH KEUSAHAWANAN',
+  'ANUGERAH KELAB DAN PERSATUAN',
+  'ANUGERAH JPP',
+  'ANUGERAH PROGRAM',
+  'ANUGERAH KOLEJ KEDIAMAN',
+  'ANUGERAH KHAS',
+];
+
 export const MAKMP_CATEGORY_GROUP_META: Record<string, { label: string; icon: string; color: string }> = {
   'ANUGERAH KOLEJ KEDIAMAN': { label: 'Kolej Kediaman', icon: 'Home', color: 'from-amber-500/20 to-orange-500/20 border-amber-500/40 text-amber-400' },
   'ANUGERAH KEUSAHAWANAN': { label: 'Keusahawanan', icon: 'Briefcase', color: 'from-emerald-500/20 to-teal-500/20 border-emerald-500/40 text-emerald-400' },
