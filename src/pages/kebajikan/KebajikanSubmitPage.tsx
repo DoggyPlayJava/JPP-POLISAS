@@ -712,7 +712,7 @@ export function KebajikanSubmitPage() {
                       {t('submit_evidence_title')}
                     </label>
                     <span className="text-[10px] font-bold text-slate-400">
-                      {images.length}/3 keping
+                      {images.length}/3 {t('kebajikan:submit_images_unit', 'keping')}
                     </span>
                   </div>
 
@@ -726,12 +726,12 @@ export function KebajikanSubmitPage() {
                     {/* Thumbnails */}
                     {images.map((img, i) => (
                       <div key={i} className="relative w-24 h-24 rounded-2xl overflow-hidden border border-slate-200 dark:border-white/10 shadow-sm group">
-                        <img src={URL.createObjectURL(img)} alt={`Bukti ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                        <img src={URL.createObjectURL(img)} alt={`${t('kebajikan:submit_evidence_img', 'Bukti')} ${i + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                         <button
                           type="button"
                           onClick={() => setImages(prev => prev.filter((_, j) => j !== i))}
                           className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-slate-900/80 hover:bg-red-600 text-white flex items-center justify-center transition-colors shadow-md"
-                          title="Padam gambar"
+                          title={t('kebajikan:submit_delete_image', 'Padam gambar')}
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -842,9 +842,9 @@ export function KebajikanSubmitPage() {
                   if (isFormReady) {
                     setShowReviewModal(true);
                   } else if (images.length === 0) {
-                    alert('Sila muat naik sekurang-kurangnya 1 gambar sokongan sebelum menyemak.');
+                    alert(t('kebajikan:submit_min_image_check_alert', 'Sila muat naik sekurang-kurangnya 1 gambar sokongan sebelum menyemak.'));
                   } else {
-                    alert('Sila lengkapkan maklumat yang bertanda bintang (*) sebelum menyemak.');
+                    alert(t('kebajikan:submit_missing_fields_alert', 'Sila lengkapkan maklumat yang bertanda bintang (*) sebelum menyemak.'));
                   }
                 }}
                 disabled={!form.category || !form.full_name || !form.description}
@@ -869,14 +869,14 @@ export function KebajikanSubmitPage() {
             </div>
 
             <div className="rounded-2xl border border-slate-200 dark:border-white/[0.1] p-6 space-y-5 bg-white dark:bg-slate-900/80 shadow-sm">
-              <Row label="Nama" value={form.full_name} />
-              <Row label="No. Matrik" value={form.matric_no || '-'} />
-              <Row label="Telefon" value={form.phone || '-'} />
-              <Row label="Kelas" value={form.class || '-'} />
+              <Row label={t('common:name', 'Nama')} value={form.full_name} />
+              <Row label={t('common:matric_no', 'No. Matrik')} value={form.matric_no || '-'} />
+              <Row label={t('submit_phone_label', 'Telefon')} value={form.phone || '-'} />
+              <Row label={t('common:class', 'Kelas')} value={form.class || '-'} />
               <hr className="border-slate-200 dark:border-white/[0.08]" />
-              <Row label="Kategori" value={form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : '-'} highlight />
-              <Row label="Tajuk Aduan" value={buildTitle()} />
-              {getLocationSummary() && <Row label="Lokasi" value={getLocationSummary()} />}
+              <Row label={t('kebajikan:ticket_category', 'Kategori')} value={form.category ? KEBAJIKAN_CATEGORY_LABELS[form.category] : '-'} highlight />
+              <Row label={t('kebajikan:ticket_title', 'Tajuk Aduan')} value={buildTitle()} />
+              {getLocationSummary() && <Row label={t('kebajikan:location', 'Lokasi')} value={getLocationSummary()} />}
               <div>
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1.5">{t('submit_description_title')}</p>
                 <p className="text-xs text-slate-700 dark:text-white/70 leading-relaxed">{form.description}</p>
@@ -886,7 +886,7 @@ export function KebajikanSubmitPage() {
                   <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-2">{t('submit_evidence_title')} ({images.length})</p>
                   <div className="flex gap-2">
                     {images.map((img, i) => (
-                      <img key={i} src={URL.createObjectURL(img)} alt={`Bukti ${i+1}`} className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-white/10 shadow-sm" />
+                      <img key={i} src={URL.createObjectURL(img)} alt={`${t('kebajikan:submit_evidence_img', 'Bukti')} ${i+1}`} className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-white/10 shadow-sm" />
                     ))}
                   </div>
                 </div>
@@ -1035,7 +1035,7 @@ export function KebajikanSubmitPage() {
                   </div>
 
                   <Row label="Tajuk Aduan" value={buildTitle()} highlight />
-                  {getLocationSummary() && <Row label="Lokasi" value={getLocationSummary()} />}
+                  {getLocationSummary() && <Row label={t('kebajikan:location', 'Lokasi')} value={getLocationSummary()} />}
 
                   <div className="border-t border-slate-200 dark:border-white/10 pt-3">
                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">{t('submit_description_title')}</span>
@@ -1044,10 +1044,10 @@ export function KebajikanSubmitPage() {
 
                   <div className="border-t border-slate-200 dark:border-white/10 pt-3 space-y-2">
                     <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 block">{t('submit_complainant_info')}</span>
-                    <Row label="Nama" value={form.full_name} />
-                    <Row label="No. Matrik" value={form.matric_no || '-'} />
-                    <Row label="Telefon" value={form.phone || '-'} />
-                    <Row label="Kelas / Program" value={form.class || '-'} />
+                    <Row label={t('common:name', 'Nama')} value={form.full_name} />
+                    <Row label={t('common:matric_no', 'No. Matrik')} value={form.matric_no || '-'} />
+                    <Row label={t('submit_phone_label', 'Telefon')} value={form.phone || '-'} />
+                    <Row label={t('submit_class_label', 'Kelas / Program')} value={form.class || '-'} />
                   </div>
 
                   {images.length > 0 && (
@@ -1057,7 +1057,7 @@ export function KebajikanSubmitPage() {
                       </span>
                       <div className="flex gap-2">
                         {images.map((img, i) => (
-                          <img key={i} src={URL.createObjectURL(img)} alt={`Bukti ${i+1}`} className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-white/10 shadow-sm" />
+                          <img key={i} src={URL.createObjectURL(img)} alt={`${t('kebajikan:submit_evidence_img', 'Bukti')} ${i+1}`} className="w-16 h-16 rounded-xl object-cover border border-slate-200 dark:border-white/10 shadow-sm" />
                         ))}
                       </div>
                     </div>

@@ -899,7 +899,7 @@ export function UrusPerniagaanPage() {
                 /* Manual assignment when shift system is off */
                 <div className="space-y-3">
                   <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
-                    <UserPlus className="w-3.5 h-3.5" /> Assign Staff POS Manual (Hari Ini)
+                    <UserPlus className="w-3.5 h-3.5" /> {t('keusahawanan:shift_assign_manual_today', 'Assign Staff POS Manual (Hari Ini)')}
                   </p>
                   <div className="space-y-2">
                     {active.filter(m => m.role !== 'OWNER').map(m => {
@@ -972,9 +972,9 @@ export function UrusPerniagaanPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <BadgePercent className="w-4 h-4" style={{ color }} />
-                    <p className="text-sm font-black text-foreground">Sesi Baldi Wang (Cash Checkpoint)</p>
+                    <p className="text-sm font-black text-foreground">{t('keusahawanan:cash_checkpoint_title', 'Sesi Baldi Wang (Cash Checkpoint)')}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">Rekod amaun tunai dalam baldi pada sebarang masa (buka pagi, semak tengahari, tutup malam).</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{t('keusahawanan:cash_checkpoint_desc', 'Rekod amaun tunai dalam baldi pada sebarang masa (buka pagi, semak tengahari, tutup malam).')}</p>
                 </div>
                 <button onClick={() => isOwner && handleToggleFeature('cash_session_enabled', !cashSessionEnabled)}
                   disabled={toggSaving === 'cash_session_enabled' || !isOwner}
@@ -992,21 +992,21 @@ export function UrusPerniagaanPage() {
                 {/* Create form */}
                 <div className="lg:col-span-2 rounded-[2rem] bg-card border border-border p-6 space-y-4">
                   <p className="text-[10px] font-black uppercase tracking-widest text-foreground flex items-center gap-2">
-                    <Plus className="w-3.5 h-3.5" /> Cipta Kupon Baharu
+                    <Plus className="w-3.5 h-3.5" /> {t('keusahawanan:promo_create_new_btn', 'Cipta Kupon Baharu')}
                   </p>
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Kod Kupon</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">{t('keusahawanan:promo_code_label', 'Kod Kupon')}</p>
                       <input type="text" value={promoForm.code} onChange={e => setPromoForm(f => ({ ...f, code: e.target.value.toUpperCase() }))}
                         placeholder="JIMAT10" className="w-full h-9 px-3 rounded-xl text-xs font-black outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all tracking-widest" />
                     </div>
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Jenis Diskaun</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">{t('keusahawanan:promo_discount_type', 'Jenis Diskaun')}</p>
                       <select value={promoForm.discount_type} onChange={e => setPromoForm(f => ({ ...f, discount_type: e.target.value as PosDiscountType }))}
                         className="w-full h-9 px-3 rounded-xl text-xs font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
-                        <option value="PERCENT">Peratus (%)</option>
-                        <option value="FIXED">Tetap (RM)</option>
+                        <option value="PERCENT">{t('keusahawanan:promo_type_percent', 'Peratus (%)')}</option>
+                        <option value="FIXED">{t('keusahawanan:promo_type_fixed', 'Tetap (RM)')}</option>
                       </select>
                     </div>
                   </div>
@@ -1128,7 +1128,7 @@ export function UrusPerniagaanPage() {
                       <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: color }} />
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-xs font-black text-foreground">{LOG_LABELS[log.action_type] || log.action_type}</p>
+                          <p className="text-xs font-black text-foreground">{t(`keusahawanan:log_${log.action_type.toLowerCase()}`, LOG_LABELS[log.action_type] || log.action_type)}</p>
                           <span className="px-2 py-0.5 rounded-full bg-muted text-[9px] font-black uppercase text-muted-foreground">{log.action_type}</span>
                         </div>
                         <p className="text-[10px] text-muted-foreground mt-0.5">{log.description}</p>

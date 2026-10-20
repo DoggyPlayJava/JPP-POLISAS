@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
 type ProgramStatus     = 'upcoming' | 'active' | 'completed';
@@ -55,6 +56,7 @@ const statusMap: Record<ProgramStatus, { label: string; color: string; bg: strin
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 export function KeusahawananProgram() {
   const { color }                     = useExcoTheme();
+  const { t }                         = useTranslation(['keusahawanan', 'common']);
   const { user, profile, isSuperAdmin } = useAuth();
 
   // ── Auth helpers ──────────────────────────────────────────────────────────
@@ -293,10 +295,10 @@ export function KeusahawananProgram() {
         <div className="space-y-1">
           <div className="flex items-center gap-2.5 mb-2">
             <div className="w-1 h-5 rounded-full" style={{ background: color }} />
-            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">e-Keusahawanan</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/60">{t('keusahawanan:module_name', 'e-Keusahawanan')}</p>
           </div>
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground leading-tight">Program Keusahawanan</h1>
-          <p className="text-xs md:text-sm font-medium text-muted-foreground">Urus semua program, workshop dan pertandingan</p>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight text-foreground leading-tight">{t('keusahawanan:program_title', 'Program Keusahawanan')}</h1>
+          <p className="text-xs md:text-sm font-medium text-muted-foreground">{t('keusahawanan:program_subtitle', 'Urus semua program, workshop dan pertandingan')}</p>
         </div>
         {canManage && (
           <Button
@@ -305,7 +307,7 @@ export function KeusahawananProgram() {
             style={{ background: color }}
           >
             <Plus className="w-4 h-4" />
-            Tambah Program
+            {t('keusahawanan:program_new_btn', 'Tambah Program')}
           </Button>
         )}
       </motion.div>
@@ -318,7 +320,7 @@ export function KeusahawananProgram() {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Cari program..."
+            placeholder={t('keusahawanan:program_search_placeholder', 'Cari program...')}
             className="w-full h-12 pl-12 pr-4 rounded-2xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all"
           />
         </div>
@@ -336,7 +338,7 @@ export function KeusahawananProgram() {
                   : { background: 'transparent', borderColor: 'hsl(var(--border)/0.5)', color: 'hsl(var(--muted-foreground)/0.6)' }
               }
             >
-              {s === 'all' ? 'Semua' : statusMap[s].label}
+              {s === 'all' ? t('keusahawanan:program_all_status', 'Semua Status') : (s === 'upcoming' ? t('keusahawanan:program_upcoming', 'Akan Datang') : s === 'active' ? t('keusahawanan:program_active', 'Sedang Berjalan') : t('keusahawanan:program_completed', 'Selesai'))}
             </button>
           ))}
 
@@ -355,9 +357,9 @@ export function KeusahawananProgram() {
                       : { background: 'transparent', borderColor: 'hsl(var(--border)/0.5)', color: 'hsl(var(--muted-foreground)/0.6)' }
                   }
                 >
-                  {v === 'all' ? <><Globe className="w-3 h-3" /> Semua Visibiliti</> :
-                   v === 'AWAM' ? <><Globe className="w-3 h-3" /> Awam</> :
-                   <><Lock className="w-3 h-3" /> JPP Sahaja</>}
+                  {v === 'all' ? <><Globe className="w-3 h-3" /> {t('keusahawanan:program_all_visibility', 'Semua Visibiliti')}</> :
+                   v === 'AWAM' ? <><Globe className="w-3 h-3" /> {t('keusahawanan:program_vis_public', 'Awam')}</> :
+                   <><Lock className="w-3 h-3" /> {t('keusahawanan:program_vis_jpp_only', 'JPP Sahaja')}</>}
                 </button>
               ))}
             </>
@@ -374,7 +376,7 @@ export function KeusahawananProgram() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="py-20 text-center">
-          <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/40">Tiada program dijumpai</p>
+          <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/40">{t('keusahawanan:program_empty', 'Tiada program dijumpai')}</p>
           {canManage && (
             <button onClick={openCreate} className="mt-3 text-xs font-black underline underline-offset-2 transition-all"
               style={{ color }}>
@@ -480,7 +482,7 @@ export function KeusahawananProgram() {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5 text-[10px] font-black uppercase text-muted-foreground group-hover:text-foreground transition-colors">
-                      <span>Lihat Butiran</span>
+                      <span>{t('common:view_details', 'Lihat Butiran')}</span>
                       <ChevronRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                     </div>
 
@@ -612,7 +614,7 @@ export function KeusahawananProgram() {
                         ) : myRegistrations.includes(selectedProgram.id) ? (
                           <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
                         ) : null}
-                        {myRegistrations.includes(selectedProgram.id) ? 'Sudah Daftar Minat' : 'Daftar Minat'}
+                        {myRegistrations.includes(selectedProgram.id) ? t('keusahawanan:program_register_interest', 'Sudah Daftar Minat') : t('keusahawanan:program_register_interest', 'Daftar Minat')}
                       </Button>
                     )}
 

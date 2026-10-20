@@ -849,9 +849,9 @@ export function PosProductPage() {
         </div>
         <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
           className="h-11 px-4 rounded-2xl text-xs font-black outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
-          <option value="name">Nama A–Z</option>
-          <option value="margin">Margin Tertinggi</option>
-          <option value="stock">Stok Tertinggi</option>
+          <option value="name">{t('keusahawanan:pos_sort_name', 'Nama A–Z')}</option>
+          <option value="margin">{t('keusahawanan:pos_sort_margin', 'Margin Tertinggi')}</option>
+          <option value="stock">{t('keusahawanan:pos_sort_stock', 'Stok Tertinggi')}</option>
         </select>
       </div>
 
@@ -883,9 +883,9 @@ export function PosProductPage() {
                     ? <img src={p.image_url} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy" decoding="async" />
                     : <div className="w-full h-full flex items-center justify-center"><Package className="w-10 h-10 text-muted-foreground/20" /></div>
                   }
-                  {!p.is_available && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><span className="text-[10px] font-black uppercase text-white tracking-widest">Tidak Aktif</span></div>}
-                  {isOut && <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-black">HABIS</div>}
-                  {isLow && !isOut && <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center gap-1"><AlertTriangle className="w-2.5 h-2.5" /> Stok: {p.stock_quantity}</div>}
+                  {!p.is_available && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><span className="text-[10px] font-black uppercase text-white tracking-widest">{t('keusahawanan:pos_status_inactive', 'Tidak Aktif')}</span></div>}
+                  {isOut && <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-black">{t('keusahawanan:pos_out_of_stock_badge', 'HABIS')}</div>}
+                  {isLow && !isOut && <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-amber-500 text-white text-[9px] font-black flex items-center gap-1"><AlertTriangle className="w-2.5 h-2.5" /> {t('keusahawanan:pos_stock_qty', 'Stok: {{count}}', { count: p.stock_quantity })}</div>}
                   {/* Margin badge */}
                   {mi && (
                     <div className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-white text-[9px] font-black"
@@ -901,7 +901,7 @@ export function PosProductPage() {
 
                   <div className="tour-pos-product-stock flex items-center justify-between mb-1">
                     <span className="text-base font-black" style={{ color }}>{`RM ${p.price.toFixed(2)}`}</span>
-                    <span className="text-xs text-muted-foreground">Stok: {p.stock_quantity}</span>
+                    <span className="text-xs text-muted-foreground">{t('keusahawanan:pos_stock_qty', 'Stok: {{count}}', { count: p.stock_quantity })}</span>
                   </div>
 
                   {/* Margin bar */}
@@ -915,13 +915,13 @@ export function PosProductPage() {
                           {mi.label} · {mi.margin.toFixed(0)}%
                         </span>
                         <span className="text-[9px] text-muted-foreground/50">
-                          Untung: {fmtRM(mi.profit)}
+                          {t('keusahawanan:pos_profit_prefix', 'Untung: ')}{fmtRM(mi.profit)}
                         </span>
                       </div>
                     </div>
                   ) : (
                     <p className="text-[9px] text-muted-foreground/30 flex items-center gap-1">
-                      <Info className="w-2.5 h-2.5" /> Kos belum ditetapkan
+                      <Info className="w-2.5 h-2.5" /> {t('keusahawanan:pos_cost_not_set', 'Kos belum ditetapkan')}
                     </p>
                   )}
 
@@ -1069,7 +1069,7 @@ export function PosProductPage() {
 
                       {/* Basic Fields */}
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Nama Produk</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">{t('keusahawanan:pos_product_name', 'Nama Produk')}</p>
                         <input type="text" value={form.name}
                           onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                           placeholder="Nasi Lemak Ayam"
@@ -1078,7 +1078,7 @@ export function PosProductPage() {
 
                       {/* Category Selector */}
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Kategori Produk</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">{t('keusahawanan:pos_product_category', 'Kategori Produk')}</p>
                         <select value={form.category}
                           onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
                           className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
@@ -1090,7 +1090,7 @@ export function PosProductPage() {
 
                       {/* Description Textarea */}
                       <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Penerangan Produk (Pilihan)</p>
+                        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">{t('keusahawanan:pos_product_desc', 'Penerangan Produk (Pilihan)')}</p>
                         <textarea value={form.description}
                           onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
                           placeholder="Huraikan keistimewaan produk anda, ramuan, saiz, atau cara penyediaan..."
@@ -1123,7 +1123,7 @@ export function PosProductPage() {
                               <div className="space-y-4 pt-1">
                                 <div>
                                   <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">
-                                    Harga Jual (RM) <span className="text-rose-500">*</span>
+                                    {t('keusahawanan:pos_product_price', 'Harga Jual (RM)')} <span className="text-rose-500">*</span>
                                   </p>
                                   <input type="number" min="0" step="0.01"
                                     value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))}
@@ -1207,14 +1207,14 @@ export function PosProductPage() {
                           <div className="space-y-3">
                             <div className="grid grid-cols-2 gap-3 p-3.5 bg-muted/20 rounded-2xl border border-border/40">
                               <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Stok Semasa</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">{t('keusahawanan:pos_product_stock', 'Stok Semasa')}</p>
                                 <input type="number" min="0" value={form.stock_quantity}
                                   onChange={e => setForm(f => ({ ...f, stock_quantity: e.target.value }))}
                                   placeholder="20"
                                   className="w-full h-10 px-4 rounded-xl text-sm font-semibold outline-none bg-card border border-border/50 text-foreground placeholder:text-muted-foreground/40 focus:border-border transition-all" />
                               </div>
                               <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">Had Amaran Stok</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1.5">{t('keusahawanan:pos_stock_alert_threshold', 'Had Amaran Stok')}</p>
                                 <input type="number" min="0" value={form.stock_alert_threshold}
                                   onChange={e => setForm(f => ({ ...f, stock_alert_threshold: e.target.value }))}
                                   placeholder="5"
@@ -1505,7 +1505,7 @@ export function PosProductPage() {
                         className="flex-[2] h-12 rounded-2xl text-white font-black text-xs uppercase tracking-wider disabled:opacity-50 shadow-lg transition-all hover:brightness-110"
                         style={{ background: color }}
                       >
-                        {saving ? 'Menyimpan...' : editId ? 'Kemaskini Produk' : 'Simpan Produk'}
+                        {saving ? t('common:saving', 'Menyimpan...') : editId ? t('keusahawanan:pos_update_product', 'Kemaskini Produk') : t('keusahawanan:pos_save_product', 'Simpan Produk')}
                       </button>
                     )}
                   </div>

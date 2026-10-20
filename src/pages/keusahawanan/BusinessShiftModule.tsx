@@ -57,7 +57,7 @@ function ShiftAccessDenied({ color }: { color: string }) {
         </p>
         <div className="mt-6 px-4 py-3 rounded-2xl bg-muted/50 border border-border">
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50">
-            Hubungi Ketua Exco Keusahawanan untuk mendapatkan akses.
+            {t('keusahawanan:shift_contact_leader_access', 'Hubungi Ketua Exco Keusahawanan untuk mendapatkan akses.')}
           </p>
         </div>
       </motion.div>
@@ -500,7 +500,7 @@ export function BusinessJadual({
                 <div className="space-y-2 max-h-56 overflow-y-auto mb-4">
                   {businessMembers.length === 0 ? (
                     <p className="text-[11px] text-muted-foreground text-center py-4">
-                      Tiada ahli JPP dalam sistem lagi.
+                      {t('keusahawanan:shift_no_members_yet', 'Tiada ahli JPP dalam sistem lagi.')}
                     </p>
                   ) : businessMembers.map(m => {
                     const mc = color;
@@ -515,7 +515,7 @@ export function BusinessJadual({
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-black truncate">{m.user?.full_name}</p>
-                          <p className="text-[10px] opacity-60">{m.role ?? 'Exco'} · {memberShiftCount[m.user_id] || 0} syif minggu ini</p>
+                          <p className="text-[10px] opacity-60">{m.role ?? 'Exco'} · {memberShiftCount[m.user_id] || 0} {t('keusahawanan:shift_count_this_week', 'syif minggu ini')}</p>
                         </div>
                         {selectedMember === m.user_id && <Check className="w-4 h-4 flex-shrink-0" />}
                       </button>
@@ -524,11 +524,11 @@ export function BusinessJadual({
                 </div>
                 <div className="flex gap-2">
                   <button onClick={() => setAssignModal(null)}
-                    className="flex-1 h-10 rounded-xl border border-border text-[11px] font-black uppercase">Batal</button>
+                    className="flex-1 h-10 rounded-xl border border-border text-[11px] font-black uppercase">{t('common:cancel', 'Batal')}</button>
                   <button onClick={handleAssign} disabled={!selectedMember || saving}
                     className="flex-1 h-10 rounded-xl text-[11px] font-black uppercase transition-opacity disabled:opacity-40"
                     style={{ background: color, color: getContrastText(color) }}>
-                    {saving ? 'Menyimpan...' : t('shift_assign_staff')}
+                    {saving ? t('common:saving', 'Menyimpan...') : t('shift_assign_staff')}
                   </button>
                 </div>
               </motion.div>
@@ -571,13 +571,13 @@ export function BusinessJadual({
                   {/* Pilih siapa nak swap dengan */}
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">
-                      Tukar Dengan <span className="text-muted-foreground/40 normal-case">(pilihan)</span>
+                      {t('keusahawanan:shift_swap_with', 'Tukar Dengan')} <span className="text-muted-foreground/40 normal-case">({t('common:optional', 'pilihan')})</span>
                     </p>
                     <div className="space-y-1.5 max-h-40 overflow-y-auto">
                       <button onClick={() => setSwapTarget('')}
                         className={cn('w-full flex items-center gap-2 px-3 py-2 rounded-xl border text-[10px] font-black transition-all text-left',
                           swapTarget === '' ? 'border-amber-500 bg-amber-500/10 text-amber-600' : 'border-border bg-muted/30 text-muted-foreground hover:border-border/60')}>
-                        <Users className="w-3.5 h-3.5" /> Sesiapa sahaja (buka kepada semua)
+                        <Users className="w-3.5 h-3.5" /> {t('keusahawanan:shift_swap_anyone', 'Sesiapa sahaja (buka kepada semua)')}
                       </button>
                       {businessMembers.filter(m => m.user_id !== currentUserId).map(m => {
                         const mc = color || '#6366f1';
@@ -600,7 +600,7 @@ export function BusinessJadual({
 
                   {/* Sebab */}
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">Sebab / Alasan</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-1.5">{t('keusahawanan:shift_swap_reason', 'Sebab / Alasan')}</p>
                     <textarea
                       value={swapReason} onChange={e => setSwapReason(e.target.value)}
                       placeholder="cth: Ada kelas pada masa tersebut, ujian, dll..."
@@ -611,10 +611,10 @@ export function BusinessJadual({
 
                 <div className="flex gap-2 mt-4">
                   <button onClick={() => setSwapModal(null)}
-                    className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
+                    className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">{t('common:cancel', 'Batal')}</button>
                   <button onClick={handleSwapRequest} disabled={!swapReason.trim() || saving}
                     className="flex-1 h-11 rounded-2xl bg-amber-500 hover:bg-amber-600 text-white text-[11px] font-black uppercase transition-colors disabled:opacity-40">
-                    {saving ? 'Menghantar...' : t('shift_swap_request')}
+                    {saving ? t('common:sending', 'Menghantar...') : t('shift_swap_request')}
                   </button>
                 </div>
               </motion.div>
@@ -628,24 +628,24 @@ export function BusinessJadual({
 
 // ─── Tab: Sesi Buka/Tutup ─────────────────────────────────────────────────────
 
-const OPENING_CHECKLIST = [
-  'Semua produk/minuman telah disediakan',
-  'Peralatan dalam keadaan baik',
-  'Tempat gerai bersih & kemas',
-  'Duit baki (float) telah dikira',
+const OPENING_CHECKLIST_CONFIG = [
+  { key: 'shift_checklist_products', fallback: 'Semua produk/minuman telah disediakan' },
+  { key: 'shift_checklist_equipment', fallback: 'Peralatan dalam keadaan baik' },
+  { key: 'shift_checklist_cleanliness', fallback: 'Tempat gerai bersih & kemas' },
+  { key: 'shift_checklist_float', fallback: 'Duit baki (float) telah dikira' },
 ];
 
-export function SesiBusiness({ businessId, color, profile }: { businessId: string; color: string; profile: any }) {
+export function SesiBusiness({ businessId, color, profile, initialOpenModal = false }: { businessId: string; color: string; profile: any; initialOpenModal?: boolean }) {
   const { t } = useTranslation(['keusahawanan', 'common']);
   const [todaySession, setTodaySession] = useState<BusinessSession | null>(null);
   const [pastSessions, setPastSessions] = useState<BusinessSession[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [openModal, setOpenModal] = useState(false);
+  const [loading, setLoading] = useState(typeof window === 'undefined' ? false : true);
+  const [openModal, setOpenModal] = useState(initialOpenModal);
   const [closeModal, setCloseModal] = useState(false);
 
   // Open form state
   const [openingCash, setOpeningCash] = useState('');
-  const [checklist, setChecklist] = useState<boolean[]>(OPENING_CHECKLIST.map(() => false));
+  const [checklist, setChecklist] = useState<boolean[]>(OPENING_CHECKLIST_CONFIG.map(() => false));
   const [openNotes, setOpenNotes] = useState('');
 
   // Close form state
@@ -715,7 +715,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
   };
 
   if (loading) {
-    return <div className="h-40 flex items-center justify-center animate-pulse text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Memuatkan...</div>;
+    return <div className="h-40 flex items-center justify-center animate-pulse text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{t('common:loading', 'Memuatkan...')}</div>;
   }
 
   return (
@@ -724,7 +724,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
       <div className="rounded-[2rem] overflow-hidden border border-border shadow-sm bg-card">
         <div className="px-5 py-6 sm:px-6 sm:py-5" style={{ background: hexToRgba(color, 0.08) }}>
           <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-3">
-            Status Hari Ini — {new Date().toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long' })}
+            {t('keusahawanan:shift_status_today_prefix', 'Status Hari Ini — ')}{new Date().toLocaleDateString('ms-MY', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
           {todaySession ? (
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
@@ -739,13 +739,13 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground font-medium">
-                  <p>Modal: <span className="font-bold text-foreground">{fmtRM(todaySession.opening_cash)}</span></p>
-                  <p>Staf: <span className="font-bold text-foreground">{getMalaysianNickname((todaySession as any).opener?.full_name)}</span></p>
+                  <p>{t('keusahawanan:shift_capital_modal', 'Modal: ')}<span className="font-bold text-foreground">{fmtRM(todaySession.opening_cash)}</span></p>
+                  <p>{t('keusahawanan:shift_staff_label', 'Staf: ')}<span className="font-bold text-foreground">{getMalaysianNickname((todaySession as any).opener?.full_name)}</span></p>
                 </div>
                 {todaySession.status === 'CLOSED' && (
                   <div className="inline-flex px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                     <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-black uppercase tracking-widest">
-                      Untung: {fmtRM(netProfit(todaySession))}
+                      {t('keusahawanan:shift_profit_label', 'Untung: ')}{fmtRM(netProfit(todaySession))}
                     </p>
                   </div>
                 )}
@@ -765,7 +765,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                   <div className="w-3 h-3 rounded-full bg-muted-foreground/20" />
                   <p className="text-xl font-black tracking-tight text-muted-foreground/60">{t('shift_not_opened')}</p>
                 </div>
-                <p className="text-xs text-muted-foreground font-medium italic">Tiada rekod sesi untuk hari ini.</p>
+                <p className="text-xs text-muted-foreground font-medium italic">{t('keusahawanan:shift_no_session_today', 'Tiada rekod sesi untuk hari ini.')}</p>
               </div>
               <button onClick={() => setOpenModal(true)}
                 className="w-full sm:w-auto flex items-center justify-center gap-2.5 px-6 py-3 rounded-2xl text-[11px] font-black uppercase tracking-[0.15em] transition-all hover:brightness-110 active:scale-95 shadow-lg shadow-indigo-500/10"
@@ -783,7 +783,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
         {pastSessions.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground/40">
             <Activity className="w-8 h-8 mx-auto mb-2" />
-            <p className="text-[11px] font-bold uppercase tracking-widest">Tiada rekod lagi</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest">{t('keusahawanan:shift_no_records_yet', 'Tiada rekod lagi')}</p>
           </div>
         ) : (
           <div className="space-y-2">
@@ -796,8 +796,8 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                       {new Date(s.session_date).toLocaleDateString('ms-MY', { weekday: 'short', day: 'numeric', month: 'short' })}
                     </p>
                     <p className="text-[10px] text-muted-foreground">
-                      Dibuka: {(s as any).opener?.full_name ?? '—'}
-                      {s.status === 'CLOSED' && ` · Ditutup: ${(s as any).closer?.full_name ?? '—'}`}
+                      {t('keusahawanan:shift_opened_by', 'Dibuka: ')}{(s as any).opener?.full_name ?? '—'}
+                      {s.status === 'CLOSED' && ` · ${t('keusahawanan:shift_closed_by', 'Ditutup: ')}${(s as any).closer?.full_name ?? '—'}`}
                     </p>
                   </div>
                   <div className="text-right flex-shrink-0">
@@ -810,7 +810,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                     </p>
                     <p className="text-[10px] text-muted-foreground flex items-center justify-end gap-1.5">
                       <span className={cn("w-1.5 h-1.5 rounded-full", s.status === 'OPEN' ? "bg-rose-500 animate-pulse" : "bg-emerald-500")} />
-                      <span>{s.status === 'OPEN' ? 'Belum tutup' : 'Selesai'}</span>
+                      <span>{s.status === 'OPEN' ? t('keusahawanan:shift_not_closed_yet', 'Belum tutup') : t('keusahawanan:shift_completed', 'Selesai')}</span>
                     </p>
                   </div>
                 </div>
@@ -860,23 +860,23 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-2">{t('shift_opening_checklist')}</p>
                     <div className="space-y-2">
-                      {OPENING_CHECKLIST.map((item, i) => (
+                      {OPENING_CHECKLIST_CONFIG.map((item, i) => (
                         <button key={i} onClick={() => setChecklist(c => c.map((v, j) => j === i ? !v : v))}
                           className="w-full flex items-center gap-3 p-2.5 rounded-xl border border-border/40 hover:border-border transition-colors text-left">
                           {checklist[i]
                             ? <CheckSquare className="w-4 h-4 flex-shrink-0" style={{ color }} />
                             : <Square className="w-4 h-4 flex-shrink-0 text-muted-foreground/30" />}
-                          <span className={cn('text-xs font-medium', checklist[i] ? 'text-foreground' : 'text-muted-foreground')}>{item}</span>
+                          <span className={cn('text-xs font-medium', checklist[i] ? 'text-foreground' : 'text-muted-foreground')}>{t(`keusahawanan:${item.key}`, item.fallback)}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1.5">Nota (Pilihan)</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1.5">{t('keusahawanan:shift_notes_optional', 'Nota (Pilihan)')}</label>
                     <textarea
                       value={openNotes} onChange={e => setOpenNotes(e.target.value)}
-                      placeholder="Nota tambahan..."
+                      placeholder={t('keusahawanan:shift_notes_placeholder', 'Nota tambahan...')}
                       className="w-full h-16 px-4 py-2.5 rounded-xl border border-border bg-muted/30 text-xs font-medium resize-none outline-none"
                     />
                   </div>
@@ -884,18 +884,18 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                   {!allChecked && (
                     <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-amber-500/10 border border-amber-500/20">
                       <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                      <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400">Sila lengkapkan semua checklist dahulu.</p>
+                      <p className="text-[10px] font-bold text-amber-600 dark:text-amber-400">{t('keusahawanan:shift_checklist_required', 'Sila lengkapkan semua checklist dahulu.')}</p>
                     </div>
                   )}
                 </div>
 
                 <div className="flex gap-2 mt-5">
                   <button onClick={() => setOpenModal(false)}
-                    className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
+                    className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">{t('common:cancel', 'Batal')}</button>
                   <button onClick={handleOpen} disabled={!openingCash || !allChecked || saving}
                     className="flex-1 h-11 rounded-2xl text-[11px] font-black uppercase disabled:opacity-40 transition-opacity"
                     style={{ background: color, color: getContrastText(color) }}>
-                    {saving ? 'Membuka...' : t('shift_open_store_btn')}
+                    {saving ? t('common:saving', 'Membuka...') : t('shift_open_store_btn')}
                   </button>
                 </div>
               </motion.div>
@@ -924,7 +924,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                   </div>
                   <div>
                     <h3 className="font-black text-sm">{t('shift_close_store_btn')}</h3>
-                    <p className="text-[10px] text-muted-foreground">Isi rekod penutupan hari ini</p>
+                    <p className="text-[10px] text-muted-foreground">{t('keusahawanan:shift_closing_records_note', 'Isi rekod penutupan hari ini')}</p>
                   </div>
                 </div>
 
@@ -932,7 +932,7 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                   {[
                     { label: t('shift_closing_cash'), value: closingCash, set: setClosingCash, placeholder: '0.00' },
                     { label: t('shift_calculated_sales'), value: totalSales, set: setTotalSales, placeholder: '0.00' },
-                    { label: 'Perbelanjaan/Stok (RM)', value: expenses, set: setExpenses, placeholder: '0.00' },
+                    { label: t('keusahawanan:shift_expenses_stock', 'Perbelanjaan/Stok (RM)'), value: expenses, set: setExpenses, placeholder: '0.00' },
                   ].map(({ label, value, set, placeholder }) => (
                     <div key={label}>
                       <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1">{label}</label>
@@ -960,10 +960,10 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
                   )}
 
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1">Nota Penutupan</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 block mb-1">{t('keusahawanan:shift_closing_notes', 'Nota Penutupan')}</label>
                     <textarea
                       value={closeNotes} onChange={e => setCloseNotes(e.target.value)}
-                      placeholder="Nota..., isu yang berlaku, dll."
+                      placeholder={t('keusahawanan:shift_closing_notes_placeholder', 'Nota..., isu yang berlaku, dll.')}
                       className="w-full h-16 px-4 py-2.5 rounded-xl border border-border bg-muted/30 text-xs font-medium resize-none outline-none"
                     />
                   </div>
@@ -971,11 +971,11 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
 
                 <div className="flex gap-2 mt-5">
                   <button onClick={() => setCloseModal(false)}
-                    className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">Batal</button>
+                    className="flex-1 h-11 rounded-2xl border border-border text-[11px] font-black uppercase">{t('common:cancel', 'Batal')}</button>
                   <button onClick={handleClose} disabled={!closingCash || !totalSales || saving}
                     className="flex-1 h-11 rounded-2xl text-[11px] font-black uppercase disabled:opacity-40"
                     style={{ background: color, color: getContrastText(color) }}>
-                    {saving ? 'Menyimpan...' : t('shift_close_store_btn')}
+                    {saving ? t('common:saving', 'Menyimpan...') : t('shift_close_store_btn')}
                   </button>
                 </div>
               </motion.div>
@@ -990,8 +990,9 @@ export function SesiBusiness({ businessId, color, profile }: { businessId: strin
 // ─── Tab: Kewangan ────────────────────────────────────────────────────────────
 
 function GeraiKewangan({ color }: { color: string }) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const [sessions, setSessions] = useState<BusinessSession[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(typeof window === 'undefined' ? false : true);
 
   useEffect(() => {
     supabase.from('business_sessions')
@@ -1012,14 +1013,14 @@ function GeraiKewangan({ color }: { color: string }) {
     best == null || netProfit(s) > netProfit(best) ? s : best, null);
 
   const stats = [
-    { label: 'Jualan Bulan Ini', value: fmtRM(totalSalesMonth), icon: DollarSign, up: true },
-    { label: 'Untung Bersih', value: fmtRM(totalProfitMonth), icon: TrendingUp, up: totalProfitMonth >= 0 },
-    { label: 'Sesi Ditutup', value: `${monthSessions.length} hari`, icon: Activity, up: true },
-    { label: 'Terbaik Pernah', value: bestDay ? fmtRM(netProfit(bestDay)) : '—', icon: TrendingUp, up: true },
+    { label: t('keusahawanan:shift_finance_sales_month', 'Jualan Bulan Ini'), value: fmtRM(totalSalesMonth), icon: DollarSign, up: true },
+    { label: t('keusahawanan:shift_finance_net_profit', 'Untung Bersih'), value: fmtRM(totalProfitMonth), icon: TrendingUp, up: totalProfitMonth >= 0 },
+    { label: t('keusahawanan:shift_finance_closed_sessions', 'Sesi Ditutup'), value: `${monthSessions.length} hari`, icon: Activity, up: true },
+    { label: t('keusahawanan:shift_finance_all_time_best', 'Terbaik Pernah'), value: bestDay ? fmtRM(netProfit(bestDay)) : '—', icon: TrendingUp, up: true },
   ];
 
   if (loading) return (
-    <div className="h-40 flex items-center justify-center animate-pulse text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Memuatkan...</div>
+    <div className="h-40 flex items-center justify-center animate-pulse text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{t('common:loading', 'Memuatkan...')}</div>
   );
 
   return (
@@ -1040,11 +1041,11 @@ function GeraiKewangan({ color }: { color: string }) {
 
       {/* Rekod Table */}
       <div>
-        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">Rekod Sesi Selesai</p>
+        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">{t('keusahawanan:shift_finance_completed_records', 'Rekod Sesi Selesai')}</p>
         {sessions.length === 0 ? (
           <div className="text-center py-10 text-muted-foreground/40">
             <TrendingUp className="w-8 h-8 mx-auto mb-2" />
-            <p className="text-[11px] font-bold uppercase tracking-widest">Tiada rekod lagi</p>
+            <p className="text-[11px] font-bold uppercase tracking-widest">{t('keusahawanan:shift_no_records_yet', 'Tiada rekod lagi')}</p>
           </div>
         ) : (
           <div className="space-y-2">
