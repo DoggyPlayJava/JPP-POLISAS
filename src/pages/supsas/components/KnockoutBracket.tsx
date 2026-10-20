@@ -3,6 +3,7 @@
  * Team-aware: sokong kontingen-based DAN team-based fixtures.
  */
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -23,6 +24,7 @@ interface GroupStandingsTableProps {
 }
 
 export function GroupStandingsTable({ group, fixtures, kontingen, teams, kontingenMap, color }: GroupStandingsTableProps) {
+  const { t } = useTranslation(['supsas']);
   const groupFixtures = fixtures.filter(f => f.group_name === group);
   const isTeamBased = groupFixtures.some(f => f.team_a_id != null);
 
@@ -77,9 +79,9 @@ export function GroupStandingsTable({ group, fixtures, kontingen, teams, konting
       >
         <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color }} />
         <span className="text-xs font-black uppercase tracking-widest" style={{ color }}>
-          Kumpulan {group}
+          {t('supsas:group_name_title', 'Kumpulan {{name}}', { name: group })}
         </span>
-        <span className="text-white/20 text-[9px] ml-auto">{groupFixtures.filter(f => f.status === 'completed').length}/{groupFixtures.length} selesai</span>
+        <span className="text-white/20 text-[9px] ml-auto">{t('supsas:fixtures_completed_progress', '{{done}}/{{total}} selesai', { done: groupFixtures.filter(f => f.status === 'completed').length, total: groupFixtures.length })}</span>
       </div>
 
       {/* Table */}
@@ -87,13 +89,13 @@ export function GroupStandingsTable({ group, fixtures, kontingen, teams, konting
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-white/5">
-              <th className="text-left px-4 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">Pasukan</th>
-              <th className="text-center px-2 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">M</th>
-              <th className="text-center px-2 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">W</th>
-              <th className="text-center px-2 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">D</th>
-              <th className="text-center px-2 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">L</th>
-              <th className="text-center px-2 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">GD</th>
-              <th className="text-center px-3 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">Pts</th>
+              <th className="text-left px-4 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">{t('supsas:table_team', 'Pasukan')}</th>
+              <th className="text-center px-2 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">{t('supsas:table_col_m', 'M')}</th>
+              <th className="text-center px-2 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">{t('supsas:table_col_w', 'W')}</th>
+              <th className="text-center px-2 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">{t('supsas:table_col_d', 'D')}</th>
+              <th className="text-center px-2 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">{t('supsas:table_col_l', 'L')}</th>
+              <th className="text-center px-2 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">{t('supsas:table_col_gd', 'GD')}</th>
+              <th className="text-center px-3 py-2 text-white/30 font-black uppercase tracking-widest text-[8px]">{t('supsas:table_col_pts', 'Pts')}</th>
             </tr>
           </thead>
           <tbody>
@@ -127,7 +129,7 @@ export function GroupStandingsTable({ group, fixtures, kontingen, teams, konting
                           className="text-[7px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded"
                           style={{ backgroundColor: `${color}20`, color }}
                         >
-                          Maju
+                          {t('supsas:badge_advance', 'Maju')}
                         </span>
                       )}
                     </div>
@@ -156,7 +158,7 @@ export function GroupStandingsTable({ group, fixtures, kontingen, teams, konting
             {standings.length === 0 && (
               <tr>
                 <td colSpan={7} className="text-center py-6 text-white/20 text-[10px] font-black uppercase tracking-widest">
-                  Belum ada keputusan
+                  {t('supsas:no_results_yet', 'Belum ada keputusan')}
                 </td>
               </tr>
             )}
@@ -177,6 +179,7 @@ interface KnockoutMatchProps {
 }
 
 function KoMatchCard({ fixture, kontingenMap, teamsMap, delay = 0, label }: KnockoutMatchProps) {
+  const { t } = useTranslation(['supsas', 'common']);
   // Team-aware: guna team_a_id jika ada, fallback ke kontingen_a_id
   const isTeamBased = !!(fixture?.team_a_id || fixture?.team_b_id);
 
@@ -221,7 +224,7 @@ function KoMatchCard({ fixture, kontingenMap, teamsMap, delay = 0, label }: Knoc
         {isLive && (
           <div className="flex items-center gap-1.5 px-3 py-1 bg-red-500/20">
             <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
-            <span className="text-[8px] font-black uppercase tracking-widest text-red-400">Live</span>
+            <span className="text-[8px] font-black uppercase tracking-widest text-red-400">{t('common:live', 'Live')}</span>
           </div>
         )}
         {/* Team A */}
@@ -257,6 +260,7 @@ interface KnockoutBracketProps {
 }
 
 export function KnockoutBracket({ qfFixtures = [], sfFixtures, finalFixture, kontingenMap, teamsMap }: KnockoutBracketProps) {
+  const { t } = useTranslation(['supsas']);
   const sf1 = sfFixtures.find(f => f.bracket_position === 1) ?? null;
   const sf2 = sfFixtures.find(f => f.bracket_position === 2) ?? null;
   const qf1 = qfFixtures.find(f => f.bracket_position === 1) ?? null;
@@ -269,9 +273,9 @@ export function KnockoutBracket({ qfFixtures = [], sfFixtures, finalFixture, kon
   const isTeamBased = !!(finalFixture?.team_a_id || finalFixture?.winner_team_id);
   let winner: { short_code: string; color: string } | null = null;
   if (isTeamBased && finalFixture?.winner_team_id) {
-    const t = teamsMap[finalFixture.winner_team_id];
-    const k = t ? kontingenMap[t.kontingen_id] : null;
-    if (t && k) winner = { short_code: `${k.short_code} #${t.group_number}`, color: k.color };
+    const tEntry = teamsMap[finalFixture.winner_team_id];
+    const k = tEntry ? kontingenMap[tEntry.kontingen_id] : null;
+    if (tEntry && k) winner = { short_code: `${k.short_code} #${tEntry.group_number}`, color: k.color };
   } else if (finalFixture?.winner_id) {
     const k = kontingenMap[finalFixture.winner_id];
     if (k) winner = { short_code: k.short_code, color: k.color };
@@ -292,10 +296,10 @@ export function KnockoutBracket({ qfFixtures = [], sfFixtures, finalFixture, kon
         {hasQF && (
           <>
             <div className="flex flex-col gap-6">
-              <KoMatchCard fixture={qf1} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0} label="Suku Akhir 1" />
-              <KoMatchCard fixture={qf2} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.05} label="Suku Akhir 2" />
-              <KoMatchCard fixture={qf3} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.1} label="Suku Akhir 3" />
-              <KoMatchCard fixture={qf4} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.15} label="Suku Akhir 4" />
+              <KoMatchCard fixture={qf1} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0} label={t('supsas:qf_round_n', 'Suku Akhir {{num}}', { num: 1 })} />
+              <KoMatchCard fixture={qf2} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.05} label={t('supsas:qf_round_n', 'Suku Akhir {{num}}', { num: 2 })} />
+              <KoMatchCard fixture={qf3} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.1} label={t('supsas:qf_round_n', 'Suku Akhir {{num}}', { num: 3 })} />
+              <KoMatchCard fixture={qf4} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.15} label={t('supsas:qf_round_n', 'Suku Akhir {{num}}', { num: 4 })} />
             </div>
             <div className="flex flex-col items-center self-stretch justify-center">
               <div className="flex-1 border-t border-r border-white/10 w-6" />
@@ -308,14 +312,14 @@ export function KnockoutBracket({ qfFixtures = [], sfFixtures, finalFixture, kon
 
         {/* Separuh Akhir */}
         <div className="flex flex-col gap-6">
-          <KoMatchCard fixture={sf1} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.2} label="Separuh Akhir 1" />
-          <KoMatchCard fixture={sf2} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.25} label="Separuh Akhir 2" />
+          <KoMatchCard fixture={sf1} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.2} label={t('supsas:sf_round_n', 'Separuh Akhir {{num}}', { num: 1 })} />
+          <KoMatchCard fixture={sf2} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.25} label={t('supsas:sf_round_n', 'Separuh Akhir {{num}}', { num: 2 })} />
         </div>
 
         <Connector />
 
         {/* Akhir */}
-        <KoMatchCard fixture={finalFixture} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.35} label="🏆 Akhir" />
+        <KoMatchCard fixture={finalFixture} kontingenMap={kontingenMap} teamsMap={teamsMap} delay={0.35} label={t('supsas:final_round_trophy', '🏆 Akhir')} />
 
         {/* Juara */}
         {winner && (
@@ -327,7 +331,7 @@ export function KnockoutBracket({ qfFixtures = [], sfFixtures, finalFixture, kon
               transition={{ delay: 0.5, type: 'spring' }}
               className="flex flex-col items-center gap-2"
             >
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-amber-400/60">JUARA</p>
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-amber-400/60">{t('supsas:champion_upper', 'JUARA')}</p>
               <div className="w-16 h-16 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex flex-col items-center justify-center gap-1"
                 style={{ boxShadow: `0 0 32px -8px ${winner.color}60` }}>
                 <Trophy className="w-5 h-5 text-amber-400" />

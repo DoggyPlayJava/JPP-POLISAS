@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useCallback, Suspense, lazy } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Home, Building2, MapPin, BarChart3, ChevronRight, HeartHandshake, Database, Wifi
+  Home, Building2, MapPin, BarChart3, ChevronRight, Database
 } from 'lucide-react';
 import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip
 } from 'recharts';
 import { motion } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
-import { cn } from '@/lib/utils';
 
 import { getKlkAcademicYear } from '@/utils/klkUtils';
 
@@ -22,6 +22,7 @@ const ACCENT_COLOR = '#818CF8';
 const CATEGORY_COLORS = ['#60A5FA', '#818CF8', '#A78BFA', '#F472B6', '#FB923C', '#FBBF24', '#34D399'];
 
 export function KlkPublicStats() {
+  const { t } = useTranslation(['housing', 'common']);
   const [stats, setStats] = useState<any>(null);
   const [mapData, setMapData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,7 +34,6 @@ export function KlkPublicStats() {
     setLoading(true);
     try {
       let finalStats = null;
-      let kawasans: any[] = [];
 
       // Fetch coord
       const { data: kawasanRes } = await supabase.from('klk_kawasan').select('name, latitude, longitude').eq('is_active', true);
@@ -113,9 +113,9 @@ export function KlkPublicStats() {
   useEffect(() => { fetchStats(); }, [fetchStats]);
 
   const statCards = [
-    { label: 'Tinggal Luar Kampus', value: loading ? '—' : stats?.total_luar ?? 0, icon: Home, color: KLS_COLOR, description: 'Menyewa di sekitar POLISAS' },
-    { label: 'Tinggal Dalam KAMSIS', value: loading ? '—' : stats?.total_kamsis ?? 0, icon: Building2, color: KAMSIS_COLOR, description: 'Menetap di Kolej Kediaman' },
-    { label: 'Sumber Aplikasi', value: loading ? '—' : stats?.by_source?.webapp ?? 0, icon: Database, color: ACCENT_COLOR, description: 'Rekod dikumpul melalui portal' },
+    { label: t('housing:stat_off_campus', 'Tinggal Luar Kampus'), value: loading ? '—' : stats?.total_luar ?? 0, icon: Home, color: KLS_COLOR, description: t('housing:stat_off_campus_desc', 'Menyewa di sekitar POLISAS') },
+    { label: t('housing:stat_in_kamsis', 'Tinggal Dalam KAMSIS'), value: loading ? '—' : stats?.total_kamsis ?? 0, icon: Building2, color: KAMSIS_COLOR, description: t('housing:stat_in_kamsis_desc', 'Menetap di Kolej Kediaman') },
+    { label: t('housing:stat_app_source', 'Sumber Aplikasi'), value: loading ? '—' : stats?.by_source?.webapp ?? 0, icon: Database, color: ACCENT_COLOR, description: t('housing:stat_app_source_desc', 'Rekod dikumpul melalui portal') },
   ];
 
   return (
@@ -132,7 +132,7 @@ export function KlkPublicStats() {
             >
               <MapPin className="w-5 h-5" style={{ color: KLS_COLOR }} />
               <span className="text-[11px] font-black uppercase tracking-[0.25em]" style={{ color: KLS_COLOR }}>
-                Exco KLK JPP POLISAS
+                {t('housing:badge_exco_klk', 'Exco KLK JPP POLISAS')}
               </span>
             </div>
           </motion.div>
@@ -140,13 +140,13 @@ export function KlkPublicStats() {
             initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }}
             className="text-3xl sm:text-4xl md:text-6xl font-black text-slate-50 mb-6 leading-tight tracking-tight"
           >
-            Taburan <span style={{ color: KLS_COLOR, textShadow: `0 0 40px rgba(96,165,250,0.4)` }}>Kediaman Pelajar</span>
+            {t('housing:hero_title_dist', 'Taburan Kediaman Pelajar')}
           </motion.h1>
           <motion.p
             initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }}
             className="text-base text-slate-400 max-w-xl mx-auto mb-10 leading-relaxed"
           >
-            Statistik awam taburan tempat tinggal pelajar Politeknik Sultan Haji Ahmad Shah bagi tahun akademik <strong className="text-white">{academicYear}</strong>.
+            {t('housing:hero_subtitle_stats', 'Statistik awam taburan tempat tinggal pelajar Politeknik Sultan Haji Ahmad Shah bagi tahun akademik {{year}}.', { year: academicYear })}
           </motion.p>
         </div>
       </div>
@@ -160,9 +160,9 @@ export function KlkPublicStats() {
         >
           <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-transparent to-indigo-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
           <Home className="relative z-10 w-16 h-16 mx-auto mb-6" style={{ color: KLS_COLOR, opacity: 0.9 }} filter="drop-shadow(0 0 20px rgba(96,165,250,0.4))" />
-          <h3 className="relative z-10 font-black text-2xl text-slate-50 mb-3">Kemaskini Status Kediaman Anda</h3>
+          <h3 className="relative z-10 font-black text-2xl text-slate-50 mb-3">{t('housing:cta_update_status_title', 'Kemaskini Status Kediaman Anda')}</h3>
           <p className="relative z-10 text-sm text-slate-400 mb-8 max-w-lg mx-auto leading-relaxed">
-            Data ini membantu Exco JPP POLISAS dan pihak pengurusan merancang program serta kemudahan untuk pelajar luar kampus. Log masuk untuk kemaskini status anda.
+            {t('housing:cta_update_status_desc', 'Data ini membantu Exco JPP POLISAS dan pihak pengurusan merancang program serta kemudahan untuk pelajar luar kampus. Log masuk untuk kemaskini status anda.')}
           </p>
           <button
             onClick={() => {
@@ -172,7 +172,7 @@ export function KlkPublicStats() {
             className="relative z-10 inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-black text-sm text-slate-950 transition-all hover:scale-[1.02] active:scale-[0.98]"
             style={{ background: KLS_COLOR, boxShadow: `0 12px 40px rgba(96,165,250,0.4)` }}
           >
-            Kemaskini Status Sekarang <ChevronRight className="w-5 h-5 ml-1" />
+            {t('housing:cta_update_now_btn', 'Kemaskini Status Sekarang')} <ChevronRight className="w-5 h-5 ml-1" />
           </button>
         </div>
 
@@ -203,17 +203,17 @@ export function KlkPublicStats() {
           {/* Peta Hotspot */}
           <div className="lg:col-span-3 rounded-3xl border border-white/[0.05] bg-white/[0.02]  shadow-2xl overflow-hidden flex flex-col" style={{ minHeight: 450 }}>
             <div className="p-6 border-b border-white/[0.04]">
-              <h2 className="font-black text-lg text-slate-100 mb-1">Peta Hotspot Taburan</h2>
-              <p className="text-xs text-slate-500 font-medium">Kawasan tumpuan pelajar menyewa di sekitar Kuantan</p>
+              <h2 className="font-black text-lg text-slate-100 mb-1">{t('housing:hotspot_map_title', 'Peta Hotspot Taburan')}</h2>
+              <p className="text-xs text-slate-500 font-medium">{t('housing:hotspot_map_desc', 'Kawasan tumpuan pelajar menyewa di sekitar Kuantan')}</p>
             </div>
             <div className="flex-1 relative">
-              <Suspense fallback={<div className="h-full flex items-center justify-center text-sm text-slate-500 font-medium">Memuatkan peta...</div>}>
+              <Suspense fallback={<div className="h-full flex items-center justify-center text-sm text-slate-500 font-medium">{t('housing:loading_map', 'Memuatkan peta...')}</div>}>
                 <KlkHotspotMap data={mapData} />
               </Suspense>
               {mapData.length === 0 && !loading && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-900/80  z-10">
                   <MapPin className="w-10 h-10 text-white/20 mb-3" />
-                  <p className="text-xs text-white/40 font-medium">Tiada data koordinat sedia ada</p>
+                  <p className="text-xs text-white/40 font-medium">{t('housing:no_coordinate_data', 'Tiada data koordinat sedia ada')}</p>
                 </div>
               )}
             </div>
@@ -221,8 +221,8 @@ export function KlkPublicStats() {
 
           {/* Top Kawasan List */}
           <div className="lg:col-span-2 rounded-3xl p-8 border border-white/[0.05] bg-white/[0.02]  shadow-2xl">
-            <h2 className="font-black text-lg text-slate-100 mb-1">Top Kawasan</h2>
-            <p className="text-xs text-slate-500 font-medium mb-8">Pilihan utama pelajar tinggal luar kampus</p>
+            <h2 className="font-black text-lg text-slate-100 mb-1">{t('housing:top_areas_title', 'Top Kawasan')}</h2>
+            <p className="text-xs text-slate-500 font-medium mb-8">{t('housing:top_areas_desc', 'Pilihan utama pelajar tinggal luar kampus')}</p>
             
             {stats?.by_kawasan && stats.by_kawasan.length > 0 ? (
               <div className="space-y-4">
@@ -235,7 +235,7 @@ export function KlkPublicStats() {
                           <span className="w-5 h-5 rounded flex items-center justify-center text-[9px] font-black bg-white/5 text-slate-400 group-hover:bg-blue-500/20 group-hover:text-blue-400 transition-colors">{i + 1}</span>
                           <span className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors truncate max-w-[150px]">{k.kawasan}</span>
                         </div>
-                        <span className="text-sm font-black text-slate-300">{k.count} <span className="text-[10px] text-slate-500 font-medium">pelajar</span></span>
+                        <span className="text-sm font-black text-slate-300">{k.count} <span className="text-[10px] text-slate-500 font-medium">{t('housing:students_lower', 'pelajar')}</span></span>
                       </div>
                       <div className="h-2 rounded-full bg-white/[0.04] overflow-hidden">
                         <motion.div
@@ -259,8 +259,8 @@ export function KlkPublicStats() {
         {/* Jabatan Charts Section */}
         <div className="rounded-3xl p-8 border border-white/[0.05] bg-white/[0.02]  shadow-2xl">
           <div className="text-center mb-10">
-            <h2 className="font-black text-2xl text-slate-100 mb-2">Pecahan Mengikut Jabatan</h2>
-            <p className="text-sm text-slate-500 font-medium">Kadar taburan pelajar luar kampus berdasarkan jabatan akademik masing-masing</p>
+            <h2 className="font-black text-2xl text-slate-100 mb-2">{t('housing:dept_breakdown_title', 'Pecahan Mengikut Jabatan')}</h2>
+            <p className="text-sm text-slate-500 font-medium">{t('housing:dept_breakdown_desc', 'Kadar taburan pelajar luar kampus berdasarkan jabatan akademik masing-masing')}</p>
           </div>
           
           {stats?.by_jabatan && stats.by_jabatan.length > 0 ? (
@@ -276,7 +276,7 @@ export function KlkPublicStats() {
                     <Tooltip
                       contentStyle={{ background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 12, boxShadow: '0 20px 40px rgba(0,0,0,0.5)' }}
                       itemStyle={{ color: 'white', fontWeight: 800 }}
-                      formatter={(v: any, n: any, props: any) => [v + ' pelajar', props.payload.jabatan]}
+                      formatter={(v: any, n: any, props: any) => [v + ' ' + t('housing:students_lower', 'pelajar'), props.payload.jabatan]}
                     />
                   </PieChart>
                 </ResponsiveContainer>
@@ -298,7 +298,7 @@ export function KlkPublicStats() {
                     </div>
                     <div className="text-right pl-4 border-l border-white/5">
                       <p className="text-lg font-black text-white">{j.count}</p>
-                      <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">Pelajar</p>
+                      <p className="text-[9px] font-bold uppercase tracking-widest text-slate-500">{t('housing:students_upper', 'Pelajar')}</p>
                     </div>
                   </div>
                 ))}
@@ -315,10 +315,11 @@ export function KlkPublicStats() {
 }
 
 function EmptyState() {
+  const { t } = useTranslation('housing');
   return (
     <div className="flex flex-col items-center justify-center py-12">
       <BarChart3 className="w-12 h-12 text-white/10 mb-4" />
-      <p className="text-xs text-white/40 font-medium">Belum ada data yang mencukupi</p>
+      <p className="text-xs text-white/40 font-medium">{t('housing:not_enough_data', 'Belum ada data yang mencukupi')}</p>
     </div>
   );
 }

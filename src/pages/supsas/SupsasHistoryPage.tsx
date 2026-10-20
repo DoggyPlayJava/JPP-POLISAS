@@ -3,6 +3,7 @@
  * Route: /supsas/sejarah
  */
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Trophy, Calendar, Users, Medal, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -24,6 +25,7 @@ interface EditionStat {
 }
 
 export function SupsasHistoryPage() {
+  const { t, i18n } = useTranslation(['supsas']);
   const [editions, setEditions] = useState<EditionStat[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -75,9 +77,9 @@ export function SupsasHistoryPage() {
               <Trophy className="w-5 h-5 text-amber-400" />
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white">Sejarah SUPSAS</h1>
+              <h1 className="text-2xl sm:text-3xl font-black text-white">{t('supsas:history_title', 'Sejarah SUPSAS')}</h1>
               <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mt-0.5">
-                Sukan Polisas — Rekod Semua Edisi
+                {t('supsas:history_subtitle', 'Sukan Polisas — Rekod Semua Edisi')}
               </p>
             </div>
           </div>
@@ -93,7 +95,7 @@ export function SupsasHistoryPage() {
         ) : editions.length === 0 ? (
           <div className="text-center py-24">
             <Trophy className="w-10 h-10 text-white/10 mx-auto mb-4" />
-            <p className="text-white/20 font-black uppercase tracking-widest text-sm">Tiada rekod edisi lagi</p>
+            <p className="text-white/20 font-black uppercase tracking-widest text-sm">{t('supsas:no_editions_record', 'Tiada rekod edisi lagi')}</p>
           </div>
         ) : (
           <div className="space-y-4">
@@ -114,7 +116,7 @@ export function SupsasHistoryPage() {
                 {ed.is_active && (
                   <div className="absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500/30">
                     <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">Edisi Semasa</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-amber-400">{t('supsas:current_edition', 'Edisi Semasa')}</span>
                   </div>
                 )}
 
@@ -143,8 +145,8 @@ export function SupsasHistoryPage() {
                     {ed.start_date && (
                       <p className="text-[10px] font-medium text-white/20 mt-2 flex items-center gap-1">
                         <Calendar className="w-3 h-3" />
-                        {new Date(ed.start_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}
-                        {ed.end_date && ` — ${new Date(ed.end_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}`}
+                        {new Date(ed.start_date).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}
+                        {ed.end_date && ` — ${new Date(ed.end_date).toLocaleDateString(i18n.language === 'en' ? 'en-US' : 'ms-MY', { day: 'numeric', month: 'long', year: 'numeric' })}`}
                       </p>
                     )}
 
@@ -152,15 +154,15 @@ export function SupsasHistoryPage() {
                     <div className="flex items-center gap-4 mt-3 flex-wrap">
                       <div className="flex items-center gap-1.5">
                         <Users className="w-3 h-3 text-white/20" />
-                        <span className="text-[10px] font-black text-white/30">{ed.total_kontingen} kontinjen</span>
+                        <span className="text-[10px] font-black text-white/30">{t('supsas:contingents_count_stat', '{{count}} kontinjen', { count: ed.total_kontingen })}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Trophy className="w-3 h-3 text-white/20" />
-                        <span className="text-[10px] font-black text-white/30">{ed.total_fixtures} perlawanan</span>
+                        <span className="text-[10px] font-black text-white/30">{t('supsas:fixtures_count_stat', '{{count}} perlawanan', { count: ed.total_fixtures })}</span>
                       </div>
                       <div className="flex items-center gap-1.5">
                         <Medal className="w-3 h-3 text-white/20" />
-                        <span className="text-[10px] font-black text-white/30">{ed.total_medals} medal</span>
+                        <span className="text-[10px] font-black text-white/30">{t('supsas:medals_count_stat', '{{count}} medal', { count: ed.total_medals })}</span>
                       </div>
                     </div>
 
@@ -175,7 +177,7 @@ export function SupsasHistoryPage() {
                         <div>
                           <p className="text-xs font-black text-white leading-none">{ed.champion.name}</p>
                           <p className="text-[9px] text-white/30 font-bold uppercase tracking-widest mt-0.5">
-                            Juara Keseluruhan · {ed.champion.gold} Emas
+                            {t('supsas:overall_champion_gold', 'Juara Keseluruhan · {{gold}} Emas', { gold: ed.champion.gold })}
                           </p>
                         </div>
                       </div>
@@ -189,7 +191,7 @@ export function SupsasHistoryPage() {
 
         {/* Footer note */}
         <p className="text-center text-[9px] font-black uppercase tracking-widest text-white/10 mt-8">
-          {editions.length} edisi direkodkan dalam sistem
+          {t('supsas:editions_recorded_in_system', '{{count}} edisi direkodkan dalam sistem', { count: editions.length })}
         </p>
       </div>
     </div>

@@ -2,14 +2,16 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { Search, Loader2, Trash2, Home, MapPin, ChevronLeft, ShieldCheck, ShieldAlert, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Search, Loader2, Trash2, Home, MapPin, ChevronLeft, ShieldCheck, ShieldAlert, EyeOff } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { FeatureToggle } from '@/components/ui/FeatureToggle';
 
 export function PolyRentAdmin() {
+  const { t, i18n } = useTranslation(['housing', 'common']);
   const navigate = useNavigate();
   
   // Data States
@@ -37,21 +39,21 @@ export function PolyRentAdmin() {
       setMatchList(data || []);
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal memuatkan data PolyRent');
+      toast.error(t('housing:fetch_polyrent_failed', 'Gagal memuatkan data PolyRent'));
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeleteMatch = async (id: string) => {
-    if (!window.confirm('Padam iklan PolyRent ini secara kekal?')) return;
+    if (!window.confirm(t('housing:confirm_delete_listing_perm', 'Padam iklan PolyRent ini secara kekal?'))) return;
     try {
       const { error } = await supabase.from('polyrent_listings').delete().eq('id', id);
       if (error) throw error;
-      toast.success('Iklan dipadam');
+      toast.success(t('housing:ad_deleted_success', 'Iklan dipadam'));
       setMatchList(prev => prev.filter(item => item.id !== id));
     } catch (err: any) {
-      toast.error('Gagal memadam iklan');
+      toast.error(t('housing:delete_ad_failed', 'Gagal memadam iklan'));
     }
   };
 
@@ -59,10 +61,10 @@ export function PolyRentAdmin() {
     try {
       const { error } = await supabase.from('polyrent_listings').update({ is_verified: !current }).eq('id', id);
       if (error) throw error;
-      toast.success(!current ? 'Iklan disahkan (Verified)' : 'Pengesahan ditarik balik');
+      toast.success(!current ? t('housing:ad_verified_success', 'Iklan disahkan (Verified)') : t('housing:ad_unverified_success', 'Pengesahan ditarik balik'));
       setMatchList(prev => prev.map(m => m.id === id ? { ...m, is_verified: !current } : m));
     } catch (err) {
-      toast.error('Ralat mengemas kini status');
+      toast.error(t('housing:error_updating_status', 'Ralat mengemas kini status'));
     }
   };
 
@@ -70,10 +72,10 @@ export function PolyRentAdmin() {
     try {
       const { error } = await supabase.from('polyrent_listings').update({ is_hidden: !current }).eq('id', id);
       if (error) throw error;
-      toast.success(!current ? 'Iklan disembunyikan' : 'Iklan dipulihkan');
+      toast.success(!current ? t('housing:ad_hidden_success', 'Iklan disembunyikan') : t('housing:ad_unhidden_success', 'Iklan dipulihkan'));
       setMatchList(prev => prev.map(m => m.id === id ? { ...m, is_hidden: !current } : m));
     } catch (err) {
-      toast.error('Ralat mengemas kini status');
+      toast.error(t('housing:error_updating_status', 'Ralat mengemas kini status'));
     }
   };
 
@@ -81,7 +83,7 @@ export function PolyRentAdmin() {
     try {
       const { error } = await supabase.from('polyrent_reports').update({ status: 'CLOSED' }).eq('listing_id', listingId).eq('status', 'OPEN');
       if (error) throw error;
-      toast.success('Semua laporan telah diselesaikan');
+      toast.success(t('housing:all_reports_resolved_success', 'Semua laporan telah diselesaikan'));
       // Update local state to mark reports as closed
       setMatchList(prev => prev.map(m => {
         if (m.id === listingId) {
@@ -93,7 +95,7 @@ export function PolyRentAdmin() {
         return m;
       }));
     } catch (err) {
-      toast.error('Gagal menyelesaikan laporan');
+      toast.error(t('housing:resolve_reports_failed', 'Gagal menyelesaikan laporan'));
     }
   };
 
@@ -114,20 +116,20 @@ export function PolyRentAdmin() {
         <div>
           <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
             <Home className="w-7 h-7 text-teal-500" />
-            Pengurusan PolyRent
+            {t('housing:polyrent_mgmt_title', 'Pengurusan PolyRent')}
           </h1>
-          <p className="text-sm text-white/50 mt-1">Pantau dan urus iklan pencarian rakan serumah.</p>
+          <p className="text-sm text-white/50 mt-1">{t('housing:polyrent_mgmt_subtitle', 'Pantau dan urus iklan pencarian rakan serumah.')}</p>
         </div>
       </div>
 
       {/* Settings Panel */}
       <div className="bg-white/5 border border-white/10 p-6 rounded-3xl mb-6">
-        <h3 className="text-lg font-bold text-white mb-2">Tetapan Modul</h3>
-        <p className="text-sm text-white/50 mb-4">Hidupkan atau matikan ciri PolyRent untuk semua pengguna portal.</p>
+        <h3 className="text-lg font-bold text-white mb-2">{t('housing:module_settings_title', 'Tetapan Modul')}</h3>
+        <p className="text-sm text-white/50 mb-4">{t('housing:module_settings_desc', 'Hidupkan atau matikan ciri PolyRent untuk semua pengguna portal.')}</p>
         <FeatureToggle 
           moduleId="polyrent" 
-          label="Sistem PolyRent" 
-          description="Buka portal iklan rumah/rakan bilik kepada pelajar." 
+          label={t('housing:system_polyrent_label', 'Sistem PolyRent')} 
+          description={t('housing:system_polyrent_desc', 'Buka portal iklan rumah/rakan bilik kepada pelajar.')} 
         />
       </div>
 
@@ -136,7 +138,7 @@ export function PolyRentAdmin() {
         <Search className="w-4 h-4 text-white/40 absolute left-4 top-1/2 -translate-y-1/2" />
         <input 
           type="text"
-          placeholder="Cari tajuk, lokasi, atau matrik..."
+          placeholder={t('housing:search_polyrent_placeholder', 'Cari tajuk, lokasi, atau matrik...')}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full bg-black/20 border border-white/10 rounded-xl pl-10 pr-4 py-3 text-sm text-white placeholder:text-white/30 focus:outline-none focus:border-white/30 transition-colors"
@@ -148,12 +150,12 @@ export function PolyRentAdmin() {
         {loading ? (
           <div className="flex flex-col items-center justify-center h-full text-white/40 py-20">
             <Loader2 className="w-8 h-8 animate-spin mb-4 text-teal-500" />
-            <p className="text-xs font-bold uppercase tracking-widest animate-pulse">Memuatkan Rekod...</p>
+            <p className="text-xs font-bold uppercase tracking-widest animate-pulse">{t('housing:loading_records', 'Memuatkan Rekod...')}</p>
           </div>
         ) : filteredMatch.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-white/40 py-20">
             <Home className="w-12 h-12 mb-4 opacity-20" />
-            <p className="text-sm">Tiada iklan dijumpai.</p>
+            <p className="text-sm">{t('housing:no_ads_found', 'Tiada iklan dijumpai.')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -171,8 +173,8 @@ export function PolyRentAdmin() {
                     <div>
                       <h4 className="font-bold text-white leading-tight mb-1 flex items-center gap-2">
                         {m.title}
-                        {m.is_verified && <ShieldCheck className="w-4 h-4 text-emerald-500" title="Verified by KLK" />}
-                        {m.is_hidden && <EyeOff className="w-4 h-4 text-rose-500" title="Hidden (Reported)" />}
+                        {m.is_verified && <ShieldCheck className="w-4 h-4 text-emerald-500" title={t('housing:verified_by_klk', 'Disahkan oleh KLK')} />}
+                        {m.is_hidden && <EyeOff className="w-4 h-4 text-rose-500" title={t('housing:hidden_reported', 'Disembunyikan (Dilaporkan)')} />}
                       </h4>
                       <div className="text-xs text-white/50 flex items-center gap-1">
                         <MapPin className="w-3 h-3 text-rose-500" /> {m.lokasi}
@@ -182,21 +184,21 @@ export function PolyRentAdmin() {
                       <button
                         onClick={() => handleToggleVerified(m.id, m.is_verified)}
                         className={cn("p-1.5 rounded-lg transition-colors", m.is_verified ? "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500 hover:text-white" : "bg-white/10 text-white/50 hover:bg-emerald-500/20 hover:text-emerald-400")}
-                        title={m.is_verified ? "Tarik Balik Pengesahan" : "Sahkan Iklan (Verify)"}
+                        title={m.is_verified ? t('housing:unverify_btn', 'Tarik Balik Pengesahan') : t('housing:verify_btn', 'Sahkan Iklan (Verify)')}
                       >
                         <ShieldCheck className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleToggleHidden(m.id, m.is_hidden)}
                         className={cn("p-1.5 rounded-lg transition-colors", m.is_hidden ? "bg-rose-500/20 text-rose-400 hover:bg-rose-500 hover:text-white" : "bg-white/10 text-white/50 hover:bg-rose-500/20 hover:text-rose-400")}
-                        title={m.is_hidden ? "Pulihkan (Unhide)" : "Sembunyikan (Hide)"}
+                        title={m.is_hidden ? t('housing:unhide_btn', 'Pulihkan (Unhide)') : t('housing:hide_btn', 'Sembunyikan (Hide)')}
                       >
                         <EyeOff className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDeleteMatch(m.id)}
                         className="p-1.5 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-colors ml-1"
-                        title="Padam Iklan Secara Kekal"
+                        title={t('housing:delete_ad_perm_btn', 'Padam Iklan Secara Kekal')}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -204,7 +206,11 @@ export function PolyRentAdmin() {
                   </div>
                   
                   <div className="text-xs text-white/70 mb-4 line-clamp-2">
-                    RM{m.sewa_bulanan} • {m.kekosongan} Kosong • {m.jantina_prefer}
+                    {t('housing:listing_summary_line', 'RM{{rent}} • {{vacancy}} Kosong • {{gender}}', {
+                      rent: m.sewa_bulanan,
+                      vacancy: m.kekosongan,
+                      gender: m.jantina_prefer,
+                    })}
                   </div>
                   
                   <div className="pt-3 border-t border-white/10 flex justify-between items-center mt-auto">
@@ -213,7 +219,7 @@ export function PolyRentAdmin() {
                       <div className="text-[10px] text-white/40 font-mono">{m.profiles?.matric_no}</div>
                     </div>
                     <div className="text-[10px] text-white/40 bg-white/5 px-2 py-1 rounded">
-                      {formatDistanceToNow(new Date(m.created_at), { addSuffix: true, locale: ms })}
+                      {formatDistanceToNow(new Date(m.created_at), { addSuffix: true, locale: i18n.language === 'en' ? enUS : ms })}
                     </div>
                   </div>
 
@@ -222,13 +228,17 @@ export function PolyRentAdmin() {
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-1.5 text-rose-400">
                           <ShieldAlert className="w-4 h-4" />
-                          <span className="text-xs font-bold">{m.polyrent_reports.filter((r: any) => r.status === 'OPEN').length} Laporan Aktif</span>
+                          <span className="text-xs font-bold">
+                            {t('housing:active_reports_count', '{{count}} Laporan Aktif', {
+                              count: m.polyrent_reports.filter((r: any) => r.status === 'OPEN').length,
+                            })}
+                          </span>
                         </div>
                         <button
                           onClick={() => handleResolveReports(m.id)}
                           className="text-[10px] bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 px-2 py-1 rounded transition-colors"
                         >
-                          Selesaikan Laporan
+                          {t('housing:resolve_reports_btn', 'Selesaikan Laporan')}
                         </button>
                       </div>
                       <div className="space-y-1.5">
@@ -239,7 +249,9 @@ export function PolyRentAdmin() {
                         ))}
                         {m.polyrent_reports.filter((r: any) => r.status === 'OPEN').length > 3 && (
                           <div className="text-[10px] text-white/40 text-center italic mt-1">
-                            +{m.polyrent_reports.filter((r: any) => r.status === 'OPEN').length - 3} laporan lain
+                            {t('housing:other_reports_count', '+{{count}} laporan lain', {
+                              count: m.polyrent_reports.filter((r: any) => r.status === 'OPEN').length - 3,
+                            })}
                           </div>
                         )}
                       </div>

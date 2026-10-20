@@ -1,31 +1,32 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Settings, Trophy, Users, BarChart3, Calendar, Layers,
   Menu, X, ArrowLeft, ChevronRight
 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSupsas } from '@/contexts/SupsasContext';
-
-const ADMIN_NAV = [
-  { label: 'Gambaran Keseluruhan', path: '/supsas/admin',          icon: BarChart3, exact: true },
-  { label: 'Urus Sukan',           path: '/supsas/admin/sukan',    icon: Trophy },
-  { label: 'Urus Kontinjen',       path: '/supsas/admin/kontinjen',icon: Users },
-  { label: 'Input Keputusan',      path: '/supsas/admin/keputusan',icon: Layers },
-  { label: 'Jadual',               path: '/supsas/admin/jadual',   icon: Calendar },
-  { label: 'Tetapan Edisi',        path: '/supsas/admin/tetapan',  icon: Settings },
-];
-
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 export function SupsasAdminLayout() {
+  const { t } = useTranslation(['supsas', 'common']);
   const { profile, isSuperAdmin, isLoading } = useAuth();
   const { enableRealtime, disableRealtime } = useSupsas();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const adminNav = [
+    { label: t('supsas:admin_nav_overview', 'Gambaran Keseluruhan'), path: '/supsas/admin',          icon: BarChart3, exact: true },
+    { label: t('supsas:admin_nav_sports', 'Urus Sukan'),           path: '/supsas/admin/sukan',    icon: Trophy },
+    { label: t('supsas:admin_nav_contingents', 'Urus Kontinjen'),       path: '/supsas/admin/kontinjen',icon: Users },
+    { label: t('supsas:admin_nav_results', 'Input Keputusan'),      path: '/supsas/admin/keputusan',icon: Layers },
+    { label: t('supsas:admin_nav_schedule', 'Jadual'),               path: '/supsas/admin/jadual',   icon: Calendar },
+    { label: t('supsas:admin_nav_settings', 'Tetapan Edisi'),        path: '/supsas/admin/tetapan',  icon: Settings },
+  ];
 
   const isAdmin = isSuperAdmin || profile?.role === 'JPP';
 
@@ -57,7 +58,7 @@ export function SupsasAdminLayout() {
           </div>
           <div>
             <p className="text-sm font-black text-white leading-none">SUPSAS Admin</p>
-            <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/60 mt-0.5">Panel Kawalan</p>
+            <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/60 mt-0.5">{t('supsas:control_panel', 'Panel Kawalan')}</p>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
@@ -69,7 +70,7 @@ export function SupsasAdminLayout() {
 
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-          {ADMIN_NAV.map((item) => {
+          {adminNav.map((item) => {
             const active = item.exact
               ? location.pathname === item.path
               : location.pathname.startsWith(item.path) && location.pathname !== '/supsas/admin';
@@ -101,7 +102,7 @@ export function SupsasAdminLayout() {
             className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black text-white/30 hover:text-white hover:bg-white/5 transition-all"
           >
             <ArrowLeft className="w-4 h-4" />
-            Kembali ke SUPSAS
+            {t('supsas:back_to_supsas', 'Kembali ke SUPSAS')}
           </button>
         </div>
       </aside>

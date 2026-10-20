@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, Plus, Edit2, Trash2, Copy, RefreshCw, Save, X, CheckCircle } from 'lucide-react';
+import { Plus, Edit2, Trash2, Copy, RefreshCw, Save, X, CheckCircle } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useSupsas, SupsasKontingen } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
@@ -20,6 +21,7 @@ function generateCode(): string {
 }
 
 export function AdminKontigenPage() {
+  const { t } = useTranslation(['supsas', 'common']);
   const { kontingen, edition, refetch } = useSupsas();
   const [showForm, setShowForm] = useState(false);
   const [editTarget, setEditTarget] = useState<SupsasKontingen | null>(null);
@@ -36,45 +38,48 @@ export function AdminKontigenPage() {
   };
 
   const handleSave = async () => {
-    if (!edition || !form.name.trim() || !form.short_code.trim()) { toast.error('Sila isi semua maklumat'); return; }
+    if (!edition || !form.name.trim() || !form.short_code.trim()) {
+      toast.error(t('supsas:fill_all_fields', 'Sila isi semua maklumat'));
+      return;
+    }
     setSaving(true);
     const payload = { ...form, edition_id: edition.id };
     const { error } = editTarget
       ? await supabase.from('supsas_kontingen').update(payload).eq('id', editTarget.id)
       : await supabase.from('supsas_kontingen').insert({ ...payload, invite_code: generateCode() });
     setSaving(false);
-    if (error) { toast.error('Gagal simpan: ' + error.message); return; }
-    toast.success(editTarget ? 'Kontinjen dikemas kini!' : 'Kontinjen ditambah dengan kod jemputan!');
+    if (error) { toast.error(`${t('supsas:save_bracket_failed', 'Gagal simpan')}: ${error.message}`); return; }
+    toast.success(editTarget ? t('supsas:contingent_updated', 'Kontinjen dikemas kini!') : t('supsas:contingent_added_with_code', 'Kontinjen ditambah dengan kod jemputan!'));
     setShowForm(false);
     refetch();
   };
 
   const handleRegen = async (k: SupsasKontingen) => {
-    if (!confirm(`Jana semula kod jemputan untuk ${k.name}? Kod lama akan tidak sah.`)) return;
+    if (!confirm(t('supsas:confirm_regen_code', 'Jana semula kod jemputan untuk {{name}}? Kod lama akan tidak sah.', { name: k.name }))) return;
     const newCode = generateCode();
     const { error } = await supabase.from('supsas_kontingen')
       .update({ invite_code: newCode, invite_used: false, leader_id: null })
       .eq('id', k.id);
-    if (error) { toast.error('Gagal jana kod'); return; }
-    toast.success('Kod baru dijana!');
+    if (error) { toast.error(t('supsas:regen_code_failed', 'Gagal jana kod')); return; }
+    toast.success(t('supsas:new_code_generated', 'Kod baru dijana!'));
     refetch();
   };
 
   const handleRevoke = async (k: SupsasKontingen) => {
-    if (!confirm(`Batalkan ketua semasa untuk ${k.name}?`)) return;
+    if (!confirm(t('supsas:confirm_revoke_leader', 'Batalkan ketua semasa untuk {{name}}?', { name: k.name }))) return;
     setRevoking(k.id);
     const { error } = await supabase.rpc('supsas_revoke_leader', { p_kontingen_id: k.id });
     setRevoking(null);
-    if (error) { toast.error('Gagal batalkan'); return; }
-    toast.success('Ketua dibatalkan');
+    if (error) { toast.error(t('supsas:revoke_leader_failed', 'Gagal batalkan')); return; }
+    toast.success(t('supsas:leader_revoked_success', 'Ketua dibatalkan'));
     refetch();
   };
 
   const handleDelete = async (k: SupsasKontingen) => {
-    if (!confirm(`Padam kontinjen "${k.name}"? Semua data peserta akan turut dipadam.`)) return;
+    if (!confirm(t('supsas:confirm_delete_contingent', 'Padam kontinjen "{{name}}"? Semua data peserta akan turut dipadam.', { name: k.name }))) return;
     const { error } = await supabase.from('supsas_kontingen').delete().eq('id', k.id);
-    if (error) { toast.error('Gagal padam'); return; }
-    toast.success('Kontinjen dipadam');
+    if (error) { toast.error(t('supsas:save_bracket_failed', 'Gagal padam')); return; }
+    toast.success(t('supsas:contingent_deleted', 'Kontinjen dipadam'));
     refetch();
   };
 
@@ -83,19 +88,19 @@ export function AdminKontigenPage() {
     navigator.clipboard.writeText(k.invite_code);
     setCopiedId(k.id);
     setTimeout(() => setCopiedId(null), 2000);
-    toast.success('Kod disalin!');
+    toast.success(t('common:copied', 'Disalin!'));
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-black text-white">Urus Kontinjen</h1>
-          <p className="text-white/30 text-sm mt-1">{kontingen.length} jabatan berdaftar</p>
+          <h1 className="text-2xl font-black text-white">{t('supsas:manage_contingents_title', 'Urus Kontinjen')}</h1>
+          <p className="text-white/30 text-sm mt-1">{t('supsas:dept_registered_count', '{{count}} jabatan berdaftar', { count: kontingen.length })}</p>
         </div>
         <button onClick={openNew} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm font-black uppercase tracking-widest hover:bg-amber-500/30 transition-all">
           <Plus className="w-4 h-4" />
-          Tambah Kontinjen
+          {t('supsas:add_contingent_btn', 'Tambah Kontinjen')}
         </button>
       </div>
 
@@ -129,11 +134,11 @@ export function AdminKontigenPage() {
               <div className="hidden sm:flex items-center">
                 {k.leader_id ? (
                   <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-                    ✓ Ada Ketua
+                    {t('supsas:has_leader_badge', '✓ Ada Ketua')}
                   </span>
                 ) : (
                   <span className="px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest bg-amber-500/10 border border-amber-500/20 text-amber-400">
-                    Tiada Ketua
+                    {t('supsas:no_leader_badge', 'Tiada Ketua')}
                   </span>
                 )}
               </div>
@@ -171,7 +176,7 @@ export function AdminKontigenPage() {
                   className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/5 border border-white/10 text-white/30 text-[10px] font-black uppercase tracking-widest hover:text-white hover:bg-white/10 transition-all flex-shrink-0"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
-                  Jana Semula
+                  {t('supsas:regen_btn', 'Jana Semula')}
                 </button>
 
                 {/* Revoke leader */}
@@ -182,12 +187,12 @@ export function AdminKontigenPage() {
                     className="flex items-center gap-2 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-red-500/20 transition-all flex-shrink-0 disabled:opacity-50"
                   >
                     <X className="w-3.5 h-3.5" />
-                    Batalkan Ketua
+                    {t('supsas:revoke_leader_btn', 'Batalkan Ketua')}
                   </button>
                 )}
               </div>
               <p className="text-[9px] text-white/20 mt-2 font-medium">
-                {k.invite_used ? '✓ Kod telah digunakan oleh ketua' : '⏳ Menunggu ketua guna kod jemputan'}
+                {k.invite_used ? t('supsas:code_used_by_leader', '✓ Kod telah digunakan oleh ketua') : t('supsas:waiting_leader_use_code', '⏳ Menunggu ketua guna kod jemputan')}
               </p>
             </div>
           </motion.div>
@@ -195,7 +200,7 @@ export function AdminKontigenPage() {
 
         {kontingen.length === 0 && (
           <div className="text-center py-12 text-white/20 text-sm font-black uppercase tracking-widest">
-            Belum ada kontinjen. Tambah jabatan pertama!
+            {t('supsas:no_contingents_add_first', 'Belum ada kontinjen. Tambah jabatan pertama!')}
           </div>
         )}
       </div>
@@ -214,24 +219,24 @@ export function AdminKontigenPage() {
               className="fixed inset-x-4 bottom-4 top-auto md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:top-1/2 md:-translate-y-1/2 md:w-[480px] z-50 bg-[#0A1628] border border-white/10 rounded-[2rem] shadow-[0_20px_80px_rgba(0,0,0,0.7)] p-6 space-y-5"
             >
               <div className="flex items-center justify-between">
-                <h2 className="text-lg font-black text-white">{editTarget ? 'Edit Kontinjen' : 'Tambah Kontinjen Baharu'}</h2>
+                <h2 className="text-lg font-black text-white">{editTarget ? t('supsas:edit_contingent_title', 'Edit Kontinjen') : t('supsas:add_contingent_title', 'Tambah Kontinjen Baharu')}</h2>
                 <button onClick={() => setShowForm(false)} className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-white/40 hover:text-white transition-all">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Nama Jabatan</label>
-                <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="cth: Jabatan Teknologi Maklumat" className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-amber-500/40 transition-all" />
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:dept_name_label', 'Nama Jabatan')}</label>
+                <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder={t('supsas:dept_name_placeholder', 'cth: Jabatan Teknologi Maklumat')} className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-medium placeholder-white/20 focus:outline-none focus:border-amber-500/40 transition-all" />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Kod Pendek</label>
-                <input value={form.short_code} onChange={e => setForm(p => ({ ...p, short_code: e.target.value.toUpperCase().slice(0, 6) }))} placeholder="cth: JTM" className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-black uppercase placeholder-white/20 focus:outline-none focus:border-amber-500/40 transition-all" maxLength={6} />
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:short_code_label', 'Kod Pendek')}</label>
+                <input value={form.short_code} onChange={e => setForm(p => ({ ...p, short_code: e.target.value.toUpperCase().slice(0, 6) }))} placeholder={t('supsas:short_code_placeholder', 'cth: JTM')} className="w-full px-4 py-3 rounded-2xl bg-white/5 border border-white/10 text-white text-sm font-black uppercase placeholder-white/20 focus:outline-none focus:border-amber-500/40 transition-all" maxLength={6} />
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">Warna Kontinjen</label>
+                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40">{t('supsas:contingent_color_label', 'Warna Kontinjen')}</label>
                 <div className="flex flex-wrap gap-2">
                   {DEPT_COLORS.map(c => (
                     <button key={c} type="button" onClick={() => setForm(p => ({ ...p, color: c }))}
@@ -250,7 +255,7 @@ export function AdminKontigenPage() {
                 className="w-full py-4 rounded-2xl bg-amber-500 hover:bg-amber-400 text-black font-black uppercase tracking-widest text-sm transition-all disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {saving ? <span className="animate-spin">⟳</span> : <Save className="w-4 h-4" />}
-                {editTarget ? 'Simpan Perubahan' : 'Tambah + Jana Kod Jemputan'}
+                {editTarget ? t('supsas:save_changes_btn', 'Simpan Perubahan') : t('supsas:add_and_gen_code_btn', 'Tambah + Jana Kod Jemputan')}
               </button>
             </motion.div>
           </>

@@ -7,6 +7,7 @@
  */
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Trophy, MapPin, LayoutGrid, List } from 'lucide-react';
 import { useSupsas } from '@/contexts/SupsasContext';
@@ -17,6 +18,7 @@ import { cn } from '@/lib/utils';
 type Tab = 'kumpulan' | 'bracket' | 'jadual';
 
 export function BracketPage() {
+  const { t } = useTranslation(['supsas', 'common']);
   const { sportId } = useParams<{ sportId: string }>();
   const navigate = useNavigate();
   const { sports, fixtures, kontingen, teams } = useSupsas();
@@ -48,18 +50,18 @@ export function BracketPage() {
   const SportIconComponent = (props: any) => sport ? <DynamicIcon name={sport.icon} fallback="Trophy" {...props} /> : <Trophy {...props} />;
 
   const TABS: Array<{ id: Tab; label: string; icon: React.ReactNode }> = [
-    { id: 'kumpulan', label: 'Kumpulan', icon: <LayoutGrid className="w-3.5 h-3.5" /> },
-    { id: 'bracket', label: 'Bracket KO', icon: <Trophy className="w-3.5 h-3.5" /> },
-    { id: 'jadual', label: 'Semua Match', icon: <List className="w-3.5 h-3.5" /> },
+    { id: 'kumpulan', label: t('supsas:tab_groups', 'Kumpulan'), icon: <LayoutGrid className="w-3.5 h-3.5" /> },
+    { id: 'bracket', label: t('supsas:tab_bracket_ko', 'Bracket KO'), icon: <Trophy className="w-3.5 h-3.5" /> },
+    { id: 'jadual', label: t('supsas:tab_all_matches', 'Semua Match'), icon: <List className="w-3.5 h-3.5" /> },
   ];
 
   if (!sport) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center text-center px-6">
         <Trophy className="w-12 h-12 text-white/10 mb-4" />
-        <h1 className="text-2xl font-black text-white mb-2">Sukan Tidak Dijumpai</h1>
+        <h1 className="text-2xl font-black text-white mb-2">{t('supsas:sport_not_found', 'Sukan Tidak Dijumpai')}</h1>
         <button onClick={() => navigate('/supsas')} className="flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-amber-500/20 border border-amber-500/30 text-amber-400 text-sm font-black mt-4">
-          <ArrowLeft className="w-4 h-4" /> Kembali
+          <ArrowLeft className="w-4 h-4" /> {t('common:back', 'Kembali')}
         </button>
       </div>
     );
@@ -69,7 +71,7 @@ export function BracketPage() {
     <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
       {/* Back nav */}
       <button onClick={() => navigate('/supsas/jadual')} className="flex items-center gap-2 text-white/40 hover:text-white text-sm font-bold transition-all">
-        <ArrowLeft className="w-4 h-4" /> Jadual Pertandingan
+        <ArrowLeft className="w-4 h-4" /> {t('supsas:schedule_nav', 'Jadual Pertandingan')}
       </button>
 
       {/* Sport header */}
@@ -83,12 +85,12 @@ export function BracketPage() {
             {liveCount > 0 && (
               <span className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-500/20 border border-red-500/30">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping" />
-                <span className="text-[9px] font-black uppercase tracking-widest text-red-400">{liveCount} Live</span>
+                <span className="text-[9px] font-black uppercase tracking-widest text-red-400">{t('supsas:status_live_count', '{{count}} Live', { count: liveCount })}</span>
               </span>
             )}
           </div>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
-            <span className="text-xs text-white/30 font-bold uppercase tracking-widest">Peringkat Kumpulan + Gugur</span>
+            <span className="text-xs text-white/30 font-bold uppercase tracking-widest">{t('supsas:format_group_knockout', 'Peringkat Kumpulan + Gugur')}</span>
             {sport.venue && (
               <span className="flex items-center gap-1 text-xs text-white/30">
                 <MapPin className="w-3 h-3" />{sport.venue}
@@ -103,7 +105,7 @@ export function BracketPage() {
                 style={{ width: sportFixtures.length ? `${(doneCount / sportFixtures.length) * 100}%` : '0%' }}
               />
             </div>
-            <span className="text-[9px] text-white/30 font-bold">{doneCount}/{sportFixtures.length} selesai</span>
+            <span className="text-[9px] text-white/30 font-bold">{t('supsas:fixtures_completed_progress', '{{done}}/{{total}} selesai', { done: doneCount, total: sportFixtures.length })}</span>
           </div>
         </div>
       </motion.div>
@@ -111,8 +113,8 @@ export function BracketPage() {
       {!hasBracket ? (
         <div className="text-center py-16 rounded-2xl bg-white/[0.02] border border-white/5">
           <Trophy className="w-10 h-10 text-white/10 mx-auto mb-3" />
-          <p className="text-white/20 text-sm font-black uppercase tracking-widest">Bracket belum dijana</p>
-          <p className="text-white/10 text-xs mt-2">Exco Sukan perlu jana bracket terlebih dahulu.</p>
+          <p className="text-white/20 text-sm font-black uppercase tracking-widest">{t('supsas:bracket_not_generated', 'Bracket belum dijana')}</p>
+          <p className="text-white/10 text-xs mt-2">{t('supsas:bracket_not_generated_desc', 'Exco Sukan perlu jana bracket terlebih dahulu.')}</p>
         </div>
       ) : (
         <>
@@ -142,11 +144,11 @@ export function BracketPage() {
               <motion.div key="kumpulan" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
                 <div className="text-center py-3 px-4 rounded-xl bg-white/[0.02] border border-white/5">
                   <p className="text-white/30 text-[10px] font-medium">
-                    Menang = <span className="text-emerald-400 font-black">3 mata</span> &nbsp;·&nbsp;
-                    Seri = <span className="text-amber-400 font-black">1 mata</span> &nbsp;·&nbsp;
-                    Kalah = <span className="text-red-400 font-black">0 mata</span>
+                    {t('supsas:rule_win_pts', 'Menang = 3 mata')} &nbsp;·&nbsp;
+                    {t('supsas:rule_draw_pts', 'Seri = 1 mata')} &nbsp;·&nbsp;
+                    {t('supsas:rule_loss_pts', 'Kalah = 0 mata')}
                     &nbsp;&nbsp;|&nbsp;&nbsp;
-                    Top 2 setiap kumpulan maju ke {hasQF ? 'Suku Akhir' : 'Separuh Akhir'}
+                    {t('supsas:rule_advance_prefix', 'Top 2 setiap kumpulan maju ke')} {hasQF ? t('supsas:bracket_quarterfinals', 'Suku Akhir') : t('supsas:bracket_semifinals', 'Separuh Akhir')}
                   </p>
                 </div>
 
@@ -170,14 +172,14 @@ export function BracketPage() {
                 <div className="rounded-[2rem] bg-white/[0.02] border border-white/5 p-5">
                   <div className="flex items-center gap-2 mb-5">
                     <Trophy className="w-4 h-4 text-amber-400" />
-                    <span className="text-sm font-black text-white">Fasa Knockout</span>
+                    <span className="text-sm font-black text-white">{t('supsas:knockout_phase', 'Fasa Knockout')}</span>
                     <span className="text-[10px] text-white/30 font-medium ml-1">
                       ({hasQF ? 'QF → SF → Final' : 'SF → Final'})
                     </span>
                   </div>
                   {sfFixtures.length === 0 && !finalFixture ? (
                     <div className="text-center py-10 text-white/20 text-xs font-black uppercase tracking-widest">
-                      Fasa KO bermula selepas fasa kumpulan selesai
+                      {t('supsas:ko_starts_after_groups', 'Fasa KO bermula selepas fasa kumpulan selesai')}
                     </div>
                   ) : (
                     <KnockoutBracket
@@ -210,7 +212,7 @@ export function BracketPage() {
                             color: grp === 'A' ? '#F59E0B' : '#8B5CF6',
                           }}
                         >
-                          Kumpulan {grp}
+                          {t('supsas:group_name_title', 'Kumpulan {{name}}', { name: grp })}
                         </span>
                         <div className="h-px flex-1 bg-white/5" />
                       </div>
@@ -227,7 +229,7 @@ export function BracketPage() {
                     <div className="flex items-center gap-3 mb-3">
                       <div className="h-px flex-1 bg-white/5" />
                       <span className="text-[9px] font-black uppercase tracking-[0.3em] px-3 py-1 rounded-full bg-amber-500/15 text-amber-400">
-                        Fasa Knockout
+                        {t('supsas:knockout_phase', 'Fasa Knockout')}
                       </span>
                       <div className="h-px flex-1 bg-white/5" />
                     </div>
@@ -252,6 +254,7 @@ function MatchRow({ fixture, kontingenMap, teamsMap }: {
   kontingenMap: Record<string, import('@/contexts/SupsasContext').SupsasKontingen>;
   teamsMap?: Record<string, import('@/contexts/SupsasContext').SupsasTeam>;
 }) {
+  const { t } = useTranslation(['supsas']);
   const isTeamBased = !!(fixture.team_a_id || fixture.team_b_id);
   let aDisplay = 'TBD', bDisplay = 'TBD';
   let aColor: string | undefined, bColor: string | undefined;
@@ -316,7 +319,7 @@ function MatchRow({ fixture, kontingenMap, teamsMap }: {
         isDone ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' :
         'bg-white/5 border-white/10 text-white/30'
       )}>
-        {isLive ? '🔴 Live' : isDone ? 'Selesai' : 'Akan Datang'}
+        {isLive ? t('supsas:status_live_badge', '🔴 Live') : isDone ? t('supsas:status_completed', 'Selesai') : t('supsas:status_upcoming', 'Akan Datang')}
       </span>
     </div>
   );

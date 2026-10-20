@@ -4,7 +4,8 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { X, Send, MessageCircle, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
+import { useTranslation } from 'react-i18next';
 import toast from 'react-hot-toast';
 
 interface PolyRentChatModalProps {
@@ -15,6 +16,7 @@ interface PolyRentChatModalProps {
 }
 
 export function PolyRentChatModal({ isOpen, onClose, receiverId, receiverName }: PolyRentChatModalProps) {
+  const { t, i18n } = useTranslation(['housing', 'common']);
   const { profile } = useAuth();
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -90,7 +92,7 @@ export function PolyRentChatModal({ isOpen, onClose, receiverId, receiverName }:
     });
 
     if (error) {
-      toast.error('Gagal menghantar mesej');
+      toast.error(t('housing:chat_send_failed', 'Gagal menghantar mesej'));
       setNewMessage(msgText);
     }
   };
@@ -123,7 +125,7 @@ export function PolyRentChatModal({ isOpen, onClose, receiverId, receiverName }:
                   <h3 className="text-base font-bold text-slate-900 dark:text-white leading-tight">{receiverName}</h3>
                   <p className="text-xs text-slate-500 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Mesej Langsung
+                    {t('housing:chat_direct_message', 'Mesej Langsung')}
                   </p>
                 </div>
               </div>
@@ -146,7 +148,7 @@ export function PolyRentChatModal({ isOpen, onClose, receiverId, receiverName }:
                   <div className="w-16 h-16 bg-slate-200 dark:bg-slate-800 rounded-full flex items-center justify-center mb-3">
                      <MessageCircle className="w-8 h-8 text-slate-400" />
                   </div>
-                  <p className="text-sm font-medium">Mulakan perbualan dengan {receiverName}</p>
+                  <p className="text-sm font-medium">{t('housing:chat_start_convo', 'Mulakan perbualan dengan {{name}}', { name: receiverName })}</p>
                 </div>
               ) : (
                 messages.map((msg, idx) => {
@@ -161,7 +163,7 @@ export function PolyRentChatModal({ isOpen, onClose, receiverId, receiverName }:
                         <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                       </div>
                       <span className="text-[10px] text-slate-400 mt-1 px-1 font-medium">
-                        {format(new Date(msg.created_at), 'hh:mm a', { locale: ms })}
+                        {format(new Date(msg.created_at), 'hh:mm a', { locale: i18n.language === 'en' ? enUS : ms })}
                       </span>
                     </div>
                   );
@@ -177,7 +179,7 @@ export function PolyRentChatModal({ isOpen, onClose, receiverId, receiverName }:
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
-                  placeholder="Taip mesej..."
+                  placeholder={t('housing:chat_type_placeholder', 'Taip mesej...')}
                   className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-full px-5 py-3 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-teal-500/50 outline-none transition-all"
                 />
                 <button
