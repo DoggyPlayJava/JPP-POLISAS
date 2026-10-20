@@ -536,7 +536,7 @@ describe('Task 5: Domain 3 Integration — Exco Units (Keusahawanan, Kebajikan, 
     it('renders KeusahawananLayout and KeusahawananSidebar with English branding', () => {
       const htmlSidebar = renderPage(<KeusahawananSidebar color="#1B5E20" />);
       expect(htmlSidebar).toContain('e-Entrepreneurship &amp; Student Commerce');
-      expect(htmlSidebar).toContain('Point of Sale (POS), inventory stock tracking, and student business onboarding.');
+      expect(htmlSidebar).toContain('Student Business &amp; POS');
 
       const htmlLayout = renderPage(
         <LayoutInner
@@ -586,7 +586,7 @@ describe('Task 5: Domain 3 Integration — Exco Units (Keusahawanan, Kebajikan, 
     it('renders KebajikanLayout and KebajikanSidebar with English branding', () => {
       const htmlSidebar = renderPage(<KebajikanSidebar />);
       expect(htmlSidebar).toContain('e-Welfare &amp; Public Complaints');
-      expect(htmlSidebar).toContain('Student ticketing system, cafeteria audits, food bank access, and emergency welfare.');
+      expect(htmlSidebar).toContain('Welfare &amp; Student Support');
 
       const htmlLayout = renderPage(<KebajikanLayout />);
       expect(htmlLayout).toContain('e-Welfare &amp; Public Complaints');
@@ -675,7 +675,7 @@ describe('Task 5: Domain 3 Integration — Exco Units (Keusahawanan, Kebajikan, 
     it('renders KeusahawananLayout and KeusahawananSidebar with Bahasa Melayu branding', () => {
       const htmlSidebar = renderPage(<KeusahawananSidebar color="#1B5E20" />);
       expect(htmlSidebar).toContain('e-Keusahawanan &amp; Perniagaan Pelajar');
-      expect(htmlSidebar).toContain('Terminal Titik Jualan (POS), pemantauan stok inventori, dan onboarding perniagaan pelajar.');
+      expect(htmlSidebar).toContain('Perniagaan Pelajar &amp; POS');
 
       const htmlLayout = renderPage(
         <LayoutInner
@@ -725,7 +725,7 @@ describe('Task 5: Domain 3 Integration — Exco Units (Keusahawanan, Kebajikan, 
     it('renders KebajikanLayout and KebajikanSidebar with Bahasa Melayu branding', () => {
       const htmlSidebar = renderPage(<KebajikanSidebar />);
       expect(htmlSidebar).toContain('e-Kebajikan &amp; Aduan Awam');
-      expect(htmlSidebar).toContain('Sistem tiket pelajar, audit kafeteria, bantuan food bank, dan kebajikan kecemasan.');
+      expect(htmlSidebar).toContain('Kebajikan &amp; Bantuan Mahasiswa');
 
       const htmlLayout = renderPage(<KebajikanLayout />);
       expect(htmlLayout).toContain('e-Kebajikan &amp; Aduan Awam');

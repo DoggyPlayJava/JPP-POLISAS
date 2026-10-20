@@ -192,7 +192,7 @@ export function KeusahawananSidebar({ color }: { color: string }) {
           </div>
           <div>
             <p className="font-black text-sm tracking-tight text-white/90">{t('module_title')}</p>
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/40">{t('module_subtitle')}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.15em] text-white/50">{t('module_subtitle')}</p>
           </div>
         </div>
       </div>

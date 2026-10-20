@@ -153,7 +153,7 @@ export function KebajikanSidebar() {
               {t('module_title')}
             </p>
             <p className={cn(
-              "text-[9px] font-black uppercase tracking-[0.25em]",
+              "text-[9px] font-black uppercase tracking-[0.15em]",
               isDark ? "text-teal-500/70" : "text-[#0f766e]"
             )}>
               {t('module_subtitle')}

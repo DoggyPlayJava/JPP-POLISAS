@@ -372,7 +372,7 @@
   "manual_reg_toast_name_required": "Please enter Leader / Participant Name.",
   "manual_reg_toast_success": "Participant successfully registered manually!",
   "max_participants_count": "Max Participants: {{count}} people",
-  "module_subtitle": "Tournament orchestration, digital jury grading sheets, live scoreboard, and verifiable digital certificates.",
+  "module_subtitle": "Event Management System",
   "module_title": "EMS — Event Management & Scoring System",
   "nav_admin": "Administration",
   "nav_event_mgmt": "Event Management",
