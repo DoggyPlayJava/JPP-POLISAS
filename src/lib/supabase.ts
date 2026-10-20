@@ -75,6 +75,8 @@ export interface Profile {
   semester_override?: number | null;
   // Food Bank: pelajar telah sahkan Nama & No. Matrik (popup first-time)
   fb_identity_confirmed?: boolean | null;
+  // Bahasa Pilihan Antaramuka Pengguna (en / ms)
+  preferred_language?: 'en' | 'ms' | null;
 }
 
 //LOGS SYSTEM
