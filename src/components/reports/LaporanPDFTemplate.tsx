@@ -5,6 +5,7 @@ import {
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import jppLogoLandscape from '@/assets/Logo-JPP-Laporan.jpeg';
+import i18n from '@/lib/i18n';
 
 // Pendaftaran Font (Helvetica)
 Font.register({
@@ -235,7 +236,7 @@ const calcBoxWidth = (lineWidth: number, ...otherTexts: (string | undefined | nu
 // ─── HARDCODED YDP (JPP POLISAS 2026) ────────────────────────────────────────
 
 const YDP_NAME = 'MUHAMAD AMIRUL HAKIMI BIN MOHD ZAWAWI';
-const t = (k: string, fb: string, _opt?: any) => fb;
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 const YDP_TITLE = t('kpp:yang_di_pertua', 'YANG DI-PERTUA');
 const DEFAULT_JPP = t('common:jpp_full', 'JAWATANKUASA PERWAKILAN PELAJAR');

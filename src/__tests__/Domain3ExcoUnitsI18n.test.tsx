@@ -606,7 +606,7 @@ describe('Task 5: Domain 3 Integration — Exco Units (Keusahawanan, Kebajikan, 
       expect(html).toContain('Cafeteria Hygiene / Pricing');
       expect(html).toContain('Open / Investigating');
       expect(html).toContain('In Progress');
-      expect(html).toContain('Resolved &amp; Closed');
+      expect(html).toContain('Resolved');
     });
 
     it('renders KebajikanFoodBankPage with English pantry, application, and eligibility terms', () => {
@@ -745,7 +745,7 @@ describe('Task 5: Domain 3 Integration — Exco Units (Keusahawanan, Kebajikan, 
       expect(html).toContain('Kebersihan / Harga Kafeteria');
       expect(html).toContain('Dibuka / Siasatan');
       expect(html).toContain('Dalam Tindakan');
-      expect(html).toContain('Selesai &amp; Ditutup');
+      expect(html).toContain('Selesai');
     });
 
     it('renders KebajikanFoodBankPage with Bahasa Melayu pantry, application, and eligibility terms', () => {

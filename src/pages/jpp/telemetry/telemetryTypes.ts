@@ -1,4 +1,5 @@
-const t = <T extends string>(k: string, fb: T, opt?: any): T => fb;
+import i18n from '@/lib/i18n';
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 export const RESILIENCE_RATING_ATTENTION = t('jpp:telemetry_rating_attention', 'Perhatian Diperlukan');
 export type ResilienceRating = 'Cemerlang' | 'Stabil' | typeof RESILIENCE_RATING_ATTENTION | 'Kritikal';
 

@@ -1,4 +1,5 @@
-const t = (k: string, fb: string, _opt?: any) => fb;
+import i18n from '@/lib/i18n';
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 export const emailLayout = (title: string, bodyHTML: string, preheader?: string) => t('portal:email_layout', `
 <!DOCTYPE html>

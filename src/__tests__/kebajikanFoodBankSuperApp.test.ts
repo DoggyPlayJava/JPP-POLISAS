@@ -235,7 +235,7 @@ describe('Task 2: Borang Aduan Fasiliti Ekspres Revamp (KebajikanSubmitPage.tsx)
     expect(content).toMatch(/jabatan/);
 
     // Dynamic re-sync on profile or user update
-    expect(content).toMatch(/useEffect\(\s*\(\)\s*=>\s*\{[\s\S]*profile[\s\S]*user[\s\S]*\}\s*,\s*\[profile,\s*user\]\)/);
+    expect(content).toMatch(/useEffect\(\s*\(\)\s*=>\s*\{[\s\S]*profile[\s\S]*user[\s\S]*\}\s*,\s*\[profile,\s*user,\s*t\]\)/);
   });
 
   it('implements direct camera capture with capture="environment" and accept="image/*"', () => {

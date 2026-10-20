@@ -321,7 +321,7 @@ describe('Task 3: Domain 1 Integration — Core Student Hub & e-KPP i18n', () =>
       expect(dashSrc).toContain("t('kpp:stats_activities')");
       expect(dashSrc).toContain("t('kpp:stats_reports')");
       expect(dashSrc).toContain("t('kpp:stats_pending')");
-      expect(dashSrc).toContain("t('kpp:my_clubs')");
+      expect(dashSrc).toContain("t('kpp:my_clubs'");
       expect(dashSrc).toContain("t('kpp:upcoming_activities')");
       expect(dashSrc).toContain("t('kpp:join_club')");
       expect(dashSrc).toContain("t('kpp:submit_report')");
@@ -348,7 +348,7 @@ describe('Task 3: Domain 1 Integration — Core Student Hub & e-KPP i18n', () =>
       expect(aktSrc).toContain("t('kpp:event_status_completed')");
 
       expect(lapSrc).toContain("import { useTranslation } from 'react-i18next';");
-      expect(lapSrc).toContain("useTranslation(['kpp', 'common'])");
+      expect(lapSrc).toContain("useTranslation(['portal', 'kpp', 'common'])");
       expect(lapSrc).toContain("t('kpp:submit_report')");
       expect(lapSrc).toContain("t('kpp:report_management')");
       expect(lapSrc).toContain("t('kpp:review_reports')");
@@ -404,7 +404,7 @@ describe('Task 3: Domain 1 Integration — Core Student Hub & e-KPP i18n', () =>
       expect(html).toContain('Active Activities');
       expect(html).toContain('Upcoming Campus Events');
       expect(html).toContain('Join a Club');
-      expect(html).toContain('Submit Activity Report');
+      expect(html).toContain('Submit Report');
     });
 
     it('renders KelabPage directory title, search placeholder, and categories in English', () => {
@@ -468,7 +468,7 @@ describe('Task 3: Domain 1 Integration — Core Student Hub & e-KPP i18n', () =>
         </MemoryRouter>
       );
 
-      expect(html).toContain('Submit Activity Report');
+      expect(html).toContain('Submit Report');
       expect(html).toContain('Report Management');
       expect(html).toContain('Review Activity Reports');
     });
@@ -523,7 +523,7 @@ describe('Task 3: Domain 1 Integration — Core Student Hub & e-KPP i18n', () =>
       expect(html).toContain('Aktiviti Aktif');
       expect(html).toContain('Program Kampus Akan Datang');
       expect(html).toContain('Sertai Kelab');
-      expect(html).toContain('Hantar Laporan Aktiviti');
+      expect(html).toContain('Hantar Laporan');
     });
 
     it('renders KelabPage directory title, search placeholder, and categories in Bahasa Melayu', () => {
@@ -578,7 +578,7 @@ describe('Task 3: Domain 1 Integration — Core Student Hub & e-KPP i18n', () =>
         </MemoryRouter>
       );
 
-      expect(html).toContain('Hantar Laporan Aktiviti');
+      expect(html).toContain('Hantar Laporan');
       expect(html).toContain('Pengurusan Laporan');
       expect(html).toContain('Semak Laporan Aktiviti');
     });

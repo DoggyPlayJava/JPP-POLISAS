@@ -34,6 +34,7 @@ import { getKlkAcademicYear } from '@/utils/klkUtils';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { getRoleBadgeTitle } from '@/lib/superAppHelpers';
+import i18n from '@/lib/i18n';
 
 // ── Palette Tokens (05 Earthy Minimal) ────────────────────────
 // #2E3A2F: Primary (Deep Forest Moss Green)
@@ -49,7 +50,7 @@ import { getRoleBadgeTitle } from '@/lib/superAppHelpers';
 // ─────────────────────────────────────────────────────────────────────────────
 // Super App Tab Configurations & Legacy Param Mapping
 // ─────────────────────────────────────────────────────────────────────────────
-const t = (k: string, fb: string) => fb;
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 export const SETTINGS_TAB_CONFIG = [
   { id: 'profil', label: t('settings:tab_profile', 'Profil & Akademik'), labelKey: 'tab_profile', iconComponent: User, desc: t('settings:profile_tab_desc', 'Maklumat peribadi & pinda data'), descKey: 'profile_tab_desc' },

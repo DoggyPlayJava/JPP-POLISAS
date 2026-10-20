@@ -38,6 +38,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
 import type { ClassType, StudentTimetableEntry, ImapsRoomMapping } from '@/types';
 import { COURSE_PALETTE, matchRoomToLocation, type RoomLocationLookup } from '@/lib/timetableParser';
+import i18n from '@/lib/i18n';
 
 export const DAY_NAMES: { value: number; label: string }[] = [
   { value: 1, label: 'Isnin' },
@@ -69,7 +70,7 @@ export function parseTimeToMinutes(t: string): number {
   return hours * 60 + mins;
 }
 
-const t = (k: string, fb: string, opt?: any): string => fb;
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 export function checkTimetableConflicts(
   slots: { day_of_week: number; start_time: string; end_time: string; course_code: string }[]

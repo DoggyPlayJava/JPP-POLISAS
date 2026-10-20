@@ -3,6 +3,7 @@ import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/render
 import { getContrastColor, formatDateDMY } from '@/lib/color-utils';
 import { TAKWIM_JENIS } from '@/config/takwim-constants';
 import type { TakwimItem } from '@/config/takwim-constants';
+import i18n from '@/lib/i18n';
 
 // ── Column Widths ──
 const COL = {
@@ -69,7 +70,7 @@ interface TakwimPusatPDFTemplateProps {
 }
 
 // ── Component ──
-const t = (k: string, fb: string, _opt?: any) => fb;
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 export default function TakwimPusatPDFTemplate({
   data, themeColor, session, filterLabel,

@@ -80,7 +80,11 @@ describe('Language Detection Algorithm & Background DB Sync', () => {
     expect(detectLanguage('zh-CN')).toBe('en');
     expect(detectLanguage('fr-FR')).toBe('en');
     expect(detectLanguage('')).toBe('en');
-    expect(detectLanguage(undefined)).toBe('en');
+  });
+
+  it('reads navigator.language when no explicit browser language is passed', () => {
+    // setup.ts sets navigator.language = 'ms-MY' for the test environment
+    expect(detectLanguage(undefined)).toBe('ms');
   });
 
   it('prioritizes saved localStorage over browser language', () => {

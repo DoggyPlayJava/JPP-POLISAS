@@ -1,7 +1,8 @@
 import { supabase } from './supabase';
 import { API_BASE_URL } from './utils';
+import i18n from '@/lib/i18n';
 
-const t = (k: string, fb: string, _opt?: any) => fb;
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 interface SendEmailParams {
   to: string | string[];

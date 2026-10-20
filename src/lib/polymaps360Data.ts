@@ -8,6 +8,7 @@
  */
 
 import { supabase } from '@/lib/supabase';
+import i18n from '@/lib/i18n';
 
 export interface PolyMaps360Building {
   name: string;
@@ -20,7 +21,7 @@ export interface PolyMaps360Building {
 
 const BASE_URL = 'https://normane176680.github.io/my-map-polisas/';
 const assetUrl = (path: string) => `${BASE_URL}${path.startsWith('/') ? path.slice(1) : path}`;
-const t = (k: string, fb: string, _opt?: any) => fb;
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 export const POLYMAPS_360_REGISTRY: PolyMaps360Building[] = [
   {

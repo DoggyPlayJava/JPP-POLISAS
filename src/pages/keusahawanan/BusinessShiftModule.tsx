@@ -17,9 +17,10 @@ import {
 import { type BusinessSession, type BusinessShift, type BusinessShiftSwap } from '@/types';
 import { useJppExcoUnits } from '@/hooks/useJppExcoUnits';
 import { toast } from 'react-hot-toast';
+import i18n from '@/lib/i18n';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-const t = (k: string, fb: string, opt?: any) => fb;
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 const SHIFT_HOURS = Array.from({ length: 9 }, (_, i) => i + 8); // [8,9,...,16]
 const fmt = (h: number) => `${String(h).padStart(2, '0')}:00–${String(h + 1).padStart(2, '0')}:00`;

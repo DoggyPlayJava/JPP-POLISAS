@@ -1,8 +1,9 @@
 import React from 'react';
 import { Document, Page, Text, View, StyleSheet, Image } from '@react-pdf/renderer';
 import { FoodBankApplication } from '@/types';
+import i18n from '@/lib/i18n';
 
-const t = (k: string, fb: string, _opt?: any) => fb;
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 const styles = StyleSheet.create({
   page: {

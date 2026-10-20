@@ -1,3 +1,4 @@
+import i18n from '@/lib/i18n';
 /**
  * foodbankEmail.ts — Templat emel premium untuk program Food Bank JPP POLISAS
  *
@@ -11,7 +12,7 @@
  * melalui `sendEmail()` (src/lib/email.ts) → Resend.
  */
 
-const t = (k: string, fb: string, _opt?: any) => fb;
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 export type FoodBankEmailStatus = 'LULUS' | 'DITOLAK' | 'SELESAI' | 'MENUNGGU';
 

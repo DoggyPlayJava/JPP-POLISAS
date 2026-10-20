@@ -1,9 +1,10 @@
+import i18n from '@/lib/i18n';
 /**
  * makmpEmail.ts — Templat emel premium untuk keputusan MAKMP
  * Tema Maroon & Gold (selari identiti JPP Polisas).
  */
 
-const t = (k: string, fb: string, _opt?: any) => fb;
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
 const C = {
   maroon: '#871A1A',
