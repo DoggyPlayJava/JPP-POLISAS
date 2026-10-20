@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Download, Loader2 } from 'lucide-react';
 import { PDFViewer, pdf } from '@react-pdf/renderer';
@@ -18,8 +19,10 @@ interface PosSalesReportModalProps {
 }
 
 export function PosSalesReportModal({
+  
   isOpen, onClose, stats, selectedBusiness, rangeLabel, dateRangeString, themeColor, generatedBy
 }: PosSalesReportModalProps) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const [generationDate, setGenerationDate] = useState('');
   const [downloading, setDownloading] = useState(false);
 
@@ -55,13 +58,16 @@ export function PosSalesReportModal({
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `Laporan_Jualan_${selectedBusiness.name.replace(/\s+/g, '_')}_${rangeLabel.replace(/\s+/g, '_')}.pdf`;
+      const filePrefix = t('keusahawanan:sales_report_filename_prefix', 'Laporan_Jualan');
+      const bizNameSanitized = selectedBusiness.name.replace(/\s+/g, '_');
+      const rangeSanitized = rangeLabel.replace(/\s+/g, '_');
+      a.download = `${filePrefix}_${bizNameSanitized}_${rangeSanitized}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
-      toast.success('Laporan PDF berjaya dimuat turun!');
+      toast.success(t('keusahawanan:sales_report_download_success', 'Laporan PDF berjaya dimuat turun!'));
     } catch (e) {
       console.error(e);
-      toast.error('Gagal memuat turun PDF.');
+      toast.error(t('keusahawanan:sales_report_download_error', 'Gagal memuat turun PDF.'));
     } finally {
       setDownloading(false);
     }
@@ -87,8 +93,8 @@ export function PosSalesReportModal({
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-border/50 bg-muted/20">
             <div>
-              <h2 className="text-lg font-black text-foreground">Preview Laporan Jualan</h2>
-              <p className="text-xs text-muted-foreground/70">Perniagaan: {selectedBusiness.name} | Tempoh: {rangeLabel}</p>
+              <h2 className="text-lg font-black text-foreground">{t('keusahawanan:sales_report_preview_title', 'Preview Laporan Jualan')}</h2>
+              <p className="text-xs text-muted-foreground/70">{t('keusahawanan:sales_report_business_label', 'Perniagaan')}: {selectedBusiness.name} | {t('keusahawanan:sales_report_period_label', 'Tempoh')}: {rangeLabel}</p>
             </div>
             <div className="flex items-center gap-3">
               <button
@@ -99,7 +105,7 @@ export function PosSalesReportModal({
               >
                 {downloading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
                 <span className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5">
-                  {downloading ? 'Muat Turun...' : 'Muat Turun PDF'}
+                  {downloading ? t('keusahawanan:sales_report_downloading', 'Muat Turun...') : t('keusahawanan:sales_report_download_pdf', 'Muat Turun PDF')}
                 </span>
               </button>
               <button

@@ -256,7 +256,7 @@ export function PolyMartVendorStorefront({
 
   const handleShareClick = async () => {
     const shareData = {
-      title: `${business?.name ?? 'Kedai'} - PolyMart POLISAS`,
+      title: t('commerce:storefront_share_title', '{{name}} - PolyMart POLISAS', { name: business?.name ?? t('commerce:store', 'Kedai') }),
       text: t('commerce:storefront_share_text', 'Jom sokong perniagaan siswa {{name}} di PolyMart POLISAS!', { name: business?.name ?? '' }),
       url: window.location.href
     };

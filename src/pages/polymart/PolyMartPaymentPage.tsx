@@ -78,7 +78,7 @@ export function PolyMartPaymentPage() {
         .single();
 
       if (error || !data) {
-        toast.error('Pesanan tidak dijumpai');
+        toast.error(t('commerce:order_not_found', 'Pesanan tidak dijumpai'));
         setLoading(false);
         return;
       }
@@ -88,7 +88,7 @@ export function PolyMartPaymentPage() {
 
       // Access Check: Only the buyer can access their payment page
       if (currentOrder.buyer_id !== user.id) {
-        toast.error('Akses ditolak.');
+        toast.error(t('commerce:access_denied', 'Akses ditolak.'));
         setLoading(false);
         return;
       }
@@ -121,7 +121,7 @@ export function PolyMartPaymentPage() {
       }
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal memuatkan butiran pembayaran');
+      toast.error(t('commerce:failed_load_payment_details', 'Gagal memuatkan butiran pembayaran'));
     } finally {
       setLoading(false);
     }
@@ -157,7 +157,7 @@ export function PolyMartPaymentPage() {
     if (!order?.business?.payment_instructions) return;
     navigator.clipboard.writeText(order.business.payment_instructions);
     setCopied(true);
-    toast.success('Salinan arahan pembayaran berjaya disimpan!');
+    toast.success(t('commerce:copy_payment_instructions_success', 'Salinan arahan pembayaran berjaya disimpan!'));
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -191,7 +191,7 @@ export function PolyMartPaymentPage() {
 
   const processFile = (file: File) => {
     if (!file.type.startsWith('image/')) {
-      toast.error('Sila pilih fail gambar sahaja (PNG, JPG, WEBP)');
+      toast.error(t('commerce:image_file_only_hint', 'Sila pilih fail gambar sahaja (PNG, JPG, WEBP)'));
       return;
     }
     setSelectedFile(file);
@@ -231,10 +231,10 @@ export function PolyMartPaymentPage() {
 
       const updateResults = await Promise.all(updatePromises);
       const failed = updateResults.some(res => res.error);
-      if (failed) throw new Error('Gagal mengemaskini status tempahan database.');
+      if (failed) throw new Error(t('commerce:update_order_status_db_failed', 'Gagal mengemaskini status tempahan database.'));
 
       setUploadSuccess(true);
-      toast.success('Resit pembayaran berjaya dihantar!');
+      toast.success(t('commerce:receipt_submitted_toast', 'Resit pembayaran berjaya dihantar!'));
 
       // Clean preview URL memory leak
       if (previewUrl) URL.revokeObjectURL(previewUrl);
@@ -245,7 +245,7 @@ export function PolyMartPaymentPage() {
       }, 3000);
 
     } catch (err: any) {
-      toast.error(err.message || 'Gagal memuat naik resit');
+      toast.error(err.message || t('commerce:upload_receipt_failed', 'Gagal memuat naik resit'));
     } finally {
       setUploading(false);
     }
@@ -314,7 +314,7 @@ export function PolyMartPaymentPage() {
             </div>
             <div className="pt-2">
               <div className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-lg">
-                <Sparkles className="w-3 h-3" /> Mengalihkan anda ke Pesanan Saya...
+                <Sparkles className="w-3 h-3" /> {t('commerce:redirecting_to_my_orders', 'Mengalihkan anda ke Pesanan Saya...')}
               </div>
             </div>
           </motion.div>
@@ -424,7 +424,7 @@ export function PolyMartPaymentPage() {
               {business?.payment_qr_url ? (
                 <div className="flex flex-col items-center py-4 bg-muted/20 rounded-2xl border border-border/30 relative group">
                   <div className="relative w-48 h-48 bg-white p-2 rounded-2xl shadow-md border border-border/60 overflow-hidden flex items-center justify-center">
-                    <img src={business.payment_qr_url} alt="QR Code Perniagaan" className="max-w-full max-h-full object-contain" />
+                    <img src={business.payment_qr_url} alt={t('commerce:business_qr_code_alt', 'QR Code Perniagaan')} className="max-w-full max-h-full object-contain" />
                   </div>
                   <p className="text-[9px] text-muted-foreground/60 font-bold mt-2 flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-amber-500" /> {t('commerce:screenshot_qr_hint', 'Sila tangkap layar (screenshot) untuk imbasan e-wallet')}
@@ -458,10 +458,10 @@ export function PolyMartPaymentPage() {
                 <div className="flex items-center justify-between p-3 rounded-2xl bg-blue-500/5 border border-blue-500/10 text-xs">
                   <div className="flex items-center gap-2">
                     <Phone className="w-4 h-4 text-blue-500" />
-                    <span className="font-bold text-muted-foreground">Hubungi Vendor:</span>
+                    <span className="font-bold text-muted-foreground">{t('commerce:contact_vendor_label', 'Hubungi Vendor:')}</span>
                     <span className="font-bold text-foreground">{business.business_phone}</span>
                   </div>
-                  <a href={`https://wa.me/${business.business_phone.replace(/\D/g, '').replace(/^0/, '60')}?text=${encodeURIComponent('Hai, saya baru sahaja membuat tempahan di PolyMart.')}`}
+                  <a href={`https://wa.me/${business.business_phone.replace(/\D/g, '').replace(/^0/, '60')}?text=${encodeURIComponent(t('commerce:whatsapp_payment_msg', 'Hai, saya baru sahaja membuat tempahan di PolyMart.'))}`}
                     target="_blank" rel="noopener noreferrer" className="text-[10px] font-black text-blue-600 hover:underline uppercase tracking-wider">
                     WhatsApp Vendor
                   </a>
@@ -505,11 +505,11 @@ export function PolyMartPaymentPage() {
               ) : (
                 <div className="rounded-2xl border border-border/40 bg-muted/20 p-3.5 space-y-3">
                   <div className="relative aspect-[3/4] max-h-72 w-full rounded-xl overflow-hidden border border-border/30 bg-muted/30">
-                    <img src={previewUrl} alt="Pratonton Resit" className="w-full h-full object-contain" />
+                    <img src={previewUrl} alt={t('commerce:receipt_preview_alt', 'Pratonton Resit')} className="w-full h-full object-contain" />
                     {uploading && (
                       <div className="absolute inset-0 bg-black/60  flex flex-col items-center justify-center gap-2 text-white">
                         <div className="w-8 h-8 rounded-full border-4 border-t-transparent animate-spin border-blue-500" />
-                        <span className="text-[10px] font-black uppercase tracking-wider">Memuat naik...</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider">{t('commerce:uploading_receipt_status', 'Memuat naik...')}</span>
                       </div>
                     )}
                   </div>
@@ -524,7 +524,7 @@ export function PolyMartPaymentPage() {
                         }}
                         className="flex-1 h-10 rounded-xl border border-border hover:bg-muted text-xs font-bold text-muted-foreground transition-all"
                       >
-                        Tukar Fail
+                        {t('commerce:change_file_btn', 'Tukar Fail')}
                       </button>
                       <button
                         type="button"

@@ -234,7 +234,7 @@ export function KeusahawananDashboard() {
           created_at: p.created_at,
           total_amount: Number(p.total_price || (Number(p.unit_price) * Number(p.quantity)) || 0),
           is_online: true,
-          items: [{ product_name: (p.business_products as any)?.name || 'Produk PolyMart', quantity: p.quantity }],
+          items: [{ product_name: (p.business_products as any)?.name || t('keusahawanan:dash_polymart_product_fallback', 'Produk PolyMart'), quantity: p.quantity }],
         }));
         
         const currentMonth = now.getMonth();
@@ -868,7 +868,12 @@ export function KeusahawananDashboard() {
                 <div className="absolute right-0 top-full mt-2 z-50 bg-popover border border-border/50 rounded-2xl shadow-2xl p-4 space-y-3 w-[260px]">
                   <p className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-wider">{t('keusahawanan:dash_quick_periods', 'Tempoh Pantas')}</p>
                   <div className="flex flex-wrap gap-1.5">
-                    {[{l:'Hari Ini',d:0},{l:'7 Hari',d:6},{l:'Sebulan',d:29},{l:'Setahun',d:364}].map(p => {
+                    {[
+                      { l: t('keusahawanan:dash_period_today', 'Hari Ini'), d: 0 },
+                      { l: t('keusahawanan:dash_period_7days', '7 Hari'), d: 6 },
+                      { l: t('keusahawanan:dash_period_month', 'Sebulan'), d: 29 },
+                      { l: t('keusahawanan:dash_period_year', 'Setahun'), d: 364 }
+                    ].map(p => {
                       const to = new Date(); const from = new Date(); from.setDate(from.getDate()-p.d); from.setHours(0,0,0,0);
                       return <button key={p.l} onClick={()=>{setDateRange({from,to});setIsPickerOpen(false);}} className="px-2.5 py-1 rounded-lg bg-muted/60 text-[11px] font-bold text-muted-foreground hover:bg-muted transition-colors">{p.l}</button>;
                     })}
@@ -903,7 +908,9 @@ export function KeusahawananDashboard() {
                   itemStyle={{ fontWeight: '900' }}
                   formatter={(value, name) => [
                     `RM ${Number(value).toFixed(2)}`,
-                    name === 'sales' ? 'Jualan Selesai' : 'Kutipan Online (Bank)'
+                    name === 'sales'
+                      ? t('keusahawanan:dash_chart_completed_sales', 'Jualan Selesai')
+                      : t('keusahawanan:dash_chart_online_collection', 'Kutipan Online (Bank)')
                   ]}
                 />
                 <Line isAnimationActive type="monotone" dataKey="sales" stroke={color} strokeWidth={3} name="sales" dot={false} activeDot={{ r: 6, fill: color, stroke: 'hsl(var(--background))', strokeWidth: 2 }} />

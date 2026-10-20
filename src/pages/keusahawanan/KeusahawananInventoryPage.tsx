@@ -73,12 +73,12 @@ export function KeusahawananInventoryPage() {
             <div>
               <p className="font-bold text-sm">{t('low_stock_warning')}</p>
               <p className="text-xs opacity-80">
-                {lowStockCount} item berada di bawah paras ambang stok minimum.
+                {t('keusahawanan:inv_low_stock_desc', '{{count}} item berada di bawah paras ambang stok minimum.', { count: lowStockCount })}
               </p>
             </div>
           </div>
           <span className="text-xs font-black px-2.5 py-1 rounded-full bg-amber-500/20 uppercase tracking-wider">
-            {lowStockCount} Item
+            {lowStockCount} {t('keusahawanan:inv_items_count_label', 'Item')}
           </span>
         </div>
       )}
@@ -92,7 +92,7 @@ export function KeusahawananInventoryPage() {
           </div>
           <p className="text-2xl font-black text-foreground">RM 480.00</p>
           <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> +12.5% berbanding semalam
+            <TrendingUp className="w-3.5 h-3.5" /> {t('keusahawanan:inv_stat_vs_yesterday', '+12.5% berbanding semalam')}
           </p>
         </div>
 
@@ -103,7 +103,7 @@ export function KeusahawananInventoryPage() {
           </div>
           <p className="text-2xl font-black text-foreground">RM 14,250.00</p>
           <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
-            <TrendingUp className="w-3.5 h-3.5" /> Sasaran 85% tercapai
+            <TrendingUp className="w-3.5 h-3.5" /> {t('keusahawanan:inv_stat_target_reached', 'Sasaran 85% tercapai')}
           </p>
         </div>
 
@@ -112,9 +112,9 @@ export function KeusahawananInventoryPage() {
             <span>{t('sales_analytics')}</span>
             <ArrowUpRight className="w-4 h-4 text-emerald-500" />
           </div>
-          <p className="text-2xl font-black text-foreground">94 Transaksi</p>
+          <p className="text-2xl font-black text-foreground">94 {t('keusahawanan:inv_stat_transactions', 'Transaksi')}</p>
           <p className="text-[11px] text-muted-foreground font-medium">
-            Purata RM 5.10 / pesanan
+            {t('keusahawanan:inv_stat_avg_order', 'Purata RM 5.10 / pesanan')}
           </p>
         </div>
       </div>
@@ -124,7 +124,7 @@ export function KeusahawananInventoryPage() {
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-base text-foreground flex items-center gap-2">
             <Layers className="w-5 h-5 text-emerald-500" />
-            Senarai Stok Barangan
+            {t('keusahawanan:inv_stock_list_title', 'Senarai Stok Barangan')}
           </h2>
         </div>
 
@@ -133,10 +133,10 @@ export function KeusahawananInventoryPage() {
             <thead>
               <tr className="border-b border-border/40 text-muted-foreground font-black uppercase tracking-wider">
                 <th className="pb-3">SKU</th>
-                <th className="pb-3">Nama Barangan</th>
-                <th className="pb-3">Kategori</th>
-                <th className="pb-3 text-right">Baki Stok</th>
-                <th className="pb-3 text-center">Status</th>
+                <th className="pb-3">{t('keusahawanan:inv_th_item_name', 'Nama Barangan')}</th>
+                <th className="pb-3">{t('keusahawanan:inv_th_category', 'Kategori')}</th>
+                <th className="pb-3 text-right">{t('keusahawanan:inv_th_stock_balance', 'Baki Stok')}</th>
+                <th className="pb-3 text-center">{t('keusahawanan:inv_th_status', 'Status')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/20">
@@ -150,7 +150,7 @@ export function KeusahawananInventoryPage() {
                     <td className="py-3 font-bold text-foreground">{item.name}</td>
                     <td className="py-3 text-muted-foreground">{item.category}</td>
                     <td className="py-3 text-right font-black text-foreground">
-                      {item.stock} unit
+                      {item.stock} {t('keusahawanan:inv_unit_label', 'unit')}
                     </td>
                     <td className="py-3 text-center">
                       {isLow ? (
@@ -159,7 +159,7 @@ export function KeusahawananInventoryPage() {
                         </span>
                       ) : (
                         <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                          Mencukupi
+                          {t('keusahawanan:inv_status_sufficient', 'Mencukupi')}
                         </span>
                       )}
                     </td>

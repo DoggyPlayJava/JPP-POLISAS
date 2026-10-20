@@ -41,13 +41,6 @@ interface VerifyOrder {
   } | null;
 }
 
-const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string; icon: React.ReactNode }> = {
-  PENDING:   { label: 'Menunggu Bayaran',  color: '#f59e0b', bg: 'rgba(245,158,11,0.1)',  icon: <Clock className="w-4 h-4" /> },
-  CONFIRMED: { label: 'Bayaran Disahkan', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)',  icon: <CreditCard className="w-4 h-4" /> },
-  READY:     { label: 'Sedia Diambil',    color: '#10b981', bg: 'rgba(16,185,129,0.1)',  icon: <Package className="w-4 h-4" /> },
-  COMPLETED: { label: 'Selesai',          color: '#6b7280', bg: 'rgba(107,114,128,0.1)', icon: <CheckCircle className="w-4 h-4" /> },
-  CANCELLED: { label: 'Dibatalkan',       color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   icon: <AlertCircle className="w-4 h-4" /> },
-};
 
 export function PolyMartVerifyPickup() {
   const { t } = useTranslation(['commerce', 'common']);
@@ -132,9 +125,9 @@ export function PolyMartVerifyPickup() {
       .update({ status: 'READY', updated_at: new Date().toISOString() })
       .eq('id', order.id);
     if (error) {
-      toast.error('Gagal mengemaskini status');
+      toast.error(t('commerce:failed_to_update_status', 'Gagal mengemaskini status'));
     } else {
-      toast.success('Pesanan ditanda sedia!');
+      toast.success(t('commerce:order_marked_ready', 'Pesanan ditanda sedia!'));
       setOrder(prev => prev ? { ...prev, status: 'READY' } : prev);
     }
     setReadying(false);
@@ -153,11 +146,11 @@ export function PolyMartVerifyPickup() {
       p_served_by: user?.id
     });
     if (error) {
-      toast.error(error.message || 'Gagal menyelesaikan pesanan');
+      toast.error(error.message || t('commerce:failed_to_complete_order', 'Gagal menyelesaikan pesanan'));
     } else {
       setCompleted(true);
       setOrder(prev => prev ? { ...prev, status: 'COMPLETED' } : prev);
-      toast.success('Pesanan selesai!', { style: { borderRadius: '16px', fontWeight: 700 } });
+      toast.success(t('commerce:order_completed_success', 'Pesanan selesai!'), { style: { borderRadius: '16px', fontWeight: 700 } });
     }
     setCompleting(false);
   };
@@ -221,7 +214,7 @@ export function PolyMartVerifyPickup() {
           className="flex flex-col items-center gap-3 py-8 rounded-3xl border border-emerald-500/20 bg-emerald-500/5">
           <CheckCircle className="w-14 h-14 text-emerald-500" />
           <p className="text-lg font-black text-foreground">{t('commerce:status_completed', 'Pesanan Selesai')}</p>
-          <p className="text-xs text-muted-foreground">Terima kasih. Pesanan telah ditandakan selesai.</p>
+          <p className="text-xs text-muted-foreground">{t('commerce:order_completed_thank_you', 'Terima kasih. Pesanan telah ditandakan selesai.')}</p>
         </motion.div>
       )}
 

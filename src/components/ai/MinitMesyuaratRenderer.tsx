@@ -9,6 +9,7 @@
  */
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 // ─── TYPE DEFINITIONS ────────────────────────────────────────────────────────
 
@@ -74,11 +75,12 @@ const tdBold: React.CSSProperties = { ...tdBase, fontWeight: 'bold' };
 
 /** HEADER SECTION — Tajuk + Metadata */
 function HeaderSection({ data }: { data: MinitMesyuaratData }) {
+  const { t } = useTranslation(['kpp', 'common']);
   return (
     <div style={{ fontSize: DOC_SIZE, fontFamily: DOC_FONT, lineHeight: 1.5 }}>
       {/* Document Title */}
       <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 2 }}>
-        MINIT MESYUARAT
+        {t('kpp:meeting_minutes_title', 'MINIT MESYUARAT')}
       </div>
       <div style={{ textAlign: 'center', fontWeight: 'bold', marginBottom: 16 }}>
         {data.tajuk_mesyuarat.toUpperCase()}
@@ -86,24 +88,24 @@ function HeaderSection({ data }: { data: MinitMesyuaratData }) {
 
       {/* BIL field — left blank per format, SU fills manually */}
       <div style={{ marginBottom: 10 }}>
-        <strong>BIL:</strong>
+        <strong>{t('kpp:num_abbr', 'BIL')}:</strong>
       </div>
 
       {/* Metadata rows */}
       <table style={{ borderCollapse: 'collapse', marginBottom: 10 }}>
         <tbody>
           <tr>
-            <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE, paddingRight: 4, fontWeight: 'bold', whiteSpace: 'nowrap' }}>TARIKH</td>
+            <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE, paddingRight: 4, fontWeight: 'bold', whiteSpace: 'nowrap' }}>{t('kpp:date_caps', 'TARIKH')}</td>
             <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE, paddingRight: 8 }}>:</td>
             <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE }}>{data.tarikh}</td>
           </tr>
           <tr>
-            <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE, paddingRight: 4, fontWeight: 'bold', whiteSpace: 'nowrap' }}>MASA</td>
+            <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE, paddingRight: 4, fontWeight: 'bold', whiteSpace: 'nowrap' }}>{t('kpp:time_caps', 'MASA')}</td>
             <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE, paddingRight: 8 }}>:</td>
             <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE }}>{data.masa}</td>
           </tr>
           <tr>
-            <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE, paddingRight: 4, fontWeight: 'bold', whiteSpace: 'nowrap' }}>PLATFORM</td>
+            <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE, paddingRight: 4, fontWeight: 'bold', whiteSpace: 'nowrap' }}>{t('kpp:platform_caps', 'PLATFORM')}</td>
             <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE, paddingRight: 8 }}>:</td>
             <td style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE }}>{data.platform}</td>
           </tr>
@@ -112,8 +114,8 @@ function HeaderSection({ data }: { data: MinitMesyuaratData }) {
 
       {/* Kehadiran count */}
       <div style={{ marginBottom: 12 }}>
-        <strong style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE }}>KEHADIRAN :</strong>
-        <span style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE }}> {data.kehadiran} Orang</span>
+        <strong style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE }}>{t('kpp:attendance_colon', 'KEHADIRAN :')}</strong>
+        <span style={{ fontFamily: DOC_FONT, fontSize: DOC_SIZE }}> {data.kehadiran} {t('kpp:pax_people', 'Orang')}</span>
       </div>
     </div>
   );
@@ -121,13 +123,14 @@ function HeaderSection({ data }: { data: MinitMesyuaratData }) {
 
 /** JADUAL KEHADIRAN — 2-column: BIL | NAMA */
 function JadualKehadiran({ ahliHadir }: { ahliHadir: AhliHadir[] }) {
+  const { t } = useTranslation(['kpp', 'common']);
   return (
     <div style={{ marginTop: 8 }}>
       <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: DOC_SIZE, fontFamily: DOC_FONT }}>
         <thead>
           <tr>
-            <td style={{ ...tdBold, textAlign: 'center', width: '12%' }}>BIL</td>
-            <td style={{ ...tdBold, textAlign: 'center' }}>NAMA</td>
+            <td style={{ ...tdBold, textAlign: 'center', width: '12%' }}>{t('kpp:num_abbr', 'BIL')}</td>
+            <td style={{ ...tdBold, textAlign: 'center' }}>{t('kpp:name_caps', 'NAMA')}</td>
           </tr>
         </thead>
         <tbody>
@@ -150,14 +153,15 @@ function JadualKehadiran({ ahliHadir }: { ahliHadir: AhliHadir[] }) {
 
 /** JADUAL AGENDA — 3-column: BIL. | AGENDA | TINDAKAN */
 function JadualAgenda({ agenda }: { agenda: AgendaItem[] }) {
+  const { t } = useTranslation(['kpp', 'common']);
   return (
     <div>
       <table style={{ borderCollapse: 'collapse', width: '100%', fontSize: DOC_SIZE, fontFamily: DOC_FONT }}>
         <thead>
           <tr>
-            <td style={{ ...tdBold, textAlign: 'center', width: '8%' }}>BIL.</td>
-            <td style={{ ...tdBold, textAlign: 'center' }}>AGENDA</td>
-            <td style={{ ...tdBold, textAlign: 'center', width: '16%' }}>TINDAKAN</td>
+            <td style={{ ...tdBold, textAlign: 'center', width: '8%' }}>{t('kpp:no_dot', 'BIL.')}</td>
+            <td style={{ ...tdBold, textAlign: 'center' }}>{t('kpp:agenda_caps', 'AGENDA')}</td>
+            <td style={{ ...tdBold, textAlign: 'center', width: '16%' }}>{t('kpp:action_caps', 'TINDAKAN')}</td>
           </tr>
         </thead>
         <tbody>
@@ -219,6 +223,7 @@ function JadualAgenda({ agenda }: { agenda: AgendaItem[] }) {
 
 /** BLOK TANDATANGAN — 2-column: Disediakan oleh | Disahkan oleh */
 function BlokTandatangan({ tandatangan }: { tandatangan: MinitMesyuaratData['tandatangan'] }) {
+  const { t } = useTranslation(['kpp', 'common']);
   const renderPihak = (label: string, pihak: TandatanganPihak) => (
     <div style={{ flex: 1, fontSize: DOC_SIZE, fontFamily: DOC_FONT, lineHeight: 1.6 }}>
       <div style={{ marginBottom: 4 }}>{label}</div>
@@ -236,19 +241,20 @@ function BlokTandatangan({ tandatangan }: { tandatangan: MinitMesyuaratData['tan
 
   return (
     <div style={{ marginTop: 32, display: 'flex', gap: 48 }}>
-      {renderPihak('Disediakan oleh:', tandatangan.disediakan_oleh)}
-      {renderPihak('Disahkan oleh:', tandatangan.disahkan_oleh)}
+      {renderPihak(t('kpp:prepared_by_colon', 'Disediakan oleh:'), tandatangan.disediakan_oleh)}
+      {renderPihak(t('kpp:verified_by_colon', 'Disahkan oleh:'), tandatangan.disahkan_oleh)}
     </div>
   );
 }
 
 /** PAGE BREAK — visual separator between sections */
 function PageBreak() {
+  const { t } = useTranslation(['kpp', 'common']);
   return (
     <div className="my-10 relative flex items-center justify-center pointer-events-none select-none">
       <div className="absolute inset-x-0 h-px bg-border/60" />
       <span className="relative px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/70 bg-card border border-border/50 rounded-full shadow-sm">
-        MUKA SURAT BARU
+        {t('kpp:new_page', 'MUKA SURAT BARU')}
       </span>
     </div>
   );
@@ -256,12 +262,13 @@ function PageBreak() {
 
 /** DOCUMENT FOOTER — branded closing */
 function DocumentFooter() {
+  const { t } = useTranslation(['kpp', 'common']);
   return (
     <div className="mt-10 flex flex-col items-center gap-6 pointer-events-none select-none border-t border-dashed border-border/30 pt-8">
       <div className="px-8 py-2.5 rounded-full border border-emerald-500/20 bg-emerald-500/5  flex items-center gap-3 shadow-sm">
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
         <span className="text-[11px] font-black uppercase tracking-[0.4em] text-emerald-500/80">
-          Tamat Dokumen
+          {t('kpp:end_of_document', 'Tamat Dokumen')}
         </span>
         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
       </div>

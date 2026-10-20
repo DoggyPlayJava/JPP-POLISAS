@@ -57,22 +57,6 @@ interface Order {
   selected_variation: string | null;
 }
 
-const STATUS_TABS: { key: OrderStatus | 'all'; label: string; icon: React.FC<any> }[] = [
-  { key: 'all',       label: 'Semua',    icon: ListFilter },
-  { key: 'PENDING',   label: 'Menunggu', icon: Clock },
-  { key: 'CONFIRMED', label: 'Disahkan', icon: CheckCircle },
-  { key: 'READY',     label: 'Siap',     icon: Truck },
-  { key: 'COMPLETED', label: 'Selesai',  icon: Star },
-  { key: 'CANCELLED', label: 'Batal',    icon: XCircle },
-];
-
-const STATUS_CONFIG: Record<OrderStatus, { label: string; color: string; bg: string; icon: React.FC<any> }> = {
-  PENDING:   { label: 'Menunggu Pengesahan', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',  icon: Clock },
-  CONFIRMED: { label: 'Disahkan Vendor',     color: '#6366f1', bg: 'rgba(99,102,241,0.12)', icon: CheckCircle },
-  READY:     { label: 'Sedia Diambil!',      color: '#22c55e', bg: 'rgba(34,197,94,0.12)',  icon: Truck },
-  COMPLETED: { label: 'Selesai',             color: '#94a3b8', bg: 'rgba(148,163,184,0.1)', icon: CheckCircle },
-  CANCELLED: { label: 'Dibatalkan',          color: '#ef4444', bg: 'rgba(239,68,68,0.1)',   icon: XCircle },
-};
 
 // ── Review Modal ───────────────────────────────────────────────────────────────
 function ReviewModal({ order, onClose }: { order: Order; onClose: (submitted: boolean) => void }) {
@@ -289,13 +273,6 @@ function ReceiptUploadButton({ orderId, onUploaded }: { orderId: string; onUploa
 }
 
 // ── Cancel Modal ───────────────────────────────────────────────────────────────
-const CANCEL_REASONS = [
-  'Salah saiz / variasi',
-  'Salah pilih produk',
-  'Tak jadi beli',
-  'Harga berubah',
-  'Lain-lain',
-];
 
 function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: boolean) => void }) {
   const { t } = useTranslation(['commerce', 'common']);
@@ -336,8 +313,8 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
             .select('owner_id').eq('id', order.keusahawanan_businesses.id).single();
           if (bizData?.owner_id) {
             await sendNotificationToUser(bizData.owner_id, {
-              title: 'Permintaan Pembatalan',
-              message: `Pembeli meminta pembatalan pesanan ${order.business_products?.name}. Sebab: ${finalReason}`,
+              title: t('commerce:cancellation_request_title', 'Permintaan Pembatalan'),
+              message: t('commerce:cancellation_request_msg', 'Pembeli meminta pembatalan pesanan {{product}}. Sebab: {{reason}}', { product: order.business_products?.name, reason: finalReason }),
               type: 'polymart_cancellation_request',
               module: 'POLYMART',
               link: '/polymart/vendor',
@@ -405,7 +382,7 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
 }
 
 
-function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: Order) => void; onCancel: (o: Order) => void }) {
+function OrderCard({ order, onReview, onCancel }: { key?: any; order: Order; onReview: (o: Order) => void; onCancel: (o: Order) => void }) {
   const { t } = useTranslation(['commerce', 'common']);
   const navigate = useNavigate();
   const statusConfig: Record<OrderStatus, { label: string; color: string; bg: string; icon: React.FC<any> }> = {
@@ -423,8 +400,9 @@ function OrderCard({ order, onReview, onCancel }: { order: Order; onReview: (o: 
   const vendorPhone = biz?.owner?.phone;
   const formattedVendorPhone = vendorPhone ? vendorPhone.replace(/\D/g, '').replace(/^0/, '60') : '';
 
+  const waMsg = encodeURIComponent(t('commerce:whatsapp_buyer_order_msg', 'Hai! Saya dari PolyMart — pesanan saya: {{count}}x {{product}} (ID: {{id}})', { count: order.quantity, product: order.business_products?.name ?? t('commerce:product_fallback', 'produk'), id: order.id.slice(0, 8) }));
   const whatsappUrl = biz?.polymart_contact_method === 'whatsapp' && order.share_phone && formattedVendorPhone
-    ? `https://wa.me/${formattedVendorPhone}?text=${encodeURIComponent(`Hai! Saya dari PolyMart — pesanan saya: ${order.quantity}x ${order.business_products?.name ?? 'produk'} (ID: ${order.id.slice(0, 8)})`)}` : null;
+    ? `https://wa.me/${formattedVendorPhone}?text=${waMsg}` : null;
 
   return (
     <motion.div

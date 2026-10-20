@@ -5266,6 +5266,19 @@ Melengkapkan gelombang pembersihan pusingan kelapan (Batch 8) merentasi 17 fail 
    - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 1,209 kepada **897** (penurunan kumulatif 4,748 kejadian dalam 8 batch, menembusi paras bawah 1,000). Tiada lagi mana-mana fail tunggal dalam keseluruhan projek yang melebihi 16 isu.
    - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
 
+### 36.34 Penuntasan Penyetempatan Mendalam AST (Deep Zero-Malay Sweep Batch 9): PolyMart/POS Hooks, Keusahawanan & AI Tools/Academics
+Melengkapkan gelombang pembersihan pusingan kesembilan (Batch 9) merentasi 30 fail serentak dalam 3 domain selari:
+
+1. **Pemprosesan Bersasar Selari 3 Domain (Batch 9 Disjoint Sweep):**
+   - **PolyMart & Hook Logik POS (`commerce.json`) [8 Fail]:** `useBusinessData.ts` (16 isu -> 0), `PolyMartPaymentPage.tsx` (15 isu -> 0), `PolyMartLayout.tsx` (9 isu -> 0), `VendorAnalyticsPromo.tsx` (9 isu -> 0), `PolyMartMyOrders.tsx` (8 isu -> 0), `PolyMartVerifyPickup.tsx` (6 isu -> 0), `PolyMartVendorDashboard.tsx` (2 isu -> 0), dan `PolyMartVendorStorefront.tsx` (1 isu -> 0) diselaraskan sepenuhnya bagi saluran pembayaran, pengesahan resit, status pesanan aktif, pengesahan kod imbasan imbasan barang, promosi iklan, dan direktori kedai. Kunci `commerce.json` meningkat ke 958 kunci dengan 100% pariti.
+   - **Penyetempatan Penuh Domain Keusahawanan (`keusahawanan.json`) [11 Fail]:** `KeusahawananAdminPanel.tsx` (14 isu -> 0), `BusinessShiftModule.tsx` (11 isu -> 0), `PosSalesReportPDF.tsx` (11 isu -> 0), `KeusahawananOnboardingPage.tsx` (9 isu -> 0), `PosSalesReportModal.tsx` (7 isu -> 0), `KeusahawananInventoryPage.tsx` (6 isu -> 0), `KeusahawananDashboard.tsx` (5 isu -> 0), `keusahawanan.ts` (5 isu -> 0), `KeusahawananPosPage.tsx` (2 isu -> 0), `PosStatsPage.tsx` (1 isu -> 0), dan `EInvoiceModal.tsx` (1 isu -> 0) diselubungi bagi pendaftaran SSM inkubator, lejar syif perniagaan, laporan jualan harian POS dalam PDF, modal e-invois, dan penjejakan inventori. Kunci `keusahawanan.json` meningkat ke 781 kunci dengan 100% pariti.
+   - **Alatan AI, Statistik Program, Kelab & Akademik (`portal.json`, `kpp.json`, `akademik.json`) [11 Fail]:** `AiAnalysisModal.tsx` (15 isu -> 0), `ProgramStatistikTab.tsx` (15 isu -> 0), `QrCodeModal.tsx` (15 isu -> 0), `AkademikLayout.tsx` (14 isu -> 0), `AIGrammarCheck.tsx` (14 isu -> 0), `KelabPage.tsx` (11 isu -> 0), `AkademikQrScan.tsx` (9 isu -> 0), `AiReviewModal.tsx` (9 isu -> 0), `AkademikTakwimPage.tsx` (8 isu -> 0), `MinitMesyuaratRenderer.tsx` (8 isu -> 0), dan `AIBudgetGenerator.tsx` (3 isu -> 0) diselaraskan bagi semakan tatabahasa kertas kerja AI, perangkaan demografi Recharts, penjana QR token merit, direktori kelab siswa, dan takwim akademik.
+
+2. **Integriti & Ujian Regresi Penuh:**
+   - 67/67 ujian lulus merentasi suite `masterLocales`, `SweepGroup4CommerceAndPosI18n`, dan `SweepGroup1PortalAndAcademicsI18n`.
+   - Baki rentetan BM tersisa merentasi kod sumber menurun drastik daripada 897 kepada **638** (penurunan kumulatif 5,007 kejadian dalam 9 batch). Tiada lagi mana-mana fail tunggal dalam keseluruhan projek yang melebihi 14 isu.
+   - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP

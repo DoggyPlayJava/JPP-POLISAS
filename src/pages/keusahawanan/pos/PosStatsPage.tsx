@@ -63,7 +63,10 @@ function AdsMarketingWidget({ stats }: { stats: StatsData }) {
   return (
     <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }}
       className="relative overflow-hidden rounded-3xl p-5 border border-amber-500/30 bg-amber-500/10 shadow-lg mt-2 mb-4 group cursor-pointer"
-      onClick={() => window.open(`https://wa.me/${adsPhone}?text=Hai Exco Keusahawanan, saya dari tab analisis jualan POS dan berminat untuk langgan slot iklan PolyMart!`, '_blank')}
+      onClick={() => {
+        const msg = encodeURIComponent(t('keusahawanan:pos_ads_whatsapp_msg', 'Hai Exco Keusahawanan, saya dari tab analisis jualan POS dan berminat untuk langgan slot iklan PolyMart!'));
+        window.open(`https://wa.me/${adsPhone}?text=${msg}`, '_blank');
+      }}
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
         <div className="flex items-center gap-4">

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Page, Text, View, Document, StyleSheet, Image, PDFViewer, pdf,
 } from '@react-pdf/renderer';
@@ -225,9 +226,10 @@ interface EInvoiceModalProps {
 }
 
 export function EInvoiceModal({ transaction: txn, onClose }: EInvoiceModalProps) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const data: InvoiceData = {
     invoiceNumber:  txn.invoice_number,
-    businessName:   txn.businessName   || 'Perniagaan',
+    businessName:   txn.businessName   || t('keusahawanan:invoice_business_fallback', 'Perniagaan'),
     businessLogo:   txn.businessLogo   || null,
     serverName:     txn.serverName     || txn.server?.full_name || null,
     customerName:   txn.customer_name  || null,
@@ -268,7 +270,7 @@ export function EInvoiceModal({ transaction: txn, onClose }: EInvoiceModalProps)
             <div className="flex items-center gap-2">
               <button onClick={handleDownload}
                 className="flex items-center gap-2 h-9 px-4 rounded-xl bg-violet-600 hover:bg-violet-700 text-white text-xs font-black uppercase tracking-wider transition-colors">
-                <Download className="w-3.5 h-3.5" /> Muat Turun
+                <Download className="w-3.5 h-3.5" /> {t('keusahawanan:download', 'Muat Turun')}
               </button>
               <button onClick={onClose}
                 className="w-9 h-9 rounded-xl bg-muted hover:bg-muted/80 flex items-center justify-center transition-colors">

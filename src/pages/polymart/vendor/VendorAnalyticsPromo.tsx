@@ -303,11 +303,11 @@ export function VendorAnalyticsPromo({
     e.preventDefault();
 
     if (!adTitle.trim()) {
-      toast.error('Sila masukkan tajuk promo');
+      toast.error(t('commerce:enter_promo_title', 'Sila masukkan tajuk promo'));
       return;
     }
     if (!adImageFile) {
-      toast.error('Sila muat naik gambar banner');
+      toast.error(t('commerce:upload_banner_image_required', 'Sila muat naik gambar banner'));
       return;
     }
 
@@ -340,7 +340,7 @@ export function VendorAnalyticsPromo({
         parsed.unshift(payload);
         localStorage.setItem('mock_vendor_ads', JSON.stringify(parsed));
 
-        toast.success('Permohonan iklan berjaya dihantar. Menunggu kelulusan Exco.');
+        toast.success(t('commerce:ad_application_submitted_toast', 'Permohonan iklan berjaya dihantar. Menunggu kelulusan Exco.'));
         setShowNewAdModal(false);
         resetAdForm();
         fetchAds();
@@ -378,13 +378,13 @@ export function VendorAnalyticsPromo({
       const { error: insertErr } = await supabase.from('polymart_ads').insert(payload);
       if (insertErr) throw insertErr;
 
-      toast.success('Permohonan iklan berjaya dihantar. Menunggu kelulusan Exco.');
+      toast.success(t('commerce:ad_application_submitted_toast', 'Permohonan iklan berjaya dihantar. Menunggu kelulusan Exco.'));
       setShowNewAdModal(false);
       resetAdForm();
       fetchAds();
       if (onUpdate) onUpdate();
     } catch (err: any) {
-      toast.error('Ralat menghantar permohonan iklan: ' + (err?.message || 'Sila cuba lagi'));
+      toast.error(t('commerce:ad_application_error_toast', 'Ralat menghantar permohonan iklan: {{error}}', { error: err?.message || t('commerce:please_try_again', 'Sila cuba lagi') }));
     } finally {
       setSubmittingAd(false);
     }
@@ -660,7 +660,7 @@ export function VendorAnalyticsPromo({
                 className="inline-flex items-center gap-1.5 h-8 px-3.5 rounded-xl text-xs font-bold text-white shadow-sm"
                 style={{ background: PM_GRADIENT }}
               >
-                + Mohon Iklan Baru
+                {t('commerce:apply_new_ad_btn', '+ Mohon Iklan Baru')}
               </button>
             </div>
           ) : (
@@ -691,15 +691,15 @@ export function VendorAnalyticsPromo({
                       <div>
                         {ad.status === 'APPROVED' || ad.status === 'ACTIVE' ? (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                            Diluluskan
+                            {t('commerce:ad_status_approved', 'Diluluskan')}
                           </span>
                         ) : ad.status === 'DRAFT' ? (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                            Menunggu Kelulusan
+                            {t('commerce:ad_status_pending_approval', 'Menunggu Kelulusan')}
                           </span>
                         ) : ad.status === 'REJECTED' ? (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-rose-500/10 text-rose-500 border border-rose-500/20">
-                            Ditolak
+                            {t('commerce:ad_status_rejected', 'Ditolak')}
                           </span>
                         ) : (
                           <span className="px-2 py-0.5 rounded-full text-[9px] font-black bg-zinc-500/10 text-zinc-400 border border-zinc-500/20">
@@ -809,7 +809,7 @@ export function VendorAnalyticsPromo({
                     onClick={() => setShowNewAdModal(false)}
                     className="flex-1 h-10 rounded-xl text-xs font-bold text-muted-foreground hover:bg-muted/40 transition-colors border border-border/60"
                   >
-                    Batal
+                    {t('commerce:cancel_btn', 'Batal')}
                   </button>
                   <button
                     type="submit"

@@ -19,6 +19,7 @@ import { useJppExcoUnits } from '@/hooks/useJppExcoUnits';
 import { toast } from 'react-hot-toast';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+const t = (k: string, fb: string, opt?: any) => fb;
 
 const SHIFT_HOURS = Array.from({ length: 9 }, (_, i) => i + 8); // [8,9,...,16]
 const fmt = (h: number) => `${String(h).padStart(2, '0')}:00–${String(h + 1).padStart(2, '0')}:00`;
@@ -212,7 +213,7 @@ export function BusinessJadual({
           <div className="flex items-center gap-2">
             <Bell className="w-4 h-4 text-amber-500" />
             <p className="text-xs font-black uppercase tracking-widest text-amber-600">
-              {myPendingReceived.length} Permintaan Tukar Syif Menunggu
+              {myPendingReceived.length} {t('keusahawanan:shift_pending_swap_title', 'Permintaan Tukar Syif Menunggu')}
             </p>
           </div>
           {myPendingReceived.map(sw => (
@@ -245,7 +246,7 @@ export function BusinessJadual({
         <div className="flex items-center gap-3 px-4 py-3 rounded-2xl bg-muted/40 border border-border/50">
           <Repeat2 className="w-4 h-4 text-muted-foreground/50 flex-shrink-0" />
           <p className="text-[10px] text-muted-foreground">
-            Awak ada <span className="font-black text-foreground">{myPendingSent.length}</span> permintaan tukar syif yang sedang menunggu respons.
+            {t('keusahawanan:shift_pending_sent_prefix', 'Awak ada')} <span className="font-black text-foreground">{myPendingSent.length}</span> {t('keusahawanan:shift_pending_sent_suffix', 'permintaan tukar syif yang sedang menunggu respons.')}
           </p>
         </div>
       )}
@@ -272,14 +273,14 @@ export function BusinessJadual({
       {!isCurrentWeek && (
         <button onClick={() => setWeekOffset(0)}
           className="mx-auto flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors">
-          <RefreshCcw className="w-3 h-3" /> Kembali ke minggu ini
+          <RefreshCcw className="w-3 h-3" /> {t('keusahawanan:shift_btn_back_to_current_week', 'Kembali ke minggu ini')}
         </button>
       )}
 
       {/* Calendar Grid */}
       {loading ? (
         <div className="h-64 flex items-center justify-center animate-pulse text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">
-          Memuatkan jadual...
+          {t('keusahawanan:shift_loading_schedule', 'Memuatkan jadual...')}
         </div>
       ) : (
         <>
@@ -450,7 +451,7 @@ export function BusinessJadual({
       {!loading && businessMembers.length > 0 && (
         <div className="space-y-4">
           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 flex items-center gap-2">
-            <Users className="w-3 h-3" /> Ahli JPP ({businessMembers.length} orang)
+            <Users className="w-3 h-3" /> {t('keusahawanan:shift_jpp_members_count', 'Ahli JPP ({{count}} orang)', { count: businessMembers.length })}
           </p>
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2.5">
             {businessMembers.map(m => {
@@ -468,7 +469,7 @@ export function BusinessJadual({
                   <div className="min-w-0">
                     <p className="text-[11px] font-black truncate leading-tight">{getMalaysianNickname(m.user?.full_name)}</p>
                     <p className="text-[9px] text-muted-foreground leading-tight mt-0.5">
-                      {shiftCount > 0 ? `${shiftCount} syif` : 'tiada syif'}
+                      {shiftCount > 0 ? t('keusahawanan:shift_count_badge', '{{count}} syif', { count: shiftCount }) : t('keusahawanan:shift_no_shifts', 'tiada syif')}
                     </p>
                   </div>
                 </div>
@@ -629,10 +630,10 @@ export function BusinessJadual({
 // ─── Tab: Sesi Buka/Tutup ─────────────────────────────────────────────────────
 
 const OPENING_CHECKLIST_CONFIG = [
-  { key: 'shift_checklist_products', fallback: 'Semua produk/minuman telah disediakan' },
-  { key: 'shift_checklist_equipment', fallback: 'Peralatan dalam keadaan baik' },
-  { key: 'shift_checklist_cleanliness', fallback: 'Tempat gerai bersih & kemas' },
-  { key: 'shift_checklist_float', fallback: 'Duit baki (float) telah dikira' },
+  { key: 'shift_checklist_products', fallback: t('keusahawanan:shift_checklist_products', 'Semua produk/minuman telah disediakan') },
+  { key: 'shift_checklist_equipment', fallback: t('keusahawanan:shift_checklist_equipment', 'Peralatan dalam keadaan baik') },
+  { key: 'shift_checklist_cleanliness', fallback: t('keusahawanan:shift_checklist_cleanliness', 'Tempat gerai bersih & kemas') },
+  { key: 'shift_checklist_float', fallback: t('keusahawanan:shift_checklist_float', 'Duit baki (float) telah dikira') },
 ];
 
 export function SesiBusiness({ businessId, color, profile, initialOpenModal = false }: { businessId: string; color: string; profile: any; initialOpenModal?: boolean }) {
@@ -1015,7 +1016,7 @@ function GeraiKewangan({ color }: { color: string }) {
   const stats = [
     { label: t('keusahawanan:shift_finance_sales_month', 'Jualan Bulan Ini'), value: fmtRM(totalSalesMonth), icon: DollarSign, up: true },
     { label: t('keusahawanan:shift_finance_net_profit', 'Untung Bersih'), value: fmtRM(totalProfitMonth), icon: TrendingUp, up: totalProfitMonth >= 0 },
-    { label: t('keusahawanan:shift_finance_closed_sessions', 'Sesi Ditutup'), value: `${monthSessions.length} hari`, icon: Activity, up: true },
+    { label: t('keusahawanan:shift_finance_closed_sessions', 'Sesi Ditutup'), value: t('keusahawanan:shift_finance_closed_days_count', '{{count}} hari', { count: monthSessions.length }), icon: Activity, up: true },
     { label: t('keusahawanan:shift_finance_all_time_best', 'Terbaik Pernah'), value: bestDay ? fmtRM(netProfit(bestDay)) : '—', icon: TrendingUp, up: true },
   ];
 
@@ -1059,7 +1060,7 @@ function GeraiKewangan({ color }: { color: string }) {
                         {new Date(s.session_date).toLocaleDateString('ms-MY', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
                       </p>
                       <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Jualan: {fmtRM(s.total_sales)} · Float: {fmtRM(s.opening_cash)} · Perbelanjaan: {fmtRM(s.total_expenses)}
+                        {t('keusahawanan:shift_session_sales_label', 'Jualan')}: {fmtRM(s.total_sales)} · {t('keusahawanan:shift_session_float_label', 'Float')}: {fmtRM(s.opening_cash)} · {t('keusahawanan:shift_session_expenses_label', 'Perbelanjaan')}: {fmtRM(s.total_expenses)}
                       </p>
                     </div>
                     <p className={cn(

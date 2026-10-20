@@ -39,23 +39,23 @@ interface Business {
 }
 
 // ─── Status Meta ──────────────────────────────────────────────────────────────
-const STATUS_META: Record<BusinessStatus, { label: string; dotColor: string; badgeCls: string }> = {
+const getStatusMeta = (t: any): Record<BusinessStatus, { label: string; dotColor: string; badgeCls: string }> => ({
   PENDING_INTERVIEW: {
-    label: 'Menunggu Temuduga',
+    label: t('keusahawanan:admin_status_pending', 'Menunggu Temuduga'),
     dotColor: '#f59e0b',
     badgeCls: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400',
   },
   ACTIVE: {
-    label: 'Aktif',
+    label: t('keusahawanan:admin_status_active', 'Aktif'),
     dotColor: '#22c55e',
     badgeCls: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400',
   },
   REJECTED: {
-    label: 'Ditolak',
+    label: t('keusahawanan:admin_status_rejected', 'Ditolak'),
     dotColor: '#ef4444',
     badgeCls: 'bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-400',
   },
-};
+});
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 function BusinessDetailModal({
@@ -65,6 +65,7 @@ function BusinessDetailModal({
   onApprove,
   onReject,
 }: {
+  key?: React.Key;
   business: Business;
   onClose: () => void;
   onApprove: (b: Business) => Promise<void>;
@@ -72,7 +73,7 @@ function BusinessDetailModal({
 }) {
   const { t } = useTranslation(['keusahawanan', 'common']);
   const [acting, setActing] = useState(false);
-  const sm = STATUS_META[business.status];
+  const sm = getStatusMeta(t)[business.status];
 
   const act = async (fn: () => Promise<void>) => {
     setActing(true);
@@ -223,7 +224,7 @@ function BusinessDetailModal({
                 onClick={() => act(() => onApprove(business))}>
                 <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_reactivate', 'Aktifkan Semula')}
               </Button>
-              <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">Tutup</Button>
+              <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">{t('keusahawanan:close', 'Tutup')}</Button>
             </>
           )}
         </div>
@@ -356,7 +357,7 @@ export function KeusahawananAdminPanel() {
   };
 
   const handleRemoveUnitAdmin = async (adminId: string, userName: string) => {
-    if (!window.confirm(`Buang ${userName} dari Unit Keusahawanan?`)) return;
+    if (!window.confirm(t('keusahawanan:admin_confirm_remove_unit_admin', 'Buang {{name}} dari Unit Keusahawanan?', { name: userName }))) return;
     await supabase.from('keusahawanan_unit_admins').delete().eq('id', adminId);
     toast.success(t('keusahawanan:admin_toast_officer_removed', '{{name}} dibuang.', { name: userName }));
     fetchUnitAdmins();
@@ -383,8 +384,8 @@ export function KeusahawananAdminPanel() {
       // Notify owner (In-App + Push)
       try {
         await sendNotificationToUser(b.owner_id, {
-          title: '🎉 Perniagaan Anda Diluluskan!',
-          message: `Tahniah! Perniagaan "${b.name}" telah diluluskan oleh JPP. Anda kini boleh mengakses sistem POS dan mula beroperasi.`,
+          title: t('keusahawanan:admin_notif_approved_title', '🎉 Perniagaan Anda Diluluskan!'),
+          message: t('keusahawanan:admin_notif_approved_msg', 'Tahniah! Perniagaan "{{name}}" telah diluluskan oleh JPP. Anda kini boleh mengakses sistem POS dan mula beroperasi.', { name: b.name }),
           type: 'STATUS_UPDATE',
           module: 'KEUSAHAWANAN',
           link: '/keusahawanan/dashboard',
@@ -394,7 +395,7 @@ export function KeusahawananAdminPanel() {
       // Audit log
       await supabase.from('keusahawanan_logs').insert({
         action_type: 'BUSINESS_APPROVED',
-        description: `Perniagaan "${b.name}" telah diluluskan.`,
+        description: t('keusahawanan:admin_log_biz_approved', 'Perniagaan "{{name}}" telah diluluskan.', { name: b.name }),
         business_id: b.id,
         actor_id: profile?.id ?? null,
       });
@@ -407,7 +408,7 @@ export function KeusahawananAdminPanel() {
   };
 
   const handleReject = async (b: Business) => {
-    const reason = window.prompt('Nyatakan sebab penolakan (pilihan):') ?? '';
+    const reason = window.prompt(t('keusahawanan:admin_prompt_reject_reason', 'Nyatakan sebab penolakan (pilihan):')) ?? '';
     const toastId = toast.loading(t('keusahawanan:admin_toast_processing', 'Memproses...'));
     try {
       const { error } = await supabase
@@ -416,10 +417,16 @@ export function KeusahawananAdminPanel() {
         .eq('id', b.id);
       if (error) throw error;
 
+      const reasonSuffix = reason
+        ? t('keusahawanan:admin_notif_rejected_reason_suffix', '. Sebab: {{reason}}', { reason })
+        : t('keusahawanan:admin_notif_rejected_contact_jpp', '. Sila hubungi JPP untuk maklumat lanjut.');
       try {
         await sendNotificationToUser(b.owner_id, {
-          title: '❌ Permohonan Perniagaan Ditolak',
-          message: `Perniagaan "${b.name}" telah ditolak${reason ? `. Sebab: ${reason}` : '. Sila hubungi JPP untuk maklumat lanjut.'}`,
+          title: t('keusahawanan:admin_notif_rejected_title', '❌ Permohonan Perniagaan Ditolak'),
+          message: t('keusahawanan:admin_notif_rejected_msg', 'Perniagaan "{{name}}" telah ditolak{{reason}}', {
+            name: b.name,
+            reason: reasonSuffix,
+          }),
           type: 'STATUS_UPDATE',
           module: 'KEUSAHAWANAN',
           link: '/keusahawanan/dashboard',
@@ -428,7 +435,7 @@ export function KeusahawananAdminPanel() {
 
       await supabase.from('keusahawanan_logs').insert({
         action_type: 'BUSINESS_REJECTED',
-        description: `Perniagaan "${b.name}" ditolak${reason ? `. Sebab: ${reason}` : ''}.`,
+        description: t('keusahawanan:admin_log_biz_rejected', 'Perniagaan "{{name}}" ditolak{{reason}}.', { name: b.name, reason: reason ? t('keusahawanan:admin_notif_rejected_reason_suffix', '. Sebab: {{reason}}', { reason }) : '' }),
         business_id: b.id,
         actor_id: profile?.id ?? null,
       });
@@ -582,7 +589,7 @@ export function KeusahawananAdminPanel() {
       ) : (
         <div className="space-y-2">
           {filtered.map((b, i) => {
-            const sm = STATUS_META[b.status];
+            const sm = getStatusMeta(t)[b.status];
             return (
               <motion.div
                 key={b.id}
@@ -610,7 +617,7 @@ export function KeusahawananAdminPanel() {
                     )}
                   </div>
                   <p className="text-[10px] text-white/40 truncate">
-                    {b.owner_name ?? '—'} · {b.owner_matric ?? 'Tiada matric'} · {b.staff_count} staf
+                    {b.owner_name ?? '—'} · {b.owner_matric ?? t('keusahawanan:admin_no_matric', 'Tiada matric')} · {b.staff_count} staf
                   </p>
                 </div>
 
@@ -665,7 +672,7 @@ export function KeusahawananAdminPanel() {
                       </div>
                       <div>
                         <p className="text-xs font-black text-white">{u.full_name}</p>
-                        <p className="text-[10px] text-white/50">{u.matric_no || 'Tiada No. Matrik'}</p>
+                        <p className="text-[10px] text-white/50">{u.matric_no || t('keusahawanan:admin_no_matric_long', 'Tiada No. Matrik')}</p>
                       </div>
                       <span className="ml-auto text-[10px] font-black uppercase px-2 py-0.5 rounded-full"
                         style={{ background: hexToRgba(color, 0.1), color }}>
@@ -691,7 +698,7 @@ export function KeusahawananAdminPanel() {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-black text-white">{a.user?.full_name}</p>
                     <p className="text-[10px] text-white/50 flex items-center gap-1.5">
-                      <ShieldCheck className="w-3 h-3 text-amber-500" /> Unit Keusahawanan · Akses Penuh
+                      <ShieldCheck className="w-3 h-3 text-amber-500" /> {t('keusahawanan:admin_unit_full_access_label', 'Unit Keusahawanan · Akses Penuh')}
                     </p>
                   </div>
                   <button onClick={() => handleRemoveUnitAdmin(a.id, a.user?.full_name)}

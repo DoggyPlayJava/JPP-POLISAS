@@ -26,9 +26,12 @@ export function AIBudgetGenerator({ initialTitle, initialDescription, onApplyBud
 
   useEffect(() => {
     if (isOpen) {
-      setContextInput(`Program: ${initialTitle}\n${initialDescription ? `Deskripsi: ${initialDescription}` : ''}`);
+      const descPart = initialDescription
+        ? '\n' + t('kpp:ai_budget_context_desc', 'Deskripsi: {{desc}}', { desc: initialDescription })
+        : '';
+      setContextInput(t('kpp:ai_budget_context_program', 'Program: {{title}}', { title: initialTitle }) + descPart);
     }
-  }, [isOpen, initialTitle, initialDescription]);
+  }, [isOpen, initialTitle, initialDescription, t]);
 
   const handleGenerate = async () => {
     if (!contextInput || contextInput.trim().length < 5) {
@@ -51,7 +54,7 @@ export function AIBudgetGenerator({ initialTitle, initialDescription, onApplyBud
         if (parsed.anggaran_kasar !== undefined && parsed.uraian) {
           setFeedback(parsed);
         } else {
-          throw new Error('Format balasan tiada anggaran_kasar/uraian');
+          throw new Error('Invalid AI response: missing budget amount or description');
         }
       } catch (err) {
         console.error('Failed to parse AI JSON:', err, rawResponse);

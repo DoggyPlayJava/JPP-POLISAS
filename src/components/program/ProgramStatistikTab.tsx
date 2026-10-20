@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { motion } from 'framer-motion';
 import {
@@ -42,6 +43,7 @@ const PIE_COLORS = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#0ea
 
 // ─── Main ─────────────────────────────────────────────────────────────────────
 export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
+  const { t } = useTranslation(['portal', 'common']);
   const [loading, setLoading]         = useState(true);
   const [summaries, setSummaries]     = useState<AttendSummary[]>([]);
   const [jabatan, setJabatan]         = useState<JabatanStat[]>([]);
@@ -158,9 +160,9 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
   // Bar chart data — top 6 program by attendance
   const barData = summaries.slice(0, 6).map(p => ({
     name: p.program_title.length > 16 ? p.program_title.slice(0, 14) + '…' : p.program_title,
-    'Hadir': p.attended + p.walk_in,
-    'Daftar': p.pre_registered,
-    'Absent': p.absent,
+    attended: p.attended + p.walk_in,
+    registered: p.pre_registered,
+    absent: p.absent,
   }));
 
   if (loading) return <StatsSkeleton />;
@@ -171,8 +173,8 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
         <div className="w-16 h-16 rounded-3xl bg-muted flex items-center justify-center mb-4">
           <Activity className="w-8 h-8 text-muted-foreground/40" />
         </div>
-        <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">Tiada Data Statistik</p>
-        <p className="text-xs text-muted-foreground/60 mt-1">Aktifkan QR pada program dan biarkan peserta scan untuk mula kumpul data.</p>
+        <p className="text-sm font-black text-muted-foreground uppercase tracking-widest">{t('portal:no_stats_data', 'Tiada Data Statistik')}</p>
+        <p className="text-xs text-muted-foreground/60 mt-1">{t('portal:enable_qr_stats_hint', 'Aktifkan QR pada program dan biarkan peserta scan untuk mula kumpul data.')}</p>
       </div>
     );
   }
@@ -182,10 +184,10 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
 
       {/* ── KPI SUMMARY CARDS ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <KpiCard icon={CalendarDays} label="Jumlah Program" value={totalPrograms} color="text-primary" bg="bg-primary/10" />
-        <KpiCard icon={Users} label="Jumlah Peserta" value={totalParticipants} color="text-emerald-600" bg="bg-emerald-500/10" />
-        <KpiCard icon={TrendingUp} label="Kadar Hadir" value={`${avgAttendRate}%`} color="text-amber-600" bg="bg-amber-500/10" />
-        <KpiCard icon={Trophy} label="Merit Dikreditkan" value={totalMerit} color="text-violet-600" bg="bg-violet-500/10" />
+        <KpiCard icon={CalendarDays} label={t('portal:total_programs', 'Jumlah Program')} value={totalPrograms} color="text-primary" bg="bg-primary/10" />
+        <KpiCard icon={Users} label={t('portal:total_participants', 'Jumlah Peserta')} value={totalParticipants} color="text-emerald-600" bg="bg-emerald-500/10" />
+        <KpiCard icon={TrendingUp} label={t('portal:attendance_rate', 'Kadar Hadir')} value={`${avgAttendRate}%`} color="text-amber-600" bg="bg-amber-500/10" />
+        <KpiCard icon={Trophy} label={t('portal:merit_credited', 'Merit Dikreditkan')} value={totalMerit} color="text-violet-600" bg="bg-violet-500/10" />
       </div>
 
       {/* ── BAR CHART: Kehadiran per Program ── */}
@@ -195,8 +197,8 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
           className="p-4 sm:p-6 rounded-[2rem] bg-card border border-border shadow-sm min-w-0"
         >
           <div className="mb-5">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Kehadiran Per Program</p>
-            <h3 className="text-lg sm:text-xl font-black tracking-tight">Status Peserta</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('portal:attendance_per_program', 'Kehadiran Per Program')}</p>
+            <h3 className="text-lg sm:text-xl font-black tracking-tight">{t('portal:participant_status', 'Status Peserta')}</h3>
           </div>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={barData} barGap={4} barSize={18}>
@@ -207,14 +209,14 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
                 contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '1rem', fontSize: 11, fontWeight: 700 }}
                 cursor={{ fill: 'hsl(var(--muted))', radius: 8 }}
               />
-              <Bar dataKey="Hadir" fill="#10b981" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="Daftar" fill="#6366f1" radius={[6, 6, 0, 0]} />
-              <Bar dataKey="Absent" fill="#f43f5e" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="attended" name={t('portal:attended', 'Hadir')} fill="#10b981" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="registered" name={t('portal:registered', 'Daftar')} fill="#6366f1" radius={[6, 6, 0, 0]} />
+              <Bar dataKey="absent" name={t('portal:not_attended', 'Tidak Hadir')} fill="#f43f5e" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
           {/* Legend manual */}
           <div className="flex flex-wrap gap-3 sm:gap-4 mt-3 justify-center">
-            {[['Hadir','#10b981'],['Daftar','#6366f1'],['Absent','#f43f5e']].map(([l,c]) => (
+            {[[t('portal:attended', 'Hadir'),'#10b981'],[t('portal:registered', 'Daftar'),'#6366f1'],[t('portal:not_attended', 'Tidak Hadir'),'#f43f5e']].map(([l,c]) => (
               <span key={l} className="flex items-center gap-1.5 text-[10px] font-bold text-muted-foreground">
                 <span className="w-2.5 h-2.5 rounded-full" style={{ background: c }} />
                 {l}
@@ -233,8 +235,8 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
             className="p-4 sm:p-6 rounded-[2rem] bg-card border border-border shadow-sm min-w-0"
           >
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Komposisi Peserta</p>
-            <h3 className="text-lg sm:text-xl font-black tracking-tight mb-4">Jabatan / Kursus</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t('portal:participant_composition', 'Komposisi Peserta')}</p>
+            <h3 className="text-lg sm:text-xl font-black tracking-tight mb-4">{t('portal:dept_course', 'Jabatan / Kursus')}</h3>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie data={jabatan} dataKey="count" nameKey="jabatan" cx="50%" cy="50%" outerRadius={85} innerRadius={45} paddingAngle={3}>
@@ -263,8 +265,8 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
             initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
             className="p-4 sm:p-6 rounded-[2rem] bg-card border border-border shadow-sm min-w-0"
           >
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Butiran Program</p>
-            <h3 className="text-lg sm:text-xl font-black tracking-tight mb-4">Senarai Kehadiran</h3>
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{t('portal:program_details', 'Butiran Program')}</p>
+            <h3 className="text-lg sm:text-xl font-black tracking-tight mb-4">{t('portal:attendance_list', 'Senarai Kehadiran')}</h3>
             <div className="space-y-3 max-h-[280px] overflow-y-auto pr-1">
               {summaries.map((p) => {
                 const hadir = p.attended + p.walk_in;
@@ -312,18 +314,18 @@ export function ProgramStatistikTab({ selectedClubId, isSuperAdmin }: Props) {
           className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 min-w-0"
         >
           {[
-            { label: 'Pre-Register', value: totalPreReg, color: 'text-indigo-600', bg: 'bg-indigo-500/10', bar: 'bg-indigo-500' },
-            { label: 'Hadir', value: totalAttended, color: 'text-emerald-600', bg: 'bg-emerald-500/10', bar: 'bg-emerald-500' },
-            { label: 'Tidak Hadir', value: summaries.reduce((s,p) => s + p.absent, 0), color: 'text-rose-500', bg: 'bg-rose-500/10', bar: 'bg-rose-500' },
+            { label: t('portal:pre_register', 'Pre-Register'), value: totalPreReg, color: 'text-indigo-600', bg: 'bg-indigo-500/10', bar: 'bg-indigo-500' },
+            { label: t('portal:attended', 'Hadir'), value: totalAttended, color: 'text-emerald-600', bg: 'bg-emerald-500/10', bar: 'bg-emerald-500' },
+            { label: t('portal:not_attended', 'Tidak Hadir'), value: summaries.reduce((s,p) => s + p.absent, 0), color: 'text-rose-500', bg: 'bg-rose-500/10', bar: 'bg-rose-500' },
           ].map(item => (
-            <div key={item.label} className={cn('p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-border', item.bg)}>
+            <div key={item.color} className={cn('p-4 sm:p-5 rounded-2xl sm:rounded-[2rem] border border-border', item.bg)}>
               <p className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mb-1">{item.label}</p>
               <p className={cn('text-2xl sm:text-3xl font-black tracking-tighter', item.color)}>{item.value}</p>
               <div className="mt-2 h-1 rounded-full bg-muted/50 overflow-hidden">
                 <div className={cn('h-full rounded-full', item.bar)} style={{ width: `${totalParticipants > 0 ? Math.round((item.value/totalParticipants)*100) : 0}%` }} />
               </div>
               <p className="text-[9px] font-bold text-muted-foreground mt-1">
-                {totalParticipants > 0 ? Math.round((item.value/totalParticipants)*100) : 0}% daripada jumlah
+                {t('portal:pct_of_total', '{{pct}}% daripada jumlah', { pct: totalParticipants > 0 ? Math.round((item.value/totalParticipants)*100) : 0 })}
               </p>
             </div>
           ))}
