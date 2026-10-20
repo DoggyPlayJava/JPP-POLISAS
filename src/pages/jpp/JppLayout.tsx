@@ -12,6 +12,7 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { JppCommandPalette } from '@/components/jpp/JppCommandPalette';
+import { useTranslation } from 'react-i18next';
 
 // Auto-calculate current academic session
 function getCurrentAcademicSession(): string {
@@ -21,21 +22,22 @@ function getCurrentAcademicSession(): string {
   return m >= 6 ? `Sem 1 ${y}/${y + 1}` : `Sem 2 ${y - 1}/${y}`;
 }
 
-const JPP_UNIT_LINKS = [
-  { label: 'Dashboard JPP HQ', path: '/jpp' },
-  { label: 'Senarai Ahli JPP', path: '/jpp/members' },
-  { label: 'Pengumuman JPP', path: '/jpp/announcements' },
-  { label: 'Takwim JPP', path: '/jpp/takwim' },
-  { label: 'NEXUS (Tugasan)', path: '/jpp/nexus' },
-];
-
 export function JppLayout() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { user, isJppMember, isSuperAdmin, isLoading, hasKediamanAccess } = useAuth();
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [cmdOpen, setCmdOpen] = useState(false);
   const [isFbOfficer, setIsFbOfficer] = useState(false);
   const [checkingFbOfficer, setCheckingFbOfficer] = useState(true);
+
+  const unitLinks = [
+    { label: t('jpp:layout_nav_dashboard', 'Dashboard JPP HQ'), path: '/jpp' },
+    { label: t('jpp:layout_nav_members', 'Senarai Ahli JPP'), path: '/jpp/members' },
+    { label: t('jpp:layout_nav_announcements', 'Pengumuman JPP'), path: '/jpp/announcements' },
+    { label: t('jpp:layout_nav_takwim', 'Takwim JPP'), path: '/jpp/takwim' },
+    { label: t('jpp:layout_nav_nexus', 'NEXUS (Tugasan)'), path: '/jpp/nexus' },
+  ];
 
   // Close sidebar on route change (mobile)
   React.useEffect(() => {
@@ -158,7 +160,7 @@ export function JppLayout() {
             <button
               onClick={() => setCmdOpen(true)}
               className="p-2 rounded-xl text-[#2E3A2F]/70 dark:text-white/50 hover:text-[#2E3A2F] dark:hover:text-white hover:bg-[#2E3A2F]/5 dark:hover:bg-white/10 transition-all"
-              title="Cari atau Buka Perintah (Ctrl+K)"
+              title={t('jpp:layout_search_tooltip', 'Cari atau Buka Perintah (Ctrl+K)')}
             >
               <Search className="w-4 h-4" />
             </button>
@@ -188,7 +190,7 @@ export function JppLayout() {
         <FloatingAiChat />
 
         {/* QR Code FAB : untuk semua ahli JPP jana QR berjenama */}
-        <QrCodeFab unitLinks={JPP_UNIT_LINKS} />
+        <QrCodeFab unitLinks={unitLinks} />
 
         {/* Floating Mobile Navigation Dock */}
         <BottomNav onOpenSidebar={() => setIsMobileOpen(true)} />

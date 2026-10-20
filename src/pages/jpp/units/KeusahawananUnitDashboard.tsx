@@ -14,11 +14,12 @@ import { supabase } from '@/lib/supabase';
 import { AlertTriangle, Logs, Clock, CheckCircle, XCircle, RefreshCw, ShoppingBag, Store, Ticket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { subDays, formatDistanceToNow } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
 import { KeusahawananAdminPanel } from '@/pages/keusahawanan/KeusahawananAdminPanel';
 import { PolyMartAdminPanel } from '@/pages/polymart/PolyMartAdminPanel';
 import { EventCouponPanel } from './EventCouponPanel';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
+import { useTranslation } from 'react-i18next';
 
 // ── Types ────────────────────────────────────────────────────────────────────
 interface PendingOldBusiness {
@@ -37,13 +38,9 @@ interface AuditLog {
   business_id?: string;
 }
 
-const ACTION_META: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  BUSINESS_APPROVED: { label: 'Diluluskan', color: 'text-emerald-600 bg-emerald-50', icon: CheckCircle },
-  BUSINESS_REJECTED: { label: 'Ditolak',   color: 'text-rose-600 bg-rose-50',      icon: XCircle   },
-};
-
 // ── Main Component ────────────────────────────────────────────────────────────
 export function KeusahawananUnitDashboard() {
+  const { t, i18n } = useTranslation(['jpp', 'common']);
   const { color } = useExcoTheme();
   const [activeMainTab, setActiveMainTab] = useState<'perniagaan' | 'polymart' | 'kupon'>('perniagaan');
   
@@ -54,6 +51,11 @@ export function KeusahawananUnitDashboard() {
   const [ssmCount, setSsmCount]             = useState(0);
   const [emsCount, setEmsCount]             = useState(0);
   const [loadingExtra, setLoadingExtra]     = useState(true);
+
+  const actionMeta: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+    BUSINESS_APPROVED: { label: t('jpp:keusahawanan_action_approved', 'Diluluskan'), color: 'text-emerald-600 bg-emerald-50', icon: CheckCircle },
+    BUSINESS_REJECTED: { label: t('jpp:keusahawanan_action_rejected', 'Ditolak'),   color: 'text-rose-600 bg-rose-50',      icon: XCircle   },
+  };
 
   const fetchExtras = async () => {
     setLoadingExtra(true);
@@ -133,14 +135,14 @@ export function KeusahawananUnitDashboard() {
             activeMainTab === 'perniagaan' ? "shadow-sm" : "text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white"
           )}
           style={activeMainTab === 'perniagaan' ? { background: color, color: '#fff' } : undefined}>
-          <Store className="w-4 h-4" /> Senarai Perniagaan
+          <Store className="w-4 h-4" /> {t('jpp:keusahawanan_tab_businesses', 'Senarai Perniagaan')}
         </button>
         <button onClick={() => setActiveMainTab('polymart')}
           className={cn("flex-1 min-w-[140px] flex items-center justify-center gap-2 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all relative",
             activeMainTab === 'polymart' ? "shadow-sm" : "text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white"
           )}
           style={activeMainTab === 'polymart' ? { background: '#f43f5e', color: '#fff' } : undefined}>
-          <ShoppingBag className="w-4 h-4" /> Pengurusan PolyMart
+          <ShoppingBag className="w-4 h-4" /> {t('jpp:keusahawanan_tab_polymart', 'Pengurusan PolyMart')}
           {pendingReports > 0 && (
             <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-white text-rose-500 rounded-full flex items-center justify-center text-[8px] font-black pointer-events-none">
               {pendingReports}
@@ -152,7 +154,7 @@ export function KeusahawananUnitDashboard() {
             activeMainTab === 'kupon' ? "shadow-sm" : "text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white"
           )}
           style={activeMainTab === 'kupon' ? { background: '#f59e0b', color: '#1e293b' } : undefined}>
-          <Ticket className="w-4 h-4" /> Kupon / Voucher
+          <Ticket className="w-4 h-4" /> {t('jpp:keusahawanan_tab_coupons', 'Kupon / Voucher')}
         </button>
       </div>
 
@@ -165,7 +167,9 @@ export function KeusahawananUnitDashboard() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-4 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">Pendaftaran PUSKEP</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+                      {t('jpp:keusahawanan_puskep_reg', 'Pendaftaran PUSKEP')}
+                    </p>
                     <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{puskepCount}</p>
                   </div>
                   <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
@@ -174,7 +178,9 @@ export function KeusahawananUnitDashboard() {
                 </div>
                 <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-4 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Pendaftaran SSM</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
+                      {t('jpp:keusahawanan_ssm_reg', 'Pendaftaran SSM')}
+                    </p>
                     <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{ssmCount}</p>
                   </div>
                   <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
@@ -183,7 +189,9 @@ export function KeusahawananUnitDashboard() {
                 </div>
                 <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-4 flex items-center justify-between shadow-sm">
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">Pendaftaran EMS (Sementara)</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-amber-600 dark:text-amber-400">
+                      {t('jpp:keusahawanan_ems_reg', 'Pendaftaran EMS (Sementara)')}
+                    </p>
                     <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{emsCount}</p>
                   </div>
                   <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center">
@@ -203,7 +211,7 @@ export function KeusahawananUnitDashboard() {
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-500 shrink-0" />
                   <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">
-                    {pendingOld.length} Permohonan Lama — Menunggu Lebih 7 Hari
+                    {t('jpp:keusahawanan_old_pending_title', '{{count}} Permohonan Lama — Menunggu Lebih 7 Hari', { count: pendingOld.length })}
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -215,7 +223,7 @@ export function KeusahawananUnitDashboard() {
                         <p className="text-[10px] text-slate-500 dark:text-white/50">{b.owner_name ?? '—'}</p>
                       </div>
                       <span className="text-[10px] font-black text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full shrink-0">
-                        {b.daysPending} hari
+                        {t('jpp:keusahawanan_days_unit', '{{days}} hari', { days: b.daysPending })}
                       </span>
                     </div>
                   ))}
@@ -237,19 +245,19 @@ export function KeusahawananUnitDashboard() {
                 <div className="flex items-center gap-2">
                   <Logs className="w-3.5 h-3.5 text-slate-400 dark:text-white/30" />
                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/40">
-                    Log Audit Terkini
+                    {t('jpp:keusahawanan_audit_logs_title', 'Log Audit Terkini')}
                   </p>
                   <button
                     onClick={fetchExtras}
                     className="ml-auto p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5 transition-colors"
-                    title="Muat semula log"
+                    title={t('jpp:keusahawanan_reload_logs', 'Muat semula log')}
                   >
                     <RefreshCw className="w-3 h-3 text-slate-400 dark:text-white/30" />
                   </button>
                 </div>
                 <div className="space-y-2">
                   {auditLogs.map((log, i) => {
-                    const meta = ACTION_META[log.action_type];
+                    const meta = actionMeta[log.action_type];
                     const Icon = meta?.icon ?? Logs;
                     return (
                       <motion.div
@@ -265,7 +273,7 @@ export function KeusahawananUnitDashboard() {
                         <div className="flex-1 min-w-0">
                           <p className="text-xs font-black text-slate-900 dark:text-white leading-tight">{log.description}</p>
                           <p className="text-[10px] text-slate-500 dark:text-white/40 mt-0.5">
-                            {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: ms })}
+                            {formatDistanceToNow(new Date(log.created_at), { addSuffix: true, locale: i18n.language.startsWith('en') ? enUS : ms })}
                           </p>
                         </div>
                         {meta && (
@@ -295,8 +303,12 @@ export function KeusahawananUnitDashboard() {
                   <AlertTriangle className="w-5 h-5 text-rose-500" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm font-black text-rose-600 dark:text-rose-500">Terdapat {pendingReports} Laporan Produk</p>
-                  <p className="text-[10px] text-rose-600/80 dark:text-rose-500/70 mt-0.5 leading-tight">Pengguna telah melaporkan beberapa produk di dalam PolyMart. Sila semak tab 'Laporan' di bawah.</p>
+                  <p className="text-sm font-black text-rose-600 dark:text-rose-500">
+                    {t('jpp:keusahawanan_reports_alert_title', 'Terdapat {{count}} Laporan Produk', { count: pendingReports })}
+                  </p>
+                  <p className="text-[10px] text-rose-600/80 dark:text-rose-500/70 mt-0.5 leading-tight">
+                    {t('jpp:keusahawanan_reports_alert_desc', 'Pengguna telah melaporkan beberapa produk di dalam PolyMart. Sila semak tab \'Laporan\' di bawah.')}
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -318,4 +330,3 @@ export function KeusahawananUnitDashboard() {
     </div>
   );
 }
-

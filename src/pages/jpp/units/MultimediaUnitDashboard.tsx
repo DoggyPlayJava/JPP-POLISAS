@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const MULTIMEDIA_COLOR = '#FB923C';
 
@@ -100,8 +101,8 @@ const BRANDKIT_LOGOS: InstitutionalLogo[] = [
     downloadUrl: '#',
   },
   {
-    id: 'logo-jtmk',
-    name: 'Jabatan Teknologi Maklumat & Komunikasi (JTMK)',
+    id: 'logo-jmsk',
+    name: 'Jabatan Matematik, Sains & Komputer (JMSK)',
     category: 'Jabatan Akademik',
     format: 'PNG Telus',
     resolution: '1500 x 1500 px',
@@ -110,38 +111,38 @@ const BRANDKIT_LOGOS: InstitutionalLogo[] = [
 ];
 
 const BRANDKIT_COLORS: InstitutionalColor[] = [
-  { name: 'POLISAS Forest Navy', hex: '#1E293B', rgb: 'rgb(30, 41, 59)', usage: 'Warna identiti utama dokumen rasmi' },
-  { name: 'JPP Crimson Red (KPP)', hex: '#F87171', rgb: 'rgb(248, 113, 113)', usage: 'Unit Kelab, Persatuan & Hebahan Am' },
-  { name: 'Keusahawanan Emerald', hex: '#4ADE80', rgb: 'rgb(74, 222, 128)', usage: 'PolyMart, Siswapreneur & Perniagaan' },
-  { name: 'Kebajikan Cyan/Teal', hex: '#2DD4BF', rgb: 'rgb(45, 212, 191)', usage: 'E-Bantu, FoodBank & Bantuan Mahasiswa' },
-  { name: 'Sukan & Rekreasi Amber', hex: '#F59E0B', rgb: 'rgb(245, 158, 11)', usage: 'SUPSAS, Sukan Kampus & Kejohanan' },
-  { name: 'Akademik Lavender', hex: '#818CF8', rgb: 'rgb(129, 140, 248)', usage: 'MAKMP, Takwim Kuliah & Inovasi' },
-  { name: 'Multimedia Tangerine', hex: '#FB923C', rgb: 'rgb(251, 146, 60)', usage: 'Siaran Media, Hebahan & Buletin Digital' },
+  { name: 'Kuning Diraja POLISAS', hex: '#F59E0B', rgb: '245, 158, 11', usage: 'Warna identiti utama institusi & jata rasmi' },
+  { name: 'Biru Korporat Utama', hex: '#1E3A8A', rgb: '30, 58, 138', usage: 'Warna latar belakang dokumen rasmi & blazer' },
+  { name: 'Emerald Gemilang', hex: '#10B981', rgb: '16, 185, 129', usage: 'Aksen kejayaan, pengesahan dan kelulusan' },
+  { name: 'Oren Multimedia JPP', hex: '#FB923C', rgb: '251, 146, 60', usage: 'Warna rasmi Exco Multimedia & penyiaran' },
+  { name: 'Hitam Arang Eksklusif', hex: '#0F172A', rgb: '15, 23, 42', usage: 'Warna tipografi dokumen rasmi & kad pelajar' },
+  { name: 'Putih Mutiara Bersih', hex: '#F8FAFC', rgb: '248, 250, 252', usage: 'Warna kanvas digital dan latar belakang poster' },
 ];
 
 export function MultimediaUnitDashboard() {
+  const { t } = useTranslation(['jpp', 'common']);
   const navigate = useNavigate();
   const { user } = useAuth();
   const [subTab, setSubTab] = useState<SubTab>('siaran');
 
-  // ── Live DB data ────────────────────────────────────────────────────
+  // ── Live DB Data ────────────────────────────────────────────────────
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // ── Copywriter Form State ───────────────────────────────────────────
-  const [cwTitle, setCwTitle] = useState('KEJOHANAN SUKAN ANTARA JABATAN (SUPSAS 2026)');
-  const [cwDate, setCwDate] = useState('25 - 28 Oktober 2026');
-  const [cwTime, setCwTime] = useState('08:00 Pagi - 05:00 Petang');
-  const [cwLocation, setCwLocation] = useState('Kompleks Sukan & Padang Utama POLISAS');
-  const [cwOrganizer, setCwOrganizer] = useState('Majlis Sukan JPP bersama Exco SRK');
-  const [cwLink, setCwLink] = useState('https://jpp-polisas.edu.my/supsas');
-  const [copiedCw, setCopiedCw] = useState(false);
-
   // ── Search & Filter ─────────────────────────────────────────────────
   const [searchAnnounce, setSearchAnnounce] = useState('');
   const [announceFilter, setAnnounceFilter] = useState<'SEMUA' | 'AKTIF' | 'ARKIB'>('SEMUA');
+
+  // ── WhatsApp Text Generator State ───────────────────────────────────
+  const [cwTitle, setCwTitle] = useState('Pesta Konvokesyen POLISAS Ke-25');
+  const [cwDate, setCwDate] = useState('24 - 26 Oktober 2026');
+  const [cwTime, setCwTime] = useState('8:00 Pagi - 11:00 Malam');
+  const [cwLocation, setCwLocation] = useState('Dewan Jubli Perak & Dataran Gemilang POLISAS');
+  const [cwOrganizer, setCwOrganizer] = useState('JPP POLISAS & Unit Hal Ehwal Pelajar (HEP)');
+  const [cwLink, setCwLink] = useState('https://jpppolisas.my/portal/events');
+  const [copiedCw, setCopiedCw] = useState(false);
 
   // Load live data safely with Promise.all
   const loadData = useCallback(async () => {
@@ -150,9 +151,9 @@ export function MultimediaUnitDashboard() {
       const [annRes, actsRes, repRes] = await Promise.all([
         supabase
           .from('system_announcements')
-          .select('id, title, content, priority, target, is_active, created_at, image_url, action_url, metadata')
+          .select('id, title, content, is_active, created_at, image_url, target, priority')
           .order('created_at', { ascending: false })
-          .limit(25),
+          .limit(30),
         supabase
           .from('club_activities')
           .select('id, title, status, start_date, location, priority')
@@ -185,18 +186,18 @@ export function MultimediaUnitDashboard() {
   // Filtered announcements
   const filteredAnnouncements = useMemo(() => {
     return announcements.filter((ann) => {
-      const matchFilter =
-        announceFilter === 'SEMUA' ||
-        (announceFilter === 'AKTIF' && ann.is_active) ||
-        (announceFilter === 'ARKIB' && !ann.is_active);
       const matchSearch =
         ann.title?.toLowerCase().includes(searchAnnounce.toLowerCase()) ||
         ann.content?.toLowerCase().includes(searchAnnounce.toLowerCase());
-      return matchFilter && matchSearch;
-    });
-  }, [announcements, announceFilter, searchAnnounce]);
 
-  // Generated WhatsApp text
+      if (!matchSearch) return false;
+      if (announceFilter === 'AKTIF') return ann.is_active;
+      if (announceFilter === 'ARKIB') return !ann.is_active;
+      return true;
+    });
+  }, [announcements, searchAnnounce, announceFilter]);
+
+  // WhatsApp text template engine
   const generatedWhatsAppText = useMemo(() => {
     return `📢 *HEBAHAN RASMI JPP POLISAS*\n\n` +
       `🔥 *${cwTitle.toUpperCase()}*\n\n` +
@@ -212,13 +213,13 @@ export function MultimediaUnitDashboard() {
   const copyWhatsApp = () => {
     navigator.clipboard.writeText(generatedWhatsAppText);
     setCopiedCw(true);
-    toast.success('Teks siaran WhatsApp berjaya disalin!');
+    toast.success(t('jpp:mm_copy_text_success', 'Teks siaran WhatsApp berjaya disalin!'));
     setTimeout(() => setCopiedCw(false), 2500);
   };
 
   const copyHex = (hex: string, name: string) => {
     navigator.clipboard.writeText(hex);
-    toast.success(`Kod warna ${name} (${hex}) disalin!`);
+    toast.success(t('jpp:mm_color_copied_toast', 'Kod warna {{name}} ({{hex}}) disalin!', { name, hex }));
   };
 
   // Stats calculation
@@ -240,7 +241,9 @@ export function MultimediaUnitDashboard() {
         {/* Kad 1: Hebahan Aktif di Portal */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Hebahan Aktif</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+              {t('jpp:mm_card_active_announcements', 'Hebahan Aktif')}
+            </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
               <Megaphone className="w-4 h-4" />
             </div>
@@ -249,14 +252,16 @@ export function MultimediaUnitDashboard() {
             {stats.activeAnnouncements}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
-            Siaran langsung ke Portal Siswa
+            {t('jpp:mm_card_active_desc', 'Siaran langsung ke Portal Siswa')}
           </p>
         </div>
 
         {/* Kad 2: Aset Brandkit */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Aset Brandkit</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+              {t('jpp:mm_card_brandkit_assets', 'Aset Brandkit')}
+            </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <Palette className="w-4 h-4" />
             </div>
@@ -265,30 +270,34 @@ export function MultimediaUnitDashboard() {
             {stats.brandkitAssets}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
-            Logo rasmi institusi sedia muat turun
+            {t('jpp:mm_card_brandkit_desc', 'Logo rasmi institusi sedia muat turun')}
           </p>
         </div>
 
         {/* Kad 3: Saluran WhatsApp Blast */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Format Siaran Pantas</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+              {t('jpp:mm_card_quick_broadcast', 'Format Siaran Pantas')}
+            </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
               <MessageSquare className="w-4 h-4" />
             </div>
           </div>
           <div className="text-3xl font-black font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
-            1-Klik
+            {t('jpp:mm_card_one_click', '1-Klik')}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
-            Penjana teks kumpulan WhatsApp rasmi
+            {t('jpp:mm_card_quick_desc', 'Penjana teks kumpulan WhatsApp rasmi')}
           </p>
         </div>
 
         {/* Kad 4: Aktiviti Berdaftar */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Aktiviti Unit</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+              {t('jpp:mm_card_unit_activities', 'Aktiviti Unit')}
+            </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
               <FileText className="w-4 h-4" />
             </div>
@@ -297,7 +306,7 @@ export function MultimediaUnitDashboard() {
             {stats.activitiesCount}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
-            {stats.reportsCount} fail laporan berdaftar
+            {t('jpp:mm_card_reports_desc', '{{count}} fail laporan berdaftar', { count: stats.reportsCount })}
           </p>
         </div>
       </div>
@@ -305,10 +314,10 @@ export function MultimediaUnitDashboard() {
       {/* ── Sub Navigation Tabs ── */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-white/[0.06] pb-3 overflow-x-auto scrollbar-none">
         {[
-          { key: 'siaran', label: 'Pusat Siaran & Hebahan Portal', icon: Megaphone },
-          { key: 'brandkit', label: 'Hab Brandkit & Aset Rasmi', icon: Palette },
-          { key: 'copywriter', label: 'Penjana Teks WhatsApp / Telegram', icon: MessageSquare },
-          { key: 'rekod', label: 'Aktiviti & Laporan Exco', icon: FileText },
+          { key: 'siaran', label: t('jpp:mm_tab_portal_broadcast', 'Pusat Siaran & Hebahan Portal'), icon: Megaphone },
+          { key: 'brandkit', label: t('jpp:mm_tab_brandkit', 'Hab Brandkit & Aset Rasmi'), icon: Palette },
+          { key: 'copywriter', label: t('jpp:mm_tab_copywriter', 'Penjana Teks WhatsApp / Telegram'), icon: MessageSquare },
+          { key: 'rekod', label: t('jpp:mm_tab_records', 'Aktiviti & Laporan Exco'), icon: FileText },
         ].map((tab) => {
           const isActive = subTab === tab.key;
           const Icon = tab.icon;
@@ -340,7 +349,7 @@ export function MultimediaUnitDashboard() {
                 type="text"
                 value={searchAnnounce}
                 onChange={(e) => setSearchAnnounce(e.target.value)}
-                placeholder="Cari tajuk hebahan atau kandungan..."
+                placeholder={t('jpp:mm_search_placeholder', 'Cari tajuk hebahan atau kandungan...')}
                 className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500/40"
               />
             </div>
@@ -358,7 +367,7 @@ export function MultimediaUnitDashboard() {
                         : 'bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-white/60 hover:bg-slate-200 dark:hover:bg-white/[0.08]'
                     )}
                   >
-                    {st}
+                    {st === 'SEMUA' ? t('jpp:mm_filter_all', 'SEMUA') : st === 'AKTIF' ? t('jpp:mm_filter_active', 'AKTIF') : t('jpp:mm_filter_archive', 'ARKIB')}
                   </button>
                 ))}
               </div>
@@ -367,7 +376,7 @@ export function MultimediaUnitDashboard() {
                 onClick={() => navigate('/jpp/announcements')}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider bg-orange-500 hover:bg-orange-600 text-white transition-colors shrink-0 shadow-xs"
               >
-                <span>Urus Penuh Hebahan</span>
+                <span>{t('jpp:mm_manage_all_announcements', 'Urus Penuh Hebahan')}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -377,9 +386,11 @@ export function MultimediaUnitDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">Senarai Hebahan & Poster Siswa</h3>
+                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                  {t('jpp:mm_announcements_list_title', 'Senarai Hebahan & Poster Siswa')}
+                </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
-                  Diselaraskan terus daripada pangkalan data system_announcements JPP POLISAS.
+                  {t('jpp:mm_announcements_list_desc', 'Diselaraskan terus daripada pangkalan data system_announcements JPP POLISAS.')}
                 </p>
               </div>
               <button
@@ -393,11 +404,11 @@ export function MultimediaUnitDashboard() {
 
             {loading ? (
               <div className="py-12 text-center text-xs font-mono text-slate-400">
-                Memuatkan senarai hebahan terkini...
+                {t('jpp:mm_loading_announcements', 'Memuatkan senarai hebahan terkini...')}
               </div>
             ) : filteredAnnouncements.length === 0 ? (
               <div className="p-8 rounded-xl border border-dashed border-slate-200 dark:border-white/[0.08] text-center text-xs text-slate-400">
-                Tiada rekod hebahan dijumpai.
+                {t('jpp:mm_no_announcements', 'Tiada rekod hebahan dijumpai.')}
               </div>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-white/[0.04]">
@@ -412,11 +423,11 @@ export function MultimediaUnitDashboard() {
                           <h4 className="font-black text-sm text-slate-900 dark:text-white">{ann.title}</h4>
                           {ann.is_active ? (
                             <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
-                              <CheckCircle2 className="w-3 h-3" /> Live di Portal
+                              <CheckCircle2 className="w-3 h-3" /> {t('jpp:mm_live_on_portal', 'Live di Portal')}
                             </span>
                           ) : (
                             <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">
-                              Arkib
+                              {t('jpp:mm_archive_badge', 'Arkib')}
                             </span>
                           )}
                         </div>
@@ -429,13 +440,13 @@ export function MultimediaUnitDashboard() {
                           </span>
                           <span>•</span>
                           <span className="font-medium text-slate-700 dark:text-white/70">
-                            Sasaran: {ann.target || 'Semua Mahasiswa'}
+                            {t('jpp:mm_target_label', 'Sasaran: {{target}}', { target: ann.target || t('jpp:mm_target_all_students', 'Semua Mahasiswa') })}
                           </span>
                           {ann.priority && (
                             <>
                               <span>•</span>
                               <span className="font-semibold text-orange-600 dark:text-orange-400">
-                                Keutamaan: {ann.priority}
+                                {t('jpp:mm_priority_label', 'Keutamaan: {{priority}}', { priority: ann.priority })}
                               </span>
                             </>
                           )}
@@ -452,13 +463,13 @@ export function MultimediaUnitDashboard() {
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-white/70 hover:bg-slate-200 transition-colors"
                         >
                           <Image className="w-3.5 h-3.5" />
-                          <span>Poster</span>
+                          <span>{t('jpp:mm_poster_btn', 'Poster')}</span>
                         </a>
                       )}
                       <button
                         onClick={() => navigate('/jpp/announcements')}
                         className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/[0.04] hover:bg-orange-500/10 text-slate-600 dark:text-white/70 hover:text-orange-500 transition-colors"
-                        title="Sunting Hebahan"
+                        title={t('jpp:mm_edit_announcement_tooltip', 'Sunting Hebahan')}
                       >
                         <ExternalLink className="w-4 h-4" />
                       </button>
@@ -478,9 +489,11 @@ export function MultimediaUnitDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">Pek Logo Rasmi Institusi (Format Telus HD)</h3>
+                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                  {t('jpp:mm_logos_pack_title', 'Pek Logo Rasmi Institusi (Format Telus HD)')}
+                </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
-                  Gunakan aset vektor dan PNG resolusi tinggi ini untuk memastikan kualiti poster kelab mematuhi piawaian.
+                  {t('jpp:mm_logos_pack_desc', 'Gunakan aset vektor dan PNG resolusi tinggi ini untuk memastikan kualiti poster kelab mematuhi piawaian.')}
                 </p>
               </div>
               <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
@@ -515,7 +528,7 @@ export function MultimediaUnitDashboard() {
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider bg-slate-900 text-white dark:bg-white dark:text-slate-900 shrink-0 shadow-xs hover:opacity-90 active:scale-[0.98] transition-all"
                   >
                     <Download className="w-3.5 h-3.5" />
-                    <span>Muat Turun</span>
+                    <span>{t('jpp:mm_download_asset_btn', 'Muat Turun')}</span>
                   </a>
                 </div>
               ))}
@@ -524,9 +537,11 @@ export function MultimediaUnitDashboard() {
 
           {/* Palet Warna Rasmi Institusi */}
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
-            <h3 className="font-black text-base text-slate-900 dark:text-white mb-1">Palet Kod Warna Rasmi JPP & Institusi</h3>
+            <h3 className="font-black text-base text-slate-900 dark:text-white mb-1">
+              {t('jpp:mm_palette_title', 'Palet Kod Warna Rasmi JPP & Institusi')}
+            </h3>
             <p className="text-xs text-slate-500 dark:text-white/40 mb-4">
-              Klik pada mana-mana swatch warna untuk menyalin kod HEX ke papan klip komputer anda.
+              {t('jpp:mm_palette_desc', 'Klik pada mana-mana swatch warna untuk menyalin kod HEX ke papan klip komputer anda.')}
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -562,16 +577,18 @@ export function MultimediaUnitDashboard() {
             {/* Form Input */}
             <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs space-y-4">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">Borang Butiran Program</h3>
+                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                  {t('jpp:mm_program_form_title', 'Borang Butiran Program')}
+                </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
-                  Masukkan butiran untuk menjana format siaran kumpulan WhatsApp secara automatik.
+                  {t('jpp:mm_program_form_desc', 'Masukkan butiran untuk menjana format siaran kumpulan WhatsApp secara automatik.')}
                 </p>
               </div>
 
               <div className="space-y-3">
                 <div>
                   <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
-                    Nama Program / Hebahan
+                    {t('jpp:mm_field_program_name', 'Nama Program / Hebahan')}
                   </label>
                   <input
                     type="text"
@@ -584,7 +601,7 @@ export function MultimediaUnitDashboard() {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
-                      Tarikh Pelaksanaan
+                      {t('jpp:mm_field_date', 'Tarikh Pelaksanaan')}
                     </label>
                     <input
                       type="text"
@@ -595,7 +612,7 @@ export function MultimediaUnitDashboard() {
                   </div>
                   <div>
                     <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
-                      Waktu Program
+                      {t('jpp:mm_field_time', 'Waktu Program')}
                     </label>
                     <input
                       type="text"
@@ -608,7 +625,7 @@ export function MultimediaUnitDashboard() {
 
                 <div>
                   <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
-                    Lokasi / Tempat
+                    {t('jpp:mm_field_location', 'Lokasi / Tempat')}
                   </label>
                   <input
                     type="text"
@@ -620,7 +637,7 @@ export function MultimediaUnitDashboard() {
 
                 <div>
                   <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
-                    Pihak Penganjur
+                    {t('jpp:mm_field_organizer', 'Pihak Penganjur')}
                   </label>
                   <input
                     type="text"
@@ -632,7 +649,7 @@ export function MultimediaUnitDashboard() {
 
                 <div>
                   <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
-                    Pautan Pendaftaran / Portal
+                    {t('jpp:mm_field_link', 'Pautan Pendaftaran / Portal')}
                   </label>
                   <input
                     type="text"
@@ -650,10 +667,12 @@ export function MultimediaUnitDashboard() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <Smartphone className="w-4 h-4 text-emerald-500" />
-                    <h3 className="font-black text-sm text-slate-900 dark:text-white">Pratonton Teks WhatsApp</h3>
+                    <h3 className="font-black text-sm text-slate-900 dark:text-white">
+                      {t('jpp:mm_preview_whatsapp_title', 'Pratonton Teks WhatsApp')}
+                    </h3>
                   </div>
                   <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                    Sedia Untuk Sebaran
+                    {t('jpp:mm_ready_for_broadcast', 'Sedia Untuk Sebaran')}
                   </span>
                 </div>
 
@@ -667,7 +686,7 @@ export function MultimediaUnitDashboard() {
                 className="mt-4 w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs active:scale-[0.98] transition-all"
               >
                 {copiedCw ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                <span>{copiedCw ? 'Teks Berjaya Disalin!' : 'Salin Teks Ke Papan Klip'}</span>
+                <span>{copiedCw ? t('jpp:mm_text_copied', 'Teks Berjaya Disalin!') : t('jpp:mm_copy_text_btn', 'Salin Teks Ke Papan Klip')}</span>
               </button>
             </div>
           </div>
@@ -680,8 +699,12 @@ export function MultimediaUnitDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">Rekod Pentadbiran Exco Multimedia</h3>
-                <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">Diselaraskan terus daripada pangkalan data pusat JPP.</p>
+                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                  {t('jpp:mm_records_title', 'Rekod Pentadbiran Exco Multimedia')}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
+                  {t('jpp:mm_records_desc', 'Diselaraskan terus daripada pangkalan data pusat JPP.')}
+                </p>
               </div>
               <button
                 onClick={loadData}
@@ -689,23 +712,23 @@ export function MultimediaUnitDashboard() {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-white/70 hover:bg-slate-200 transition-colors"
               >
                 <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />
-                Segar Semula
+                {t('jpp:mm_reload_records', 'Segar Semula')}
               </button>
             </div>
 
             {loading ? (
               <div className="py-12 text-center text-xs font-mono text-slate-400">
-                Memuatkan data aktiviti & laporan...
+                {t('jpp:mm_loading_records', 'Memuatkan data aktiviti & laporan...')}
               </div>
             ) : (
               <div className="space-y-6">
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-3">
-                    Aktiviti Berdaftar ({activities.length})
+                    {t('jpp:mm_registered_activities', 'Aktiviti Berdaftar ({{count}})', { count: activities.length })}
                   </h4>
                   {activities.length === 0 ? (
                     <div className="p-4 rounded-xl border border-dashed border-slate-200 dark:border-white/[0.08] text-center text-xs text-slate-400">
-                      Tiada aktiviti didaftarkan untuk unit Multimedia pada masa ini.
+                      {t('jpp:mm_no_activities', 'Tiada aktiviti didaftarkan untuk unit Multimedia pada masa ini.')}
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -717,7 +740,7 @@ export function MultimediaUnitDashboard() {
                           <div>
                             <p className="font-black text-xs text-slate-900 dark:text-white">{act.title}</p>
                             <p className="text-[11px] font-mono text-slate-500 dark:text-white/40 mt-0.5">
-                              {act.start_date || 'Tarikh belum ditetapkan'} · {act.location || 'Lokasi belum ditetapkan'}
+                              {act.start_date || t('jpp:mm_date_unset', 'Tarikh belum ditetapkan')} · {act.location || t('jpp:mm_location_unset', 'Lokasi belum ditetapkan')}
                             </p>
                           </div>
                           <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-200 dark:bg-white/[0.06] text-slate-700 dark:text-white/70">
@@ -731,11 +754,11 @@ export function MultimediaUnitDashboard() {
 
                 <div>
                   <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-3">
-                    Laporan Rasmi ({reports.length})
+                    {t('jpp:mm_official_reports', 'Laporan Rasmi ({{count}})', { count: reports.length })}
                   </h4>
                   {reports.length === 0 ? (
                     <div className="p-4 rounded-xl border border-dashed border-slate-200 dark:border-white/[0.08] text-center text-xs text-slate-400">
-                      Tiada fail laporan dimuat naik untuk unit Multimedia setakat ini.
+                      {t('jpp:mm_no_reports', 'Tiada fail laporan dimuat naik untuk unit Multimedia setakat ini.')}
                     </div>
                   ) : (
                     <div className="space-y-2">
@@ -749,7 +772,7 @@ export function MultimediaUnitDashboard() {
                             <div>
                               <p className="font-black text-xs text-slate-900 dark:text-white">{rep.file_name}</p>
                               <p className="text-[11px] font-mono text-slate-500 dark:text-white/40 mt-0.5">
-                                Dimuat naik pada {rep.created_at ? format(parseISO(rep.created_at), 'dd MMM yyyy', { locale: ms }) : '—'}
+                                {rep.created_at ? t('jpp:mm_uploaded_on', 'Dimuat naik pada {{date}}', { date: format(parseISO(rep.created_at), 'dd MMM yyyy', { locale: ms }) }) : '—'}
                               </p>
                             </div>
                           </div>

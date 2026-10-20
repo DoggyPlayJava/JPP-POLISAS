@@ -19,6 +19,7 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { toast } from 'react-hot-toast';
+import { useTranslation } from 'react-i18next';
 
 const KOLAB_COLOR = '#34D399';
 
@@ -81,6 +82,7 @@ const INITIAL_PARTNERS: MouPartner[] = [
 ];
 
 export function KolaborasiUnitDashboard() {
+  const { t } = useTranslation(['jpp', 'common']);
   const navigate = useNavigate();
   const { user } = useAuth();
   const [subTab, setSubTab] = useState<SubTab>('sukarelawan');
@@ -174,7 +176,9 @@ export function KolaborasiUnitDashboard() {
         {/* Kad 1: Acara EMS Buka Sukarelawan */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Acara EMS Terkini</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+              {t('jpp:kolab_card_ems_events', 'Acara EMS Terkini')}
+            </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <Calendar className="w-4 h-4" />
             </div>
@@ -183,14 +187,16 @@ export function KolaborasiUnitDashboard() {
             {stats.activeEvents}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
-            Pangkalan data acara EMS diselaraskan
+            {t('jpp:kolab_card_ems_desc', 'Pangkalan data acara EMS diselaraskan')}
           </p>
         </div>
 
         {/* Kad 2: E-Sijil Dijana */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">E-Sijil EMS Dijana</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+              {t('jpp:kolab_card_certs', 'E-Sijil EMS Dijana')}
+            </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
               <Award className="w-4 h-4" />
             </div>
@@ -199,14 +205,16 @@ export function KolaborasiUnitDashboard() {
             {stats.totalCerts}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
-            Sijil rasmi berkod QR pengesahan
+            {t('jpp:kolab_card_certs_desc', 'Sijil rasmi berkod QR pengesahan')}
           </p>
         </div>
 
         {/* Kad 3: Rakan Strategik MoU */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Rakan Strategik</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+              {t('jpp:kolab_card_partners', 'Rakan Strategik')}
+            </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20">
               <Handshake className="w-4 h-4" />
             </div>
@@ -215,14 +223,16 @@ export function KolaborasiUnitDashboard() {
             {stats.activePartners}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
-            Jalinan industri & agensi CSR aktif
+            {t('jpp:kolab_card_partners_desc', 'Jalinan industri & agensi CSR aktif')}
           </p>
         </div>
 
         {/* Kad 4: Aktiviti Berdaftar */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">Aktiviti Unit</span>
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+              {t('jpp:kolab_card_activities', 'Aktiviti Unit')}
+            </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <FileText className="w-4 h-4" />
             </div>
@@ -231,7 +241,7 @@ export function KolaborasiUnitDashboard() {
             {stats.activitiesCount}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
-            {stats.reportsCount} laporan berdaftar
+            {t('jpp:kolab_card_reports_desc', '{{count}} laporan berdaftar', { count: stats.reportsCount })}
           </p>
         </div>
       </div>
@@ -239,10 +249,10 @@ export function KolaborasiUnitDashboard() {
       {/* ── Sub Navigation Tabs ── */}
       <div className="flex items-center gap-2 border-b border-slate-200 dark:border-white/[0.06] pb-3 overflow-x-auto scrollbar-none">
         {[
-          { key: 'sukarelawan', label: 'Pengerahan Sukarelawan Acara EMS', icon: Users },
-          { key: 'kehadiran', label: 'Imbasan QR & Pengesahan Kru', icon: QrCode },
-          { key: 'sijil', label: 'Enjin Sijil Sukarelawan EMS', icon: Award },
-          { key: 'rakan', label: 'Rakan Strategik & Aktiviti Unit', icon: Handshake },
+          { key: 'sukarelawan', label: t('jpp:kolab_tab_volunteers', 'Pengerahan Sukarelawan Acara EMS'), icon: Users },
+          { key: 'kehadiran', label: t('jpp:kolab_tab_attendance', 'Imbasan QR & Pengesahan Kru'), icon: QrCode },
+          { key: 'sijil', label: t('jpp:kolab_tab_certs', 'Enjin Sijil Sukarelawan EMS'), icon: Award },
+          { key: 'rakan', label: t('jpp:kolab_tab_partners', 'Rakan Strategik & Aktiviti Unit'), icon: Handshake },
         ].map((tab) => {
           const isActive = subTab === tab.key;
           const Icon = tab.icon;
@@ -274,7 +284,7 @@ export function KolaborasiUnitDashboard() {
                 type="text"
                 value={searchEvent}
                 onChange={(e) => setSearchEvent(e.target.value)}
-                placeholder="Cari acara EMS, lokasi atau kategori..."
+                placeholder={t('jpp:kolab_search_placeholder', 'Cari acara EMS, lokasi atau kategori...')}
                 className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] text-xs font-medium text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40"
               />
             </div>
@@ -284,7 +294,7 @@ export function KolaborasiUnitDashboard() {
                 onClick={() => navigate('/ems')}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white transition-colors shrink-0 shadow-xs"
               >
-                <span>Buka Panel EMS</span>
+                <span>{t('jpp:kolab_open_ems_panel', 'Buka Panel EMS')}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -294,9 +304,11 @@ export function KolaborasiUnitDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">Penyelarasan Sukarelawan Mengikut Acara EMS</h3>
+                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                  {t('jpp:kolab_volunteers_coordination_title', 'Penyelarasan Sukarelawan Mengikut Acara EMS')}
+                </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
-                  Menghubungkan keperluan kru sukarelawan terus ke acara EMS institusi.
+                  {t('jpp:kolab_volunteers_coordination_desc', 'Menghubungkan keperluan kru sukarelawan terus ke acara EMS institusi.')}
                 </p>
               </div>
               <button
@@ -310,11 +322,11 @@ export function KolaborasiUnitDashboard() {
 
             {loading ? (
               <div className="py-12 text-center text-xs font-mono text-slate-400">
-                Memuatkan senarai acara EMS...
+                {t('jpp:kolab_loading_events', 'Memuatkan senarai acara EMS...')}
               </div>
             ) : filteredEvents.length === 0 ? (
               <div className="p-8 rounded-xl border border-dashed border-slate-200 dark:border-white/[0.08] text-center text-xs text-slate-400">
-                Tiada acara EMS dijumpai.
+                {t('jpp:kolab_no_events_found', 'Tiada acara EMS dijumpai.')}
               </div>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-white/[0.04]">
@@ -332,11 +344,11 @@ export function KolaborasiUnitDashboard() {
                           </span>
                         </div>
                         <p className="text-xs text-slate-600 dark:text-white/60 mt-1 line-clamp-1 leading-relaxed">
-                          {evt.description || 'Tiada penerangan tambahan acara.'}
+                          {evt.description || t('jpp:kolab_no_desc', 'Tiada penerangan tambahan acara.')}
                         </p>
                         <div className="flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-white/40 mt-2">
                           <span className="font-mono tabular-nums">
-                            {evt.event_date ? format(parseISO(evt.event_date), 'dd MMM yyyy', { locale: ms }) : 'Tarikh ditetapkan'}
+                            {evt.event_date ? format(parseISO(evt.event_date), 'dd MMM yyyy', { locale: ms }) : t('jpp:kolab_date_set', 'Tarikh ditetapkan')}
                           </span>
                           <span>•</span>
                           <span>{evt.location || 'Kampus POLISAS'}</span>
@@ -344,7 +356,7 @@ export function KolaborasiUnitDashboard() {
                             <>
                               <span>•</span>
                               <span className="font-mono tabular-nums font-medium text-slate-700 dark:text-white/70">
-                                Kapasiti: {evt.max_participants} Peserta
+                                {t('jpp:kolab_capacity_label', 'Kapasiti: {{count}} Peserta', { count: evt.max_participants })}
                               </span>
                             </>
                           )}
@@ -358,12 +370,12 @@ export function KolaborasiUnitDashboard() {
                         className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-xs hover:opacity-90 active:scale-[0.98] transition-all"
                       >
                         <QrCode className="w-3.5 h-3.5" />
-                        <span>Imbas QR</span>
+                        <span>{t('jpp:kolab_scan_qr_btn', 'Imbas QR')}</span>
                       </button>
                       <button
                         onClick={() => navigate(`/ems`)}
                         className="p-1.5 rounded-lg bg-slate-100 dark:bg-white/[0.04] hover:bg-emerald-500/10 text-slate-600 dark:text-white/70 hover:text-emerald-600 transition-colors"
-                        title="Lihat Maklumat EMS"
+                        title={t('jpp:kolab_view_ems_info', 'Lihat Maklumat EMS')}
                       >
                         <ExternalLink className="w-4 h-4" />
                       </button>
@@ -382,9 +394,11 @@ export function KolaborasiUnitDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">Pengesahan Kehadiran Kru & Sukarelawan EMS</h3>
+                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                  {t('jpp:kolab_crew_attendance_title', 'Pengesahan Kehadiran Kru & Sukarelawan EMS')}
+                </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
-                  Imbas pas digital sukarelawan menggunakan kamera peranti untuk pengesahan jam khidmat serta-merta.
+                  {t('jpp:kolab_crew_attendance_desc', 'Imbas pas digital sukarelawan menggunakan kamera peranti untuk pengesahan jam khidmat serta-merta.')}
                 </p>
               </div>
               <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -397,9 +411,11 @@ export function KolaborasiUnitDashboard() {
                 <QrCode className="w-6 h-6" />
               </div>
               <div className="max-w-md mx-auto space-y-1">
-                <h4 className="font-black text-sm text-slate-900 dark:text-white">Buka Pengimbas QR Kehadiran EMS</h4>
+                <h4 className="font-black text-sm text-slate-900 dark:text-white">
+                  {t('jpp:kolab_open_scanner_title', 'Buka Pengimbas QR Kehadiran EMS')}
+                </h4>
                 <p className="text-xs text-slate-600 dark:text-white/60 leading-relaxed">
-                  Gunakan enjin pengimbas EMS yang terbukti pantas untuk mengimbas kad pelajar dan kod QR tiket acara tanpa kelewatan.
+                  {t('jpp:kolab_open_scanner_desc', 'Gunakan enjin pengimbas EMS yang terbukti pantas untuk mengimbas kad pelajar dan kod QR tiket acara tanpa kelewatan.')}
                 </p>
               </div>
               <button
@@ -407,7 +423,7 @@ export function KolaborasiUnitDashboard() {
                 className="px-6 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs active:scale-[0.98] transition-all inline-flex items-center gap-2"
               >
                 <QrCode className="w-4 h-4" />
-                <span>Lancarkan Pengimbas Kehadiran</span>
+                <span>{t('jpp:kolab_launch_scanner_btn', 'Lancarkan Pengimbas Kehadiran')}</span>
               </button>
             </div>
           </div>
@@ -420,23 +436,25 @@ export function KolaborasiUnitDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">Lejar Sijil Penghargaan Sukarelawan EMS</h3>
+                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                  {t('jpp:kolab_certs_ledger_title', 'Lejar Sijil Penghargaan Sukarelawan EMS')}
+                </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
-                  Setiap sijil dijana dengan kod verifikasi kriptografik unik dan boleh disemak keasliannya di /ems/verify.
+                  {t('jpp:kolab_certs_ledger_desc', 'Setiap sijil dijana dengan kod verifikasi kriptografik unik dan boleh disemak keasliannya di /ems/verify.')}
                 </p>
               </div>
               <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 font-mono tabular-nums">
-                {certificates.length} Sijil Dikeluarkan
+                {t('jpp:kolab_certs_issued_count', '{{count}} Sijil Dikeluarkan', { count: certificates.length })}
               </span>
             </div>
 
             {loading ? (
               <div className="py-12 text-center text-xs font-mono text-slate-400">
-                Memuatkan rekod sijil EMS...
+                {t('jpp:kolab_loading_certs', 'Memuatkan rekod sijil EMS...')}
               </div>
             ) : certificates.length === 0 ? (
               <div className="p-8 rounded-xl border border-dashed border-slate-200 dark:border-white/[0.08] text-center text-xs text-slate-400">
-                Tiada sijil sukarelawan dikeluarkan setakat ini.
+                {t('jpp:kolab_no_certs_issued', 'Tiada sijil sukarelawan dikeluarkan setakat ini.')}
               </div>
             ) : (
               <div className="divide-y divide-slate-100 dark:divide-white/[0.04]">
@@ -454,7 +472,7 @@ export function KolaborasiUnitDashboard() {
                           </span>
                         </div>
                         <p className="text-[11px] font-mono text-slate-500 dark:text-white/40 mt-0.5">
-                          Kod Pengesahan: <span className="text-teal-600 dark:text-teal-400 font-bold">{cert.verify_code}</span>
+                          {t('jpp:kolab_verify_code_label', 'Kod Pengesahan:')} <span className="text-teal-600 dark:text-teal-400 font-bold">{cert.verify_code}</span>
                         </p>
                       </div>
                     </div>
@@ -466,7 +484,7 @@ export function KolaborasiUnitDashboard() {
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-white/70 hover:bg-slate-200 transition-colors shrink-0"
                     >
                       <ShieldCheck className="w-3.5 h-3.5 text-teal-500" />
-                      <span>Sahkan Sijil</span>
+                      <span>{t('jpp:kolab_verify_cert_btn', 'Sahkan Sijil')}</span>
                     </a>
                   </div>
                 ))}
@@ -483,9 +501,11 @@ export function KolaborasiUnitDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">Direktori Rakan Strategik & Penaja Luar</h3>
+                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                  {t('jpp:kolab_partners_directory_title', 'Direktori Rakan Strategik & Penaja Luar')}
+                </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
-                  Saluran kerjasama MoU dan rakan CSR korporat bagi aktiviti mahasiswa.
+                  {t('jpp:kolab_partners_directory_desc', 'Saluran kerjasama MoU dan rakan CSR korporat bagi aktiviti mahasiswa.')}
                 </p>
               </div>
               <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
@@ -525,12 +545,12 @@ export function KolaborasiUnitDashboard() {
                   </div>
 
                   <div className="pt-2.5 border-t border-slate-100 dark:border-white/[0.04] flex items-center justify-between text-[11px] text-slate-500 dark:text-white/40">
-                    <span>Sah sehingga {partner.validUntil}</span>
+                    <span>{t('jpp:kolab_valid_until', 'Sah sehingga {{date}}', { date: partner.validUntil })}</span>
                     <a
                       href={`mailto:${partner.contactEmail}`}
                       className="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 font-medium"
                     >
-                      <Mail className="w-3 h-3" /> Hubungi
+                      <Mail className="w-3 h-3" /> {t('jpp:kolab_contact_link', 'Hubungi')}
                     </a>
                   </div>
                 </div>
@@ -540,15 +560,17 @@ export function KolaborasiUnitDashboard() {
 
           {/* Aktiviti & Laporan Rasmi */}
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
-            <h3 className="font-black text-base text-slate-900 dark:text-white mb-4">Rekod Pentadbiran Exco Kolaborasi</h3>
+            <h3 className="font-black text-base text-slate-900 dark:text-white mb-4">
+              {t('jpp:kolab_records_title', 'Rekod Pentadbiran Exco Kolaborasi')}
+            </h3>
             <div className="space-y-4">
               <div>
                 <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-2">
-                  Aktiviti Berdaftar ({activities.length})
+                  {t('jpp:kolab_registered_activities', 'Aktiviti Berdaftar ({{count}})', { count: activities.length })}
                 </h4>
                 {activities.length === 0 ? (
                   <p className="text-xs text-slate-400 p-3 rounded-lg border border-dashed border-slate-200 dark:border-white/[0.08]">
-                    Tiada aktiviti didaftarkan untuk unit Kolaborasi pada masa ini.
+                    {t('jpp:kolab_no_activities', 'Tiada aktiviti didaftarkan untuk unit Kolaborasi pada masa ini.')}
                   </p>
                 ) : (
                   <div className="space-y-2">

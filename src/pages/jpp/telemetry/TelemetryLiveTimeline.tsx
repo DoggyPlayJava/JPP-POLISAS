@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { UnifiedTimelineEvent } from './telemetryTypes';
 import { cn } from '@/lib/utils';
+import { useTranslation } from 'react-i18next';
 
 interface TelemetryLiveTimelineProps {
   events: UnifiedTimelineEvent[];
@@ -27,6 +28,7 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
   loading = false,
   onViewAllClick,
 }) => {
+  const { t, i18n } = useTranslation(['jpp', 'common']);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'critical' | 'error' | 'warning'>('all');
@@ -60,17 +62,17 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div>
             <h3 className="text-base font-black text-slate-900 tracking-tight">
-              Live Timeline
+              {t('jpp:telemetry_timeline_title', 'Live Timeline')}
             </h3>
             <p className="text-[10px] font-bold text-slate-400">
-              Penjejak Ralat & Halaman Bermasalah
+              {t('jpp:telemetry_timeline_subtitle', 'Penjejak Ralat & Halaman Bermasalah')}
             </p>
           </div>
           <button
             onClick={onViewAllClick}
             className="text-xs font-black text-[#FF5B37] hover:underline flex items-center gap-1"
           >
-            <span>View All</span>
+            <span>{t('jpp:telemetry_timeline_view_all', 'View All')}</span>
             <ArrowRight className="w-3 h-3" />
           </button>
         </div>
@@ -78,20 +80,20 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
         {/* ── Filter Pills ── */}
         <div className="flex items-center gap-1.5 pt-3 pb-2 overflow-x-auto">
           {[
-            { id: 'all', label: 'Semua', count: events.length },
+            { id: 'all', label: t('jpp:telemetry_filter_all', 'Semua'), count: events.length },
             {
               id: 'critical',
-              label: 'Kritikal',
+              label: t('jpp:telemetry_filter_critical', 'Kritikal'),
               count: events.filter((e) => e.severity === 'CRITICAL').length,
             },
             {
               id: 'error',
-              label: 'Error',
+              label: t('jpp:telemetry_filter_error', 'Error'),
               count: events.filter((e) => e.badge === 'ERROR').length,
             },
             {
               id: 'warning',
-              label: 'Amaran',
+              label: t('jpp:telemetry_filter_warning', 'Amaran'),
               count: events.filter((e) => e.severity === 'WARNING').length,
             },
           ].map((tab) => (
@@ -130,9 +132,11 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
           {displayEvents.length === 0 ? (
             <div className="text-center py-10">
               <ShieldCheck className="w-7 h-7 text-emerald-500 mx-auto mb-1.5" />
-              <p className="text-xs font-bold text-slate-700">Tiada Ralat Dikesan</p>
+              <p className="text-xs font-bold text-slate-700">
+                {t('jpp:telemetry_no_errors_title', 'Tiada Ralat Dikesan')}
+              </p>
               <p className="text-[10px] text-slate-400 mt-0.5">
-                Semua halaman dan subsistem beroperasi dengan lancar.
+                {t('jpp:telemetry_no_errors_desc', 'Semua halaman dan subsistem beroperasi dengan lancar.')}
               </p>
             </div>
           ) : (
@@ -185,7 +189,7 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
                           {ev.badge || ev.severity}
                         </span>
                         <span className="text-[9px] text-slate-400 font-mono">
-                          {new Date(ev.timestamp).toLocaleTimeString('ms-MY', {
+                          {new Date(ev.timestamp).toLocaleTimeString(i18n.language.startsWith('en') ? 'en-MY' : 'ms-MY', {
                             hour: '2-digit',
                             minute: '2-digit',
                             second: '2-digit',
@@ -217,7 +221,7 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
                     {/* Expand/Collapse Indicator */}
                     {hasDetails && (
                       <div className="mt-1 flex items-center justify-between text-[9px] font-bold text-slate-400 pt-1 border-t border-slate-100">
-                        <span>{isExpanded ? 'Sembunyikan Butiran' : 'Klik untuk Jejak Penuh'}</span>
+                        <span>{isExpanded ? t('jpp:telemetry_hide_details', 'Sembunyikan Butiran') : t('jpp:telemetry_click_for_trace', 'Klik untuk Jejak Penuh')}</span>
                         {isExpanded ? (
                           <ChevronUp className="w-3 h-3" />
                         ) : (
@@ -230,15 +234,15 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
                     <AnimatePresence>
                       {isExpanded && (
                         <motion.div
-                          initial={{ opacity: 0, }}
-                          animate={{ opacity: 1, }}
-                          exit={{ opacity: 0, }}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
                           className="mt-2.5 pt-2 border-t border-slate-200 space-y-2 text-[10px]"
                         >
                           {/* Full URL Path */}
                           {ev.endpoint && (
                             <div>
-                              <span className="font-bold text-slate-500 block">URL Halaman:</span>
+                              <span className="font-bold text-slate-500 block">{t('jpp:telemetry_page_url', 'URL Halaman:')}</span>
                               <div className="flex items-center gap-1 mt-0.5">
                                 <code className="p-1 rounded bg-slate-100 text-slate-800 font-mono text-[9px] break-all flex-1">
                                   {ev.endpoint}
@@ -250,7 +254,7 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
                                     rel="noreferrer"
                                     onClick={(e) => e.stopPropagation()}
                                     className="p-1 rounded bg-slate-200 text-slate-700 hover:bg-slate-300"
-                                    title="Buka Halaman Ini"
+                                    title={t('jpp:telemetry_open_page_tooltip', 'Buka Halaman Ini')}
                                   >
                                     <ExternalLink className="w-3 h-3" />
                                   </a>
@@ -263,7 +267,7 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
                           {ev.stack && (
                             <div>
                               <div className="flex items-center justify-between mb-0.5">
-                                <span className="font-bold text-slate-500">Call Stack:</span>
+                                <span className="font-bold text-slate-500">{t('jpp:telemetry_call_stack', 'Call Stack:')}</span>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -274,12 +278,12 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
                                   {copiedId === ev.id ? (
                                     <>
                                       <Check className="w-2.5 h-2.5 text-emerald-600" />
-                                      <span className="text-emerald-600">Disalin</span>
+                                      <span className="text-emerald-600">{t('jpp:telemetry_copied', 'Disalin')}</span>
                                     </>
                                   ) : (
                                     <>
                                       <Copy className="w-2.5 h-2.5" />
-                                      <span>Salin</span>
+                                      <span>{t('jpp:telemetry_copy', 'Salin')}</span>
                                     </>
                                   )}
                                 </button>

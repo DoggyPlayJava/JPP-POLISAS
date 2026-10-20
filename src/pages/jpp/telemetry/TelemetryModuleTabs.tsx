@@ -31,6 +31,7 @@ import {
 import { TelemetryData } from './telemetryTypes';
 import { hexToRgba, cn } from '@/lib/utils';
 import { formatUptime } from './telemetryUtils';
+import { useTranslation } from 'react-i18next';
 
 interface TelemetryModuleTabsProps {
   data: TelemetryData;
@@ -135,11 +136,12 @@ function ChartTooltip({ active, payload, label }: any) {
 }
 
 export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }) => {
+  const { t, i18n } = useTranslation(['jpp', 'common']);
   const [activeTab, setActiveTab] = useState<TabType>('trend');
   const { modules: m, diagnostics: d, snapshots } = data;
 
   const snapshotChartData = (snapshots || []).map((s) => ({
-    date: new Date(s.snapshot_date).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short' }),
+    date: new Date(s.snapshot_date).toLocaleDateString(i18n.language.startsWith('en') ? 'en-MY' : 'ms-MY', { day: '2-digit', month: 'short' }),
     pelajar: s.m_profiles,
     kelab: s.m_clubs,
     tiket: s.m_kebajikan_tickets,
@@ -149,9 +151,9 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
 
   const kebDonut = m
     ? [
-        { name: 'Terbuka', value: m.kebajikan_breakdown?.open ?? 0, color: '#EF4444' },
-        { name: 'Escalated', value: m.kebajikan_breakdown?.escalated ?? 0, color: '#F59E0B' },
-        { name: 'Selesai', value: m.kebajikan_breakdown?.resolved ?? 0, color: '#10B981' },
+        { name: t('jpp:telemetry_status_open', 'Terbuka'), value: m.kebajikan_breakdown?.open ?? 0, color: '#EF4444' },
+        { name: t('jpp:telemetry_status_escalated', 'Escalated'), value: m.kebajikan_breakdown?.escalated ?? 0, color: '#F59E0B' },
+        { name: t('jpp:telemetry_status_resolved', 'Selesai'), value: m.kebajikan_breakdown?.resolved ?? 0, color: '#10B981' },
       ]
     : [];
 
@@ -161,19 +163,19 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/[0.06]">
         <div>
           <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
-            Metrik Mendalam Subsistem
+            {t('jpp:telemetry_tabs_title', 'Metrik Mendalam Subsistem')}
           </h3>
           <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/35">
-            Data Analisis & Statistik Rekod Modul
+            {t('jpp:telemetry_tabs_subtitle', 'Data Analisis & Statistik Rekod Modul')}
           </p>
         </div>
 
         <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] overflow-x-auto">
           {[
-            { id: 'trend', label: '📊 Trend Sejarah' },
-            { id: 'campus', label: '🏛️ Kampus' },
-            { id: 'commercial', label: '🛒 Komersial' },
-            { id: 'database', label: '⚙️ DB Deep-Dive' },
+            { id: 'trend', label: t('jpp:telemetry_tab_trend', '📊 Trend Sejarah') },
+            { id: 'campus', label: t('jpp:telemetry_tab_campus', '🏛️ Kampus') },
+            { id: 'commercial', label: t('jpp:telemetry_tab_commercial', '🛒 Komersial') },
+            { id: 'database', label: t('jpp:telemetry_tab_database', '⚙️ DB Deep-Dive') },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -198,10 +200,10 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           <div className="lg:col-span-2 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] p-4 bg-slate-50/50 dark:bg-white/[0.02]">
             <div className="mb-4">
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/30 block">
-                Pertumbuhan Rekod 30-Hari
+                {t('jpp:telemetry_growth_title', 'Pertumbuhan Rekod 30-Hari')}
               </span>
               <p className="text-xs font-bold text-slate-600 dark:text-white/70">
-                Trafik Pelajar & Trip PolyRider daripada Snapshot Automatik
+                {t('jpp:telemetry_growth_desc', 'Trafik Pelajar & Trip PolyRider daripada Snapshot Automatik')}
               </p>
             </div>
             {snapshotChartData.length > 0 ? (
@@ -253,10 +255,10 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
               <div className="h-56 flex flex-col items-center justify-center text-center">
                 <TrendingUp className="w-8 h-8 text-slate-300 dark:text-white/20 mb-2" />
                 <p className="text-xs font-bold text-slate-500 dark:text-white/40">
-                  Belum ada data snapshot sejarah
+                  {t('jpp:telemetry_no_snapshot_title', 'Belum ada data snapshot sejarah')}
                 </p>
                 <p className="text-[10px] text-slate-400 dark:text-white/25 mt-1 max-w-xs">
-                  Snapshot harian dijana setiap 3:00 AM melalui cron pelayan.
+                  {t('jpp:telemetry_no_snapshot_desc', 'Snapshot harian dijana setiap 3:00 AM melalui cron pelayan.')}
                 </p>
               </div>
             )}
@@ -266,16 +268,18 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.06] p-4 bg-slate-50/50 dark:bg-white/[0.02] flex flex-col justify-between">
             <div>
               <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/30 block mb-1">
-                Pecahan Tiket Kebajikan
+                {t('jpp:telemetry_kebajikan_donut_title', 'Pecahan Tiket Kebajikan')}
               </span>
               <p className="text-xs font-bold text-slate-600 dark:text-white/70">
-                Status Terbuka vs Selesai
+                {t('jpp:telemetry_kebajikan_donut_desc', 'Status Terbuka vs Selesai')}
               </p>
             </div>
 
             <div className="h-44 w-full flex items-center justify-center">
               {kebDonut.every((d) => d.value === 0) ? (
-                <p className="text-xs text-slate-400 dark:text-white/30">Tiada tiket aktif</p>
+                <p className="text-xs text-slate-400 dark:text-white/30">
+                  {t('jpp:telemetry_no_active_tickets', 'Tiada tiket aktif')}
+                </p>
               ) : (
                 <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
@@ -497,42 +501,42 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="rounded-xl border border-slate-200/80 dark:border-white/[0.06] p-3 bg-slate-50/50 dark:bg-white/[0.02]">
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-white/30 block mb-1">
-                Cache Hit Rate
+                {t('jpp:telemetry_cache_hit_rate', 'Cache Hit Rate')}
               </span>
               <p className="text-xl font-black text-slate-900 dark:text-white font-mono">
                 {d?.database?.cache_hit_rate_pct || 99}%
               </p>
-              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">Threshold: &gt; 85%</p>
+              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">{t('jpp:telemetry_threshold_hit_rate', 'Threshold: > 85%')}</p>
             </div>
 
             <div className="rounded-xl border border-slate-200/80 dark:border-white/[0.06] p-3 bg-slate-50/50 dark:bg-white/[0.02]">
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-white/30 block mb-1">
-                Dead Tuples Bloat
+                {t('jpp:telemetry_dead_tuples', 'Dead Tuples Bloat')}
               </span>
               <p className="text-xl font-black text-slate-900 dark:text-white font-mono">
                 {d?.database?.dead_tuples_pct || 0}%
               </p>
-              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">Vacuum trigger: &gt; 20%</p>
+              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">{t('jpp:telemetry_vacuum_trigger', 'Vacuum trigger: > 20%')}</p>
             </div>
 
             <div className="rounded-xl border border-slate-200/80 dark:border-white/[0.06] p-3 bg-slate-50/50 dark:bg-white/[0.02]">
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-white/30 block mb-1">
-                Lock Contention
+                {t('jpp:telemetry_lock_contention', 'Lock Contention')}
               </span>
               <p className="text-xl font-black text-slate-900 dark:text-white font-mono">
                 {d?.database?.waiting_locks || 0}
               </p>
-              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">Locks menunggu</p>
+              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">{t('jpp:telemetry_waiting_locks', 'Locks menunggu')}</p>
             </div>
 
             <div className="rounded-xl border border-slate-200/80 dark:border-white/[0.06] p-3 bg-slate-50/50 dark:bg-white/[0.02]">
               <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-white/30 block mb-1">
-                Saiz Storan DB
+                {t('jpp:telemetry_db_storage_size', 'Saiz Storan DB')}
               </span>
               <p className="text-xl font-black text-slate-900 dark:text-white font-mono">
                 {d?.database?.db_size_mb || 0} MB
               </p>
-              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">Total PostgreSQL size</p>
+              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">{t('jpp:telemetry_total_postgres_size', 'Total PostgreSQL size')}</p>
             </div>
           </div>
 
@@ -543,25 +547,25 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
               </div>
               <div>
                 <h4 className="text-sm font-black text-slate-900 dark:text-white">
-                  WAL & Realtime Watchdog
+                  {t('jpp:telemetry_watchdog_title', 'WAL & Realtime Watchdog')}
                 </h4>
                 <p className="text-xs text-slate-500 dark:text-white/50">
-                  Perlindungan had 2GB (2,048 MB) bagi mengelakkan database crash semasa Orientasi.
+                  {t('jpp:telemetry_watchdog_desc', 'Perlindungan had 2GB (2,048 MB) bagi mengelakkan database crash semasa Orientasi.')}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-4 text-xs font-mono">
               <div>
-                <span className="text-slate-400 dark:text-white/30 block text-[9px] uppercase">Replication Slot</span>
+                <span className="text-slate-400 dark:text-white/30 block text-[9px] uppercase">{t('jpp:telemetry_replication_slot', 'Replication Slot')}</span>
                 <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  {d?.database?.replication_slot_active ? '● Aktif' : '○ Tidak Aktif'}
+                  {d?.database?.replication_slot_active ? t('jpp:telemetry_slot_active', '● Aktif') : t('jpp:telemetry_slot_inactive', '○ Tidak Aktif')}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 dark:text-white/30 block text-[9px] uppercase">Jadual Realtime</span>
+                <span className="text-slate-400 dark:text-white/30 block text-[9px] uppercase">{t('jpp:telemetry_realtime_tables', 'Jadual Realtime')}</span>
                 <span className="font-bold text-slate-900 dark:text-white">
-                  {d?.database?.realtime_tables || 0} Jadual
+                  {t('jpp:telemetry_tables_count', '{{count}} Jadual', { count: d?.database?.realtime_tables || 0 })}
                 </span>
               </div>
             </div>

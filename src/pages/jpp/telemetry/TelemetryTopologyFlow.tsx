@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Globe,
@@ -31,6 +32,7 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
   data,
   onFilterTimelineByRoute,
 }) => {
+  const { t } = useTranslation();
   const [viewMode, setViewMode] = useState<'flow' | 'traffic' | 'heatmap'>('flow');
   const [activeNodeId, setActiveNodeId] = useState<string | null>(null);
 
@@ -107,30 +109,30 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
   // ── 2. REAL Conditional Alert Badges (HANYA MUNCUL JIKA ADA AMARAN SEBENAR!) ──
   // Node 2 (API Gateway)
   const apiBadge =
-    heapPct > 80 ? { text: `Heap Spike ${heapPct}%`, color: 'bg-rose-50 border-rose-300 text-rose-700' } : null;
+    heapPct > 80 ? { text: t('jpp:telemetry_topo_badge_heap_spike', 'Heap Spike {{pct}}%', { pct: heapPct }), color: 'bg-rose-50 border-rose-300 text-rose-700' } : null;
 
   // Node 4a (Commercial: PolyMart & AI)
   const commercialBadge =
     (pm?.pending_stale || 0) > 0
-      ? { text: `${pm.pending_stale} Pesanan Basi >48j`, color: 'bg-amber-50 border-amber-300 text-amber-800' }
+      ? { text: t('jpp:telemetry_topo_badge_stale_orders', '{{count}} Pesanan Basi >48j', { count: pm.pending_stale }), color: 'bg-amber-50 border-amber-300 text-amber-800' }
       : aiPct > 85
-      ? { text: `AI Kuota ${aiPct}%`, color: 'bg-amber-50 border-amber-300 text-amber-800' }
+      ? { text: t('jpp:telemetry_topo_badge_ai_quota', 'AI Kuota {{pct}}%', { pct: aiPct }), color: 'bg-amber-50 border-amber-300 text-amber-800' }
       : null;
 
   // Node 4b (Operations: PolyRider & Kebajikan)
   const operationsBadge =
     (keb?.sla_breached || 0) > 0
-      ? { text: `${keb.sla_breached} SLA Tiket Pecah!`, color: 'bg-rose-50 border-rose-300 text-rose-800' }
+      ? { text: t('jpp:telemetry_topo_badge_sla_breached', '{{count}} SLA Tiket Pecah!', { count: keb.sla_breached }), color: 'bg-rose-50 border-rose-300 text-rose-800' }
       : (pr?.stuck_emergency || 0) > 0
-      ? { text: `${pr.stuck_emergency} SOS Tersekat!`, color: 'bg-rose-50 border-rose-300 text-rose-800' }
+      ? { text: t('jpp:telemetry_topo_badge_sos_stuck', '{{count}} SOS Tersekat!', { count: pr.stuck_emergency }), color: 'bg-rose-50 border-rose-300 text-rose-800' }
       : null;
 
   // Node 5 (PostgreSQL Cluster & WAL)
   const dbBadge =
     (db?.wal_retained_mb || 0) > 512
-      ? { text: `WAL ${db.wal_retained_mb}MB / 2GB`, color: 'bg-rose-50 border-rose-300 text-rose-800' }
+      ? { text: t('jpp:telemetry_topo_badge_wal', 'WAL {{mb}}MB / 2GB', { mb: db.wal_retained_mb }), color: 'bg-rose-50 border-rose-300 text-rose-800' }
       : dbConnPct > 80
-      ? { text: `Pool ${db.active_connections}/${db.max_connections}`, color: 'bg-amber-50 border-amber-300 text-amber-800' }
+      ? { text: t('jpp:telemetry_topo_badge_pool', 'Pool {{active}}/{{max}}', { active: db.active_connections, max: db.max_connections }), color: 'bg-amber-50 border-amber-300 text-amber-800' }
       : null;
 
   // ── 3. Real Subsystem Inspector Data ──
@@ -139,63 +141,63 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
     { title: string; subtitle: string; route?: string; stats: { label: string; val: string }[] }
   > = {
     ingress: {
-      title: '🌐 Siswa & Ingress Trafik',
-      subtitle: 'Sesi web portal dan aplikasi PWA siswa yang aktif mengakses sistem.',
+      title: t('jpp:telemetry_topo_ingress_title', '🌐 Siswa & Ingress Trafik'),
+      subtitle: t('jpp:telemetry_topo_ingress_sub', 'Sesi web portal dan aplikasi PWA siswa yang aktif mengakses sistem.'),
       route: '/portal',
       stats: [
-        { label: 'Jumlah Siswa Berdaftar', val: `${(modules.profiles || 0).toLocaleString()} rekod` },
-        { label: 'Push Subscriptions', val: `${modules.push_subscriptions || 0} aktif` },
-        { label: 'Notifikasi Terhantar', val: `${(modules.notifications || 0).toLocaleString()} notif` },
+        { label: t('jpp:telemetry_topo_registered_students', 'Jumlah Siswa Berdaftar'), val: `${(modules.profiles || 0).toLocaleString()} ${t('jpp:telemetry_topo_records_unit', 'rekod')}` },
+        { label: t('jpp:telemetry_topo_push_subs', 'Push Subscriptions'), val: `${modules.push_subscriptions || 0} ${t('jpp:telemetry_topo_active', 'aktif')}` },
+        { label: t('jpp:telemetry_topo_notifications_sent', 'Notifikasi Terhantar'), val: `${(modules.notifications || 0).toLocaleString()} ${t('jpp:telemetry_topo_notifs_unit', 'notif')}` },
       ],
     },
     api: {
-      title: '⚡ Node.js API Gateway (Express)',
-      subtitle: 'Pelayan API backend yang memproses laluan, middleware keselamatan, dan soket.',
+      title: t('jpp:telemetry_topo_api_title', '⚡ Node.js API Gateway (Express)'),
+      subtitle: t('jpp:telemetry_topo_api_sub', 'Pelayan API backend yang memproses laluan, middleware keselamatan, dan soket.'),
       route: '/jpp/telemetry',
       stats: [
-        { label: 'Uptime Proses API', val: formatUptime(server.uptime_seconds) },
-        { label: 'Memori Heap V8', val: `${server.memory.heap_used_mb} / ${server.memory.heap_total_mb} MB (${heapPct}%)` },
-        { label: 'ID Proses (PID)', val: `PID ${server.pid} • v${server.node_version}` },
+        { label: t('jpp:telemetry_topo_api_uptime', 'Uptime Proses API'), val: formatUptime(server.uptime_seconds) },
+        { label: t('jpp:telemetry_topo_api_heap', 'Memori Heap V8'), val: `${server.memory.heap_used_mb} / ${server.memory.heap_total_mb} MB (${heapPct}%)` },
+        { label: t('jpp:telemetry_topo_api_pid', 'ID Proses (PID)'), val: `PID ${server.pid} • v${server.node_version}` },
       ],
     },
     auth: {
-      title: '🛡️ Supabase Auth & RBAC Guard',
-      subtitle: 'Pengesahan token JWT sesi login pelajar dan kebenaran SUPER_ADMIN_JPP.',
+      title: t('jpp:telemetry_topo_auth_title', '🛡️ Supabase Auth & RBAC Guard'),
+      subtitle: t('jpp:telemetry_topo_auth_sub', 'Pengesahan token JWT sesi login pelajar dan kebenaran SUPER_ADMIN_JPP.'),
       route: '/login',
       stats: [
-        { label: 'Sesi Keselamatan', val: 'JWT Bearer Active' },
-        { label: 'Akses Peranan', val: 'SuperAdmin RBAC Enforced' },
-        { label: 'Akaun Menunggu', val: `${diagnostics?.accounts?.pending || 0} akaun` },
+        { label: t('jpp:telemetry_topo_auth_session', 'Sesi Keselamatan'), val: 'JWT Bearer Active' },
+        { label: t('jpp:telemetry_topo_auth_role_access', 'Akses Peranan'), val: 'SuperAdmin RBAC Enforced' },
+        { label: t('jpp:telemetry_topo_auth_pending_acc', 'Akaun Menunggu'), val: t('jpp:telemetry_topo_accounts_unit', '{{count}} akaun', { count: diagnostics?.accounts?.pending || 0 }) },
       ],
     },
     commercial: {
-      title: '🛒 PolyMart & AI Nexus',
-      subtitle: 'Ekosistem e-dagang siswa dan enjin kecerdasan buatan kampus.',
+      title: t('jpp:telemetry_topo_commercial_title', '🛒 PolyMart & AI Nexus'),
+      subtitle: t('jpp:telemetry_topo_commercial_sub', 'Ekosistem e-dagang siswa dan enjin kecerdasan buatan kampus.'),
       route: '/polymart',
       stats: [
-        { label: 'Pesanan PolyMart', val: `${modules.polymart_orders || 0} pesanan` },
-        { label: 'Pesanan Tertunggak >48j', val: `${pm?.pending_stale || 0} pesanan` },
-        { label: 'Token AI Digunakan', val: `${(modules.ai_tokens_used || 0).toLocaleString()} / ${(modules.ai_token_limit || 1000000).toLocaleString()}` },
+        { label: t('jpp:telemetry_topo_orders_label', 'Pesanan PolyMart'), val: t('jpp:telemetry_topo_orders_unit', '{{count}} pesanan', { count: modules.polymart_orders || 0 }) },
+        { label: t('jpp:telemetry_topo_stale_orders_label', 'Pesanan Tertunggak >48j'), val: t('jpp:telemetry_topo_orders_unit', '{{count}} pesanan', { count: pm?.pending_stale || 0 }) },
+        { label: t('jpp:telemetry_topo_ai_tokens_label', 'Token AI Digunakan'), val: `${(modules.ai_tokens_used || 0).toLocaleString()} / ${(modules.ai_token_limit || 1000000).toLocaleString()}` },
       ],
     },
     operations: {
-      title: '📦 PolyRider & e-Kebajikan',
-      subtitle: 'Logistik penghantaran makanan kampus dan hab aduan bantuan siswa.',
+      title: t('jpp:telemetry_topo_ops_title', '📦 PolyRider & e-Kebajikan'),
+      subtitle: t('jpp:telemetry_topo_ops_sub', 'Logistik penghantaran makanan kampus dan hab aduan bantuan siswa.'),
       route: '/kebajikan',
       stats: [
-        { label: 'Trip PolyRider', val: `${modules.polyrider_jobs || 0} trip` },
-        { label: 'SOS Emergency Tersekat', val: `${pr?.stuck_emergency || 0} kes` },
-        { label: 'Tiket e-Kebajikan', val: `${modules.kebajikan_tickets || 0} (${keb?.sla_breached || 0} SLA breached)` },
+        { label: t('jpp:telemetry_topo_trips_label', 'Trip PolyRider'), val: t('jpp:telemetry_topo_trips_unit', '{{count}} trip', { count: modules.polyrider_jobs || 0 }) },
+        { label: t('jpp:telemetry_topo_sos_label', 'SOS Emergency Tersekat'), val: t('jpp:telemetry_topo_cases_unit', '{{count}} kes', { count: pr?.stuck_emergency || 0 }) },
+        { label: t('jpp:telemetry_topo_tickets_label', 'Tiket e-Kebajikan'), val: t('jpp:telemetry_topo_tickets_stat', '{{total}} ({{breached}} SLA breached)', { total: modules.kebajikan_tickets || 0, breached: keb?.sla_breached || 0 }) },
       ],
     },
     db: {
-      title: '🗄️ PostgreSQL Cluster & WAL Watchdog',
-      subtitle: 'Pangkalan data utama Supabase dengan pemantauan had WAL 2GB.',
+      title: t('jpp:telemetry_topo_db_title', '🗄️ PostgreSQL Cluster & WAL Watchdog'),
+      subtitle: t('jpp:telemetry_topo_db_sub', 'Pangkalan data utama Supabase dengan pemantauan had WAL 2GB.'),
       route: '/jpp/telemetry',
       stats: [
-        { label: 'Sambungan Aktif', val: `${db?.active_connections || 0} / ${db?.max_connections || 100} conns` },
-        { label: 'WAL Retained', val: `${db?.wal_retained_mb || 0} MB (Had: 2,048 MB)` },
-        { label: 'Cache Hit Rate', val: `${db?.cache_hit_rate_pct || 99.9}%` },
+        { label: t('jpp:telemetry_topo_active_conns_label', 'Sambungan Aktif'), val: `${db?.active_connections || 0} / ${db?.max_connections || 100} conns` },
+        { label: t('jpp:telemetry_topo_wal_retained_label', 'WAL Retained'), val: t('jpp:telemetry_topo_wal_retained_val', '{{mb}} MB (Had: 2,048 MB)', { mb: db?.wal_retained_mb || 0 }) },
+        { label: t('jpp:telemetry_cache_hit_rate', 'Cache Hit Rate'), val: `${db?.cache_hit_rate_pct || 99.9}%` },
       ],
     },
   };
@@ -226,19 +228,19 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
       <div className="flex items-center justify-between mb-2">
         <div>
           <h3 className="text-base font-black text-slate-900 tracking-tight">
-            Threat & Architecture Overview
+            {t('jpp:telemetry_topo_header_title', 'Threat & Architecture Overview')}
           </h3>
           <p className="text-[11px] font-bold text-slate-400">
-            Arkitektur Langsung JPP-POLISAS • Klik mana-mana nod untuk analisis
+            {t('jpp:telemetry_topo_header_desc', 'Arkitektur Langsung JPP-POLISAS • Klik mana-mana nod untuk analisis')}
           </p>
         </div>
 
         <div className="flex items-center gap-1.5 p-1 rounded-xl bg-slate-50 border border-slate-200/70">
           {(
             [
-              { id: 'flow', label: 'Flow View' },
-              { id: 'traffic', label: 'Traffic' },
-              { id: 'heatmap', label: 'Risk Heatmap' },
+              { id: 'flow', label: t('jpp:telemetry_topo_tab_flow', 'Flow View') },
+              { id: 'traffic', label: t('jpp:telemetry_topo_tab_traffic', 'Traffic') },
+              { id: 'heatmap', label: t('jpp:telemetry_topo_tab_heatmap', 'Risk Heatmap') },
             ] as const
           ).map((tab) => (
             <button
@@ -338,9 +340,9 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
               >
                 <Globe className="w-5 h-5 transition-colors" />
               </div>
-              <span className="text-xs font-bold text-slate-800 mt-2">Siswa Ingress</span>
+              <span className="text-xs font-bold text-slate-800 mt-2">{t('jpp:telemetry_topo_node_ingress', 'Siswa Ingress')}</span>
               <span className="text-[10px] text-slate-400 font-medium">
-                {(modules.profiles || 0).toLocaleString()} sesi
+                {t('jpp:telemetry_topo_sessions_count', '{{count}} sesi', { count: (modules.profiles || 0).toLocaleString() })}
               </span>
             </div>
 
@@ -373,9 +375,9 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
               >
                 <Server className="w-5 h-5 transition-colors" />
               </div>
-              <span className="text-xs font-bold text-slate-800 mt-2">Node.js API</span>
+              <span className="text-xs font-bold text-slate-800 mt-2">{t('jpp:telemetry_topo_node_api', 'Node.js API')}</span>
               <span className="text-[10px] text-slate-400 font-medium">
-                Heap {heapPct}%
+                {t('jpp:telemetry_topo_heap_pct', 'Heap {{pct}}%', { pct: heapPct })}
               </span>
             </div>
 
@@ -393,8 +395,8 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
               >
                 <Shield className="w-5 h-5 transition-colors" />
               </div>
-              <span className="text-xs font-bold text-slate-800 mt-2">Supabase Auth</span>
-              <span className="text-[10px] text-slate-400 font-medium">RBAC Guard</span>
+              <span className="text-xs font-bold text-slate-800 mt-2">{t('jpp:telemetry_topo_node_auth', 'Supabase Auth')}</span>
+              <span className="text-[10px] text-slate-400 font-medium">{t('jpp:telemetry_topo_rbac_guard', 'RBAC Guard')}</span>
             </div>
 
             {/* ── Branching Column: PolyMart & AI (4a) + PolyRider & Kebajikan (4b) ── */}
@@ -428,9 +430,9 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
                 >
                   <ShoppingBag className="w-4 h-4 transition-colors" />
                 </div>
-                <span className="text-[11px] font-bold text-slate-800 mt-1">PolyMart & AI</span>
+                <span className="text-[11px] font-bold text-slate-800 mt-1">{t('jpp:telemetry_topo_node_commercial', 'PolyMart & AI')}</span>
                 <span className="text-[9px] text-slate-400 font-medium">
-                  {modules.polymart_orders || 0} pesanan
+                  {t('jpp:telemetry_topo_orders_unit', '{{count}} pesanan', { count: modules.polymart_orders || 0 })}
                 </span>
               </div>
 
@@ -463,14 +465,14 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
                 >
                   <Bike className="w-4 h-4 transition-colors" />
                 </div>
-                <span className="text-[11px] font-bold text-slate-800 mt-1">Rider & Kebajikan</span>
+                <span className="text-[11px] font-bold text-slate-800 mt-1">{t('jpp:telemetry_topo_node_operations', 'Rider & Kebajikan')}</span>
                 <span
                   className={cn(
                     'text-[9px] font-medium',
                     nodeStatus.operations === 'critical' ? 'text-rose-600 font-black' : 'text-slate-400'
                   )}
                 >
-                  {nodeStatus.operations === 'critical' ? 'Perhatian Diperlukan' : `${modules.polyrider_jobs || 0} trip`}
+                  {nodeStatus.operations === 'critical' ? t('jpp:telemetry_topo_attention_needed', 'Perhatian Diperlukan') : t('jpp:telemetry_topo_trips_unit', '{{count}} trip', { count: modules.polyrider_jobs || 0 })}
                 </span>
               </div>
             </div>
@@ -504,9 +506,9 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
               >
                 <Database className="w-5 h-5 transition-colors" />
               </div>
-              <span className="text-xs font-bold text-slate-800 mt-2">PostgreSQL DB</span>
+              <span className="text-xs font-bold text-slate-800 mt-2">{t('jpp:telemetry_topo_node_db', 'PostgreSQL DB')}</span>
               <span className="text-[10px] text-slate-400 font-medium">
-                {db?.active_connections || 0}/{db?.max_connections || 100} conns
+                {t('jpp:telemetry_topo_conns_unit', '{{active}}/{{max}} conns', { active: db?.active_connections || 0, max: db?.max_connections || 100 })}
               </span>
             </div>
           </div>
@@ -515,9 +517,9 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
           <AnimatePresence>
             {activeNodeId && nodeDetails[activeNodeId] && (
               <motion.div
-                initial={{ opacity: 0, y: -6, }}
-                animate={{ opacity: 1, y: 0, }}
-                exit={{ opacity: 0, y: -6, }}
+                initial={{ opacity: 0, y: -6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
                 className="mt-6 pt-4 border-t border-slate-100 rounded-xl bg-slate-50/90 p-4 text-left relative"
               >
                 <button
@@ -542,7 +544,7 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
                       onClick={() => onFilterTimelineByRoute(nodeDetails[activeNodeId].route!)}
                       className="text-[10px] font-black text-blue-600 hover:underline flex items-center gap-1 bg-blue-50 px-2 py-1 rounded-md border border-blue-200"
                     >
-                      <span>Tapis Ralat Modul Ini</span>
+                      <span>{t('jpp:telemetry_topo_filter_module_errors', 'Tapis Ralat Modul Ini')}</span>
                       <ExternalLink className="w-3 h-3" />
                     </button>
                   )}
@@ -564,19 +566,19 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
           <div className="flex items-center justify-center gap-6 mt-6 pt-3 text-[11px] font-medium text-slate-500 border-t border-slate-100">
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-emerald-500" />
-              Optimal
+              {t('jpp:telemetry_topo_legend_optimal', 'Optimal')}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-[#EA580C]" />
-              Amaran Threshold
+              {t('jpp:telemetry_topo_legend_threshold', 'Amaran Threshold')}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-              Kritikal / Broken
+              {t('jpp:telemetry_topo_legend_critical', 'Kritikal / Broken')}
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-2 h-2 rounded-full bg-blue-500" />
-              Aliran Langsung
+              {t('jpp:telemetry_topo_legend_live_flow', 'Aliran Langsung')}
             </span>
           </div>
         </div>
@@ -586,10 +588,10 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
       {viewMode === 'traffic' && (
         <div className="py-4 space-y-3">
           {[
-            { label: 'Pesanan PolyMart', count: modules.polymart_orders || 0, max: 200, color: 'bg-pink-500' },
-            { label: 'Trip PolyRider', count: modules.polyrider_jobs || 0, max: 200, color: 'bg-cyan-500' },
-            { label: 'Tiket e-Kebajikan', count: modules.kebajikan_tickets || 0, max: 100, color: 'bg-rose-500' },
-            { label: 'Token AI Assistant', count: modules.ai_tokens_used || 0, max: modules.ai_token_limit || 1000000, color: 'bg-purple-500' },
+            { label: t('jpp:telemetry_topo_traffic_polymart', 'Pesanan PolyMart'), count: modules.polymart_orders || 0, max: 200, color: 'bg-pink-500' },
+            { label: t('jpp:telemetry_topo_traffic_polyrider', 'Trip PolyRider'), count: modules.polyrider_jobs || 0, max: 200, color: 'bg-cyan-500' },
+            { label: t('jpp:telemetry_topo_traffic_kebajikan', 'Tiket e-Kebajikan'), count: modules.kebajikan_tickets || 0, max: 100, color: 'bg-rose-500' },
+            { label: t('jpp:telemetry_topo_traffic_ai', 'Token AI Assistant'), count: modules.ai_tokens_used || 0, max: modules.ai_token_limit || 1000000, color: 'bg-purple-500' },
           ].map((item, idx) => (
             <div key={idx} className="space-y-1">
               <div className="flex items-center justify-between text-xs font-bold text-slate-700">
@@ -611,12 +613,12 @@ export const TelemetryTopologyFlow: React.FC<TelemetryTopologyFlowProps> = ({
       {viewMode === 'heatmap' && (
         <div className="py-4 grid grid-cols-2 sm:grid-cols-3 gap-3">
           {[
-            { name: 'Node.js Engine', status: nodeStatus.api, detail: `${server.memory.heap_used_mb}MB Heap` },
-            { name: 'PostgreSQL Pool', status: nodeStatus.db, detail: `${db?.active_connections || 0}/${db?.max_connections || 100} Conns` },
-            { name: 'WAL Watchdog', status: nodeStatus.db, detail: `${db?.wal_retained_mb || 0}MB / 2GB` },
-            { name: 'PolyMart Orders', status: nodeStatus.commercial, detail: `${pm?.pending_stale || 0} Tertunggak` },
-            { name: 'PolyRider SOS', status: nodeStatus.operations, detail: `${pr?.stuck_emergency || 0} Kecemasan` },
-            { name: 'e-Kebajikan SLA', status: nodeStatus.operations, detail: `${keb?.sla_breached || 0} Melepasi SLA` },
+            { name: t('jpp:telemetry_topo_hm_nodejs', 'Node.js Engine'), status: nodeStatus.api, detail: `${server.memory.heap_used_mb}MB Heap` },
+            { name: t('jpp:telemetry_topo_hm_pgpool', 'PostgreSQL Pool'), status: nodeStatus.db, detail: `${db?.active_connections || 0}/${db?.max_connections || 100} Conns` },
+            { name: t('jpp:telemetry_topo_hm_wal', 'WAL Watchdog'), status: nodeStatus.db, detail: `${db?.wal_retained_mb || 0}MB / 2GB` },
+            { name: t('jpp:telemetry_topo_hm_polymart', 'PolyMart Orders'), status: nodeStatus.commercial, detail: t('jpp:telemetry_topo_hm_pending', '{{count}} Tertunggak', { count: pm?.pending_stale || 0 }) },
+            { name: t('jpp:telemetry_topo_hm_polyrider', 'PolyRider SOS'), status: nodeStatus.operations, detail: t('jpp:telemetry_topo_hm_emergency', '{{count}} Kecemasan', { count: pr?.stuck_emergency || 0 }) },
+            { name: t('jpp:telemetry_topo_hm_kebajikan', 'e-Kebajikan SLA'), status: nodeStatus.operations, detail: t('jpp:telemetry_topo_hm_sla_breached', '{{count}} Melepasi SLA', { count: keb?.sla_breached || 0 }) },
           ].map((item, idx) => (
             <div
               key={idx}
