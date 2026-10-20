@@ -22,6 +22,7 @@ import akademikEn from '@/locales/en/akademik.json';
 import housingEn from '@/locales/en/housing.json';
 import klkEn from '@/locales/en/klk.json';
 import supsasEn from '@/locales/en/supsas.json';
+import gigEn from '@/locales/en/gig.json';
 
 // Bahasa Melayu namespaces
 import commonMs from '@/locales/ms/common.json';
@@ -43,6 +44,7 @@ import akademikMs from '@/locales/ms/akademik.json';
 import housingMs from '@/locales/ms/housing.json';
 import klkMs from '@/locales/ms/klk.json';
 import supsasMs from '@/locales/ms/supsas.json';
+import gigMs from '@/locales/ms/gig.json';
 
 export const SUPPORTED_LANGUAGES = ['en', 'ms'] as const;
 export type SupportedLanguage = (typeof SUPPORTED_LANGUAGES)[number];
@@ -101,6 +103,7 @@ export const resources = {
     housing: housingEn,
     klk: klkEn,
     supsas: supsasEn,
+    gig: gigEn,
   },
   ms: {
     common: commonMs,
@@ -121,6 +124,7 @@ export const resources = {
     housing: housingMs,
     klk: klkMs,
     supsas: supsasMs,
+    gig: gigMs,
   },
 } as const;
 

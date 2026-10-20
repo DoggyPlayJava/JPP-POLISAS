@@ -43,6 +43,8 @@ import klkEn from '../en/klk.json';
 import klkMs from '../ms/klk.json';
 import supsasEn from '../en/supsas.json';
 import supsasMs from '../ms/supsas.json';
+import gigEn from '../en/gig.json';
+import gigMs from '../ms/gig.json';
 
 function verifyParity(enObj: Record<string, any>, msObj: Record<string, any>, namespace: string) {
   const enKeys = Object.keys(enObj).sort();
@@ -75,9 +77,10 @@ describe('Master Translation Dictionaries Parity (100% All Domains)', () => {
   it('has identical keys for housing namespace', () => verifyParity(housingEn, housingMs, 'housing'));
   it('has identical keys for klk namespace', () => verifyParity(klkEn, klkMs, 'klk'));
   it('has identical keys for supsas namespace', () => verifyParity(supsasEn, supsasMs, 'supsas'));
+  it('has identical keys for gig namespace', () => verifyParity(gigEn, gigMs, 'gig'));
 
   it('ensures English translations do not have redundant slashes or overlong parentheticals', () => {
-    const namespaces = ['common', 'akademik', 'kebajikan', 'jpp', 'makmp', 'ems', 'supsas', 'housing', 'keusahawanan'];
+    const namespaces = ['common', 'akademik', 'kebajikan', 'jpp', 'makmp', 'ems', 'supsas', 'housing', 'keusahawanan', 'gig'];
     namespaces.forEach(ns => {
       const en = JSON.parse(fs.readFileSync(path.join(localesDir, 'en', `${ns}.json`), 'utf-8'));
       // Ensure pruned keys are concise

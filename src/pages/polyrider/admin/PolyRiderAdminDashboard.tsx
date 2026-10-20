@@ -5,7 +5,9 @@ import toast from 'react-hot-toast';
 import { notifyKLKOnSuspension } from '@/lib/polyRiderNotify';
 import { uploadFileToDrive } from '@/lib/driveUpload';
 import { logAuditAction } from '@/lib/auditLogger';
+import { useTranslation } from 'react-i18next';
 export function PolyRiderAdminDashboard() {
+  const { t } = useTranslation(['gig', 'common']);
   const [pendingRiders, setPendingRiders] = useState<any[]>([]);
   const [activeRiders, setActiveRiders] = useState<any[]>([]);
   const [systemActive, setSystemActive] = useState(true);
@@ -423,10 +425,10 @@ export function PolyRiderAdminDashboard() {
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            Kawalan KLK <Shield className="w-6 h-6 text-amber-500" />
+            {t('gig:polyrider_admin_title', 'Kawalan KLK')} <Shield className="w-6 h-6 text-amber-500" />
           </h1>
           <p className="text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-widest mt-1">
-            Pengurusan PolyRider
+            {t('gig:polyrider_management', 'Pengurusan PolyRider')}
           </p>
         </div>
 
@@ -439,7 +441,7 @@ export function PolyRiderAdminDashboard() {
               : 'bg-rose-500 text-white shadow-rose-500/20'
           }`}
         >
-          {systemActive ? 'SISTEM ON' : 'SISTEM OFF'}
+          {systemActive ? t('gig:system_active_on', 'SISTEM ON') : t('gig:system_active_off', 'SISTEM OFF')}
         </button>
       </div>
 
@@ -448,16 +450,16 @@ export function PolyRiderAdminDashboard() {
         <button onClick={() => setActiveTab('riders')}
           className={`flex-1 py-2 px-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
             activeTab === 'riders' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 dark:text-white/40'
-          }`}>Pengurusan Rider</button>
+          }`}>{t('gig:tab_riders', 'Pengurusan Rider')}</button>
         <button onClick={() => setActiveTab('presets')}
           className={`flex-1 py-2 px-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 whitespace-nowrap ${
             activeTab === 'presets' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 dark:text-white/40'
-          }`}><MapPin className="w-3 h-3" /> Preset</button>
+          }`}><MapPin className="w-3 h-3" /> {t('gig:tab_presets', 'Preset')}</button>
         <button onClick={() => setActiveTab('sos')}
           className={`flex-1 py-2 px-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 whitespace-nowrap relative ${
             activeTab === 'sos' ? 'bg-red-500 text-white shadow-sm' : 'text-red-500 dark:text-red-400'
           }`}>
-          <AlertTriangle className="w-3 h-3" /> SOS
+          <AlertTriangle className="w-3 h-3" /> {t('gig:tab_sos', 'SOS')}
           {sosAlerts.length > 0 && (
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center animate-bounce">
               {sosAlerts.length}
@@ -468,7 +470,7 @@ export function PolyRiderAdminDashboard() {
           className={`flex-1 py-2 px-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1.5 whitespace-nowrap relative ${
             activeTab === 'appeals' ? 'bg-blue-500 text-white shadow-sm' : 'text-blue-500 dark:text-blue-400'
           }`}>
-          <FileText className="w-3 h-3" /> Rayuan
+          <FileText className="w-3 h-3" /> {t('gig:tab_appeals', 'Rayuan')}
           {appeals.filter(a => a.status === 'PENDING').length > 0 && (
             <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[8px] font-black rounded-full flex items-center justify-center animate-bounce">
               {appeals.filter(a => a.status === 'PENDING').length}
@@ -478,7 +480,7 @@ export function PolyRiderAdminDashboard() {
         <button onClick={() => setActiveTab('settings')}
           className={`flex-1 py-2 px-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center gap-1 whitespace-nowrap ${
             activeTab === 'settings' ? 'bg-white dark:bg-zinc-800 text-slate-900 dark:text-white shadow-sm' : 'text-slate-400 dark:text-white/40'
-          }`}><Settings className="w-3 h-3" /> Tetapan</button>
+          }`}><Settings className="w-3 h-3" /> {t('gig:tab_settings', 'Tetapan')}</button>
       </div>
 
       {/* RIDERS TAB */}
@@ -490,26 +492,26 @@ export function PolyRiderAdminDashboard() {
             <FileText className="w-6 h-6" />
           </div>
           <h3 className="text-3xl font-black text-amber-700 dark:text-amber-400 mb-1">{pendingRiders.length}</h3>
-          <p className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest">Menunggu Kelulusan</p>
+          <p className="text-xs font-bold text-amber-600 dark:text-amber-500 uppercase tracking-widest">{t('gig:pending_approval', 'Menunggu Kelulusan')}</p>
         </div>
         <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-[2rem] p-6 border border-emerald-100 dark:border-emerald-500/20">
           <div className="w-12 h-12 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-4">
             <CheckCircle className="w-6 h-6" />
           </div>
           <h3 className="text-3xl font-black text-emerald-700 dark:text-emerald-400 mb-1">{activeRiders.length}</h3>
-          <p className="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">Rider Berdaftar</p>
+          <p className="text-xs font-bold text-emerald-600 dark:text-emerald-500 uppercase tracking-widest">{t('gig:registered_riders', 'Rider Berdaftar')}</p>
         </div>
       </div>
 
       <div className="mb-8">
         <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-          Permohonan Baharu <span className="bg-amber-500 text-white px-2 py-0.5 rounded-full text-[10px]">{pendingRiders.length}</span>
+          {t('gig:new_applications', 'Permohonan Baharu')} <span className="bg-amber-500 text-white px-2 py-0.5 rounded-full text-[10px]">{pendingRiders.length}</span>
         </h2>
         
         <div className="space-y-4">
           {pendingRiders.length === 0 ? (
             <div className="text-center p-8 bg-slate-50 dark:bg-zinc-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-white/10">
-              <p className="text-xs font-bold text-slate-400 dark:text-white/30 uppercase tracking-widest">Tiada Permohonan</p>
+              <p className="text-xs font-bold text-slate-400 dark:text-white/30 uppercase tracking-widest">{t('gig:no_applications', 'Tiada Permohonan')}</p>
             </div>
           ) : (
             pendingRiders.map(rider => (
@@ -530,7 +532,7 @@ export function PolyRiderAdminDashboard() {
                         rel="noopener noreferrer"
                         className="text-[10px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 dark:bg-blue-500/10 px-3 py-2 rounded-xl"
                       >
-                        Lihat Resit
+                        {t('gig:view_receipt', 'Lihat Resit')}
                       </a>
                     )}
                     <button onClick={() => handleApprove(rider.user_id)} className="w-10 h-10 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center transition-colors">
@@ -548,15 +550,15 @@ export function PolyRiderAdminDashboard() {
       </div>
 
       <div>
-        <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">Semua Rider</h2>
+        <h2 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider mb-4">{t('gig:all_riders', 'Semua Rider')}</h2>
         <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-1 shadow-lg shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-white/5 overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
               <tr>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Rider</th>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Kenderaan</th>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Status</th>
-                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">Tindakan</th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">{t('gig:th_rider', 'Rider')}</th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">{t('gig:th_vehicle', 'Kenderaan')}</th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">{t('gig:th_status', 'Status')}</th>
+                <th className="p-4 text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 border-b border-slate-100 dark:border-white/5">{t('gig:th_action', 'Tindakan')}</th>
               </tr>
             </thead>
             <tbody>
@@ -566,7 +568,7 @@ export function PolyRiderAdminDashboard() {
                   <tr key={rider.user_id} className={`hover:bg-slate-50 dark:hover:bg-white dark:bg-zinc-900/5 transition-colors ${rider.status === 'SUSPENDED' ? 'opacity-60' : ''}`}>
                     <td className="p-4 border-b border-slate-50 dark:border-white/5">
                       <p className="font-bold text-sm text-slate-900 dark:text-white">{rider.profiles?.full_name}</p>
-                      {rider.status === 'SUSPENDED' && <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-md mt-1 inline-block">Digantung</span>}
+                      {rider.status === 'SUSPENDED' && <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-md mt-1 inline-block">{t('gig:suspended_badge', 'Digantung')}</span>}
                     </td>
                     <td className="p-4 border-b border-slate-50 dark:border-white/5">
                       <p className="text-xs font-bold text-slate-500 dark:text-white/60">{rider.plate_number}</p>
@@ -576,11 +578,11 @@ export function PolyRiderAdminDashboard() {
                         <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md w-fit ${
                           rider.is_active ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20' : 'bg-slate-100 text-slate-500 dark:bg-white dark:bg-zinc-900/10 dark:text-white/40'
                         }`}>
-                          {rider.is_active ? 'On-Duty' : 'Off-Duty'}
+                          {rider.is_active ? t('gig:on_duty', 'On-Duty') : t('gig:off_duty', 'Off-Duty')}
                         </span>
                         {rider.status === 'APPROVED' && (
                           <span className={`text-[10px] font-bold ${daysRemaining <= 3 ? 'text-rose-500' : 'text-slate-400 dark:text-white/40'}`}>
-                            {daysRemaining} hari lagi
+                            {t('gig:days_remaining', '{{days}} hari lagi', { days: daysRemaining })}
                           </span>
                         )}
                       </div>
@@ -588,11 +590,11 @@ export function PolyRiderAdminDashboard() {
                     <td className="p-4 border-b border-slate-50 dark:border-white/5">
                       {rider.status === 'APPROVED' ? (
                         <button onClick={() => handleSuspend(rider.user_id)} className="text-[10px] font-black uppercase tracking-widest bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 px-3 py-2 rounded-xl transition-colors">
-                          Gantung Tugas
+                          {t('gig:suspend_btn', 'Gantung Tugas')}
                         </button>
                       ) : (
                         <button onClick={() => handleResume(rider.user_id)} className="text-[10px] font-black uppercase tracking-widest bg-emerald-50 hover:bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:hover:bg-emerald-500/20 px-3 py-2 rounded-xl transition-colors">
-                          Sambung Tugas
+                          {t('gig:resume_btn', 'Sambung Tugas')}
                         </button>
                       )}
                     </td>
@@ -612,52 +614,52 @@ export function PolyRiderAdminDashboard() {
           {/* Add Form */}
           <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-5 border border-slate-100 dark:border-white/5">
             <h2 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white mb-4 flex items-center gap-2">
-              <Plus className="w-4 h-4 text-amber-500" /> Tambah Lokasi Baru
+              <Plus className="w-4 h-4 text-amber-500" /> {t('gig:add_new_location', 'Tambah Lokasi Baru')}
             </h2>
             <div className="grid grid-cols-2 gap-3 mb-3">
               <div>
-                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">Label *</label>
+                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">{t('gig:location_label', 'Label *')}</label>
                 <input value={newPreset.label} onChange={e => setNewPreset({...newPreset, label: e.target.value})}
                   placeholder="Kamsis D" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">Icon Emoji</label>
+                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">{t('gig:icon_emoji', 'Icon Emoji')}</label>
                 <input value={newPreset.icon} onChange={e => setNewPreset({...newPreset, icon: e.target.value})}
                   placeholder="📍" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
               </div>
             </div>
             <div className="mb-3">
-              <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">Alamat / Huraian *</label>
+              <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">{t('gig:address_desc', 'Alamat / Huraian *')}</label>
               <input value={newPreset.address} onChange={e => setNewPreset({...newPreset, address: e.target.value})}
                 placeholder="Kolej Kediaman D, POLISAS" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
             </div>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div>
-                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">Latitud (Opsional)</label>
+                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">{t('gig:latitude_opt', 'Latitud (Opsional)')}</label>
                 <input type="number" step="any" value={newPreset.lat} onChange={e => setNewPreset({...newPreset, lat: e.target.value})}
                   placeholder="3.8333" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
               </div>
               <div>
-                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">Longitud (Opsional)</label>
+                <label className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1 block">{t('gig:longitude_opt', 'Longitud (Opsional)')}</label>
                 <input type="number" step="any" value={newPreset.lng} onChange={e => setNewPreset({...newPreset, lng: e.target.value})}
                   placeholder="103.3167" className="w-full bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-sm font-bold text-slate-900 dark:text-white focus:outline-none focus:border-amber-400" />
               </div>
             </div>
             <button onClick={addPreset} disabled={savingPreset}
               className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
-              <Plus className="w-4 h-4" /> {savingPreset ? 'Menyimpan...' : 'Tambah Preset'}
+              <Plus className="w-4 h-4" /> {savingPreset ? t('gig:saving_preset', 'Menyimpan...') : t('gig:add_preset_btn', 'Tambah Preset')}
             </button>
           </div>
 
           {/* Preset List */}
           <div>
             <h2 className="text-sm font-black uppercase tracking-widest text-slate-900 dark:text-white mb-4">
-              Preset Sedia Ada ({presets.length})
+              {t('gig:existing_presets', 'Preset Sedia Ada ({{count}})', { count: presets.length })}
             </h2>
             <div className="space-y-3">
               {presets.length === 0 ? (
                 <div className="text-center p-8 bg-slate-50 dark:bg-zinc-900/50 rounded-3xl border border-dashed border-slate-200 dark:border-white/10">
-                  <p className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest">Tiada Preset</p>
+                  <p className="text-xs font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest">{t('gig:no_presets', 'Tiada Preset')}</p>
                 </div>
               ) : (
                 presets.map(p => (
@@ -696,7 +698,7 @@ export function PolyRiderAdminDashboard() {
         <div>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-sm font-black text-red-500 uppercase tracking-wider flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4" /> Isyarat SOS Aktif
+              <AlertTriangle className="w-4 h-4" /> {t('gig:active_sos_alerts', 'Isyarat SOS Aktif')}
             </h2>
             <button onClick={fetchSosAlerts} className="text-[10px] font-black text-slate-400 dark:text-white/40 bg-slate-100 dark:bg-zinc-800 px-3 py-1.5 rounded-lg uppercase tracking-widest">
               ↻ Muat Semula
@@ -706,8 +708,8 @@ export function PolyRiderAdminDashboard() {
           {sosAlerts.length === 0 ? (
             <div className="text-center p-12 bg-emerald-50 dark:bg-emerald-500/10 rounded-[2rem] border border-emerald-100 dark:border-emerald-500/20">
               <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
-              <p className="font-black text-emerald-700 dark:text-emerald-400">Tiada Kecemasan Aktif</p>
-              <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">Semua pelajar dan rider selamat.</p>
+              <p className="font-black text-emerald-700 dark:text-emerald-400">{t('gig:no_active_emergency', 'Tiada Kecemasan Aktif')}</p>
+              <p className="text-xs text-emerald-600 dark:text-emerald-500 mt-1">{t('gig:all_safe_desc', 'Semua pelajar dan rider selamat.')}</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -722,18 +724,18 @@ export function PolyRiderAdminDashboard() {
                       <div className="flex items-center gap-2">
                         <span className="text-2xl animate-pulse">🚨</span>
                         <div>
-                          <p className="font-black text-red-700 dark:text-red-400 text-sm">SOS KECEMASAN</p>
+                          <p className="font-black text-red-700 dark:text-red-400 text-sm">{t('gig:emergency_sos', 'SOS KECEMASAN')}</p>
                           <p className="text-[10px] text-red-500 dark:text-red-400/70 font-bold">{elapsed} minit lepas</p>
                         </div>
                       </div>
-                      <span className="text-[10px] font-black bg-red-500 text-white px-2 py-1 rounded-lg uppercase">Belum Selesai</span>
+                      <span className="text-[10px] font-black bg-red-500 text-white px-2 py-1 rounded-lg uppercase">{t('gig:unresolved', 'Belum Selesai')}</span>
                     </div>
 
                     <div className="space-y-2 mb-4">
                       {student && (
                         <div className="flex items-center justify-between bg-white dark:bg-zinc-900 rounded-xl p-3">
                           <div>
-                            <p className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase">Pelajar</p>
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase">{t('gig:student_label', 'Pelajar')}</p>
                             <p className="font-black text-slate-900 dark:text-white text-sm">{student.full_name}</p>
                             {student.matric_no && <p className="text-xs text-slate-400">{student.matric_no}</p>}
                           </div>
@@ -742,7 +744,7 @@ export function PolyRiderAdminDashboard() {
                       {rider && (
                         <div className="flex items-center justify-between bg-white dark:bg-zinc-900 rounded-xl p-3">
                           <div>
-                            <p className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase">Rider</p>
+                            <p className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase">{t('gig:rider_label', 'Rider')}</p>
                             <p className="font-black text-slate-900 dark:text-white text-sm">{rider.profiles?.full_name}</p>
                             <p className="text-xs font-bold text-amber-500">{rider.plate_number}</p>
                           </div>
@@ -751,13 +753,13 @@ export function PolyRiderAdminDashboard() {
                       {mapsLink && (
                         <a href={mapsLink} target="_blank" rel="noopener noreferrer"
                           className="flex items-center gap-2 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl p-3 text-blue-600 dark:text-blue-400 font-bold text-sm">
-                          <MapPin className="w-4 h-4" /> Buka Lokasi GPS di Maps
+                          <MapPin className="w-4 h-4" /> {t('gig:open_gps_maps', 'Buka Lokasi GPS di Maps')}
                         </a>
                       )}
                       {!mapsLink && (
                         <div className="bg-white dark:bg-zinc-900 rounded-xl p-3">
                           <p className="text-[10px] text-slate-400 dark:text-white/40 font-bold uppercase">Lokasi GPS</p>
-                          <p className="text-sm font-bold text-slate-500 dark:text-white/60">Tidak tersedia</p>
+                          <p className="text-sm font-bold text-slate-500 dark:text-white/60">{t('gig:gps_unavailable', 'Tidak tersedia')}</p>
                         </div>
                       )}
                     </div>
@@ -767,13 +769,13 @@ export function PolyRiderAdminDashboard() {
                         onClick={() => markSOSAsFake(sos.id)}
                         className="flex-1 py-3 bg-red-100 dark:bg-red-900/40 hover:bg-red-200 dark:hover:bg-red-900/60 text-red-700 dark:text-red-400 font-bold rounded-xl flex items-center justify-center gap-2 transition-colors"
                       >
-                        <XCircle className="w-4 h-4" /> Khianat
+                        <XCircle className="w-4 h-4" /> {t('gig:mark_fake_sos', 'Khianat')}
                       </button>
                       <button
                         onClick={() => resolveSOS(sos.id)}
                         className="flex-1 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl flex items-center justify-center gap-2 transition-colors"
                       >
-                        <CheckCircle className="w-5 h-5" /> Selesai
+                        <CheckCircle className="w-5 h-5" /> {t('gig:mark_resolved', 'Selesai')}
                       </button>
                     </div>
                   </div>
@@ -788,12 +790,12 @@ export function PolyRiderAdminDashboard() {
       {activeTab === 'appeals' && (
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Pengurusan Rayuan Penggantungan</h2>
+            <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">{t('gig:suspension_appeals', 'Pengurusan Rayuan Penggantungan')}</h2>
           </div>
           {appeals.length === 0 ? (
             <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-12 text-center border border-slate-100 dark:border-white/5">
               <FileText className="w-12 h-12 text-slate-200 dark:text-white/10 mx-auto mb-4" />
-              <p className="font-bold text-slate-400 dark:text-white/40">Tiada rekod rayuan setakat ini.</p>
+              <p className="font-bold text-slate-400 dark:text-white/40">{t('gig:no_appeals_record', 'Tiada rekod rayuan setakat ini.')}</p>
             </div>
           ) : (
             <div className="grid gap-4">
@@ -814,24 +816,24 @@ export function PolyRiderAdminDashboard() {
                   </div>
                   
                   <div className="bg-slate-50 dark:bg-zinc-800 rounded-xl p-4 mb-4">
-                    <p className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1">Sebab Rayuan</p>
+                    <p className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1">{t('gig:appeal_reason', 'Sebab Rayuan')}</p>
                     <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap">{appeal.reason}</p>
                   </div>
 
                   {appeal.status === 'PENDING' && (
                     <div className="flex gap-2">
                       <button onClick={() => processAppeal(appeal.id, false)} className="flex-1 py-3 bg-red-50 text-red-600 font-bold rounded-xl hover:bg-red-100 transition-colors">
-                        Tolak
+                        {t('gig:reject_appeal', 'Tolak')}
                       </button>
                       <button onClick={() => processAppeal(appeal.id, true)} className="flex-1 py-3 bg-emerald-500 text-white font-bold rounded-xl hover:bg-emerald-600 transition-colors shadow-lg shadow-emerald-500/20">
-                        Luluskan
+                        {t('gig:approve_appeal', 'Luluskan')}
                       </button>
                     </div>
                   )}
 
                   {appeal.status !== 'PENDING' && appeal.admin_notes && (
                     <div className="mt-2 text-xs text-slate-500 dark:text-slate-400 border-t dark:border-zinc-800 pt-2">
-                      <span className="font-bold">Nota Tindakan:</span> {appeal.admin_notes}
+                      <span className="font-bold">{t('gig:action_notes', 'Nota Tindakan:')}</span> {appeal.admin_notes}
                     </div>
                   )}
                 </div>
@@ -844,10 +846,10 @@ export function PolyRiderAdminDashboard() {
       {/* SETTINGS TAB */}
       {activeTab === 'settings' && (
         <div className="space-y-6">
-          <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">Tetapan PolyRider</h2>
+          <h2 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider">{t('gig:polyrider_settings', 'Tetapan PolyRider')}</h2>
           <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 border border-slate-100 dark:border-white/5">
-            <label className="text-xs font-black text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-2">No. Telefon Kecemasan KLK</label>
-            <p className="text-[10px] text-slate-400 dark:text-white/30 mb-3">Nombor ini akan dipaparkan kepada pelajar dan rider selepas mereka mencetuskan SOS.</p>
+            <label className="text-xs font-black text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-2">{t('gig:klk_emergency_phone', 'No. Telefon Kecemasan KLK')}</label>
+            <p className="text-[10px] text-slate-400 dark:text-white/30 mb-3">{t('gig:klk_phone_desc', 'Nombor ini akan dipaparkan kepada pelajar dan rider selepas mereka mencetuskan SOS.')}</p>
             <div className="flex gap-3">
               <input
                 type="tel"
@@ -859,14 +861,14 @@ export function PolyRiderAdminDashboard() {
               <button onClick={saveKlkPhone} disabled={savingPhone}
                 className="px-5 py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl disabled:opacity-50 flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                {savingPhone ? '...' : 'Simpan'}
+                {savingPhone ? '...' : t('gig:save_phone', 'Simpan')}
               </button>
             </div>
           </div>
 
           <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 border border-slate-100 dark:border-white/5">
-            <label className="text-xs font-black text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-2">Pautan Komuniti WhatsApp</label>
-            <p className="text-[10px] text-slate-400 dark:text-white/30 mb-3">Pautan ini akan dipaparkan kepada rider setelah pendaftaran mereka diluluskan.</p>
+            <label className="text-xs font-black text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-2">{t('gig:whatsapp_community_link', 'Pautan Komuniti WhatsApp')}</label>
+            <p className="text-[10px] text-slate-400 dark:text-white/30 mb-3">{t('gig:whatsapp_desc', 'Pautan ini akan dipaparkan kepada rider setelah pendaftaran mereka diluluskan.')}</p>
             <div className="flex gap-3">
               <input
                 type="url"
@@ -878,14 +880,14 @@ export function PolyRiderAdminDashboard() {
               <button onClick={saveWhatsappLink} disabled={savingWhatsapp}
                 className="px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl disabled:opacity-50 flex items-center gap-2">
                 <MessageCircle className="w-4 h-4" />
-                {savingWhatsapp ? '...' : 'Simpan Pautan'}
+                {savingWhatsapp ? '...' : t('gig:save_link', 'Simpan Pautan')}
               </button>
             </div>
           </div>
 
           <div className="bg-white dark:bg-zinc-900 rounded-[2rem] p-6 border border-slate-100 dark:border-white/5">
-            <label className="text-xs font-black text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-2">QR Code Bayaran Yuran PolyRider</label>
-            <p className="text-[10px] text-slate-400 dark:text-white/30 mb-3">Sila muat naik QR Code (contohnya DuitNow) untuk pelajar membayar yuran langganan bulanan RM10.</p>
+            <label className="text-xs font-black text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-2">{t('gig:polyrider_fee_qr', 'QR Code Bayaran Yuran PolyRider')}</label>
+            <p className="text-[10px] text-slate-400 dark:text-white/30 mb-3">{t('gig:qr_desc', 'Sila muat naik QR Code (contohnya DuitNow) untuk pelajar membayar yuran langganan bulanan RM10.')}</p>
             <div className="flex flex-col md:flex-row gap-6 items-start">
               <div className="border-2 border-dashed border-slate-200 dark:border-white/20 rounded-xl p-6 text-center hover:border-amber-500 transition-colors w-full md:w-1/2">
                 <input
@@ -903,7 +905,7 @@ export function PolyRiderAdminDashboard() {
                 />
                 <label htmlFor="qr-upload" className="cursor-pointer flex flex-col items-center">
                   <Upload className="w-8 h-8 text-slate-400 dark:text-white/40 mb-2" />
-                  <span className="text-sm font-bold text-amber-600">{qrFile ? qrFile.name : 'Pilih Gambar QR'}</span>
+                  <span className="text-sm font-bold text-amber-600">{qrFile ? qrFile.name : t('gig:choose_qr_image', 'Pilih Gambar QR')}</span>
                   <span className="text-xs text-slate-400 dark:text-white/40 mt-1">Sokongan JPG, PNG</span>
                 </label>
               </div>
@@ -913,14 +915,14 @@ export function PolyRiderAdminDashboard() {
                   <img src={qrPreview} alt="QR Preview" className="w-48 h-48 object-contain rounded-xl border border-slate-200 dark:border-white/10 mb-4" />
                 ) : (
                   <div className="w-48 h-48 bg-slate-50 dark:bg-zinc-800 rounded-xl border border-slate-200 dark:border-white/10 flex items-center justify-center mb-4">
-                    <span className="text-xs font-bold text-slate-400">Tiada QR</span>
+                    <span className="text-xs font-bold text-slate-400">{t('gig:no_qr_uploaded', 'Tiada QR')}</span>
                   </div>
                 )}
                 
                 <button onClick={saveQrCode} disabled={!qrFile || savingQr}
                   className="w-full py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl disabled:opacity-50 flex items-center justify-center gap-2">
                   <Upload className="w-4 h-4" />
-                  {savingQr ? 'Memuat naik...' : 'Simpan QR Code'}
+                  {savingQr ? 'Memuat naik...' : t('gig:save_qr_btn', 'Simpan QR Code')}
                 </button>
               </div>
             </div>

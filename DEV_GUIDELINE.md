@@ -4530,17 +4530,18 @@ Semua fail terjemahan diuruskan secara modular di bawah folder `src/locales/` me
 | `akademik` | e-Akademik, matriks jadual waktu kuliah, kalkulator HPNM, takwim peperiksaan | `module_title`, `timetable_grid`, `current_slot`, `gpa_calculator`, `exam_schedule` |
 | `housing` | e-Kediaman Luar Kampus (KLK), direktori rumah sewa berdaftar, deklarasi kediaman | `klk_title`, `browse_rentals`, `monthly_rent`, `declare_residence` |
 | `supsas` | Kejohanan Sukan Tahunan POLISAS, jadual perlawanan, papan pungutan pingat | `module_title`, `fixtures_results`, `medal_tally`, `gold_medals`, `championship_champion` |
+| `gig` | PolyGig, PolyRider & PolyTask (ekonomi gig kampus, tempahan rider & bidaan tugasan) | `polytask_title`, `polyrider_title`, `create_job`, `request_ride`, `dispute_title`, `escrow_notice` |
 
 ```
 src/locales/
-├── en/                       ← Bahasa Inggeris (17 fail JSON kamus lengkap)
+├── en/                       ← Bahasa Inggeris (18 fail JSON kamus lengkap)
 │   ├── common.json, auth.json, nav.json, settings.json, portal.json, kpp.json, jpp.json,
 │   ├── keusahawanan.json, kebajikan.json, karnival.json, ems.json, makmp.json,
-│   └── commerce.json, services.json, akademik.json, housing.json, supsas.json
-└── ms/                       ← Bahasa Melayu (17 fail JSON kamus lengkap dengan 100% key parity)
+│   └── commerce.json, services.json, akademik.json, housing.json, supsas.json, gig.json
+└── ms/                       ← Bahasa Melayu (18 fail JSON kamus lengkap dengan 100% key parity)
     ├── common.json, auth.json, nav.json, settings.json, portal.json, kpp.json, jpp.json,
     ├── keusahawanan.json, kebajikan.json, karnival.json, ems.json, makmp.json,
-    └── commerce.json, services.json, akademik.json, housing.json, supsas.json
+    └── commerce.json, services.json, akademik.json, housing.json, supsas.json, gig.json
 ```
 
 ### 36.4 Panduan Pembangun: Menambah Terjemahan untuk Modul Baharu
@@ -4687,3 +4688,7 @@ Domain 0 merangkumi kesemua cengkerang navigasi global, bar sisi (*sidebars*), d
 3. **Penyelarasan Kamus & Ujian Pengesahan:**
    - Ruang nama kamus `nav.json`, `portal.json`, `settings.json`, `jpp.json`, `kebajikan.json`, `housing.json`, `klk.json`, `common.json`, `ems.json`, `commerce.json`, `akademik.json` diselaraskan 100% pariti.
    - Ujian unit integrasi komprehensif didokumenkan dalam `src/__tests__/Domain0NavigationShellsI18n.test.tsx` (40 ujian khusus merangkumi paparan BM, EN dan penukaran dinamik).
+4. **Penyelarasan Domain 7 (PolyGig, PolyRider, PolyTask):**
+   - Ruang nama kamus `gig.json` (402 kunci dwi-bahasa EN & MS dengan 100% pariti kunci dan tanpa rentetan kosong).
+   - Penyetempatan mendalam komponen PolyRider (`PolyRiderHome`, `PolyRiderDashboard`, `PolyRiderAdminDashboard`), PolyTask (`PolyTaskBoard`, `PolyTaskJobDetail`, `PolyTaskMyJobs`, `PolyTaskAdmin`, `CreateJobModal`, `PolyTaskDisputeModal`), dan Nexus (`NexusPage`).
+   - Ujian unit integrasi komprehensif didokumenkan dalam `src/__tests__/Domain7PolyGigI18n.test.tsx` (14 ujian khusus merangkumi pengesahan 100% pariti kamus `gig.json`, rendering DOM Bahasa Inggeris, dan rendering DOM Bahasa Melayu).

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 import { X, Briefcase, MapPin, DollarSign, Calendar, Clock, Loader2, AlertCircle, ChevronRight, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
@@ -13,6 +14,7 @@ interface CreateJobModalProps {
 }
 
 export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalProps) {
+  const { t } = useTranslation(['gig', 'common']);
   const { profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [step, setStep] = useState(1);
@@ -48,7 +50,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
   const handleNextStep = () => {
     if (step === 1) {
       if (!formData.title || !formData.description) {
-        toast.error('Sila lengkapkan Tajuk dan Deskripsi sebelum meneruskan.');
+        toast.error(t('gig:error_missing_step1', 'Sila lengkapkan Tajuk dan Deskripsi sebelum meneruskan.'));
         return;
       }
       setStep(2);
@@ -65,13 +67,13 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
     
     // Validations
     if (!formData.location || !formData.budget || !formData.deadlineDate) {
-      toast.error('Sila lengkapkan Lokasi, Upah dan Tarikh Akhir.');
+      toast.error(t('gig:error_missing_step2', 'Sila lengkapkan Lokasi, Upah dan Tarikh Akhir.'));
       return;
     }
 
     const budgetVal = parseFloat(formData.budget);
     if (isNaN(budgetVal) || budgetVal <= 0) {
-      toast.error('Bajet mesti lebih daripada RM 0');
+      toast.error(t('gig:error_invalid_budget', 'Bajet mesti lebih daripada RM 0'));
       return;
     }
 
@@ -94,9 +96,9 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
 
     if (error) {
       console.error(error);
-      toast.error('Gagal memuat naik tugasan. Sila cuba lagi.');
+      toast.error(t('gig:error_upload_job', 'Gagal memuat naik tugasan. Sila cuba lagi.'));
     } else {
-      toast.success('Tugasan berjaya diiklankan!');
+      toast.success(t('gig:job_created_success', 'Tugasan berjaya diiklankan!'));
       onSuccess();
       onClose();
       // Reset form
@@ -131,8 +133,8 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-white">Cipta Tugasan Baharu</h2>
-                  <p className="text-xs text-slate-400">Iklankan tugasan anda kepada rakan pelajar.</p>
+                  <h2 className="text-xl font-bold text-white">{t('gig:create_job_modal_title', 'Cipta Tugasan Baharu')}</h2>
+                  <p className="text-xs text-slate-400">{t('gig:create_job_modal_desc', 'Iklankan tugasan anda kepada rakan pelajar.')}</p>
                 </div>
               </div>
               <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-slate-400 transition-colors">
@@ -146,8 +148,8 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
               <div className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]' : 'bg-slate-800'}`} />
             </div>
             <div className="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-              <span className={step >= 1 ? 'text-indigo-400' : ''}>Langkah 1: Butiran</span>
-              <span className={step >= 2 ? 'text-indigo-400' : ''}>Langkah 2: Logistik & Upah</span>
+              <span className={step >= 1 ? 'text-indigo-400' : ''}>{t('gig:step_details', 'Langkah 1: Butiran')}</span>
+              <span className={step >= 2 ? 'text-indigo-400' : ''}>{t('gig:step_logistics', 'Langkah 2: Logistik & Upah')}</span>
             </div>
           </div>
 
@@ -165,12 +167,12 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                     className="space-y-6"
                   >
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-300">Tajuk Tugasan <span className="text-rose-400">*</span></label>
+                      <label className="text-sm font-medium text-slate-300">{t('gig:job_title_label', 'Tajuk Tugasan')} <span className="text-rose-400">*</span></label>
                       <input 
                         type="text" 
                         value={formData.title}
                         onChange={e => setFormData({...formData, title: e.target.value})}
-                        placeholder="Cth: Format Laptop HP & Install Windows 11" 
+                        placeholder={t('gig:job_title_placeholder', 'Cth: Format Laptop HP & Install Windows 11')} 
                         className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                         maxLength={100}
                         required
@@ -178,26 +180,26 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-300">Kategori <span className="text-rose-400">*</span></label>
+                      <label className="text-sm font-medium text-slate-300">{t('gig:job_category_label', 'Kategori')} <span className="text-rose-400">*</span></label>
                       <select 
                         value={formData.category}
                         onChange={e => setFormData({...formData, category: e.target.value})}
                         className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 appearance-none"
                       >
-                        <option value="AKADEMIK">Akademik (Tutor, Assignment)</option>
-                        <option value="TEKNIKAL">Teknikal (Baiki Laptop, Motor)</option>
-                        <option value="RUNNER">Runner (Beli Barang, Hantar Dokumen)</option>
-                        <option value="KREATIF">Kreatif (Design, Video, Foto)</option>
-                        <option value="LAIN-LAIN">Lain-lain Khidmat</option>
+                        <option value="AKADEMIK">{t('gig:opt_academic', 'Akademik (Tutor, Assignment)')}</option>
+                        <option value="TEKNIKAL">{t('gig:opt_technical', 'Teknikal (Baiki Laptop, Motor)')}</option>
+                        <option value="RUNNER">{t('gig:opt_runner', 'Runner (Beli Barang, Hantar Dokumen)')}</option>
+                        <option value="KREATIF">{t('gig:opt_creative', 'Kreatif (Design, Video, Foto)')}</option>
+                        <option value="LAIN-LAIN">{t('gig:opt_other', 'Lain-lain Khidmat')}</option>
                       </select>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-sm font-medium text-slate-300">Deskripsi Penuh <span className="text-rose-400">*</span></label>
+                      <label className="text-sm font-medium text-slate-300">{t('gig:job_desc_label', 'Deskripsi Penuh')} <span className="text-rose-400">*</span></label>
                       <textarea 
                         value={formData.description}
                         onChange={e => setFormData({...formData, description: e.target.value})}
-                        placeholder="Terangkan dengan terperinci apa yang anda perlukan..." 
+                        placeholder={t('gig:job_desc_placeholder', 'Terangkan dengan terperinci apa yang anda perlukan...')} 
                         className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50 h-32 resize-none"
                         required
                       />
@@ -216,19 +218,19 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                   >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300 flex items-center gap-2"><MapPin className="w-4 h-4 text-slate-500"/> Lokasi <span className="text-rose-400">*</span></label>
+                        <label className="text-sm font-medium text-slate-300 flex items-center gap-2"><MapPin className="w-4 h-4 text-slate-500"/> {t('gig:job_location_label', 'Lokasi')} <span className="text-rose-400">*</span></label>
                         <input 
                           type="text" 
                           value={formData.location}
                           onChange={e => setFormData({...formData, location: e.target.value})}
-                          placeholder="Cth: Kamsis A / Kafeteria" 
+                          placeholder={t('gig:job_location_placeholder', 'Cth: Kamsis A / Kafeteria')} 
                           className="w-full bg-slate-950/50 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500/50"
                           required
                         />
                       </div>
                       
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300 flex items-center gap-2"><DollarSign className="w-4 h-4 text-emerald-500"/> Upah (RM) <span className="text-rose-400">*</span></label>
+                        <label className="text-sm font-medium text-slate-300 flex items-center gap-2"><DollarSign className="w-4 h-4 text-emerald-500"/> {t('gig:job_reward_label', 'Upah (RM)')} <span className="text-rose-400">*</span></label>
                         <div className="relative">
                           <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">RM</span>
                           <input 
@@ -244,7 +246,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                         </div>
                         {avgBudget !== null && (
                           <p className="text-[10px] text-indigo-400 font-medium flex items-center mt-1">
-                            💡 Purata pasaran untuk {formData.category.toLowerCase()}: RM {avgBudget.toFixed(2)}
+                            {t('gig:average_market_price', 'Purata pasaran untuk {{cat}}: RM {{avg}}', { cat: formData.category.toLowerCase(), avg: avgBudget.toFixed(2) })}
                           </p>
                         )}
                       </div>
@@ -252,7 +254,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300 flex items-center gap-2"><Calendar className="w-4 h-4 text-slate-500"/> Tarikh Akhir <span className="text-rose-400">*</span></label>
+                        <label className="text-sm font-medium text-slate-300 flex items-center gap-2"><Calendar className="w-4 h-4 text-slate-500"/> {t('gig:deadline_date_label', 'Tarikh Akhir')} <span className="text-rose-400">*</span></label>
                         <input 
                           type="date" 
                           value={formData.deadlineDate}
@@ -263,7 +265,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-sm font-medium text-slate-300 flex items-center gap-2"><Clock className="w-4 h-4 text-slate-500"/> Masa Akhir</label>
+                        <label className="text-sm font-medium text-slate-300 flex items-center gap-2"><Clock className="w-4 h-4 text-slate-500"/> {t('gig:deadline_time_label', 'Masa Akhir')}</label>
                         <input 
                           type="time" 
                           value={formData.deadlineTime}
@@ -276,7 +278,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                     <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 flex gap-3 text-indigo-200 text-sm leading-relaxed mt-4">
                       <AlertCircle className="w-5 h-5 flex-shrink-0 text-indigo-400 mt-0.5" />
                       <p>
-                        Sila pastikan tawaran anda munasabah dan adil. Pembayaran kepada Tasker harus dibincangkan dan diselesaikan secara terus (tunai/transfer) setelah tugasan selesai. JPPHQ tidak memegang wang anda buat masa ini.
+                        {t('gig:escrow_notice', 'Sila pastikan tawaran anda munasabah dan adil. Pembayaran kepada Tasker harus dibincangkan dan diselesaikan secara terus (tunai/transfer) setelah tugasan selesai. JPPHQ tidak memegang wang anda buat masa ini.')}
                       </p>
                     </div>
                   </motion.div>
@@ -289,11 +291,11 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
           <div className="p-6 border-t border-white/5 bg-slate-800/30 flex items-center justify-between mt-auto">
             {step === 1 ? (
               <Button variant="ghost" type="button" onClick={onClose} disabled={loading} className="text-slate-400 hover:text-white">
-                Batal
+                {t('gig:cancel', 'Batal')}
               </Button>
             ) : (
               <Button variant="ghost" type="button" onClick={handlePrevStep} disabled={loading} className="text-slate-400 hover:text-white">
-                <ChevronLeft className="w-4 h-4 mr-2" /> Kembali
+                <ChevronLeft className="w-4 h-4 mr-2" /> {t('gig:previous', 'Kembali')}
               </Button>
             )}
 
@@ -303,7 +305,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                 onClick={handleNextStep}
                 className="bg-indigo-600 hover:bg-indigo-700 text-white min-w-[120px] rounded-xl font-bold"
               >
-                Seterusnya <ChevronRight className="w-4 h-4 ml-2" />
+                {t('gig:next', 'Seterusnya')} <ChevronRight className="w-4 h-4 ml-2" />
               </Button>
             ) : (
               <Button 
@@ -312,7 +314,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                 disabled={loading}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white min-w-[120px] rounded-xl font-bold shadow-[0_0_15px_rgba(16,185,129,0.3)]"
               >
-                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Iklankan Tugasan'}
+                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : t('gig:post_task_btn', 'Iklankan Tugasan')}
               </Button>
             )}
           </div>

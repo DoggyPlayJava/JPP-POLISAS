@@ -22,6 +22,7 @@ import { supabase } from '@/lib/supabase';
 import { insertNotifications } from '@/lib/notifications';
 import { Buffer } from 'buffer';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTranslation } from 'react-i18next';
 
 // @ts-ignore - polyfill untuk node js buffer yang diperlukan oleh html-docx-js
 if (typeof window !== 'undefined') window.Buffer = Buffer;
@@ -46,6 +47,7 @@ function useLocalState<T>(key: string, initialValue: T) {
 }
 
 export function NexusPage() {
+  const { t } = useTranslation(['gig', 'common']);
   const [searchParams] = useSearchParams();
   const { allowAiBudget } = useAiSettings();
   const { callAi, isLoading, retryCount } = useAiAssistant();
@@ -77,7 +79,7 @@ export function NexusPage() {
   const [hasilKertasKerja, setHasilKertasKerja] = useLocalState<KertasKerjaData | null>('nx_hasilKertasKerja', null);
 
   const handleResetKertasKerja = () => {
-    if (confirm("Adakah anda pasti mahu memadam semua maklumat draf ini dan mula dari awal?")) {
+    if (confirm(t('gig:nexus_confirm_reset', "Adakah anda pasti mahu memadam semua maklumat draf ini dan mula dari awal?"))) {
       setKertasKerjaStep(1);
       setJenisProgram([]);
       setBentukProgram([]);
@@ -94,7 +96,7 @@ export function NexusPage() {
       setAhliJK('');
       setKonteksTambahan('');
       setHasilKertasKerja(null);
-      toast.success('Borang telah dikosongkan.');
+      toast.success(t('gig:nexus_form_cleared', 'Borang telah dikosongkan.'));
     }
   };
 
@@ -405,12 +407,12 @@ export function NexusPage() {
           <AlertTriangle className="w-12 h-12 relative z-10" />
           <div className="absolute inset-0 bg-rose-500/20 animate-pulse" />
         </div>
-        <h1 className="text-3xl font-black text-rose-500 tracking-tight">AKSES DISEKAT</h1>
+        <h1 className="text-3xl font-black text-rose-500 tracking-tight">{t('gig:nexus_access_blocked', 'AKSES DISEKAT')}</h1>
         <p className="text-muted-foreground max-w-md">
-          Enjin Nexus AI telah dinyahaktifkan oleh Admin JPP. Modul ini tidak tersedia buat masa ini. Hubungi pentadbir sistem untuk maklumat lanjut.
+          {t('gig:nexus_access_blocked_desc', 'Enjin Nexus AI telah dinyahaktifkan oleh Admin JPP. Modul ini tidak tersedia buat masa ini. Hubungi pentadbir sistem untuk maklumat lanjut.')}
         </p>
         <Button variant="outline" className="mt-4 border-rose-500/20 hover:bg-rose-500/10 hover:text-rose-400" onClick={() => window.history.back()}>
-          Kembali ke Halaman Sebelumnya
+          {t('gig:nexus_back_prev', 'Kembali ke Halaman Sebelumnya')}
         </Button>
       </div>
     );
@@ -553,11 +555,11 @@ export function NexusPage() {
           </div>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground">Nexus AI Hub</h1>
+              <h1 className="text-3xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground via-foreground/90 to-muted-foreground">{t('gig:nexus_hub_title', 'Nexus AI Hub')}</h1>
               <Badge className="bg-indigo-500/10 text-indigo-400 border-indigo-500/20 font-black tracking-widest text-[10px] uppercase">BETA</Badge>
             </div>
             <p className="text-sm text-muted-foreground mt-1.5 font-medium max-w-lg leading-relaxed">
-              Pusat penjanaan dokumen pintar. Hasilkan kertas kerja dan minit mesyuarat rasmi dengan pantas menggunakan enjin Nexus AI.
+              {t('gig:nexus_hub_desc', 'Pusat penjanaan dokumen pintar. Hasilkan kertas kerja dan minit mesyuarat rasmi dengan pantas menggunakan enjin Nexus AI.')}
             </p>
           </div>
         </div>
@@ -568,15 +570,15 @@ export function NexusPage() {
         <TabsList className="w-full justify-start h-auto p-1.5 mb-6 bg-slate-100/80 dark:bg-slate-900/50  shadow-sm rounded-2xl border border-slate-200/60 dark:border-border/50 flex-col sm:flex-row overflow-x-auto">
           <TabsTrigger value="kertas-kerja" className="flex-1 sm:flex-none justify-start sm:justify-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-indigo-400">
             <FileText className="w-4 h-4" />
-            <span className="font-bold">Penjana Kertas Kerja</span>
+            <span className="font-bold">{t('gig:nexus_tab_paper', 'Penjana Kertas Kerja')}</span>
           </TabsTrigger>
           <TabsTrigger value="minit-mesyuarat" className="flex-1 sm:flex-none justify-start sm:justify-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-emerald-400">
             <Users className="w-4 h-4" />
-            <span className="font-bold">Minit Mesyuarat</span>
+            <span className="font-bold">{t('gig:nexus_tab_minutes', 'Minit Mesyuarat')}</span>
           </TabsTrigger>
           <TabsTrigger value="langganan" className="flex-1 sm:flex-none justify-start sm:justify-center gap-2 px-6 py-3 rounded-xl data-[state=active]:bg-background data-[state=active]:shadow-sm data-[state=active]:text-amber-500">
             <Sparkles className="w-4 h-4" />
-            <span className="font-bold">Langganan & Token</span>
+            <span className="font-bold">{t('gig:nexus_tab_subscription', 'Langganan & Token')}</span>
           </TabsTrigger>
         </TabsList>
 
@@ -590,9 +592,9 @@ export function NexusPage() {
 
                 {/* Header & Reset Button */}
                 <div className="px-6 pt-4 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Isi Borang</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t('gig:nexus_fill_form', 'Isi Borang')}</span>
                   <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold tracking-widest text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 px-2" onClick={handleResetKertasKerja}>
-                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Mula Semula
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> {t('gig:nexus_start_over', 'Mula Semula')}
                   </Button>
                 </div>
 
@@ -1017,9 +1019,9 @@ export function NexusPage() {
 
                 {/* Header + Reset */}
                 <div className="px-6 pt-4 flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Isi Borang</span>
+                  <span className="text-xs font-bold uppercase tracking-widest text-muted-foreground">{t('gig:nexus_fill_form', 'Isi Borang')}</span>
                   <Button variant="ghost" size="sm" className="h-7 text-[10px] uppercase font-bold tracking-widest text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-500/10 px-2" onClick={handleResetMinit}>
-                    <Trash2 className="w-3.5 h-3.5 mr-1" /> Mula Semula
+                    <Trash2 className="w-3.5 h-3.5 mr-1" /> {t('gig:nexus_start_over', 'Mula Semula')}
                   </Button>
                 </div>
 
