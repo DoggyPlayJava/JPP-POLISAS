@@ -250,7 +250,7 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
           <p className="text-[10px] font-black uppercase tracking-[0.2em]" style={{ color: themeColor }}>
             {reviewerUnit === 'KPP' ? 'Exco KPP — Voucher' : 'Exco Kediaman — Kuasa Mutlak'}
           </p>
-          <h3 className="text-xl font-black text-white mt-0.5">Permohonan Merit Rasmi</h3>
+          <h3 className="text-xl font-black text-slate-900 dark:text-white mt-0.5">Permohonan Merit Rasmi</h3>
         </div>
         <button
           onClick={load}
@@ -264,7 +264,7 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
       {/* Info banner */}
       <div className="rounded-2xl p-4 flex items-start gap-3" style={{ background: hexToRgba(themeColor, 0.06), border: `1px solid ${hexToRgba(themeColor, 0.2)}` }}>
         <Info size={14} style={{ color: themeColor }} className="shrink-0 mt-0.5" />
-        <p className="text-[10px] text-white/50 leading-relaxed">
+        <p className="text-[11px] font-medium text-slate-700 dark:text-white/70 leading-relaxed">
           {reviewerUnit === 'KPP'
             ? 'Sebagai Exco KPP, anda berperanan sebagai Supporter (Voucher). Vouch bermakna anda menyokong permohonan ini untuk dipertimbangkan oleh Exco Kediaman. Kuasa mutlak kelulusan adalah pada Exco Kediaman.'
             : 'Sebagai Exco Kediaman, anda mempunyai kuasa mutlak untuk meluluskan atau menolak permohonan merit rasmi. Merit akan dikreditkan secara automatik kepada semua peserta yang hadir sebaik sahaja anda meluluskan.'
@@ -302,7 +302,7 @@ export function MeritRasmiReviewPanel({ reviewerUnit, themeColor }: Props) {
 
           {/* ── History ── */}
           {resolved.length > 0 && (
-            <Section title={`Sejarah (${resolved.length})`} color="rgba(255,255,255,0.2)" count={resolved.length} collapsed>
+            <Section title={`Sejarah (${resolved.length})`} count={resolved.length} collapsed>
               {resolved.map(app => (
                 <AppCardHistory key={app.id} app={app} reviewerUnit={reviewerUnit} formatDT={formatDT} />
               ))}
@@ -325,11 +325,10 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
     <motion.div
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-[1.5rem] overflow-hidden"
-      style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.07)' }}
+      className="rounded-[1.5rem] overflow-hidden border border-slate-200 dark:border-white/[0.07] bg-slate-50/50 dark:bg-white/[0.02]"
     >
       {/* Card header */}
-      <button onClick={onToggle} className="w-full flex items-start gap-3 p-4 text-left hover:bg-white/[0.02] transition-colors">
+      <button onClick={onToggle} className="w-full flex items-start gap-3 p-4 text-left hover:bg-slate-100/60 dark:hover:bg-white/[0.02] transition-colors">
         {/* Merit badge */}
         <div className="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0" style={{ background: hexToRgba(themeColor, 0.12) }}>
           <Trophy size={16} style={{ color: themeColor }} />
@@ -337,27 +336,27 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
 
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <p className="text-sm font-black text-white leading-snug line-clamp-1">{app.program_title}</p>
+            <p className="text-sm font-black text-slate-900 dark:text-white leading-snug line-clamp-1">{app.program_title}</p>
             <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full shrink-0 whitespace-nowrap"
               style={{ background: cfg.bg, color: cfg.color }}>
               {cfg.label}
             </span>
           </div>
           <div className="flex items-center gap-3 mt-1 flex-wrap">
-            <span className="text-[10px] font-bold text-white/40">{app.program_type === 'takwim' ? 'Takwim Rasmi' : 'Aktiviti Kelab'}</span>
+            <span className="text-[10px] font-bold text-slate-500 dark:text-white/40">{app.program_type === 'takwim' ? 'Takwim Rasmi' : 'Aktiviti Kelab'}</span>
             <span className="flex items-center gap-1 text-[10px] font-black" style={{ color: themeColor }}>
               <Trophy size={9} /> +{app.merit_value} merit
             </span>
             {app.attendee_count > 0 && (
-              <span className="flex items-center gap-1 text-[10px] text-white/40">
+              <span className="flex items-center gap-1 text-[10px] text-slate-500 dark:text-white/40">
                 <Users size={9} /> {app.attendee_count} peserta hadir
               </span>
             )}
           </div>
-          <p className="text-[9px] text-white/30 mt-0.5">{app.applicant?.full_name} · {formatDT(app.created_at)}</p>
+          <p className="text-[9px] text-slate-500 dark:text-white/30 mt-0.5">{app.applicant?.full_name} · {formatDT(app.created_at)}</p>
         </div>
 
-        {expanded ? <ChevronUp size={13} className="text-white/30 shrink-0 mt-1" /> : <ChevronDown size={13} className="text-white/30 shrink-0 mt-1" />}
+        {expanded ? <ChevronUp size={13} className="text-slate-400 dark:text-white/30 shrink-0 mt-1" /> : <ChevronDown size={13} className="text-slate-400 dark:text-white/30 shrink-0 mt-1" />}
       </button>
 
       {/* Expanded detail + actions */}
@@ -370,13 +369,13 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="px-4 pb-4 space-y-3 border-t" style={{ borderColor: 'rgba(255,255,255,0.05)' }}>
+            <div className="px-4 pb-4 space-y-3 border-t border-slate-200 dark:border-white/[0.05]">
 
               {/* Justification */}
               {app.justification && (
-                <div className="mt-3 p-3 rounded-2xl bg-white/[0.03]">
-                  <p className="text-[9px] font-black uppercase text-white/30 mb-1">Justifikasi Permohonan</p>
-                  <p className="text-[11px] text-white/60">{app.justification}</p>
+                <div className="mt-3 p-3 rounded-2xl bg-slate-100/70 dark:bg-white/[0.03]">
+                  <p className="text-[9px] font-black uppercase text-slate-500 dark:text-white/30 mb-1">Justifikasi Permohonan</p>
+                  <p className="text-[11px] text-slate-700 dark:text-white/60">{app.justification}</p>
                 </div>
               )}
 
@@ -386,7 +385,7 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
                   <p className="text-[9px] font-black uppercase mb-1" style={{ color: app.status === 'kpp_vouched' ? '#6366f1' : '#f43f5e' }}>
                     {app.status === 'kpp_vouched' ? '✅ Disokong oleh KPP' : app.status === 'pending' ? '⏳ Belum disemak KPP' : '❌ Tidak disokong KPP'}
                   </p>
-                  {app.kpp_vouch_notes && <p className="text-[10px] text-white/50">{app.kpp_vouch_notes}</p>}
+                  {app.kpp_vouch_notes && <p className="text-[10px] text-slate-700 dark:text-white/70">{app.kpp_vouch_notes}</p>}
                 </div>
               )}
 
@@ -397,7 +396,7 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
                   onChange={e => onNoteChange(e.target.value)}
                   placeholder={reviewerUnit === 'KPP' ? 'Nota vouch (pilihan)...' : 'Nota keputusan (pilihan)...'}
                   rows={2}
-                  className="w-full px-3 py-2.5 rounded-2xl text-[11px] font-medium outline-none resize-none bg-white/[0.04] border border-white/10 text-white placeholder:text-white/25 focus:border-white/25 transition-all"
+                  className="w-full px-3 py-2.5 rounded-2xl text-[11px] font-medium outline-none resize-none bg-white dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/25 focus:border-indigo-500 dark:focus:border-white/25 transition-all shadow-xs"
                 />
               )}
 
@@ -461,13 +460,13 @@ function AppCard({ app, themeColor, reviewerUnit, expanded, saving, noteValue, o
 function AppCardHistory({ app, reviewerUnit, formatDT }: any) {
   const cfg = STATUS_CFG[app.status] || STATUS_CFG.pending;
   return (
-    <div className="flex items-center gap-3 p-3 rounded-2xl" style={{ background: 'rgba(255,255,255,0.02)' }}>
+    <div className="flex items-center gap-3 p-3 rounded-2xl border border-slate-200/70 dark:border-transparent bg-slate-50/60 dark:bg-white/[0.02]">
       <span className="text-[9px] font-black uppercase px-2.5 py-1 rounded-full shrink-0" style={{ background: cfg.bg, color: cfg.color }}>
         {cfg.label}
       </span>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-black text-white/70 truncate">{app.program_title}</p>
-        <p className="text-[9px] text-white/30">
+        <p className="text-[11px] font-black text-slate-800 dark:text-white/70 truncate">{app.program_title}</p>
+        <p className="text-[9px] text-slate-500 dark:text-white/30">
           +{app.merit_value} merit ·{' '}
           {reviewerUnit === 'KPP' && app.kpp_reviewed_at ? formatDT(app.kpp_reviewed_at) : ''}
           {reviewerUnit === 'KEDIAMAN' && app.kediaman_reviewed_at ? formatDT(app.kediaman_reviewed_at) : ''}
@@ -484,10 +483,14 @@ function Section({ title, color, count, children, collapsed = false }: any) {
   return (
     <div className="space-y-3">
       <button onClick={() => setOpen(!open)} className="flex items-center gap-2 w-full text-left">
-        <p className="text-[10px] font-black uppercase tracking-widest flex-1" style={{ color }}>
+        <p className={cn("text-[10px] font-black uppercase tracking-widest flex-1", !color && "text-slate-400 dark:text-white/40")} style={color ? { color } : undefined}>
           {title}
         </p>
-        {open ? <ChevronUp size={13} style={{ color }} /> : <ChevronDown size={13} style={{ color }} />}
+        {open ? (
+          <ChevronUp size={13} style={color ? { color } : undefined} className={!color ? "text-slate-400 dark:text-white/40" : undefined} />
+        ) : (
+          <ChevronDown size={13} style={color ? { color } : undefined} className={!color ? "text-slate-400 dark:text-white/40" : undefined} />
+        )}
       </button>
       <AnimatePresence>
         {open && (
@@ -508,8 +511,8 @@ function Section({ title, color, count, children, collapsed = false }: any) {
 function EmptyState({ label }: { label: string }) {
   return (
     <div className="py-8 text-center">
-      <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-white/10" />
-      <p className="text-[10px] font-black uppercase tracking-widest text-white/20">{label}</p>
+      <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-slate-300 dark:text-white/10" />
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">{label}</p>
     </div>
   );
 }
@@ -518,7 +521,7 @@ function LoadingSkeleton({ themeColor }: { themeColor: string }) {
   return (
     <div className="space-y-3">
       {[1, 2, 3].map(i => (
-        <div key={i} className="h-20 rounded-[1.5rem] animate-pulse" style={{ background: hexToRgba(themeColor, 0.04) }} />
+        <div key={i} className="h-20 rounded-[1.5rem] animate-pulse bg-slate-100 dark:bg-white/[0.04] border border-slate-200/50 dark:border-transparent" />
       ))}
     </div>
   );
