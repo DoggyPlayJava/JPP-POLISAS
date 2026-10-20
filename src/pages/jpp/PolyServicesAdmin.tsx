@@ -101,9 +101,9 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
       if (error) throw error;
       setNewWord('');
       fetchCensoredWords();
-      toast.success('Perkataan ditambah');
+      toast.success(t('jpp:services_word_added', 'Perkataan ditambah'));
     } catch (e) {
-      toast.error('Gagal tambah atau perkataan sudah wujud');
+      toast.error(t('jpp:services_word_add_failed', 'Gagal tambah atau perkataan sudah wujud'));
     }
   };
 
@@ -112,9 +112,9 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
       const { error } = await supabase.from('polysuara_censored_words').delete().eq('id', id);
       if (error) throw error;
       fetchCensoredWords();
-      toast.success('Perkataan dibuang');
+      toast.success(t('jpp:services_word_removed', 'Perkataan dibuang'));
     } catch (e) {
-      toast.error('Gagal buang perkataan');
+      toast.error(t('jpp:services_word_remove_failed', 'Gagal buang perkataan'));
     }
   };
 
@@ -130,9 +130,9 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
         })
         .eq('id', 1);
       if (error) throw error;
-      toast.success('Konfigurasi auto-hide dikemaskini');
+      toast.success(t('jpp:services_auto_hide_updated', 'Konfigurasi auto-hide dikemaskini'));
     } catch (e: any) {
-      toast.error('Gagal kemaskini tetapan');
+      toast.error(t('jpp:services_settings_update_failed', 'Gagal kemaskini tetapan'));
     } finally {
       setSavingConfig(false);
     }
@@ -145,9 +145,9 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
         .update({ upvote_threshold: notifConfig.upvote_threshold })
         .eq('id', 1);
       if (error) throw error;
-      toast.success('Tetapan notifikasi dikemaskini');
+      toast.success(t('jpp:services_notifications_updated', 'Tetapan notifikasi dikemaskini'));
     } catch (e: any) {
-      toast.error('Gagal kemaskini tetapan notifikasi');
+      toast.error(t('jpp:services_notifications_update_failed', 'Gagal kemaskini tetapan notifikasi'));
     } finally {
       setSavingNotifConfig(false);
     }
@@ -160,9 +160,9 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
         .eq('id', 1);
       if (error) throw error;
       setNotifConfig(prev => ({ ...prev, last_notified_at: null }));
-      toast.success('Cooldown notifikasi ditetapkan semula');
+      toast.success(t('jpp:services_cooldown_reset', 'Cooldown notifikasi ditetapkan semula'));
     } catch (e: any) {
-      toast.error('Gagal menetapkan semula cooldown');
+      toast.error(t('jpp:services_cooldown_reset_failed', 'Gagal menetapkan semula cooldown'));
     }
   };
 
@@ -208,11 +208,11 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
         p_comment_id: id
       });
       if (error) throw error;
-      toast.success('Ulasan berjaya dipulihkan');
+      toast.success(t('jpp:services_comment_restored', 'Ulasan berjaya dipulihkan'));
       setReportedComments(prev => prev.filter(c => c.id !== id));
     } catch (err: any) {
       console.error(err);
-      toast.error('Gagal memulihkan ulasan');
+      toast.error(t('jpp:services_comment_restore_failed', 'Gagal memulihkan ulasan'));
     }
   };
 
@@ -229,9 +229,9 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
       });
       if (error) throw error;
       if (wasSoftDeleted) {
-        toast.success('Ulasan disembunyikan dengan selamat.');
+        toast.success(t('jpp:services_comment_hidden_safe', 'Ulasan disembunyikan dengan selamat.'));
       } else {
-        toast.success('Ulasan dipadamkan secara kekal.');
+        toast.success(t('jpp:services_comment_deleted_permanent', 'Ulasan dipadamkan secara kekal.'));
       }
       setDeleteCommentId(null);
       fetchData();
@@ -249,11 +249,11 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
     try {
       const { error } = await supabase.from('polysuara_confessions').delete().eq('id', deleteSuaraId);
       if (error) throw error;
-      toast.success('Luahan berjaya dipadam.');
+      toast.success(t('jpp:services_post_deleted', 'Luahan berjaya dipadam.'));
       setSuaraList(prev => prev.filter(item => item.id !== deleteSuaraId));
       setDeleteSuaraId(null);
     } catch (err: any) {
-      toast.error('Gagal memadam data luahan');
+      toast.error(t('jpp:services_post_delete_failed', 'Gagal memadam data luahan'));
     } finally {
       setDeletingRecord(false);
     }
@@ -266,7 +266,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
         .update({ is_approved: !currentStatus })
         .eq('id', id);
       if (error) throw error;
-      toast.success(!currentStatus ? 'Confession diluluskan' : 'Confession disembunyikan');
+      toast.success(!currentStatus ? t('jpp:services_confession_approved', 'Confession diluluskan') : t('jpp:services_confession_hidden', 'Confession disembunyikan'));
       setSuaraList(prev => prev.map(item => item.id === id ? { ...item, is_approved: !currentStatus } : item));
     } catch (err: any) {
       toast.error('Gagal kemaskini status');
@@ -279,7 +279,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
         p_confession_id: id
       });
       if (error) throw error;
-      toast.success('Confession dikembalikan ke paparan awam');
+      toast.success(t('jpp:services_confession_restored_public', 'Confession dikembalikan ke paparan awam'));
       setSuaraList(prev => prev.map(item => item.id === id ? { ...item, is_hidden_by_community: false, is_approved: true, downvotes: 0 } : item));
     } catch (err: any) {
       toast.error('Gagal memulihkan confession');

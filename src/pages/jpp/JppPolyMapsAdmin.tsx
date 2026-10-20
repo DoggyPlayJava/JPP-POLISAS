@@ -135,7 +135,7 @@ function WalkwayDrawingMap({
         
         if (nearestNode && minDistance <= SNAP_THRESHOLD_METERS) {
           onChange([...points, nearestNode]);
-          toast.success(`Disnap ke titik terdekat (${minDistance.toFixed(1)}m)`);
+          toast.success(t('jpp:polymaps_snap_nearest', 'Disnap ke titik terdekat ({{distance}}m)', { distance: minDistance.toFixed(1) }));
         } else {
           onChange([...points, [clickLat, clickLng]]);
         }
@@ -237,7 +237,7 @@ function WalkwayDrawingMap({
       
       {isDrawing && (
         <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60  text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
-          {points.length === 0 ? 'Sentuh peta untuk mula melukis jalan' : `Titik dilukis: ${points.length} (Sentuh peta untuk tambah)`}
+          {points.length === 0 ? t('jpp:polymaps_touch_map_to_draw', 'Sentuh peta untuk mula melukis jalan') : t('jpp:polymaps_points_drawn', 'Titik dilukis: {{count}} (Sentuh peta untuk tambah)', { count: points.length })}
         </div>
       )}
     </div>
@@ -523,16 +523,16 @@ export function JppPolyMapsAdmin() {
 
   const saveWalkway = async () => {
     if (!walkwayName.trim()) {
-      toast.error('Sila isi nama laluan');
+      toast.error(t('jpp:polymaps_enter_route_name', 'Sila isi nama laluan'));
       return;
     }
     if (drawingPoints.length < 2) {
-      toast.error('Sila lukis sekurang-kurangnya 2 titik pada peta');
+      toast.error(t('jpp:polymaps_min_points_error', 'Sila lukis sekurang-kurangnya 2 titik pada peta'));
       return;
     }
 
     setIsSaving(true);
-    const toastId = toast.loading('Menyimpan laluan...');
+    const toastId = toast.loading(t('jpp:polymaps_saving_route', 'Menyimpan laluan...'));
     try {
       const { error } = await supabase.from('imaps_walkways').insert({
         name: walkwayName,
@@ -542,7 +542,7 @@ export function JppPolyMapsAdmin() {
 
       if (error) throw error;
 
-      toast.success('Laluan berjaya disimpan!', { id: toastId });
+      toast.success(t('jpp:polymaps_route_saved', 'Laluan berjaya disimpan!'), { id: toastId });
       setWalkwayName('');
       setDrawingPoints([]);
       setIsWalkwayCovered(false);
@@ -561,7 +561,7 @@ export function JppPolyMapsAdmin() {
 
       fetchData();
     } catch (err: any) {
-      toast.error(err.message || 'Gagal menyimpan laluan', { id: toastId });
+      toast.error(err.message || t('jpp:polymaps_route_save_failed', 'Gagal menyimpan laluan'), { id: toastId });
     } finally {
       setIsSaving(false);
     }
@@ -571,14 +571,14 @@ export function JppPolyMapsAdmin() {
     setConfirmConfig({
       isOpen: true,
       title: t('jpp:polymaps_delete_route', 'Padam Laluan'),
-      description: 'Adakah anda pasti mahu memadam laluan ini? Tindakan ini tidak boleh diundur.',
+      description: t('jpp:polymaps_delete_route_confirm_desc', 'Adakah anda pasti mahu memadam laluan ini? Tindakan ini tidak boleh diundur.'),
       confirmLabel: t('jpp:polymaps_delete_route', 'Padam Laluan'),
       variant: 'danger',
       onConfirm: async () => {
         try {
           const { error } = await supabase.from('imaps_walkways').delete().eq('id', id);
           if (error) throw error;
-          toast.success('Laluan berjaya dipadam.');
+          toast.success(t('jpp:polymaps_route_deleted', 'Laluan berjaya dipadam.'));
           
           const userId = (await supabase.auth.getUser()).data.user?.id;
           if (userId) {
@@ -593,7 +593,7 @@ export function JppPolyMapsAdmin() {
 
           fetchData();
         } catch (err: any) {
-          toast.error('Gagal memadam laluan');
+          toast.error(t('jpp:polymaps_route_delete_failed', 'Gagal memadam laluan'));
         }
       },
     });
@@ -656,7 +656,7 @@ export function JppPolyMapsAdmin() {
   // --- Building Functions ---
   const saveBuilding = async () => {
     if (!currentBuilding.name || !currentBuilding.code) {
-      toast.error('Sila isi nama dan kod bangunan');
+      toast.error(t('jpp:polymaps_fill_building_info', 'Sila isi nama dan kod bangunan'));
       return;
     }
     

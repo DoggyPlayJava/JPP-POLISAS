@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2, Download, Star, Search, ChevronUp, ChevronDown,
@@ -106,6 +107,7 @@ function ToggleBtn({ label, status, loading, onToggle }: { label: string; status
 // Main Component
 // ─────────────────────────────────────────────────────────────────────────────
 export function JppAsramaPage() {
+  const { t } = useTranslation(['jpp', 'common']);
   const { user, profile, isSuperAdmin } = useAuth();
   const { activeSession, semesterString, refreshSession } = useAcademicSession();
 
@@ -316,13 +318,13 @@ export function JppAsramaPage() {
       if (student.isRecommended) {
         await supabase.from('asrama_recommendations').delete()
           .eq('user_id', student.id).eq('session', activeSession);
-        toast.success('Tandaan Disyorkan dibuang.');
+        toast.success(t('jpp:asrama_recommended_removed', 'Tandaan Disyorkan dibuang.'));
       } else {
         const note = `Disyorkan oleh ${profile?.full_name ?? 'JPP'}`;
         await supabase.from('asrama_recommendations').upsert({
           user_id: student.id, session: activeSession, notes: note, marked_by: user.id,
         }, { onConflict: 'user_id,session' });
-        toast.success('Pelajar ditandakan sebagai Disyorkan ⭐');
+        toast.success(t('jpp:asrama_recommended_added', 'Pelajar ditandakan sebagai Disyorkan ⭐'));
       }
       await fetchAll();
     } catch (err) {
@@ -338,7 +340,7 @@ export function JppAsramaPage() {
     try {
       await supabase.from('kamsis_applications').update({ status })
         .eq('user_id', student.id).eq('session', activeSession).eq('semester', semesterString);
-      toast.success(`Status dikemaskini kepada ${status}`);
+      toast.success(t('jpp:asrama_status_updated', 'Status dikemaskini kepada {{status}}', { status }));
 
       // ── Notifikasi kepada pelajar ──
       try {
@@ -476,7 +478,7 @@ export function JppAsramaPage() {
             </div>
             <div>
               <h1 className="font-black text-base text-slate-900 dark:text-white leading-none">
-                Papan Rujukan Asrama
+                {t('jpp:asrama_title', 'Papan Rujukan Asrama')}
               </h1>
               <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
                 Sesi
@@ -623,11 +625,11 @@ export function JppAsramaPage() {
               <thead>
                 <tr className="border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/20">
                   <th className="text-left px-4 py-3 font-black uppercase tracking-widest text-slate-400 w-10">#</th>
-                  <th className="text-left px-4 py-3 font-black uppercase tracking-widest text-slate-400"><button className="flex items-center gap-1 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" onClick={() => handleSort('nama')}>Nama <SortIcon k="nama" /></button></th>
-                  <th className="text-left px-4 py-3 font-black uppercase tracking-widest text-slate-400">Kohort</th>
-                  <th className="text-center px-3 py-3 font-black uppercase tracking-widest text-emerald-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('hpnm')}>HPNM <SortIcon k="hpnm" /></button></th>
-                  <th className="text-center px-3 py-3 font-black uppercase tracking-widest text-sky-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('pencapaian')}><Award className="w-3 h-3" /> Pencapaian <SortIcon k="pencapaian" /></button></th>
-                  <th className="text-center px-3 py-3 font-black uppercase tracking-widest text-amber-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('aktiviti')}><Zap className="w-3 h-3" /> Aktiviti <SortIcon k="aktiviti" /></button></th>
+                  <th className="text-left px-4 py-3 font-black uppercase tracking-widest text-slate-400"><button className="flex items-center gap-1 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" onClick={() => handleSort('nama')}>{t('jpp:asrama_th_name', 'Nama')} <SortIcon k="nama" /></button></th>
+                  <th className="text-left px-4 py-3 font-black uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_cohort', 'Kohort')}</th>
+                  <th className="text-center px-3 py-3 font-black uppercase tracking-widest text-emerald-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('hpnm')}>{t('jpp:asrama_th_cgpa', 'HPNM')} <SortIcon k="hpnm" /></button></th>
+                  <th className="text-center px-3 py-3 font-black uppercase tracking-widest text-sky-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('pencapaian')}><Award className="w-3 h-3" /> {t('jpp:asrama_th_achievements', 'Pencapaian')} <SortIcon k="pencapaian" /></button></th>
+                  <th className="text-center px-3 py-3 font-black uppercase tracking-widest text-amber-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('aktiviti')}><Zap className="w-3 h-3" /> {t('jpp:asrama_th_activities', 'Aktiviti')} <SortIcon k="aktiviti" /></button></th>
 
                   {activeTab === 'pemohon' || activeTab === 'rayuan' ? (
                     <>
@@ -673,8 +675,8 @@ export function JppAsramaPage() {
                           {s.kamsis_status === 'PENDING' ? (
                             isSuperAdmin ? (
                               <div className="flex items-center justify-center gap-2">
-                                <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">Lulus</button>
-                                <button onClick={() => updateStatus(s, 'REJECTED')} className="px-3 py-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">Tolak</button>
+                                <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_approve', 'Lulus')}</button>
+                                <button onClick={() => updateStatus(s, 'REJECTED')} className="px-3 py-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
                               </div>
                             ) : (
                               <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] font-black uppercase">Menunggu Kelulusan</span>
@@ -759,8 +761,8 @@ export function JppAsramaPage() {
                        s.kamsis_status === 'PENDING' ? (
                           isSuperAdmin ? (
                              <div className="flex items-center gap-2">
-                               <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">Lulus</button>
-                               <button onClick={() => updateStatus(s, 'REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">Tolak</button>
+                               <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_approve', 'Lulus')}</button>
+                               <button onClick={() => updateStatus(s, 'REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
                              </div>
                           ) : (
                              <span className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] font-black uppercase">Menunggu Kelulusan</span>
@@ -769,7 +771,7 @@ export function JppAsramaPage() {
                           isSuperAdmin ? (
                              <div className="flex items-center gap-2">
                                <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">Terima</button>
-                               <button onClick={() => updateStatus(s, 'APPEAL_REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">Tolak</button>
+                               <button onClick={() => updateStatus(s, 'APPEAL_REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
                              </div>
                           ) : (
                              <span className="px-2.5 py-1 rounded-md bg-amber-500/15 text-amber-500 text-[10px] font-black uppercase">Rayuan Diproses</span>
