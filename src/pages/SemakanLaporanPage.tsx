@@ -237,7 +237,7 @@ export function SemakanLaporanPage() {
       notificationContent = `JPP telah MENOLAK permohonan unlock anda untuk "${actionDialog.data.nama_program}". ${remarks ? 'Alasan: ' + remarks : ''}`;
     }
 
-    const toastId = toast.loading("Mengemaskini...");
+    const toastId = toast.loading(t('common:updating', 'Mengemas kini...'));
 
     // 1. Update Status Program
     const { error } = await supabase
@@ -246,7 +246,7 @@ export function SemakanLaporanPage() {
       .eq('id', actionDialog.data.id);
 
     if (error) {
-      toast.error("Gagal kemaskini.", { id: toastId });
+      toast.error(t('common:update_failed', 'Gagal mengemas kini.'), { id: toastId });
       return;
     }
 
@@ -263,7 +263,7 @@ export function SemakanLaporanPage() {
       } catch {} // Jangan block bisnes logic
     }
 
-    toast.success("Tindakan Berjaya!", { id: toastId });
+    toast.success(t('common:action_successful', 'Tindakan Berjaya!'), { id: toastId });
     loadData();
     setActionDialog({ open: false, type: null, data: null });
     setRemarks('');
@@ -271,13 +271,13 @@ export function SemakanLaporanPage() {
 
   // ── Overdue Reminder Engine ──
   const handleSendOverdueNotices = async () => {
-    const toastId = toast.loading("Mengimbas pangkalan data...");
+    const toastId = toast.loading(t('kpp:scanning_database', 'Mengimbas pangkalan data...'));
 
     // Fetch all active programs
     const { data: allPrograms, error } = await supabase.from('programs').select('id, nama_program, tarikh_mula, tarikh_tamat, status, user_id').not('status', 'eq', 'COMPLETED');
 
     if (error || !allPrograms) {
-      toast.error("Ralat mengakses pangkalan data.", { id: toastId });
+      toast.error(t('kpp:db_access_error', 'Ralat mengakses pangkalan data.'), { id: toastId });
       return;
     }
 
@@ -316,15 +316,15 @@ export function SemakanLaporanPage() {
     }
 
     if (noticesToInsert.length === 0) {
-      toast.success("Tiada program yang tertunggak. Semua takwim berjalan lancar!", { id: toastId });
+      toast.success(t('kpp:no_overdue_programs', 'Tiada program yang tertunggak. Semua takwim berjalan lancar!'), { id: toastId });
       return;
     }
 
     const { error: insertError } = await supabase.from('notifications').insert(noticesToInsert);
     if (insertError) {
-      toast.error("Gagal menghantar notis peringatan.", { id: toastId });
+      toast.error(t('kpp:reminder_notice_failed', 'Gagal menghantar notis peringatan.'), { id: toastId });
     } else {
-      toast.success(`Berjaya menghantar ${noticesToInsert.length} notis peringatan!`, { id: toastId });
+      toast.success(t('kpp:reminder_notices_sent', 'Berjaya menghantar {{count}} notis peringatan!', { count: noticesToInsert.length }), { id: toastId });
     }
   };
 
@@ -336,7 +336,7 @@ export function SemakanLaporanPage() {
   });
 
   const handleStatusUpdate = async (r: any, newStatus: string, remarksInput: string = '') => {
-    const toastId = toast.loading("Memproses...");
+    const toastId = toast.loading(t('common:processing', 'Memproses...'));
     const { error } = await supabase.from('club_reports').update({ 
       status: newStatus, 
       reviewed_by: user?.id, 
@@ -345,9 +345,9 @@ export function SemakanLaporanPage() {
     }).eq('id', r.id);
     
     if (error) {
-      toast.error('Gagal memproses dokumen.', { id: toastId });
+      toast.error(t('kpp:process_doc_failed', 'Gagal memproses dokumen.'), { id: toastId });
     } else { 
-      toast.success(`Dokumen ${newStatus.toLowerCase()}!`, { id: toastId }); 
+      toast.success(t('kpp:document_status_toast', 'Dokumen {{status}}!', { status: newStatus.toLowerCase() }), { id: toastId }); 
       
       const isApproved = newStatus === 'Diluluskan';
       const notificationTitle = isApproved ? '✅ Laporan Diluluskan' : '❌ Laporan Ditolak';
@@ -586,7 +586,7 @@ export function SemakanLaporanPage() {
                           )}
                         </p>
                       </div>
-                      <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px] font-black uppercase shrink-0">Selesai</Badge>
+                      <Badge className="bg-emerald-500/10 text-emerald-500 border-none text-[10px] font-black uppercase shrink-0">{t('common:completed', 'Selesai')}</Badge>
                     </div>
                   ))}
                 </div>
@@ -856,7 +856,7 @@ export function SemakanLaporanPage() {
             <Textarea
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
-              placeholder="Taip alasan atau ulasan di sini..."
+              placeholder={t('kpp:type_reason_placeholder', 'Taip alasan atau ulasan di sini...')}
               className="rounded-2xl bg-muted border-none min-h-[120px] p-5 font-medium focus-visible:ring-primary/20"
             />
           </div>
@@ -880,7 +880,7 @@ export function SemakanLaporanPage() {
             <Textarea
               value={reportRemarks}
               onChange={(e) => setReportRemarks(e.target.value)}
-              placeholder="Berikan alasan kenapa dokumen ini ditolak..."
+              placeholder={t('kpp:reject_reason_placeholder', 'Berikan alasan kenapa dokumen ini ditolak...')}
               className="rounded-2xl bg-muted border-none min-h-[120px] p-5 font-medium focus-visible:ring-rose-500/20"
             />
           </div>

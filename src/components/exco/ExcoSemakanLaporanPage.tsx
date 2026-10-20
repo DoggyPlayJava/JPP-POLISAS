@@ -4,6 +4,7 @@
 // RBAC: hanya MT yang oversee unit tersebut atau SuperAdmin
 // ============================================================
 import React, { useEffect, useState, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -45,6 +46,7 @@ interface ExcoReport {
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 export function ExcoSemakanLaporanPage() {
+  const { t } = useTranslation(['kpp', 'common']);
   const { unitCode }          = useParams<{ unitCode: string }>();
   const { user, isSuperAdmin, profile } = useAuth();
   const navigate              = useNavigate();
@@ -118,9 +120,9 @@ export function ExcoSemakanLaporanPage() {
       
       if (error) throw error;
       setAutoPdfEnabled(newVal);
-      toast.success(`Janaan Auto-PDF ${newVal ? 'DIBUKA' : 'DITUTUP'} untuk ${excoLabel}`);
+      toast.success(t('kpp:auto_pdf_toggle_success', 'Janaan Auto-PDF {{status}} untuk {{unit}}', { status: newVal ? t('common:opened', 'DIBUKA') : t('common:closed_upper', 'DITUTUP'), unit: excoLabel }));
     } catch (err: any) {
-      toast.error('Ralat mengemas kini tetapan: ' + err.message);
+      toast.error(t('kpp:settings_update_error', 'Ralat mengemas kini tetapan: ') + err.message);
     } finally {
       setSettingsLoading(false);
     }
@@ -130,7 +132,7 @@ export function ExcoSemakanLaporanPage() {
   const handleAction = async () => {
     if (!actionDialog.report || !actionDialog.type || !user) return;
     if (actionDialog.type === 'Ditolak' && !remarks.trim()) {
-      toast.error('Sila masukkan nota penolakan.');
+      toast.error(t('kpp:please_enter_rejection_notes', 'Sila masukkan nota penolakan.'));
       return;
     }
     setSubmitting(true);
@@ -162,14 +164,14 @@ export function ExcoSemakanLaporanPage() {
 
       toast.success(
         actionDialog.type === 'Diluluskan'
-          ? 'Laporan diluluskan dan diarkibkan!'
-          : 'Laporan ditolak dan penghantar dimaklumkan.'
+          ? t('kpp:report_approved_and_archived', 'Laporan diluluskan dan diarkibkan!')
+          : t('kpp:report_rejected_and_notified', 'Laporan ditolak dan penghantar dimaklumkan.')
       );
       setActionDialog({ open: false, type: null, report: null });
       setRemarks('');
       loadReports();
     } catch (err: any) {
-      toast.error(err.message || 'Ralat memproses tindakan.');
+      toast.error(err.message || t('common:action_failed', 'Ralat memproses tindakan.'));
     } finally {
       setSubmitting(false);
     }
@@ -193,16 +195,16 @@ export function ExcoSemakanLaporanPage() {
         <div className="w-20 h-20 rounded-[2rem] bg-rose-500/10 flex items-center justify-center">
           <Lock className="text-rose-400 w-9 h-9" />
         </div>
-        <h2 className="text-3xl font-black text-white tracking-tight">Akses Terhad</h2>
+        <h2 className="text-3xl font-black text-white tracking-tight">{t('common:access_restricted', 'Akses Terhad')}</h2>
         <p className="text-sm text-white/30 font-medium max-w-xs">
-          Halaman ini hanya untuk MT yang mengesahkan unit {excoLabel} dan Admin JPP.
+          {t('kpp:restricted_exco_desc', 'Halaman ini hanya untuk MT yang mengesahkan unit {{label}} dan Admin JPP.', { label: excoLabel })}
         </p>
         <Button
           variant="ghost"
           onClick={() => navigate(-1)}
           className="text-white/30 hover:text-white text-xs font-black uppercase tracking-widest"
         >
-          ← Kembali
+          {t('common:back', '← Kembali')}
         </Button>
       </div>
     );
@@ -223,19 +225,19 @@ export function ExcoSemakanLaporanPage() {
               {excoUnit}
             </span>
             <span className="text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full bg-white/5 text-white/40">
-              Semak Laporan
+              {t('kpp:check_report', 'Semak Laporan')}
             </span>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div>
-              <h1 className="text-4xl font-black tracking-tight text-white">Semakan Laporan</h1>
+              <h1 className="text-4xl font-black tracking-tight text-white">{t('kpp:report_review', 'Semakan Laporan')}</h1>
               <p className="text-sm text-white/40 mt-1 font-medium">{excoLabel}</p>
             </div>
             
             <div className="flex items-center gap-3 p-3 rounded-2xl bg-white/[0.02] border border-white/[0.04]">
               <div className="flex-1 min-w-[120px]">
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-0.5">Janaan Auto-PDF</p>
-                <p className="text-[10px] text-white/30 font-medium leading-tight">Benarkan Exco jana PDF automatik</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/60 mb-0.5">{t('kpp:auto_pdf_generation', 'Janaan Auto-PDF')}</p>
+                <p className="text-[10px] text-white/30 font-medium leading-tight">{t('kpp:allow_exco_auto_pdf', 'Benarkan Exco jana PDF automatik')}</p>
               </div>
               <button
                 onClick={toggleAutoPdf}
@@ -257,9 +259,9 @@ export function ExcoSemakanLaporanPage() {
         {/* Summary cards */}
         <div className="grid grid-cols-3 gap-3">
           {[
-            { key: 'Menunggu',   label: 'Menunggu',   count: counts.Menunggu,   color: '#f59e0b', bg: '#f59e0b15' },
-            { key: 'Diluluskan', label: 'Diluluskan', count: counts.Diluluskan, color: '#10b981', bg: '#10b98115' },
-            { key: 'Ditolak',    label: 'Ditolak',    count: counts.Ditolak,    color: '#ef4444', bg: '#ef444415' },
+            { key: 'Menunggu',   label: t('common:pending', 'Menunggu'),   count: counts.Menunggu,   color: '#f59e0b', bg: '#f59e0b15' },
+            { key: 'Diluluskan', label: t('common:approved', 'Diluluskan'), count: counts.Diluluskan, color: '#10b981', bg: '#10b98115' },
+            { key: 'Ditolak',    label: t('common:rejected', 'Ditolak'),    count: counts.Ditolak,    color: '#ef4444', bg: '#ef444415' },
           ].map(stat => (
             <button
               key={stat.key}
@@ -282,13 +284,13 @@ export function ExcoSemakanLaporanPage() {
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <h2 className="text-[10px] font-black uppercase tracking-widest text-white/40">
-              Laporan {filterTab}
+              {t('kpp:report_filter_tab', 'Laporan {{status}}', { status: filterTab === 'Menunggu' ? t('common:pending', 'Menunggu') : filterTab === 'Diluluskan' ? t('common:approved', 'Diluluskan') : t('common:rejected', 'Ditolak') })}
             </h2>
             <button
               onClick={loadReports}
               className="text-[10px] font-black uppercase tracking-widest text-white/25 hover:text-white/50 flex items-center gap-1.5 transition-all"
             >
-              <RefreshCw className="w-3 h-3" /> Segarkan
+              <RefreshCw className="w-3 h-3" /> {t('common:refresh', 'Segarkan')}
             </button>
           </div>
 
@@ -302,7 +304,7 @@ export function ExcoSemakanLaporanPage() {
             <div className="py-16 rounded-[2rem] border-2 border-dashed border-white/[0.05] flex flex-col items-center justify-center gap-3 text-center">
               <FileText className="w-8 h-8 text-white/10" />
               <p className="text-[10px] font-black uppercase tracking-widest text-white/20">
-                Tiada laporan {filterTab.toLowerCase()}
+                {t('kpp:no_reports_status', 'Tiada laporan {{status}}', { status: filterTab === 'Menunggu' ? t('common:pending', 'Menunggu') : filterTab === 'Diluluskan' ? t('common:approved', 'Diluluskan') : t('common:rejected', 'Ditolak') })}
               </p>
             </div>
           ) : (
@@ -337,7 +339,7 @@ export function ExcoSemakanLaporanPage() {
               className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white/25 hover:text-white/50 transition-all"
             >
               <Archive className="w-3.5 h-3.5" />
-              Arkib Laporan ({archived.length})
+              {t('kpp:reports_archive_count', 'Arkib Laporan ({{count}})', { count: archived.length })}
               {showArchived ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
             </button>
             <AnimatePresence>
@@ -374,8 +376,8 @@ export function ExcoSemakanLaporanPage() {
           >
             <DialogTitle className="text-lg font-black flex items-center gap-2">
               {actionDialog.type === 'Diluluskan'
-                ? <><CheckCircle2 className="w-5 h-5 text-emerald-400" /> Lulus Laporan</>
-                : <><XCircle className="w-5 h-5 text-rose-400" /> Tolak Laporan</>
+                ? <><CheckCircle2 className="w-5 h-5 text-emerald-400" /> {t('kpp:approve_report', 'Lulus Laporan')}</>
+                : <><XCircle className="w-5 h-5 text-rose-400" /> {t('kpp:reject_report', 'Tolak Laporan')}</>
               }
             </DialogTitle>
             {actionDialog.report && (
@@ -389,12 +391,12 @@ export function ExcoSemakanLaporanPage() {
             {actionDialog.type === 'Ditolak' && (
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-white/40">
-                  Nota Penolakan *
+                  {t('kpp:rejection_note_req', 'Nota Penolakan *')}
                 </label>
                 <Textarea
                   value={remarks}
                   onChange={e => setRemarks(e.target.value)}
-                  placeholder="Nyatakan sebab penolakan dengan jelas..."
+                  placeholder={t('kpp:rejection_note_placeholder', 'Nyatakan sebab penolakan dengan jelas...')}
                   className="rounded-2xl bg-white/[0.05] border-white/[0.08] text-white placeholder:text-white/20 font-medium resize-none min-h-[100px]"
                 />
               </div>
@@ -403,7 +405,7 @@ export function ExcoSemakanLaporanPage() {
             {actionDialog.type === 'Diluluskan' && (
               <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20">
                 <p className="text-xs text-emerald-400 font-medium">
-                  Laporan akan diluluskan, diarkibkan, dan penghantar akan menerima notifikasi.
+                  {t('kpp:report_approve_desc', 'Laporan akan diluluskan, diarkibkan, dan penghantar akan menerima notifikasi.')}
                 </p>
               </div>
             )}
@@ -415,7 +417,7 @@ export function ExcoSemakanLaporanPage() {
               onClick={() => { setActionDialog({ open: false, type: null, report: null }); setRemarks(''); }}
               className="font-black text-[10px] uppercase tracking-widest text-white/30 hover:text-white rounded-xl"
             >
-              Batal
+              {t('common:cancel', 'Batal')}
             </Button>
             <Button
               onClick={handleAction}
@@ -426,8 +428,8 @@ export function ExcoSemakanLaporanPage() {
               )}
             >
               {submitting
-                ? 'Memproses...'
-                : actionDialog.type === 'Diluluskan' ? 'Sahkan & Lulus' : 'Sahkan & Tolak'
+                ? t('common:processing', 'Memproses...')
+                : actionDialog.type === 'Diluluskan' ? t('kpp:confirm_and_approve', 'Sahkan & Lulus') : t('kpp:confirm_and_reject', 'Sahkan & Tolak')
               }
             </Button>
           </DialogFooter>
@@ -439,18 +441,21 @@ export function ExcoSemakanLaporanPage() {
 
 // ─── CARD ────────────────────────────────────────────────────────────────────
 function ExcoReportCard({ report, themeColor, showActions, onApprove, onReject }: {
+  key?: React.Key;
   report: ExcoReport;
   themeColor: string;
   showActions: boolean;
   onApprove: () => void;
   onReject: () => void;
 }) {
+  const { t } = useTranslation(['kpp', 'common']);
   const statusColors: Record<string, { text: string; bg: string }> = {
     'Menunggu':   { text: '#f59e0b', bg: '#f59e0b15' },
     'Diluluskan': { text: '#10b981', bg: '#10b98115' },
     'Ditolak':    { text: '#ef4444', bg: '#ef444415' },
   };
   const sc = statusColors[report.status] || statusColors['Menunggu'];
+  const statusLabel = report.status === 'Menunggu' ? t('common:pending', 'Menunggu') : report.status === 'Diluluskan' ? t('common:approved', 'Diluluskan') : t('common:rejected', 'Ditolak');
 
   return (
     <div className={cn(
@@ -471,7 +476,7 @@ function ExcoReportCard({ report, themeColor, showActions, onApprove, onReject }
             className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shrink-0"
             style={{ background: sc.bg, color: sc.text }}
           >
-            {report.status}
+            {statusLabel}
           </span>
         </div>
 
@@ -502,7 +507,7 @@ function ExcoReportCard({ report, themeColor, showActions, onApprove, onReject }
             className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-1 transition-opacity hover:opacity-70"
             style={{ color: themeColor }}
           >
-            <ExternalLink className="w-3 h-3" /> Buka Fail
+            <ExternalLink className="w-3 h-3" /> {t('kpp:view_file', 'Buka Fail')}
           </a>
 
           {showActions && (
@@ -511,13 +516,13 @@ function ExcoReportCard({ report, themeColor, showActions, onApprove, onReject }
                 onClick={onReject}
                 className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 transition-colors"
               >
-                Tolak
+                {t('common:reject', 'Tolak')}
               </button>
               <button
                 onClick={onApprove}
                 className="px-4 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 transition-colors"
               >
-                Lulus
+                {t('common:approve', 'Lulus')}
               </button>
             </div>
           )}

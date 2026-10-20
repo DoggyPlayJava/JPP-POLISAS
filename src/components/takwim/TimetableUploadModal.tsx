@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Dialog,
   DialogContent,
@@ -58,6 +59,7 @@ export function TimetableUploadModal({
   onSuccess,
   onParsed,
 }: TimetableUploadModalProps) {
+  const { t } = useTranslation(['kpp', 'common']);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [file, setFile] = useState<File | null>(null);
@@ -241,10 +243,10 @@ export function TimetableUploadModal({
         setErrorMessage(
           'Imej terlalu kecil / resolusi rendah. Sila muat naik imej asal (bukan screenshot yang di-compress WhatsApp/Telegram), atau screenshot semula dalam keadaan landskap (mendatar).',
         );
-        toast.error('Imej resolusi rendah. Muat naik imej asal (landskap).');
+        toast.error(t('kpp:low_res_image_toast', 'Imej resolusi rendah. Muat naik imej asal (landskap).'));
       } else {
         setErrorMessage('Gagal memproses imej: ' + (err.message || 'Format imej tidak disokong.'));
-        toast.error('Gagal mengekstrak jadual dari imej.');
+        toast.error(t('kpp:failed_extract_schedule_image', 'Gagal mengekstrak jadual dari imej.'));
       }
     } finally {
       setIsParsing(false);
@@ -255,16 +257,16 @@ export function TimetableUploadModal({
     if (fileKind === 'image') {
       // Image already parsed on selection; open preview (with reject guard)
       if (!previewData) {
-        toast.error('Sila tunggu pemprosesan imej selesai.');
+        toast.error(t('kpp:wait_image_processing_toast', 'Sila tunggu pemprosesan imej selesai.'));
         return;
       }
       const quality = imageQuality;
       if (quality && quality.score < 50) {
-        toast.error(`Ketepatan terlalu rendah (${quality.score}%). Sila muat naik imej yang lebih jelas.`);
+        toast.error(t('kpp:accuracy_too_low_toast', 'Ketepatan terlalu rendah ({{score}}%). Sila muat naik imej yang lebih jelas.', { score: quality.score }));
         return;
       }
       if (previewData.entries.length === 0) {
-        toast('Tiada slot kuliah dikesan pada imej ini. Sila semak semula atau isi secara manual.');
+        toast(t('kpp:no_slots_detected_image', 'Tiada slot kuliah dikesan pada imej ini. Sila semak semula atau isi secara manual.'));
       }
       if (onParsed) onParsed(previewData);
       setIsPreviewOpen(true);
@@ -273,7 +275,7 @@ export function TimetableUploadModal({
 
     // PDF path (existing)
     if (!pdfBuffer || selectedPageIndex === null) {
-      toast.error('Sila pilih muka surat atau kelas terlebih dahulu.');
+      toast.error(t('kpp:select_page_or_class_first', 'Sila pilih muka surat atau kelas terlebih dahulu.'));
       return;
     }
 
@@ -305,7 +307,7 @@ export function TimetableUploadModal({
       );
 
       if (parsedResult.entries.length === 0) {
-        toast('Tiada slot kuliah ditemui pada muka surat ini. Sila semak semula atau tambah secara manual.');
+        toast(t('kpp:no_slots_for_view', 'Tiada slot kuliah ditemui pada muka surat ini. Sila semak semula atau tambah secara manual.'));
       }
 
       if (onParsed) {
@@ -316,8 +318,8 @@ export function TimetableUploadModal({
       setIsPreviewOpen(true);
     } catch (err: any) {
       console.error('Failed to parse timetable page:', err);
-      setErrorMessage('Gagal memproses jadual: ' + (err.message || 'Format jadual tidak disokong.'));
-      toast.error('Gagal mengekstrak jadual dari PDF.');
+      setErrorMessage(t('kpp:failed_to_save_timetable', 'Gagal memproses jadual: ') + (err.message || ''));
+      toast.error(t('kpp:failed_extract_schedule_pdf', 'Gagal mengekstrak jadual dari PDF.'));
     } finally {
       setIsParsing(false);
     }
@@ -352,11 +354,11 @@ export function TimetableUploadModal({
                 <Calendar className="w-4 h-4" />
               </div>
               <DialogTitle className="text-lg font-bold">
-                Muat Naik Jadual Waktu Kuliah
+                {t('kpp:upload_class_timetable', 'Muat Naik Jadual Waktu Kuliah')}
               </DialogTitle>
             </div>
             <DialogDescription className="text-sm text-muted-foreground">
-              Muat naik jadual waktu rasmi (.pdf) atau screenshot (.png/.jpg) — sistem akan ekstrak secara pintar.
+              {t('kpp:upload_timetable_desc', 'Muat naik jadual waktu rasmi (.pdf) atau screenshot (.png/.jpg) — sistem akan ekstrak secara pintar.')}
             </DialogDescription>
           </DialogHeader>
 
@@ -384,10 +386,10 @@ export function TimetableUploadModal({
                 <Upload className="w-6 h-6" />
               </div>
               <p className="text-sm font-semibold mb-1">
-                Pilih fail PDF atau screenshot, atau seret ke sini
+                {t('kpp:dropzone_title', 'Pilih fail PDF atau screenshot, atau seret ke sini')}
               </p>
               <p className="text-xs text-muted-foreground">
-                Menyokong PDF jadual jabatan & screenshot (PNG/JPG/WebP)
+                {t('kpp:dropzone_subtitle', 'Menyokong PDF jadual jabatan & screenshot (PNG/JPG/WebP)')}
               </p>
             </div>
           )}
@@ -397,8 +399,8 @@ export function TimetableUploadModal({
             <div className="p-6 rounded-2xl border bg-muted/40 flex flex-col items-center justify-center gap-3 text-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <div className="space-y-1">
-                <p className="text-sm font-medium">Sedang mengimbas kandungan...</p>
-                <p className="text-xs text-muted-foreground">Mencari senarai kelas dan jadual waktu.</p>
+                <p className="text-sm font-medium">{t('kpp:scanning_content', 'Sedang mengimbas kandungan...')}</p>
+                <p className="text-xs text-muted-foreground">{t('kpp:searching_classes_schedules', 'Mencari senarai kelas dan jadual waktu.')}</p>
               </div>
             </div>
           )}
@@ -408,8 +410,8 @@ export function TimetableUploadModal({
             <div className="p-6 rounded-2xl border bg-muted/40 flex flex-col items-center justify-center gap-3 text-center">
               <Loader2 className="w-8 h-8 animate-spin text-primary" />
               <div className="space-y-1">
-                <p className="text-sm font-medium">Mengekstrak jadual dari imej...</p>
-                <p className="text-xs text-muted-foreground">Ini mungkin mengambil masa beberapa saat.</p>
+                <p className="text-sm font-medium">{t('kpp:extracting_image_timetable', 'Mengekstrak jadual dari imej...')}</p>
+                <p className="text-xs text-muted-foreground">{t('kpp:may_take_a_few_seconds', 'Ini mungkin mengambil masa beberapa saat.')}</p>
               </div>
             </div>
           )}
@@ -443,7 +445,7 @@ export function TimetableUploadModal({
                   onClick={handleReset}
                   className="text-xs text-muted-foreground hover:text-foreground"
                 >
-                  Tukar Fail
+                  {t('kpp:change_file', 'Tukar Fail')}
                 </Button>
               </div>
 
@@ -453,7 +455,7 @@ export function TimetableUploadModal({
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-semibold flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5 text-primary" />
-                      Anggaran Ketepatan
+                      {t('kpp:estimated_accuracy', 'Anggaran Ketepatan')}
                     </span>
                     <span className={`text-lg font-black ${imageQuality.score >= 75 ? 'text-emerald-600' : imageQuality.score >= 50 ? 'text-amber-600' : 'text-rose-600'}`}>
                       {imageQuality.score}%
@@ -470,9 +472,9 @@ export function TimetableUploadModal({
                   {/* score components — 3 weighted factors, transparent formula */}
                   <div className="space-y-1.5">
                     {[
-                      ['Kualiti imej', imageQuality.geoScore, 35],
-                      ['Keyakinan OCR', imageQuality.ocrConfidence, 45],
-                      ['Hari dikesan', Math.round((imageQuality.daysDetected / 5) * 100), 20],
+                      [t('kpp:image_quality', 'Kualiti imej'), imageQuality.geoScore, 35],
+                      [t('kpp:ocr_confidence', 'Keyakinan OCR'), imageQuality.ocrConfidence, 45],
+                      [t('kpp:days_detected', 'Hari dikesan'), Math.round((imageQuality.daysDetected / 5) * 100), 20],
                     ].map(([label, val, weight]) => (
                       <div key={label as string} className="flex items-center gap-2">
                         <span className="text-[11px] text-muted-foreground w-24 shrink-0">
@@ -491,7 +493,7 @@ export function TimetableUploadModal({
 
                   <p className="text-[11px] text-muted-foreground flex items-center gap-1.5">
                     <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                    {imageQuality.daysDetected}/5 hari dikesan · kelas {imageQuality.daysDetected >= 3 ? 'dijumpai' : 'tidak lengkap'}
+                    {imageQuality.daysDetected}/5 {t('kpp:days_detected', 'Hari dikesan')} · {t('kpp:class', 'Kelas')} {imageQuality.daysDetected >= 3 ? 'dijumpai' : 'tidak lengkap'}
                   </p>
 
                   {/* mandatory review notice */}
@@ -499,8 +501,8 @@ export function TimetableUploadModal({
                     {imageQuality.score < 50 ? <ShieldAlert className="w-3.5 h-3.5 shrink-0 mt-0.5" /> : <TriangleAlert className="w-3.5 h-3.5 shrink-0 mt-0.5" />}
                     <span>
                       {imageQuality.score < 50
-                        ? 'Ketepatan terlalu rendah. Sila muat naik imej yang lebih jelas atau guna fail PDF.'
-                        : 'Sila semak setiap slot sebelum menyimpan. OCR mungkin tersalah baca kod subjek.'}
+                        ? t('kpp:accuracy_too_low', 'Ketepatan terlalu rendah. Sila muat naik imej yang lebih jelas atau guna fail PDF.')
+                        : t('kpp:review_before_saving_warning', 'Sila semak setiap slot sebelum menyimpan. OCR mungkin tersalah baca kod subjek.')}
                     </span>
                   </div>
                 </div>
@@ -511,19 +513,19 @@ export function TimetableUploadModal({
                 <div className="space-y-2 p-3.5 rounded-xl border bg-muted/30">
                   <label className="text-xs font-semibold flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5 text-primary" />
-                    Pilih Kelas Anda ({scannedClasses.length} kelas dijumpai):
+                    {t('kpp:choose_your_class', 'Pilih Kelas Anda ({{count}} kelas dijumpai):', { count: scannedClasses.length })}
                   </label>
                   <Select
                     value={String(selectedPageIndex)}
                     onValueChange={val => setSelectedPageIndex(parseInt(val, 10))}
                   >
                     <SelectTrigger className="h-9 text-sm bg-background">
-                      <SelectValue placeholder="Pilih kelas" />
+                      <SelectValue placeholder={t('kpp:choose_class', 'Pilih kelas')} />
                     </SelectTrigger>
                     <SelectContent>
                       {scannedClasses.map(c => (
                         <SelectItem key={c.pageIndex} value={String(c.pageIndex)}>
-                          Kelas {c.className} (Muka Surat {c.pageIndex})
+                          {t('kpp:class', 'Kelas')} {c.className} ({t('kpp:page', 'Muka Surat')} {c.pageIndex})
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -536,11 +538,11 @@ export function TimetableUploadModal({
                 <div className="p-3.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-center gap-2.5 text-emerald-800 dark:text-emerald-200">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
                   <div className="text-xs">
-                    Kelas dikesan secara automatik:{' '}
+                    {t('kpp:class_auto_detected', 'Kelas dikesan secara automatik:')}{' '}
                     <span className="font-bold text-emerald-700 dark:text-emerald-300">
                       {scannedClasses[0].className}
                     </span>{' '}
-                    (Muka Surat {scannedClasses[0].pageIndex})
+                    ({t('kpp:page', 'Muka Surat')} {scannedClasses[0].pageIndex})
                   </div>
                 </div>
               )}
@@ -550,10 +552,10 @@ export function TimetableUploadModal({
                 <div className="p-3.5 rounded-xl border border-amber-500/30 bg-amber-500/10 space-y-2 text-amber-800 dark:text-amber-200 text-xs">
                   <div className="flex items-center gap-2 font-semibold">
                     <AlertCircle className="w-4 h-4 text-amber-600 shrink-0" />
-                    <span>Tiada pengecam kelas standard dikesan</span>
+                    <span>{t('kpp:no_standard_class_detected', 'Tiada pengecam kelas standard dikesan')}</span>
                   </div>
                   <p>
-                    Format header kelas tidak ditemui secara automatik. Sila gunakan 'Isi Jadual Manual' atau teruskan dengan muka surat 1.
+                    {t('kpp:no_class_format_fallback', 'Format header kelas tidak ditemui secara automatik. Sila gunakan "Isi Jadual Manual" atau teruskan dengan muka surat 1.')}
                   </p>
                 </div>
               )}
@@ -570,7 +572,7 @@ export function TimetableUploadModal({
               className="w-full sm:w-auto text-xs gap-1.5"
             >
               <PenLine className="w-3.5 h-3.5" />
-              Isi Jadual Manual
+              {t('kpp:manual_entry', 'Isi Jadual Manual')}
             </Button>
 
             {file && !isScanning && (
@@ -584,11 +586,11 @@ export function TimetableUploadModal({
                 {isParsing ? (
                 <>
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                  Memproses Jadual...
+                  {t('kpp:processing_timetable', 'Memproses Jadual...')}
                 </>
                 ) : (
                 <>
-                  {fileKind === 'image' ? 'Semak & Sahkan Jadual' : 'Pratonton & Sahkan Jadual'}
+                  {fileKind === 'image' ? t('kpp:review_confirm_timetable', 'Semak & Sahkan Jadual') : t('kpp:preview_confirm_timetable', 'Pratonton & Sahkan Jadual')}
                   <ArrowRight className="w-3.5 h-3.5" />
                 </>
                 )}

@@ -4871,3 +4871,41 @@ Domain 4 merangkumi dua modul teras acara dan anugerah kecemerlangan mahasiswa P
    - `src/__tests__/Domain4EmsMakmpI18n.test.tsx` (30 ujian integrasi Domain 4 sedia ada).
    - `src/locales/__tests__/masterLocales.test.ts` (20 ujian pengesahan integriti kamus).
    - **Keputusan:** 70/70 ujian berkaitan Domain 4 lulus sepenuhnya (100% pass rate).
+
+
+### 36.17 Penyetempatan Menyeluruh Domain 1 & Domain 8 (Student Hub, Club Management, Standalone Pages & Shared Utility Modals)
+Domain 1 dan Domain 8 merangkumi tulang belakang interaksi harian mahasiswa di portal utama POLISAS: direktori aktiviti pelajar, templat pengurusan aktiviti exco dan semakan laporan berkala, papan pemuka utama pelajar dan Majlis Tertinggi (MT), direktori dan profil rasmi kelab/persatuan, carian pantas bersepadu kampus, pengesahan pas kehadiran QR acara, wisard janaan bajet AI Nexus, modal delegasi tugasan pintar, sistem pengimbas OCR jadual waktu kuliah PDF/imej, modal penyuntingan dan semakan konflik jadual waktu, serta kawalan UI paparan kertas kerja rasmi.
+
+1. **Senarai Fail Terlibat (15 Fail Lengkap 100% Diterjemahkan Baris-demi-Baris):**
+   - `src/pages/AktivitiFull.tsx` (Pusat Direktori & Takwim Aktiviti Pelajar: tab aktiviti kelab, takwim rasmi, statistik penganjuran, penapis status masa nyata, borang cipta/sunting aktiviti kelab, muat naik gambar bukti ke Google Drive, permohonan automatik merit rasmi e-Akademik, dialog permohonan buka kunci tarikh JPP, serta pengarkiban aktiviti)
+   - `src/components/exco/ExcoAktivitiPage.tsx` (Templat Universal Pengurus Aktiviti Exco: antaramuka modular seragam untuk semua unit exco, borang aktiviti tanpa kertas kerja, sokongan muat naik bukti dan pemilih keutamaan tugasan)
+   - `src/pages/SemakanLaporanPage.tsx` (Portal Semakan Laporan Berkala Kelab: pengimbas laporan tertunggak takwim automatik, pemicu notis peringatan pintar ke peti masuk pelajar, modal audit & penolakan bertulis, lencana status dokumen, serta arkib laporan kohort)
+   - `src/components/exco/ExcoSemakanLaporanPage.tsx` (Templat Universal Semakan Laporan Exco: panel kawalan pengesahan MT, suis janaan Auto-PDF peringkat unit, penapis status dwi-bahasa dan modal tindakan kelulusan/penolakan)
+   - `src/pages/DashboardPage.tsx` (Papan Pemuka Utama Pelajar & MT: kad metrik langsung keahlian/program/laporan, penunjuk tugasan lewat beranimasi pulse, aliran kelulusan merit dan pengesahan tugasan MT, carta analitik taburan peranan & prestasi, serta wisard sokongan AI Nexus)
+   - `src/pages/AhliPage.tsx` (Pengurusan Ahli & Jawatankuasa Kelab: senarai semak ahli aktif, lantikan peranan jawatankuasa berperingkat, eksport senarai ke fail lejar, penapis status keahlian serta dialog tindakan penyingkiran/penarikan diri)
+   - `src/pages/KelabPage.tsx` (Direktori Kelab & Persatuan Mahasiswa: grid visualisasi kelab mengikut kategori Akademik/Sukan/Uniform/Umum, penguatkuasaan had keahlian dan syarat kelayakan GEOSAS JKA, borang permohonan kepimpinan Presiden atau ahli biasa, serta aliran permohonan penarikan diri bersurat ke penasihat)
+   - `src/pages/CarianPage.tsx` (Carian Pantas Bersepadu Seluruh Kampus: bar carian global dengan cadangan pintar, penapis pantas mengikut domain aktiviti/kelab/lokasi, sejarah carian terkini dan pembilang hasil carian tepat)
+   - `src/pages/ClubDetailPage.tsx` (Profil Awam & Pengenalan Kelab: paparan maklumat penasihat kelab, senarai barisan kepimpinan semasa, pameran arkib aktiviti terdahulu, butang sertai kelab interaktif serta pautan terus ke laman perhubungan)
+   - `src/pages/ProgramAttendPage.tsx` (Pengesahan Kehadiran & Pas Digital QR Program: pengesahan automatik pra-pendaftaran vs walk-in, semakan tempoh pembukaan kod QR, kad ringkasan program, maklum balas status kehadiran visual [Berjaya / Sudah Hadir / Pendaftaran Diperlukan / Kod Ditutup], serta integrasi log masuk satu-klik)
+   - `src/components/ai/AIBudgetGenerator.tsx` (Wisard AI Penjana Bajet Program: penganalisis teks pintar cadangan belanjawan berasaskan sasaran peserta, pengiraan anggaran kasar automatik, paparan perincian perbelanjaan berserta butang pindah anggaran satu-klik ke borang utama)
+   - `src/components/tasks/AddTaskModal.tsx` (Modal Delegasi Tugasan Pintar MT: mod manual dan mod AI pecahan tugasan mikro automatik, pengagihan tarikh akhir seragam, penugasan AJK bertugas, penetapan mata kredit merit serta pendaftaran pukal atomik)
+   - `src/components/takwim/TimetableUploadModal.tsx` (Modal Muat Naik Jadual Waktu Kuliah: pengimbas PDF berbilang muka surat automatik, penganalisis OCR imej jadual waktu screenshot dengan faktor kualiti/keyakinan/hari, pengesanan kelas automatik serta laluan pintas isi jadual manual)
+   - `src/components/takwim/TimetablePreviewModal.tsx` (Modal Semakan & Pengesanan Konflik Jadual Waktu: pratonton grid slot mengikut hari dan warna subjek tersuai, pengesanan automatik pertembungan masa perlawanan/kuliah, penentu semester automatik serta penyimpanan rekod arkib semester)
+   - `src/components/ai/KertasKerjaRenderer.tsx` (Kawalan UI & Penonton Dokumen Rasmi Kertas Kerja: pemaparan dwi-bahasa untuk semua butang tindakan kawalan dokumen, pemisah halaman estetik, penunjuk cetakan, muat turun DOCX/PDF, serta penutup dokumen rasmi Nexus AI Hub)
+
+2. **Pariti Kamus & Statistik Kunci:**
+   - `src/locales/{en,ms}/kpp.json`: **524+ kunci** (100% pariti kunci, 0 kunci kosong)
+   - `src/locales/{en,ms}/portal.json`: **280 kunci** (100% pariti kunci, 0 kunci kosong)
+   - `src/locales/{en,ms}/common.json`: **189 kunci** (100% pariti kunci, 0 kunci kosong)
+   - **Pematuhan Pariti:** Disahkan secara berterusan melalui suite ujian automatik `src/locales/__tests__/masterLocales.test.ts` (20 ujian lulus).
+
+3. **Piawaian Salinan, Fallback & Polisi Kertas Kerja:**
+   - Setiap rentetan menggunakan struktur sintaksis AST mandatori: `t('namespace:key', 'Literal BM Asal', { params })`.
+   - **Polisi Kertas Kerja Rasmi HEP:** Mengikut ketetapan pentadbiran Hal Ehwal Pelajar (HEP) POLISAS, kandungan badan dokumen kertas kerja rasmi (Halaman Muka, Ringkasan Eksekutif, Isi Kandungan 1.0–12.0, Lampiran Carta Organisasi, Tentatif & Anggaran Belanjawan) kekal dalam Bahasa Melayu standard. Walau bagaimanapun, SEMUA elemen antaramuka web sekeliling (butang muat turun, bar kawalan cetak, status notis, dialog modal, dan toasters) adalah 100% dwi-bahasa sepenuhnya.
+   - **Pencegahan Ralat Skop Sub-komponen:** Semua sub-komponen pembantu (seperti `UploadZone`, `ActivityKelabCard`, `ProgramCard`, `TaskItem`, `ExcoReportCard`) mengisytiharkan cangkuk penterjemahan `const { t } = useTranslation(...)` dalam skop fungsi masing-masing bagi mengelakkan ralat runtime.
+   - **Penghapusan Pembayangan (Zero Shadowing):** Tiada pembolehubah fungsi atau lelaran gelung (seperti `.filter(tsk => ...)` atau `.map(tm => ...)`) yang membayangi pembolehubah `t` penterjemahan.
+
+4. **Ujian Unit & Integrasi Pengesahan:**
+   - `src/__tests__/Domain1And8SharedCompleteI18n.test.tsx` (18 ujian menyeluruh merangkumi pariti kamus, render SSR dwi-bahasa EN/BM, pengesahan kawalan modal, dan pertukaran bahasa dinamik).
+   - `src/locales/__tests__/masterLocales.test.ts` (20 ujian pengesahan integriti kamus).
+   - **Keputusan:** 38/38 ujian berkaitan Domain 1 & 8 lulus dengan cemerlang tanpa sebarang ralat atau regresi.

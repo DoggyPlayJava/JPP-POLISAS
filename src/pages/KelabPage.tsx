@@ -127,13 +127,13 @@ export function KelabPage() {
 
     const targetIsGeosas = club.short_name?.toUpperCase() === 'GEOSAS';
     if (targetIsGeosas && profile?.department !== 'awam') {
-      toast.error('Kelab GEOSAS hanya terbuka kepada pelajar Jabatan Kejuruteraan Awam (JKA).');
+      toast.error(t('kpp:geosas_exclusive_toast', 'Kelab GEOSAS hanya terbuka kepada pelajar Jabatan Kejuruteraan Awam (JKA).'));
       return;
     }
 
     const checkLimit = (profile?.department === 'awam' && (hasGeosas || targetIsGeosas)) ? maxClubs + 1 : maxClubs;
     if (approvedCount >= checkLimit) {
-      toast.error(`Had keahlian dicapai (${checkLimit} kelab). Hubungi JPP untuk menaikkan had.`);
+      toast.error(t('kpp:membership_limit_reached', 'Had keahlian dicapai ({{limit}} kelab). Hubungi JPP untuk menaikkan had.', { limit: checkLimit }));
       return;
     }
     setConfirmClub(club);
@@ -157,7 +157,7 @@ export function KelabPage() {
         if (admins && admins.length > 0) {
           const notifs = admins.map(a => ({
             user_id: a.id,
-            title: 'Permohonan Kepimpinan Baharu',
+            title: t('kpp:leadership_application_title', 'Permohonan Kepimpinan Baharu'),
             message: `Terdapat permohonan kepimpinan sebagai Presiden untuk kelab ${confirmClub.name}. Sila semak tab Permohonan Baru di Pengurusan Ahli.`,
             type: 'SYSTEM',
             is_read: false
@@ -168,7 +168,7 @@ export function KelabPage() {
         try {
           const { sendNotificationToKppExco } = await import('@/lib/notifications');
           await sendNotificationToKppExco({
-            title: 'Permohonan Kelab Baru',
+            title: t('kpp:new_club_application_title', 'Permohonan Kelab Baru'),
             message: `Terdapat permohonan keahlian baharu untuk kelab ${confirmClub.name}. Sila semak di panel Exco KPP.`,
             type: 'KPP_MEMBERSHIP_REQUEST',
             module: 'EKPP',
@@ -179,12 +179,12 @@ export function KelabPage() {
         }
       }
 
-      toast.success(`Permohonan sebagai ${ROLE_LABELS[applyRole] || 'Ahli'} untuk ${confirmClub.name} dihantar! Sila tunggu kelulusan.`);
+      toast.success(t('kpp:application_submitted_wait', 'Permohonan sebagai {{role}} untuk {{club}} dihantar! Sila tunggu kelulusan.', { role: ROLE_LABELS[applyRole] || 'Ahli', club: confirmClub.name }));
       setConfirmClub(null);
       setApplyRole('CLUB_MEMBER');
       load();
     } catch (e: any) {
-      toast.error(e.message || 'Gagal menghantar permohonan.');
+      toast.error(e.message || t('kpp:application_submit_failed', 'Gagal menghantar permohonan.'));
     } finally {
       setApplying(null);
     }
@@ -197,16 +197,16 @@ export function KelabPage() {
       if (resignModal.isPrimary) {
         const { error } = await supabase.rpc('request_leave_club', { p_club_id: resignModal.clubId, p_is_primary: true });
         if (error) throw error;
-        toast.success('Permohonan keluar kelab Akademik dihantar untuk kelulusan Penasihat.');
+        toast.success(t('kpp:academic_leave_submitted', 'Permohonan keluar kelab Akademik dihantar untuk kelulusan Penasihat.'));
       } else {
         const { error } = await supabase.rpc('request_leave_club', { p_club_id: resignModal.clubId, p_is_primary: false });
         if (error) throw error;
-        toast.success('Berjaya menarik diri daripada kelab.');
+        toast.success(t('kpp:leave_club_success', 'Berjaya menarik diri daripada kelab.'));
       }
       setResignModal(null);
       load();
     } catch (e: any) {
-      toast.error(e.message || 'Gagal memproses penarikan diri.');
+      toast.error(e.message || t('kpp:leave_club_failed', 'Gagal memproses penarikan diri.'));
     } finally {
       setResigning(false);
     }
@@ -643,7 +643,7 @@ export function KelabPage() {
                 <Label className="text-xs font-semibold text-foreground">{t('kpp:application_role_type', 'Jenis Permohonan Peranan')}</Label>
                 <Select value={applyRole} onValueChange={(r: UserRole) => setApplyRole(r)}>
                   <SelectTrigger className="h-11 rounded-xl bg-card border-border/80 font-medium w-full text-xs">
-                    <SelectValue placeholder="Pilih peranan..." />
+                    <SelectValue placeholder={t('kpp:select_role_placeholder', 'Pilih peranan...')} />
                   </SelectTrigger>
                   <SelectContent className="rounded-2xl border-border/80 shadow-xl">
                     <SelectItem value="CLUB_MEMBER" className="font-semibold text-xs py-2">

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import { Search, Flag, FileText, Activity } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
@@ -10,6 +11,7 @@ import { ALL_CLUBS } from '@/types';
 import { useAuth } from '@/contexts/AuthContext';
 
 export function CarianPage() {
+  const { t } = useTranslation(['common', 'kpp']);
   const { selectedClubId, isSuperAdmin } = useAuth();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -72,26 +74,26 @@ export function CarianPage() {
   return (
     <div className="page-container space-y-8">
       <div className="space-y-2">
-        <h1 className="text-4xl font-black tracking-tighter">Hasil Carian</h1>
+        <h1 className="text-4xl font-black tracking-tighter">{t('common:search_results', 'Hasil Carian')}</h1>
         <p className="text-muted-foreground font-medium">
-          Menjumpai <span className="text-primary font-black">{totalResults}</span> padanan untuk "<span className="text-accent font-bold">{query}</span>"
+          {t('common:found_prefix', 'Menjumpai')} <span className="text-primary font-black">{totalResults}</span> {t('common:matches_for', 'padanan untuk')} "<span className="text-accent font-bold">{query}</span>"
         </p>
       </div>
 
       {loading ? (
-        <div className="p-20 text-center font-black animate-pulse opacity-50 uppercase tracking-widest">Sedang Mencari...</div>
+        <div className="p-20 text-center font-black animate-pulse opacity-50 uppercase tracking-widest">{t('common:searching', 'Sedang Mencari...')}</div>
       ) : totalResults === 0 ? (
         <div className="p-20 text-center flex flex-col items-center opacity-50">
           <Search className="w-16 h-16 mb-4" />
-          <h2 className="text-2xl font-black">Tiada Rekod Dijumpai</h2>
-          <p>Cuba gunakan kata kunci yang lebih ringkas.</p>
+          <h2 className="text-2xl font-black">{t('common:no_records_found', 'Tiada Rekod Dijumpai')}</h2>
+          <p>{t('common:try_simpler_keywords', 'Cuba gunakan kata kunci yang lebih ringkas.')}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           
           {/* KOLUM 1: KELAB */}
           <div className="space-y-4">
-            <h2 className="text-lg font-black flex items-center gap-2 border-b pb-2"><Flag className="w-5 h-5 text-primary"/> Kelab ({foundClubs.length})</h2>
+            <h2 className="text-lg font-black flex items-center gap-2 border-b pb-2"><Flag className="w-5 h-5 text-primary"/> {t('kpp:club', 'Kelab')} ({foundClubs.length})</h2>
             {foundClubs.map(c => (
               <Card key={c.id} className="cursor-pointer hover:border-primary transition-all" onClick={() => navigate(`/kelab/${c.id}`)}>
                 <CardContent className="p-4 flex items-center gap-4">
@@ -107,7 +109,7 @@ export function CarianPage() {
 
           {/* KOLUM 2: AKTIVITI */}
           <div className="space-y-4">
-            <h2 className="text-lg font-black flex items-center gap-2 border-b pb-2"><Activity className="w-5 h-5 text-emerald-500"/> Aktiviti ({activities.length})</h2>
+            <h2 className="text-lg font-black flex items-center gap-2 border-b pb-2"><Activity className="w-5 h-5 text-emerald-500"/> {t('kpp:activity', 'Aktiviti')} ({activities.length})</h2>
             {activities.map(a => (
               <Card key={a.id} className="cursor-pointer hover:border-emerald-500 transition-all" onClick={() => navigate('/aktiviti')}>
                 <CardContent className="p-4">
@@ -120,7 +122,7 @@ export function CarianPage() {
 
           {/* KOLUM 3: DOKUMEN */}
           <div className="space-y-4">
-            <h2 className="text-lg font-black flex items-center gap-2 border-b pb-2"><FileText className="w-5 h-5 text-blue-500"/> Dokumen ({reports.length})</h2>
+            <h2 className="text-lg font-black flex items-center gap-2 border-b pb-2"><FileText className="w-5 h-5 text-blue-500"/> {t('kpp:documents', 'Dokumen')} ({reports.length})</h2>
             {reports.map(r => (
               <Card key={r.id} className="cursor-pointer hover:border-blue-500 transition-all" onClick={() => navigate('/semakan-laporan')}>
                 <CardContent className="p-4">

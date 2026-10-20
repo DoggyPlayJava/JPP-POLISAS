@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, Users, Activity, Calendar, ShieldCheck, Award, Lock, LogOut,
@@ -19,13 +20,19 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn, getContrastColor } from '@/lib/utils';
 import { toast } from 'react-hot-toast';
 
-export function ClubDetailPage() {
+interface ClubDetailPageProps {
+  initialClub?: any;
+  initialLoading?: boolean;
+}
+
+export function ClubDetailPage({ initialClub, initialLoading }: ClubDetailPageProps = {}) {
+  const { t } = useTranslation(['kpp', 'common']);
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isSuperAdmin, userClubIds, primaryClubId, refetchProfile } = useAuth();
 
-  const [loading, setLoading] = useState(true);
-  const [club, setClub] = useState<any>(null);
+  const [loading, setLoading] = useState(initialLoading ?? (initialClub ? false : true));
+  const [club, setClub] = useState<any>(initialClub || null);
   const [committee, setCommittee] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
 
@@ -111,10 +118,10 @@ export function ClubDetailPage() {
     return (
       <div className="page-container py-24 text-center space-y-4">
         <Building2 className="w-12 h-12 text-muted-foreground/50 mx-auto" />
-        <h2 className="text-2xl font-bold tracking-tight text-foreground">Kelab Tidak Ditemui</h2>
-        <p className="text-xs text-muted-foreground">Maklumat persatuan ini tidak wujud atau telah dipadamkan.</p>
+        <h2 className="text-2xl font-bold tracking-tight text-foreground">{t('kpp:club_not_found', 'Kelab Tidak Ditemui')}</h2>
+        <p className="text-xs text-muted-foreground">{t('kpp:club_not_found_desc', 'Maklumat persatuan ini tidak wujud atau telah dipadamkan.')}</p>
         <Button onClick={() => navigate('/kelab')} variant="outline" className="rounded-xl text-xs font-semibold mt-4">
-          <ArrowLeft className="w-4 h-4 mr-2" /> Kembali ke Direktori
+          <ArrowLeft className="w-4 h-4 mr-2" /> {t('kpp:back_to_directory', 'Kembali ke Direktori')}
         </Button>
       </div>
     );
@@ -135,18 +142,18 @@ export function ClubDetailPage() {
       if (isPrimary) {
         const { error } = await supabase.rpc('request_leave_club', { p_club_id: club.id, p_is_primary: true });
         if (error) throw error;
-        toast.success('Permohonan keluar kelab Akademik telah dihantar untuk kelulusan Penasihat.');
+        toast.success(t('kpp:leave_academic_sent', 'Permohonan keluar kelab Akademik telah dihantar untuk kelulusan Penasihat.'));
         refetchProfile();
       } else {
         const { error } = await supabase.rpc('request_leave_club', { p_club_id: club.id, p_is_primary: false });
         if (error) throw error;
-        toast.success(`Anda telah berjaya menarik diri daripada ${club.name}.`);
+        toast.success(t('kpp:left_club_success', 'Anda telah berjaya menarik diri daripada {{name}}.', { name: club.name }));
         refetchProfile();
         setTimeout(() => navigate('/kelab'), 1200);
       }
       setShowLeaveModal(false);
     } catch (err: any) {
-      toast.error(err.message || 'Gagal memproses penarikan diri');
+      toast.error(err.message || t('kpp:failed_to_process_leave', 'Gagal memproses penarikan diri'));
     } finally {
       setLeaving(false);
     }
@@ -164,12 +171,12 @@ export function ClubDetailPage() {
           className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors group py-1"
         >
           <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
-          <span>Kembali ke Direktori Kelab</span>
+          <span>{t('kpp:back_to_club_directory', 'Kembali ke Direktori Kelab')}</span>
         </button>
         <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground/70 font-medium">
-          <span>Portal</span>
+          <span>{t('kpp:portal', 'Portal')}</span>
           <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
-          <span>Direktori</span>
+          <span>{t('kpp:directory', 'Direktori')}</span>
           <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40" />
           <span className="text-foreground font-semibold truncate max-w-[200px]">{club.name}</span>
         </div>
@@ -202,14 +209,14 @@ export function ClubDetailPage() {
           <div className="text-center md:text-left space-y-4 flex-1 min-w-0">
             <div className="flex flex-wrap justify-center md:justify-start gap-2">
               <Badge className="bg-white/20 text-inherit border-none uppercase tracking-wider text-[11px] font-bold px-3 py-1 rounded-full backdrop-blur-sm">
-                {club.category || 'Kelab'}
+                {club.category || t('kpp:club', 'Kelab')}
               </Badge>
               <Badge className="bg-black/25 text-inherit border-none text-[11px] font-semibold px-3 py-1 rounded-full">
-                Sesi {(() => { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth(); return m >= 5 ? `${y}/${y+1}` : `${y-1}/${y}`; })()}
+                {t('kpp:session_label', 'Sesi')} {(() => { const now = new Date(); const y = now.getFullYear(); const m = now.getMonth(); return m >= 5 ? `${y}/${y+1}` : `${y-1}/${y}`; })()}
               </Badge>
               {isOwnClub && (
                 <Badge className="bg-emerald-500/90 text-white border-none text-[11px] font-bold px-3 py-1 rounded-full shadow-sm flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" /> Anda Ahli
+                  <CheckCircle2 className="w-3 h-3" /> {t('kpp:you_are_member', 'Anda Ahli')}
                 </Badge>
               )}
             </div>
@@ -225,7 +232,7 @@ export function ClubDetailPage() {
               className="font-normal opacity-90 text-xs sm:text-sm md:text-base max-w-2xl leading-relaxed text-pretty"
               style={{ color: headerTextColor }}
             >
-              {club.description || 'Menerajui aktiviti kokurikulum dan perpaduan mahasiswa berkualiti di POLISAS.'}
+              {club.description || t('kpp:default_club_desc', 'Menerajui aktiviti kokurikulum dan perpaduan mahasiswa berkualiti di POLISAS.')}
             </p>
 
             {isOwnClub && !isSuperAdmin && (
@@ -236,7 +243,7 @@ export function ClubDetailPage() {
                   onClick={() => setShowLeaveModal(true)}
                   className="rounded-xl font-bold text-xs px-4 h-9 shadow-md bg-rose-600 hover:bg-rose-700 text-white border-none"
                 >
-                  <LogOut className="w-3.5 h-3.5 mr-1.5" /> Keluar Kelab
+                  <LogOut className="w-3.5 h-3.5 mr-1.5" /> {t('kpp:leave_club', 'Keluar Kelab')}
                 </Button>
               </div>
             )}
@@ -246,10 +253,10 @@ export function ClubDetailPage() {
 
       {/* ── 3. METRIK STATISTIK PANTAS (TABULAR NUMS) ── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatItem label="Jumlah Ahli Aktif" val={committee.length} icon={Users} color="text-primary" />
-        <StatItem label="Aktiviti Terdaftar" val={activities.length} icon={Activity} color="text-emerald-500" />
-        <StatItem label="Barisan MT / Exco" val={mtMembers.length + excoMembers.length} icon={Award} color="text-blue-500" />
-        <StatItem label="Status Kelab" val="Aktif" icon={ShieldCheck} color="text-amber-500" isText />
+        <StatItem label={t('kpp:total_active_members', 'Jumlah Ahli Aktif')} val={committee.length} icon={Users} color="text-primary" />
+        <StatItem label={t('kpp:registered_activities', 'Aktiviti Terdaftar')} val={activities.length} icon={Activity} color="text-emerald-500" />
+        <StatItem label={t('kpp:mt_exco_lineup', 'Barisan MT / Exco')} val={mtMembers.length + excoMembers.length} icon={Award} color="text-blue-500" />
+        <StatItem label={t('kpp:club_status', 'Status Kelab')} val={t('kpp:status_active', 'Aktif')} icon={ShieldCheck} color="text-amber-500" isText />
       </div>
 
       {/* ── 4. KEPIMPINAN & AKTIVITI ── */}
@@ -262,9 +269,9 @@ export function ClubDetailPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Award className="w-4 h-4 text-primary" /> Majlis Tertinggi
+                <Award className="w-4 h-4 text-primary" /> {t('kpp:high_council', 'Majlis Tertinggi')}
               </h3>
-              <span className="text-xs font-mono tabular-nums text-muted-foreground">{mtMembers.length} Jawatan</span>
+              <span className="text-xs font-mono tabular-nums text-muted-foreground">{t('kpp:positions_count', '{{count}} Jawatan', { count: mtMembers.length })}</span>
             </div>
 
             {mtMembers.length > 0 ? (
@@ -287,9 +294,9 @@ export function ClubDetailPage() {
             ) : (
               <div className="p-8 text-center rounded-2xl bg-card border border-dashed border-border/80 space-y-2">
                 <Award className="w-8 h-8 text-muted-foreground/40 mx-auto" />
-                <p className="text-xs font-semibold text-muted-foreground">Tiada Rekod Majlis Tertinggi</p>
+                <p className="text-xs font-semibold text-muted-foreground">{t('kpp:no_mt_records', 'Tiada Rekod Majlis Tertinggi')}</p>
                 <p className="text-[11px] text-muted-foreground/60 max-w-xs mx-auto">
-                  Pelantikan Majlis Tertinggi akan dikemaskini oleh pihak pentadbiran kelab.
+                  {t('kpp:no_mt_desc', 'Pelantikan Majlis Tertinggi akan dikemaskini oleh pihak pentadbiran kelab.')}
                 </p>
               </div>
             )}
@@ -299,9 +306,9 @@ export function ClubDetailPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Users className="w-4 h-4 text-emerald-500" /> Barisan Exco & AJK
+                <Users className="w-4 h-4 text-emerald-500" /> {t('kpp:exco_ajk_lineup', 'Barisan Exco & AJK')}
               </h3>
-              <span className="text-xs font-mono tabular-nums text-muted-foreground">{excoMembers.length} Orang</span>
+              <span className="text-xs font-mono tabular-nums text-muted-foreground">{t('kpp:people_count', '{{count}} Orang', { count: excoMembers.length })}</span>
             </div>
 
             {excoMembers.length > 0 ? (
@@ -322,9 +329,9 @@ export function ClubDetailPage() {
             ) : (
               <div className="p-8 text-center rounded-2xl bg-card border border-dashed border-border/80 space-y-2">
                 <Users className="w-8 h-8 text-muted-foreground/40 mx-auto" />
-                <p className="text-xs font-semibold text-muted-foreground">Tiada Rekod Exco Dikesan</p>
+                <p className="text-xs font-semibold text-muted-foreground">{t('kpp:no_exco_records', 'Tiada Rekod Exco Dikesan')}</p>
                 <p className="text-[11px] text-muted-foreground/60 max-w-xs mx-auto">
-                  Barisan biro dan unit aktiviti sedang disusun.
+                  {t('kpp:no_exco_desc', 'Barisan biro dan unit aktiviti sedang disusun.')}
                 </p>
               </div>
             )}
@@ -334,7 +341,7 @@ export function ClubDetailPage() {
           <section className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xs font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-amber-500" /> Ahli Biasa ({ahliBiasa.length})
+                <Sparkles className="w-4 h-4 text-amber-500" /> {t('kpp:general_members', 'Ahli Biasa')} ({ahliBiasa.length})
               </h3>
             </div>
 
@@ -352,7 +359,7 @@ export function ClubDetailPage() {
               </div>
             ) : (
               <div className="p-6 text-center rounded-2xl bg-card border border-dashed border-border/80">
-                <p className="text-xs font-semibold text-muted-foreground">Tiada ahli biasa berdaftar.</p>
+                <p className="text-xs font-semibold text-muted-foreground">{t('kpp:no_general_members', 'Tiada ahli biasa berdaftar.')}</p>
               </div>
             )}
           </section>
@@ -365,14 +372,14 @@ export function ClubDetailPage() {
             <Card className="rounded-3xl border border-border/80 bg-card shadow-sm overflow-hidden">
               <CardHeader className="bg-muted/30 p-5 border-b border-border/60">
                 <CardTitle className="text-sm font-bold tracking-tight flex items-center gap-2 text-foreground">
-                  <Activity className="w-4 h-4 text-primary" /> Jejak Aktiviti & Program
+                  <Activity className="w-4 h-4 text-primary" /> {t('kpp:activity_tracker', 'Jejak Aktiviti & Program')}
                 </CardTitle>
-                <p className="text-xs text-muted-foreground mt-0.5">Program kelab yang diluluskan</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('kpp:approved_club_programs', 'Program kelab yang diluluskan')}</p>
               </CardHeader>
               <CardContent className="p-5">
                 {activities.length === 0 ? (
                   <p className="text-center py-8 text-xs font-medium text-muted-foreground">
-                    Tiada rekod program atau aktiviti setakat ini.
+                    {t('kpp:no_activities_so_far', 'Tiada rekod program atau aktiviti setakat ini.')}
                   </p>
                 ) : (
                   <div className="space-y-4">
@@ -397,9 +404,9 @@ export function ClubDetailPage() {
               <div className="w-12 h-12 rounded-2xl bg-card flex items-center justify-center mx-auto shadow-sm">
                 <Lock className="w-5 h-5 text-muted-foreground" />
               </div>
-              <h4 className="font-bold text-sm text-foreground">Akses Aktiviti Terhad</h4>
+              <h4 className="font-bold text-sm text-foreground">{t('kpp:restricted_activity_access', 'Akses Aktiviti Terhad')}</h4>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Log program dan minit mesyuarat hanya dipaparkan kepada ahli kelab yang telah disahkan dan pihak JPP POLISAS.
+                {t('kpp:restricted_activity_desc', 'Log program dan minit mesyuarat hanya dipaparkan kepada ahli kelab yang telah disahkan dan pihak JPP POLISAS.')}
               </p>
             </div>
           )}
@@ -413,12 +420,12 @@ export function ClubDetailPage() {
           <DialogHeader>
             <DialogTitle className="font-bold text-xl tracking-tight text-rose-600 dark:text-rose-400 flex items-center gap-2">
               <AlertCircle className="w-5 h-5 text-rose-600 dark:text-rose-400" />
-              {isPrimary ? 'Mohon Keluar Kelab Akademik' : 'Tarik Diri daripada Kelab'}
+              {isPrimary ? t('kpp:apply_leave_academic', 'Mohon Keluar Kelab Akademik') : t('kpp:leave_club_title', 'Tarik Diri daripada Kelab')}
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground leading-relaxed pt-1">
               {isPrimary
-                ? 'Kelab Akademik tertakluk kepada jabatan pengajian anda. Permohonan pelepasan memerlukan sokongan dan kelulusan Penasihat Kelab.'
-                : `Adakah anda pasti ingin menarik diri serta-merta daripada "${club.name}"? Sebarang rekod jawatan dan aktiviti yang sedang berlangsung akan dihentikan.`}
+                ? t('kpp:leave_academic_desc', 'Kelab Akademik tertakluk kepada jabatan pengajian anda. Permohonan pelepasan memerlukan sokongan dan kelulusan Penasihat Kelab.')
+                : t('kpp:leave_club_confirm_desc', 'Adakah anda pasti ingin menarik diri serta-merta daripada "{{name}}"? Sebarang rekod jawatan dan aktiviti yang sedang berlangsung akan dihentikan.', { name: club.name })}
             </DialogDescription>
           </DialogHeader>
 
@@ -428,14 +435,14 @@ export function ClubDetailPage() {
               onClick={() => setShowLeaveModal(false)}
               className="rounded-xl font-bold text-xs"
             >
-              Batal
+              {t('common:cancel', 'Batal')}
             </Button>
             <Button
               onClick={handleConfirmLeave}
               disabled={leaving}
               className="rounded-xl font-bold text-xs bg-rose-600 hover:bg-rose-700 text-white"
             >
-              {leaving ? 'Memproses...' : (isPrimary ? 'Hantar Permohonan Keluar' : 'Sahkan Tarik Diri')}
+              {leaving ? t('common:processing', 'Memproses...') : (isPrimary ? t('kpp:send_leave_application', 'Hantar Permohonan Keluar') : t('kpp:confirm_leave_club', 'Sahkan Tarik Diri'))}
             </Button>
           </DialogFooter>
         </DialogContent>

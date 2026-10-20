@@ -175,5 +175,15 @@
   "yes": "Yes",
   "thank_you": "Thank You!",
   "new": "New",
-  "save_changes": "Save Changes"
+  "save_changes": "Save Changes",
+  "search_results": "Search Results",
+  "no_records_found": "No Records Found",
+  "system_busy": "System is busy",
+  "access_restricted": "Access Restricted",
+  "load_more": "Load More",
+  "processing": "Processing...",
+  "opened": "OPEN",
+  "closed_upper": "CLOSED",
+  "action_successful": "Action Successful!",
+  "submitted_successfully": "Submitted successfully!"
 }

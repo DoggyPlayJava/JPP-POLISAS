@@ -208,7 +208,7 @@ export function DashboardPage() {
       });
       if (error) {
         console.error('increment_merit error:', error);
-        toast.error('Gagal kemaskini merit: ' + error.message);
+        toast.error(t('kpp:merit_update_failed', 'Gagal kemaskini merit: ') + error.message);
       }
     }
   };
@@ -221,16 +221,16 @@ export function DashboardPage() {
         }).eq('id', task.id);
         if (error) throw error;
         await awardMerit(task);
-        toast.success("Anugerah merit selesai!");
+        toast.success(t('kpp:merit_award_completed', 'Anugerah merit selesai!'));
       } else if (task.approval_status === 'WAITING') {
         const { error } = await supabase.from('club_tasks').update({
           approval_status: 'APPROVED', status: 'ACTIVE', approved_by: user?.id
         }).eq('id', task.id);
         if (error) throw error;
-        toast.success("Tugasan diluluskan, sedia untuk dijalankan.");
+        toast.success(t('kpp:task_approved_ready', 'Tugasan diluluskan, sedia untuk dijalankan.'));
       }
       fetchData();
-    } catch (error) { toast.error("Ralat semasa meluluskan"); }
+    } catch (error) { toast.error(t('kpp:task_approval_error', 'Ralat semasa meluluskan')); }
   };
 
   const handleVerifyTask = (task: any) => {
@@ -255,12 +255,12 @@ export function DashboardPage() {
       fetchData();
       
       if (meritToGive < 0) {
-        toast.success(`Tugasan diarkibkan & penalti merit (${Math.abs(meritToGive)} pts) dikenakan.`);
+        toast.success(t('kpp:task_archived_penalty', 'Tugasan diarkibkan & penalti merit ({{pts}} pts) dikenakan.', { pts: Math.abs(meritToGive) }));
       } else {
-        toast.success(`Tugasan disahkan & merit (${meritToGive} pts) diberikan!`);
+        toast.success(t('kpp:task_verified_merit', 'Tugasan disahkan & merit ({{pts}} pts) diberikan!', { pts: meritToGive }));
       }
     } catch (e) {
-      toast.error("Ralat semasa pengesahan tugasan");
+      toast.error(t('kpp:task_verify_error', 'Ralat semasa pengesahan tugasan'));
     } finally {
       setIsProcessingAction(false);
       setLateVerifyDialog({ open: false, task: null });
@@ -283,10 +283,10 @@ export function DashboardPage() {
         approved_by: user?.id
       }).eq('id', rejectDialog.task.id);
       if (error) throw error;
-      toast.success("Tugasan telah ditolak.");
+      toast.success(t('kpp:task_rejected_toast', 'Tugasan telah ditolak.'));
       fetchData();
     } catch (error) {
-      toast.error("Gagal menolak tugasan");
+      toast.error(t('kpp:task_reject_error', 'Gagal menolak tugasan'));
     } finally {
       setIsProcessingAction(false);
       setRejectDialog({ open: false, task: null });
@@ -315,10 +315,10 @@ export function DashboardPage() {
         content: `MT [${user?.email}] memohon UNLOCK bagi program: ${unlockDialog.program.nama_program}. Sebab: ${reason}`
       }]);
 
-      toast.success("Permohonan Unlock dihantar ke JPP");
+      toast.success(t('kpp:unlock_request_sent_toast', 'Permohonan Unlock dihantar ke JPP'));
       fetchData();
     } catch (e) {
-      toast.error("Gagal menghantar permohonan");
+      toast.error(t('kpp:unlock_request_failed_toast', 'Gagal menghantar permohonan.'));
     } finally {
       setIsProcessingAction(false);
       setUnlockDialog({ open: false, program: null });
@@ -410,7 +410,7 @@ export function DashboardPage() {
 
       {/* ── STAT CARDS ── */}
       <div className="tour-kelab-stats grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label={t('kpp:stats_pending')} val={tasks.filter((t: any) => t.approval_status === 'WAITING').length} color="text-rose-600" icon={Clock} bg="bg-rose-500/10" />
+        <StatCard label={t('kpp:stats_pending')} val={tasks.filter((tsk: any) => tsk.approval_status === 'WAITING').length} color="text-rose-600" icon={Clock} bg="bg-rose-500/10" />
         <StatCard label={t('kpp:stats_clubs')} val={userClubIds.length || members.length} color="text-primary" icon={Users} bg="bg-primary/10" />
         <StatCard label={t('kpp:stats_reports')} val={tasks.length} color="text-amber-600" icon={Activity} bg="bg-amber-500/10" />
         <StatCard label={t('kpp:stats_activities')} val={activities.length} color="text-emerald-600" icon={TrendingUp} bg="bg-emerald-500/10" />

@@ -175,5 +175,15 @@
   "yes": "Ya",
   "thank_you": "Terima Kasih!",
   "new": "Baharu",
-  "save_changes": "Simpan Perubahan"
+  "save_changes": "Simpan Perubahan",
+  "search_results": "Hasil Carian",
+  "no_records_found": "Tiada Rekod Dijumpai",
+  "system_busy": "Sistem sedang sibuk",
+  "access_restricted": "Akses Terhad",
+  "load_more": "Muat Lagi",
+  "processing": "Memproses...",
+  "opened": "DIBUKA",
+  "closed_upper": "DITUTUP",
+  "action_successful": "Tindakan Berjaya!",
+  "submitted_successfully": "Berjaya dihantar!"
 }
