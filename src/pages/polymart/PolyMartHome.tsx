@@ -56,6 +56,7 @@ export interface PolyBusiness {
 
 // ── Product Card ───────────────────────────────────────────────────────────────
 function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { product: PolyProduct; index: number; isWishlisted: boolean; onToggleWishlist: (id: string) => void; key?: React.Key }) {
+  const { t } = useTranslation(['commerce', 'common']);
   const navigate = useNavigate();
   const FallbackIcon = CATEGORY_ICON_MAP[product.category] || Package;
   const isLowStock = product.stock_quantity > 0 && product.stock_quantity <= 5;
@@ -93,14 +94,14 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
         {isOut && (
           <div className="absolute inset-0 bg-black/60 -[1px] flex items-center justify-center z-10">
             <span className="text-[10px] font-black uppercase text-white tracking-widest bg-black/70 px-2.5 py-1 rounded-full border border-white/20">
-              Habis
+              {t('commerce:stock_out', 'Habis')}
             </span>
           </div>
         )}
         {isLowStock && !isOut && (
           <div className="absolute top-2 left-2 flex items-center gap-1 bg-amber-500/90 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full z-10 shadow-xs">
             <Clock className="w-2.5 h-2.5" />
-            <span>Hampir habis</span>
+            <span>{t('commerce:low_stock_pill', 'Hampir habis')}</span>
           </div>
         )}
 
@@ -121,7 +122,7 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
         {product.is_preorder && (
           <div className="absolute bottom-2 left-2 bg-indigo-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs flex items-center gap-1 z-10">
             <Package className="w-2.5 h-2.5" />
-            <span>PRA-TEMPAH</span>
+            <span>{t('commerce:preorder_caps', 'PRA-TEMPAH')}</span>
           </div>
         )}
 
@@ -140,7 +141,7 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
         {/* Business name */}
         <p className="text-[9px] font-bold text-muted-foreground/70 truncate flex items-center gap-1">
           <Store className="w-2.5 h-2.5 text-amber-500 shrink-0" />
-          <span>{product.keusahawanan_businesses?.name ?? 'Kedai'}</span>
+          <span>{product.keusahawanan_businesses?.name ?? t('commerce:store', 'Kedai')}</span>
         </p>
 
         {/* Product name */}
@@ -201,6 +202,7 @@ function BusinessCard({ biz }: { biz: PolyBusiness; key?: React.Key }) {
 
 // ── In-Feed Ad Card ────────────────────────────────────────────────────────────
 function InFeedAdCard({ ad }: { ad: PolyAd; key?: React.Key }) {
+  const { t } = useTranslation(['commerce', 'common']);
   const navigate = useNavigate();
   
   const handleClick = async () => {
@@ -228,7 +230,7 @@ function InFeedAdCard({ ad }: { ad: PolyAd; key?: React.Key }) {
       className="group cursor-pointer rounded-2xl border border-amber-500/40 overflow-hidden relative shadow-sm hover:shadow-md hover:border-amber-500 transition-all duration-300 flex flex-col bg-amber-500/10"
     >
       <div className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-amber-500 text-[9px] font-black tracking-widest text-white uppercase z-10 shadow-xs">
-        Disponsor
+        {t('commerce:sponsored_badge', 'Disponsor')}
       </div>
       
       <div className="relative aspect-square w-full">
@@ -252,6 +254,7 @@ export function ActiveVendorsSheet({
   onClose: () => void;
   businesses: PolyBusiness[];
 }) {
+  const { t } = useTranslation(['commerce', 'common']);
   const navigate = useNavigate();
   const [vendorSearch, setVendorSearch] = useState('');
 
@@ -294,9 +297,9 @@ export function ActiveVendorsSheet({
               <Store className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-foreground">Semua Peniaga Siswa</h3>
+              <h3 className="text-sm font-black text-foreground">{t('commerce:all_student_vendors', 'Semua Peniaga Siswa')}</h3>
               <p className="text-[11px] text-muted-foreground font-medium">
-                {businesses.length} perniagaan berdaftar di POLISAS
+                {t('commerce:registered_businesses_count', '{{count}} perniagaan berdaftar di POLISAS', { count: businesses.length })}
               </p>
             </div>
           </div>
@@ -315,7 +318,7 @@ export function ActiveVendorsSheet({
             <input
               value={vendorSearch}
               onChange={e => setVendorSearch(e.target.value)}
-              placeholder="Cari peniaga atau jenama..."
+              placeholder={t('commerce:search_vendors_placeholder', 'Cari peniaga atau jenama...')}
               className="flex-1 text-xs bg-transparent outline-none text-foreground placeholder:text-muted-foreground/60"
             />
             {vendorSearch && (
@@ -331,8 +334,8 @@ export function ActiveVendorsSheet({
           {filteredBusinesses.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
               <Store className="w-8 h-8 text-muted-foreground/40 mb-2" />
-              <p className="text-xs font-bold">Tiada peniaga ditemui</p>
-              <p className="text-[11px] text-muted-foreground/60">Cuba carian dengan kata kunci lain</p>
+              <p className="text-xs font-bold">{t('commerce:no_vendors_found', 'Tiada peniaga ditemui')}</p>
+              <p className="text-[11px] text-muted-foreground/60">{t('commerce:try_different_search_keyword', 'Cuba carian dengan kata kunci lain')}</p>
             </div>
           ) : (
             filteredBusinesses.map(b => (
@@ -356,7 +359,7 @@ export function ActiveVendorsSheet({
                     </h4>
                     <div className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="w-3 h-3 shrink-0" />
-                      <span>Peniaga Siswa Sah POLISAS</span>
+                      <span>{t('commerce:polisas_verified_vendor_badge', 'Peniaga Siswa Sah POLISAS')}</span>
                     </div>
                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
                       {b.avg_rating && b.avg_rating > 0 ? (
@@ -368,7 +371,7 @@ export function ActiveVendorsSheet({
                       ) : null}
                       <span className="flex items-center gap-1 font-medium">
                         <Package className="w-3 h-3 text-muted-foreground/60" />
-                        {`${b.product_count || 0} produk`}
+                        {t('commerce:product_count_label', `${b.product_count || 0} produk`, { count: b.product_count || 0 })}
                       </span>
                     </div>
                   </div>
@@ -382,7 +385,7 @@ export function ActiveVendorsSheet({
                   }}
                   className="px-3 py-1.5 rounded-full text-xs font-black text-amber-600 dark:text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-all shrink-0 active:scale-95 cursor-pointer ml-2"
                 >
-                  Lawati Kedai
+                  {t('commerce:visit_store', 'Lawati Kedai')}
                 </button>
               </div>
             ))
@@ -438,7 +441,7 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
         <div className="flex-1 pr-3">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400 text-[9px] font-black uppercase tracking-wider mb-1.5">
             <Sparkles className="w-3 h-3 text-amber-400" />
-            <span>Pasar Mahasiswa POLISAS</span>
+            <span>{t('commerce:student_market_badge', 'Pasar Mahasiswa POLISAS')}</span>
           </div>
 
           <h1 className="text-base sm:text-xl font-black text-white leading-tight mb-1">
@@ -446,7 +449,7 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
           </h1>
 
           <p className="text-[10px] sm:text-[11px] text-white/60 font-medium mb-3 line-clamp-1">
-            Tempah produk terus dari usahawan mahasiswa POLISAS.
+            {t('commerce:hero_banner_tagline', 'Tempah produk terus dari usahawan mahasiswa POLISAS.')}
           </p>
 
           <div className="flex items-center gap-2 mb-3">
@@ -468,8 +471,8 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
 
           <div className="flex items-center gap-2 sm:gap-3">
             {[
-              { icon: Package, value: totalProducts, label: 'Produk' },
-              { icon: Store,   value: totalVendors,  label: 'Peniaga' },
+              { icon: Package, value: totalProducts, label: t('commerce:products_stat_label', 'Produk') },
+              { icon: Store,   value: totalVendors,  label: t('commerce:vendors_stat_label', 'Peniaga') },
             ].map(s => (
               <div key={s.label} className="inline-flex items-center gap-1.5 px-2 py-1 rounded-xl bg-white/5 border border-white/10">
                 <div className="w-5 h-5 rounded-lg flex items-center justify-center bg-amber-500/15 text-amber-400">
@@ -504,7 +507,7 @@ function HeroBanner({ totalProducts, totalVendors, ads }: { totalProducts: numbe
                 <img src={ad.image_url} alt={ad.title} loading="lazy" decoding="async" className="w-full h-full object-cover shrink-0 hover:scale-[1.02] transition-transform duration-500" />
               </div>
               <div className="absolute top-3 right-3 bg-black/60  px-2 py-0.5 rounded-full border border-white/10 shadow-xl">
-                <p className="text-[8px] font-black text-white uppercase tracking-widest">{ad.type === 'EXTERNAL' ? 'Penaja' : 'Iklan'}</p>
+                <p className="text-[8px] font-black text-white uppercase tracking-widest">{ad.type === 'EXTERNAL' ? t('commerce:sponsor_tag', 'Penaja') : t('commerce:ad_tag', 'Iklan')}</p>
               </div>
             </div>
           ))}
@@ -554,7 +557,7 @@ export function PolyMartHome() {
 
   // Wishlist toggle
   const toggleWishlist = async (productId: string) => {
-    if (!user) { toast.error('Sila log masuk untuk simpan ke wishlist'); return; }
+    if (!user) { toast.error(t('commerce:toast_login_for_wishlist', 'Sila log masuk untuk simpan ke wishlist')); return; }
     const isCurrently = wishlistIds.has(productId);
     // Optimistic update
     setWishlistIds(prev => {
@@ -567,7 +570,7 @@ export function PolyMartHome() {
         .eq('user_id', user.id).eq('product_id', productId);
       if (error) {
         setWishlistIds(prev => { const n = new Set(prev); n.add(productId); return n; });
-        toast.error('Gagal mengalih keluar dari wishlist');
+        toast.error(t('commerce:toast_wishlist_remove_failed', 'Gagal mengalih keluar dari wishlist'));
       }
     } else {
       const { error } = await supabase.from('polymart_wishlist').insert({
@@ -575,9 +578,9 @@ export function PolyMartHome() {
       });
       if (error) {
         setWishlistIds(prev => { const n = new Set(prev); n.delete(productId); return n; });
-        if (!error.message.includes('duplicate')) toast.error('Gagal menyimpan ke wishlist');
+        if (!error.message.includes('duplicate')) toast.error(t('commerce:toast_wishlist_save_failed', 'Gagal menyimpan ke wishlist'));
       } else {
-        toast.success('Disimpan ke wishlist', { duration: 1500 });
+        toast.success(t('commerce:toast_wishlist_saved', 'Disimpan ke wishlist'), { duration: 1500 });
       }
     }
   };
@@ -884,12 +887,12 @@ export function PolyMartHome() {
           <div className="flex items-center gap-2">
             <Store className="w-3.5 h-3.5" style={{ color: PM_ACCENT }} />
             <span className="text-xs font-bold">
-              {businesses.find(b => b.id === vendorFilter)?.name ?? 'Semua Kedai'}
+              {businesses.find(b => b.id === vendorFilter)?.name ?? t('commerce:all_stores', 'Semua Kedai')}
             </span>
           </div>
           <button onClick={() => setVendorFilter(null)}
             className="text-[10px] font-bold text-muted-foreground hover:text-foreground transition-colors">
-            Papar Semua ×
+            {t('commerce:show_all_filter', 'Papar Semua ×')}
           </button>
         </div>
       )}
@@ -902,14 +905,14 @@ export function PolyMartHome() {
               <div className="w-5 h-5 rounded-lg flex items-center justify-center" style={{ background: PM_GRADIENT }}>
                 <TrendingUp className="w-3 h-3 text-white" />
               </div>
-              <h2 className="text-sm font-black text-foreground">Peniaga Aktif</h2>
+              <h2 className="text-sm font-black text-foreground">{t('commerce:active_vendors', 'Peniaga Aktif')}</h2>
             </div>
             <button
               onClick={() => setShowAllVendors(true)}
               className="flex items-center gap-1 text-[11px] font-bold cursor-pointer"
               style={{ color: PM_ACCENT }}
             >
-              <span>Lihat Semua</span>
+              <span>{t('commerce:view_all', 'Lihat Semua')}</span>
               <ChevronRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -927,9 +930,9 @@ export function PolyMartHome() {
               <Zap className="w-3 h-3" style={{ color: PM_ACCENT }} />
             </div>
             <h2 className="text-sm font-black text-foreground">
-              {searchQuery ? `Hasil Carian "${searchQuery}"` :
+              {searchQuery ? t('commerce:search_results_query', 'Hasil Carian "{{query}}"', { query: searchQuery }) :
                activeCategory !== 'all' ? activeCategory :
-               vendorFilter ? 'Produk Kedai' : 'Semua Produk'}
+               vendorFilter ? t('commerce:store_products', 'Produk Kedai') : t('commerce:all_products', 'Semua Produk')}
               <span className="text-xs font-medium text-muted-foreground ml-1.5">({filtered.length})</span>
             </h2>
           </div>
@@ -937,11 +940,11 @@ export function PolyMartHome() {
           {/* Sort */}
           <select value={sortBy} onChange={e => setSortBy(e.target.value as any)}
             className="h-7 px-2 rounded-xl text-[10px] font-bold outline-none bg-muted/40 border border-border/50 text-foreground focus:border-border transition-all">
-            <option value="newest">Terbaru</option>
-            <option value="popular">Paling Laris</option>
-            <option value="price_asc">Harga ↑</option>
-            <option value="price_desc">Harga ↓</option>
-            <option value="rating">Rating</option>
+            <option value="newest">{t('commerce:sort_newest', 'Terbaru')}</option>
+            <option value="popular">{/* <option value="popular">Paling Laris</option> */}{t('commerce:sort_popular', 'Paling Laris')}</option>
+            <option value="price_asc">{t('commerce:sort_price_asc', 'Harga ↑')}</option>
+            <option value="price_desc">{t('commerce:sort_price_desc', 'Harga ↓')}</option>
+            <option value="rating">{t('commerce:sort_rating', 'Rating')}</option>
           </select>
         </div>
 
@@ -955,9 +958,9 @@ export function PolyMartHome() {
                 <PackageSearch className="w-7 h-7" />
               </div>
               <p className="text-sm font-bold text-muted-foreground/60">
-                {searchQuery ? 'Tiada produk dijumpai' : 'Tiada produk dalam kategori ini'}
+                {searchQuery ? t('commerce:no_products_found', 'Tiada produk dijumpai') : t('commerce:no_products_in_category', 'Tiada produk dalam kategori ini')}
               </p>
-              <p className="text-xs text-muted-foreground/40">Cuba kategori atau carian lain</p>
+              <p className="text-xs text-muted-foreground/40">{t('commerce:try_other_category_or_search', 'Cuba kategori atau carian lain')}</p>
             </motion.div>
           ) : (
             <motion.div
@@ -983,15 +986,15 @@ export function PolyMartHome() {
             <Store className="w-8 h-8" />
           </div>
           <div className="text-center">
-            <p className="text-base font-black text-foreground">PolyMart Belum Ada Produk</p>
+            <p className="text-base font-black text-foreground">{t('commerce:polymart_empty_title', 'PolyMart Belum Ada Produk')}</p>
             <p className="text-sm text-muted-foreground/60 mt-1">
-              Peniaga belum muat naik produk ke marketplace.
+              {t('commerce:polymart_empty_desc', 'Peniaga belum muat naik produk ke marketplace.')}
             </p>
           </div>
           <div className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 max-w-sm text-center">
             <AlertCircle className="w-4 h-4 text-amber-500 shrink-0" />
             <p className="text-xs text-amber-600 dark:text-amber-400 font-medium">
-              Peniaga e-Keusahawanan boleh publish produk dari POS → Katalog Produk
+              {t('commerce:polymart_vendor_publish_hint', 'Peniaga e-Keusahawanan boleh publish produk dari POS → Katalog Produk')}
             </p>
           </div>
         </motion.div>

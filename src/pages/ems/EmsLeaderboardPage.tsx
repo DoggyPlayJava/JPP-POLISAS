@@ -218,7 +218,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       ]);
 
       if (eventRes.error) {
-        throw new Error(`Gagal memuatkan acara: ${eventRes.error.message}`);
+        throw new Error(t('ems:failed_load_event_err', 'Gagal memuatkan acara: {{error}}', { error: eventRes.error.message }));
       }
 
       setEvent(eventRes.data as EmsEvent);
@@ -233,7 +233,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       }
     } catch (err: any) {
       console.error('[EMS Leaderboard] Error loading data:', err);
-      toast.error(err.message || 'Gagal memuatkan papan pendahulu');
+      toast.error(err.message || t('ems:failed_load_leaderboard', 'Gagal memuatkan papan pendahulu'));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -459,11 +459,11 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       setEvent({ ...event, is_leaderboard_public: nextState });
       toast.success(
         nextState
-          ? 'Papan Pendahulu kini DIBUKA secara awam (Skrin Pentas Diaktifkan)!'
-          : 'Papan Pendahulu kini DISEMBUNYIKAN (Skrin Pentas Ditutup)!'
+          ? t('ems:leaderboard_public_opened', 'Papan Pendahulu kini DIBUKA secara awam (Skrin Pentas Diaktifkan)!')
+          : t('ems:leaderboard_public_hidden', 'Papan Pendahulu kini DISEMBUNYIKAN (Skrin Pentas Ditutup)!')
       );
     } catch (err: any) {
-      toast.error(`Gagal mengemaskini status paparan: ${err.message}`);
+      toast.error(t('ems:failed_update_display_status', 'Gagal mengemaskini status paparan: {{error}}', { error: err.message }));
     } finally {
       setTogglingVisibility(false);
     }
@@ -488,7 +488,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       if (error) throw error;
       setParticipantScores((data || []) as DetailedScore[]);
     } catch (err: any) {
-      toast.error(`Gagal memuatkan komen juri: ${err.message}`);
+      toast.error(t('ems:failed_load_jury_comments', 'Gagal memuatkan komen juri: {{error}}', { error: err.message }));
     } finally {
       setLoadingComments(false);
     }
@@ -508,7 +508,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       setShowTieBreakerModal(false);
       loadData();
     } catch (err: any) {
-      toast.error(`Gagal menetapkan pemenang seri: ${err.message}`);
+      toast.error(t('ems:failed_set_tie_winner', 'Gagal menetapkan pemenang seri: {{error}}', { error: err.message }));
     } finally {
       setResolvingTie(false);
     }
@@ -546,7 +546,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           onClick={() => navigate('/ems/dashboard')}
           className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/20 active:scale-[0.98]"
         >
-          Kembali ke Papan Pemuka EMS
+          {t('ems:back_to_ems_dashboard', 'Kembali ke Papan Pemuka EMS')}
         </button>
       </div>
     );
@@ -572,13 +572,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-widest">
               <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400 animate-ping" />
-              Keputusan Sedang Diproses
+              {t('ems:results_being_processed', 'Keputusan Sedang Diproses')}
             </div>
             <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-slate-100 dark:to-amber-200">
-              Keputusan Belum Didedahkan Oleh Penganjur
+              {t('ems:results_not_revealed_by_organizer', 'Keputusan Belum Didedahkan Oleh Penganjur')}
             </h1>
             <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-              Kedudukan dan markah peserta sedang disemak dan belum didedahkan kepada awam.
+              {t('ems:results_being_reviewed_desc', 'Kedudukan dan markah peserta sedang disemak dan belum didedahkan kepada awam.')}
             </p>
           </div>
 
@@ -587,7 +587,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               onClick={() => navigate('/ems/dashboard')}
               className="px-6 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider rounded-xl transition shadow-lg shadow-amber-500/20 active:scale-[0.98]"
             >
-              Kembali ke Papan Pemuka EMS
+              {t('ems:back_to_ems_dashboard', 'Kembali ke Papan Pemuka EMS')}
             </button>
           </div>
         </div>
@@ -619,14 +619,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             <div className="space-y-3">
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-widest">
                 <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400 animate-ping" />
-                Keputusan Sedang Diproses
+                {t('ems:results_being_processed', 'Keputusan Sedang Diproses')}
               </div>
               <h1 className="text-3xl md:text-5xl font-black tracking-tight text-slate-900 dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-r dark:from-white dark:via-slate-100 dark:to-amber-200 [text-wrap:balance]">
-                KEPUTUSAN BELUM DIDEDAHKAN
+                {t('ems:results_not_yet_revealed', 'KEPUTUSAN BELUM DIDEDAHKAN')}
               </h1>
               <p className="text-base md:text-lg text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                Panel Juri dan Pengarah Program sedang memuktamadkan skor rasmi bagi acara{' '}
-                <span className="text-amber-600 dark:text-amber-400 font-bold [text-wrap:balance]">{event.title}</span>. Keputusan rasmi akan dipaparkan di skrin ini sebentar lagi.
+                {t('ems:jury_finalizing_desc', 'Panel Juri dan Pengarah Program sedang memuktamadkan skor rasmi bagi acara {{title}}. Keputusan rasmi akan dipaparkan di skrin ini sebentar lagi.', { title: event.title })}
               </p>
             </div>
 
@@ -636,7 +635,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 <div className="w-full h-full bg-gradient-to-r from-amber-500 to-amber-400 animate-pulse" />
               </div>
               <span className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">
-                MOD SKRIN PENTAS EMS - MENUNGGU ISYARAT URUS SETIA
+                {t('ems:stage_mode_waiting_signal', 'MOD SKRIN PENTAS EMS - MENUNGGU ISYARAT URUS SETIA')}
               </span>
             </div>
 
@@ -649,7 +648,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                   className="px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black uppercase tracking-wider transition shadow-lg flex items-center gap-2 mx-auto"
                 >
                   <Eye className="w-4 h-4" />
-                  Buka Keputusan Pentas Sekarang
+                  {t('ems:open_stage_results_now', 'Buka Keputusan Pentas Sekarang')}
                 </button>
               </div>
             )}
@@ -674,7 +673,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             <button
               onClick={() => navigate(`/ems/leaderboard/${eventId}`)}
               className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/70 dark:hover:text-white transition border border-slate-200 dark:border-white/10"
-              title="Keluar Mod Pentas"
+              title={t('ems:exit_stage_mode', 'Keluar Mod Pentas')}
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
@@ -682,7 +681,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider border border-emerald-500/30 flex items-center gap-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-ping" />
-                  KEMAS KINI MASA-NYATA
+                  {t('ems:realtime_update', 'KEMAS KINI MASA-NYATA')}
                 </span>
                 <span className="text-xs text-slate-500 dark:text-white/50 font-bold uppercase tracking-wider">
                   EMS STAGE MODE • {t('stage_presentation')}
@@ -709,7 +708,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                       : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200 dark:text-white/70 dark:hover:text-white dark:hover:bg-white/5'
                   }`}
                 >
-                  Semua Kategori ({leaderboard.length})
+                  {t('ems:all_categories_with_count', 'Semua Kategori ({{count}})', { count: leaderboard.length })}
                 </button>
                 {categories.map((cat) => {
                   const count = leaderboard.filter((item) => {
@@ -756,7 +755,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               className="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-slate-950 font-black text-xs uppercase tracking-wider shadow-[0_0_20px_rgba(245,158,11,0.4)] transition flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4 fill-slate-950" />
-              Bunga Api
+              {t('ems:fireworks', 'Bunga Api')}
             </button>
 
             {/* Stage Mode ThemeToggle */}
@@ -767,7 +766,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             <button
               onClick={toggleFullscreen}
               className="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/70 dark:hover:text-white transition border border-slate-200 dark:border-white/10"
-              title="Skrin Penuh"
+              title={t('ems:fullscreen', 'Skrin Penuh')}
             >
               {isFullscreen ? <Minimize2 className="w-5 h-5" /> : <Maximize2 className="w-5 h-5" />}
             </button>
@@ -778,7 +777,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         <div className="relative z-20 my-4 p-3 rounded-2xl bg-white/5 border border-white/10  flex flex-wrap items-center justify-between gap-3 shadow-lg">
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5 mr-1">
-              <Sparkles className="w-3.5 h-3.5" /> Kawalan Pentas:
+              <Sparkles className="w-3.5 h-3.5" /> {t('ems:stage_controls', 'Kawalan Pentas:')}
             </span>
             <div className="flex items-center gap-1 bg-black/40 p-1 rounded-xl border border-white/10">
               <button
@@ -790,7 +789,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
               >
-                Semua Terbuka
+                {t('ems:all_revealed', 'Semua Terbuka')}
               </button>
               <button
                 type="button"
@@ -801,7 +800,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
               >
-                Kunci (Armed)
+                {t('ems:lock_armed', 'Kunci (Armed)')}
               </button>
               <button
                 type="button"
@@ -812,7 +811,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
               >
-                Ke-3 (Gangsa)
+                {t('ems:third_bronze', 'Ke-3 (Gangsa)')}
               </button>
               <button
                 type="button"
@@ -823,7 +822,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
               >
-                Ke-2 (Perak)
+                {t('ems:second_silver', 'Ke-2 (Perak)')}
               </button>
               <button
                 type="button"
@@ -837,23 +836,23 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                     : 'text-white/70 hover:text-white hover:bg-white/10'
                 }`}
               >
-                Johan (Emas)
+                {t('ems:champion_gold', 'Johan (Emas)')}
               </button>
             </div>
           </div>
 
           <div className="hidden lg:flex items-center gap-3 text-[11px] text-white/50 font-medium">
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">Space / →</kbd> Seterusnya
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">Space / →</kbd> {t('ems:next', 'Seterusnya')}
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">R</kbd> Kunci Semula
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">R</kbd> {t('ems:relock', 'Kunci Semula')}
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">C</kbd> Bunga Api
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">C</kbd> {t('ems:fireworks', 'Bunga Api')}
             </span>
             <span className="flex items-center gap-1">
-              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">F</kbd> Skrin Penuh
+              <kbd className="px-1.5 py-0.5 rounded bg-white/10 text-white/80 font-mono text-[10px]">F</kbd> {t('ems:fullscreen', 'Skrin Penuh')}
             </span>
           </div>
         </div>
@@ -863,7 +862,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           {filteredLeaderboard.length === 0 ? (
             <div className="text-center py-20 text-slate-400 dark:text-white/40">
               <Trophy className="w-16 h-16 mx-auto mb-3 opacity-30" />
-              <p className="text-lg font-bold">Tiada data keputusan peserta setakat ini.</p>
+              <p className="text-lg font-bold">{t('ems:no_participant_results', 'Tiada data keputusan peserta setakat ini.')}</p>
             </div>
           ) : (
             <div className="space-y-12">
@@ -878,7 +877,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                         <Medal className="w-9 h-9" />
                       </div>
                       <span className="px-3 py-0.5 rounded-full bg-slate-100 dark:bg-slate-400/20 text-slate-700 dark:text-slate-300 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-slate-300 dark:border-slate-400/30">
-                        TEMPAT KE-2
+                        {t('ems:second_place', 'TEMPAT KE-2')}
                       </span>
                       <div className="text-xs font-black text-amber-600 dark:text-amber-400/90 tracking-widest mb-1 uppercase tabular-nums font-mono">
                         STAN #{top2.participant.booth_no || top2.participant.custom_responses?.booth_no || top2.participant.custom_responses?.booth_number || '-'}
@@ -892,13 +891,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
                       {/* Score display */}
                       <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-center gap-2">
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Markah Terwajar:</span>
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">{t('ems:weighted_score', 'Markah Terwajar:')}</span>
                         <span className="text-2xl font-black text-slate-800 dark:text-slate-200 tabular-nums font-mono">{top2.average_score.toFixed(1)} / 100%</span>
                       </div>
 
                       {top2.is_tie_winner && (
                         <div className="mt-2 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          <Scale className="w-3 h-3" /> Penentuan Seri
+                          <Scale className="w-3 h-3" /> {t('ems:tie_determination', 'Penentuan Seri')}
                         </div>
                       )}
                     </div>
@@ -920,7 +919,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                       </div>
 
                       <span className="px-4 py-1 rounded-full bg-amber-500/20 text-amber-800 dark:text-amber-300 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-amber-400/40 shadow-sm">
-                        CHAMPION - JOHAN
+                        {t('ems:champion_label', 'CHAMPION - JOHAN')}
                       </span>
 
                       <div className="text-xs font-black text-amber-700 dark:text-amber-300 tracking-widest mb-1 uppercase tabular-nums font-mono">
@@ -937,7 +936,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
                       {/* Score display */}
                       <div className="pt-4 border-t border-amber-500/20 flex items-center justify-center gap-2">
-                        <span className="text-xs font-bold text-amber-700 dark:text-amber-300/70 uppercase">Markah Terwajar:</span>
+                        <span className="text-xs font-bold text-amber-700 dark:text-amber-300/70 uppercase">{t('ems:weighted_score', 'Markah Terwajar:')}</span>
                         <span className="text-3xl md:text-4xl font-black text-amber-600 dark:text-amber-300 drop-shadow-md tabular-nums font-mono">
                           {top1.average_score.toFixed(1)} / 100%
                         </span>
@@ -945,7 +944,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
                       {top1.is_tie_winner && (
                         <div className="mt-3 text-xs font-bold text-amber-800 dark:text-amber-300 bg-amber-500/20 border border-amber-400/30 px-3 py-1 rounded-full inline-flex items-center gap-1.5">
-                          <Scale className="w-3.5 h-3.5" /> Penentuan Seri Pemenang
+                          <Scale className="w-3.5 h-3.5" /> {t('ems:tie_winner_decision', 'Penentuan Seri Pemenang')}
                         </div>
                       )}
                     </div>
@@ -964,7 +963,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                         <Award className="w-9 h-9" />
                       </div>
                       <span className="px-3 py-0.5 rounded-full bg-amber-700/10 dark:bg-amber-700/20 text-amber-800 dark:text-amber-400 text-xs font-black tracking-widest uppercase mb-2 inline-block border border-amber-700/20 dark:border-amber-700/30">
-                        TEMPAT KE-3
+                        {t('ems:third_place', 'TEMPAT KE-3')}
                       </span>
                       <div className="text-xs font-black text-amber-700 dark:text-amber-500/90 tracking-widest mb-1 uppercase tabular-nums font-mono">
                         STAN #{top3.participant.booth_no || top3.participant.custom_responses?.booth_no || top3.participant.custom_responses?.booth_number || '-'}
@@ -978,13 +977,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
                       {/* Score display */}
                       <div className="pt-3 border-t border-slate-200 dark:border-white/10 flex items-center justify-center gap-2">
-                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">Markah Terwajar:</span>
+                        <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase">{t('ems:weighted_score', 'Markah Terwajar:')}</span>
                         <span className="text-2xl font-black text-amber-700 dark:text-amber-200 tabular-nums font-mono">{top3.average_score.toFixed(1)} / 100%</span>
                       </div>
 
                       {top3.is_tie_winner && (
                         <div className="mt-2 text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                          <Scale className="w-3 h-3" /> Penentuan Seri
+                          <Scale className="w-3 h-3" /> {t('ems:tie_determination', 'Penentuan Seri')}
                         </div>
                       )}
                     </div>
@@ -1000,7 +999,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 <div className="max-w-6xl mx-auto px-4 pt-6">
                   <h3 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/50 mb-4 flex items-center gap-2">
                     <Layers className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                    Kedudukan Seterusnya (Carta Keseluruhan)
+                    {t('ems:next_rankings_overall', 'Kedudukan Seterusnya (Carta Keseluruhan)')}
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1032,7 +1031,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                               {item.average_score.toFixed(1)} / 100%
                             </div>
                             <span className="text-[10px] text-slate-400 dark:text-white/40 uppercase font-bold tabular-nums font-mono">
-                              {item.jury_count} Juri
+                              {t('ems:jury_count_suffix', '{{count}} Juri', { count: item.jury_count })}
                             </span>
                           </div>
                         </div>
@@ -1048,7 +1047,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
         {/* Footer */}
         <footer className="relative z-10 pt-6 border-t border-slate-200 dark:border-white/10 flex items-center justify-between text-xs text-slate-500 dark:text-white/40">
           <span>JPP POLISAS - Event Management System (EMS)</span>
-          <span>Dikuasa oleh Sistem Keputusan Realtime Supabase</span>
+          <span>{t('ems:powered_by_supabase_realtime', 'Dikuasa oleh Sistem Keputusan Realtime Supabase')}</span>
         </footer>
       </div>
     );
@@ -1068,12 +1067,12 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-500 hover:text-amber-600 dark:text-slate-400 dark:hover:text-amber-400 transition"
             >
               <ArrowLeft className="w-4 h-4" />
-              Kembali ke Papan Pemuka EMS
+              {t('ems:back_to_ems_dashboard', 'Kembali ke Papan Pemuka EMS')}
             </button>
             <span className="text-slate-300 dark:text-slate-700">•</span>
             <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider flex items-center gap-1">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              Masa-Nyata
+              {t('ems:realtime_badge', 'Masa-Nyata')}
             </span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-3 [text-wrap:balance]">
@@ -1081,7 +1080,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             {t('live_leaderboard')}: {event.title}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Penilaian masa-nyata juri, pengiraan purata markah, dan kawalan paparan skrin pentas.
+            {t('ems:leaderboard_subtitle', 'Penilaian masa-nyata juri, pengiraan purata markah, dan kawalan paparan skrin pentas.')}
           </p>
         </div>
 
@@ -1106,7 +1105,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             onClick={() => loadData(true)}
             disabled={refreshing}
             className="p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition text-slate-700 dark:text-slate-300 shadow-sm"
-            title="Muat Semula Data"
+            title={t('ems:refresh_data', 'Muat Semula Data')}
           >
             <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
           </button>
@@ -1191,18 +1190,18 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
                 <div className="space-y-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Visibiliti Skrin Pentas
+                    {t('ems:stage_screen_visibility', 'Visibiliti Skrin Pentas')}
                   </span>
                   <div className="flex items-center gap-2">
                     <span className={`w-2.5 h-2.5 rounded-full ${event.is_leaderboard_public ? 'bg-emerald-500' : 'bg-rose-500'}`} />
                     <h4 className="text-sm font-black">
-                      {event.is_leaderboard_public ? 'Status Awam: Didedahkan' : 'Status Awam: Disembunyikan'}
+                      {event.is_leaderboard_public ? t('ems:public_status_revealed', 'Status Awam: Didedahkan') : t('ems:public_status_hidden', 'Status Awam: Disembunyikan')}
                     </h4>
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {event.is_leaderboard_public
-                      ? 'Skrin pentas memaparkan kedudukan & kedudukan terkini peserta.'
-                      : 'Skrin pentas memaparkan skrin kunci "Keputusan Sedang Diproses".'}
+                      ? t('ems:stage_displays_rankings', 'Skrin pentas memaparkan kedudukan & kedudukan terkini peserta.')
+                      : t('ems:stage_displays_locked', 'Skrin pentas memaparkan skrin kunci "Keputusan Sedang Diproses".')}
                   </p>
                 </div>
 
@@ -1217,11 +1216,11 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 >
                   {event.is_leaderboard_public ? (
                     <>
-                      <EyeOff className="w-4 h-4" /> Sembunyi
+                      <EyeOff className="w-4 h-4" /> {t('ems:hide', 'Sembunyi')}
                     </>
                   ) : (
                     <>
-                      <Eye className="w-4 h-4" /> Buka Awam
+                      <Eye className="w-4 h-4" /> {t('ems:open_public', 'Buka Awam')}
                     </>
                   )}
                 </button>
@@ -1231,16 +1230,16 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
                 <div className="space-y-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Penentuan Seri (Tie-Breaker)
+                    {t('ems:tie_breaker_resolution', 'Penentuan Seri (Tie-Breaker)')}
                   </span>
                   <h4 className="text-sm font-black flex items-center gap-1.5">
                     <Scale className="w-4 h-4 text-amber-500" />
-                    {hasTiedParticipants ? 'Terdapat Keputusan Seri!' : 'Tiada Keputusan Seri'}
+                    {hasTiedParticipants ? t('ems:has_tied_results', 'Terdapat Keputusan Seri!') : t('ems:no_tied_results', 'Tiada Keputusan Seri')}
                   </h4>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
                     {hasTiedParticipants
-                      ? 'Pengarah Program perlu menetapkan pemenang muktamad.'
-                      : 'Kedudukan dikira berdasarkan purata skor juri.'}
+                      ? t('ems:program_director_resolve_tie', 'Pengarah Program perlu menetapkan pemenang muktamad.')
+                      : t('ems:rankings_calculated_average', 'Kedudukan dikira berdasarkan purata skor juri.')}
                   </p>
                 </div>
 
@@ -1248,7 +1247,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                   onClick={() => setShowTieBreakerModal(true)}
                   className="px-4 py-2 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 hover:bg-amber-500/20 transition font-black text-xs uppercase tracking-wider shrink-0 flex items-center gap-1.5 active:scale-[0.98]"
                 >
-                  <Scale className="w-4 h-4" /> Urus Pecah Seri
+                  <Scale className="w-4 h-4" /> {t('ems:manage_tie_breaker', 'Urus Pecah Seri')}
                 </button>
               </div>
 
@@ -1256,13 +1255,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
                 <div className="space-y-1">
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Jumlah Peserta & Juri
+                    {t('ems:total_participants_jury', 'Jumlah Peserta & Juri')}
                   </span>
                   <h4 className="text-sm font-black text-amber-600 dark:text-amber-400">
-                    {leaderboard.length} Peserta Berdaftar
+                    {t('ems:registered_participants_count', '{{count}} Peserta Berdaftar', { count: leaderboard.length })}
                   </h4>
                   <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Dineka untuk {categories.length || 1} kategori penilaian.
+                    {t('ems:designed_for_categories', 'Dineka untuk {{count}} kategori penilaian.', { count: categories.length || 1 })}
                   </p>
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center font-black text-lg tabular-nums font-mono">
@@ -1292,7 +1291,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                     : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
                 }`}
               >
-                Semua Kategori ({leaderboard.length})
+                {t('ems:all_categories_with_count', 'Semua Kategori ({{count}})', { count: leaderboard.length })}
               </button>
               {categories.map((cat) => {
                 const count = leaderboard.filter((item) => {
@@ -1327,7 +1326,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Cari Stan / Peserta..."
+                placeholder={t('ems:search_booth_participant_placeholder', 'Cari Stan / Peserta...')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-9 pr-4 py-2 text-xs rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-amber-500 focus:outline-none transition"
@@ -1341,21 +1340,21 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-100/80 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider border-b border-slate-200 dark:border-slate-800">
                   <tr>
-                    <th className="px-4 py-3.5 text-center w-16">Kedudukan</th>
-                    <th className="px-4 py-3.5">Stan #</th>
-                    <th className="px-4 py-3.5">Pasukan / Ketua</th>
-                    <th className="px-4 py-3.5">Kategori</th>
-                    <th className="px-4 py-3.5 text-center">Markah Terwajar (%)</th>
-                    <th className="px-4 py-3.5 text-center">Bil. Juri</th>
-                    <th className="px-4 py-3.5 text-center">Status / Lencana</th>
-                    <th className="px-4 py-3.5 text-right">Tindakan</th>
+                    <th className="px-4 py-3.5 text-center w-16">{t('ems:ranking', 'Kedudukan')}</th>
+                    <th className="px-4 py-3.5">{t('ems:booth_hash', 'Stan #')}</th>
+                    <th className="px-4 py-3.5">{t('ems:team_or_leader', 'Pasukan / Ketua')}</th>
+                    <th className="px-4 py-3.5">{t('ems:category', 'Kategori')}</th>
+                    <th className="px-4 py-3.5 text-center">{t('ems:weighted_score_percent', 'Markah Terwajar (%)')}</th>
+                    <th className="px-4 py-3.5 text-center">{t('ems:jury_count_header', 'Bil. Juri')}</th>
+                    <th className="px-4 py-3.5 text-center">{t('ems:status_badge_header', 'Status / Lencana')}</th>
+                    <th className="px-4 py-3.5 text-right">{t('ems:actions_col', 'Tindakan')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
                   {filteredLeaderboard.length === 0 ? (
                     <tr>
                       <td colSpan={8} className="px-4 py-12 text-center text-slate-400">
-                        Tiada data peserta ditemui bagi carian/kategori ini.
+                        {t('ems:no_participants_found_filter', 'Tiada data peserta ditemui bagi carian/kategori ini.')}
                       </td>
                     </tr>
                   ) : (
@@ -1405,7 +1404,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                               {p.team_name || p.leader_name}
                             </div>
                             <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                              Ketua: {p.leader_name} {p.matrix_no ? `(${p.matrix_no})` : ''}
+                              {t('ems:leader_prefix', 'Ketua:')} {p.leader_name} {p.matrix_no ? `(${p.matrix_no})` : ''}
                             </div>
                           </td>
                           <td className="px-4 py-3.5 text-slate-600 dark:text-slate-400">
@@ -1422,17 +1421,17 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                           </td>
                           <td className="px-4 py-3.5 text-center">
                             <span className="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[11px] font-bold tabular-nums font-mono">
-                              {item.jury_count} Juri
+                              {t('ems:jury_count_suffix', '{{count}} Juri', { count: item.jury_count })}
                             </span>
                           </td>
                           <td className="px-4 py-3.5 text-center">
                             {item.is_tie_winner ? (
                               <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1">
-                                <Trophy className="w-3 h-3" /> Pemenang Seri
+                                <Trophy className="w-3 h-3" /> {t('ems:tie_winner_badge', 'Pemenang Seri')}
                               </span>
                             ) : item.is_tied ? (
                               <span className="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 text-[10px] font-black uppercase tracking-wider inline-flex items-center gap-1">
-                                <Scale className="w-3 h-3" /> Markah Seri
+                                <Scale className="w-3 h-3" /> {t('ems:tie_score_badge', 'Markah Seri')}
                               </span>
                             ) : (
                               <span className="text-[11px] text-slate-400">-</span>
@@ -1444,7 +1443,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                               className="px-3 py-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 hover:bg-amber-100 dark:hover:bg-amber-900/40 font-bold text-xs transition inline-flex items-center gap-1.5 border border-amber-200 dark:border-amber-800/60"
                             >
                               <MessageSquare className="w-3.5 h-3.5" />
-                              Lihat Markah & Komen
+                              {t('ems:view_scores_comments', 'Lihat Markah & Komen')}
                             </button>
                           </td>
                         </tr>
@@ -1467,7 +1466,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
             <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-800">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                  Perincian Penilaian Juri
+                  {t('ems:jury_evaluation_details', 'Perincian Penilaian Juri')}
                 </span>
                 <h3 className="text-lg font-black text-slate-900 dark:text-white [text-wrap:balance]">
                   {selectedParticipantForComments.participant.team_name || selectedParticipantForComments.participant.leader_name}
@@ -1485,11 +1484,11 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               {loadingComments ? (
                 <div className="py-12 text-center text-slate-400">
                   <RefreshCw className="w-8 h-8 mx-auto animate-spin mb-2" />
-                  Memuatkan jawapan & komen juri...
+                  {t('ems:loading_jury_answers_comments', 'Memuatkan jawapan & komen juri...')}
                 </div>
               ) : participantScores.length === 0 ? (
                 <div className="py-12 text-center text-slate-400">
-                  Belum ada markah atau komen juri dimasukkan untuk peserta ini.
+                  {t('ems:no_jury_scores_or_comments_yet', 'Belum ada markah atau komen juri dimasukkan untuk peserta ini.')}
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -1502,7 +1501,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                         <div className="flex items-center gap-2">
                           <UserCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                           <span className="font-bold text-xs text-slate-900 dark:text-white">
-                            Juri: {score.jury?.jury_name || score.jury?.code || 'Kod Juri'}
+                            {t('ems:jury_prefix', 'Juri:')} {score.jury?.jury_name || score.jury?.code || t('ems:jury_code_fallback', 'Kod Juri')}
                           </span>
                           {score.jury?.organization && (
                             <span className="text-[10px] text-slate-500 dark:text-slate-400">
@@ -1511,14 +1510,14 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                           )}
                         </div>
                         <div className="text-xs font-black text-amber-600 dark:text-amber-400 tabular-nums font-mono">
-                          Skor Criteria: {score.score}
+                          {t('ems:criteria_score_label', 'Skor Kriteria: {{score}}', { score: score.score })}
                         </div>
                       </div>
 
                       {score.rubric && (
                         <div className="text-xs text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                          <span>Criteria: <strong>{score.rubric.criteria_name}</strong></span>
-                          <span className="text-[10px] text-slate-400 tabular-nums font-mono">Pemberat: {score.rubric.weight}x</span>
+                          <span>{t('ems:criteria_label', 'Kriteria:')} <strong>{score.rubric.criteria_name}</strong></span>
+                          <span className="text-[10px] text-slate-400 tabular-nums font-mono">{t('ems:weight_multiplier', 'Pemberat: {{weight}}x', { weight: score.rubric.weight })}</span>
                         </div>
                       )}
 
@@ -1527,7 +1526,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                           &quot;{score.comments}&quot;
                         </div>
                       ) : (
-                        <div className="text-[11px] text-slate-400 italic">Tiada ulasan bertulis daripada juri ini.</div>
+                        <div className="text-[11px] text-slate-400 italic">{t('ems:no_written_review_from_jury', 'Tiada ulasan bertulis daripada juri ini.')}</div>
                       )}
                     </div>
                   ))}
@@ -1540,7 +1539,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 onClick={() => setSelectedParticipantForComments(null)}
                 className="px-5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs transition"
               >
-                Tutup
+                {t('ems:close_btn', 'Tutup')}
               </button>
             </div>
           </div>
@@ -1557,7 +1556,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
               <div className="flex items-center gap-2">
                 <Scale className="w-6 h-6 text-amber-500" />
                 <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                  Penentuan Pemenang Pecah Seri
+                  {t('ems:tie_breaker_winner_selection', 'Penentuan Pemenang Pecah Seri')}
                 </h3>
               </div>
               <button
@@ -1570,7 +1569,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
 
             <div className="space-y-3">
               <p className="text-xs text-slate-600 dark:text-slate-400">
-                Pilih peserta yang ditentukan sebagai Pemenang Utama bagi keputusan markah seri. Pilihan ini akan mengatasi keutamaan senarai (Tie-Breaker Badge).
+                {t('ems:tie_breaker_modal_desc', 'Pilih peserta yang ditentukan sebagai Pemenang Utama bagi keputusan markah seri. Pilihan ini akan mengatasi keutamaan senarai (Tie-Breaker Badge).')}
               </p>
 
               <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
@@ -1600,13 +1599,13 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                             #{p.booth_no || p.custom_responses?.booth_no || '-'} - {p.team_name || p.leader_name}
                           </p>
                           <p className="text-[11px] text-slate-500 dark:text-slate-400 tabular-nums font-mono">
-                            Purata Skor: {item.average_score.toFixed(2)}
+                            {t('ems:average_score_prefix', 'Purata Skor:')} {item.average_score.toFixed(2)}
                           </p>
                         </div>
                       </div>
                       {item.is_tie_winner && (
                         <span className="text-[10px] bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full font-black">
-                          Pemenang Semasa
+                          {t('ems:current_winner', 'Pemenang Semasa')}
                         </span>
                       )}
                     </label>
@@ -1620,14 +1619,14 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 onClick={() => setShowTieBreakerModal(false)}
                 className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold text-xs hover:bg-slate-200 dark:hover:bg-slate-700 transition"
               >
-                Batal
+                {t('ems:cancel', 'Batal')}
               </button>
               <button
                 onClick={handleConfirmTieWinner}
                 disabled={resolvingTie || !selectedTieWinnerId}
                 className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-xs uppercase tracking-wider transition shadow-md disabled:opacity-50"
               >
-                {resolvingTie ? 'Menyimpan...' : 'Sahkan Pemenang Seri'}
+                {resolvingTie ? t('ems:saving', 'Menyimpan...') : t('ems:confirm_tie_winner', 'Sahkan Pemenang Seri')}
               </button>
             </div>
           </div>

@@ -119,10 +119,10 @@ function MemberCard({
 
       onUpdate(member.id, patch);
       setEditing(false);
-      toast.success('Maklumat ahli dikemaskini.');
-      logAuditAction({ actionType: 'JPP_MEMBER_UPDATED', module: 'JPP Admin', entityId: member.id, description: `Maklumat ahli ${member.full_name} dikemaskini (Jawatan: ${position || '-'}, Unit: ${unit || '-'})`, actorId: member.id, metadata: { position, unit, overseeUnits } });
+      toast.success(t('jpp:members_info_updated', 'Maklumat ahli dikemaskini.'));
+      logAuditAction({ actionType: 'JPP_MEMBER_UPDATED', module: 'JPP Admin', entityId: member.id, description: t('jpp:members_audit_member_updated', 'Maklumat ahli {{name}} dikemaskini (Jawatan: {{pos}}, Unit: {{unit}})', { name: member.full_name, pos: position || '-', unit: unit || '-' }), actorId: member.id, metadata: { position, unit, overseeUnits } });
     } catch (err: any) {
-      toast.error('Gagal simpan: ' + err.message);
+      toast.error(t('jpp:members_save_fail', 'Gagal simpan:') + ' ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -172,9 +172,7 @@ function MemberCard({
                 {positionLabels[member.jpp_position as string] ?? member.jpp_position}
               </span>
             ) : (
-              <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/30">
-                Tiada Jawatan
-              </span>
+              <span className="text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/30">{t('jpp:members_no_position', 'Tiada Jawatan')}</span>
             )}
 
             {unitCfg && (
@@ -198,7 +196,7 @@ function MemberCard({
               }}
               className="text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
             >
-              <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">— Pilih Jawatan —</option>
+              <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{t('jpp:members_select_position_opt', '— Pilih Jawatan —')}</option>
               {Object.entries(positionLabels).map(([k, v]) => (
                 <option key={k} value={k} className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{v}</option>
               ))}
@@ -211,7 +209,7 @@ function MemberCard({
                 onChange={e => setUnit(e.target.value)}
                 className="text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white rounded-xl px-2 py-1.5 outline-none custom-scrollbar"
               >
-                <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">— Pilih Unit Exco —</option>
+                <option value="" className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{t('jpp:members_select_exco_unit_opt', '— Pilih Unit Exco —')}</option>
                 {Object.keys(unitLabels).map(u => (
                   <option key={u} value={u} className="bg-white dark:bg-[#0f0f13] text-slate-900 dark:text-white">{unitLabels[u] ?? u}</option>
                 ))}
@@ -221,12 +219,10 @@ function MemberCard({
             {/* MT Oversees — Multi-Checkbox (hanya untuk jawatan MT) */}
             {willBeMT && (
               <div className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/30 p-2.5 space-y-1.5">
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">
-                  🎯 Unit Diawasi (boleh pilih banyak)
-                </p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">{t('jpp:members_supervised_units_label', '🎯 Unit Diawasi (boleh pilih banyak)')}</p>
                 {loadingOversee ? (
                   <div className="flex items-center gap-2 text-slate-400 dark:text-white/30 text-[10px]">
-                    <Loader2 className="w-3 h-3 animate-spin" /> Memuatkan...
+                    <Loader2 className="w-3 h-3 animate-spin" /> {t('jpp:loading', 'Memuatkan...')}
                   </div>
                 ) : (
                   unitOrder.map(code => {
@@ -268,7 +264,7 @@ function MemberCard({
                 onClick={() => setRemoveConfirmOpen(true)}
                 disabled={saving}
                 className="flex-shrink-0 flex items-center justify-center px-3 py-1.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-all text-xs font-bold"
-                title="Buang Ahli"
+                title={t('jpp:members_remove_member_title', 'Buang Ahli')}
               >
                 <Trash className="w-3.5 h-3.5" />
               </button>
@@ -286,10 +282,10 @@ function MemberCard({
       <ConfirmDialog
         open={removeConfirmOpen}
         onOpenChange={setRemoveConfirmOpen}
-        title="Buang Ahli JPP"
-        description={`Adakah anda pasti mahu membuang ${member.full_name || 'ahli ini'} daripada barisan Majlis Perwakilan Pelajar? Tindakan ini akan melucutkan jawatan dan unit beliau.`}
-        confirmLabel="Buang Ahli"
-        cancelLabel="Batal"
+        title={t('jpp:members_remove_jpp_member_title', 'Buang Ahli JPP')}
+        description={t('jpp:members_remove_confirm_desc', 'Adakah anda pasti mahu membuang {{name}} daripada barisan Majlis Perwakilan Pelajar? Tindakan ini akan melucutkan jawatan dan unit beliau.', { name: member.full_name || t('jpp:members_this_member', 'ahli ini') })}
+        confirmLabel={t('jpp:members_remove_member_confirm', 'Buang Ahli')}
+        cancelLabel={t('jpp:cancel', 'Batal')}
         variant="destructive"
         onConfirm={() => onRemove(member.id)}
       />
@@ -348,6 +344,7 @@ function AddMemberModal({
   onSuccess: (newMember: JppMember) => void;
 }) {
   const { positionLabels, unitLabels, unitConfig, unitOrder } = useJppConfig();
+  const { t } = useTranslation(['jpp', 'common']);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
@@ -409,8 +406,8 @@ function AddMemberModal({
         );
       }
 
-      toast.success('Ahli berjaya ditambah ke JPP.');
-      logAuditAction({ actionType: 'JPP_MEMBER_ADDED', module: 'JPP Admin', entityId: selectedUser.id, description: `${selectedUser.full_name} ditambah ke JPP (Jawatan: ${position || '-'})`, actorId: selectedUser.id, metadata: { position, unit, overseeUnits } });
+      toast.success(t('jpp:members_added_success', 'Ahli berjaya ditambah ke JPP.'));
+      logAuditAction({ actionType: 'JPP_MEMBER_ADDED', module: 'JPP Admin', entityId: selectedUser.id, description: t('jpp:members_audit_member_added', '{{name}} ditambah ke JPP (Jawatan: {{pos}})', { name: selectedUser.full_name, pos: position || '-' }), actorId: selectedUser.id, metadata: { position, unit, overseeUnits } });
       onSuccess({
         id: selectedUser.id,
         full_name: selectedUser.full_name,
@@ -427,7 +424,7 @@ function AddMemberModal({
       setUnit('');
       setOverseeUnits([]);
     } catch (err: any) {
-      toast.error('Gagal tambah ahli: ' + err.message);
+      toast.error(t('jpp:members_add_fail', 'Gagal tambah ahli:') + ' ' + err.message);
     } finally {
       setSaving(false);
     }
@@ -439,8 +436,8 @@ function AddMemberModal({
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      title="Tambah Ahli JPP"
-      description="Cari pelajar dan tetapkan jawatan kepimpinan"
+      title={t('jpp:members_add_member_title', 'Tambah Ahli JPP')}
+      description={t('jpp:members_add_member_desc', 'Cari pelajar dan tetapkan jawatan kepimpinan')}
     >
       <div className="pt-2">
         {!selectedUser ? (
@@ -451,18 +448,18 @@ function AddMemberModal({
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Cari nama penuh pelajar..."
+                placeholder={t('jpp:members_search_full_name_ph', 'Cari nama penuh pelajar...')}
                 className="w-full pl-11 pr-4 py-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] text-sm text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/30 focus:outline-none focus:border-emerald-500/50 dark:focus:border-emerald-500/30 focus:bg-white dark:focus:bg-white/[0.05] hover:border-slate-300 dark:hover:border-white/[0.1] transition-all font-medium"
               />
             </div>
             
             <div className="space-y-2 min-h-[150px]">
               {searching ? (
-                <div className="flex justify-center py-6 text-slate-500 dark:text-white/30 text-xs gap-2 font-medium bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200 dark:border-white/[0.03]"><Loader2 className="w-4 h-4 animate-spin text-emerald-500 dark:text-emerald-400"/>Mencari rekod...</div>
+                <div className="flex justify-center py-6 text-slate-500 dark:text-white/30 text-xs gap-2 font-medium bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200 dark:border-white/[0.03]"><Loader2 className="w-4 h-4 animate-spin text-emerald-500 dark:text-emerald-400"/>{t('jpp:members_searching_records', 'Mencari rekod...')}</div>
               ) : searchQuery.length > 0 && searchQuery.length < 3 ? (
-                <div className="text-center py-6 text-slate-400 dark:text-white/30 text-[10px] uppercase tracking-widest font-bold bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200 dark:border-white/[0.03]">Taip 3 aksara untuk carian</div>
+                <div className="text-center py-6 text-slate-400 dark:text-white/30 text-[10px] uppercase tracking-widest font-bold bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200 dark:border-white/[0.03]">{t('jpp:members_type_3_chars', 'Taip 3 aksara untuk carian')}</div>
               ) : searchResults.length === 0 && searchQuery.length >= 3 ? (
-                <div className="text-center py-6 text-slate-400 dark:text-white/30 text-[10px] uppercase tracking-widest font-bold bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200 dark:border-white/[0.03]">Tiada pelajar dijumpai</div>
+                <div className="text-center py-6 text-slate-400 dark:text-white/30 text-[10px] uppercase tracking-widest font-bold bg-slate-50 dark:bg-white/[0.02] rounded-xl border border-slate-200 dark:border-white/[0.03]">{t('jpp:members_no_student_found', 'Tiada pelajar dijumpai')}</div>
               ) : (
                 searchResults.map(u => (
                   <button
@@ -515,7 +512,7 @@ function AddMemberModal({
                   }}
                   className="w-full text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/50 dark:focus:border-emerald-500/30 transition-colors"
                 >
-                  <option value="" className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">— Pilih Jawatan —</option>
+                  <option value="" className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">{t('jpp:members_select_position_opt', '— Pilih Jawatan —')}</option>
                   {Object.entries(positionLabels).map(([k, v]) => (
                     <option key={k} value={k} className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">{v}</option>
                   ))}
@@ -524,13 +521,13 @@ function AddMemberModal({
 
               {!willBeMT && (
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 block mb-2">Unit Exco (Pilihan)</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 block mb-2">{t('jpp:members_exco_unit_optional', 'Unit Exco (Pilihan)')}</label>
                   <select
                     value={unit}
                     onChange={e => setUnit(e.target.value)}
                     className="w-full text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/50 dark:focus:border-emerald-500/30 transition-colors"
                   >
-                    <option value="" className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">— Pilih Unit Exco —</option>
+                    <option value="" className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">{t('jpp:members_select_exco_unit_opt', '— Pilih Unit Exco —')}</option>
                     {Object.keys(unitLabels).map(u => (
                       <option key={u} value={u} className="bg-white dark:bg-[#151D16] text-slate-900 dark:text-white">{unitLabels[u] ?? u}</option>
                     ))}
@@ -540,7 +537,7 @@ function AddMemberModal({
 
               {willBeMT && (
                 <div>
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 block mb-2 flex items-center gap-2">Penyeliaan Unit (MT) <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md text-[8px]">PILIHAN RAWAK</span></label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 block mb-2 flex items-center gap-2">{t('jpp:members_unit_supervision_mt', 'Penyeliaan Unit (MT)')} <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 px-1.5 py-0.5 rounded-md text-[8px]">{t('jpp:members_random_selection', 'PILIHAN RAWAK')}</span></label>
                   <div className="rounded-xl border border-slate-200 dark:border-white/[0.08] bg-slate-50 dark:bg-black/30 p-2 max-h-48 overflow-y-auto custom-scrollbar space-y-1">
                     {unitOrder.map(code => {
                       const cfg = unitConfig[code];
@@ -578,7 +575,7 @@ function AddMemberModal({
                   saving || !position ? "bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/20 border border-slate-200 dark:border-white/5 cursor-not-allowed" : "bg-emerald-500 text-white hover:bg-emerald-400 shadow-emerald-500/20 hover:scale-[1.02]"
                 )}
               >
-                {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Simpan Ahli JPP'}
+                {saving ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : t('jpp:members_save_jpp_member', 'Simpan Ahli JPP')}
               </button>
             </div>
           </div>
@@ -598,6 +595,7 @@ function ResetKohortModal({
   onClose: () => void;
   onConfirm: () => void;
 }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const [confirmText, setConfirmText] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -635,25 +633,24 @@ function ResetKohortModal({
             <AlertTriangle className="w-5 h-5 text-rose-500 dark:text-rose-400" />
           </div>
           <div>
-            <h3 className="text-lg font-black text-slate-900 dark:text-white">Reset Kohort JPP</h3>
-            <p className="text-[10px] text-rose-600 dark:text-rose-400/80 uppercase tracking-widest font-bold">Tindakan tidak boleh dipulihkan</p>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white">{t('jpp:members_reset_cohort_title', 'Reset Kohort JPP')}</h3>
+            <p className="text-[10px] text-rose-600 dark:text-rose-400/80 uppercase tracking-widest font-bold">{t('jpp:members_action_irreversible', 'Tindakan tidak boleh dipulihkan')}</p>
           </div>
         </div>
 
         <p className="text-sm text-slate-600 dark:text-white/70 mb-4 leading-relaxed">
-          Tindakan ini akan <b>melucutkan peranan JPP</b> daripada kesemua ahli sedia ada dan mengosongkan semua jawatan serta unit. 
-          Lakukan ini hanya jika anda ingin melantik kohort/barisan ahli yang baharu.
+          {t('jpp:members_reset_cohort_p1', 'Tindakan ini akan')} <b>{t('jpp:members_revoke_jpp_role', 'melucutkan peranan JPP')}</b> {t('jpp:members_reset_cohort_p2', 'daripada kesemua ahli sedia ada dan mengosongkan semua jawatan serta unit. Lakukan ini hanya jika anda ingin melantik kohort/barisan ahli yang baharu.')}
         </p>
 
         <div className="space-y-3 mb-6">
           <label className="text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/50 block">
-            Sila taip <span className="text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1 rounded">RESET KOHORT</span> untuk mengesahkan:
+            {t('jpp:members_please_type', 'Sila taip')} <span className="text-rose-600 dark:text-rose-400 bg-rose-500/10 px-1 rounded">{t('jpp:members_reset_cohort_code', 'RESET KOHORT')}</span> {t('jpp:members_to_confirm', 'untuk mengesahkan:')}
           </label>
           <input
             type="text"
             value={confirmText}
             onChange={(e) => setConfirmText(e.target.value)}
-            placeholder="RESET KOHORT"
+            placeholder={t('jpp:members_reset_cohort_code', 'RESET KOHORT')}
             className="w-full px-4 py-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-white/20 focus:outline-none focus:border-rose-500/50 font-mono text-center tracking-widest uppercase transition-all"
           />
         </div>
@@ -668,7 +665,7 @@ function ResetKohortModal({
               : "bg-rose-500 text-white hover:bg-rose-400 shadow-rose-500/20 hover:scale-[1.02]"
           )}
         >
-          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : 'Sahkan & Reset'}
+          {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : t('jpp:members_confirm_and_reset', 'Sahkan & Reset')}
         </button>
       </motion.div>
     </div>
@@ -724,10 +721,10 @@ export function JppMembersPage() {
       if (error) throw error;
       const removed = members.find(m => m.id === id);
       setMembers(prev => prev.filter(m => m.id !== id));
-      toast.success('Ahli berjaya dibuang dari JPP.');
-      logAuditAction({ actionType: 'JPP_MEMBER_REMOVED', module: 'JPP Admin', entityId: id, description: `${removed?.full_name || 'Ahli'} dibuang dari JPP`, actorId: user!.id });
+      toast.success(t('jpp:members_removed_success', 'Ahli berjaya dibuang dari JPP.'));
+      logAuditAction({ actionType: 'JPP_MEMBER_REMOVED', module: 'JPP Admin', entityId: id, description: t('jpp:members_audit_member_removed', '{{name}} dibuang dari JPP', { name: removed?.full_name || t('jpp:member', 'Ahli') }), actorId: user!.id });
     } catch (err: any) {
-      toast.error('Gagal membuang ahli: ' + err.message);
+      toast.error(t('jpp:members_remove_fail', 'Gagal membuang ahli:') + ' ' + err.message);
     }
   }, []);
 
@@ -735,11 +732,11 @@ export function JppMembersPage() {
     try {
       const { error } = await supabase.rpc('reset_jpp_cohort');
       if (error) throw error;
-      toast.success('Berjaya reset kohort JPP. Semua ahli telah dikeluarkan.');
-      logAuditAction({ actionType: 'JPP_KOHORT_RESET', module: 'JPP Admin', description: `Kohort JPP direset — ${members.length} ahli dikeluarkan`, actorId: user!.id, metadata: { total_removed: members.length } });
+      toast.success(t('jpp:members_reset_cohort_success', 'Berjaya reset kohort JPP. Semua ahli telah dikeluarkan.'));
+      logAuditAction({ actionType: 'JPP_KOHORT_RESET', module: 'JPP Admin', description: t('jpp:members_audit_cohort_reset', 'Kohort JPP direset — {{count}} ahli dikeluarkan', { count: members.length }), actorId: user!.id, metadata: { total_removed: members.length } });
       fetchMembers(); // Refresh senarai ahli
     } catch (err: any) {
-      toast.error('Gagal mereset kohort: ' + err.message);
+      toast.error(t('jpp:members_reset_cohort_fail', 'Gagal mereset kohort:') + ' ' + err.message);
     }
   }, [fetchMembers]);
 
@@ -819,10 +816,10 @@ export function JppMembersPage() {
                 <button
                   onClick={() => setShowResetModal(true)}
                   className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-rose-500/10 border border-rose-500/20 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all"
-                  title="Reset Kohort"
+                  title={t('jpp:members_reset_cohort_title', 'Reset Kohort')}
                 >
                   <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>Reset Kohort</span>
+                  <span>{t('jpp:members_reset_cohort_title', 'Reset Kohort')}</span>
                 </button>
               </div>
             )}
@@ -838,12 +835,12 @@ export function JppMembersPage() {
           </div>
           <div className="p-5 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-xs dark:shadow-none flex flex-col justify-center relative overflow-hidden">
             <Users className="absolute -right-4 -bottom-4 w-20 h-20 text-slate-100 dark:text-white/5 pointer-events-none" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1">Exco & Unit</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400 mb-1">{t('jpp:members_exco_and_unit', 'Exco & Unit')}</p>
             <p className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white">{filtered.length - unassigned.length - mtMembers.length}</p>
           </div>
           <div className="p-5 rounded-[1.5rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-xs dark:shadow-none flex flex-col justify-center relative overflow-hidden">
             <Shield className="absolute -right-4 -bottom-4 w-20 h-20 text-slate-100 dark:text-white/5 pointer-events-none" />
-            <p className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-1">Belum Set</p>
+            <p className="text-[10px] font-black uppercase tracking-widest text-rose-600 dark:text-rose-400 mb-1">{t('jpp:members_not_set', 'Belum Set')}</p>
             <p className="text-3xl font-black font-mono tabular-nums text-slate-900 dark:text-white">{unassigned.length}</p>
           </div>
         </div>
@@ -862,7 +859,7 @@ export function JppMembersPage() {
           </div>
           <div className="text-right">
             <span className="text-xs font-bold text-slate-500 dark:text-white/40 tabular-nums">
-              {filtered.length} daripada {members.length} {t('common:all', 'ahli')}
+              {filtered.length} {t('jpp:of', 'daripada')} {members.length} {t('common:all', 'ahli')}
             </span>
           </div>
         </div>
@@ -876,18 +873,16 @@ export function JppMembersPage() {
           <div className="flex flex-col items-center justify-center py-20 text-center bg-white dark:bg-white/[0.02] rounded-[2rem] border border-slate-200 dark:border-white/[0.05] shadow-xs dark:shadow-none">
             <UserCheck className="w-10 h-10 text-slate-300 dark:text-white/10 mb-4" />
             <p className="text-sm font-black text-slate-700 dark:text-white/60 uppercase tracking-widest">
-              {members.length === 0 ? 'Tiada Ahli Didaftarkan' : 'Tiada Padanan Carian'}
+              {members.length === 0 ? t('jpp:members_no_members_registered', 'Tiada Ahli Didaftarkan') : t('jpp:members_no_search_matches', 'Tiada Padanan Carian')}
             </p>
             <p className="text-xs text-slate-500 dark:text-white/30 mt-2 font-medium max-w-sm">
-              {members.length === 0
-                ? 'Belum ada ahli dalam kohort ini. Klik "Tambah Ahli" untuk mula melantik jawatan.'
-                : `Tiada ahli sepadan dengan carian "${search}". Sila semak semula ejaan anda.`}
+              {members.length === 0 ? t('jpp:members_no_members_desc', 'Belum ada ahli dalam kohort ini. Klik "Tambah Ahli" untuk mula melantik jawatan.') : t('jpp:members_no_search_match_desc', 'Tiada ahli sepadan dengan carian "{{query}}". Sila semak semula ejaan anda.', { query: search })}
             </p>
           </div>
         ) : (
           <div className="space-y-10">
             <GroupSection
-              title="Majlis Tertinggi (MT)"
+              title={t('jpp:members_supreme_council_mt', 'Majlis Tertinggi (MT)')}
               members={mtMembers}
               canEdit={canEdit}
               themeColor={themeColor}
@@ -902,7 +897,7 @@ export function JppMembersPage() {
               return (
                 <GroupSection
                   key={u}
-                  title={`Unit ${unitLabels[u] ?? u}`}
+                  title={'Unit ' + (unitLabels[u] ?? u)}
                   members={grpMembers}
                   canEdit={canEdit}
                   themeColor={themeColor}
@@ -913,7 +908,7 @@ export function JppMembersPage() {
             })}
 
             <GroupSection
-              title="Belum Ditetapkan"
+              title={t('jpp:members_unassigned', 'Belum Ditetapkan')}
               members={unassigned}
               canEdit={canEdit}
               themeColor="#f43f5e" 

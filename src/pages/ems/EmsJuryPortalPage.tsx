@@ -39,6 +39,7 @@ import {
   ThumbsUp,
 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import {
@@ -77,56 +78,58 @@ export interface LikertOptionItem {
   defaultDescriptor: string;
 }
 
+const t = (k: string, fb: string, opts?: any) => i18n.t(k, fb, opts);
+
 export const LIKERT_OPTIONS: LikertOptionItem[] = [
   {
     value: 5,
-    label: '5 - Cemerlang',
-    shortText: 'Cemerlang (5/5)',
+    get label() { return t('ems:likert_label_5', '5 - Cemerlang'); },
+    get shortText() { return t('ems:likert_short_5', 'Cemerlang (5/5)'); },
     icon: Sparkles,
     iconName: 'Sparkles',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
     activeBg: 'bg-emerald-600 text-white border-emerald-500 ring-2 ring-emerald-500/30 shadow-md',
-    defaultDescriptor: 'Cemerlang - Prestasi luar biasa, sangat kreatif, inovatif dan memenuhi semua kriteria kualiti tertinggi.',
+    get defaultDescriptor() { return t('ems:likert_desc_5', 'Cemerlang - Prestasi luar biasa, sangat kreatif, inovatif dan memenuhi semua kriteria kualiti tertinggi.'); },
   },
   {
     value: 4,
-    label: '4 - Baik',
-    shortText: 'Baik (4/5)',
+    get label() { return t('ems:likert_label_4', '4 - Baik'); },
+    get shortText() { return t('ems:likert_short_4', 'Baik (4/5)'); },
     icon: ThumbsUp,
     iconName: 'ThumbsUp',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
     activeBg: 'bg-sky-600 dark:bg-sky-500 text-white border-sky-500 ring-2 ring-sky-500/30 shadow-md',
-    defaultDescriptor: 'Baik - Memenuhi kriteria dengan kualiti tinggi, kemas dan penyampaian yang meyakinkan.',
+    get defaultDescriptor() { return t('ems:likert_desc_4', 'Baik - Memenuhi kriteria dengan kualiti tinggi, kemas dan penyampaian yang meyakinkan.'); },
   },
   {
     value: 3,
-    label: '3 - Memuaskan',
-    shortText: 'Memuaskan (3/5)',
+    get label() { return t('ems:likert_label_3', '3 - Memuaskan'); },
+    get shortText() { return t('ems:likert_short_3', 'Memuaskan (3/5)'); },
     icon: MinusCircle,
     iconName: 'MinusCircle',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
     activeBg: 'bg-slate-700 dark:bg-slate-600 text-white border-slate-600 ring-2 ring-slate-500/30 shadow-md',
-    defaultDescriptor: 'Memuaskan - Memenuhi kriteria asas pada tahap yang memuaskan dan wajar diterima.',
+    get defaultDescriptor() { return t('ems:likert_desc_3', 'Memuaskan - Memenuhi kriteria asas pada tahap yang memuaskan dan wajar diterima.'); },
   },
   {
     value: 2,
-    label: '2 - Sederhana',
-    shortText: 'Sederhana (2/5)',
+    get label() { return t('ems:likert_label_2', '2 - Sederhana'); },
+    get shortText() { return t('ems:likert_short_2', 'Sederhana (2/5)'); },
     icon: AlertCircle,
     iconName: 'AlertCircle',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
     activeBg: 'bg-amber-600 text-white border-amber-500 ring-2 ring-amber-500/30 shadow-md',
-    defaultDescriptor: 'Sederhana - Memerlukan penambahbaikan pada beberapa aspek penting.',
+    get defaultDescriptor() { return t('ems:likert_desc_2', 'Sederhana - Memerlukan penambahbaikan pada beberapa aspek penting.'); },
   },
   {
     value: 1,
-    label: '1 - Lemah',
-    shortText: 'Lemah (1/5)',
+    get label() { return t('ems:likert_label_1', '1 - Lemah'); },
+    get shortText() { return t('ems:likert_short_1', 'Lemah (1/5)'); },
     icon: XCircle,
     iconName: 'XCircle',
     badgeColor: 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
     activeBg: 'bg-rose-600 text-white border-rose-500 ring-2 ring-rose-500/30 shadow-md',
-    defaultDescriptor: 'Lemah - Tidak memenuhi kriteria asas atau terdapat kelemahan ketara.',
+    get defaultDescriptor() { return t('ems:likert_desc_1', 'Lemah - Tidak memenuhi kriteria asas atau terdapat kelemahan ketara.'); },
   },
 ];
 
@@ -330,7 +333,7 @@ export function EmsJuryPortalPage() {
     if (!participantRubrics || participantRubrics.length === 0) return [];
     const map = new Map<string, EmsRubricCriteria[]>();
     participantRubrics.forEach((r) => {
-      const secName = r.section_name?.trim() || 'Penilaian Utama';
+      const secName = r.section_name?.trim() || t('ems:main_evaluation_section', 'Penilaian Utama');
       if (!map.has(secName)) {
         map.set(secName, []);
       }
@@ -397,7 +400,7 @@ export function EmsJuryPortalPage() {
               await fetchDashboardData(verified.event.id, verified.juryCode.id);
             } else {
               localStorage.removeItem('ems_jury_session');
-              toast.error('Sesi juri telah tamat atau kod tidak sah lagi.');
+              toast.error(t('ems:jury_session_expired', 'Sesi juri telah tamat atau kod tidak sah lagi.'));
             }
           }
         }
@@ -434,7 +437,7 @@ export function EmsJuryPortalPage() {
       setScores(scoresRes.data || []);
     } catch (err: any) {
       console.error('Failed to load dashboard data:', err);
-      toast.error(`Gagal memuatkan maklumat peserta: ${err.message || 'Ralat rangkaian'}`);
+      toast.error(t('ems:failed_load_participant_info', 'Gagal memuatkan maklumat peserta: {{error}}', { error: err.message || t('ems:network_error', 'Ralat rangkaian') }));
     } finally {
       setIsLoadingDashboard(false);
     }
@@ -445,7 +448,7 @@ export function EmsJuryPortalPage() {
     e.preventDefault();
     const cleanCode = inputCode.trim().toUpperCase();
     if (!cleanCode) {
-      toast.error('Sila masukkan Kod Jemputan Juri.');
+      toast.error(t('ems:please_enter_jury_code', 'Sila masukkan Kod Jemputan Juri.'));
       return;
     }
 
@@ -453,7 +456,7 @@ export function EmsJuryPortalPage() {
     try {
       const verified = await verifyJuryCode(cleanCode);
       if (!verified) {
-        toast.error('Kod Jemputan Juri tidak sah atau tidak wujud.');
+        toast.error(t('ems:invalid_jury_code', 'Kod Jemputan Juri tidak sah atau tidak wujud.'));
         setIsVerifying(false);
         return;
       }
@@ -480,7 +483,7 @@ export function EmsJuryPortalPage() {
         setInputOrganization(juryCode.organization || '');
       }
     } catch (err: any) {
-      toast.error(`Ralat pengesahan: ${err.message || 'Sila cuba lagi'}`);
+      toast.error(t('ems:verification_error', 'Ralat pengesahan: {{error}}', { error: err.message || t('ems:please_try_again', 'Sila cuba lagi') }));
     } finally {
       setIsVerifying(false);
     }
@@ -495,11 +498,11 @@ export function EmsJuryPortalPage() {
     const org = inputOrganization.trim();
 
     if (!name) {
-      toast.error('Sila masukkan nama penuh anda.');
+      toast.error(t('ems:please_enter_full_name', 'Sila masukkan nama penuh anda.'));
       return;
     }
     if (!org) {
-      toast.error('Sila masukkan organisasi atau jawatan anda.');
+      toast.error(t('ems:please_enter_organization', 'Sila masukkan organisasi atau jawatan anda.'));
       return;
     }
 
@@ -530,7 +533,7 @@ export function EmsJuryPortalPage() {
       toast.success(`Selamat datang, ${name}!`);
       await fetchDashboardData(event.id, updatedJuryCode.id);
     } catch (err: any) {
-      toast.error(`Gagal menyimpan maklumat juri: ${err.message || 'Ralat sistem'}`);
+      toast.error(t('ems:failed_save_jury_info', 'Gagal menyimpan maklumat juri: {{error}}', { error: err.message || t('ems:system_error', 'Ralat sistem') }));
     } finally {
       setIsVerifying(false);
     }
@@ -550,7 +553,7 @@ export function EmsJuryPortalPage() {
     setSelectedCategory('ALL');
     setCelebrationModal(null);
     setShowCandidateInfo(false);
-    toast.success('Anda telah log keluar daripada sesi juri.');
+    toast.success(t('ems:logged_out_jury_session', 'Anda telah log keluar daripada sesi juri.'));
   };
 
   // Further filter participants based on selectedCategory, search query, and status filter
@@ -679,7 +682,7 @@ export function EmsJuryPortalPage() {
     if (!evalParticipant || !juryCodeData || !eventData) return;
 
     if (!isAllCriteriaCompleted) {
-      toast.error('Sila lengkapkan semua kriteria penilaian sebelum menghantar markah.');
+      toast.error(t('ems:complete_all_criteria_before_submit', 'Sila lengkapkan semua kriteria penilaian sebelum menghantar markah.'));
       return;
     }
 
@@ -695,7 +698,7 @@ export function EmsJuryPortalPage() {
       }));
 
       await submitJuryScore(scoresPayload);
-      toast.success(`Pemarkahan untuk ${evalParticipant.team_name || evalParticipant.leader_name} berjaya disimpan!`);
+      toast.success(t('ems:scoring_saved_success', 'Pemarkahan untuk {{name}} berjaya disimpan!', { name: evalParticipant.team_name || evalParticipant.leader_name }));
 
       // Clear local draft upon successful submission
       if (session) {
@@ -736,7 +739,7 @@ export function EmsJuryPortalPage() {
       });
     } catch (err: any) {
       console.error('Failed to submit scores:', err);
-      toast.error(`Gagal menyimpan pemarkahan: ${err.message || 'Ralat sistem'}`);
+      toast.error(t('ems:failed_save_scoring', 'Gagal menyimpan pemarkahan: {{error}}', { error: err.message || t('ems:system_error', 'Ralat sistem') }));
     } finally {
       setIsSubmittingScores(false);
     }
@@ -779,7 +782,7 @@ export function EmsJuryPortalPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col items-center justify-center p-4 transition-colors">
         <div className="w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-slate-600 dark:text-slate-400 font-medium animate-pulse">Menghubungkan ke Portal Juri EMS...</p>
+        <p className="text-slate-600 dark:text-slate-400 font-medium animate-pulse">{t('ems:connecting_to_jury_portal', 'Menghubungkan ke Portal Juri EMS...')}</p>
       </div>
     );
   }
@@ -843,7 +846,7 @@ export function EmsJuryPortalPage() {
                   />
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 text-center">
-                  Kod jemputan diberikan oleh Pengarah Program atau Urusetia Penilaian.
+                  {t('ems:jury_code_help_text', 'Kod jemputan diberikan oleh Pengarah Program atau Urusetia Penilaian.')}
                 </p>
               </div>
 
@@ -859,7 +862,7 @@ export function EmsJuryPortalPage() {
                   </>
                 ) : (
                   <>
-                    <span>Sahkan Kod & Teruskan</span>
+                    <span>{t('ems:verify_code_and_continue', 'Sahkan Kod & Teruskan')}</span>
                     <ChevronRight className="w-5 h-5" />
                   </>
                 )}
@@ -871,7 +874,7 @@ export function EmsJuryPortalPage() {
                 <BadgeCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5" />
                 <div>
                   <span className="font-semibold text-emerald-950 dark:text-white block font-mono">Kod Disahkan: {pendingJuryCode.juryCode.code}</span>
-                  <span className="text-emerald-800 dark:text-slate-300">Acara: {pendingJuryCode.event.title}</span>
+                  <span className="text-emerald-800 dark:text-slate-300">{t('ems:event_prefix', 'Acara:')} {pendingJuryCode.event.title}</span>
                 </div>
               </div>
 
@@ -880,7 +883,7 @@ export function EmsJuryPortalPage() {
                   htmlFor="jury-full-name"
                   className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5"
                 >
-                  Nama Penuh Juri <span className="text-rose-500">*</span>
+                  {t('ems:jury_full_name_label', 'Nama Penuh Juri')} <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
@@ -904,7 +907,7 @@ export function EmsJuryPortalPage() {
                   htmlFor="jury-organization"
                   className="block text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1.5"
                 >
-                  Organisasi / Jabatan / Jawatan <span className="text-rose-500">*</span>
+                  {t('ems:organization_dept_label', 'Organisasi / Jabatan / Jawatan')} <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
@@ -916,7 +919,7 @@ export function EmsJuryPortalPage() {
                     type="text"
                     value={inputOrganization}
                     onChange={(e) => setInputOrganization(e.target.value)}
-                    placeholder="Contoh: Universiti Malaysia Pahang / Pensyarah Kanan"
+                    placeholder={t('ems:organization_dept_placeholder', 'Contoh: Universiti Malaysia Pahang / Pensyarah Kanan')}
                     className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-slate-700 rounded-xl text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-600 text-sm"
                     required
                   />
@@ -1028,7 +1031,7 @@ export function EmsJuryPortalPage() {
                 <ThemeToggle />
                 <button
                   onClick={handleLogout}
-                  title="Log Keluar Sesi Juri"
+                  title={t('ems:logout_jury_session_title', 'Log Keluar Sesi Juri')}
                   className="p-2 text-slate-500 dark:text-slate-400 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-xl transition-all"
                 >
                   <LogOut className="w-4 h-4" />
@@ -1096,7 +1099,7 @@ export function EmsJuryPortalPage() {
                         : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
                     }`}
                   >
-                    {isComplete ? `${catScored}/${catTotal} Selesai` : `${catScored}/${catTotal}`}
+                    {isComplete ? t('ems:scored_of_total_complete', '{{scored}}/{{total}} Selesai', { scored: catScored, total: catTotal }) : `${catScored}/${catTotal}`}
                   </span>
                   {isComplete && (
                     <CheckCircle2 className={`w-3.5 h-3.5 ${isSelected ? 'text-emerald-300' : 'text-emerald-500'}`} />
@@ -1117,7 +1120,7 @@ export function EmsJuryPortalPage() {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Cari booth #, pasukan, ketua atau tajuk inovasi..."
+                placeholder={t('ems:search_jury_portal_placeholder', 'Cari booth #, pasukan, ketua atau tajuk inovasi...')}
                 className="w-full pl-10 pr-4 py-2.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-slate-400 dark:focus:ring-slate-600 focus:border-slate-400 dark:focus:border-slate-600 placeholder:text-slate-400 dark:placeholder:text-slate-600"
               />
               {searchQuery && (
@@ -1140,7 +1143,7 @@ export function EmsJuryPortalPage() {
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                Semua ({assignedParticipants.length})
+                {t('ems:all_with_count', 'Semua ({{count}})', { count: assignedParticipants.length })}
               </button>
               <button
                 onClick={() => setStatusFilter('UNSCORED')}
@@ -1150,7 +1153,7 @@ export function EmsJuryPortalPage() {
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                Belum Dinilai ({assignedParticipants.filter((p) => !scores.some((s) => s.participant_id === p.id)).length})
+                {t('ems:unscored_with_count', 'Belum Dinilai ({{count}})', { count: assignedParticipants.filter((p) => !scores.some((s) => s.participant_id === p.id)).length })}
               </button>
               <button
                 onClick={() => setStatusFilter('SCORED')}
@@ -1160,7 +1163,7 @@ export function EmsJuryPortalPage() {
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
                 }`}
               >
-                Telah Dinilai ({assignedParticipants.filter((p) => scores.some((s) => s.participant_id === p.id)).length})
+                {t('ems:scored_with_count', 'Telah Dinilai ({{count}})', { count: assignedParticipants.filter((p) => scores.some((s) => s.participant_id === p.id)).length })}
               </button>
             </div>
           </div>
@@ -1234,7 +1237,7 @@ export function EmsJuryPortalPage() {
                           </span>
                         ) : (
                           <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-medium rounded-lg">
-                            TIADA BOOTH
+                            {t('ems:no_booth_badge', 'TIADA BOOTH')}
                           </span>
                         )}
                       </div>
@@ -1248,7 +1251,7 @@ export function EmsJuryPortalPage() {
                       ) : (
                         <span className="px-2.5 py-1 bg-amber-50 dark:bg-amber-500/15 border border-amber-200 dark:border-amber-500/30 text-amber-700 dark:text-amber-400 text-[11px] font-semibold rounded-full flex items-center gap-1 shrink-0">
                           <Clock className="w-3.5 h-3.5" />
-                          <span>Belum Dinilai</span>
+                          <span>{t('ems:unscored_badge', 'Belum Dinilai')}</span>
                         </span>
                       )}
                     </div>
@@ -1305,7 +1308,7 @@ export function EmsJuryPortalPage() {
                                   }
                                 }}
                                 className="relative group w-16 h-16 rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 shrink-0 hover:border-amber-500/50 dark:hover:border-amber-400/50 transition-all flex flex-col items-center justify-center shadow-xs"
-                                title={isPdf ? `Buka dokumen PDF: ${img.label}` : `Buka foto: ${img.label}`}
+                                title={isPdf ? t('ems:open_pdf_doc', 'Buka dokumen PDF: {{label}}', { label: img.label }) : t('ems:open_photo', 'Buka foto: {{label}}', { label: img.label })}
                               >
                                 {isPdf ? (
                                   <div className="w-full h-full flex flex-col items-center justify-center bg-rose-50/70 dark:bg-rose-950/30 p-1">
@@ -1348,7 +1351,7 @@ export function EmsJuryPortalPage() {
                       }`}
                     >
                       <Sliders className="w-4 h-4" />
-                      <span>{isScored ? 'Kemaskini Markah' : 'Nilai Booth Sekarang'}</span>
+                      <span>{isScored ? t('ems:update_score_btn', 'Kemaskini Markah') : t('ems:score_booth_now_btn', 'Nilai Booth Sekarang')}</span>
                     </button>
                   </div>
                 </div>
@@ -1394,10 +1397,10 @@ export function EmsJuryPortalPage() {
                       {isDraftSaved && (
                         <span
                           className="px-1.5 py-0.5 bg-emerald-50 dark:bg-emerald-950/50 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 text-[10px] sm:text-[11px] font-medium rounded-md flex items-center gap-1 shrink-0"
-                          title="Draf disimpan secara automatik"
+                          title={t('ems:draft_saved_auto_title', 'Draf disimpan secara automatik')}
                         >
                           <Check className="w-3 h-3 text-emerald-500" />
-                          <span className="hidden xs:inline">Draf Disimpan</span>
+                          <span className="hidden xs:inline">{t('ems:draft_saved_label', 'Draf Disimpan')}</span>
                         </span>
                       )}
                     </div>
@@ -1431,7 +1434,7 @@ export function EmsJuryPortalPage() {
                           setShowCandidateInfo(false);
                         }}
                         className="p-1.5 sm:p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-all"
-                        title="Tutup Penilaian"
+                        title={t('ems:close_evaluation_title', 'Tutup Penilaian')}
                       >
                         <X className="w-4 h-4 sm:w-5 sm:h-5" />
                       </button>
@@ -1475,7 +1478,7 @@ export function EmsJuryPortalPage() {
                             </span>
                             {candidateAttachments.length === 0 ? (
                               <p className="text-xs text-slate-400 dark:text-slate-500 italic">
-                                Tiada lampiran dimuat naik oleh calon ini.
+                                {t('ems:no_attachments_uploaded', 'Tiada lampiran dimuat naik oleh calon ini.')}
                               </p>
                             ) : (
                               <div className="flex flex-wrap gap-2">
@@ -1488,7 +1491,7 @@ export function EmsJuryPortalPage() {
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:text-rose-500 dark:hover:text-rose-400 border border-slate-200 dark:border-slate-800 hover:border-rose-300 transition-colors shadow-xs"
-                                      title="Buka lampiran PDF dalam tab baru"
+                                      title={t('ems:open_pdf_new_tab', 'Buka lampiran PDF dalam tab baru')}
                                     >
                                       <FileText className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                                       <span>{att.label}</span>
@@ -1532,7 +1535,7 @@ export function EmsJuryPortalPage() {
               {participantRubrics.length === 0 ? (
                 <div className="p-8 bg-slate-50 dark:bg-slate-950/60 rounded-2xl border border-slate-200 dark:border-slate-800 text-center text-slate-600 dark:text-slate-400 text-sm space-y-2">
                   <AlertCircle className="w-8 h-8 text-amber-500 dark:text-amber-400 mx-auto" />
-                  <p>Tiada kriteria penilaian rubrik ditetap untuk kategori ini.</p>
+                  <p>{t('ems:no_rubric_criteria_for_category', 'Tiada kriteria penilaian rubrik ditetap untuk kategori ini.')}</p>
                 </div>
               ) : (
                 <>
@@ -1627,7 +1630,7 @@ export function EmsJuryPortalPage() {
                                           key={option.value}
                                           type="button"
                                           aria-pressed={isSelected}
-                                          aria-label={`${option.shortText} (${option.value} daripada 5)`}
+                                          aria-label={t('ems:likert_aria_label', '{{shortText}} ({{value}} daripada 5)', { shortText: option.shortText, value: option.value })}
                                           onClick={() => handleScoreSelect(r.id, option.value)}
                                           onMouseEnter={() =>
                                             setHoveredScores((prev) => ({ ...prev, [r.id]: option.value }))
@@ -1793,7 +1796,7 @@ export function EmsJuryPortalPage() {
                 {t('ems:congrats_and_thank_you', 'Tahniah & Terima Kasih!')}
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Markah untuk booth ini telah direkodkan ke pangkalan data.
+                {t('ems:scores_recorded_to_db', 'Markah untuk booth ini telah direkodkan ke pangkalan data.')}
               </p>
             </div>
 

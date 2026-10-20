@@ -95,7 +95,7 @@ export function EmsEventFormPage() {
   // Section 2: Form Builder Fields
   const [formFields, setFormFields] = useState<LocalFormField[]>([
     {
-      field_label: 'Nama Ahli Pasukan / Kad Pengenalan',
+      field_label: t('ems:default_team_member_field_label', 'Nama Ahli Pasukan / Kad Pengenalan'),
       field_type: 'text',
       is_required: true,
       options: '',
@@ -139,10 +139,10 @@ export function EmsEventFormPage() {
     const { presetName, newItems } = presetPrompt;
     if (mode === 'append') {
       setRubrics((prev) => [...prev, ...newItems]);
-      toast.success(`Templat ${presetName} berjaya ditambah! (+${newItems.length} Rubrik)`);
+      toast.success(t('ems:template_added_success', 'Templat {{presetName}} berjaya ditambah! (+{{count}} Rubrik)', { presetName, count: newItems.length }));
     } else {
       setRubrics(newItems);
-      toast.success(`Templat ${presetName} berjaya menggantikan rubrik sedia ada! (${newItems.length} Rubrik)`);
+      toast.success(t('ems:template_replaced_success', 'Templat {{presetName}} berjaya menggantikan rubrik sedia ada! ({{count}} Rubrik)', { presetName, count: newItems.length }));
     }
     setPresetPrompt(null);
   };
@@ -162,7 +162,7 @@ export function EmsEventFormPage() {
         setLoading(true);
         const data = await fetchEmsEventById(id!);
         if (!data) {
-          toast.error('Acara tidak dijumpai');
+          toast.error(t('ems:event_not_found', 'Acara tidak dijumpai'));
           navigate('/ems/dashboard');
           return;
         }
@@ -239,7 +239,7 @@ export function EmsEventFormPage() {
           );
         }
       } catch (err: any) {
-        toast.error(`Gagal memuatkan acara: ${err.message}`);
+        toast.error(t('ems:failed_load_event_err', 'Gagal memuatkan acara: {{error}}', { error: err.message }));
       } finally {
         setLoading(false);
       }
@@ -301,7 +301,7 @@ export function EmsEventFormPage() {
   };
 
   const handleAddCategory = () => {
-    const catName = window.prompt('Masukkan nama Kategori Rubrik baharu (cth: Anugerah Khas / Best Innovation):');
+    const catName = window.prompt(t('ems:prompt_new_category_name', 'Masukkan nama Kategori Rubrik baharu (cth: Anugerah Khas / Best Innovation):'));
     if (!catName || !catName.trim()) return;
     const name = catName.trim();
     setRubrics((prev) => [
@@ -323,14 +323,14 @@ export function EmsEventFormPage() {
         },
       },
     ]);
-    toast.success(`Kategori "${name}" berjaya ditambah!`);
+    toast.success(t('ems:category_added_success', 'Kategori "{{name}}" berjaya ditambah!', { name }));
   };
 
   const handleAddSection = (categoryName: string) => {
-    const secInput = window.prompt(`Masukkan nama Seksyen baharu untuk Kategori "${categoryName}" (cth: PITCHING PRESENTATION [30%]):`);
+    const secInput = window.prompt(t('ems:prompt_new_section_name', 'Masukkan nama Seksyen baharu untuk Kategori "{{categoryName}}" (cth: PITCHING PRESENTATION [30%]):', { categoryName }));
     if (!secInput || !secInput.trim()) return;
     const secName = secInput.trim();
-    const actualCategory = categoryName === 'Tanpa Kategori' ? '' : categoryName;
+    const actualCategory = (categoryName === 'Tanpa Kategori' || categoryName === t('ems:uncategorized', 'Tanpa Kategori')) ? '' : categoryName;
     setRubrics((prev) => [
       ...prev,
       {
@@ -350,7 +350,7 @@ export function EmsEventFormPage() {
         },
       },
     ]);
-    toast.success(`Seksyen "${secName}" berjaya ditambah!`);
+    toast.success(t('ems:section_added_success', 'Seksyen "{{secName}}" berjaya ditambah!', { secName }));
   };
 
   const removeRubric = (index: number) => {
@@ -389,14 +389,14 @@ export function EmsEventFormPage() {
     if (hasRubrics) {
       setPresetPrompt({
         isOpen: true,
-        title: 'Muat Templat iFAMB Best Showcase',
+        title: t('ems:load_template_showcase', 'Muat Templat iFAMB Best Showcase'),
         presetName: 'iFAMB Best Showcase',
         newItems,
         hasDifferentCategory,
       });
     } else {
       setRubrics(newItems);
-      toast.success('Templat iFAMB Best Showcase berjaya dimuatkan! (16 Rubrik / 4 Seksyen)');
+      toast.success(t('ems:template_showcase_loaded', 'Templat iFAMB Best Showcase berjaya dimuatkan! (16 Rubrik / 4 Seksyen)'));
     }
   };
 
@@ -421,14 +421,14 @@ export function EmsEventFormPage() {
     if (hasRubrics) {
       setPresetPrompt({
         isOpen: true,
-        title: 'Muat Templat iFAMB Best Pitching',
+        title: t('ems:load_template_pitching', 'Muat Templat iFAMB Best Pitching'),
         presetName: 'iFAMB Best Pitching',
         newItems,
         hasDifferentCategory,
       });
     } else {
       setRubrics(newItems);
-      toast.success('Templat iFAMB Best Pitching berjaya dimuatkan! (10 Rubrik)');
+      toast.success(t('ems:template_pitching_loaded', 'Templat iFAMB Best Pitching berjaya dimuatkan! (10 Rubrik)'));
     }
   };
 
@@ -518,22 +518,22 @@ export function EmsEventFormPage() {
         await updateEmsEvent(id, eventPayload, preparedFields, preparedRubrics);
         toast.success(
           targetStatus === 'DRAFT'
-            ? 'Draf acara berjaya dikemaskini!'
-            : 'Acara dihantar untuk kelulusan JPP HQ!'
+            ? t('ems:event_draft_updated_success', 'Draf acara berjaya dikemaskini!')
+            : t('ems:event_submitted_for_hq_approval', 'Acara dihantar untuk kelulusan JPP HQ!')
         );
       } else {
         await createEmsEvent(eventPayload, preparedFields, preparedRubrics);
         toast.success(
           targetStatus === 'DRAFT'
-            ? 'Draf acara berjaya disimpan!'
-            : 'Acara baharu berjaya dihantar untuk kelulusan JPP HQ!'
+            ? t('ems:event_draft_saved_success', 'Draf acara berjaya disimpan!')
+            : t('ems:new_event_submitted_hq_approval', 'Acara baharu berjaya dihantar untuk kelulusan JPP HQ!')
         );
       }
 
       navigate('/ems/dashboard');
     } catch (err: any) {
       console.error('[EMS] Error saving event:', err);
-      toast.error(`Gagal menyimpan acara: ${err.message || 'Ralat sistem'}`);
+      toast.error(t('ems:failed_save_event', 'Gagal menyimpan acara: {{error}}', { error: err.message || t('ems:system_error', 'Ralat sistem') }));
     } finally {
       setSubmitting(false);
     }
@@ -543,7 +543,7 @@ export function EmsEventFormPage() {
     return (
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-8 transition-colors">
         <RefreshCw className="w-8 h-8 text-amber-500 animate-spin mb-3" />
-        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">Memuatkan data acara...</p>
+        <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">{t('ems:loading_event_data', 'Memuatkan data acara...')}</p>
       </div>
     );
   }
@@ -631,7 +631,7 @@ export function EmsEventFormPage() {
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Penerangan ringkas objektif, syarat pertandigan dan maklumat lanjut..."
+                placeholder={t('ems:event_description_placeholder', 'Penerangan ringkas objektif, syarat pertandigan dan maklumat lanjut...')}
                 className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-slate-400 dark:focus:border-slate-600 focus:ring-1 focus:ring-slate-400 dark:focus:ring-slate-600 resize-none"
               />
             </div>
@@ -651,8 +651,8 @@ export function EmsEventFormPage() {
                   }`}
                 >
                   <div>
-                    <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">Pertandingan / Pameran</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">Juri & Leaderboard pemarkahan</div>
+                    <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">{t('ems:event_type_competition_title', 'Pertandingan / Pameran')}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">{t('ems:event_type_competition_sub', 'Juri & Leaderboard pemarkahan')}</div>
                   </div>
                 </button>
 
@@ -666,8 +666,8 @@ export function EmsEventFormPage() {
                   }`}
                 >
                   <div>
-                    <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">Program Terbuka / Ceramah</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">Kehadiran & Cabutan Bertuah</div>
+                    <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">{t('ems:event_type_open_title', 'Program Terbuka / Ceramah')}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">{t('ems:event_type_open_sub', 'Kehadiran & Cabutan Bertuah')}</div>
                   </div>
                 </button>
 
@@ -681,8 +681,8 @@ export function EmsEventFormPage() {
                   }`}
                 >
                   <div>
-                    <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">Kombinasi (Hybrid)</div>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">Pertandingan & Kehadiran Awam</div>
+                    <div className="font-bold text-sm text-slate-900 dark:text-white mb-1">{t('ems:event_type_hybrid_title', 'Kombinasi (Hybrid)')}</div>
+                    <div className="text-xs text-slate-500 dark:text-slate-400">{t('ems:event_type_hybrid_sub', 'Pertandingan & Kehadiran Awam')}</div>
                   </div>
                 </button>
               </div>
@@ -695,17 +695,17 @@ export function EmsEventFormPage() {
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
               >
-                <option value="Keusahawanan">Keusahawanan</option>
-                <option value="Inovasi">Inovasi & Teknologi</option>
-                <option value="Akademik">Akademik & STEM</option>
-                <option value="Sukan">Sukan & Rekreasi</option>
-                <option value="Kebudayaan">Kebudayaan & Seni</option>
-                <option value="Lain-lain">Lain-lain</option>
+                <option value="Keusahawanan">{t('ems:cat_entrepreneurship', 'Keusahawanan')}</option>
+                <option value="Inovasi">{t('ems:cat_innovation', 'Inovasi & Teknologi')}</option>
+                <option value="Akademik">{t('ems:cat_academic', 'Akademik & STEM')}</option>
+                <option value="Sukan">{t('ems:cat_sports', 'Sukan & Rekreasi')}</option>
+                <option value="Kebudayaan">{t('ems:cat_culture', 'Kebudayaan & Seni')}</option>
+                <option value="Lain-lain">{t('ems:cat_other', 'Lain-lain')}</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">Mod Penyertaan</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-2">{t('ems:participation_mode_label', 'Mod Penyertaan')}</label>
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
@@ -716,7 +716,7 @@ export function EmsEventFormPage() {
                       : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  Individu
+                  {t('ems:participation_mode_individual', 'Individu')}
                 </button>
                 <button
                   type="button"
@@ -797,7 +797,7 @@ export function EmsEventFormPage() {
                 type="text"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
-                placeholder="e.g. Dewan Gemilang POLISAS / Booth Lobi Utama"
+                placeholder={t('ems:event_location_placeholder', 'e.g. Dewan Gemilang POLISAS / Booth Lobi Utama')}
                 className="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-sm focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
               />
             </div>
@@ -845,10 +845,10 @@ export function EmsEventFormPage() {
               </div>
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                  Seksyen 2: Pembina Borang Pendaftaran
+                  {t('ems:event_form_sec2_title', 'Seksyen 2: Pembina Borang Pendaftaran')}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Tambah medan maklumat tambahan yang perlu diisi oleh peserta semasa mendaftar.
+                  {t('ems:event_form_sec2_desc', 'Tambah medan maklumat tambahan yang perlu diisi oleh peserta semasa mendaftar.')}
                 </p>
               </div>
             </div>
@@ -877,7 +877,7 @@ export function EmsEventFormPage() {
                     <input
                       type="text"
                       required
-                      placeholder="Label Medan (e.g. Nama Produk / Tajuk Projek)"
+                      placeholder={t('ems:event_form_field_label_placeholder', 'Label Medan (e.g. Nama Produk / Tajuk Projek)')}
                       value={field.field_label}
                       onChange={(e) => {
                         const updated = [...formFields];
@@ -921,7 +921,7 @@ export function EmsEventFormPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
                   <div>
                     <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
-                      Jenis Medan
+                      {t('ems:event_form_field_type_label', 'Jenis Medan')}
                     </label>
                     <select
                       value={field.field_type}
@@ -944,7 +944,7 @@ export function EmsEventFormPage() {
                   {field.field_type === 'select' && (
                     <div className="sm:col-span-2">
                       <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
-                        Pilihan (Asingkan dengan koma)
+                        {t('ems:event_form_field_options_label', 'Pilihan (Asingkan dengan koma)')}
                       </label>
                       <input
                         type="text"
@@ -995,7 +995,7 @@ export function EmsEventFormPage() {
                   {t('ems:sec3_rubric_hierarchy_title', 'Seksyen 3: Rubrik Pemarkahan Juri & Hierarki')}
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  Tetapkan kriteria pemarkahan, markah maksimum & pemberat (weightage) untuk juri.
+                  {t('ems:sec3_rubric_hierarchy_desc', 'Tetapkan kriteria pemarkahan, markah maksimum & pemberat (weightage) untuk juri.')}
                 </p>
               </div>
             </div>
@@ -1015,7 +1015,7 @@ export function EmsEventFormPage() {
                 className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-bold text-xs transition-all shadow-sm active:scale-[0.98]"
               >
                 <Plus className="w-4 h-4" />
-                <span>{t('event_form_add_criteria', '+ Tambah Kriteria')}</span>
+                <span>{t('ems:add_criteria_btn', '+ Tambah Kriteria')}</span>
               </button>
             </div>
           </div>
@@ -1061,7 +1061,7 @@ export function EmsEventFormPage() {
           {(() => {
             const categorySummaryMap: Record<string, number> = {};
             rubrics.forEach((r) => {
-              const catName = r.category_name?.trim() || 'Tanpa Kategori';
+              const catName = r.category_name?.trim() || t('ems:uncategorized', 'Tanpa Kategori');
               categorySummaryMap[catName] = (categorySummaryMap[catName] || 0) + (Number(r.weight) || 0);
             });
 
@@ -1109,11 +1109,11 @@ export function EmsEventFormPage() {
                       <span className="font-mono font-black">{cat.catTotalWeight}%</span>
                       {cat.isCatBalanced ? (
                         <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-emerald-400 bg-emerald-100 dark:bg-emerald-500/20 px-1.5 py-0.5 rounded-md">
-                          <CheckCircle2 className="w-3 h-3" /> 100% Seimbang
+                          <CheckCircle2 className="w-3 h-3" /> {t('ems:balanced_100', '100% Seimbang')}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-500/20 px-1.5 py-0.5 rounded-md">
-                          <AlertCircle className="w-3 h-3" /> Tidak Seimbang
+                          <AlertCircle className="w-3 h-3" /> {t('ems:unbalanced', 'Tidak Seimbang')}
                         </span>
                       )}
                     </div>
@@ -1149,7 +1149,7 @@ export function EmsEventFormPage() {
             }[] = [];
 
             rubrics.forEach((rubric, index) => {
-              const catName = rubric.category_name?.trim() || 'Tanpa Kategori';
+              const catName = rubric.category_name?.trim() || t('ems:uncategorized', 'Tanpa Kategori');
               let group = categoryGroups.find((g) => g.categoryName.toLowerCase() === catName.toLowerCase());
               if (!group) {
                 group = { categoryName: catName, items: [], totalWeight: 0 };
@@ -1181,28 +1181,28 @@ export function EmsEventFormPage() {
 
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mr-1">
-                          {group.items.length} Kriteria
+                          {t('ems:criteria_count_suffix', '{{count}} Kriteria', { count: group.items.length })}
                         </span>
                         <div className="px-3 py-1 rounded-xl bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold font-mono mr-1">
-                          Jumlah Pemberat: <span className="text-slate-950 dark:text-white font-black">{group.totalWeight}%</span>
+                          {t('ems:total_weight_label', 'Jumlah Pemberat:')} <span className="text-slate-950 dark:text-white font-black">{group.totalWeight}%</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => handleAddSection(group.categoryName)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-teal-50 dark:bg-teal-500/20 hover:bg-teal-100 dark:hover:bg-teal-500/30 text-teal-700 dark:text-teal-300 text-xs font-bold transition-all border border-teal-200 dark:border-teal-500/30 active:scale-95"
-                          title={`Tambah Seksyen ke ${group.categoryName}`}
+                          title={t('ems:add_section_to_group_title', 'Tambah Seksyen ke {{category}}', { category: group.categoryName })}
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>Tambah Seksyen</span>
+                          <span>{t('ems:add_section_btn', 'Tambah Seksyen')}</span>
                         </button>
                         <button
                           type="button"
-                          onClick={() => addRubric(group.categoryName === 'Tanpa Kategori' ? '' : group.categoryName)}
+                          onClick={() => addRubric((group.categoryName === 'Tanpa Kategori' || group.categoryName === t('ems:uncategorized', 'Tanpa Kategori')) ? '' : group.categoryName)}
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold transition-all border border-slate-300 dark:border-slate-700 active:scale-95"
-                          title={`Tambah Kriteria ke ${group.categoryName}`}
+                          title={t('ems:add_criteria_to_group_title', 'Tambah Kriteria ke {{category}}', { category: group.categoryName })}
                         >
                           <Plus className="w-3.5 h-3.5" />
-                          <span>Tambah Kriteria</span>
+                          <span>{t('ems:add_criteria_btn', 'Tambah Kriteria')}</span>
                         </button>
                       </div>
                     </div>
@@ -1229,7 +1229,7 @@ export function EmsEventFormPage() {
                                   <input
                                     type="text"
                                     required
-                                    placeholder="Nama Kriteria (e.g. Creativity & Originality)"
+                                    placeholder={t('ems:criteria_name_placeholder', 'Nama Kriteria (e.g. Creativity & Originality)')}
                                     value={rubric.criteria_name}
                                     onChange={(e) => {
                                       const updated = [...rubrics];
@@ -1247,7 +1247,7 @@ export function EmsEventFormPage() {
                                   disabled={index === 0}
                                   onClick={() => moveRubric(index, 'UP')}
                                   className="p-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 disabled:opacity-30 transition-colors"
-                                  title="Alih ke atas"
+                                  title={t('ems:move_up_title', 'Alih ke atas')}
                                 >
                                   <MoveUp className="w-3.5 h-3.5" />
                                 </button>
@@ -1256,7 +1256,7 @@ export function EmsEventFormPage() {
                                   disabled={index === rubrics.length - 1}
                                   onClick={() => moveRubric(index, 'DOWN')}
                                   className="p-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-800 disabled:opacity-30 transition-colors"
-                                  title="Alih ke bawah"
+                                  title={t('ems:move_down_title', 'Alih ke bawah')}
                                 >
                                   <MoveDown className="w-3.5 h-3.5" />
                                 </button>
@@ -1264,7 +1264,7 @@ export function EmsEventFormPage() {
                                   type="button"
                                   onClick={() => removeRubric(index)}
                                   className="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-500 dark:text-rose-400 transition-all border border-rose-200 dark:border-rose-900/30"
-                                  title="Padam Kriteria"
+                                  title={t('ems:delete_criteria_title', 'Padam Kriteria')}
                                 >
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
@@ -1292,7 +1292,7 @@ export function EmsEventFormPage() {
 
                               <div>
                                 <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
-                                  Seksyen / Sub-kategori (Section)
+                                  {t('ems:section_subcat_label', 'Seksyen / Sub-kategori (Section)')}
                                 </label>
                                 <input
                                   type="text"
@@ -1309,7 +1309,7 @@ export function EmsEventFormPage() {
 
                               <div>
                                 <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
-                                  Pemberat % (Weight)
+                                  {t('ems:weight_percent_label', 'Pemberat % (Weight)')}
                                 </label>
                                 <input
                                   type="number"
@@ -1328,7 +1328,7 @@ export function EmsEventFormPage() {
 
                               <div>
                                 <label className="block text-[10px] font-bold uppercase text-slate-500 dark:text-slate-400 mb-1">
-                                  Markah Maksimum (Max Score)
+                                  {t('ems:max_score_label', 'Markah Maksimum (Max Score)')}
                                 </label>
                                 <input
                                   type="number"
@@ -1359,7 +1359,7 @@ export function EmsEventFormPage() {
                                 )}
                                 <span>{t('ems:five_scale_descriptor_title', 'Deskriptor Pemarkahan 5-Skala (Skor 1 - 5)')}</span>
                                 <span className="ml-auto text-[10px] text-slate-500 dark:text-slate-400">
-                                  {isExpanded ? 'Tutup' : 'Buka & Sunting'}
+                                  {isExpanded ? t('ems:close_btn', 'Tutup') : t('ems:open_and_edit', 'Buka & Sunting')}
                                 </span>
                               </button>
 
@@ -1382,7 +1382,7 @@ export function EmsEventFormPage() {
                                         </span>
                                         <input
                                           type="text"
-                                          placeholder={`Keterangan untuk skor ${level.key}...`}
+                                          placeholder={t('ems:score_desc_placeholder', 'Keterangan untuk skor {{key}}...', { key: level.key })}
                                           value={descriptors[level.key] || ''}
                                           onChange={(e) => updateDescriptor(index, level.key, e.target.value)}
                                           className="w-full px-3 py-1.5 rounded-lg bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white text-xs focus:outline-none focus:border-slate-400 dark:focus:border-slate-600"
@@ -1441,7 +1441,7 @@ export function EmsEventFormPage() {
                   {presetPrompt.title}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {presetPrompt.newItems.length} kriteria rubrik akan dimuatkan
+                  {t('ems:rubric_criteria_will_be_loaded', '{{count}} kriteria rubrik akan dimuatkan', { count: presetPrompt.newItems.length })}
                 </p>
               </div>
             </div>
@@ -1474,7 +1474,7 @@ export function EmsEventFormPage() {
                 onClick={() => applyPreset('append')}
                 className="flex-1 px-4 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow-md transition"
               >
-                + Tambah
+                {t('ems:add_preset_append', '+ Tambah')}
               </button>
             </div>
           </div>

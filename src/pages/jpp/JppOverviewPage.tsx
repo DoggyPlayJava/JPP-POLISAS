@@ -71,6 +71,7 @@ function BigStatCard({
 
 // ── Push Subscribers Modal ──────────────────────────────────────────────────────
 function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const { isSuperAdmin } = useAuth();
   const [subs, setSubs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,11 +124,11 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
     try {
       const { error } = await supabase.from('push_subscriptions').delete().eq('id', revokeTargetId);
       if (error) throw error;
-      toast.success("Langganan berjaya dibatalkan.");
+      toast.success(t('jpp:overview_sub_cancelled_success', "Langganan berjaya dibatalkan."));
       setRevokeTargetId(null);
       fetchSubs();
     } catch (e: any) {
-      toast.error(e.message || "Gagal membatalkan langganan.");
+      toast.error(e.message || t('jpp:overview_cancel_sub_fail', "Gagal membatalkan langganan."));
     } finally {
       setRevoking(false);
     }
@@ -151,8 +152,8 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
               <BellRing className="w-5 h-5 text-[#2E3A2F] dark:text-[#F8F6EE]" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">Senarai Langganan Notifikasi</h2>
-              <p className="text-[10px] text-[#556453] dark:text-[#A3B39F] font-bold uppercase tracking-widest">{subs.length} peranti aktif</p>
+              <h2 className="text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">{t('jpp:overview_notif_subs_list', 'Senarai Langganan Notifikasi')}</h2>
+              <p className="text-[10px] text-[#556453] dark:text-[#A3B39F] font-bold uppercase tracking-widest">{subs.length} {t('jpp:overview_active_devices', 'peranti aktif')}</p>
             </div>
           </div>
           <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#2E3A2F]/10 dark:hover:bg-white/10 text-[#556453] dark:text-white/50 hover:text-[#2E3A2F] dark:hover:text-white transition-colors">
@@ -167,7 +168,7 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
             </div>
           ) : subs.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-[#556453] dark:text-white/30 text-sm">Tiada langganan buat masa ini.</p>
+              <p className="text-[#556453] dark:text-white/30 text-sm">{t('jpp:overview_no_subs_yet', 'Tiada langganan buat masa ini.')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -188,7 +189,7 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-[#2E3A2F] dark:text-white truncate">{p?.full_name || 'Pengguna Tidak Diketahui'}</p>
+                      <p className="text-sm font-bold text-[#2E3A2F] dark:text-white truncate">{p?.full_name || t('jpp:overview_unknown_user', 'Pengguna Tidak Diketahui')}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-[10px] text-[#556453] dark:text-white/40">{p?.matric_no}</span>
                         <span className="w-1 h-1 rounded-full bg-[#D9C9B2] dark:bg-white/20" />
@@ -198,7 +199,7 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
                     <div className="flex items-center gap-4 shrink-0">
                       <div className="text-right hidden sm:block">
-                        <p className="text-[10px] text-[#556453]/70 dark:text-white/30">Dilanggan pada</p>
+                        <p className="text-[10px] text-[#556453]/70 dark:text-white/30">{t('jpp:overview_subscribed_at', 'Dilanggan pada')}</p>
                         <p className="text-xs text-[#556453] dark:text-white/60 font-medium">
                           {new Date(s.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
@@ -208,7 +209,7 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                         <button 
                           onClick={() => setRevokeTargetId(s.id)}
                           className="w-10 h-10 rounded-xl bg-red-500/10 hover:bg-red-500/20 text-red-600 dark:text-red-400 flex items-center justify-center transition-colors border border-red-500/20"
-                          title="Buang langganan ini"
+                          title={t('jpp:overview_remove_sub_tooltip', 'Buang langganan ini')}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -225,10 +226,10 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
       <ConfirmDialog
         open={Boolean(revokeTargetId)}
         onOpenChange={(open) => !open && setRevokeTargetId(null)}
-        title="Batalkan Langganan Notifikasi"
-        description="Adakah anda pasti mahu membatalkan langganan peranti ini? Pengguna tidak akan menerima notifikasi tolak (push notification) pada peranti ini lagi."
-        confirmLabel="Batalkan Langganan"
-        cancelLabel="Kembali"
+        title={t('jpp:overview_cancel_sub_modal_title', 'Batalkan Langganan Notifikasi')}
+        description={t('jpp:overview_cancel_sub_modal_desc', 'Adakah anda pasti mahu membatalkan langganan peranti ini? Pengguna tidak akan menerima notifikasi tolak (push notification) pada peranti ini lagi.')}
+        confirmLabel={t('jpp:overview_cancel_sub_btn', 'Batalkan Langganan')}
+        cancelLabel={t('jpp:cancel', 'Kembali')}
         variant="destructive"
         isLoading={revoking}
         onConfirm={handleConfirmRevoke}
@@ -270,6 +271,7 @@ function reverseCalcIntake(targetSem: number): { intake_year: number; intake_per
 // ProfileEditRequestsSection : Panel semakan pindaan profil pelajar
 // ═════════════════════════════════════════════════════════════════════════════
 function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
+  const { t } = useTranslation(['jpp', 'common']);
   const { user, profile } = useAuth();
   const [requests, setRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -291,7 +293,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
       if (error) throw error;
       setRequests(data || []);
     } catch (err: any) {
-      toast.error('Gagal muatkan permintaan: ' + err.message);
+      toast.error(t('jpp:overview_load_requests_fail', 'Gagal muatkan permintaan:') + ' ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -310,7 +312,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
   const handleReview = async () => {
     if (!reviewModal.req || !reviewModal.action || !user || !profile) return;
     if (reviewModal.action === 'REJECTED' && !reviewNote.trim()) {
-      toast.error('Sila masukkan sebab penolakan.');
+      toast.error(t('jpp:overview_enter_rejection_reason', 'Sila masukkan sebab penolakan.'));
       return;
     }
     setProcessing(true);
@@ -338,14 +340,12 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
         if (profileErr) throw profileErr;
       }
 
-      const fieldLabel = req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester';
+      const fieldLabel = req.field_type === 'matric_no' ? t('jpp:matric_no', 'No. Matrik') : t('jpp:semester', 'Semester');
       const isApproved = action === 'APPROVED';
       const { error: notifErr } = await supabase.from('notifications').insert({
         user_id: req.user_id,
-        title: isApproved ? `Permintaan Pindaan ${fieldLabel} Diluluskan` : `Permintaan Pindaan ${fieldLabel} Ditolak`,
-        message: isApproved
-          ? `Permintaan anda untuk menukar ${fieldLabel} kepada "${req.requested_value}" telah diluluskan oleh MT JPP${reviewNote.trim() ? `. Nota: ${reviewNote.trim()}` : '.'}`
-          : `Permintaan anda untuk menukar ${fieldLabel} kepada "${req.requested_value}" telah ditolak. Sebab: ${reviewNote.trim()}`,
+        title: isApproved ? t('jpp:overview_edit_req_approved_title', 'Permintaan Pindaan {{field}} Diluluskan', { field: fieldLabel }) : t('jpp:overview_edit_req_rejected_title', 'Permintaan Pindaan {{field}} Ditolak', { field: fieldLabel }),
+        message: isApproved ? t('jpp:overview_edit_req_approved_msg', 'Permintaan anda untuk menukar {{field}} kepada "{{value}}" telah diluluskan oleh MT JPP{{note}}', { field: fieldLabel, value: req.requested_value, note: reviewNote.trim() ? '. Nota: ' + reviewNote.trim() : '.' }) : t('jpp:overview_edit_req_rejected_msg', 'Permintaan anda untuk menukar {{field}} kepada "{{value}}" telah ditolak. Sebab: {{note}}', { field: fieldLabel, value: req.requested_value, note: reviewNote.trim() }),
         type: 'SYSTEM',
         module: 'EKPP',
         link: '/tetapan',
@@ -354,12 +354,12 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
       });
       if (notifErr) console.warn('Notifikasi student gagal:', notifErr.message);
 
-      toast.success(`Permintaan berjaya ${isApproved ? 'diluluskan' : 'ditolak'}. Audit log direkodkan.`);
+      toast.success(t('jpp:overview_req_processed_success', 'Permintaan berjaya {{status}}. Audit log direkodkan.', { status: isApproved ? t('jpp:approved_lc', 'diluluskan') : t('jpp:rejected_lc', 'ditolak') }));
       setReviewModal({ open: false, req: null, action: null });
       setReviewNote('');
       await fetchRequests();
     } catch (err: any) {
-      toast.error(err.message || 'Ralat semasa memproses.');
+      toast.error(err.message || t('jpp:overview_process_error', 'Ralat semasa memproses.'));
     } finally {
       setProcessing(false);
     }
@@ -378,8 +378,8 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
           <ClipboardList className="w-5 h-5" style={{ color: themeColor }} />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">Semakan Pindaan Profil</h2>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#556453] dark:text-[#A3B39F]">Kelulusan pindaan no. matrik &amp; semester pelajar</p>
+          <h2 className="text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">{t('jpp:overview_profile_audit_title', 'Semakan Pindaan Profil')}</h2>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#556453] dark:text-[#A3B39F]">{t('jpp:overview_profile_audit_subtitle', 'Kelulusan pindaan no. matrik & semester pelajar')}</p>
         </div>
         {pendingCount > 0 && (
           <span className="ml-auto px-3 py-1.5 rounded-full text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">{pendingCount} PENDING</span>
@@ -412,7 +412,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
           ) : filtered.length === 0 ? (
             <div className="text-center py-12">
               <ClipboardList className="w-10 h-10 mx-auto mb-3 text-[#D9C9B2] dark:text-white/10" />
-              <p className="text-[#556453] dark:text-white/30 text-xs font-medium">Tiada rekod {filter === 'PENDING' ? 'menunggu semakan' : filter === 'APPROVED' ? 'yang telah diluluskan' : 'yang ditolak'}</p>
+              <p className="text-[#556453] dark:text-white/30 text-xs font-medium">{t('jpp:overview_no_records', 'Tiada rekod')} {filter === 'PENDING' ? t('jpp:overview_pending_review_suffix', 'menunggu semakan') : filter === 'APPROVED' ? t('jpp:overview_approved_suffix', 'yang telah diluluskan') : t('jpp:overview_rejected_suffix', 'yang ditolak')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -429,7 +429,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                     <div className="ml-9">
                       <p className="text-xs text-[#556453] dark:text-white/60 font-medium">
                         <span className="text-[#556453]/70 dark:text-white/30">Pindaan:</span>{' '}
-                        <span className="font-bold text-[#2E3A2F] dark:text-white/80">{req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}</span>
+                        <span className="font-bold text-[#2E3A2F] dark:text-white/80">{req.field_type === 'matric_no' ? t('jpp:matric_no', 'No. Matrik') : t('jpp:semester', 'Semester')}</span>
                         {' : '}
                         <span className="line-through text-[#556453]/60 dark:text-white/30 font-mono text-[11px]">{req.current_value ?? '-'}</span>
                         {' -> '}
@@ -440,7 +440,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                       <div className="flex items-center gap-3 mt-1.5 text-[10px] text-[#556453]/70 dark:text-white/25">
                         <span>Dihantar: {new Date(req.submitted_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                         {req.reviewed_at && <span>· Disemak: {new Date(req.reviewed_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}</span>}
-                        {req.reviewer?.full_name && <span>· oleh {req.reviewer.full_name}</span>}
+                        {req.reviewer?.full_name && <span>· {t('jpp:by', 'oleh')} {req.reviewer.full_name}</span>}
                       </div>
                     </div>
                   </div>
@@ -489,33 +489,33 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                   <div>
                     <p className="font-black text-[#2E3A2F] dark:text-[#F8F6EE] text-sm">{reviewModal.action === 'APPROVED' ? 'Luluskan' : 'Tolak'} Permintaan Pindaan</p>
                     <p className="text-[11px] text-[#556453] dark:text-white/40">
-                      {reviewModal.req.field_type === 'matric_no' ? 'No. Matrik' : 'Semester'}:{' '}
+                      {reviewModal.req.field_type === 'matric_no' ? t('jpp:matric_no', 'No. Matrik') : t('jpp:semester', 'Semester')}:{' '}
                       <span className="font-mono text-[#556453]/60 dark:text-white/60 line-through">{reviewModal.req.current_value}</span>
                       {' -> '}<span className="font-mono text-[#2E3A2F] dark:text-white font-black">{reviewModal.req.requested_value}</span>
                     </p>
-                    <p className="text-[10px] text-[#556453]/80 dark:text-white/30 mt-0.5">Pelajar: {reviewModal.req.requester?.full_name}</p>
+                    <p className="text-[10px] text-[#556453]/80 dark:text-white/30 mt-0.5">{t('jpp:student', 'Pelajar')}: {reviewModal.req.requester?.full_name}</p>
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-black uppercase tracking-widest text-[#556453] dark:text-white/40">
-                    {reviewModal.action === 'REJECTED' ? 'Sebab Penolakan *' : 'Nota Ulasan (Pilihan)'}
+                    {reviewModal.action === 'REJECTED' ? t('jpp:overview_rejection_reason_label', 'Sebab Penolakan *') : t('jpp:overview_review_notes_optional', 'Nota Ulasan (Pilihan)')}
                   </label>
                   <textarea
                     value={reviewNote} onChange={e => setReviewNote(e.target.value)} rows={3}
-                    placeholder={reviewModal.action === 'REJECTED' ? 'Nyatakan sebab penolakan...' : 'Nota tambahan (jika ada)...'}
+                    placeholder={reviewModal.action === 'REJECTED' ? t('jpp:overview_rejection_reason_placeholder', 'Nyatakan sebab penolakan...') : t('jpp:overview_additional_note_placeholder', 'Nota tambahan (jika ada)...')}
                     className="w-full px-4 py-3 rounded-xl bg-[#F8F6EE]/50 dark:bg-white/5 border border-[#D9C9B2]/80 dark:border-white/10 text-sm text-[#2E3A2F] dark:text-white placeholder:text-[#556453]/60 dark:placeholder:text-white/20 font-medium resize-none focus:outline-none focus:border-[#2E3A2F] dark:focus:border-white/20"
                   />
-                  <p className="text-[10px] text-[#556453]/70 dark:text-white/25">Nota ini akan direkodkan dalam Audit Log dan dihantar kepada pelajar.</p>
+                  <p className="text-[10px] text-[#556453]/70 dark:text-white/25">{t('jpp:overview_audit_log_note', 'Nota ini akan direkodkan dalam Audit Log dan dihantar kepada pelajar.')}</p>
                 </div>
                 <div className="flex gap-3">
                   <button onClick={() => setReviewModal({ open: false, req: null, action: null })} disabled={processing}
                     className="flex-1 h-11 rounded-xl font-bold text-xs uppercase tracking-wider border border-[#D9C9B2]/80 dark:border-white/10 text-[#556453] dark:text-white/40 hover:bg-[#F8F6EE] dark:hover:bg-white/5 transition-all">
-                    Batal
+                    {t('jpp:cancel', 'Batal')}
                   </button>
                   <button onClick={handleReview} disabled={processing || (reviewModal.action === 'REJECTED' && !reviewNote.trim())}
                     className={cn('flex-1 h-11 rounded-xl font-black text-xs uppercase tracking-wider transition-all disabled:opacity-40',
                       reviewModal.action === 'APPROVED' ? 'bg-emerald-500 hover:bg-emerald-400 text-white' : 'bg-red-600 hover:bg-red-500 text-white')}>
-                    {processing ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1" />Memproses...</> : reviewModal.action === 'APPROVED' ? 'Sahkan Kelulusan' : 'Sahkan Penolakan'}
+                    {processing ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1" />{t('jpp:processing', 'Memproses...')}</> : reviewModal.action === 'APPROVED' ? t('jpp:overview_confirm_approve', 'Sahkan Kelulusan') : t('jpp:overview_confirm_reject', 'Sahkan Penolakan')}
                   </button>
                 </div>
               </div>
@@ -706,16 +706,16 @@ export function JppOverviewPage() {
             icon={BellRing}  
             color={themeColor} 
             delay={0.05} 
-            sub={`daripada ${stats.totalStudents} pelajar`}
+            sub={t('jpp:overview_out_of_students', 'daripada {{count}} pelajar', { count: stats.totalStudents })}
             onClick={() => setShowSubsModal(true)} 
           />
           <BigStatCard label={t('jpp:total_students')} value={stats.totalStudents} icon={Users} color="#60A5FA" delay={0.10} />
-          <BigStatCard label="Jumlah Kelab"      value={stats.totalClubs}      icon={Flag}      color="#4ADE80" delay={0.15} />
+          <BigStatCard label={t('jpp:overview_total_clubs', 'Jumlah Kelab')}      value={stats.totalClubs}      icon={Flag}      color="#4ADE80" delay={0.15} />
           <BigStatCard label="Bisnes"            value={stats.totalBusinesses} icon={Store}     color="#F59E0B"    delay={0.20} />
-          <BigStatCard label="Produk PolyMart"   value={stats.totalProducts}   icon={ShoppingBag} color="#EC4899" delay={0.25} />
-          <BigStatCard label="Aduan Kebajikan"   value={stats.totalTickets}    icon={Heart}     color="#EF4444"    delay={0.30} />
-          <BigStatCard label="Acara Sukan"       value={stats.totalSports}     icon={Trophy}    color="#EAB308"    delay={0.35} />
-          <BigStatCard label="Laporan & Kadar Penyerahan" value={stats.totalReports} icon={FileText} color="#A78BFA" delay={0.40} sub="Kadar Penyerahan Laporan Kelab" />
+          <BigStatCard label={t('jpp:overview_polymart_products', 'Produk PolyMart')}   value={stats.totalProducts}   icon={ShoppingBag} color="#EC4899" delay={0.25} />
+          <BigStatCard label={t('jpp:overview_welfare_complaints', 'Aduan Kebajikan')}   value={stats.totalTickets}    icon={Heart}     color="#EF4444"    delay={0.30} />
+          <BigStatCard label={t('jpp:overview_sports_events', 'Acara Sukan')}       value={stats.totalSports}     icon={Trophy}    color="#EAB308"    delay={0.35} />
+          <BigStatCard label={t('jpp:overview_reports_submission_rate', 'Laporan & Kadar Penyerahan')} value={stats.totalReports} icon={FileText} color="#A78BFA" delay={0.40} sub={t('jpp:overview_club_reports_sub_rate', 'Kadar Penyerahan Laporan Kelab')} />
         </div>
 
         {loading ? (
@@ -736,14 +736,12 @@ export function JppOverviewPage() {
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                   <div>
-                    <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#556453] dark:text-[#A3B39F] mb-1">
-                      Trend Pendaftaran Pelajar
-                    </h2>
+                    <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#556453] dark:text-[#A3B39F] mb-1">{t('jpp:overview_student_reg_trend', 'Trend Pendaftaran Pelajar')}</h2>
                     <p className="text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE]">
-                      <span className="font-mono tabular-nums">{(stats?.totalStudents ?? 0).toLocaleString()}</span> <span className="text-xs text-[#556453] dark:text-[#A3B39F]/70 font-medium font-sans">jumlah pelajar</span>
+                      <span className="font-mono tabular-nums">{(stats?.totalStudents ?? 0).toLocaleString()}</span> <span className="text-xs text-[#556453] dark:text-[#A3B39F]/70 font-medium font-sans">{t('jpp:overview_total_students_label', 'jumlah pelajar')}</span>
                     </p>
                     <p className="text-[11px] text-[#556453]/80 dark:text-white/30 font-medium mt-0.5">
-                      {chartData.reduce((acc, curr) => acc + curr.count, 0)} baru mendaftar dalam {timeRange === '7d' ? '7' : '30'} hari
+                      {t('jpp:overview_newly_registered_days', '{{count}} baru mendaftar dalam {{days}} hari', { count: chartData.reduce((acc, curr) => acc + curr.count, 0), days: timeRange === '7d' ? '7' : '30' })}
                     </p>
                   </div>
                   <div className="flex items-center bg-[#F8F6EE] dark:bg-white/5 rounded-xl p-1 shrink-0">
@@ -753,7 +751,7 @@ export function JppOverviewPage() {
                         timeRange === '7d' ? 'bg-white dark:bg-white/10 text-[#2E3A2F] dark:text-white shadow-sm dark:shadow-none' : 'text-[#556453] dark:text-white/30 hover:text-[#2E3A2F] dark:hover:text-white/60'
                       }`}
                     >
-                      7 Hari
+                      {t('jpp:days_7', '7 Hari')}
                     </button>
                     <button
                       onClick={() => setTimeRange('30d')}
@@ -761,7 +759,7 @@ export function JppOverviewPage() {
                         timeRange === '30d' ? 'bg-white dark:bg-white/10 text-[#2E3A2F] dark:text-white shadow-sm dark:shadow-none' : 'text-[#556453] dark:text-white/30 hover:text-[#2E3A2F] dark:hover:text-white/60'
                       }`}
                     >
-                      30 Hari
+                      {t('jpp:days_30', '30 Hari')}
                     </button>
                   </div>
                 </div>
@@ -809,15 +807,13 @@ export function JppOverviewPage() {
                 transition={{ delay: 0.5 }}
                 className="rounded-[1.75rem] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-white dark:bg-[#1E271F]/80 p-6 flex flex-col shadow-[0_4px_20px_rgba(46,58,47,0.04)] dark:shadow-none"
               >
-                <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#556453] dark:text-[#A3B39F] mb-2">
-                  Status Tiket Kebajikan
-                </h2>
+                <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#556453] dark:text-[#A3B39F] mb-2">{t('jpp:overview_welfare_ticket_status', 'Status Tiket Kebajikan')}</h2>
                 
                 <div className="flex-1 min-h-[200px] w-full flex items-center justify-center relative mt-4">
                   {ticketStats.every(t => t.value === 0) ? (
                     <div className="text-center">
                       <Heart className="w-8 h-8 text-[#D9C9B2] dark:text-white/10 mx-auto mb-2" />
-                      <p className="text-xs text-[#556453] dark:text-white/30 font-medium">Tiada tiket kebajikan</p>
+                      <p className="text-xs text-[#556453] dark:text-white/30 font-medium">{t('jpp:overview_no_welfare_tickets', 'Tiada tiket kebajikan')}</p>
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
