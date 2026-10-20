@@ -279,7 +279,7 @@ export function PolyRiderDashboard() {
     shareLocation();
     const iv = setInterval(shareLocation, 90_000);
     return () => clearInterval(iv);
-  }, [activeJobs.map(j => `${j.id}:${j.status}`).join(','), user]);
+  }, [activeJobs.map(j => j.id + ':' + j.status).join(','), user]);
 
   const fetchProfile = async () => {
     try {
@@ -300,13 +300,13 @@ export function PolyRiderDashboard() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!plateNumber || !receiptFile) {
-      toast.error('Sila isi semua maklumat pendaftaran');
+      toast.error(t('gig:fill_all_reg_info', 'Sila isi semua maklumat pendaftaran'));
       return;
     }
     setIsSubmitting(true);
     try {
       const receipt_url = await uploadFileToDrive(receiptFile, 'polyrider-receipts');
-      if (!receipt_url) throw new Error('Gagal muat naik resit');
+      if (!receipt_url) throw new Error(t('gig:upload_receipt_failed', 'Gagal muat naik resit'));
 
       const { error } = await supabase.from('polyrider_profiles').upsert({
         user_id: user!.id,
@@ -316,10 +316,10 @@ export function PolyRiderDashboard() {
         status: 'PENDING'
       });
       if (error) throw error;
-      toast.success('Pendaftaran berjaya dihantar untuk kelulusan!');
+      toast.success(t('gig:reg_submitted_success', 'Pendaftaran berjaya dihantar untuk kelulusan!'));
       fetchProfile();
     } catch (e: any) {
-      toast.error(e.message || 'Ralat sistem. Cuba lagi.');
+      toast.error(e.message || t('gig:system_error_retry', 'Ralat sistem. Cuba lagi.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -328,13 +328,13 @@ export function PolyRiderDashboard() {
   const toggleStatus = async () => {
     if (!profile || !user) return;
     if (activeJobs.length > 0 && profile.is_active) {
-      toast.error('Selesaikan semua trip aktif sebelum OFF-DUTY');
+      toast.error(t('gig:complete_active_trips_before_off', 'Selesaikan semua trip aktif sebelum OFF-DUTY'));
       return;
     }
 
     if (!profile.is_active) {
       if (profile.status === 'SUSPENDED') {
-        toast.error('Akaun anda telah digantung oleh Admin. Anda tidak boleh bertugas.');
+        toast.error(t('gig:account_suspended_by_admin', 'Akaun anda telah digantung oleh Admin. Anda tidak boleh bertugas.'));
         return;
       }
 
@@ -348,7 +348,7 @@ export function PolyRiderDashboard() {
           setShowExpiredWarning(true);
           return;
         } else if (now > validUntil) {
-          toast.error('Peringatan: Langganan bulanan tamat. Anda berada dalam tempoh ihsan 3 hari.', { duration: 6000 });
+          toast.error(t('gig:sub_expired_grace_period', 'Peringatan: Langganan bulanan tamat. Anda berada dalam tempoh ihsan 3 hari.'), { duration: 6000 });
         }
       }
     }
@@ -374,9 +374,9 @@ export function PolyRiderDashboard() {
 
     if (error) {
       setProfile({ ...profile, is_active: !newStatus });
-      toast.error('Gagal tukar status. Cuba lagi.');
+      toast.error(t('gig:status_change_failed', 'Gagal tukar status. Cuba lagi.'));
     } else {
-      toast.success(newStatus ? 'Anda kini ON-DUTY 🟢' : 'Anda kini OFF-DUTY 🔴');
+      toast.success(newStatus ? t('gig:now_on_duty_toast', 'Anda kini ON-DUTY 🟢') : t('gig:now_off_duty_toast', 'Anda kini OFF-DUTY 🔴'));
     }
   };
 
@@ -411,9 +411,9 @@ export function PolyRiderDashboard() {
 
       const results = await Promise.all(insertPromises);
       const hasError = results.some(r => r.error);
-      if (hasError) { toast.error('Gagal menghantar pecahan tawaran.'); setProcessingBidId(null); return; }
+      if (hasError) { toast.error(t('gig:failed_split_offer', 'Gagal menghantar pecahan tawaran.')); setProcessingBidId(null); return; }
       
-      toast.success('Bidaan pecahan berjaya dihantar kepada semua penumpang!');
+      toast.success(t('gig:split_offer_success', 'Bidaan pecahan berjaya dihantar kepada semua penumpang!'));
       setBiddingJobId(null);
       setProcessingBidId(null);
       setSubmittedBids(prev => {
@@ -442,8 +442,8 @@ export function PolyRiderDashboard() {
           notifyUsers(
             session?.access_token ?? '',
             [m.student_id],
-            '🤝 Bidaan Rider (Auto-Split)',
-            `Rider meminta RM${amount.toFixed(2)} keseluruhan. Bahagian anda: RM${splitAmount.toFixed(2)}. Semak bidaan sekarang!`,
+            t('gig:rider_bid_split_title', '🤝 Bidaan Rider (Auto-Split)'),
+            t('gig:rider_bid_split_msg', 'Rider meminta RM{{amount}} keseluruhan. Bahagian anda: RM{{split}}. Semak bidaan sekarang!', { amount: amount.toFixed(2), split: splitAmount.toFixed(2) }),
             { tag: 'polyrider-bid-received', url: '/polyrider' }
           );
         }
@@ -452,8 +452,8 @@ export function PolyRiderDashboard() {
       const { error } = await supabase.from('polyrider_bids').insert({
         job_id: job.id, rider_id: user.id, bid_amount: amount, status: 'PENDING'
       });
-      if (error) { toast.error('Gagal menghantar tawaran.'); setProcessingBidId(null); return; }
-      toast.success('Tawaran berjaya dihantar!');
+      if (error) { toast.error(t('gig:failed_send_offer', 'Gagal menghantar tawaran.')); setProcessingBidId(null); return; }
+      toast.success(t('gig:offer_sent_success', 'Tawaran berjaya dihantar!'));
       setBiddingJobId(null);
       setProcessingBidId(null);
       setSubmittedBids(prev => ({ ...prev, [job.id]: amount }));
@@ -462,8 +462,8 @@ export function PolyRiderDashboard() {
         notifyUsers(
           session?.access_token ?? '',
           [job.student_id],
-          '🤝 Tawaran Bidaan Rider!',
-          `Rider sedia mengambil anda dengan bayaran RM${amount.toFixed(2)}. Semak bidaan sekarang!`,
+          t('gig:rider_bid_offer_title', '🤝 Tawaran Bidaan Rider!'),
+          t('gig:rider_bid_offer_msg', 'Rider sedia mengambil anda dengan bayaran RM{{amount}}. Semak bidaan sekarang!', { amount: amount.toFixed(2) }),
           { tag: 'polyrider-bid-received', url: '/polyrider' }
         );
       }
@@ -483,9 +483,9 @@ export function PolyRiderDashboard() {
       const results = await Promise.all(insertPromises);
       const hasError = results.some(r => r.error);
       setProcessingBidId(null);
-      if (hasError) { toast.error('Gagal menghantar tawaran.'); return; }
+      if (hasError) { toast.error(t('gig:failed_send_offer', 'Gagal menghantar tawaran.')); return; }
       
-      toast.success('Tawaran diterima untuk keseluruhan kumpulan!');
+      toast.success(t('gig:offer_accepted_group', 'Tawaran diterima untuk keseluruhan kumpulan!'));
       setSubmittedBids(prev => {
         const newBids = { ...prev };
         job.carpoolMembers.forEach((m: any) => { newBids[m.id] = Number(m.proposed_price || 0); });
@@ -497,8 +497,8 @@ export function PolyRiderDashboard() {
       notifyUsers(
         session?.access_token ?? '',
         studentIds,
-        '🤝 Rider Terima Carpool!',
-        `Rider sedia mengambil anda pada harga cadangan anda. Sahkan sekarang!`,
+        t('gig:rider_accept_carpool_title', '🤝 Rider Terima Carpool!'),
+        t('gig:rider_accept_carpool_msg', 'Rider sedia mengambil anda pada harga cadangan anda. Sahkan sekarang!'),
         { tag: 'polyrider-bid-received', url: '/polyrider' }
       );
     } else {
@@ -507,19 +507,19 @@ export function PolyRiderDashboard() {
       });
       setProcessingBidId(null);
       if (!error) {
-        toast.success('Tawaran pada harga yang dicadang dihantar!');
+        toast.success(t('gig:offer_at_proposed_sent', 'Tawaran pada harga yang dicadang dihantar!'));
         setSubmittedBids(prev => ({ ...prev, [job.id]: Number(job.proposed_price || 0) }));
         if (job.student_id) {
           const { data: { session } } = await supabase.auth.getSession();
           notifyUsers(
             session?.access_token ?? '',
             [job.student_id],
-            '🤝 Rider Terima Tawaran!',
-            `Rider sedia mengambil anda pada harga cadangan anda. Sahkan sekarang!`,
+            t('gig:rider_accept_offer_title', '🤝 Rider Terima Tawaran!'),
+            t('gig:rider_accept_carpool_msg', 'Rider sedia mengambil anda pada harga cadangan anda. Sahkan sekarang!'),
             { tag: 'polyrider-bid-received', url: '/polyrider' }
           );
         }
-      } else toast.error('Gagal hantar tawaran.');
+      } else toast.error(t('gig:failed_send_offer', 'Gagal hantar tawaran.'));
     }
   };
 
@@ -552,19 +552,19 @@ export function PolyRiderDashboard() {
 
     const { data: { session } } = await supabase.auth.getSession();
     notifyUsers(session?.access_token ?? '', [jobStudentId],
-      accept ? '✅ Rider Setuju Tawaran Balas!' : '❌ Rider Tolak Tawaran Balas',
+      accept ? t('gig:rider_agree_counter_title', '✅ Rider Setuju Tawaran Balas!') : t('gig:rider_reject_counter_title', '❌ Rider Tolak Tawaran Balas'),
       accept
-        ? `Rider bersetuju RM${counterAmt.toFixed(2)}. Tekan Sahkan untuk meneruskan.`
-        : 'Rider menolak tawaran anda. Pilih rider lain atau tawar semula.',
+        ? t('gig:rider_agree_counter_msg', 'Rider bersetuju RM{{amount}}. Tekan Sahkan untuk meneruskan.', { amount: counterAmt.toFixed(2) })
+        : t('gig:rider_reject_counter_msg', 'Rider menolak tawaran anda. Pilih rider lain atau tawar semula.'),
       { tag: 'polyrider-counter-response', url: '/polyrider' }
     );
-    toast.success(accept ? 'Tawaran balas diterima!' : 'Tawaran balas ditolak.');
+    toast.success(accept ? t('gig:counter_accepted_toast', 'Tawaran balas diterima!') : t('gig:counter_rejected_toast', 'Tawaran balas ditolak.'));
   };
 
   const updateJobStatus = async (jobId: string, newStatus: string) => {
     const job = activeJobs.find(j => j.id === jobId);
-    if (!job || job.rider_id !== user?.id) { toast.error('Akses tidak dibenarkan.'); return; }
-    if (VALID_TRANSITIONS[job.status] !== newStatus) { toast.error('Perubahan status tidak sah.'); return; }
+    if (!job || job.rider_id !== user?.id) { toast.error(t('gig:access_denied', 'Akses tidak dibenarkan.')); return; }
+    if (VALID_TRANSITIONS[job.status] !== newStatus) { toast.error(t('gig:invalid_status_change', 'Perubahan status tidak sah.')); return; }
     const { error } = await supabase.from('polyrider_jobs')
       .update({ status: newStatus }).eq('id', jobId).eq('rider_id', user!.id);
     if (!error) {
@@ -574,26 +574,26 @@ export function PolyRiderDashboard() {
       const studentId = job.student_id;
 
       if (newStatus === 'ARRIVED') {
-        toast.success('Pelajar dimaklumkan anda telah tiba!');
+        toast.success(t('gig:student_notified_arrival', 'Pelajar dimaklumkan anda telah tiba!'));
         if (studentId) notifyUsers(token, [studentId],
-          '🛕 Rider Telah Tiba!',
-          'Rider anda sudah sampai di lokasi pickup. Sila bergerak keluar sekarang.',
+          t('gig:rider_arrived_notif_title', '🛕 Rider Telah Tiba!'),
+          t('gig:rider_arrived_notif_msg', 'Rider anda sudah sampai di lokasi pickup. Sila bergerak keluar sekarang.'),
           { tag: 'polyrider-arrived', url: '/polyrider' }
         );
       }
       if (newStatus === 'IN_TRANSIT') {
         if (studentId) notifyUsers(token, [studentId],
-          '🚴 Dalam Perjalanan!',
-          'Perjalanan anda sedang berlangsung. Selamat sampai!',
+          t('gig:trip_in_transit_notif_title', '🚴 Dalam Perjalanan!'),
+          t('gig:trip_in_transit_notif_msg', 'Perjalanan anda sedang berlangsung. Selamat sampai!'),
           { tag: 'polyrider-transit', url: '/polyrider' }
         );
       }
       if (newStatus === 'COMPLETED') {
-        toast.success('Tugasan Selesai! ✅');
+        toast.success(t('gig:task_completed_toast', 'Tugasan Selesai! ✅'));
         fetchTodayEarnings();
         if (studentId) notifyUsers(token, [studentId],
-          '✅ Perjalanan Selesai!',
-          'Anda telah selamat tiba di destinasi. Sila beri penilaian kepada rider anda.',
+          t('gig:trip_completed_notif_title', '✅ Perjalanan Selesai!'),
+          t('gig:trip_completed_notif_msg', 'Anda telah selamat tiba di destinasi. Sila beri penilaian kepada rider anda.'),
           { tag: 'polyrider-completed', url: '/polyrider' }
         );
       }
@@ -642,7 +642,7 @@ export function PolyRiderDashboard() {
     } catch (e) { console.error('[SOS-Rider] Backend alert failed:', e); }
 
     setSosJobId(null);
-    toast.error('🚨 Isyarat SOS dihantar! KLK dimaklumkan.', { duration: 8000 });
+    toast.error(t('gig:sos_signal_sent_klk', '🚨 Isyarat SOS dihantar! KLK dimaklumkan.'), { duration: 8000 });
     checkActiveJobs();
   };
 
@@ -657,11 +657,11 @@ export function PolyRiderDashboard() {
 
   const handleRenewSubscription = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!renewFile) { toast.error('Sila muat naik resit bayaran.'); return; }
+    if (!renewFile) { toast.error(t('gig:please_upload_payment_receipt', 'Sila muat naik resit bayaran.')); return; }
     setIsRenewing(true);
     try {
       const receipt_url = await uploadFileToDrive(renewFile, 'polyrider-receipts');
-      if (!receipt_url) throw new Error('Gagal muat naik resit');
+      if (!receipt_url) throw new Error(t('gig:upload_receipt_failed', 'Gagal muat naik resit'));
 
       const { error } = await supabase.from('polyrider_profiles').update({
         receipt_url,
@@ -670,12 +670,12 @@ export function PolyRiderDashboard() {
       }).eq('user_id', user!.id);
       
       if (error) throw error;
-      toast.success('Resit pembaharuan berjaya dihantar untuk kelulusan!');
+      toast.success(t('gig:renewal_receipt_submitted', 'Resit pembaharuan berjaya dihantar untuk kelulusan!'));
       setShowExpiredWarning(false);
       setRenewFile(null);
       fetchProfile();
     } catch (e: any) {
-      toast.error(e.message || 'Ralat muat naik resit.');
+      toast.error(e.message || t('gig:receipt_upload_error', 'Ralat muat naik resit.'));
     } finally {
       setIsRenewing(false);
     }
@@ -697,10 +697,10 @@ export function PolyRiderDashboard() {
     setIsCancelModalOpen(false);
 
     if (error) {
-      toast.error('Gagal membatalkan. ' + error.message);
+      toast.error(t('gig:cancel_failed_try_again', 'Gagal membatalkan.') + ' ' + error.message);
       setCancelJobId(null);
     } else {
-      toast.success('Tugasan dibatalkan');
+      toast.success(t('gig:task_cancelled_toast', 'Tugasan dibatalkan'));
       setActiveJobs(prev => prev.filter(j => j.id !== cancelJobId));
       setCancelJobId(null);
       checkActiveJobs();
@@ -735,8 +735,8 @@ export function PolyRiderDashboard() {
                   <Bug className="w-4 h-4 text-rose-500" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-slate-900 dark:text-white">Lapor Ralat</p>
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">Tech Support</p>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">{t('gig:report_error', 'Lapor Ralat')}</p>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">{t('gig:tech_support', 'Tech Support')}</p>
                 </div>
               </a>
               <div className="h-px bg-slate-100 dark:bg-white/5 w-full my-0.5" />
@@ -751,8 +751,8 @@ export function PolyRiderDashboard() {
                   <MessageCircle className="w-4 h-4 text-emerald-500" />
                 </div>
                 <div>
-                  <p className="text-xs font-black text-slate-900 dark:text-white">Admin PolyRider</p>
-                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">Exco KLK</p>
+                  <p className="text-xs font-black text-slate-900 dark:text-white">{t('gig:admin_polyrider', 'Admin PolyRider')}</p>
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-white/50">{t('gig:exco_klk', 'Exco KLK')}</p>
                 </div>
               </a>
             </motion.div>
@@ -762,7 +762,7 @@ export function PolyRiderDashboard() {
         <button
           onClick={() => setShowContactMenu(!showContactMenu)}
           className="bg-emerald-500 text-white p-3.5 rounded-full shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 transition-all hover:scale-105 active:scale-95 flex items-center justify-center"
-          title="Hubungi JPP / Lapor Bug"
+          title={t('gig:contact_jpp_bug', 'Hubungi JPP / Lapor Bug')}
         >
           {showContactMenu ? <X className="w-6 h-6" /> : <Phone className="w-6 h-6" />}
         </button>
@@ -894,6 +894,7 @@ export function PolyRiderDashboard() {
   // -------------------------------------------------------------
   // RENDER: Papan Pemuka Rider (APPROVED)
   // -------------------------------------------------------------
+  const isSuspended = profile.status === 'SUSPENDED';
   return (
     <div className="max-w-xl mx-auto pb-32 pt-4 px-4 min-h-screen flex flex-col">
       <EarningsAnalyticsSheet 
@@ -919,8 +920,8 @@ export function PolyRiderDashboard() {
         
         <button 
           onClick={toggleStatus}
-          disabled={profile.status === 'SUSPENDED'}
-          className={`px-4 py-2 rounded-full font-black text-xs tracking-wider transition-all flex items-center gap-2 ${profile.status === 'SUSPENDED' ? 'opacity-50 cursor-not-allowed bg-slate-200 dark:bg-zinc-900/10 text-slate-500' : profile.is_active ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-200 dark:bg-white dark:bg-zinc-900/10 text-slate-500 dark:text-white/50'}`}
+          disabled={isSuspended}
+          className={`px-4 py-2 rounded-full font-black text-xs tracking-wider transition-all flex items-center gap-2 ${isSuspended ? 'opacity-50 cursor-not-allowed bg-slate-200 dark:bg-zinc-900/10 text-slate-500' : profile.is_active ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-200 dark:bg-white dark:bg-zinc-900/10 text-slate-500 dark:text-white/50'}`}
         >
           <div className={`w-2 h-2 rounded-full ${profile.is_active ? 'bg-white dark:bg-zinc-900 animate-pulse' : 'bg-slate-400 dark:bg-white dark:bg-zinc-900/40'}`} />
           {profile.is_active ? t('gig:on_duty', 'ON-DUTY') : t('gig:off_duty', 'OFF-DUTY')}
@@ -957,15 +958,15 @@ export function PolyRiderDashboard() {
                   {/* Seat number badge */}
                   <div className="flex items-center gap-2 mb-3">
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40 bg-white dark:bg-zinc-800 border border-slate-100 dark:border-white/10 px-2 py-1 rounded-md">
-                      Penumpang {idx + 1} / {activeJobs.length}
+                      {t('gig:passenger_index_of_total', 'Penumpang {{index}} / {{total}}', { index: idx + 1, total: activeJobs.length })}
                     </span>
                     {job.carpool_group_id && (
-                      <span className="text-[10px] font-black text-blue-500 bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-md uppercase tracking-widest">Carpool</span>
+                      <span className="text-[10px] font-black text-blue-500 bg-blue-50 dark:bg-blue-500/10 px-2 py-1 rounded-md uppercase tracking-widest">{t('gig:carpool_word', 'Carpool')}</span>
                     )}
                   </div>
                   <div className="flex justify-between items-start mb-6">
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-md mb-2 inline-block">Penumpang {idx + 1}</span>
+                      <span className="text-[10px] font-black uppercase tracking-widest text-emerald-500 bg-emerald-500/10 px-2 py-1 rounded-md mb-2 inline-block">{t('gig:passenger_index', 'Penumpang {{index}}', { index: idx + 1 })}</span>
                       <p className="font-bold text-slate-900 dark:text-white">{job.student?.full_name}</p>
                     </div>
                     <div className="text-right">
@@ -1023,7 +1024,7 @@ export function PolyRiderDashboard() {
                           </div>
                           {job.status === 'IN_TRANSIT' && s.lat && s.lng && (
                             <a href={`https://waze.com/ul?ll=${s.lat},${s.lng}&navigate=yes`} target="_blank" rel="noopener noreferrer" className="w-full text-center py-1.5 bg-[#33CCFF]/10 hover:bg-[#33CCFF]/20 text-[#0099CC] dark:text-[#33CCFF] font-bold rounded-lg text-[10px] transition-colors mt-0.5">
-                              🔵 Waze ke Singgahan
+                              {t('gig:waze_to_stop', '🔵 Waze ke Singgahan')}
                             </a>
                           )}
                         </div>
@@ -1037,7 +1038,7 @@ export function PolyRiderDashboard() {
                       </div>
                       <div className="flex-1 bg-white dark:bg-zinc-900 border border-slate-100 dark:border-white/5 rounded-xl p-2.5 shadow-sm flex flex-col gap-1.5">
                         <div>
-                          <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Destinasi Akhir</p>
+                          <p className="text-[8px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{t('gig:final_destination', 'Destinasi Akhir')}</p>
                           <p className="font-bold text-xs text-slate-900 dark:text-white leading-tight">{job.dropoff_name}</p>
                         </div>
                         {job.status === 'IN_TRANSIT' && (
@@ -1079,7 +1080,7 @@ export function PolyRiderDashboard() {
                             </>
                           )}
                         </div>
-                        <span className="text-xs font-bold text-slate-700 dark:text-white/80">Chat Penumpang</span>
+                        <span className="text-xs font-bold text-slate-700 dark:text-white/80">{t('gig:passenger_chat_title', 'Chat Penumpang')}</span>
                       </div>
                       <span className="text-amber-500 transition-transform duration-300 group-open:-rotate-180">
                         <ChevronRight className="w-4 h-4 rotate-90" />
@@ -1089,7 +1090,7 @@ export function PolyRiderDashboard() {
                       <div className="flex flex-col min-h-[120px] max-h-[150px]">
                         <div ref={el => chatContainerRefs.current[job.id] = el} className="flex-1 overflow-y-auto space-y-2 mb-2 p-1">
                           {(!chatMessages[job.id] || chatMessages[job.id].length === 0) ? (
-                            <p className="text-[10px] text-center text-slate-400 dark:text-white/40 mt-4">Berhubung dengan pelajar.</p>
+                            <p className="text-[10px] text-center text-slate-400 dark:text-white/40 mt-4">{t('gig:connect_with_student', 'Berhubung dengan pelajar.')}</p>
                           ) : (
                             chatMessages[job.id].map(msg => (
                               <div key={msg.id} className={`flex ${msg.sender_id === user!.id ? 'justify-end' : 'justify-start'}`}>
@@ -1105,7 +1106,7 @@ export function PolyRiderDashboard() {
                             type="text" 
                             value={newMessages[job.id] || ''} 
                             onChange={e => setNewMessages({...newMessages, [job.id]: e.target.value})}
-                            placeholder="Mesej..." 
+                            placeholder={t('gig:chat_message_placeholder', 'Mesej...')} 
                             className="flex-1 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-white/5 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-amber-500 text-slate-900 dark:text-white"
                           />
                           <button type="submit" className="px-3 bg-amber-500 hover:bg-amber-600 text-white rounded-xl flex items-center justify-center shrink-0 transition-colors">
@@ -1121,7 +1122,7 @@ export function PolyRiderDashboard() {
                       <div className="col-span-2 py-2.5 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 rounded-xl flex items-center justify-between px-3">
                         <div className="flex items-center gap-2">
                           <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
-                          <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">Lokasi Auto-Dikongsi</span>
+                          <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wider">{t('gig:auto_shared_location', 'Lokasi Auto-Dikongsi')}</span>
                         </div>
                         <button
                           onClick={async () => {
@@ -1134,39 +1135,39 @@ export function PolyRiderDashboard() {
                                 rider_lng: pos.coords.longitude,
                                 rider_location_updated_at: new Date().toISOString(),
                               }).eq('id', job.id);
-                              if (error) { toast.error('Gagal kongsi lokasi. Cuba lagi.'); return; }
-                              toast.success('\ud83d\udccd Lokasi dikemas kini!');
+                              if (error) { toast.error(t('gig:failed_share_location', 'Gagal kongsi lokasi. Cuba lagi.')); return; }
+                              toast.success(t('gig:location_updated_toast', '📍 Lokasi dikemas kini!'));
                             } catch {
-                              toast.error('GPS tidak tersedia.');
+                              toast.error(t('gig:gps_unavailable_toast', 'GPS tidak tersedia.'));
                             }
                           }}
                           className="px-2.5 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-[10px] font-black rounded-lg transition-colors"
                         >
-                          Kemas Kini Sekarang
+                          {t('gig:update_now_btn', 'Kemas Kini Sekarang')}
                         </button>
                       </div>
                     )}
                     {job.status === 'ACCEPTED' && (
                       <button onClick={() => updateJobStatus(job.id, 'ARRIVED')} className="col-span-2 py-3 bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold rounded-xl flex items-center justify-center gap-2">
-                        <MapPin className="w-5 h-5" /> Tiba di Pickup
+                        <MapPin className="w-5 h-5" /> {t('gig:arrived_at_pickup', 'Tiba di Pickup')}
                       </button>
                     )}
 
                     {job.status === 'ARRIVED' && (
                       <button onClick={() => updateJobStatus(job.id, 'IN_TRANSIT')} className="col-span-2 py-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-xl flex items-center justify-center gap-2">
-                        <Navigation className="w-5 h-5" /> Mula Perjalanan
+                        <Navigation className="w-5 h-5" /> {t('gig:start_trip', 'Mula Perjalanan')}
                       </button>
                     )}
                     {job.status === 'IN_TRANSIT' && (
                       <button onClick={() => updateJobStatus(job.id, 'COMPLETED')} className="col-span-2 py-3 bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 font-bold rounded-xl flex items-center justify-center gap-2">
-                        <CheckCircle className="w-5 h-5" /> Selesai & Terima Tunai
+                        <CheckCircle className="w-5 h-5" /> {t('gig:finish_receive_cash', 'Selesai & Terima Tunai')}
                       </button>
                     )}
                   </div>
                   <div className="mt-4 border-t border-slate-100 dark:border-white/5 pt-4">
                     <SwipeToSOS onTrigger={() => triggerSOS(job.id)} />
                     <button onClick={() => setShowRiderContactsSheet(true)} className="w-full mt-2 py-2 text-xs text-slate-400 dark:text-white/30 font-bold flex items-center justify-center gap-1.5">
-                      <UserCircle className="w-3.5 h-3.5" /> Urus Kenalan Kecemasan SOS
+                      <UserCircle className="w-3.5 h-3.5" /> {t('gig:manage_sos_contacts', 'Urus Kenalan Kecemasan SOS')}
                     </button>
                     {job.status === 'ACCEPTED' && (
                       <div className="mt-4">
@@ -1175,7 +1176,7 @@ export function PolyRiderDashboard() {
                           className="w-full border-red-200 text-red-600 hover:bg-red-50" 
                           onClick={() => { setCancelJobId(job.id); setIsCancelModalOpen(true); }}
                         >
-                          Batal Tugasan
+                          {t('gig:cancel_task', 'Batal Tugasan')}
                         </Button>
                       </div>
                     )}
@@ -1191,7 +1192,7 @@ export function PolyRiderDashboard() {
       {activeJobs.length < 3 && (
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">Permintaan Terkini</h2>
+            <h2 className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/40">{t('gig:recent_requests_title', 'Permintaan Terkini')}</h2>
             {isPolling && (
               <div className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -1211,10 +1212,10 @@ export function PolyRiderDashboard() {
               </div>
               
               <h3 className="text-xl font-black text-slate-900 dark:text-white tracking-tight mb-2 relative z-10">
-                Status OFF-DUTY
+                {t('gig:off_duty_title', 'Status OFF-DUTY')}
               </h3>
               <p className="text-sm text-slate-500 dark:text-white/60 font-medium mb-8 max-w-[250px] mx-auto relative z-10 leading-relaxed">
-                Anda tidak akan menerima sebarang order baru. Tekan butang di bawah untuk mula.
+                {t('gig:off_duty_desc', 'Anda tidak akan menerima sebarang order baru. Tekan butang di bawah untuk mula.')}
               </p>
               
               <button 
@@ -1222,7 +1223,7 @@ export function PolyRiderDashboard() {
                 className="relative z-10 w-full py-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-lg rounded-2xl shadow-[0_0_40px_-10px_rgba(16,185,129,0.5)] transition-all flex items-center justify-center gap-3 group"
               >
                 <div className="w-3 h-3 rounded-full bg-white animate-pulse" />
-                MULA ON-DUTY
+                {t('gig:start_on_duty_btn', 'MULA ON-DUTY')}
               </button>
             </div>
           ) : (
@@ -1240,19 +1241,19 @@ export function PolyRiderDashboard() {
                   </div>
                   
                   <h3 className="text-lg font-black text-slate-900 dark:text-white tracking-tight mb-2 relative z-10">
-                    Sistem Sedang Mencari...
+                    {t('gig:system_searching_title', 'Sistem Sedang Mencari...')}
                   </h3>
                   <p className="text-sm text-slate-500 dark:text-white/60 font-medium mb-8 max-w-[200px] mx-auto relative z-10">
-                    Bila ada pesanan baru, ia akan dipaparkan di sini secara automatik.
+                    {t('gig:auto_order_hint', 'Bila ada pesanan baru, ia akan dipaparkan di sini secara automatik.')}
                   </p>
                   
                   <div className="flex gap-3 relative z-10 w-full">
                     <button onClick={toggleStatus} className="flex-1 py-3 bg-red-50 dark:bg-red-500/10 text-red-600 font-bold rounded-xl hover:bg-red-100 dark:hover:bg-red-500/20 transition-all flex items-center justify-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-red-500" />
-                      Rehat (OFF)
+                      {t('gig:rest_off_btn', 'Rehat (OFF)')}
                     </button>
                     <button onClick={checkActiveJobs} className="flex-1 py-3 bg-white dark:bg-zinc-800 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-white font-bold rounded-xl hover:bg-slate-50 dark:hover:bg-zinc-700 transition-all flex items-center justify-center gap-2">
-                      ↻ Segarkan
+                      ↻ {t('gig:refresh_btn', 'Segarkan')}
                     </button>
                   </div>
                 </div>
@@ -1274,7 +1275,7 @@ export function PolyRiderDashboard() {
                             : 'bg-slate-100 dark:bg-zinc-800 text-slate-500 dark:text-white/40 hover:bg-slate-200 dark:hover:bg-zinc-700'
                         }`}
                       >
-                        {f === 'LELAKI' ? '♂ Lelaki' : f === 'PEREMPUAN' ? '♀ Perempuan' : '⊕ Semua'}
+                        {f === 'LELAKI' ? t('gig:male_filter', '♂ Lelaki') : f === 'PEREMPUAN' ? t('gig:female_filter', '♀ Perempuan') : t('gig:all_filter', '⊕ Semua')}
                       </button>
                     ))}
                   </div>
@@ -1359,15 +1360,15 @@ export function PolyRiderDashboard() {
                             <div className="flex items-center gap-2">
                               <Users className="w-5 h-5 text-emerald-500" />
                               <div>
-                                <p className="text-xs font-black text-emerald-700 dark:text-emerald-400">Kumpulan Carpool</p>
-                                <p className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-400/70">{job.carpoolMembers.length} Penumpang Berkongsi</p>
+                                <p className="text-xs font-black text-emerald-700 dark:text-emerald-400">{t('gig:carpool_group', 'Kumpulan Carpool')}</p>
+                                <p className="text-[10px] font-bold text-emerald-600/70 dark:text-emerald-400/70">{t('gig:shared_passengers_count', '{{count}} Penumpang Berkongsi', { count: job.carpoolMembers.length })}</p>
                               </div>
                             </div>
                             <button 
                               onClick={() => setExpandedCarpool(expandedCarpool === job.id ? null : job.id)}
                               className="text-emerald-600 dark:text-emerald-400 text-xs font-bold bg-emerald-200/50 dark:bg-emerald-500/20 px-3 py-1.5 rounded-lg transition-colors hover:bg-emerald-300/50 dark:hover:bg-emerald-500/30"
                             >
-                              {expandedCarpool === job.id ? 'Tutup' : 'Lihat'}
+                              {expandedCarpool === job.id ? t('gig:close_btn', 'Tutup') : t('gig:view_btn', 'Lihat')}
                             </button>
                           </div>
                           
@@ -1433,12 +1434,12 @@ export function PolyRiderDashboard() {
                             </span>
                           ) : (
                             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest bg-slate-100 dark:bg-white/5 text-slate-400 dark:text-white/30">
-                              ∅ Jantina Tiada
+                              {t('gig:no_gender_badge', '∅ Jantina Tiada')}
                             </span>
                           )}
                           {/* Passenger name */}
                           <span className="text-xs font-bold text-slate-600 dark:text-white/60 truncate">
-                            {job.student?.full_name ?? 'Pelajar'}
+                            {job.student?.full_name ?? t('gig:student_default', 'Pelajar')}
                           </span>
                         </div>
                       )}
@@ -1469,7 +1470,7 @@ export function PolyRiderDashboard() {
                               {job.stops.map((s: any, i: number) => (
                                 <p key={i} className="text-[10px] font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
                                   <MapPin className="w-2.5 h-2.5" />
-                                  Singgah {i + 1}: {s.name}
+                                  {t('gig:stop_item_title', 'Singgah {{index}}: {{name}}', { index: i + 1, name: s.name })}
                                 </p>
                               ))}
                             </div>
@@ -1491,7 +1492,7 @@ export function PolyRiderDashboard() {
                         
                         <div className="text-right shrink-0">
                           <p className="text-[10px] font-black text-slate-400 dark:text-white/40 uppercase tracking-widest mb-1">
-                            {job.isGroupedCarpool ? 'Jumlah Tawaran' : 'Tawaran'}
+                            {job.isGroupedCarpool ? t('gig:total_offer', 'Jumlah Tawaran') : t('gig:offer_label', 'Tawaran')}
                           </p>
                           <p className="text-xl font-black text-emerald-500 mb-1">
                             RM {
@@ -1505,7 +1506,7 @@ export function PolyRiderDashboard() {
                           {job.distance_km && <p className="text-xs font-bold text-slate-400 dark:text-white/40">{job.distance_km.toFixed(1)} km</p>}
                           {distToPickup !== null && (
                             <p className="text-[10px] font-black text-blue-500 mt-0.5">
-                              📍 ~{distToPickup.toFixed(1)} km dari anda
+                              📍 ~{distToPickup.toFixed(1)} {t('gig:km_from_you', 'km dari anda')}
                             </p>
                           )}
                         </div>
@@ -1516,21 +1517,21 @@ export function PolyRiderDashboard() {
                         <div className="pt-4 border-t border-slate-100 dark:border-white/5 space-y-2">
                           {counterOfferBids[job.id] ? (
                             <div className="bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/30 rounded-xl p-3">
-                              <p className="text-xs font-black text-amber-700 dark:text-amber-400 mb-2">💬 Pelajar Tawar Balik RM{counterOfferBids[job.id].counterAmt.toFixed(2)}</p>
+                              <p className="text-xs font-black text-amber-700 dark:text-amber-400 mb-2">{t('gig:student_counter_offer_label', '💬 Pelajar Tawar Balik RM{{amount}}', { amount: counterOfferBids[job.id].counterAmt.toFixed(2) })}</p>
                               <div className="flex gap-2">
                                 <button onClick={() => respondCounterOffer(counterOfferBids[job.id].bidId, job.student_id, true, counterOfferBids[job.id].counterAmt)}
                                   className="flex-1 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs transition-colors">
-                                  ✓ Terima RM{counterOfferBids[job.id].counterAmt.toFixed(2)}
+                                  {t('gig:accept_counter_btn', '✓ Terima RM{{amount}}', { amount: counterOfferBids[job.id].counterAmt.toFixed(2) })}
                                 </button>
                                 <button onClick={() => respondCounterOffer(counterOfferBids[job.id].bidId, job.student_id, false, counterOfferBids[job.id].counterAmt)}
                                   className="flex-1 py-2 bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60 font-bold rounded-xl text-xs transition-colors">
-                                  ✗ Tolak
+                                  {t('gig:reject_counter_btn', '✗ Tolak')}
                                 </button>
                               </div>
                             </div>
                           ) : (
                             <div className="py-3 bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold rounded-xl flex items-center justify-center gap-2">
-                              <Clock className="w-5 h-5" /> Menunggu Respons Pelajar...
+                              <Clock className="w-5 h-5" /> {t('gig:waiting_student_response', 'Menunggu Respons Pelajar...')}
                             </div>
                           )}
                         </div>
@@ -1560,8 +1561,8 @@ export function PolyRiderDashboard() {
                             className={`px-4 py-3 font-bold rounded-xl flex items-center justify-center gap-2 transition-all ${processingBidId === job.id ? 'bg-emerald-500/50 text-white cursor-not-allowed' : 'bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/20'}`}
                           >
                             {processingBidId === job.id ? (
-                              <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Memproses...</>
-                            ) : 'Hantar Bidaan'}
+                              <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> {t('gig:processing', 'Memproses...')}</>
+                            ) : t('gig:submit_bid_btn', 'Hantar Bidaan')}
                           </button>
                         </div>
                       ) : (
@@ -1571,7 +1572,7 @@ export function PolyRiderDashboard() {
                             disabled={processingBidId === job.id}
                             className="flex-1 py-3 bg-slate-100 dark:bg-white dark:bg-zinc-900/5 text-slate-900 dark:text-white font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-white dark:bg-zinc-900/10 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Bida Harga Lain
+                            {t('gig:bid_another_price', 'Bida Harga Lain')}
                           </button>
                           <button 
                             onClick={() => acceptAtProposedPrice(job)} 
@@ -1580,7 +1581,7 @@ export function PolyRiderDashboard() {
                           >
                             {processingBidId === job.id ? (
                               <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> Memproses...</>
-                            ) : `Terima RM${Number(job.isGroupedCarpool ? job.total_proposed_price : job.proposed_price).toFixed(2)}`}
+                            ) : t('gig:accept_proposed_btn', 'Terima RM{{amount}}', { amount: Number(job.isGroupedCarpool ? job.total_proposed_price : job.proposed_price).toFixed(2) })}
                           </button>
                         </div>
                       )}
@@ -1595,7 +1596,7 @@ export function PolyRiderDashboard() {
                       onClick={() => setHiddenJobs([])}
                       className="px-4 py-2 bg-slate-100 dark:bg-zinc-800 hover:bg-slate-200 dark:hover:bg-zinc-700 text-slate-600 dark:text-white/60 text-[10px] font-black uppercase tracking-widest rounded-xl transition-colors flex items-center gap-2 shadow-sm"
                     >
-                      👀 {hiddenCount} Tugasan Disembunyikan - Buka Semula
+                      {t('gig:hidden_tasks_reopen', '👀 {{count}} Tugasan Disembunyikan - Buka Semula', { count: hiddenCount })}
                     </button>
                   </div>
               )}
@@ -1620,12 +1621,12 @@ export function PolyRiderDashboard() {
               <TrendingUp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest mb-0.5">Pendapatan Hari Ini</p>
+              <p className="text-[10px] font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-widest mb-0.5">{t('gig:today_earnings_title', 'Pendapatan Hari Ini')}</p>
               <p className="text-2xl font-black text-emerald-600 dark:text-emerald-300 leading-none">RM {todayEarnings.toFixed(2)}</p>
             </div>
           </div>
           <div className="flex items-center text-[10px] font-black uppercase tracking-widest text-emerald-600/50 dark:text-emerald-400/50 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
-            Sejarah Penuh →
+            {t('gig:full_history_link', 'Sejarah Penuh →')}
           </div>
         </button>
       )}
@@ -1647,16 +1648,16 @@ export function PolyRiderDashboard() {
               <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-500/20 text-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <MessageCircle className="w-8 h-8" />
               </div>
-              <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Komuniti PolyRider</h3>
+              <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{t('gig:polyrider_community_title', 'Komuniti PolyRider')}</h3>
               <p className="text-sm font-medium text-slate-500 dark:text-white/60 mb-6 leading-relaxed">
-                Tahniah, pendaftaran anda telah diluluskan! Sila sertai kumpulan WhatsApp rasmi PolyRider untuk mendapatkan info dan pengumuman terkini.
+                {t('gig:registration_approved_wa_msg', 'Tahniah, pendaftaran anda telah diluluskan! Sila sertai kumpulan WhatsApp rasmi PolyRider untuk mendapatkan info dan pengumuman terkini.')}
               </p>
               <div className="space-y-3">
                 <a href={whatsappLink} target="_blank" rel="noopener noreferrer" onClick={() => { localStorage.setItem('polyrider_whatsapp_joined', 'true'); setShowWhatsappModal(false); }} className="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/30 transition-all">
-                  <MessageCircle className="w-5 h-5" /> Sertai Sekarang
+                  <MessageCircle className="w-5 h-5" /> {t('gig:join_now_btn', 'Sertai Sekarang')}
                 </a>
                 <button onClick={() => { localStorage.setItem('polyrider_whatsapp_joined', 'true'); setShowWhatsappModal(false); }} className="w-full py-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-white/60 font-bold rounded-xl transition-colors">
-                  Tutup
+                  {t('gig:close_btn', 'Tutup')}
                 </button>
               </div>
             </motion.div>
@@ -1670,16 +1671,16 @@ export function PolyRiderDashboard() {
                 <div className="w-16 h-16 bg-red-100 dark:bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
                   <ShieldAlert className="w-8 h-8" />
                 </div>
-                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">Langganan Tamat Tempoh</h3>
+                <h3 className="text-xl font-black text-slate-900 dark:text-white mb-2">{t('gig:subscription_expired_title', 'Langganan Tamat Tempoh')}</h3>
                 <p className="text-sm font-medium text-slate-500 dark:text-white/60 leading-relaxed">
-                  Langganan bulanan anda telah melepasi tempoh ihsan 3 hari. Akaun anda kini disekat dari bertugas. Sila jelaskan yuran RM10 untuk meneruskan perkhidmatan.
+                  {t('gig:subscription_expired_desc', 'Langganan bulanan anda telah melepasi tempoh ihsan 3 hari. Akaun anda kini disekat dari bertugas. Sila jelaskan yuran RM10 untuk meneruskan perkhidmatan.')}
                 </p>
               </div>
 
               <form onSubmit={handleRenewSubscription} className="space-y-4">
                 {adminQrUrl && (
                   <div className="bg-slate-50 dark:bg-zinc-950/50 rounded-xl p-4 flex flex-col items-center border border-slate-200 dark:border-white/10">
-                    <p className="text-[10px] font-bold text-slate-500 dark:text-white/60 mb-2 uppercase tracking-widest">Kod QR Bayaran (RM10)</p>
+                    <p className="text-[10px] font-bold text-slate-500 dark:text-white/60 mb-2 uppercase tracking-widest">{t('gig:payment_qr_rm10', 'Kod QR Bayaran (RM10)')}</p>
                     <img src={adminQrUrl} alt="Admin QR Code" className="w-40 h-40 object-contain rounded-lg border border-slate-200 dark:border-white/10" />
                   </div>
                 )}
@@ -1688,16 +1689,16 @@ export function PolyRiderDashboard() {
                   <input type="file" required accept="image/*,.pdf" className="hidden" id="renew-upload" onChange={(e) => setRenewFile(e.target.files?.[0] || null)} />
                   <label htmlFor="renew-upload" className="cursor-pointer flex flex-col items-center">
                     <Upload className="w-6 h-6 text-slate-400 dark:text-white/40 mb-2" />
-                    <span className="text-xs font-bold text-amber-600">{renewFile ? renewFile.name : 'Muat Naik Resit Baru'}</span>
+                    <span className="text-xs font-bold text-amber-600">{renewFile ? renewFile.name : t('gig:upload_new_receipt', 'Muat Naik Resit Baru')}</span>
                   </label>
                 </div>
                 
                 <div className="flex gap-2">
                   <button type="button" onClick={() => setShowExpiredWarning(false)} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-600 dark:text-white/60 font-bold rounded-xl transition-colors">
-                    Tutup
+                    {t('gig:close_btn', 'Tutup')}
                   </button>
                   <button type="submit" disabled={isRenewing || !renewFile} className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl disabled:opacity-50 transition-colors shadow-lg shadow-amber-500/20">
-                    {isRenewing ? 'Menghantar...' : 'Hantar Resit'}
+                    {isRenewing ? t('gig:submitting', 'Menghantar...') : t('gig:submit_receipt_btn', 'Hantar Resit')}
                   </button>
                 </div>
               </form>
@@ -1715,6 +1716,7 @@ export function PolyRiderDashboard() {
 // -------------------------------------------------------
 interface EarningsAnalyticsSheetProps { show: boolean; onClose: () => void; userId: string; }
 function EarningsAnalyticsSheet({ show, onClose, userId }: EarningsAnalyticsSheetProps) {
+  const { t } = useTranslation(['gig', 'common']);
   const [loading, setLoading] = useState(true);
   const [jobs, setJobs] = useState<any[]>([]);
   const [weeklyEarnings, setWeeklyEarnings] = useState(0);
@@ -1762,8 +1764,8 @@ function EarningsAnalyticsSheet({ show, onClose, userId }: EarningsAnalyticsShee
             className="bg-white dark:bg-zinc-900 rounded-t-[2rem] w-full max-w-xl mx-auto flex flex-col shadow-2xl h-[85vh]">
             <div className="flex items-center justify-between p-6 pb-4 border-b border-slate-100 dark:border-white/5">
               <div>
-                <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">Analitik Pendapatan</h2>
-                <p className="text-xs font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest mt-1">Sejarah Penuh</p>
+                <h2 className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{t('gig:earnings_analytics_title', 'Analitik Pendapatan')}</h2>
+                <p className="text-xs font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest mt-1">{t('gig:full_history_title', 'Sejarah Penuh')}</p>
               </div>
               <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white dark:bg-zinc-900/10 text-slate-500 dark:text-white/50">
                 <X className="w-4 h-4" />
@@ -1773,26 +1775,26 @@ function EarningsAnalyticsSheet({ show, onClose, userId }: EarningsAnalyticsShee
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20">
                   <div className="w-8 h-8 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin mb-4" />
-                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">Memuat Turun...</p>
+                  <p className="text-xs font-bold text-slate-500 uppercase tracking-widest">{t('gig:loading', 'Memuat Turun...')}</p>
                 </div>
               ) : (
                 <>
                   <div className="grid grid-cols-2 gap-4 mb-8">
                     <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl p-4 border border-emerald-200 dark:border-emerald-500/20">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">Minggu Ini</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">{t('gig:this_week', 'Minggu Ini')}</p>
                       <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300">RM {weeklyEarnings.toFixed(2)}</p>
                     </div>
                     <div className="bg-emerald-50 dark:bg-emerald-500/10 rounded-2xl p-4 border border-emerald-200 dark:border-emerald-500/20">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">Bulan Ini</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 mb-1">{t('gig:this_month', 'Bulan Ini')}</p>
                       <p className="text-2xl font-black text-emerald-700 dark:text-emerald-300">RM {monthlyEarnings.toFixed(2)}</p>
                     </div>
                   </div>
                   <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-wider mb-4 flex items-center gap-2">
-                    <History className="w-4 h-4 text-emerald-500" /> Sejarah Perjalanan
+                    <History className="w-4 h-4 text-emerald-500" /> {t('gig:trip_history', 'Sejarah Perjalanan')}
                   </h3>
                   {jobs.length === 0 ? (
                     <div className="text-center py-12 bg-slate-50 dark:bg-zinc-950/50 rounded-2xl border border-dashed border-slate-200 dark:border-white/10">
-                      <p className="text-sm font-bold text-slate-400 dark:text-white/30">Tiada sejarah perjalanan lagi.</p>
+                      <p className="text-sm font-bold text-slate-400 dark:text-white/30">{t('gig:no_trip_history', 'Tiada sejarah perjalanan lagi.')}</p>
                     </div>
                   ) : (
                     <div className="space-y-3">

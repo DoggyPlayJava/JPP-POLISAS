@@ -5162,6 +5162,19 @@ Sesi ini melengkapkan fasa kemuncak (Task 7) bagi Inisiatif Penyetempatan Menyel
    - PWA Service Worker generasi baharu (`dist/sw.js` & `dist/sw.mjs`) dijana dengan suntikan manifes dan caching penuh (28 entri pra-cache).
    - Tiada perubahan pangkalan data dilakukan (Zero Database Alterations), tiada skema/migrasi diubah, dan pola singleton Supabase (`@/lib/supabase`) dipelihara 100%.
 
+### 36.26 Penuntasan Penyetempatan Mendalam AST (Deep Zero-Malay Sweep Gate): MAKMP, PolyMaps & PolyRider
+Bagi merealisasikan mandat *Zero-Malay In English Mode* secara menyeluruh di peringkat pokok sintaks abstrak (AST):
+
+1. **Pemprosesan Bersasar Selari (Parallel Disjoint Sweep):**
+   - **Domain MAKMP (`makmp.json`):** `MakmpAdminDashboardPage.tsx` (223 isu -> 0) & `MakmpPublicFormPage.tsx` (123 isu -> 0) diselubungi sepenuhnya dengan sokongan `PRESET_CATEGORY_GROUPS` dinamik, penggantian ikon Lucide standard (`Star`, `Folder`, `Trophy`, `Unlock`), dan penambahan 321 kunci baharu dengan 100% pariti dwibahasa (517 kunci keseluruhan).
+   - **Domain PolyMaps (`services.json`):** `JppPolyMapsAdmin.tsx` (130 isu -> 0) & `PolyMapsPage.tsx` (59 isu -> 0) diselaraskan sepenuhnya bagi alatan melukis laluan pejalan kaki, penapisan aras blok, muat naik foto bilik, dan penonton maya 360 Pannellum.
+   - **Domain PolyRider (`gig.json`):** `PolyRiderHome.tsx` (115 isu -> 0) & `PolyRiderDashboard.tsx` (94 isu -> 0) diselaraskan bagi carian kafetaria, analitik pendapatan penunggang, penjejakan status tugas, dan modal SOS.
+
+2. **Integriti & Ujian Regresi:**
+   - 80/80 ujian lulus merentasi suite `Domain4EmsMakmpCompleteI18n`, `Domain5CommerceCompleteI18n`, `SweepGroup6LogisticsAndUtilityI18n`, dan `masterLocales`.
+   - 100% pariti kunci kamus dipelihara merentasi semua 18 ruang nama tanpa kunci kosong.
+   - Sifar perubahan pada skema pangkalan data atau klien Supabase singleton.
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP
