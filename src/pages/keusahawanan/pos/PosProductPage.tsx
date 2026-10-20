@@ -221,6 +221,7 @@ function CostBuilder({
   mode, onModeChange, quickCost, onQuickCostChange,
   items, onItemsChange, costNotes, onCostNotesChange, totalCost, accent,
 }: CostBuilderProps) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
 
   // ── Update helper: auto-recalculate subtotal on any field change ────────────
   const updateItem = (id: string, field: keyof CostItem, value: any) => {
@@ -501,6 +502,7 @@ function CostBuilder({
 // ── Margin Preview Panel ──────────────────────────────────────────────────────
 
 function MarginPreview({ price, cost, accent }: { price: number; cost: number; accent: string }) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const info = getMarginInfo(price, cost);
 
   if (!info) {
@@ -572,6 +574,7 @@ function MarginPreview({ price, cost, accent }: { price: number; cost: number; a
 
 // ── PolyMart Ads Banner ───────────────────────────────────────────────────────
 function PolymartAdsPromoBanner({ color }: { color: string }) {
+  const { t } = useTranslation(['keusahawanan', 'common']);
   const [adsPhone, setAdsPhone] = useState<string | null>(null);
 
   useEffect(() => {
