@@ -20,24 +20,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 
-const AKADEMIK_UNIT_LINKS = [
-  { label: 'Dashboard Akademik', path: '/akademik' },
-  { label: 'Pencapaian Pelajar', path: '/akademik/pencapaian' },
-  { label: 'Leaderboard Merit Akademik', path: '/akademik/leaderboard' },
-  { label: 'Scan QR Merit', path: '/akademik/qr' },
-  { label: 'Takwim Akademik', path: '/akademik/takwim' },
-];
 
-const NAV_ITEMS = [
-  { path: '/akademik',            label: 'Dashboard',    labelKey: 'nav:dashboard', icon: LayoutDashboard },
-  { path: '/akademik/pencapaian', label: 'Pencapaian',   labelKey: 'akademik:nav_achievements', icon: Trophy },
-  { path: '/akademik/cgpa',       label: 'HPNM / CGPA',  labelKey: 'akademik:nav_cgpa', icon: BookOpen },
-  { path: '/akademik/merit',      label: 'Merit Saya',   labelKey: 'akademik:nav_my_merit', icon: Star },
-  { path: '/akademik/folder',     label: 'Dokumen',      labelKey: 'akademik:nav_documents', icon: FileText },
-  { path: '/akademik/leaderboard',label: 'Leaderboard',  labelKey: 'akademik:nav_leaderboard', icon: BarChart3 },
-  { path: '/akademik/takwim',     label: 'Takwim',       labelKey: 'nav:takwim', icon: CalendarDays },
-  { path: '/akademik/qr',         label: 'Scan QR',      labelKey: 'nav:scan_qr', icon: QrCode },
-];
 
 const THEME = '#818CF8';
 
@@ -48,6 +31,14 @@ export function AkademikLayout() {
   const location   = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { runTour, startTour, closeTour } = useTour('akademik_module_tour', false);
+
+  const akademikUnitLinks = React.useMemo(() => [
+    { label: t('akademik:academic_dashboard_btn', 'Dashboard Akademik'), path: '/akademik' },
+    { label: t('akademik:student_achievements', 'Pencapaian Pelajar'), path: '/akademik/pencapaian' },
+    { label: t('akademik:merit_leaderboard', 'Leaderboard Merit Akademik'), path: '/akademik/leaderboard' },
+    { label: t('akademik:scan_qr_merit', 'Scan QR Merit'), path: '/akademik/qr' },
+    { label: t('akademik:academic_takwim', 'Takwim Akademik'), path: '/akademik/takwim' },
+  ], [t]);
 
   const isActive = (path: string) =>
     path === '/akademik' ? location.pathname === '/akademik' : location.pathname.startsWith(path);
@@ -73,27 +64,29 @@ export function AkademikLayout() {
   const akademikTourSteps = [
     {
       target: 'body',
-      content: 'Selamat datang ke e-Akademik! Sistem berpusat untuk mengurus pencapaian, merit, dan dokumen akademik anda.',
-      title: 'Modul e-Akademik',
+      content: t('akademik:tour_welcome_content', 'Selamat datang ke e-Akademik! Sistem berpusat untuk mengurus pencapaian, merit, dan dokumen akademik anda.'),
+      title: t('akademik:tour_welcome_title', 'Modul e-Akademik'),
       placement: 'center' as const,
       disableBeacon: true,
     },
     {
       target: isMobile ? '.tour-mobile-hamburger' : '.tour-akademik-sidebar',
-      content: isMobile ? 'Gunakan menu ini untuk mengakses pencapaian, HPNM/CGPA, dokumen, dan merit.' : 'Di ruangan tepi ini, anda boleh melihat pencapaian, mengemas kini CGPA, serta menyemak merit.',
-      title: 'Navigasi Menu',
+      content: isMobile
+        ? t('akademik:tour_nav_mobile_content', 'Gunakan menu ini untuk mengakses pencapaian, HPNM/CGPA, dokumen, dan merit.')
+        : t('akademik:tour_nav_desktop_content', 'Di ruangan tepi ini, anda boleh melihat pencapaian, mengemas kini CGPA, serta menyemak merit.'),
+      title: t('akademik:tour_nav_title', 'Navigasi Menu'),
       placement: isMobile ? 'bottom' as const : 'right' as const,
     },
     {
       target: '.tour-akademik-cgpa',
-      content: 'Di sini anda dapat melihat ringkasan CGPA terkini dan memantau prestasi akademik anda dari masa ke semasa.',
-      title: 'Prestasi Akademik',
+      content: t('akademik:tour_cgpa_content', 'Di sini anda dapat melihat ringkasan CGPA terkini dan memantau prestasi akademik anda dari masa ke semasa.'),
+      title: t('akademik:tour_cgpa_title', 'Prestasi Akademik'),
       placement: 'bottom' as const,
     },
     {
       target: '.tour-akademik-merit',
-      content: 'Anda boleh memantau baki merit anda di sini untuk kelayakan permohonan asrama.',
-      title: 'Status Merit',
+      content: t('akademik:tour_merit_content', 'Anda boleh memantau baki merit anda di sini untuk kelayakan permohonan asrama.'),
+      title: t('akademik:tour_merit_title', 'Status Merit'),
       placement: 'bottom' as const,
     }
   ];
@@ -205,7 +198,7 @@ export function AkademikLayout() {
         <FloatingAiChat />
 
         {/* QR Code FAB — untuk Exco Akademik jana QR */}
-        <QrCodeFab unitLinks={AKADEMIK_UNIT_LINKS} accentColor="#818CF8" />
+        <QrCodeFab unitLinks={akademikUnitLinks} accentColor="#818CF8" />
         <div className="tour-akademik-mobile-nav">
           <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
         </div>
@@ -243,7 +236,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
             </div>
             <div>
               <p className="text-sm font-black text-slate-900 dark:text-white">e-Akademik</p>
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30">Exco Akademik</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30">{t('akademik:exco_academic', 'Exco Akademik')}</p>
             </div>
           </div>
           <button
@@ -258,7 +251,16 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
       {/* Nav */}
       <nav className="tour-akademik-sidebar flex-1 px-3 py-4 space-y-1 overflow-y-auto">
         <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 px-3 mb-3">{t('nav:navigation', 'Navigasi')}</p>
-        {NAV_ITEMS.map(item => {
+        {[
+          { path: '/akademik',            label: t('nav:dashboard', 'Dashboard'), icon: LayoutDashboard },
+          { path: '/akademik/pencapaian', label: t('akademik:nav_achievements', 'Pencapaian'), icon: Trophy },
+          { path: '/akademik/cgpa',       label: t('akademik:nav_cgpa', 'HPNM / CGPA'), icon: BookOpen },
+          { path: '/akademik/merit',      label: t('akademik:nav_my_merit', 'Merit Saya'), icon: Star },
+          { path: '/akademik/folder',     label: t('akademik:nav_documents', 'Dokumen'), icon: FileText },
+          { path: '/akademik/leaderboard',label: t('akademik:nav_leaderboard', 'Leaderboard'), icon: BarChart3 },
+          { path: '/akademik/takwim',     label: t('nav:takwim', 'Takwim'), icon: CalendarDays },
+          { path: '/akademik/qr',         label: t('nav:scan_qr', 'Scan QR'), icon: QrCode },
+        ].map(item => {
           const active = isActive(item.path);
           const Icon   = item.icon;
           return (
@@ -281,7 +283,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
               >
                 <Icon className="w-3.5 h-3.5" />
               </div>
-              <span className="text-xs font-black flex-1">{item.labelKey ? t(item.labelKey, item.label) : item.label}</span>
+              <span className="text-xs font-black flex-1">{item.label}</span>
               {active && <ChevronRight className="w-3 h-3 shrink-0" style={{ color: THEME }} />}
             </button>
           );

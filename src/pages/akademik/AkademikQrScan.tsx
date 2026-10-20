@@ -139,7 +139,7 @@ export function AkademikQrScan() {
             const hr = parseInt(h); const m = mStr || '00';
             return `${hr > 12 ? hr - 12 : hr === 0 ? 12 : hr}:${m} ${hr >= 12 ? 'pm' : 'am'}`;
           };
-          setWindowMsg(`QR ini hanya aktif dari ${fmt(tokenData.available_from)} hingga ${fmt(tokenData.available_until)}`);
+          setWindowMsg(t('akademik:qr_active_window', 'QR ini hanya aktif dari {{from}} hingga {{until}}', { from: fmt(tokenData.available_from), until: fmt(tokenData.available_until) }));
           setStatus('outside_window');
           return;
         }
@@ -162,7 +162,7 @@ export function AkademikQrScan() {
         const diff        = nextAllowed.getTime() - Date.now();
         const hrs         = Math.floor(diff / 3600000);
         const mins        = Math.floor((diff % 3600000) / 60000);
-        setCooldownLeft(hrs > 0 ? `${hrs}j ${mins}m` : `${mins} minit`);
+        setCooldownLeft(hrs > 0 ? (hrs + 'j ' + mins + 'm') : t('akademik:cooldown_mins', '{{mins}} minit', { mins }));
         setStatus('cooldown');
         return;
       }
@@ -189,7 +189,7 @@ export function AkademikQrScan() {
         user_id:    profile.id,
         club_id:    null,
         points:     tokenData.merit_value,
-        reason:     `QR Merit: ${tokenData.title}`,
+        reason:     t('akademik:merit_reason_prefix', 'QR Merit: {{title}}', { title: tokenData.title }),
         actor_name: 'Sistem QR',
         source:     'QR_SCAN',
         reference_id: tokenData.id,
@@ -476,13 +476,13 @@ export function QrMeritManager({ themeColor = THEME, initialTokens }: { themeCol
   useEffect(() => { load(); }, [load]);
 
   const deleteToken = async (id: string) => {
-    if (!window.confirm('Padam token QR ini secara kekal?')) return;
+    if (!window.confirm(t('akademik:confirm_delete_token', 'Padam token QR ini secara kekal?'))) return;
     const { error } = await supabase.from('akademik_qr_tokens').delete().eq('id', id);
     if (!error) {
-      toast.success('Token berjaya dipadam.');
+      toast.success(t('akademik:token_deleted_success', 'Token berjaya dipadam.'));
       setTokens(prev => prev.filter(tok => tok.id !== id));
     } else {
-      toast.error('Gagal memadam token.');
+      toast.error(t('akademik:token_delete_failed', 'Gagal memadam token.'));
     }
   };
 
@@ -562,7 +562,7 @@ export function QrMeritManager({ themeColor = THEME, initialTokens }: { themeCol
     if (!url) return;
     const a = document.createElement('a');
     a.href = url;
-    a.download = `QR-Merit-${title.replace(/\s+/g, '-')}.png`;
+    a.download = ('QR_Merit_' + title.replace(/[^a-zA-Z0-9_-]/g, '_') + '.png');
     a.click();
   };
 
@@ -593,8 +593,7 @@ export function QrMeritManager({ themeColor = THEME, initialTokens }: { themeCol
           <div>
             <p className="text-[10px] font-black text-amber-300">{t('akademik:dev_mode_title', 'Mod Pembangunan (localhost)')}</p>
             <p className="text-[9px] text-amber-400/60 mt-0.5 font-medium">
-              QR kod akan menghala ke <code className="font-mono bg-black/20 px-1 rounded">{BASE_URL}</code> — tidak boleh diakses dari telefon lain.
-              Untuk pengeluaran, tetapkan <code className="font-mono bg-black/20 px-1 rounded">VITE_APP_URL</code> dalam fail <code className="font-mono bg-black/20 px-1 rounded">.env.local</code>.
+              {t('akademik:dev_mode_qr_desc_1', 'QR kod akan menghala ke')} <code className="font-mono bg-black/20 px-1 rounded">{BASE_URL}</code> {t('akademik:dev_mode_qr_desc_2', '— tidak boleh diakses dari telefon lain. Untuk pengeluaran, tetapkan')} <code className="font-mono bg-black/20 px-1 rounded">VITE_APP_URL</code> {t('akademik:dev_mode_qr_desc_3', 'dalam fail')} <code className="font-mono bg-black/20 px-1 rounded">.env.local</code>.
             </p>
           </div>
         </div>

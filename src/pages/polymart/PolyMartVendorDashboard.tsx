@@ -72,7 +72,7 @@ export const groupVendorOrders = (rawOrders: any[]): GroupedVendorOrder[] => {
       batchKey = `time_${bucket}`;
     }
 
-    const key = `${buyerId}_${bizId}_${status}_${method}_${batchKey}`;
+    const key = [buyerId, bizId, status, method, batchKey].join('_');
 
     if (!groups[key]) {
       groups[key] = {
@@ -192,7 +192,7 @@ export function PolyMartVendorDashboard() {
                 is_active: b.is_active ?? true,
               }))
             : [
-                { id: 'mock-biz-1', name: 'Kedai Mock Cik Jah', is_active: true },
+                { id: 'mock-biz-1', name: t('commerce:mock_store_cik_jah', 'Kedai Mock Cik Jah'), is_active: true },
                 { id: 'mock-biz-2', name: 'PolyMerch Co.', is_active: false },
               ];
         setMyBusinesses(mockBizList);

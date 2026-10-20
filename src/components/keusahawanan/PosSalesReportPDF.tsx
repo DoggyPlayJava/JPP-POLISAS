@@ -3,6 +3,8 @@ import {
   Document, Page, Text, View, StyleSheet, Image,
 } from '@react-pdf/renderer';
 import { StatsData } from '@/hooks/usePosData';
+import i18n from '@/lib/i18n';
+const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, fb, opt) as string) : fb);
 
 // ── Styles ───────────────────────────────────────────────────────────────────
 const s = StyleSheet.create({
@@ -256,71 +258,71 @@ export function PosSalesReportPDF({
             )}
             <View style={s.headerLeftTextContainer}>
               <Text style={s.businessName}>{businessName}</Text>
-              <Text style={s.reportSubtitle}>Laporan Prestasi & Jualan</Text>
+              <Text style={s.reportSubtitle}>{t('keusahawanan:pdf_report_subtitle', 'Laporan Prestasi & Jualan')}</Text>
             </View>
           </View>
           <View style={s.headerRightText}>
-            <Text style={[s.badge, { backgroundColor: themeColor }]}>Tempoh: {rangeLabel}</Text>
+            <Text style={[s.badge, { backgroundColor: themeColor }]}>{t('keusahawanan:pdf_period_label', 'Tempoh')}: {rangeLabel}</Text>
             <Text style={[s.metaText, { fontFamily: 'Helvetica-Bold', marginBottom: 6, color: '#111' }]}>{dateRangeString}</Text>
-            <Text style={s.metaText}>Janaan: {generationDate}</Text>
-            <Text style={s.metaText}>Oleh: {generatedBy}</Text>
+            <Text style={s.metaText}>{t('keusahawanan:pdf_generated_date_label', 'Janaan')}: {generationDate}</Text>
+            <Text style={s.metaText}>{t('keusahawanan:pdf_generated_by_label', 'Oleh')}: {generatedBy}</Text>
           </View>
         </View>
 
         {/* ── EXECUTIVE SUMMARY ── */}
-        <Text style={s.sectionTitle}>Ringkasan Eksekutif</Text>
+        <Text style={s.sectionTitle}>{t('keusahawanan:pdf_executive_summary', 'Ringkasan Eksekutif')}</Text>
         <View style={s.summaryGrid}>
           {/* Row 1 */}
           <View style={s.summaryCard}>
-            <Text style={s.summaryLabel}>Tunai Kasar (Tunai+Bank)</Text>
+            <Text style={s.summaryLabel}>{t('keusahawanan:pdf_gross_cash', 'Tunai Kasar (Tunai+Bank)')}</Text>
             <Text style={[s.summaryValue, { color: themeColor }]}>{fmtRM((stats as any).totalCashCollected ?? stats.totalRevenue)}</Text>
-            <Text style={s.metaText}>Selesai: {fmtRM(stats.totalRevenue)}</Text>
-            <Text style={s.metaText}>Pending QR: {fmtRM((stats as any).onlinePendingRevenue ?? 0)}</Text>
+            <Text style={s.metaText}>{t('keusahawanan:pdf_completed_label', 'Selesai')}: {fmtRM(stats.totalRevenue)}</Text>
+            <Text style={s.metaText}>{t('keusahawanan:pdf_pending_qr_label', 'Pending QR')}: {fmtRM((stats as any).onlinePendingRevenue ?? 0)}</Text>
           </View>
           <View style={s.summaryCard}>
-            <Text style={s.summaryLabel}>Jumlah Perbelanjaan</Text>
+            <Text style={s.summaryLabel}>{t('keusahawanan:pdf_total_expenses', 'Jumlah Perbelanjaan')}</Text>
             <Text style={[s.summaryValue, { color: '#ef4444' }]}>{fmtRM(stats.totalExpenses)}</Text>
           </View>
           <View style={s.summaryCard}>
-            <Text style={s.summaryLabel}>Untung Bersih (Anggaran)</Text>
+            <Text style={s.summaryLabel}>{t('keusahawanan:pdf_net_profit_est', 'Untung Bersih (Anggaran)')}</Text>
             <Text style={s.summaryValue}>{fmtRM(stats.netProfit)}</Text>
             {stats.netProfit >= 0 ? (
-              <Text style={s.summarySubGreen}>✅ Untung</Text>
+              <Text style={s.summarySubGreen}>✅ {t('keusahawanan:pdf_profit_tag', 'Untung')}</Text>
             ) : (
-              <Text style={s.summarySub}>🔴 Rugi</Text>
+              <Text style={s.summarySub}>🔴 {t('keusahawanan:pdf_loss_tag', 'Rugi')}</Text>
             )}
           </View>
 
           {/* Row 2 */}
           <View style={s.summaryCard}>
-            <Text style={s.summaryLabel}>Transaksi & Unit</Text>
+            <Text style={s.summaryLabel}>{t('keusahawanan:pdf_txn_and_units', 'Transaksi & Unit')}</Text>
             <Text style={s.summaryValue}>{stats.transactionCount} Txn</Text>
-            <Text style={s.metaText}>Total unit dijual: {stats.unitsSold}</Text>
+            <Text style={s.metaText}>{t('keusahawanan:pdf_total_units_sold', 'Total unit dijual')}: {stats.unitsSold}</Text>
           </View>
           <View style={s.summaryCard}>
-            <Text style={s.summaryLabel}>Purata Pesanan (AOV)</Text>
+            <Text style={s.summaryLabel}>{t('keusahawanan:pdf_aov', 'Purata Pesanan (AOV)')}</Text>
             <Text style={s.summaryValue}>{fmtRM(stats.averageOrderValue)}</Text>
-            <Text style={s.metaText}>Per transaksi</Text>
+            <Text style={s.metaText}>{t('keusahawanan:pdf_per_transaction', 'Per transaksi')}</Text>
           </View>
           <View style={s.summaryCard}>
-            <Text style={s.summaryLabel}>Diskaun Diberi</Text>
+            <Text style={s.summaryLabel}>{t('keusahawanan:pdf_discounts_given', 'Diskaun Diberi')}</Text>
             <Text style={s.summaryValue}>{fmtRM(stats.totalDiscounts)}</Text>
-            <Text style={s.metaText}>Potongan / Promo</Text>
+            <Text style={s.metaText}>{t('keusahawanan:pdf_discount_sub', 'Potongan / Promo')}</Text>
           </View>
         </View>
 
         {/* ── TOP PRODUCTS ── */}
-        <Text style={s.sectionTitle}>Prestasi Produk Terjual</Text>
+        <Text style={s.sectionTitle}>{t('keusahawanan:pdf_products_sold_performance', 'Prestasi Produk Terjual')}</Text>
         <View style={s.table}>
           <View style={s.tableHeader}>
-            <Text style={[s.tableHeaderCell, s.w10, s.textCenter]}>Rank</Text>
-            <Text style={[s.tableHeaderCell, s.w50]}>Nama Produk</Text>
-            <Text style={[s.tableHeaderCell, s.w20, s.textCenter]}>Unit Terjual</Text>
-            <Text style={[s.tableHeaderCell, s.w20, s.textRight]}>Jumlah (RM)</Text>
+            <Text style={[s.tableHeaderCell, s.w10, s.textCenter]}>{t('keusahawanan:pdf_rank', 'Rank')}</Text>
+            <Text style={[s.tableHeaderCell, s.w50]}>{t('keusahawanan:pdf_product_name', 'Nama Produk')}</Text>
+            <Text style={[s.tableHeaderCell, s.w20, s.textCenter]}>{t('keusahawanan:pdf_units_sold', 'Unit Terjual')}</Text>
+            <Text style={[s.tableHeaderCell, s.w20, s.textRight]}>{t('keusahawanan:pdf_amount_rm', 'Jumlah (RM)')}</Text>
           </View>
           {stats.topProducts.length === 0 ? (
             <View style={s.tableRow}>
-              <Text style={[s.tableCell, { width: '100%', textAlign: 'center', paddingVertical: 10 }]}>Tiada rekod jualan dalam tempoh ini.</Text>
+              <Text style={[s.tableCell, { width: '100%', textAlign: 'center', paddingVertical: 10 }]}>{t('keusahawanan:pdf_no_sales_record', 'Tiada rekod jualan dalam tempoh ini.')}</Text>
             </View>
           ) : (
             stats.topProducts.map((p, i) => (
@@ -335,17 +337,17 @@ export function PosSalesReportPDF({
         </View>
 
         {/* ── EXPENSE DETAILS ── */}
-        <Text style={s.sectionTitle}>Butiran Perbelanjaan Operasi</Text>
+        <Text style={s.sectionTitle}>{t('keusahawanan:pdf_operating_expenses_detail', 'Butiran Perbelanjaan Operasi')}</Text>
         <View style={s.table}>
           <View style={s.tableHeader}>
-            <Text style={[s.tableHeaderCell, s.w15]}>Tarikh</Text>
-            <Text style={[s.tableHeaderCell, s.w45]}>Butiran</Text>
-            <Text style={[s.tableHeaderCell, s.w20]}>Kategori</Text>
+            <Text style={[s.tableHeaderCell, s.w15]}>{t('keusahawanan:pdf_date', 'Tarikh')}</Text>
+            <Text style={[s.tableHeaderCell, s.w45]}>{t('keusahawanan:pdf_details', 'Butiran')}</Text>
+            <Text style={[s.tableHeaderCell, s.w20]}>{t('keusahawanan:pdf_category', 'Kategori')}</Text>
             <Text style={[s.tableHeaderCell, s.w20, s.textRight, { paddingRight: 0 }]}>Jumlah (RM)</Text>
           </View>
           {stats.expenseItems?.length === 0 ? (
             <View style={s.tableRow}>
-              <Text style={[s.tableCell, { width: '100%', textAlign: 'center', paddingVertical: 10 }]}>Tiada perbelanjaan direkodkan.</Text>
+              <Text style={[s.tableCell, { width: '100%', textAlign: 'center', paddingVertical: 10 }]}>{t('keusahawanan:pdf_no_expenses_recorded', 'Tiada perbelanjaan direkodkan.')}</Text>
             </View>
           ) : (
             stats.expenseItems?.map((e, i) => (
@@ -362,10 +364,10 @@ export function PosSalesReportPDF({
         {/* ── FOOTER ── */}
         <View style={s.footer}>
           <View style={s.sigBlock}>
-            <Text style={s.sigLabel}>Disahkan oleh:</Text>
+            <Text style={s.sigLabel}>{t('keusahawanan:pdf_verified_by', 'Disahkan oleh:')}</Text>
             <View style={s.sigLine} />
             <Text style={s.sigName}>{generatedBy}</Text>
-            <Text style={s.sigRole}>Pengurus Perniagaan</Text>
+            <Text style={s.sigRole}>{t('keusahawanan:pdf_business_manager', 'Pengurus Perniagaan')}</Text>
           </View>
         </View>
 

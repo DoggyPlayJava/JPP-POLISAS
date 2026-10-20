@@ -97,8 +97,8 @@ export function PolyMartLayout() {
       try {
         if (localStorage.getItem('use_mock_auth') === 'true') {
           setSearchResults([
-            { id: 'mock-prod-1', name: 'Nasi Lemak Ayam Goreng', price: 5.5, image_url: null, category: 'Makanan', keusahawanan_businesses: { name: 'Kedai Mock Cik Jah' } },
-            { id: 'mock-prod-2', name: 'Kopi Ais Kaw', price: 3.0, image_url: null, category: 'Minuman', keusahawanan_businesses: { name: 'Kedai Mock Cik Jah' } }
+            { id: 'mock-prod-1', name: 'Nasi Lemak Ayam Goreng', price: 5.5, image_url: null, category: 'Makanan', keusahawanan_businesses: { name: t('commerce:mock_store_cik_jah', 'Kedai Mock Cik Jah') } },
+            { id: 'mock-prod-2', name: 'Kopi Ais Kaw', price: 3.0, image_url: null, category: 'Minuman', keusahawanan_businesses: { name: t('commerce:mock_store_cik_jah', 'Kedai Mock Cik Jah') } }
           ]);
           setIsSearching(false);
           return;
@@ -220,7 +220,7 @@ export function PolyMartLayout() {
               <button
                 onClick={() => isHome ? navigate(user ? '/portal' : '/') : navigate(-1)}
                 className="w-9 h-9 rounded-full bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 flex items-center justify-center shrink-0 active:scale-95 transition-all cursor-pointer group"
-                aria-label="Kembali"
+                aria-label={t('commerce:back_btn', 'Kembali')}
               >
                 <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
               </button>
@@ -275,7 +275,7 @@ export function PolyMartLayout() {
                 <button
                   onClick={startTour}
                   className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 text-amber-500/80 hover:text-amber-500 transition-all active:scale-95 cursor-pointer"
-                  aria-label="Panduan PolyMart"
+                  aria-label={t('commerce:polymart_tour_guide', 'Panduan PolyMart')}
                 >
                   <HelpCircle className="w-4 h-4" />
                 </button>
@@ -286,7 +286,7 @@ export function PolyMartLayout() {
                     <button
                       onClick={() => navigate('/polymart/troli')}
                       className="tour-polymart-cart relative hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
-                      aria-label="Troli Beli-belah"
+                      aria-label={t('commerce:shopping_cart', 'Troli Beli-belah')}
                     >
                       <ShoppingCart className="w-4 h-4" />
                       {cartCount > 0 && (
@@ -300,7 +300,7 @@ export function PolyMartLayout() {
                     <button
                       onClick={() => navigate('/polymart/pesanan-saya')}
                       className="relative hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 text-muted-foreground hover:text-foreground transition-all active:scale-95 cursor-pointer"
-                      aria-label="Pesanan Saya"
+                      aria-label={t('commerce:my_orders_title', 'Pesanan Saya')}
                     >
                       <Package className="w-4 h-4" />
                       {myActiveOrdersCount > 0 && (
@@ -314,7 +314,7 @@ export function PolyMartLayout() {
                     <button
                       onClick={() => navigate('/polymart/wishlist')}
                       className="relative hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-rose-400/40 text-muted-foreground hover:text-rose-500 transition-all active:scale-95 cursor-pointer"
-                      aria-label="Senarai Hajat"
+                      aria-label={t('commerce:wishlist', 'Senarai Hajat')}
                     >
                       <Heart className="w-4 h-4" />
                     </button>
@@ -333,10 +333,10 @@ export function PolyMartLayout() {
                       <button
                         onClick={() => navigate('/polymart/vendor')}
                         className="tour-polymart-vendor relative w-9 h-9 sm:w-auto sm:px-3.5 sm:h-9 rounded-full flex items-center justify-center gap-1.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition-all active:scale-95 shrink-0 shadow-xs cursor-pointer"
-                        title="Kedai Saya"
+                        title={t('commerce:my_store_title', 'Kedai Saya')}
                       >
                         <Store className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-black uppercase tracking-wider hidden sm:inline">Kedai</span>
+                        <span className="text-[10px] font-black uppercase tracking-wider hidden sm:inline">{t('commerce:store_nav_label', 'Kedai')}</span>
                         {pendingVendorCount > 0 && (
                           <span className="absolute -top-1 -right-1 sm:static min-w-[16px] h-4 px-1 rounded-full bg-rose-500 text-white text-[8px] font-black flex items-center justify-center">
                             {pendingVendorCount}
@@ -521,7 +521,7 @@ export function PolyMartLayout() {
                               <h4 className="text-xs font-bold text-foreground truncate leading-snug">{prod.name}</h4>
                               <p className="text-[9px] text-muted-foreground/60 font-semibold mt-0.5 truncate flex items-center gap-1">
                                 <Store className="w-2.5 h-2.5" />
-                                {prod.keusahawanan_businesses?.name || 'Perniagaan Pelajar'}
+                                {prod.keusahawanan_businesses?.name || t('commerce:student_business_default', 'Perniagaan Pelajar')}
                               </p>
                             </div>
                             <div className="text-right shrink-0">

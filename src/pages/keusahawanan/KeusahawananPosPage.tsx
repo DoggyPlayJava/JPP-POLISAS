@@ -96,7 +96,7 @@ export function KeusahawananPosPage() {
                 </div>
                 <div className="mt-3 text-right">
                   <span className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full">
-                    + Tambah
+                    {t('keusahawanan:pos_btn_add', '+ Tambah')}
                   </span>
                 </div>
               </div>
@@ -115,7 +115,7 @@ export function KeusahawananPosPage() {
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {cart.length === 0 ? (
                 <p className="text-xs text-muted-foreground py-4 text-center">
-                  Tiada item dalam troli jualan.
+                  {t('keusahawanan:pos_empty_cart', 'Tiada item dalam troli jualan.')}
                 </p>
               ) : (
                 cart.map((item, idx) => (

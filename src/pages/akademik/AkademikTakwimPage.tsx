@@ -79,7 +79,7 @@ export function AkademikTakwimPage() {
             <CalendarDays className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Takwim POLISAS</h1>
+            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('akademik:takwim_polisas', 'Takwim POLISAS')}</h1>
             <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
               {t('akademik:exam_schedule', 'Kalendar Peperiksaan Rasmi')} · {INSTITUSI_LABEL} · {sesi}
             </p>
@@ -100,7 +100,7 @@ export function AkademikTakwimPage() {
           )}
         >
           <Calendar className="w-4 h-4" />
-          <span>Jadual Kuliah Saya</span>
+          <span>{t('akademik:my_lecture_schedule', 'Jadual Kuliah Saya')}</span>
         </button>
         <button
           type="button"
@@ -113,7 +113,7 @@ export function AkademikTakwimPage() {
           )}
         >
           <BookOpen className="w-4 h-4" />
-          <span>{t('akademik:exam_schedule', 'Takwim Rasmi')} POLISAS & Kelab</span>
+          <span>{t('akademik:official_takwim_clubs', 'Takwim Rasmi POLISAS & Kelab')}</span>
         </button>
       </div>
 
@@ -137,7 +137,7 @@ export function AkademikTakwimPage() {
                   <Users className="w-3 h-3 mr-2 text-emerald-600 dark:text-emerald-400/50" /><SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="ALL">Semua Kelab Saya ({myClubs.length})</SelectItem>
+                  <SelectItem value="ALL">{t('akademik:all_my_clubs_count', 'Semua Kelab Saya ({{count}})', { count: myClubs.length })}</SelectItem>
                   {myClubs.map(c => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
@@ -256,11 +256,12 @@ function StudentCalendar({ items, month, onPrev, onNext, onDayClick }: { items: 
 }
 
 function StudentTable({ items }: { items: TakwimItem[] }) {
+  const { t } = useTranslation(['akademik', 'common']);
   const fmtDate = (d: string) => { try { return format(parseISO(d), 'd MMM yyyy', { locale: ms }); } catch { return d; } };
   if (items.length === 0) return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <CalendarDays className="w-10 h-10 text-slate-300 dark:text-white/10 mb-3" />
-      <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">Tiada entri takwim</p>
+      <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">{t('akademik:no_takwim_entries', 'Tiada entri takwim')}</p>
     </div>
   );
 
@@ -270,11 +271,11 @@ function StudentTable({ items }: { items: TakwimItem[] }) {
         <table className="w-full text-left">
           <thead>
             <tr className="bg-slate-50 dark:bg-white/[0.04] border-b border-slate-200 dark:border-white/5">
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Jenis</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Tajuk / Aktiviti</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Tarikh</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Minggu</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">Catatan</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('akademik:th_type', 'Jenis')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('akademik:th_title_activity', 'Tajuk / Aktiviti')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('akademik:th_date', 'Tarikh')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('akademik:th_week', 'Minggu')}</th>
+              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('akademik:th_notes', 'Catatan')}</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
@@ -291,7 +292,7 @@ function StudentTable({ items }: { items: TakwimItem[] }) {
                     {item.club_name && <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">{item.club_name}</p>}
                   </td>
                   <td className="px-4 py-3 text-[11px] font-bold text-slate-600 dark:text-white/60 whitespace-nowrap">
-                    {fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ` — ${fmtDate(item.tarikh_tamat)}` : ''}
+                    {fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? t('akademik:date_range_to', ' — {{date}}', { date: fmtDate(item.tarikh_tamat) }) : ''}
                   </td>
                   <td className="px-4 py-3 text-xs font-black text-slate-500 dark:text-white/40 text-center">{item.bil_minggu || '—'}</td>
                   <td className="px-4 py-3 text-[10px] text-slate-500 dark:text-white/40 max-w-[200px] truncate">{item.catatan || '—'}</td>

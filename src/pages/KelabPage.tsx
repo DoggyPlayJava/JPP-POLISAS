@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 
 // Category metadata helper dengan normalisasi case-insensitive
-function getCategoryMeta(rawCategory?: string | null) {
+function getCategoryMeta(rawCategory?: string | null, t?: (k: string, f: string) => string) {
   const cat = (rawCategory || '').toLowerCase().trim();
   if (cat.includes('akademik') || cat.includes('awam') || cat.includes('elektrik') || cat.includes('mekanikal') || cat.includes('perdagangan')) {
     return {
@@ -50,7 +50,7 @@ function getCategoryMeta(rawCategory?: string | null) {
     };
   }
   return {
-    label: rawCategory || 'Kelab Umum',
+    label: rawCategory || (t ? t('kpp:general_club', 'Kelab Umum') : 'General Club'),
     icon: Heart,
     color: 'text-rose-600 dark:text-rose-400',
     badgeBg: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/20'
@@ -158,7 +158,7 @@ export function KelabPage() {
           const notifs = admins.map(a => ({
             user_id: a.id,
             title: t('kpp:leadership_application_title', 'Permohonan Kepimpinan Baharu'),
-            message: `Terdapat permohonan kepimpinan sebagai Presiden untuk kelab ${confirmClub.name}. Sila semak tab Permohonan Baru di Pengurusan Ahli.`,
+            message: t('kpp:president_application_notif_msg', 'Terdapat permohonan kepimpinan sebagai Presiden untuk kelab {{clubName}}. Sila semak tab Permohonan Baru di Pengurusan Ahli.', { clubName: confirmClub.name }),
             type: 'SYSTEM',
             is_read: false
           }));
@@ -169,7 +169,7 @@ export function KelabPage() {
           const { sendNotificationToKppExco } = await import('@/lib/notifications');
           await sendNotificationToKppExco({
             title: t('kpp:new_club_application_title', 'Permohonan Kelab Baru'),
-            message: `Terdapat permohonan keahlian baharu untuk kelab ${confirmClub.name}. Sila semak di panel Exco KPP.`,
+            message: t('kpp:new_membership_notif_msg', 'Terdapat permohonan keahlian baharu untuk kelab {{clubName}}. Sila semak di panel Exco KPP.', { clubName: confirmClub.name }),
             type: 'KPP_MEMBERSHIP_REQUEST',
             module: 'EKPP',
             link: '/jpp'
@@ -371,7 +371,7 @@ export function KelabPage() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2.5">
           <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400">
             <Clock className="w-4 h-4" />
-            <h3 className="text-xs font-bold uppercase tracking-wider">Menunggu Kelulusan</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wider">{t('kpp:pending_approval_heading', 'Menunggu Kelulusan')}</h3>
           </div>
           <div className="flex flex-wrap gap-2">
             {myPendingClubs.map(club => (
@@ -434,7 +434,7 @@ export function KelabPage() {
             {filteredClubs.map((club, index) => {
               const status = getMembershipStatus(club.id);
               const joinable = isJoinable(club);
-              const meta = getCategoryMeta(club.category);
+              const meta = getCategoryMeta(club.category, t);
               const CategoryIcon = meta.icon;
               const isAutoAssign = AUTO_ASSIGN_CATEGORIES.some(c => club.category?.toLowerCase() === c.toLowerCase()) && club.short_name?.toUpperCase() !== 'GEOSAS';
               const isRestricted = RESTRICTED_CATEGORIES.some(c => club.category?.toLowerCase() === c.toLowerCase());
@@ -511,7 +511,7 @@ export function KelabPage() {
                           </p>
                         ) : (
                           <p className="text-xs text-muted-foreground/60 italic">
-                            Tiada penerangan rasmi kelab.
+                            {t('kpp:no_official_club_desc', 'Tiada penerangan rasmi kelab.')}
                           </p>
                         )}
                       </div>
@@ -602,7 +602,7 @@ export function KelabPage() {
           <Search className="w-10 h-10 mx-auto text-muted-foreground/60" />
           <h3 className="font-bold text-lg tracking-tight text-foreground">{t('kpp:no_clubs_found', 'Tiada Kelab Ditemui')}</h3>
           <p className="font-normal text-xs text-muted-foreground leading-relaxed">
-            Tiada kelab yang sepadan dengan carian "{searchQuery}". Sila semak ejaan nama atau pilih tab kategori lain.
+            {t('kpp:no_clubs_match_query', 'Tiada kelab yang sepadan dengan carian "{{query}}". Sila semak ejaan nama atau pilih tab kategori lain.', { query: searchQuery })}
           </p>
           <Button variant="outline" size="sm" onClick={() => { setSearchQuery(''); setActiveTab('Semua'); }} className="rounded-xl mt-2 text-xs font-semibold">
             {t('kpp:clear_search', 'Kosongkan Carian')}
@@ -664,7 +664,7 @@ export function KelabPage() {
               </div>
 
               <p className="text-xs text-muted-foreground font-medium">
-                Status kuota: <span className="font-mono tabular-nums text-foreground">{approvedCount}</span> / <span className="font-mono tabular-nums text-foreground">{effectiveMaxClubs}</span> kelab aktif digunakan.
+                {t('kpp:quota_status_label', 'Status kuota:')} <span className="font-mono tabular-nums text-foreground">{approvedCount}</span> / <span className="font-mono tabular-nums text-foreground">{effectiveMaxClubs}</span> {t('kpp:active_clubs_used', 'kelab aktif digunakan.')}
               </p>
             </div>
           )}
@@ -698,8 +698,8 @@ export function KelabPage() {
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground">
               {resignModal?.isPrimary
-                ? 'Kelab akademik adalah wajib mengikut jabatan pengajian anda. Permohonan pindah memerlukan kelulusan rasmi daripada Penasihat Kelab.'
-                : `Adakah anda pasti ingin menarik diri serta-merta daripada "${resignModal?.clubName}"? Rekod merit aktiviti berkaitan kelab ini akan terkesan.`}
+                ? t('kpp:academic_club_transfer_warning', 'Kelab akademik adalah wajib mengikut jabatan pengajian anda. Permohonan pindah memerlukan kelulusan rasmi daripada Penasihat Kelab.')
+                : t('kpp:confirm_resign_club_warning', 'Adakah anda pasti ingin menarik diri serta-merta daripada "{{clubName}}"? Rekod merit aktiviti berkaitan kelab ini akan terkesan.', { clubName: resignModal?.clubName })}
             </DialogDescription>
           </DialogHeader>
 

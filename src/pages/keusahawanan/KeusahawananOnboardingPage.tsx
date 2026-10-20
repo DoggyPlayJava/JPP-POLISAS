@@ -18,7 +18,7 @@ export function KeusahawananOnboardingPage() {
   const { t } = useTranslation(['keusahawanan', 'common']);
   const [businessName, setBusinessName] = useState('');
   const [ownerMatric, setOwnerMatric] = useState('');
-  const [businessCategory, setBusinessCategory] = useState('Makanan & Minuman');
+  const [businessCategory, setBusinessCategory] = useState(t('keusahawanan:category_food_beverage', 'Makanan & Minuman'));
   const [submitted, setSubmitted] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -88,10 +88,10 @@ export function KeusahawananOnboardingPage() {
                 onChange={(e) => setBusinessCategory(e.target.value)}
                 className="w-full h-12 rounded-2xl bg-muted/30 border border-border px-3 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                <option value="Makanan & Minuman">Makanan &amp; Minuman</option>
-                <option value="Perkhidmatan & Percetakan">Perkhidmatan &amp; Percetakan</option>
-                <option value="Pakaian & Aksesori">Pakaian &amp; Aksesori</option>
-                <option value="Digital & Barangan IT">Digital &amp; Barangan IT</option>
+                <option value={t('keusahawanan:category_food_beverage', 'Makanan & Minuman')}>{t('keusahawanan:category_food_beverage', 'Makanan & Minuman')}</option>
+                <option value={t('keusahawanan:category_services_printing', 'Perkhidmatan & Percetakan')}>{t('keusahawanan:category_services_printing', 'Perkhidmatan & Percetakan')}</option>
+                <option value={t('keusahawanan:category_clothing_accessories', 'Pakaian & Aksesori')}>{t('keusahawanan:category_clothing_accessories', 'Pakaian & Aksesori')}</option>
+                <option value={t('keusahawanan:category_digital_it', 'Digital & Barangan IT')}>{t('keusahawanan:category_digital_it', 'Digital & Barangan IT')}</option>
               </select>
             </div>
 
@@ -117,22 +117,22 @@ export function KeusahawananOnboardingPage() {
                 <div className="p-3 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-2.5 text-amber-700 dark:text-amber-300">
                   <Clock className="w-5 h-5 shrink-0 text-amber-500" />
                   <div>
-                    <p className="text-xs font-black uppercase">Dalam Pertimbangan</p>
-                    <p className="text-[10px] opacity-80">Menunggu temuduga Exco</p>
+                    <p className="text-xs font-black uppercase">{t('keusahawanan:onboarding_status_under_review', 'Dalam Pertimbangan')}</p>
+                    <p className="text-[10px] opacity-80">{t('keusahawanan:onboarding_status_waiting_interview', 'Menunggu temuduga Exco')}</p>
                   </div>
                 </div>
 
                 <div className="text-xs space-y-1.5 pt-2 border-t border-border/20">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Bisnes:</span>
+                    <span className="text-muted-foreground">{t('keusahawanan:onboarding_business_label', 'Bisnes:')}</span>
                     <span className="font-bold text-foreground">{businessName}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Matrik:</span>
+                    <span className="text-muted-foreground">{t('keusahawanan:onboarding_matric_label', 'Matrik:')}</span>
                     <span className="font-mono text-foreground">{ownerMatric}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Sektor:</span>
+                    <span className="text-muted-foreground">{t('keusahawanan:onboarding_sector_label', 'Sektor:')}</span>
                     <span className="text-foreground">{businessCategory}</span>
                   </div>
                 </div>
@@ -141,10 +141,10 @@ export function KeusahawananOnboardingPage() {
               <div className="text-center py-6 space-y-2">
                 <Building2 className="w-10 h-10 text-muted-foreground/30 mx-auto" />
                 <p className="text-xs font-bold text-muted-foreground">
-                  Belum ada permohonan aktif.
+                  {t('keusahawanan:onboarding_no_active_app', 'Belum ada permohonan aktif.')}
                 </p>
                 <p className="text-[10px] text-muted-foreground/70">
-                  Isi borang di sebelah untuk memulakan perniagaan rasmi di POLISAS.
+                  {t('keusahawanan:onboarding_fill_form_desc', 'Isi borang di sebelah untuk memulakan perniagaan rasmi di POLISAS.')}
                 </p>
               </div>
             )}

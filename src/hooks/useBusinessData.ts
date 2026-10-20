@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { KeusahawananBusiness, KeusahawananCategory, StudentBusinessMembership } from '@/types';
@@ -6,6 +7,7 @@ import toast from 'react-hot-toast';
 import { sendNotificationToUser } from '@/lib/notifications';
 
 export function useBusinessData() {
+  const { t } = useTranslation(['commerce', 'common']);
   const { user } = useAuth();
   
   const [categories, setCategories] = useState<KeusahawananCategory[]>([]);
@@ -76,12 +78,12 @@ export function useBusinessData() {
     ssmRegistrationNumber?: string,
     mentors: { name: string; department: string }[] = []
   ) => {
-    if (!user) return { error: 'Tiada sesi' };
+    if (!user) return { error: t('commerce:no_session', 'Tiada sesi') };
     
     // Check limit
     const activeOrPending = myMemberships.filter(m => m.status === 'ACTIVE' || m.status === 'PENDING');
     if (activeOrPending.length >= 2) {
-      return { error: 'Anda telah mencapai had maksimum (2 perniagaan).' };
+      return { error: t('commerce:max_businesses_reached', 'Anda telah mencapai had maksimum (2 perniagaan).') };
     }
 
     try {
@@ -129,8 +131,8 @@ export function useBusinessData() {
       // 3. Trigger Notification (In-App + Push)
       try {
         await sendNotificationToUser(user.id, {
-          title: 'Permohonan Perniagaan Dihantar',
-          message: 'Permohonan untuk menubuhkan perniagaan anda telah direkodkan. Sistem / pentadbir akan menetapkan tarikh temuduga.',
+          title: t('commerce:business_application_submitted_title', 'Permohonan Perniagaan Dihantar'),
+          message: t('commerce:business_application_submitted_msg', 'Permohonan untuk menubuhkan perniagaan anda telah direkodkan. Sistem / pentadbir akan menetapkan tarikh temuduga.'),
           type: 'SYSTEM',
           module: 'KEUSAHAWANAN',
           link: '/keusahawanan/dashboard',
@@ -152,7 +154,7 @@ export function useBusinessData() {
     // Check limit
     const activeOrPending = myMemberships.filter(m => m.status === 'ACTIVE' || m.status === 'PENDING');
     if (activeOrPending.length >= 2) {
-      toast.error('Anda telah mencapai had maksimum (2 perniagaan).');
+      toast.error(t('commerce:max_businesses_reached', 'Anda telah mencapai had maksimum (2 perniagaan).'));
       return;
     }
 
@@ -175,11 +177,11 @@ export function useBusinessData() {
           ]);
 
           if (businessRes.data && profileRes.data) {
-             const phoneInfo = profileRes.data.phone_number ? `No Tel: ${profileRes.data.phone_number}` : 'Tiada No Tel didaftarkan.';
+             const phoneInfo = profileRes.data.phone_number ? t('commerce:phone_num_label', 'No Tel: {{phone}}', { phone: profileRes.data.phone_number }) : t('commerce:no_phone_registered', 'Tiada No Tel didaftarkan.');
              try {
                await sendNotificationToUser(businessRes.data.owner_id, {
-                 title: 'Rayuan Semula (Appeal)',
-                 message: `Pelajar ${profileRes.data.full_name} membuat rayuan semula untuk menyertai ${businessRes.data.name}. Sila semak di menu Urus Perniagaan. ${phoneInfo}`,
+                 title: t('commerce:appeal_membership_title', 'Rayuan Semula (Appeal)'),
+                 message: t('commerce:appeal_membership_msg', 'Pelajar {{student}} membuat rayuan semula untuk menyertai {{business}}. Sila semak di menu Urus Perniagaan. {{phone}}', { student: profileRes.data.full_name, business: businessRes.data.name, phone: phoneInfo }),
                  type: 'SYSTEM',
                  module: 'KEUSAHAWANAN',
                  link: '/keusahawanan/dashboard',
@@ -187,11 +189,11 @@ export function useBusinessData() {
              } catch {}
           }
 
-          toast.success('Rayuan telah dihantar. Pemilik perniagaan telah dimaklumkan.');
+          toast.success(t('commerce:appeal_sent_toast', 'Rayuan telah dihantar. Pemilik perniagaan telah dimaklumkan.'));
           await fetchInitialData();
           return;
         } else {
-          throw new Error('Anda sudah mempunyai rekod permohonan untuk perniagaan ini.');
+          throw new Error(t('commerce:already_have_application_record', 'Anda sudah mempunyai rekod permohonan untuk perniagaan ini.'));
         }
       }
 
@@ -207,7 +209,7 @@ export function useBusinessData() {
 
       if (error) {
         if (error.code === '23505') {
-           throw new Error('Anda sudah membuat permohonan untuk perniagaan ini.');
+           throw new Error(t('commerce:already_applied_business', 'Anda sudah membuat permohonan untuk perniagaan ini.'));
         }
         throw error;
       };
@@ -220,10 +222,10 @@ export function useBusinessData() {
         ]);
         
         if (busRes.data && profRes.data) {
-           const phoneInfo = profRes.data.phone_number ? `No Tel: ${profRes.data.phone_number}` : 'Tiada No Tel didaftarkan.';
+           const phoneInfo = profRes.data.phone_number ? t('commerce:phone_num_label', 'No Tel: {{phone}}', { phone: profRes.data.phone_number }) : t('commerce:no_phone_registered', 'Tiada No Tel didaftarkan.');
            await sendNotificationToUser(busRes.data.owner_id, {
-             title: 'Permohonan Keahlian Baharu',
-             message: `Pelajar ${profRes.data.full_name} memohon untuk menyertai ${busRes.data.name}. Sila semak di menu Urus Perniagaan. ${phoneInfo}`,
+             title: t('commerce:new_membership_application_title', 'Permohonan Keahlian Baharu'),
+             message: t('commerce:new_membership_application_msg', 'Pelajar {{student}} memohon untuk menyertai {{business}}. Sila semak di menu Urus Perniagaan. {{phone}}', { student: profRes.data.full_name, business: busRes.data.name, phone: phoneInfo }),
              type: 'INFO',
              module: 'KEUSAHAWANAN',
              link: '/keusahawanan/urus-perniagaan'
@@ -233,11 +235,11 @@ export function useBusinessData() {
         console.error('Failed to notify owner:', err);
       }
 
-      toast.success('Permohonan menyertai perniagaan telah dihantar.');
+      toast.success(t('commerce:join_business_request_sent', 'Permohonan menyertai perniagaan telah dihantar.'));
       await fetchInitialData();
     } catch (err: any) {
       console.error('Error joining business:', err);
-      toast.error(err.message || 'Gagal menghantar permohonan.');
+      toast.error(err.message || t('commerce:join_business_failed', 'Gagal menghantar permohonan.'));
     }
   };
 
