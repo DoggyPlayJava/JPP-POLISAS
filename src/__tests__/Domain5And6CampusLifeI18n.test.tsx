@@ -60,7 +60,7 @@ if (typeof globalThis.document === 'undefined') {
 
 if (typeof (globalThis as any).window === 'undefined') {
   (globalThis as any).window = {
-    location: { search: '', pathname: '/', href: 'http://localhost/' },
+    location: { search: '', pathname: '/', href: 'http://localhost/', origin: 'http://localhost/' },
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     open: vi.fn(),
@@ -302,6 +302,7 @@ import { PolySuaraPage } from '@/pages/polyservices/PolySuaraPage';
 import { AkademikDashboard } from '@/pages/akademik/AkademikDashboard';
 import { AkademikCgpa } from '@/pages/akademik/AkademikCgpa';
 import { AkademikTakwimPage } from '@/pages/akademik/AkademikTakwimPage';
+import { QrMeritManager } from '@/pages/akademik/AkademikQrScan';
 import { KlkDashboard } from '@/pages/klk/KlkDashboard';
 import { KlkResidencyFormPage } from '@/pages/klk/KlkResidencyFormPage';
 import { SupsasLandingPage } from '@/pages/supsas/SupsasLandingPage';
@@ -451,6 +452,37 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
         </MemoryRouter>
       );
       expect(html).toContain('Official Examination Calendar');
+    });
+
+    it('renders QrMeritManager with populated tokens without throwing TypeError (English)', () => {
+      const sampleTokens = [
+        {
+          id: 'tok-1',
+          title: 'Test Token',
+          is_active: true,
+          verification_pin: '1234',
+          current_scans: 5,
+          max_scans: 10,
+          merit_value: 5,
+          cooldown_hours: 1,
+        },
+      ];
+
+      expect(() => {
+        const html = renderToString(
+          <MemoryRouter initialEntries={['/akademik']}>
+            <I18nextProvider i18n={i18n}>
+              <QrMeritManager initialTokens={sampleTokens} />
+            </I18nextProvider>
+          </MemoryRouter>
+        );
+        expect(html).toContain('Test Token');
+        expect(html).toContain('Hall PIN');
+        expect(html).toContain('1234');
+        expect(html).toContain('Active');
+        expect(html).toContain('Deactivate');
+        expect(html).toContain('Delete');
+      }).not.toThrow();
     });
 
     it('renders KlkDashboard in English', () => {
@@ -604,6 +636,85 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
         </MemoryRouter>
       );
       expect(html).toContain('Kalendar Peperiksaan Rasmi');
+    });
+
+    it('renders QrMeritManager with populated tokens without throwing TypeError (Bahasa Melayu)', () => {
+      const sampleTokens = [
+        {
+          id: 'tok-1',
+          title: 'Test Token',
+          is_active: true,
+          verification_pin: '1234',
+          current_scans: 5,
+          max_scans: 10,
+          merit_value: 5,
+          cooldown_hours: 1,
+        },
+      ];
+
+      expect(() => {
+        const html = renderToString(
+          <MemoryRouter initialEntries={['/akademik']}>
+            <I18nextProvider i18n={i18n}>
+              <QrMeritManager initialTokens={sampleTokens} />
+            </I18nextProvider>
+          </MemoryRouter>
+        );
+        expect(html).toContain('Test Token');
+        expect(html).toContain('PIN Dewan');
+        expect(html).toContain('1234');
+        expect(html).toContain('Aktif');
+        expect(html).toContain('Nyahaktif');
+        expect(html).toContain('Padam');
+      }).not.toThrow();
+    });
+
+    it('renders localized status badges for inactive and expired tokens in QrMeritManager', async () => {
+      const variedTokens = [
+        {
+          id: 'tok-expired',
+          title: 'Expired Token',
+          is_active: true,
+          expires_at: '2020-01-01T00:00:00.000Z',
+          verification_pin: '9999',
+          current_scans: 10,
+          max_scans: 10,
+          merit_value: 2,
+          cooldown_hours: 4,
+        },
+        {
+          id: 'tok-inactive',
+          title: 'Inactive Token',
+          is_active: false,
+          verification_pin: '8888',
+          current_scans: 0,
+          max_scans: 10,
+          merit_value: 2,
+          cooldown_hours: 4,
+        },
+      ];
+
+      await changeLanguage('en');
+      let htmlEn = renderToString(
+        <MemoryRouter initialEntries={['/akademik']}>
+          <I18nextProvider i18n={i18n}>
+            <QrMeritManager initialTokens={variedTokens} />
+          </I18nextProvider>
+        </MemoryRouter>
+      );
+      expect(htmlEn).toContain('Expired');
+      expect(htmlEn).toContain('Inactive');
+
+      await changeLanguage('ms');
+      let htmlMs = renderToString(
+        <MemoryRouter initialEntries={['/akademik']}>
+          <I18nextProvider i18n={i18n}>
+            <QrMeritManager initialTokens={variedTokens} />
+          </I18nextProvider>
+        </MemoryRouter>
+      );
+      expect(htmlMs).toContain('Tamat');
+      expect(htmlMs).toContain('Tidak Aktif');
     });
 
     it('renders KlkDashboard in Bahasa Melayu', () => {

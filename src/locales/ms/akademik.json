@@ -52,6 +52,7 @@
   "status_pending": "Menunggu",
   "status_approved": "Disahkan",
   "status_rejected": "Ditolak",
+  "status_expired": "Tamat",
   "unlock_request_btn": "Buka Kunci Pencapaian",
   "unlock_reason_placeholder": "Nyatakan sebab permohonan...",
   "qr_invalid_title": "QR Tidak Sah",
