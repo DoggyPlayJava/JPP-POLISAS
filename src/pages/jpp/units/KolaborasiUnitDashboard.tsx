@@ -467,7 +467,7 @@ export function KolaborasiUnitDashboard() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <p className="font-black text-sm text-slate-900 dark:text-white">{cert.cert_type || 'Sijil Sukarelawan'}</p>
+                          <p className="font-black text-sm text-slate-900 dark:text-white">{cert.cert_type || t('jpp:kolab_cert_volunteer_default', 'Sijil Sukarelawan')}</p>
                           <span className="text-[10px] font-mono tabular-nums font-bold px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-white/60">
                             {cert.cert_serial}
                           </span>

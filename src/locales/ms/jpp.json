@@ -2325,5 +2325,6 @@
   "viewfinder_camera_title": "Viewfinder Kamera Digital",
   "waiting_pass_scan": "Menunggu Imbasan Pas Mahasiswa",
   "waiting_pass_scan_desc": "Halakan kod QR ke viewfinder atau buat carian No. Matrik secara manual untuk memaparkan maklumat pelajar dan butang serahan makanan.",
-  "wrapper_access_denied": "Akses Ditolak"
+  "wrapper_access_denied": "Akses Ditolak",
+  "kolab_cert_volunteer_default": "Sijil Sukarelawan"
 }

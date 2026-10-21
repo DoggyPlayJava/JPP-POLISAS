@@ -11,6 +11,9 @@ declare let self: ServiceWorkerGlobalScope;
 const OFFLINE_CACHE = 'jpp-offline-fallback-v1';
 const OFFLINE_URL = '/offline.html';
 
+const isMsLang = typeof navigator !== 'undefined' && (navigator.language || '').toLowerCase().startsWith('ms');
+const t = (_k: string, fbMs: string, fbEn: string): string => (isMsLang ? fbMs : fbEn);
+
 clientsClaim();
 
 // Dengarkan arahan SKIP_WAITING daripada komponen PwaUpdater (butang Muat Semula)
@@ -65,8 +68,9 @@ registerRoute(
     } catch (_e) { /* Cache miss — teruskan */ }
 
     // Pertahanan terakhir: halaman HTML minimum
+    const offlineTitle = t('sw:offline_title', 'Tiada Sambungan', 'Offline / No Connection');
     return new Response(
-      '<html><body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:system-ui"><h1>Tiada Sambungan</h1></body></html>',
+      '<html><body style="display:flex;justify-content:center;align-items:center;height:100vh;font-family:system-ui"><h1>' + offlineTitle + '</h1></body></html>',
       { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
     );
   }
@@ -114,11 +118,11 @@ self.addEventListener('push', (event: PushEvent) => {
     payload = { title: event.data.text() };
   }
 
-  const title = payload.title ?? 'Notifikasi Sistem';
+  const title = payload.title ?? t("sw:system_notification", "Notifikasi Sistem", "System Notification");
   const targetUrl = payload.data?.url ?? '/portal';
   
   const options: NotificationOptions = {
-    body: payload.body ?? 'Anda mempunyai satu notifikasi baru.',
+    body: payload.body ?? t("sw:new_notification", "Anda mempunyai satu notifikasi baru.", "You have a new notification."),
     icon: payload.icon ?? '/jpp-app-icon.png',
     // Android memerlukan icon monokrom lutsinar untuk badge, kita guna jpp-logo sementara belum ada khas
     badge: payload.badge ?? '/jpp-app-icon.png',

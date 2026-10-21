@@ -2325,5 +2325,6 @@
   "viewfinder_camera_title": "Digital Camera Viewfinder",
   "waiting_pass_scan": "Awaiting Student Pass Scan",
   "waiting_pass_scan_desc": "Aim QR code at viewfinder or search Matric No. manually to display student info and disbursement button.",
-  "wrapper_access_denied": "Access Denied"
+  "wrapper_access_denied": "Access Denied",
+  "kolab_cert_volunteer_default": "Volunteer Certificate"
 }
