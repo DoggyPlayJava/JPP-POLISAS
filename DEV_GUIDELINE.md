@@ -103,18 +103,21 @@ src/
 │   ├── polymart/              ← Modul PolyMart (marketplace pelajar)
 │   ├── supsas/                ← Modul SUPSAS (sukan & pertandingan)
 │   ├── ems/                   ← Modul EMS (Event Management System)
-│   └── karnival/              ← Modul Karnival (sistem undian & booth)
+│   ├── karnival/              ← Modul Karnival (sistem undian & booth)
+│   └── LandingPage.tsx        ← Halaman pendaratan rasmi (/ & /landing) dengan seni bina neo-campus, dwibahasa (BM/EN), header mudah alih ramping (bebas kapsul AI slop) & visual OpenLearning
 │
 ├── components/
 │   ├── RouteGuards.tsx        ← ProtectedRoute, PublicRoute
 │   ├── ai/                   ← FloatingAiChat, komponen AI
 │   ├── ems/                  ← Templat E-Sijil & komponen EMS
+│   ├── landing/              ← Redesigned Earthy Neo-Campus landing components (LandingNavbar dengan LanguageToggle & drawer mobile, LandingHero dengan 5 lencana jabatan & cip terapung OpenLearning, LandingTicker, CampusDayTimeline, LandingBento modul bersepadu, LandingNexusAI, LandingStats angka sebenar kampus, LandingCta, LandingFooter, SpotlightCard, landingTypes)
 │   ├── layout/               ← AppLayout, Sidebar, BottomNav
 │   ├── portal/               ← Komponen Portal Super App (SuperAppHeader, CampusServicesGrid, Carousel, Feeds, dll)
 │   ├── reports/              ← Penjana PDF/DOCX laporan
 │   ├── takwim/               ← Komponen takwim/kalendar
 │   ├── tasks/                ← Komponen pengurusan tugasan
 │   └── ui/                   ← Shadcn UI components
+
 │
 ├── locales/
 │   ├── en/                   ← Bahasa Inggeris (common, auth, nav, settings)
