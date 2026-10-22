@@ -5,7 +5,7 @@ import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePosData, StatsData } from '@/hooks/usePosData';
-import { hexToRgba } from '@/lib/utils';
+import { cn, hexToRgba } from '@/lib/utils';
 import { supabase } from '@/lib/supabase';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
