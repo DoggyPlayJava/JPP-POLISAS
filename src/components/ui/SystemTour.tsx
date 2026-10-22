@@ -155,7 +155,7 @@ function CustomTooltip({
       <div className="flex items-center justify-between mt-6 relative z-10">
         <div className="flex gap-1.5 items-center">
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">
-               Langkah {index + 1} / {size}
+               {t('common:step_counter', 'Langkah {{current}} / {{total}}', { current: index + 1, total: size })}
             </span>
         </div>
         

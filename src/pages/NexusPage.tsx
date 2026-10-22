@@ -375,7 +375,7 @@ export function NexusPage() {
       }
 
       // Sanitize filename — buang aksara yang tidak selamat
-      const safeFilename = filename.replace(/[/\\?%*:|"<>]/g, '-').trim() || 'Kertas_Kerja';
+      const safeFilename = filename.replace(/[/\\?%*:|"<>]/g, '-').trim() || t('portal:default_filename_working_paper', 'Kertas_Kerja');
       console.log('🔄 Menyedia muat turun untuk:', safeFilename);
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -528,7 +528,7 @@ export function NexusPage() {
       const { generateMinitMesyuaratDocx } = await import('../utils/docxGenerator');
       const blob = await generateMinitMesyuaratDocx(data);
       if (!blob || blob.size === 0) throw new Error(t('portal:nexus_blob_empty', 'Blob dijana kosong.'));
-      const safeFilename = (data.tajuk_mesyuarat || 'Minit_Mesyuarat').replace(/[/\\?%*:|"<>]/g, '-').trim();
+      const safeFilename = (data.tajuk_mesyuarat || t('portal:default_filename_meeting_minutes', 'Minit_Mesyuarat')).replace(/[/\\?%*:|"<>]/g, '-').trim();
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -983,7 +983,7 @@ export function NexusPage() {
                   </div>
                   {hasilKertasKerja && (
                     <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2 bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20" onClick={() => handleDownloadKertasKerjaDocx(hasilKertasKerja, hasilKertasKerja?.halaman_muka?.tajuk_program || tajukProgram || 'Kertas_Kerja')}>
+                      <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2 bg-indigo-500/10 text-indigo-400 border-indigo-500/20 hover:bg-indigo-500/20" onClick={() => handleDownloadKertasKerjaDocx(hasilKertasKerja, hasilKertasKerja?.halaman_muka?.tajuk_program || tajukProgram || t('portal:default_filename_working_paper', 'Kertas_Kerja'))}>
                         <Download className="w-3.5 h-3.5" /> {t('portal:nexus_download_docx', 'Muat Turun DOCX')}
                       </Button>
                       <Button variant="outline" size="sm" className="h-8 text-xs font-bold gap-2" onClick={() => {

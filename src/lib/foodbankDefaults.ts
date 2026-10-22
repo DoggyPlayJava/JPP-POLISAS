@@ -28,33 +28,54 @@ import {
 // Semantic Color & Category Tokens ("Warm Citrus & Fresh Harvest")
 // ============================================================
 
-export const FOODBANK_CATEGORY_CONFIG: Record<string, { label: string; badge: string; icon: string }> = {
-  MAKANAN: {
-    label: t('kebajikan:foodbank_cat_makanan', 'Makanan Asas'),
-    badge: 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30',
-    icon: '🍚',
+export function getFoodBankCategoryConfig(t: (k: string, fb: string, opt?: Record<string, unknown>) => string = (k, fb, opt) => (i18n && i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb)): Record<string, { label: string; badge: string; icon: string }> {
+  return {
+    MAKANAN: {
+      label: t('kebajikan:foodbank_cat_makanan', 'Makanan Asas'),
+      badge: 'bg-amber-500/10 text-amber-800 dark:text-amber-300 border-amber-500/30',
+      icon: '🍚',
+    },
+    MINUMAN: {
+      label: t('kebajikan:foodbank_cat_minuman', 'Minuman'),
+      badge: 'bg-sky-500/10 text-sky-800 dark:text-sky-300 border-sky-500/30',
+      icon: '☕',
+    },
+    KEBERSIHAN: {
+      label: t('kebajikan:foodbank_cat_kebersihan', 'Kebersihan Diri'),
+      badge: 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30',
+      icon: '🧼',
+    },
+    KEPERLUAN_ASAS: {
+      label: t('kebajikan:foodbank_cat_keperluan_asas', 'Keperluan Asas'),
+      badge: 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30',
+      icon: '📦',
+    },
+    LAIN_LAIN: {
+      label: t('kebajikan:foodbank_cat_lain_lain', 'Keperluan Lain'),
+      badge: 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30',
+      icon: '📦',
+    },
+  };
+}
+
+export const FOODBANK_CATEGORY_CONFIG: Record<string, { label: string; badge: string; icon: string }> = new Proxy({}, {
+  get(_target, prop: string) {
+    return getFoodBankCategoryConfig()[prop];
   },
-  MINUMAN: {
-    label: t('kebajikan:foodbank_cat_minuman', 'Minuman'),
-    badge: 'bg-sky-500/10 text-sky-800 dark:text-sky-300 border-sky-500/30',
-    icon: '☕',
+  has(_target, prop: string) {
+    return prop in getFoodBankCategoryConfig();
   },
-  KEBERSIHAN: {
-    label: t('kebajikan:foodbank_cat_kebersihan', 'Kebersihan Diri'),
-    badge: 'bg-emerald-500/10 text-emerald-800 dark:text-emerald-300 border-emerald-500/30',
-    icon: '🧼',
+  ownKeys() {
+    return Reflect.ownKeys(getFoodBankCategoryConfig());
   },
-  KEPERLUAN_ASAS: {
-    label: t('kebajikan:foodbank_cat_keperluan_asas', 'Keperluan Asas'),
-    badge: 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30',
-    icon: '📦',
+  getOwnPropertyDescriptor(_target, prop: string) {
+    return {
+      configurable: true,
+      enumerable: true,
+      value: (getFoodBankCategoryConfig() as any)[prop],
+    };
   },
-  LAIN_LAIN: {
-    label: t('kebajikan:foodbank_cat_lain_lain', 'Keperluan Lain'),
-    badge: 'bg-purple-500/10 text-purple-800 dark:text-purple-300 border-purple-500/30',
-    icon: '📦',
-  },
-};
+}) as Record<string, { label: string; badge: string; icon: string }>;
 
 export function getFoodBankStockBadge(stock: number, unit: string = 'unit') {
   if (stock <= 0) {
@@ -78,38 +99,59 @@ export function getFoodBankStockBadge(stock: number, unit: string = 'unit') {
   };
 }
 
-export const FOODBANK_STATUS_CONFIG: Record<FoodBankApplicationStatus, { label: string; badge: string; dot: string; iconName?: string }> = {
-  MENUNGGU: {
-    label: t('kebajikan:foodbank_status_menunggu', 'Menunggu Kelulusan'),
-    badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30',
-    dot: 'bg-amber-500',
+export function getFoodBankStatusConfig(t: (k: string, fb: string, opt?: Record<string, unknown>) => string = (k, fb, opt) => (i18n && i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb)): Record<FoodBankApplicationStatus, { label: string; badge: string; dot: string; iconName?: string }> {
+  return {
+    MENUNGGU: {
+      label: t('kebajikan:foodbank_status_menunggu', 'Menunggu Kelulusan'),
+      badge: 'bg-amber-500/10 text-amber-700 dark:text-amber-300 border-amber-500/30',
+      dot: 'bg-amber-500',
+    },
+    DALAM_SEMAKAN: {
+      label: t('kebajikan:foodbank_status_dalam_semakan', 'Dalam Semakan'),
+      badge: 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/30',
+      dot: 'bg-sky-500',
+    },
+    LULUS: {
+      label: t('kebajikan:foodbank_status_lulus', 'Lulus - Sedia Diambil'),
+      badge: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40',
+      dot: 'bg-emerald-500',
+    },
+    SELESAI: {
+      label: t('kebajikan:foodbank_status_selesai', 'Selesai Diambil'),
+      badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
+      dot: 'bg-emerald-600',
+    },
+    DITOLAK: {
+      label: t('kebajikan:foodbank_status_ditolak', 'Tidak Diluluskan'),
+      badge: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30',
+      dot: 'bg-rose-500',
+    },
+    BATAL: {
+      label: t('kebajikan:foodbank_status_batal', 'Dibatalkan'),
+      badge: 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/30',
+      dot: 'bg-slate-400',
+    },
+  };
+}
+
+export const FOODBANK_STATUS_CONFIG: Record<FoodBankApplicationStatus, { label: string; badge: string; dot: string; iconName?: string }> = new Proxy({}, {
+  get(_target, prop: string) {
+    return (getFoodBankStatusConfig() as any)[prop];
   },
-  DALAM_SEMAKAN: {
-    label: t('kebajikan:foodbank_status_dalam_semakan', 'Dalam Semakan'),
-    badge: 'bg-sky-500/10 text-sky-700 dark:text-sky-300 border-sky-500/30',
-    dot: 'bg-sky-500',
+  has(_target, prop: string) {
+    return prop in getFoodBankStatusConfig();
   },
-  LULUS: {
-    label: t('kebajikan:foodbank_status_lulus', 'Lulus - Sedia Diambil'),
-    badge: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/40',
-    dot: 'bg-emerald-500',
+  ownKeys() {
+    return Reflect.ownKeys(getFoodBankStatusConfig());
   },
-  SELESAI: {
-    label: t('kebajikan:foodbank_status_selesai', 'Selesai Diambil'),
-    badge: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border-emerald-500/30',
-    dot: 'bg-emerald-600',
+  getOwnPropertyDescriptor(_target, prop: string) {
+    return {
+      configurable: true,
+      enumerable: true,
+      value: (getFoodBankStatusConfig() as any)[prop],
+    };
   },
-  DITOLAK: {
-    label: t('kebajikan:foodbank_status_ditolak', 'Tidak Diluluskan'),
-    badge: 'bg-rose-500/10 text-rose-700 dark:text-rose-300 border-rose-500/30',
-    dot: 'bg-rose-500',
-  },
-  BATAL: {
-    label: t('kebajikan:foodbank_status_batal', 'Dibatalkan'),
-    badge: 'bg-slate-500/10 text-slate-700 dark:text-slate-300 border-slate-500/30',
-    dot: 'bg-slate-400',
-  },
-};
+}) as Record<FoodBankApplicationStatus, { label: string; badge: string; dot: string; iconName?: string }>;
 
 export const DEFAULT_FOODBANK_SETTINGS: FoodBankSettings = {
   id: '00000000-0000-0000-0000-000000000001',

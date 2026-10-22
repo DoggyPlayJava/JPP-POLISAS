@@ -1,5 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
 import { useNavigate } from 'react-router-dom';
@@ -49,18 +50,60 @@ import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 
 // ─── STATUS CONFIG ────────────────────────────────────────────────────────────
-const ACTIVITY_STATUS: Record<string, { label: string; color: string; bg: string }> = {
-  perancangan: { label: 'Perancangan', color: 'text-blue-600', bg: 'bg-blue-500/10' },
-  aktif: { label: 'Aktif', color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
-  selesai: { label: 'Selesai', color: 'text-muted-foreground', bg: 'bg-muted' },
-  ditangguh: { label: 'Ditangguh', color: 'text-orange-600', bg: 'bg-orange-500/10' },
-};
+export const getActivityStatus = (t: (key: string, fallback: string) => string): Record<string, { label: string; color: string; bg: string }> => ({
+  perancangan: { label: t('kpp:status_planning', 'Perancangan'), color: 'text-blue-600', bg: 'bg-blue-500/10' },
+  aktif: { label: t('kpp:status_active', 'Aktif'), color: 'text-emerald-600', bg: 'bg-emerald-500/10' },
+  selesai: { label: t('kpp:status_completed', 'Selesai'), color: 'text-muted-foreground', bg: 'bg-muted' },
+  ditangguh: { label: t('kpp:status_postponed', 'Ditangguh'), color: 'text-orange-600', bg: 'bg-orange-500/10' },
+});
 
-const PRIORITY_CONFIG: Record<string, { label: string; dot: string }> = {
-  rendah: { label: 'Rendah', dot: 'bg-blue-400' },
-  sederhana: { label: 'Sederhana', dot: 'bg-amber-400' },
-  tinggi: { label: 'Tinggi', dot: 'bg-rose-500' },
-};
+export const getPriorityConfig = (t: (key: string, fallback: string) => string): Record<string, { label: string; dot: string }> => ({
+  rendah: { label: t('kpp:priority_low', 'Rendah'), dot: 'bg-blue-400' },
+  sederhana: { label: t('kpp:priority_medium', 'Sederhana'), dot: 'bg-amber-400' },
+  tinggi: { label: t('kpp:priority_high', 'Tinggi'), dot: 'bg-rose-500' },
+});
+
+export const ACTIVITY_STATUS: Record<string, { label: string; color: string; bg: string }> = new Proxy({}, {
+  get(_target, prop: string) {
+    const live = getActivityStatus((k, fb) => (i18n && i18n.isInitialized ? (i18n.t(k, { defaultValue: fb }) as string) : fb));
+    return live[prop];
+  },
+  has(_target, prop: string) {
+    return prop in getActivityStatus((_k, fb) => fb);
+  },
+  ownKeys() {
+    return Reflect.ownKeys(getActivityStatus((_k, fb) => fb));
+  },
+  getOwnPropertyDescriptor(_target, prop: string) {
+    const live = getActivityStatus((k, fb) => (i18n && i18n.isInitialized ? (i18n.t(k, { defaultValue: fb }) as string) : fb));
+    return {
+      configurable: true,
+      enumerable: true,
+      value: (live as any)[prop],
+    };
+  },
+}) as Record<string, { label: string; color: string; bg: string }>;
+
+export const PRIORITY_CONFIG: Record<string, { label: string; dot: string }> = new Proxy({}, {
+  get(_target, prop: string) {
+    const live = getPriorityConfig((k, fb) => (i18n && i18n.isInitialized ? (i18n.t(k, { defaultValue: fb }) as string) : fb));
+    return live[prop];
+  },
+  has(_target, prop: string) {
+    return prop in getPriorityConfig((_k, fb) => fb);
+  },
+  ownKeys() {
+    return Reflect.ownKeys(getPriorityConfig((_k, fb) => fb));
+  },
+  getOwnPropertyDescriptor(_target, prop: string) {
+    const live = getPriorityConfig((k, fb) => (i18n && i18n.isInitialized ? (i18n.t(k, { defaultValue: fb }) as string) : fb));
+    return {
+      configurable: true,
+      enumerable: true,
+      value: (live as any)[prop],
+    };
+  },
+}) as Record<string, { label: string; dot: string }>;
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export function AktivitiFull() {
@@ -75,7 +118,7 @@ export function AktivitiFull() {
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex justify-between items-start gap-4">
         <div>
           <Badge className="mb-3 px-3 py-1 text-[10px] font-black uppercase tracking-widest bg-accent/10 text-accent border-none">
-            {profile?.club_id ? 'Kelab' : 'JPP'}
+            {profile?.club_id ? t('kpp:club_label', 'Kelab') : 'JPP'}
           </Badge>
           <h1 className="text-3xl sm:text-5xl font-black tracking-tighter gradient-text">{t('kpp:upcoming_activities')}</h1>
           <p className="text-muted-foreground mt-1 text-sm sm:text-base font-medium">
@@ -724,17 +767,19 @@ function AktivitiKelabTab({ user, profile, selectedClubId, effectiveRole }: any)
 // Card untuk setiap aktiviti kelab
 function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete }: any) {
   const { t } = useTranslation(['kpp', 'common']);
-  const statusCfg = ACTIVITY_STATUS[act.status] || ACTIVITY_STATUS.perancangan;
-  const priorityCfg = PRIORITY_CONFIG[act.priority] || PRIORITY_CONFIG.sederhana;
+  const actStatusMap = useMemo(() => getActivityStatus(t), [t]);
+  const actPriorityMap = useMemo(() => getPriorityConfig(t), [t]);
+  const statusCfg = actStatusMap[act.status] || actStatusMap.perancangan;
+  const priorityCfg = actPriorityMap[act.priority] || actPriorityMap.sederhana;
   const isOwner = act.user_id === currentUserId;
   const [qrOpen, setQrOpen] = useState(false);
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'perancangan': return t('kpp:event_status_upcoming');
-      case 'aktif': return t('kpp:event_status_ongoing');
-      case 'selesai': return t('kpp:event_status_completed');
-      case 'ditangguh': return t('kpp:event_status_postponed');
+      case 'perancangan': return t('kpp:event_status_upcoming', statusCfg.label);
+      case 'aktif': return t('kpp:event_status_ongoing', statusCfg.label);
+      case 'selesai': return t('kpp:event_status_completed', statusCfg.label);
+      case 'ditangguh': return t('kpp:event_status_postponed', statusCfg.label);
       default: return statusCfg.label;
     }
   };
@@ -832,13 +877,13 @@ function ActivityKelabCard({ act, currentUserId, effectiveRole, onEdit, onDelete
               {act.merit_kelab > 0 && (
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black uppercase tracking-widest text-amber-600">
                   <Trophy size={9} />
-                  +{act.merit_kelab} Kelab
+                  +{act.merit_kelab} {t('kpp:merit_club_suffix', 'Kelab')}
                 </span>
               )}
               {act.merit_eakademik > 0 && (
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase tracking-widest text-emerald-700">
                   <Trophy size={9} />
-                  +{act.merit_eakademik} Rasmi
+                  +{act.merit_eakademik} {t('kpp:merit_official_suffix', 'Rasmi')}
                 </span>
               )}
             </div>
@@ -1632,13 +1677,13 @@ function ProgramCard({ act, onEdit, load, isUrgent, isMini, onUnlock, canManage,
               {act.merit_kelab > 0 && (
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-[9px] font-black uppercase text-amber-600">
                   <Trophy size={9} />
-                  +{act.merit_kelab} Kelab
+                  +{act.merit_kelab} {t('kpp:merit_club_suffix', 'Kelab')}
                 </span>
               )}
               {act.merit_eakademik > 0 && (
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[9px] font-black uppercase text-emerald-700">
                   <Trophy size={9} />
-                  +{act.merit_eakademik} Rasmi
+                  +{act.merit_eakademik} {t('kpp:merit_official_suffix', 'Rasmi')}
                 </span>
               )}
             </div>

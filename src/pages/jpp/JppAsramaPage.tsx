@@ -751,15 +751,15 @@ export function JppAsramaPage() {
 
                <div className="flex gap-4 border-y border-slate-100 dark:border-slate-800/50 py-3">
                  <div className="flex-1">
-                   <p className="text-[10px] font-bold text-slate-400">Pencapaian</p>
+                   <p className="text-[10px] font-bold text-slate-400">{t('jpp:asrama_achievement', 'Pencapaian')}</p>
                    <p className="font-black text-sky-600 dark:text-sky-400">{s.merit_pencapaian > 0 ? s.merit_pencapaian : '—'}</p>
                  </div>
                  <div className="flex-1">
-                   <p className="text-[10px] font-bold text-slate-400">Aktiviti</p>
+                   <p className="text-[10px] font-bold text-slate-400">{t('jpp:asrama_activity', 'Aktiviti')}</p>
                    <p className="font-black text-amber-600 dark:text-amber-400">{s.merit_aktiviti > 0 ? s.merit_aktiviti : '—'}</p>
                  </div>
                  <div className="flex-1 text-right">
-                   <p className="text-[10px] font-bold text-slate-400">Kohort</p>
+                   <p className="text-[10px] font-bold text-slate-400">{t('jpp:asrama_cohort', 'Kohort')}</p>
                    <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{getCohortLabel(s, intakeConfig)}</p>
                  </div>
                </div>

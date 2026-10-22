@@ -93,6 +93,7 @@
   "business_application_submitted_title": "Business Application Submitted",
   "business_default_name": "Business",
   "business_info": "Business Information",
+  "business_label": "Business:",
   "business_logo": "Business Logo",
   "business_phone": "Business Phone No.",
   "business_phone_desc": "Displayed to COD customers for payment coordination.",
@@ -388,6 +389,7 @@
   "open_sales": "Open Sales",
   "opening_chat": "Opening PolyMart chat inbox...",
   "operating_hours_pickup": "Operating Hours / Pickup Method",
+  "operating_hours_pickup_info": "Operating Hours / Pickup Method",
   "operating_hours_placeholder": "e.g. Mon-Fri 8am-4pm...",
   "ops_shift_settings": "Operations & Shift Settings",
   "order_awaiting_vendor_confirmation": "Please wait for status confirmation from the vendor.",
@@ -660,6 +662,7 @@
   "secure_checkout_badge": "SECURE CHECKOUT",
   "select_active_member": "-- Select Active Member --",
   "select_all": "Select All",
+  "select_business_placeholder": "Select business...",
   "select_order_aria": "Select order",
   "select_payment_method_error": "Please select payment method (COD or QR Online)!",
   "select_store_label": "Select Store:",
@@ -792,6 +795,7 @@
   "submitting_ad_dots": "Submitting...",
   "submitting_review_dots": "Submitting...",
   "sum_variations_above": "Sum of {{count}} variations above",
+  "switch_business_hint": "You can switch your business view here.",
   "tab_ad_management": "Ad Management",
   "tab_all": "All",
   "tab_cancelled": "Cancelled",
@@ -956,8 +960,5 @@
   "write_review_title": "Write a Review",
   "yield_prompt": "How many does 1 {{unit}} make / fill?",
   "zoom_in_aria": "Zoom In",
-  "zoom_out_aria": "Zoom Out",
-  "business_label": "Business:",
-  "select_business_placeholder": "Select business...",
-  "switch_business_hint": "You can switch your business view here."
+  "zoom_out_aria": "Zoom Out"
 }

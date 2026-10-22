@@ -93,6 +93,7 @@
   "business_application_submitted_title": "Permohonan Perniagaan Dihantar",
   "business_default_name": "Perniagaan",
   "business_info": "Maklumat Perniagaan",
+  "business_label": "Perniagaan:",
   "business_logo": "Logo Perniagaan",
   "business_phone": "No. Telefon Perniagaan",
   "business_phone_desc": "Dipaparkan kepada pelanggan COD untuk penyelarasan bayaran.",
@@ -388,6 +389,7 @@
   "open_sales": "Buka Jualan",
   "opening_chat": "Membuka peti perbualan PolyMart...",
   "operating_hours_pickup": "Waktu Operasi / Cara Ambil",
+  "operating_hours_pickup_info": "Waktu Operasi / Cara Ambil",
   "operating_hours_placeholder": "cth: Isnin-Jumaat 8am-4pm...",
   "ops_shift_settings": "Tetapan Operasi & Syif",
   "order_awaiting_vendor_confirmation": "Sila tunggu pengesahan status daripada peniaga.",
@@ -660,6 +662,7 @@
   "secure_checkout_badge": "CHECKOUT SELAMAT",
   "select_active_member": "-- Pilih Ahli Aktif --",
   "select_all": "Pilih Semua",
+  "select_business_placeholder": "Pilih perniagaan...",
   "select_order_aria": "Pilih pesanan",
   "select_payment_method_error": "Sila pilih kaedah pembayaran (COD atau QR Online)!",
   "select_store_label": "Pilih Kedai:",
@@ -792,6 +795,7 @@
   "submitting_ad_dots": "Menghantar...",
   "submitting_review_dots": "Menghantar...",
   "sum_variations_above": "Hasil tambah {{count}} variasi di atas",
+  "switch_business_hint": "Anda boleh menukar paparan perniagaan anda di sini.",
   "tab_ad_management": "Pengurusan Iklan",
   "tab_all": "Semua",
   "tab_cancelled": "Batal",
@@ -956,8 +960,5 @@
   "write_review_title": "Beri Ulasan",
   "yield_prompt": "1 {{unit}} ini boleh buat / isi berapa?",
   "zoom_in_aria": "Zum Masuk",
-  "zoom_out_aria": "Zum Keluar",
-  "business_label": "Perniagaan:",
-  "select_business_placeholder": "Pilih perniagaan...",
-  "switch_business_hint": "Anda boleh menukar paparan perniagaan anda di sini."
+  "zoom_out_aria": "Zum Keluar"
 }

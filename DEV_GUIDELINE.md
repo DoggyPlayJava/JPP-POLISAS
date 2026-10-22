@@ -5320,6 +5320,25 @@ Melengkapkan gelombang terakhir (Batch 12) merentasi kesemua 50 fail berbaki yan
    - **Binaan Produksi (Production Build):** `npm run build` berjaya sepenuhnya dengan 0 ralat TypeScript dan sifar amaran rollup kritikal.
    - **Pematuhan Arkitektur:** Sifar migrasi skema baharu, tiada perubahan polisi RLS, dan integriti klien tunggal Supabase (`import { supabase } from '@/lib/supabase'`) kekal terpelihara.
 
+### 36.38 Penuntasan Mutlak Titik Buta AST Morfologi & Pembaikan Pariti Kamus Menyeluruh (Deep Morphological AST & Dynamic Key Fix)
+Melengkapkan pembongkaran dan penyelesaian mutlak titik buta (*blind spots*) pengimbas AST lama serta menangani kesemua ketidaklengkapan penterjemahan di peringkat kamus dan objek pemalar modul:
+
+1. **Penyahaktifan Titik Buta Pengimbas AST:**
+   - Menghapuskan sekatan kata tunggal (*single-word suppression*) yang sebelum ini mengabaikan label penting seperti `"Menunggu"`, `"Disahkan"`, `"Ditolak"`, `"Perancangan"`, `"Kategori"`, `"Barangan"`.
+   - Mengeluarkan perkataan UI seperti `'lulus'`, `'ditolak'`, `'selesai'`, `'aktif'`, `'draf'` daripada senarai `ignoredPhrases` supaya elemen butang `<button>Lulus</button>` dan `<button>Tolak</button>` dapat dilokalisasi.
+   - Mengintegrasikan analisis morfologi imbuhan Bahasa Melayu (`di-`, `me-`, `ber-`, `ter-`, `pe-`, `se-`) bagi mengesan kata kerja pasif/aktif secara jitu.
+
+2. **Pengisian Kunci Kamus Dinamik & Refaktor Objek Statik Peringkat Modul:**
+   - **Kunci Dinamik Kad Exco Portal (`portal.json`):** Membekalkan padanan terjemahan lengkap bagi modul `sukan`, `multimedia`, `kls`, `kolab`, dan `kerohanian` (merangkumi `title`, `desc`, dan `tagline`) dalam `en/portal.json` dan `ms/portal.json`.
+   - **Refaktor Objek Pemalar Statik:** Menukar objek pemalar peringkat modul yang statik (seperti `ACTIVITY_STATUS` & `PRIORITY_CONFIG` di `src/pages/AktivitiFull.tsx`, `STATUS_CONFIG` di `src/pages/polymart/vendor/VendorOrdersPipeline.tsx`, `FOODBANK_STATUS_CONFIG` di `src/lib/foodbankDefaults.ts`, dan `SETTINGS_TAB_CONFIG` di `src/pages/SettingsPage.tsx`) kepada fungsi pencarian dinamik berasaskan `t()`, membolehkan penukaran bahasa serta-merta tanpa perlu muat semula halaman.
+   - **Lokalisasi Modul Panduan & Konfigurasi:** Melokalisasikan 114 langkah `tourSteps.ts`, pemalar takwim `takwim-constants.ts`, serta metadata `excoModules.ts`.
+   - **Peningkatan Had Saiz Precache PWA:** Menyelaraskan `injectManifest.maximumFileSizeToCacheInBytes` kepada 4 MiB di `vite.config.ts` untuk memastikan berkas produksi yang lengkap dengan kamus terjemahan dwibahasa dapat diprecache dengan lancar oleh Service Worker.
+
+3. **Integriti Sistem:**
+   - Sifar perubahan pada skema pangkalan data atau fail migrasi Supabase.
+   - 20/20 ujian pariti kamus lulus 100% (`masterLocales.test.ts`).
+   - Binaan produksi Vite lulus sepenuhnya (`✓ built in 23.29s`).
+
 ---
 
 ## 37. Piawaian Dwi-Tema Modul Exco & Ergonomik Antaramuka Navigasi JPP

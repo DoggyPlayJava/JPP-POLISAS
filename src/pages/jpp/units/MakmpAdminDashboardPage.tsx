@@ -1169,7 +1169,7 @@ export default function MakmpAdminDashboardPage() {
         <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 shadow-sm space-y-1">
           <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase">{t('admin_stats_qualified', 'Diluluskan')}</div>
           <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-300">{approvedCount}</div>
-          <div className="text-[10px] text-emerald-600/80 dark:text-emerald-500/80">{rejectedCount} ditolak</div>
+          <div className="text-[10px] text-emerald-600/80 dark:text-emerald-500/80">{t('makmp:rejected_count', '{{count}} ditolak', { count: rejectedCount })}</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 shadow-sm space-y-1">
@@ -1330,14 +1330,14 @@ export default function MakmpAdminDashboardPage() {
               <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
                 <thead className="bg-slate-50 dark:bg-slate-950 text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                   <tr>
-                    <th className="py-3 px-4">Kod Rujukan</th>
+                    <th className="py-3 px-4">{t('makmp:col_ref_code', 'Kod Rujukan')}</th>
                     <th className="py-3 px-4">{t('jpp:makmp_th_student_name', 'Nama Pelajar')}</th>
                     <th className="py-3 px-4">{t('jpp:makmp_th_matric_no', 'No. Matrik')}</th>
-                    <th className="py-3 px-4">Jabatan</th>
+                    <th className="py-3 px-4">{t('makmp:col_department', 'Jabatan')}</th>
                     <th className="py-3 px-4">{t('jpp:makmp_th_award_category', 'Kategori Anugerah')}</th>
                     <th className="py-3 px-4">{t('jpp:makmp_th_certificates', 'Sijil')}</th>
                     <th className="py-3 px-4">{t('makmp:admin_col_status', 'Status')}</th>
-                    <th className="py-3 px-4">Merit</th>
+                    <th className="py-3 px-4">{t('makmp:merit_label_short', 'Merit')}</th>
                     <th className="py-3 px-4 text-right">{t('jpp:makmp_th_actions', 'Tindakan')}</th>
                   </tr>
                 </thead>
@@ -1430,7 +1430,7 @@ export default function MakmpAdminDashboardPage() {
                               className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition inline-flex items-center gap-1 text-[11px] shadow-xs"
                             >
                               <Eye className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
-                              <span>Perincian</span>
+                              <span>{t('makmp:admin_btn_details', 'Perincian')}</span>
                             </button>
                           </div>
                         </td>
@@ -1561,7 +1561,7 @@ export default function MakmpAdminDashboardPage() {
                               : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20'
                           }`}
                         >
-                          {aw.is_active ? 'Aktif' : 'Nyahaktif'}
+                          {aw.is_active ? t('common:active', 'Aktif') : t('common:inactive', 'Nyahaktif')}
                         </button>
                       </div>
                     </div>
@@ -1621,8 +1621,8 @@ export default function MakmpAdminDashboardPage() {
 
                   <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3 space-y-2">
                     <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
-                      <span>Maks. {aw.max_certificates} Dokumen</span>
-                      <span className="font-bold text-amber-600 dark:text-amber-400">Had: {aw.max_merit} Merit</span>
+                      <span>{t('makmp:max_docs_prefix', 'Maks.')} {aw.max_certificates} {t('makmp:documents_suffix', 'Dokumen')}</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">{t('makmp:limit_prefix', 'Had:')} {aw.max_merit} {t('makmp:merit_unit', 'Merit')}</span>
                     </div>
 
                     {/* Award Card Action Buttons */}
@@ -1696,7 +1696,7 @@ export default function MakmpAdminDashboardPage() {
                               : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
                           }`}
                         >
-                          {cat.is_active ? 'Aktif' : 'Nyahaktif'}
+                          {cat.is_active ? t('common:active', 'Aktif') : t('common:inactive', 'Nyahaktif')}
                         </button>
                       </div>
                     </div>
@@ -1781,7 +1781,7 @@ export default function MakmpAdminDashboardPage() {
                     </div>
 
                     <div>
-                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Sasaran Pemohon *</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_target_applicant_label', 'Sasaran Pemohon *')}</label>
                       <select
                         value={awardTargetType}
                         onChange={(e) => setAwardTargetType(e.target.value as 'INDIVIDUAL' | 'ENTITY')}
@@ -1892,7 +1892,7 @@ export default function MakmpAdminDashboardPage() {
 
                   <div className="grid grid-cols-2 gap-3 pt-1">
                     <div>
-                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Urutan Susunan (Sort Order)</label>
+                      <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_sort_order_label', 'Urutan Susunan (Sort Order)')}</label>
                       <input
                         type="number"
                         min={1}
@@ -2027,7 +2027,7 @@ export default function MakmpAdminDashboardPage() {
                         onChange={(e) => setCatIsActive(e.target.checked)}
                         className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:ring-amber-500"
                       />
-                      <span className="text-slate-800 dark:text-white font-semibold text-xs">Aktif</span>
+                      <span className="text-slate-800 dark:text-white font-semibold text-xs">{t('common:active', 'Aktif')}</span>
                     </label>
                   </div>
 
@@ -2107,7 +2107,7 @@ export default function MakmpAdminDashboardPage() {
                             : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20'
                         }`}
                       >
-                        {pin.is_active ? 'Aktif' : 'Dinyahaktif'}
+                        {pin.is_active ? t('common:active', 'Aktif') : t('common:inactive', 'Dinyahaktif')}
                       </button>
                     </div>
 
@@ -2170,7 +2170,7 @@ export default function MakmpAdminDashboardPage() {
                         {copiedPin === pin.pin_code ? (
                           <>
                             <Check className="w-3.5 h-3.5 text-emerald-500 dark:text-emerald-400" />
-                            <span>Disalin!</span>
+                            <span>{t('common:copied', 'Disalin!')}</span>
                           </>
                         ) : (
                           <>
@@ -2268,7 +2268,7 @@ export default function MakmpAdminDashboardPage() {
                             onClick={() => setSelectedJuryCategories([])}
                             className="text-[10px] text-slate-500 hover:text-rose-500 underline transition"
                           >
-                            Kosongkan
+                            {t('common:clear', 'Kosongkan')}
                           </button>
                         )}
                       </div>
@@ -2588,7 +2588,7 @@ export default function MakmpAdminDashboardPage() {
                             </span>
                             {awApp.status === 'DISAHKAN' && (
                               <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400">
-                                +{awApp.total_merit_granted} Merit
+                                +{awApp.total_merit_granted} {t('makmp:merit_label_short', 'Merit')}
                               </span>
                             )}
                             {(awApp.status === 'DISAHKAN' || awApp.status === 'DITOLAK') && (

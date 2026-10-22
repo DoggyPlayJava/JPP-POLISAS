@@ -936,7 +936,7 @@ export function PosProductPage() {
                       <button onClick={() => handleToggleAvailable(p)}
                         className="flex-1 h-8 rounded-xl text-[10px] font-black uppercase border border-border flex items-center justify-center gap-1.5 hover:bg-muted/50 transition-colors"
                         style={{ color: p.is_available ? color : 'hsl(var(--muted-foreground))' }}>
-                        {p.is_available ? <><Eye className="w-3 h-3" /> Aktif</> : <><EyeOff className="w-3 h-3" /> Nyahaktif</>}
+                        {p.is_available ? <><Eye className="w-3 h-3" /> {t('commerce:status_active', 'Aktif')}</> : <><EyeOff className="w-3 h-3" /> {t('commerce:status_inactive', 'Nyahaktif')}</>}
                       </button>
                       <button onClick={() => openEdit(p)}
                         className="w-8 h-8 rounded-xl bg-muted/50 hover:bg-muted flex items-center justify-center transition-colors">
@@ -1025,7 +1025,7 @@ export function PosProductPage() {
                               <>
                                 <img src={form.image_url} alt="Main" className="w-full h-full object-cover" />
                                 <div className="absolute top-1 left-1 bg-amber-500 text-[7px] font-black text-white px-1 py-0.5 rounded uppercase">
-                                  Utama
+                                  {t('commerce:main_image_badge', 'Utama')}
                                 </div>
                                 <label className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
                                   <Camera className="w-4 h-4 text-white" />
@@ -1035,7 +1035,7 @@ export function PosProductPage() {
                             ) : (
                               <label className="w-full h-full flex flex-col items-center justify-center gap-1 cursor-pointer">
                                 <Plus className="w-4 h-4 text-muted-foreground/40" />
-                                <span className="text-[8px] font-bold text-muted-foreground/60">Utama</span>
+                                <span className="text-[8px] font-bold text-muted-foreground/60">{t('commerce:main_image_badge', 'Utama')}</span>
                                 <input type="file" accept="image/*" className="hidden" onChange={handleUpload} disabled={uploading} />
                               </label>
                             )}
@@ -1089,7 +1089,7 @@ export function PosProductPage() {
                           onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
                           className="w-full h-10 px-4 rounded-xl text-sm font-medium outline-none bg-muted/30 border border-border/50 text-foreground focus:border-border transition-all">
                           {CATEGORIES.map(cat => (
-                            <option key={cat} value={cat} className="bg-card text-foreground">{cat}</option>
+                            <option key={cat} value={cat} className="bg-card text-foreground">{t(`keusahawanan:pos_cat_${cat.toLowerCase()}`, cat)}</option>
                           ))}
                         </select>
                       </div>
@@ -1341,7 +1341,7 @@ export function PosProductPage() {
                               <div className="flex items-center gap-2">
                                 <p className="text-xs font-black text-foreground">{t('commerce:publish_to_polymart', 'Siarkan ke PolyMart')}</p>
                                 <span className={`text-[9px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-wider ${form.publish_to_polymart ? 'bg-amber-500/20 text-amber-500 border border-amber-500/30' : 'bg-muted text-muted-foreground/50 border border-border'}`}>
-                                  {form.publish_to_polymart ? 'Aktif' : 'Nyahaktif'}
+                                  {form.publish_to_polymart ? t('common:active', 'Aktif') : t('common:inactive', 'Nyahaktif')}
                                 </span>
                               </div>
                               <p className="text-[9px] text-muted-foreground/60 font-medium mt-0.5">{t('keusahawanan:pos_polymart_marketplace_desc', 'Paparan & pembelian terus pelajar di Marketplace')}</p>
@@ -1374,7 +1374,7 @@ export function PosProductPage() {
                                   className="w-full h-9 px-3 rounded-xl text-xs outline-none bg-background border border-border text-foreground placeholder:text-muted-foreground/40 focus:border-amber-500/50 transition-all" />
                               </div>
                               <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">Waktu Operasi / Cara Ambil</p>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/50 mb-1">{t('commerce:operating_hours_pickup', 'Waktu Operasi / Cara Ambil')}</p>
                                 <input value={form.polymart_pickup_info}
                                   onChange={e => setForm(f => ({ ...f, polymart_pickup_info: e.target.value }))}
                                   placeholder="cth: Isnin-Jumaat 8am-4pm..."
@@ -1438,7 +1438,7 @@ export function PosProductPage() {
                                       <span className="text-xs font-bold text-foreground truncate">{v.name}</span>
                                     </div>
                                     <span className={`text-xs font-black px-2 py-0.5 rounded-md ${isLow ? 'bg-amber-500/10 text-amber-500' : 'bg-muted text-muted-foreground'}`}>
-                                      {v.stock} unit
+                                      {v.stock} {t('keusahawanan:units_suffix', 'unit')}
                                     </span>
                                   </div>
                                 );
@@ -1453,7 +1453,7 @@ export function PosProductPage() {
                               </div>
                               <div className="text-right">
                                 <span className="text-lg font-black text-transparent bg-clip-text" style={{ backgroundImage: `linear-gradient(135deg, ${color}, #eab308)` }}>
-                                  {form.stock_quantity} unit
+                                  {form.stock_quantity} {t('keusahawanan:units_suffix', 'unit')}
                                 </span>
                               </div>
                             </div>
@@ -1466,7 +1466,7 @@ export function PosProductPage() {
                             </div>
                             <div className="text-right">
                               <span className="text-base font-black" style={{ color }}>
-                                {form.stock_quantity} unit
+                                {form.stock_quantity} {t('keusahawanan:units_suffix', 'unit')}
                               </span>
                             </div>
                           </div>

@@ -114,7 +114,36 @@ function StatCard({ label, value, icon: Icon, color, sub, delay = 0, onClick }: 
 }
 
 // ─── Ticket row ───────────────────────────────────────────────────────────────
+
+function getKebajikanStatusLabel(status: KebajikanTicketStatus, t: any): string {
+  const map: Partial<Record<KebajikanTicketStatus, string>> = {
+    NEW: t('kebajikan:status_new', 'Diterima'),
+    IN_PROGRESS: t('kebajikan:status_in_progress', 'Dalam Tindakan'),
+    WAITING_INFO: t('kebajikan:pdf_status_waiting_info', 'Menunggu Maklumat'),
+    PENDING_EXTERNAL: t('kebajikan:status_pending_external', 'Menunggu Pihak Lain'),
+    DELEGATED: t('kebajikan:status_delegated', 'Didelegasikan'),
+    ESCALATED: t('kebajikan:status_escalated', 'Diescalate'),
+    RESOLVED: t('kebajikan:status_resolved', 'Selesai'),
+    CLOSED: t('kebajikan:status_closed', 'Ditutup'),
+    CANCELLED: t('kebajikan:status_cancelled', 'Dibatal'),
+    REOPENED: t('kebajikan:status_reopened', 'Dibuka Semula'),
+  };
+  return map[status] || (KEBAJIKAN_STATUS_LABELS as any)[status] || status;
+}
+
+function getKebajikanCategoryLabel(category: KebajikanTicketCategory, t: any): string {
+  const map: Partial<Record<KebajikanTicketCategory, string>> = {
+    FASILITI_JABATAN: t('kebajikan:cat_fasiliti_jabatan', 'Fasiliti Jabatan'),
+    FASILITI_SUKAN: t('kebajikan:cat_fasiliti_sukan', 'Fasiliti Sukan'),
+    KAFETERIA: t('kebajikan:cat_kafeteria', 'Kafeteria'),
+    WIFI_KAMSIS: t('kebajikan:cat_wifi_kamsis', 'WiFi Kamsis'),
+    LAIN_LAIN: t('kebajikan:cat_lain_lain', 'Aduan Lain-Lain'),
+  };
+  return map[category] || (KEBAJIKAN_CATEGORY_LABELS as any)[category] || category;
+}
+
 function TicketRow({ ticket, onClick }: { ticket: KebajikanTicket; onClick: () => void; key?: React.Key }) {
+  const { t } = useTranslation(['kebajikan', 'jpp', 'common']);
   const sm = STATUS_META[ticket.status] || { color: '#94a3b8', bg: 'rgba(148,163,184,0.1)' };
   const pm = PRIORITY_META[ticket.priority] ?? PRIORITY_META.NORMAL;
   return (
@@ -136,7 +165,7 @@ function TicketRow({ ticket, onClick }: { ticket: KebajikanTicket; onClick: () =
           </span>
           <span className="text-[10px] text-slate-300 dark:text-white/20">·</span>
           <span className="text-[10px] text-slate-500 dark:text-white/30">
-            {KEBAJIKAN_CATEGORY_LABELS[ticket.category]}
+            {getKebajikanCategoryLabel(ticket.category, t)}
           </span>
         </div>
         <p className="text-xs font-black text-slate-900 dark:text-white leading-tight line-clamp-1">{ticket.title}</p>
@@ -151,7 +180,7 @@ function TicketRow({ ticket, onClick }: { ticket: KebajikanTicket; onClick: () =
         className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full shrink-0"
         style={{ background: sm.bg, color: sm.color }}
       >
-        {KEBAJIKAN_STATUS_LABELS[ticket.status]}
+        {getKebajikanStatusLabel(ticket.status, t)}
       </span>
 
       <ChevronRight className="w-3.5 h-3.5 text-slate-400 dark:text-white/15 group-hover:text-slate-600 dark:group-hover:text-white/50 group-hover:translate-x-0.5 transition-all shrink-0" />
@@ -161,7 +190,7 @@ function TicketRow({ ticket, onClick }: { ticket: KebajikanTicket; onClick: () =
 
 // ─── MAIN ────────────────────────────────────────────────────────────────────
 export function KebajikanUnitDashboard() {
-  const { t } = useTranslation(['jpp', 'common']);
+  const { t } = useTranslation(['kebajikan', 'jpp', 'common']);
   const navigate = useNavigate();
   const { profile, isSuperAdmin } = useAuth();
 
@@ -531,7 +560,7 @@ export function KebajikanUnitDashboard() {
                     ? { background: sm.bg, color: sm.color, border: `1px solid ${sm.color}33` }
                     : {}}
                 >
-                  {KEBAJIKAN_STATUS_LABELS[s]} ({cnt})
+                  {getKebajikanStatusLabel(s, t)} ({cnt})
                 </button>
               );
             })}
@@ -779,7 +808,7 @@ export function KebajikanUnitDashboard() {
                       <p className="text-xs font-black text-slate-900 dark:text-white line-clamp-1">{r.file_name}</p>
                       <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">{fmtDate(r.created_at)}</p>
                     </div>
-                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-amber-500/20 text-amber-600 dark:text-amber-400 bg-amber-500/10">Menunggu</span>
+                    <span className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-amber-500/20 text-amber-600 dark:text-amber-400 bg-amber-500/10">{t('kebajikan:status_pending', 'Menunggu')}</span>
                   </div>
                 ))}
               </div>
@@ -789,9 +818,9 @@ export function KebajikanUnitDashboard() {
           {/* Stats summary */}
           <div className="grid grid-cols-3 gap-3">
             {[
-              { label: 'Menunggu', val: reports.filter(r => r.status === 'Menunggu' && !r.is_archived).length, color: '#f59e0b' },
-              { label: 'Diluluskan', val: reports.filter(r => r.status === 'Diluluskan').length, color: '#34d399' },
-              { label: 'Ditolak', val: reports.filter(r => r.status === 'Ditolak' && !r.is_archived).length, color: '#f87171' },
+              { label: t('kebajikan:status_pending', 'Menunggu'), val: reports.filter(r => r.status === 'Menunggu' && !r.is_archived).length, color: '#f59e0b' },
+              { label: t('kebajikan:status_approved', 'Diluluskan'), val: reports.filter(r => r.status === 'Diluluskan').length, color: '#34d399' },
+              { label: t('kebajikan:status_rejected', 'Ditolak'), val: reports.filter(r => r.status === 'Ditolak' && !r.is_archived).length, color: '#f87171' },
             ].map(s => (
               <div key={s.label} className="p-4 rounded-2xl border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] text-center shadow-sm">
                 <p className="text-2xl font-black" style={{ color: s.color }}>{s.val}</p>

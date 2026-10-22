@@ -163,6 +163,7 @@
   "exco_kk_qr_note": "QR kod disediakan oleh Exco KK (Kediaman & Kerohanian) untuk aktiviti asrama seperti solat berjemaah, gotong-royong, dsbnya. Hubungi Exco KK untuk maklumat lanjut.",
   "expected_merit": "Merit dijangka:",
   "expiry_label": "Tamat Tempoh",
+  "failed_load_takwim_data": "Gagal memuatkan data takwim",
   "files_count": "{{count}} fail",
   "fill_manually": "Isi Manual",
   "filter_all": "Semua",
@@ -202,6 +203,7 @@
   "leaderboard_title": "Papan Pendahulu",
   "lecture_hall": "Dewan Kuliah / Makmal",
   "lecturer_name": "Pensyarah / Pengajar",
+  "level": "Peringkat",
   "level_district": "Daerah",
   "level_internal": "Dalaman",
   "level_international": "Antarabangsa",
@@ -372,7 +374,10 @@
   "source_qr_scan": "Aktiviti QR",
   "status_active": "Aktif",
   "status_approved": "Disahkan",
+  "status_disahkan": "Disahkan",
+  "status_ditolak": "Ditolak",
   "status_expired": "Tamat",
+  "status_menunggu": "Menunggu",
   "status_pending": "Menunggu",
   "status_rejected": "Ditolak",
   "step_offense_details": "2. Butiran Kesalahan",
@@ -485,6 +490,5 @@
   "warning_permanent_operation": "Awas: Operasi Kekal",
   "your_rank": "Kedudukan Anda",
   "zip_error_no_files": "Gagal muat turun mana-mana fail. Sila cuba lagi.",
-  "zip_failed_header": "FAIL YANG TIDAK BERJAYA DIMUAT TURUN:",
-  "failed_load_takwim_data": "Gagal memuatkan data takwim"
+  "zip_failed_header": "FAIL YANG TIDAK BERJAYA DIMUAT TURUN:"
 }

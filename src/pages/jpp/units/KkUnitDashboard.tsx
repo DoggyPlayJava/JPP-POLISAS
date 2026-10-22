@@ -372,7 +372,7 @@ function TakwimKediamanTab() {
   const handleDownloadPdf = async () => {
     if (!pdfReady || generatingPdf) return;
     setGeneratingPdf(true);
-    const toastId = toast.loading('Menjana PDF rasmi...');
+    const toastId = toast.loading(t('jpp:kk_generating_official_pdf', 'Menjana PDF rasmi...'));
     try {
       const [{ pdf }, { default: TakwimPusatPDFTemplate }] = await Promise.all([
         import('@react-pdf/renderer'),
@@ -479,9 +479,9 @@ function TakwimKediamanTab() {
         ? await supabase.from('takwim_pusat').update({ ...payload, updated_at: new Date().toISOString() }).eq('id', editTarget.id)
         : await supabase.from('takwim_pusat').insert([payload]);
       if (res.error) throw res.error;
-      toast.success(editTarget ? 'Dikemaskini!' : 'Ditambah!');
+      toast.success(editTarget ? t('jpp:kk_updated_success', 'Dikemaskini!') : t('jpp:kk_added_success', 'Ditambah!'));
       setDialogOpen(false); fetchData();
-    } catch (e: any) { toast.error(e.message || 'Gagal.'); }
+    } catch (e: any) { toast.error(e.message || t('jpp:kk_fail', 'Gagal.')); }
     finally { setSaving(false); }
   };
   const [deleteTakwimTarget, setDeleteTakwimTarget] = useState<TakwimItem | null>(null);
@@ -490,7 +490,7 @@ function TakwimKediamanTab() {
     const item = deleteTakwimTarget;
     const { error } = await supabase.from('takwim_pusat').delete().eq('id', item.id);
     if (error) { toast.error(t('jpp:kk_delete_fail', 'Gagal memadamkan.')); return; }
-    toast.success('Dipadam.');
+    toast.success(t('jpp:kk_deleted_success', 'Dipadam.'));
     setDeleteTakwimTarget(null);
     fetchData();
   };
@@ -558,7 +558,7 @@ function TakwimKediamanTab() {
             {generatingPdf ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                <span className="animate-pulse">Menjana PDF...</span>
+                <span className="animate-pulse">{t('jpp:kk_generating_pdf', 'Menjana PDF...')}</span>
               </>
             ) : !pdfReady ? (
               <>
@@ -585,11 +585,11 @@ function TakwimKediamanTab() {
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50 dark:bg-white/[0.04]">
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Jenis</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Tajuk</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Kelab</th>
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_type', 'Jenis')}</th>
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_title', 'Tajuk')}</th>
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_club', 'Kelab')}</th>
                   <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_date', 'Tarikh')}</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">Minggu</th>
+                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_week', 'Minggu')}</th>
                   <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 text-right">{t('jpp:kk_th_action', 'Tindakan')}</th>
                 </tr>
               </thead>
@@ -646,7 +646,7 @@ function TakwimKediamanTab() {
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Tajuk *</Label>
+                <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_title_required', 'Tajuk *')}</Label>
                 <Input value={form.tajuk} onChange={e => setForm({ ...form, tajuk: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder={t('jpp:kk_activity_name_placeholder', 'Nama aktiviti...')} />
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -661,11 +661,11 @@ function TakwimKediamanTab() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Bil. Minggu</Label>
+                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_week_count_label', 'Bil. Minggu')}</Label>
                   <Input type="number" value={form.bil_minggu} onChange={e => setForm({ ...form, bil_minggu: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Catatan</Label>
+                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_notes_label', 'Catatan')}</Label>
                   <Input value={form.catatan} onChange={e => setForm({ ...form, catatan: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
               </div>
@@ -675,7 +675,7 @@ function TakwimKediamanTab() {
                 <div className="flex items-center gap-3">
                   <input type="color" value={form.warna_custom || KK_COLOR} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="w-12 h-12 rounded-xl border-2 border-slate-200 dark:border-white/10 cursor-pointer bg-transparent" />
                   <Input value={form.warna_custom} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold flex-1" placeholder={KK_COLOR} />
-                  {form.warna_custom && <button onClick={() => setForm({ ...form, warna_custom: '' })} className="text-[10px] font-bold text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60">Reset</button>}
+                  {form.warna_custom && <button onClick={() => setForm({ ...form, warna_custom: '' })} className="text-[10px] font-bold text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60">{t('jpp:kk_reset_btn', 'Reset')}</button>}
                 </div>
               </div>
             </div>

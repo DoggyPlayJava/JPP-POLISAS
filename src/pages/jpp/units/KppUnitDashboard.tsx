@@ -94,6 +94,16 @@ const ACTIVITY_STATUS_COLOR: Record<string, string> = {
   selesai: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20',
   ditangguh: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
 };
+
+const formatActivityStatus = (status: string, translate: (k: string, fb: string) => string = t) => {
+  switch (status?.toLowerCase()) {
+    case 'perancangan': return translate('kpp:status_planning', 'Perancangan');
+    case 'aktif': return translate('kpp:status_active', 'Aktif');
+    case 'selesai': return translate('kpp:status_completed', 'Selesai');
+    case 'ditangguh': return translate('kpp:status_postponed', 'Ditangguh');
+    default: return status;
+  }
+};
 const REPORT_STATUS_COLOR: Record<string, string> = {
   Menunggu: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
   [t('kpp:status_in_review', 'Dalam Semakan')]: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
@@ -204,7 +214,7 @@ function AktivitiPopout({ open, onClose }: { open: boolean; onClose: () => void 
                     <p className="font-semibold text-sm text-foreground truncate">{a.title}</p>
                     <p className="text-[11px] text-muted-foreground">{club?.shortName || '—'} · {a.start_date ? new Date(a.start_date).toLocaleDateString('ms-MY') : t('kpp:no_date', 'Tiada tarikh')}</p>
                   </div>
-                  <span className={cn('text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl flex-shrink-0', ACTIVITY_STATUS_COLOR[a.status] || 'bg-slate-100 text-slate-600')}>{a.status}</span>
+                  <span className={cn('text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl flex-shrink-0', ACTIVITY_STATUS_COLOR[a.status] || 'bg-slate-100 text-slate-600')}>{formatActivityStatus(a.status, t)}</span>
                 </div>
               );
             })
@@ -368,7 +378,7 @@ export function KppUnitDashboard() {
   // ── Actions ────────────────────────────────────────────────────────────────
   const toggleSetting = async (key: string, currentValue: boolean) => {
     const newValue = !currentValue;
-    const toastId = toast.loading('Mengemaskini...');
+    const toastId = toast.loading(t('common:updating', 'Mengemaskini...'));
     try {
       const { error } = await supabase.from('system_settings').update({ value: newValue }).eq('key', key);
       if (error) throw error;
@@ -383,7 +393,7 @@ export function KppUnitDashboard() {
     const current = Number(settings.max_clubs_per_student ?? 2);
     const newLimit = Math.max(1, Math.min(10, current + delta));
     if (newLimit === current) return;
-    const toastId = toast.loading('Mengemaskini had...');
+    const toastId = toast.loading(t('kpp:updating_limit', 'Mengemaskini had...'));
     try {
       const { data, error } = await supabase.from('system_settings').update({ value: newLimit }).eq('key', 'max_clubs_per_student').select();
       if (error) throw error;
@@ -664,7 +674,7 @@ export function KppUnitDashboard() {
                             <p className="font-semibold text-sm text-slate-900 dark:text-foreground truncate">{a.title}</p>
                             <p className="text-[11px] text-slate-500 dark:text-muted-foreground">{club?.shortName || '—'} · {a.start_date ? new Date(a.start_date).toLocaleDateString('ms-MY') : t('kpp:no_date', 'Tiada tarikh')}</p>
                           </div>
-                          <span className={cn('text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl flex-shrink-0', ACTIVITY_STATUS_COLOR[a.status] || 'bg-slate-100 text-slate-600')}>{a.status}</span>
+                          <span className={cn('text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-xl flex-shrink-0', ACTIVITY_STATUS_COLOR[a.status] || 'bg-slate-100 text-slate-600')}>{formatActivityStatus(a.status, t)}</span>
                         </div>
                       );
                     })}
@@ -893,7 +903,7 @@ export function KppUnitDashboard() {
 
                             {/* Nama Singkatan */}
                             <div className="space-y-1.5">
-                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">Nama Singkatan / Kod</label>
+                                <label className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-muted-foreground">{t('kpp:club_short_name_code', 'Nama Singkatan / Kod')}</label>
                                 <input
                                     type="text"
                                     required
@@ -915,10 +925,10 @@ export function KppUnitDashboard() {
                                         <SelectValue placeholder={t('kpp:select_category_placeholder', 'Pilih Kategori')} />
                                     </SelectTrigger>
                                     <SelectContent className="rounded-xl">
-                                        <SelectItem value="Sukan" className="font-semibold">Sukan</SelectItem>
-                                        <SelectItem value="Akademik" className="font-semibold">Akademik</SelectItem>
-                                        <SelectItem value="Awam" className="font-semibold">Awam</SelectItem>
-                                        <SelectItem value="Kediaman" className="font-semibold">Kediaman</SelectItem>
+                                        <SelectItem value="Sukan" className="font-semibold">{t('kpp:cat_sports', 'Sukan')}</SelectItem>
+                                        <SelectItem value="Akademik" className="font-semibold">{t('kpp:cat_academic', 'Akademik')}</SelectItem>
+                                        <SelectItem value="Awam" className="font-semibold">{t('kpp:cat_public', 'Awam')}</SelectItem>
+                                        <SelectItem value="Kediaman" className="font-semibold">{t('kpp:cat_residential', 'Kediaman')}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

@@ -3,9 +3,11 @@
 // ============================================================
 // Setiap exco ada ID, nama, warna tandatangan, route dan status.
 // Warna DEFAULT ada di sini, tetapi ia boleh ditindih secara
-// dinamik dari jadual `portal_settings` dalam Supabase supaya
+// dinamik dari jadual portal_settings dalam Supabase supaya
 // pengurusan JPP setiap tahun boleh tukar warna sendiri.
 // ============================================================
+
+import i18n from '@/lib/i18n';
 
 export type ExcoModule = {
   id: string;
@@ -19,74 +21,91 @@ export type ExcoModule = {
   isActive: boolean;      // false = "Akan Datang" (tidak boleh diklik)
 };
 
-// Senarai semua modul exco JPP.
-// Untuk tambah exco baru: masukkan entry baru di sini dengan isActive: false,
-// kemudian tukar kepada true bila modul siap dibina.
-export const EXCO_MODULES: ExcoModule[] = [
-  {
-    id: 'ekpp',
-    name: 'Sistem Kelab',
-    fullName: 'Exco Kelab, Persatuan & Perpaduan',
-    tagline: 'Kelab · Persatuan · Perpaduan',
-    description: 'Pengurusan kelab, aktiviti, laporan bulanan & kertas kerja secara digital.',
-    defaultColor: '#F87171',  // Merah terang untuk kontras dalam dark-mode (Red-400)
-    icon: 'Landmark',
-    basePath: '/dashboard',   // Route Sistem Kelab KEKAL tanpa prefix (konvensyen sedia ada)
-    isActive: true,
+export function getLocalizedExcoModules(t: (key: string, fallback: string) => string = (k, f) => i18n.t(k, f)): ExcoModule[] {
+  return [
+    {
+      id: 'ekpp',
+      name: t('portal:module_ekpp_title', 'Sistem Kelab'),
+      fullName: t('portal:module_ekpp_fullname', 'Exco Kelab, Persatuan & Perpaduan'),
+      tagline: t('portal:module_ekpp_tagline', 'Kelab · Persatuan · Perpaduan'),
+      description: t('portal:module_ekpp_desc', 'Pengurusan kelab, aktiviti, laporan bulanan & kertas kerja secara digital.'),
+      defaultColor: '#F87171',  // Merah terang untuk kontras dalam dark-mode (Red-400)
+      icon: 'Landmark',
+      basePath: '/dashboard',   // Route Sistem Kelab KEKAL tanpa prefix (konvensyen sedia ada)
+      isActive: true,
+    },
+    {
+      id: 'kebajikan',
+      name: t('portal:module_kebajikan_title', 'e-Kebajikan'),
+      fullName: t('portal:module_kebajikan_fullname', 'Exco Kebajikan Pelajar'),
+      tagline: t('portal:module_kebajikan_tagline', 'Khidmat · Bantuan · Kesejahteraan'),
+      description: t('portal:module_kebajikan_desc', 'Pengurusan bantuan pelajar, program kebajikan & khidmat masyarakat.'),
+      defaultColor: '#2DD4BF',  // Teal cerah (Teal-400)
+      icon: 'HeartHandshake',
+      basePath: '/kebajikan/buat-aduan', // Redirect pelajar ke form aduan; Exco pergi ke /kebajikan
+      isActive: true,                    // Sistem sekarang aktif!
+    },
+    {
+      id: 'keusahawanan',
+      name: t('portal:module_keusahawanan_title', 'e-Keusahawanan'),
+      fullName: t('portal:module_keusahawanan_fullname', 'Exco Keusahawanan & Inovasi'),
+      tagline: t('portal:module_keusahawanan_tagline', 'Inovasi · Usaha · Kejayaan'),
+      description: t('portal:module_keusahawanan_desc', 'Program keusahawanan, geran, pameran & pembangunan bakat pelajar.'),
+      defaultColor: '#4ADE80',
+      icon: 'Lightbulb',
+      basePath: '/keusahawanan/dashboard',
+      isActive: false,
+    },
+    {
+      id: 'akademik',
+      name: t('portal:module_akademik_title', 'e-Akademik'),
+      fullName: t('portal:module_akademik_fullname', 'Exco Akademik & Pembangunan Intelek'),
+      tagline: t('portal:module_akademik_tagline', 'Ilmu · Pencapaian · Kecemerlangan'),
+      description: t('portal:module_akademik_desc', 'Portal akademik pelajar — rekod pencapaian, sijil, CGPA & merit secara digital.'),
+      defaultColor: '#818CF8',
+      icon: 'GraduationCap',
+      basePath: '/akademik',
+      isActive: true,
+    },
+    {
+      id: 'ems',
+      name: t('portal:module_ems_title', 'EMS'),
+      fullName: t('portal:module_ems_fullname', 'Event Management System'),
+      tagline: t('portal:module_ems_tagline', 'Acara · Penjurian · Sijil'),
+      description: t('portal:module_ems_desc', 'Pengurusan acara politeknik, pendaftaran QR, juri luar & live leaderboard.'),
+      defaultColor: '#EC4899',
+      icon: 'CalendarDays',
+      basePath: '/ems/dashboard',
+      isActive: true,
+    },
+  ];
+}
+
+// Senarai semua modul exco JPP (dinamik dengan Proxy untuk sokongan i18n dwibahasa)
+export const EXCO_MODULES: ExcoModule[] = new Proxy([] as ExcoModule[], {
+  get(_target, prop) {
+    const live = getLocalizedExcoModules();
+    const val = Reflect.get(live, prop);
+    return typeof val === 'function' ? val.bind(live) : val;
   },
-  {
-    id: 'kebajikan',
-    name: 'e-Kebajikan',
-    fullName: 'Exco Kebajikan Pelajar',
-    tagline: 'Khidmat · Bantuan · Kesejahteraan',
-    description: 'Pengurusan bantuan pelajar, program kebajikan & khidmat masyarakat.',
-    defaultColor: '#2DD4BF',  // Teal cerah (Teal-400)
-    icon: 'HeartHandshake',
-    basePath: '/kebajikan/buat-aduan', // Redirect pelajar ke form aduan; Exco pergi ke /kebajikan
-    isActive: true,                    // Sistem sekarang aktif!
+  has(_target, prop) {
+    const live = getLocalizedExcoModules();
+    return Reflect.has(live, prop);
   },
-  {
-    id: 'keusahawanan',
-    name: 'e-Keusahawanan',
-    fullName: 'Exco Keusahawanan & Inovasi',
-    tagline: 'Inovasi · Usaha · Kejayaan',
-    description: 'Program keusahawanan, geran, pameran & pembangunan bakat pelajar.',
-    defaultColor: '#4ADE80',
-    icon: 'Lightbulb',
-    basePath: '/keusahawanan/dashboard',
-    isActive: false,
+  ownKeys() {
+    const live = getLocalizedExcoModules();
+    return Reflect.ownKeys(live);
   },
-  {
-    id: 'akademik',
-    name: 'e-Akademik',
-    fullName: 'Exco Akademik & Pembangunan Intelek',
-    tagline: 'Ilmu · Pencapaian · Kecemerlangan',
-    description: 'Portal akademik pelajar — rekod pencapaian, sijil, CGPA & merit secara digital.',
-    defaultColor: '#818CF8',
-    icon: 'GraduationCap',
-    basePath: '/akademik',
-    isActive: true,
-  },
-  {
-    id: 'ems',
-    name: 'EMS',
-    fullName: 'Event Management System',
-    tagline: 'Acara · Penjurian · Sijil',
-    description: 'Pengurusan acara politeknik, pendaftaran QR, juri luar & live leaderboard.',
-    defaultColor: '#EC4899',
-    icon: 'CalendarDays',
-    basePath: '/ems/dashboard',
-    isActive: true,
-  },
-  // NOTA: SUPSAS dan PolyRider tidak dimasukkan dalam senarai ini — ia dikawal
-  // secara berasingan melalui komponen tersendiri (BottomNav atau event banner).
-];
+  getOwnPropertyDescriptor(_target, prop) {
+    const live = getLocalizedExcoModules();
+    return Reflect.getOwnPropertyDescriptor(live, prop);
+  }
+});
 
 // ============================================================
 // Context warna aktif — dikemaskini dari Supabase portal_settings
 // ============================================================
 
-// Jenis untuk rekod warna yang disimpan dalam DB
 export type ExcoColorSetting = {
   exco_module: string;  // ID exco (contoh: 'ekpp')
   color: string;        // Warna hex yang dipilih oleh JPP
@@ -107,7 +126,8 @@ export function getExcoColor(
   return mod?.defaultColor ?? '#7B1C1C';
 }
 
-// Ambil objek ExcoModule berdasarkan ID
-export function getExcoModule(moduleId: string): ExcoModule | undefined {
-  return EXCO_MODULES.find(m => m.id === moduleId);
+// Ambil objek ExcoModule berdasarkan ID (menyokong t function)
+export function getExcoModule(moduleId: string, t?: (key: string, fallback: string) => string): ExcoModule | undefined {
+  const modules = t ? getLocalizedExcoModules(t) : getLocalizedExcoModules();
+  return modules.find(m => m.id === moduleId);
 }

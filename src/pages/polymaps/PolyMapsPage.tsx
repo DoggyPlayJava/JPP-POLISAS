@@ -192,7 +192,25 @@ export const getPolyMartHubs = (t: any = (k: string, fb: string) => i18n.t(k, { 
   }
 ];
 
-export const POLYMART_HUBS: PolyMartHubItem[] = getPolyMartHubs((k: string, fb: string) => i18n.t(k, { defaultValue: fb }));
+export const POLYMART_HUBS: PolyMartHubItem[] = new Proxy([] as PolyMartHubItem[], {
+  get(_target, prop: string | symbol) {
+    const hubs = getPolyMartHubs();
+    return (hubs as any)[prop];
+  },
+  has(_target, prop) {
+    return prop in getPolyMartHubs();
+  },
+  ownKeys() {
+    return Reflect.ownKeys(getPolyMartHubs());
+  },
+  getOwnPropertyDescriptor(_target, prop) {
+    return {
+      configurable: true,
+      enumerable: true,
+      value: (getPolyMartHubs() as any)[prop],
+    };
+  },
+});
 
 function mapEventLocationToCoords(locationStr: string | null | undefined, buildings: Building[]): [number, number] {
   if (!locationStr) {

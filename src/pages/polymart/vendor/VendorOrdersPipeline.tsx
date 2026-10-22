@@ -118,33 +118,35 @@ export const PIPELINE_STAGES: Array<{
   },
 ];
 
-const STATUS_CONFIG: Record<OrderStatus, { label: string; colorClass: string; bgClass: string }> = {
+export const getStatusConfig = (t: (key: string, fallback: string) => string): Record<OrderStatus, { label: string; colorClass: string; bgClass: string }> => ({
   PENDING: {
-    label: 'Menunggu',
+    label: t('commerce:status_pending', 'Menunggu'),
     colorClass: 'text-amber-500 dark:text-amber-400',
     bgClass: 'bg-amber-500/10 border-amber-500/20',
   },
   CONFIRMED: {
-    label: 'Disahkan',
+    label: t('commerce:status_confirmed', 'Disahkan'),
     colorClass: 'text-indigo-500 dark:text-indigo-400',
     bgClass: 'bg-indigo-500/10 border-indigo-500/20',
   },
   READY: {
-    label: 'Siap Diambil',
+    label: t('commerce:status_ready', 'Siap Diambil'),
     colorClass: 'text-emerald-500 dark:text-emerald-400',
     bgClass: 'bg-emerald-500/10 border-emerald-500/20',
   },
   COMPLETED: {
-    label: 'Selesai',
+    label: t('commerce:status_completed', 'Selesai'),
     colorClass: 'text-zinc-500 dark:text-zinc-400',
     bgClass: 'bg-zinc-500/10 border-zinc-500/20',
   },
   CANCELLED: {
-    label: 'Dibatalkan',
+    label: t('commerce:status_cancelled', 'Dibatalkan'),
     colorClass: 'text-rose-500 dark:text-rose-400',
     bgClass: 'bg-rose-500/10 border-rose-500/20',
   },
-};
+});
+
+export const STATUS_CONFIG = getStatusConfig((k, fb) => (i18n.isInitialized ? i18n.t(k, { defaultValue: fb }) : fb));
 
 const getCategoryIcon = (category: string) => {
   const className = 'w-4 h-4 text-muted-foreground stroke-[1.5]';
@@ -199,33 +201,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
     },
   ], [t]);
 
-  const statusConfig: Record<OrderStatus, { label: string; colorClass: string; bgClass: string }> = useMemo(() => ({
-    PENDING: {
-      label: t('commerce:status_pending', 'Menunggu'),
-      colorClass: 'text-amber-500 dark:text-amber-400',
-      bgClass: 'bg-amber-500/10 border-amber-500/20',
-    },
-    CONFIRMED: {
-      label: t('commerce:status_confirmed', 'Disahkan'),
-      colorClass: 'text-indigo-500 dark:text-indigo-400',
-      bgClass: 'bg-indigo-500/10 border-indigo-500/20',
-    },
-    READY: {
-      label: t('commerce:status_ready', 'Siap Diambil'),
-      colorClass: 'text-emerald-500 dark:text-emerald-400',
-      bgClass: 'bg-emerald-500/10 border-emerald-500/20',
-    },
-    COMPLETED: {
-      label: t('commerce:status_completed', 'Selesai'),
-      colorClass: 'text-zinc-500 dark:text-zinc-400',
-      bgClass: 'bg-zinc-500/10 border-zinc-500/20',
-    },
-    CANCELLED: {
-      label: t('commerce:status_cancelled', 'Dibatalkan'),
-      colorClass: 'text-rose-500 dark:text-rose-400',
-      bgClass: 'bg-rose-500/10 border-rose-500/20',
-    },
-  }), [t]);
+  const statusConfig: Record<OrderStatus, { label: string; colorClass: string; bgClass: string }> = useMemo(() => getStatusConfig(t), [t]);
 
   // Active Stage Tab
   const [activeStage, setActiveStage] = useState<PipelineStage>('actions');

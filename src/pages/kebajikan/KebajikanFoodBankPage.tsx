@@ -567,7 +567,7 @@ export function KebajikanFoodBankPage() {
 
   const selectedLocationName = useMemo(() => {
     const loc = locations.find((l) => l.id === selectedLocationId);
-    return loc ? loc.name : 'Pusat Edaran Terpilih';
+    return loc ? loc.name : t('kebajikan:selected_distribution_center', 'Pusat Edaran Terpilih');
   }, [locations, selectedLocationId]);
 
   const activeTimeSlots = useMemo(() => {
@@ -1043,7 +1043,7 @@ export function KebajikanFoodBankPage() {
           <RefreshCw className="w-6 h-6" />
         </div>
         <p className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 animate-pulse">
-          Memuatkan Portal Food Bank...
+          {t('kebajikan:loading_foodbank_portal', 'Memuatkan Portal Food Bank...')}
         </p>
       </div>
     );
@@ -1460,8 +1460,8 @@ export function KebajikanFoodBankPage() {
                   disabled={isSessionClosed}
                   className="w-full h-10 px-3 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500"
                 >
-                  <option value="B40">B40 (Pendapatan &lt; RM4,850)</option>
-                  <option value="M40">M40 (Pendapatan RM4,850 - RM10,959)</option>
+                  <option value="B40">{t('kebajikan:income_b40', 'B40 (Pendapatan < RM4,850)')}</option>
+                  <option value="M40">{t('kebajikan:income_m40', 'M40 (Pendapatan RM4,850 - RM10,959)')}</option>
                   <option value="ASNAF">{t('kebajikan:foodbank_financial_asnaf', 'Asnaf / Bantuan Zakat')}</option>
                   <option value="KECEMASAN">{t('kebajikan:foodbank_emergency_option', 'Kecemasan / Ketiadaan Wang Saku')}</option>
                 </select>
@@ -2240,7 +2240,7 @@ export function KebajikanFoodBankPage() {
                           {/* Stepper Buttons (+ / -) */}
                           <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">
                             <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                              {qty > 0 ? `${qty} ${item.unit}` : '0 unit'}
+                              {qty > 0 ? `${qty} ${item.unit}` : t('kebajikan:zero_units', '0 unit')}
                             </span>
 
                             <div className="flex items-center gap-1.5">
@@ -2354,7 +2354,7 @@ export function KebajikanFoodBankPage() {
                 {t('kebajikan:foodbank_items_selected_quota_remaining', '{{count}} Item Dipilih • Baki Kuota: {{remaining}}', { count: totalSelectedCount, remaining: remainingQuota })}
               </p>
               <p className="text-[10px] text-slate-400 font-mono">
-                {usedQuota}/{totalQuota} unit
+                {usedQuota}/{totalQuota} {t('kebajikan:units_suffix', 'unit')}
               </p>
             </div>
           </div>
@@ -2408,7 +2408,7 @@ export function KebajikanFoodBankPage() {
               <div className="px-5 py-3 bg-amber-500/10 border-b border-amber-500/20 text-xs">
                 <div className="flex items-center justify-between font-bold text-[11px] mb-1">
                   <span className="text-amber-900 dark:text-amber-200">
-                    Penggunaan Kuota: {usedQuota} / {totalQuota} Unit
+                    {t('kebajikan:quota_usage_label', 'Penggunaan Kuota: {{used}} / {{total}} Unit', { used: usedQuota, total: totalQuota })}
                   </span>
                   <span
                     className={cn(

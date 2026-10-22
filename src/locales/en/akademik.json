@@ -163,6 +163,7 @@
   "exco_kk_qr_note": "QR codes are provided by Exco KK (Residential & Spiritual) for hostel activities such as congregational prayers, gotong-royong, etc. Contact Exco KK for more information.",
   "expected_merit": "Estimated merit:",
   "expiry_label": "Expiry Date",
+  "failed_load_takwim_data": "Failed to load academic calendar data",
   "files_count": "{{count}} files",
   "fill_manually": "Fill Manually",
   "filter_all": "All",
@@ -202,6 +203,7 @@
   "leaderboard_title": "Leaderboard",
   "lecture_hall": "Lecture Hall / Lab",
   "lecturer_name": "Lecturer / Instructor",
+  "level": "Level",
   "level_district": "District",
   "level_internal": "Internal",
   "level_international": "International",
@@ -372,7 +374,10 @@
   "source_qr_scan": "QR Activities",
   "status_active": "Active",
   "status_approved": "Verified",
+  "status_disahkan": "Verified",
+  "status_ditolak": "Rejected",
   "status_expired": "Expired",
+  "status_menunggu": "Pending",
   "status_pending": "Pending Review",
   "status_rejected": "Rejected",
   "step_offense_details": "2. Offense Details",
@@ -485,6 +490,5 @@
   "warning_permanent_operation": "Warning: Permanent Action",
   "your_rank": "Your Rank",
   "zip_error_no_files": "Failed to download any files. Please try again.",
-  "zip_failed_header": "FILES FAILED TO DOWNLOAD:",
-  "failed_load_takwim_data": "Failed to load academic calendar data"
+  "zip_failed_header": "FILES FAILED TO DOWNLOAD:"
 }

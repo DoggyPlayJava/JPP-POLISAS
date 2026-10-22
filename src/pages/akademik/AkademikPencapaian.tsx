@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn, hexToRgba } from '@/lib/utils';
 import { uploadPdfToDrive } from '@/lib/driveUpload';
+import i18n from '@/lib/i18n';
 import {
   Plus, Trophy, Clock, CheckCircle, XCircle, Upload,
   ChevronDown, X, FileText, AlertCircle, Loader2, Trash2, UnlockKeyhole,
@@ -18,11 +19,20 @@ const THEME = '#818CF8';
 const JENIS_OPTIONS  = ['ANUGERAH', 'SIJIL', 'PERTANDINGAN'];
 const PERINGKAT_OPTIONS = ['ANTARABANGSA', 'KEBANGSAAN', 'NEGERI', 'DAERAH'];
 
-const STATUS_CFG: Record<string, { label: string; color: string; bg: string; icon: any }> = {
-  MENUNGGU: { label: 'Menunggu', color: '#F59E0B', bg: '#F59E0B18', icon: Clock },
-  DISAHKAN: { label: 'Disahkan', color: '#10B981', bg: '#10B98118', icon: CheckCircle },
-  DITOLAK:  { label: 'Ditolak',  color: '#EF4444', bg: '#EF444418', icon: XCircle },
-};
+export function getAkademikStatusCfg(t: (key: string, fallback: string) => string = (k, f) => i18n.t(k, f)) {
+  return {
+    MENUNGGU: { label: t('akademik:status_pending', 'Menunggu'), color: '#F59E0B', bg: '#F59E0B18', icon: Clock },
+    DISAHKAN: { label: t('akademik:status_approved', 'Disahkan'), color: '#10B981', bg: '#10B98118', icon: CheckCircle },
+    DITOLAK:  { label: t('akademik:status_rejected', 'Ditolak'),  color: '#EF4444', bg: '#EF444418', icon: XCircle },
+  };
+}
+
+const STATUS_CFG: Record<string, { label: string; color: string; bg: string; icon: any }> = new Proxy({} as any, {
+  get(_target, prop) {
+    const live = getAkademikStatusCfg();
+    return live[prop as keyof typeof live];
+  }
+});
 
 // ─── Form Tambah Pencapaian ───────────────────────────────────
 function TambahForm({ categories, meritConfig, onClose, onSuccess }: any) {

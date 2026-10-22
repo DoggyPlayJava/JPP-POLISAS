@@ -52,14 +52,16 @@ import i18n from '@/lib/i18n';
 // ─────────────────────────────────────────────────────────────────────────────
 const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
-export const SETTINGS_TAB_CONFIG = [
-  { id: 'profil', label: t('settings:tab_profile', 'Profil & Akademik'), labelKey: 'tab_profile', iconComponent: User, desc: t('settings:profile_tab_desc', 'Maklumat peribadi & pinda data'), descKey: 'profile_tab_desc' },
-  { id: 'kediaman', label: t('settings:tab_residence', 'Status Kediaman'), labelKey: 'tab_residence', iconComponent: MapPin, desc: t('settings:residence_tab_desc', 'Deklarasi KAMSIS / Luar Kampus'), descKey: 'residence_tab_desc' },
-  { id: 'tema', label: t('settings:tab_theme', 'Paparan & Bahasa'), labelKey: 'tab_theme', iconComponent: Moon, desc: t('settings:theme_tab_desc', 'Pilihan mod cerah, gelap dan pilihan bahasa'), descKey: 'theme_tab_desc' },
-  { id: 'notifikasi', label: t('settings:tab_notifications', 'Pemberitahuan'), labelKey: 'tab_notifications', iconComponent: Bell, desc: t('settings:notifications_tab_desc', 'Urus amaran & notifikasi pesanan'), descKey: 'notifications_tab_desc' },
-  { id: 'keselamatan', label: t('settings:tab_security', 'Keselamatan'), labelKey: 'tab_security', iconComponent: Shield, desc: t('settings:security_tab_desc', 'Kata laluan & log masuk akaun'), descKey: 'security_tab_desc' },
-  { id: 'bantuan', label: t('settings:tab_help', 'Bantuan & Tutorial'), labelKey: 'tab_help', iconComponent: HelpCircle, desc: t('settings:help_tab_desc', 'Panduan sistem & talian aduan'), descKey: 'help_tab_desc' },
-] as const;
+export const getSettingsTabConfig = (t: (k: string, fb: string, opt?: any) => string = (k, fb, opt) => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb)) => [
+  { id: 'profil' as const, label: t('settings:tab_profile', 'Profil & Akademik'), labelKey: 'tab_profile', iconComponent: User, desc: t('settings:profile_tab_desc', 'Maklumat peribadi & pinda data'), descKey: 'profile_tab_desc' },
+  { id: 'kediaman' as const, label: t('settings:tab_residence', 'Status Kediaman'), labelKey: 'tab_residence', iconComponent: MapPin, desc: t('settings:residence_tab_desc', 'Deklarasi KAMSIS / Luar Kampus'), descKey: 'residence_tab_desc' },
+  { id: 'tema' as const, label: t('settings:tab_theme', 'Paparan & Bahasa'), labelKey: 'tab_theme', iconComponent: Moon, desc: t('settings:theme_tab_desc', 'Pilihan mod cerah, gelap dan pilihan bahasa'), descKey: 'theme_tab_desc' },
+  { id: 'notifikasi' as const, label: t('settings:tab_notifications', 'Pemberitahuan'), labelKey: 'tab_notifications', iconComponent: Bell, desc: t('settings:notifications_tab_desc', 'Urus amaran & notifikasi pesanan'), descKey: 'notifications_tab_desc' },
+  { id: 'keselamatan' as const, label: t('settings:tab_security', 'Keselamatan'), labelKey: 'tab_security', iconComponent: Shield, desc: t('settings:security_tab_desc', 'Kata laluan & log masuk akaun'), descKey: 'security_tab_desc' },
+  { id: 'bantuan' as const, label: t('settings:tab_help', 'Bantuan & Tutorial'), labelKey: 'tab_help', iconComponent: HelpCircle, desc: t('settings:help_tab_desc', 'Panduan sistem & talian aduan'), descKey: 'help_tab_desc' },
+];
+
+export const SETTINGS_TAB_CONFIG = getSettingsTabConfig();
 
 export type SettingsTabId = 'profil' | 'kediaman' | 'tema' | 'notifikasi' | 'keselamatan' | 'bantuan';
 
@@ -171,9 +173,9 @@ function ProfileEditRequestSection() {
   };
 
   const statusBadge = (status: string) => {
-    if (status === 'PENDING') return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"><Clock className="w-3 h-3" />MENUNGGU</span>;
-    if (status === 'APPROVED') return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#6B7F5B]/15 text-[#2E3A2F] dark:text-[#F8F6EE] border border-[#6B7F5B]/30"><CheckCircle2 className="w-3 h-3 text-[#6B7F5B]" />DILULUSKAN</span>;
-    return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"><XCircle className="w-3 h-3" />DITOLAK</span>;
+    if (status === 'PENDING') return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"><Clock className="w-3 h-3" />{t('settings:status_pending', 'MENUNGGU')}</span>;
+    if (status === 'APPROVED') return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-[#6B7F5B]/15 text-[#2E3A2F] dark:text-[#F8F6EE] border border-[#6B7F5B]/30"><CheckCircle2 className="w-3 h-3 text-[#6B7F5B]" />{t('settings:status_approved', 'DILULUSKAN')}</span>;
+    return <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20"><XCircle className="w-3 h-3" />{t('settings:status_rejected', 'DITOLAK')}</span>;
   };
 
   return (
@@ -585,6 +587,7 @@ export function SettingsPage() {
   const { theme, setTheme } = useTheme();
   const { intake1Month, intake2Month } = useAcademicSession();
   const { t, i18n } = useTranslation(['settings', 'common']);
+  const tabConfigs = React.useMemo(() => getSettingsTabConfig(t), [t]);
 
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -930,7 +933,7 @@ export function SettingsPage() {
                 <div className="flex flex-col items-center justify-center p-2 sm:p-2.5 md:p-3 rounded-2xl bg-[#F8F6EE]/60 dark:bg-[#151D16]/60 border border-[#D9C9B2]/60 dark:border-[#3A4A3B] text-center min-w-0 overflow-hidden">
                   <div className="flex items-center gap-1 text-[#556453] dark:text-[#A3B39F] text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate max-w-full">
                     <GraduationCap className="w-3.5 h-3.5 text-[#6B7F5B] shrink-0" />
-                    <span className="truncate">Semester</span>
+                    <span className="truncate">{t('settings:semester_label', 'Semester')}</span>
                   </div>
                   <span className="text-[11px] sm:text-xs md:text-sm font-black text-[#2E3A2F] dark:text-[#F8F6EE] truncate max-w-full">
                     {semInfo.semester > 0 ? t('settings:semester_n', 'Semester {{sem}}', { sem: semInfo.semester }) : t('settings:semester_n', 'Semester {{sem}}', { sem: 1 })}
@@ -940,10 +943,10 @@ export function SettingsPage() {
                 <div className="flex flex-col items-center justify-center p-2 sm:p-2.5 md:p-3 rounded-2xl bg-[#F8F6EE]/60 dark:bg-[#151D16]/60 border border-[#D9C9B2]/60 dark:border-[#3A4A3B] text-center min-w-0 overflow-hidden">
                   <div className="flex items-center gap-1 text-[#556453] dark:text-[#A3B39F] text-[9px] sm:text-[10px] font-bold uppercase tracking-wider mb-0.5 truncate max-w-full">
                     <Sparkles className="w-3.5 h-3.5 text-[#C96F4F] shrink-0" />
-                    <span className="truncate">Merit</span>
+                    <span className="truncate">{t('settings:merit_label', 'Merit')}</span>
                   </div>
                   <span className="text-[11px] sm:text-xs md:text-sm font-black text-[#2E3A2F] dark:text-[#F8F6EE] truncate max-w-full">
-                    {profile?.merit_points ?? 0} Merit
+                    {profile?.merit_points ?? 0} {t('settings:merit_unit', 'Merit')}
                   </span>
                 </div>
 
@@ -963,7 +966,7 @@ export function SettingsPage() {
 
         {/* ── B. SEGMENTED TAB NAVIGATION ── */}
         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none snap-x -mx-1 px-1">
-          {SETTINGS_TAB_CONFIG.map((tConfig) => {
+          {tabConfigs.map((tConfig) => {
             const isActive = currentTab === tConfig.id;
             const Icon = tConfig.iconComponent;
             return (
@@ -1083,15 +1086,15 @@ export function SettingsPage() {
                       <p className="text-[10px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mb-3">{t('settings:academic_details', 'Maklumat Program & Jabatan')}</p>
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                         <div className="p-3.5 rounded-2xl bg-[#F8F6EE]/60 dark:bg-[#151D16]/60 border border-[#D9C9B2]/60 dark:border-[#3A4A3B]">
-                          <span className="text-[10px] font-bold uppercase text-[#556453] dark:text-[#A3B39F] block">Jabatan</span>
+                          <span className="text-[10px] font-bold uppercase text-[#556453] dark:text-[#A3B39F] block">{t('settings:department', 'Jabatan')}</span>
                           <span className="text-xs font-black text-[#2E3A2F] dark:text-[#F8F6EE] truncate block mt-0.5">{profile?.department || '-'}</span>
                         </div>
                         <div className="p-3.5 rounded-2xl bg-[#F8F6EE]/60 dark:bg-[#151D16]/60 border border-[#D9C9B2]/60 dark:border-[#3A4A3B]">
-                          <span className="text-[10px] font-bold uppercase text-[#556453] dark:text-[#A3B39F] block">Program</span>
+                          <span className="text-[10px] font-bold uppercase text-[#556453] dark:text-[#A3B39F] block">{t('settings:programme', 'Program')}</span>
                           <span className="text-xs font-black text-[#2E3A2F] dark:text-[#F8F6EE] truncate block mt-0.5">{profile?.programme_name || profile?.programme_code || '-'}</span>
                         </div>
                         <div className="p-3.5 rounded-2xl bg-[#F8F6EE]/60 dark:bg-[#151D16]/60 border border-[#D9C9B2]/60 dark:border-[#3A4A3B]">
-                          <span className="text-[10px] font-bold uppercase text-[#556453] dark:text-[#A3B39F] block">Sesi Kemasukan</span>
+                          <span className="text-[10px] font-bold uppercase text-[#556453] dark:text-[#A3B39F] block">{t('settings:intake_session', 'Sesi Kemasukan')}</span>
                           <span className="text-xs font-black text-[#2E3A2F] dark:text-[#F8F6EE] truncate block mt-0.5">
                             {profile?.intake_year ? `${profile.intake_year} / Sesi ${profile.intake_period || 1}` : '-'}
                           </span>

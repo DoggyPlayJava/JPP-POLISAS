@@ -24,7 +24,7 @@ const THEME = '#818CF8';
 
 // ─── Merit Config Panel (SUPER_ADMIN only) ────────────────────
 function MeritConfigPanel() {
-  const { t } = useTranslation(['jpp', 'common']);
+  const { t } = useTranslation(['akademik', 'jpp', 'common']);
   const [config, setConfig] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
@@ -73,12 +73,12 @@ function MeritConfigPanel() {
           <table className="w-full text-[10px]">
             <thead>
               <tr>
-                <th className="text-left py-2 pr-4 font-black text-slate-400 dark:text-white/25 uppercase tracking-wider">Peringkat</th>
+                <th className="text-left py-2 pr-4 font-black text-slate-400 dark:text-white/25 uppercase tracking-wider">{t('akademik:level', 'Peringkat')}</th>
                 {JENIS.map(j => <th key={j} className="py-2 px-3 font-black text-slate-400 dark:text-white/25 uppercase tracking-wider">{j}</th>)}
               </tr>
             </thead>
             <tbody>
-              {loading ? <tr><td colSpan={4} className="text-center py-4 text-slate-400 dark:text-white/20">Memuatkan...</td></tr> : PERINGKAT.map(p => (
+              {loading ? <tr><td colSpan={4} className="text-center py-4 text-slate-400 dark:text-white/20">{t('common:loading', 'Memuatkan...')}</td></tr> : PERINGKAT.map(p => (
                 <tr key={p} className="border-t border-slate-100 dark:border-white/[0.04]">
                   <td className="py-2 pr-4 font-black text-slate-600 dark:text-white/40">{p}</td>
                   {JENIS.map(j => (
@@ -105,7 +105,7 @@ function MeritConfigPanel() {
         <table className="w-full text-xs">
           <thead>
             <tr className="border-b border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.02]">
-              <th className="text-left p-4 font-black text-slate-500 dark:text-white/30 uppercase tracking-wider text-[10px]">Peringkat</th>
+              <th className="text-left p-4 font-black text-slate-500 dark:text-white/30 uppercase tracking-wider text-[10px]">{t('akademik:level', 'Peringkat')}</th>
               {JENIS.map(j => <th key={j} className="p-4 font-black text-slate-500 dark:text-white/30 uppercase tracking-wider text-[10px]">{j}</th>)}
             </tr>
           </thead>
@@ -345,7 +345,7 @@ function PencapaianReviewPanel() {
                     <div className="flex gap-2 mt-1 flex-wrap">
                       <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-white/40">{item.jenis}</span>
                       <span className="text-[9px] font-black px-2 py-0.5 rounded-full bg-slate-100 dark:bg-white/[0.05] text-slate-600 dark:text-white/40">{item.peringkat}</span>
-                      <span className="text-[9px] font-black" style={{ color: THEME }}>+{merit} merit</span>
+                      <span className="text-[9px] font-black" style={{ color: THEME }}>+{merit} {t('jpp:akademik_merit_unit', 'merit')}</span>
                     </div>
                   </div>
                   {item.drive_view_url && (
@@ -538,7 +538,7 @@ function UnlockRequestsPanel() {
 
       load();
     } catch (e: any) {
-      toast.error(e.message || 'Ralat.');
+      toast.error(e.message || t('jpp:error', 'Ralat.'));
     } finally { setActing(null); }
   };
 
@@ -615,7 +615,7 @@ function UnlockRequestsPanel() {
             {req.profile?.full_name} · {req.profile?.department?.toUpperCase()}
           </p>
           <p className="text-[10px] text-amber-700 dark:text-amber-300/80 font-medium mt-1 bg-amber-500/10 rounded-lg px-2 py-1 border border-amber-500/15">
-            📝 Sebab: {req.reason}
+            📝 {t('common:reason', 'Sebab')}: {req.reason}
           </p>
         </div>
         <span className={`text-[8px] font-black px-2 py-1 rounded-full uppercase ${
@@ -870,7 +870,7 @@ export function AkademikUnitDashboard() {
                         )
                       ) : (
                         <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-700 dark:text-rose-300 border border-rose-500/30">
-                          Sesi Ditutup
+                          {t('jpp:akademik_closed_session', 'Sesi Ditutup')}
                         </span>
                       )}
                     </div>
