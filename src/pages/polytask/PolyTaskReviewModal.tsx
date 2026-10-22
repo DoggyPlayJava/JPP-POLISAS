@@ -64,21 +64,21 @@ export function PolyTaskReviewModal({ isOpen, onClose, jobId, reviewerId, review
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md p-6 overflow-hidden shadow-2xl"
+            className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-md p-6 overflow-hidden shadow-2xl text-slate-900 dark:text-slate-100"
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors"
+              className="absolute top-4 right-4 p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-slate-700 dark:hover:text-white"
             >
-              <X className="w-4 h-4 text-slate-400" />
+              <X className="w-4 h-4" />
             </button>
 
             <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-indigo-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-indigo-500/20">
-                <Star className="w-8 h-8 text-indigo-400" />
+              <div className="w-16 h-16 bg-purple-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-purple-500/20">
+                <Star className="w-8 h-8 text-purple-600 dark:text-purple-400" />
               </div>
-              <h2 className="text-2xl font-black text-white">{t('gig:rate_task_title', 'Nilai Tugasan')}</h2>
-              <p className="text-sm text-slate-400 mt-2">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white">{t('gig:rate_task_title', 'Nilai Tugasan')}</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
                 {t('gig:rate_experience_prompt', 'Bagaimanakah pengalaman anda berurusan dengan {{name}}?', { name: revieweeName })}
               </p>
             </div>
@@ -97,7 +97,7 @@ export function PolyTaskReviewModal({ isOpen, onClose, jobId, reviewerId, review
                     className={`w-10 h-10 ${
                       (hoverRating || rating) >= star
                         ? 'fill-amber-400 text-amber-400'
-                        : 'text-slate-600'
+                        : 'text-slate-300 dark:text-slate-600'
                     } transition-colors`}
                   />
                 </button>
@@ -105,7 +105,7 @@ export function PolyTaskReviewModal({ isOpen, onClose, jobId, reviewerId, review
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 {t('gig:comment_optional', 'Komen (Pilihan)')}
               </label>
               <textarea
@@ -113,14 +113,14 @@ export function PolyTaskReviewModal({ isOpen, onClose, jobId, reviewerId, review
                 onChange={(e) => setComment(e.target.value)}
                 placeholder={t('gig:comment_placeholder', 'Tulis sedikit ulasan tentang kualiti kerja...')}
                 rows={3}
-                className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-indigo-500/50 outline-none resize-none"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-purple-500/50 outline-none resize-none"
               />
             </div>
 
             <button
               onClick={handleSubmit}
               disabled={submitting}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white font-bold py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 shadow-md shadow-purple-500/25 active:scale-95"
             >
               {submitting ? (
                 <>

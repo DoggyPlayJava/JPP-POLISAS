@@ -11,6 +11,9 @@ import {
   LogOut, ShieldCheck, BarChart3, Bike
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -21,6 +24,8 @@ const KLS_COLOR = '#60A5FA';
 export function KlkSidebar() {
   const { t } = useTranslation(['klk', 'housing', 'nav', 'common']);
   const { user, profile, signOut, isSuperAdmin } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const navigate = useNavigate();
   const unreadCount = useNotificationStore(state => state.unreadCount);
 
@@ -45,8 +50,8 @@ export function KlkSidebar() {
         cn(
           'flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-300 relative group overflow-hidden',
           isActive
-            ? 'text-white shadow-lg bg-white/[0.04] border border-white/5'
-            : 'text-slate-400 hover:text-white hover:bg-white/[0.02] border border-transparent',
+            ? (isDark ? 'text-white shadow-lg bg-white/[0.04] border border-white/5' : 'text-blue-700 shadow-xs bg-blue-50 border border-blue-200/60 font-black')
+            : (isDark ? 'text-slate-400 hover:text-white hover:bg-white/[0.02] border border-transparent' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'),
         )
       }
     >
@@ -60,14 +65,14 @@ export function KlkSidebar() {
           )}
           <div
             className="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-300"
-            style={{ background: isActive ? hexToRgba(KLS_COLOR, 0.15) : 'rgba(255,255,255,0.02)' }}
+            style={{ background: isActive ? hexToRgba(KLS_COLOR, isDark ? 0.15 : 0.2) : (isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.03)') }}
           >
             {React.createElement(icon, {
               className: 'w-4 h-4',
               style: { color: isActive ? KLS_COLOR : undefined },
             })}
           </div>
-          <span className={cn('text-xs font-bold tracking-wide flex-1 transition-colors duration-300', isActive && 'text-slate-50')}>
+          <span className={cn('text-xs font-bold tracking-wide flex-1 transition-colors duration-300', isActive && (isDark ? 'text-slate-50' : 'text-blue-900'))}>
             {label}
           </span>
           {badge && badge > 0 ? (
@@ -87,8 +92,11 @@ export function KlkSidebar() {
 
   return (
     <aside
-      className="w-[280px] h-screen flex flex-col select-none overflow-hidden flex-shrink-0  z-[140] relative border-r border-white/5"
-      style={{ background: 'linear-gradient(180deg, rgba(2,6,23,0.7) 0%, rgba(15,23,42,0.9) 100%)' }}
+      className={cn(
+        "w-[280px] h-screen flex flex-col select-none overflow-hidden flex-shrink-0 z-[140] relative border-r transition-colors duration-300",
+        isDark ? "bg-[#090e17] border-white/5 text-slate-50" : "bg-white border-slate-200 text-slate-900"
+      )}
+      style={isDark ? { background: 'linear-gradient(180deg, rgba(2,6,23,0.7) 0%, rgba(15,23,42,0.9) 100%)' } : undefined}
     >
       {/* Header */}
       <div className="flex-shrink-0 flex flex-col relative z-10 border-b border-white/5 bg-black/10">
@@ -157,7 +165,7 @@ export function KlkSidebar() {
       {/* Footer — Avatar + Log Keluar */}
       <div
         className="flex-shrink-0 p-4 space-y-3 relative z-10"
-        style={{ borderTop: `1px solid ${hexToRgba(KLS_COLOR, 0.1)}` }}
+        style={{ borderTop: `1px solid ${hexToRgba(KLS_COLOR, isDark ? 0.1 : 0.2)}` }}
       >
         <div className="flex items-center gap-3 px-2 py-2">
           <Avatar className="h-8 w-8 rounded-xl ring-2 ring-white/10 shadow-md">
@@ -170,28 +178,37 @@ export function KlkSidebar() {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-black truncate leading-tight text-slate-50">{displayName}</p>
+            <p className={cn("text-xs font-black truncate leading-tight", isDark ? "text-slate-50" : "text-slate-900")}>{displayName}</p>
             <p
               className="text-[10px] font-black uppercase tracking-widest truncate"
-              style={{ color: hexToRgba(KLS_COLOR, 0.7) }}
+              style={{ color: hexToRgba(KLS_COLOR, isDark ? 0.7 : 1) }}
             >
               {posLabel}
             </p>
           </div>
           {isSuperAdmin && (
             <div className="flex-shrink-0 w-5 h-5 rounded-md flex items-center justify-center bg-amber-500/20">
-              <ShieldCheck className="w-2.5 h-2.5 text-amber-400" />
+              <ShieldCheck className="w-2.5 h-2.5 text-amber-500" />
             </div>
           )}
         </div>
-        <Button
-          variant="ghost"
-          onClick={signOut}
-          className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-white/30 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
-        >
-          <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
-          {t('nav:logout', 'Log Keluar')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="ghost"
+            onClick={signOut}
+            className={cn(
+              "flex-1 justify-start gap-2 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl transition-all",
+              isDark
+                ? "text-white/40 hover:text-rose-400 hover:bg-rose-500/10"
+                : "text-slate-600 hover:text-rose-600 hover:bg-rose-50"
+            )}
+          >
+            <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
+            {t('nav:logout', 'Log Keluar')}
+          </Button>
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
       </div>
     </aside>
   );

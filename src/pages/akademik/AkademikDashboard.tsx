@@ -231,6 +231,7 @@ export function AkademikDashboard() {
     latestHpnm:      null as number | null,
   });
   const [recentPencapaian, setRecentPencapaian] = useState<any[]>([]);
+  const [timetableEntries, setTimetableEntries] = useState<any[]>([]);
   const [loading, setLoading] = useState(() => typeof window === 'undefined' ? false : true);
 
   const load = useCallback(async () => {
@@ -240,7 +241,7 @@ export function AkademikDashboard() {
     }
     setLoading(true);
     try {
-      const [pencRes, cgpaRes] = await Promise.all([
+      const [pencRes, cgpaRes, timetableRes] = await Promise.all([
         supabase
           .from('akademik_pencapaian')
           .select('id, nama_pencapaian, jenis, peringkat, status, merit_auto, merit_override, created_at, akademik_sijil_categories(name, icon, color)')
@@ -254,6 +255,13 @@ export function AkademikDashboard() {
           .eq('is_user_verified', true)
           .order('created_at', { ascending: false })
           .limit(1),
+        supabase
+          .from('student_timetables')
+          .select('id, course_code, course_name, day_of_week, start_time, end_time, room_raw, lecturer_name, is_online, location:imaps_locations(room_code, building:imaps_buildings(name, code))')
+          .eq('user_id', profile.id)
+          .eq('is_archived', false)
+          .order('day_of_week', { ascending: true })
+          .order('start_time', { ascending: true }),
       ]);
 
       const pencs = pencRes.data || [];
@@ -272,6 +280,7 @@ export function AkademikDashboard() {
         latestHpnm: cgpaRes.data?.[0]?.hpnm != null ? parseFloat(cgpaRes.data[0].hpnm) : null,
       });
       setRecentPencapaian(pencs.slice(0, 4));
+      setTimetableEntries(timetableRes.data || []);
     } finally {
       setLoading(false);
     }
@@ -301,6 +310,39 @@ export function AkademikDashboard() {
         semester: profile?.semester_override || 1,
         level: (profile?.semester_override || 1) <= 3 ? 'Junior' : 'Senior',
       };
+
+  // Live Timetable calculations for today
+  const now = new Date();
+  const todayDay = now.getDay();
+  const currentMins = now.getHours() * 60 + now.getMinutes();
+
+  const parseTimeMins = (tStr?: string | null) => {
+    if (!tStr) return 0;
+    const [h, m] = tStr.split(':').map(Number);
+    return (h || 0) * 60 + (m || 0);
+  };
+
+  const formatTimeStr = (tStr?: string | null) => {
+    if (!tStr) return '--:--';
+    const [h, m] = tStr.split(':');
+    return `${(h || '00').padStart(2, '0')}:${(m || '00').padStart(2, '0')}`;
+  };
+
+  const getVenueStr = (entry: any) => {
+    if (entry.is_online) return t('akademik:online_teams', 'Dalam Talian (Teams)');
+    if (entry.location?.room_code) {
+      const bName = entry.location.building?.code || entry.location.building?.name;
+      return `${entry.location.room_code}${bName ? ` (${bName})` : ''}`;
+    }
+    return entry.room_raw || t('akademik:campus_room', 'Bilik Kuliah POLISAS');
+  };
+
+  const todayEntries = timetableEntries.filter(e => e.day_of_week === todayDay);
+  const ongoingClass = todayEntries.find(e => parseTimeMins(e.start_time) <= currentMins && currentMins < parseTimeMins(e.end_time));
+  const upcomingClasses = todayEntries
+    .filter(e => parseTimeMins(e.start_time) > currentMins)
+    .sort((a, b) => parseTimeMins(a.start_time) - parseTimeMins(b.start_time));
+  const nextClass = upcomingClasses[0];
 
   if (loading) {
     return (
@@ -422,43 +464,117 @@ export function AkademikDashboard() {
       </motion.div>
 
       {/* ── Timetable Matrix Overview Card ── */}
-      <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] p-5 shadow-xs space-y-3">
-        <div className="flex items-center justify-between">
+      <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] p-5 shadow-xs space-y-4">
+        <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4 text-indigo-500" />
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">
               {t('akademik:timetable_grid', 'Matriks Jadual Waktu Kelas')}
             </h3>
           </div>
-          <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full">
-            {t('akademik:current_slot', 'Kuliah Sedang Berlangsung')}
-          </span>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.04] space-y-1">
-            <span className="text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase">
-              {t('akademik:lecture_hall', 'Dewan Kuliah / Makmal')}
+          <div className="flex items-center gap-2">
+            <span className={cn(
+              "text-[10px] font-bold px-2.5 py-1 rounded-full",
+              ongoingClass 
+                ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 flex items-center gap-1.5" 
+                : "text-slate-500 dark:text-white/40 bg-slate-100 dark:bg-white/[0.04]"
+            )}>
+              {ongoingClass && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />}
+              {t('akademik:current_slot', 'Kuliah Sedang Berlangsung')}
             </span>
-            <p className="font-bold text-slate-800 dark:text-slate-200">{t('akademik:mock_hall_computer_lab', 'DK 1 / Makmal Komputer 3')}</p>
-            <p className="text-[11px] text-slate-500 dark:text-white/40">
-              {t('akademik:lecturer_name', 'Pensyarah / Pengajar')}: Dr. Haslina
-            </p>
-          </div>
-          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.04] space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-bold text-indigo-500 uppercase">
-                {t('akademik:next_slot', 'Slot Kuliah Seterusnya')}
-              </span>
-              <span className="text-[10px] text-amber-500 font-semibold">
-                {t('akademik:free_slot', 'Masa Lapang / Rehat')} (13:00 - 14:00)
-              </span>
-            </div>
-            <p className="font-bold text-slate-800 dark:text-slate-200">{t('akademik:mock_subject_cs_algo', 'Sains Komputer & Algoritma')}</p>
-            <p className="text-[11px] text-slate-500 dark:text-white/40">
-              {t('akademik:lecture_hall', 'Dewan Kuliah / Makmal')}: DK 2
-            </p>
+            <button
+              onClick={() => navigate('/akademik/takwim')}
+              className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5 ml-1"
+            >
+              <span className="hidden sm:inline">{t('akademik:view_full_schedule', 'Jadual Penuh')}</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
           </div>
         </div>
+
+        {timetableEntries.length === 0 ? (
+          <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.04] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+            <div className="space-y-0.5">
+              <p className="font-bold text-slate-800 dark:text-slate-200">
+                {t('akademik:no_timetable_loaded', 'Belum Ada Jadual Waktu Didaftarkan')}
+              </p>
+              <p className="text-[11px] text-slate-500 dark:text-white/40">
+                {t('akademik:no_timetable_loaded_desc', 'Muat naik jadual kelas anda untuk melihat status kuliah harian secara langsung.')}
+              </p>
+            </div>
+            <button
+              onClick={() => navigate('/akademik/takwim')}
+              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shrink-0 transition-colors shadow-xs"
+            >
+              {t('akademik:upload_timetable_cta', 'Import Jadual')}
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+            {/* Slot 1: Current / Ongoing Slot */}
+            <div className={cn(
+              "p-3.5 rounded-xl border space-y-1.5 transition-colors",
+              ongoingClass
+                ? "bg-emerald-500/5 border-emerald-500/20"
+                : "bg-slate-50 dark:bg-white/[0.03] border-slate-200/60 dark:border-white/[0.04]"
+            )}>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase">
+                  {ongoingClass ? t('akademik:ongoing_class_label', 'Kuliah Semasa') : t('akademik:lecture_hall', 'Dewan Kuliah / Makmal')}
+                </span>
+                {ongoingClass && (
+                  <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                    {formatTimeStr(ongoingClass.start_time)} - {formatTimeStr(ongoingClass.end_time)}
+                  </span>
+                )}
+              </div>
+              <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">
+                {ongoingClass 
+                  ? `${ongoingClass.course_code ? `${ongoingClass.course_code} - ` : ''}${ongoingClass.course_name}` 
+                  : (todayEntries.length > 0 ? t('akademik:free_slot', 'Masa Lapang / Rehat') : t('akademik:no_classes_today', 'Tiada Kuliah Hari Ini'))}
+              </p>
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-white/40 pt-0.5">
+                <span>{ongoingClass ? getVenueStr(ongoingClass) : (todayEntries.length > 0 ? t('akademik:study_time_label', 'Ulangkaji / Rehat') : t('akademik:rest_day', 'Hari Rehat'))}</span>
+                {ongoingClass?.lecturer_name && (
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {t('akademik:lecturer_name', 'Pensyarah / Pengajar')}: {ongoingClass.lecturer_name}
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Slot 2: Next Upcoming Slot */}
+            <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.04] space-y-1.5">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold text-indigo-500 uppercase">
+                  {t('akademik:next_slot', 'Slot Kuliah Seterusnya')}
+                </span>
+                {nextClass ? (
+                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
+                    {formatTimeStr(nextClass.start_time)} - {formatTimeStr(nextClass.end_time)}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-amber-500 font-semibold">
+                    {todayEntries.length > 0 ? t('akademik:all_classes_done', 'Semua Kelas Selesai') : t('akademik:free_slot', 'Masa Lapang / Rehat')}
+                  </span>
+                )}
+              </div>
+              <p className="font-bold text-slate-800 dark:text-slate-200 text-sm">
+                {nextClass
+                  ? `${nextClass.course_code ? `${nextClass.course_code} - ` : ''}${nextClass.course_name}`
+                  : (todayEntries.length > 0 ? t('akademik:all_classes_done_title', 'Kelas Hari Ini Selesai') : t('akademik:no_upcoming_lecture', 'Tiada Kuliah Berjadual'))}
+              </p>
+              <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-white/40 pt-0.5">
+                <span>{nextClass ? getVenueStr(nextClass) : t('akademik:free_schedule_desc', 'Tiada slot kuliah lagi hari ini')}</span>
+                {nextClass?.lecturer_name && (
+                  <span className="font-medium text-slate-700 dark:text-slate-300">
+                    {t('akademik:lecturer_name', 'Pensyarah / Pengajar')}: {nextClass.lecturer_name}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ── QR Scan CTA ── */}

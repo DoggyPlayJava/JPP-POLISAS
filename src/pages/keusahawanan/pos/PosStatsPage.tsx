@@ -243,56 +243,76 @@ export function PosStatsPage() {
   return (
     <div className="min-h-full p-4 sm:p-6 space-y-8 pb-28 md:pb-8">
       {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <div className="w-1 h-5 rounded-full" style={{ background: color }} />
             <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">POS</p>
           </div>
-          <h1 className="text-3xl font-black tracking-tight text-foreground">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-foreground">
             {t('keusahawanan:pos_stats_title', 'Statistik & Analisis')}
           </h1>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-2.5 w-full lg:w-auto">
           {/* Tab */}
-          <div className="flex gap-1 bg-muted/30 p-1 rounded-2xl">
+          <div className="inline-flex items-center bg-muted/50 dark:bg-muted/30 p-1 rounded-2xl border border-border/50 shrink-0 overflow-x-auto no-scrollbar">
             {([
               ['jualan', t('keusahawanan:pos_tab_sales', 'Jualan')],
               ['produk', t('keusahawanan:pos_tab_products', 'Produk')],
               ['perbelanjaan', t('keusahawanan:pos_tab_expenses', 'Belanja')]
             ] as [Tab, string][]).map(([key, label]) => (
-              <button key={key} onClick={() => setTab(key)}
-                className="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+              <button
+                key={key}
+                type="button"
+                onClick={() => setTab(key)}
+                className={cn(
+                  "h-8 px-3.5 sm:px-4 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center justify-center",
+                  tab === key ? "shadow-xs" : "hover:text-foreground"
+                )}
                 style={tab === key
                   ? { background: color, color: '#fff' }
-                  : { color: 'hsl(var(--muted-foreground)/0.6)' }
-                }>{label}</button>
+                  : { color: 'hsl(var(--muted-foreground))' }
+                }
+              >
+                {label}
+              </button>
             ))}
           </div>
           {/* Range filter (jualan & perbelanjaan tabs) */}
           {(tab === 'jualan' || tab === 'perbelanjaan') && (
-            <div className="flex items-center gap-2">
-              <div className="flex gap-2 bg-muted/30 p-1 rounded-2xl">
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="inline-flex items-center bg-muted/50 dark:bg-muted/30 p-1 rounded-2xl border border-border/50 shrink-0 overflow-x-auto no-scrollbar">
                 {(Object.entries(RANGE_LABELS) as [Range, string][]).map(([key, label]) => (
-                  <button key={key} onClick={() => setRange(key)}
-                    className="px-5 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all"
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => setRange(key)}
+                    className={cn(
+                      "h-8 px-3 sm:px-3.5 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all whitespace-nowrap flex items-center justify-center",
+                      range === key ? "shadow-xs" : "hover:text-foreground"
+                    )}
                     style={range === key
                       ? { background: color, color: '#fff' }
-                      : { color: 'hsl(var(--muted-foreground)/0.6)' }
-                    }>{label}</button>
+                      : { color: 'hsl(var(--muted-foreground))' }
+                    }
+                  >
+                    {label}
+                  </button>
                 ))}
               </div>
 
               {/* Laporan PDF Button */}
               {stats && (
                 <button
+                  type="button"
                   onClick={() => setShowPdfPreview(true)}
-                  className="h-10 px-4 rounded-xl text-white flex items-center justify-center gap-2 transition-colors shadow-sm hover:brightness-110"
+                  className="h-10 px-4 rounded-2xl text-white inline-flex items-center justify-center gap-2 transition-all shadow-xs hover:brightness-110 active:scale-95 shrink-0"
                   style={{ background: color }}
+                  aria-label={t('keusahawanan:pos_preview_pdf', 'Pratonton PDF')}
                 >
-                  <FileText className="w-4 h-4" />
-                  <span className="text-[10px] font-black uppercase tracking-widest leading-none mt-0.5">
-                    {t('keusahawanan:pos_preview_pdf', 'Preview PDF')}
+                  <FileText className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-black uppercase tracking-widest leading-none">
+                    {t('keusahawanan:pos_preview_pdf', 'PDF')}
                   </span>
                 </button>
               )}

@@ -1907,15 +1907,15 @@ export function FloatingAiChat() {
             className="absolute bottom-[4.5rem] right-0 w-[calc(100vw-2rem)] sm:w-80 md:w-96 rounded-[2.5rem] shadow-2xl bg-card overflow-hidden flex flex-col border border-white/[0.05]"
             style={{ height: 'min(580px, calc(100dvh - 12rem))' }}
           >
-            {/* Header */}
-            <div className={`p-5 text-white relative shrink-0 flex items-center justify-between bg-gradient-to-r ${themeColors.bg}`}>
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full  -translate-y-1/2 translate-x-1/4 pointer-events-none" />
-              <div className="relative z-10">
-                <h3 className="font-black text-lg italic flex items-center gap-2">
-                  <Sparkles size={18} className="text-white/80" />
-                  {selectedChat ? selectedChat.title : (isExcoMode ? 'Kebajikan AI' : t('nav:ai_assistant', 'JPP Nexus'))}
+            {/* Header (Streamlined compact ratio for maximized chat viewport) */}
+            <div className={`px-4 py-2.5 text-white relative shrink-0 flex items-center justify-between bg-gradient-to-r ${themeColors.bg}`}>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/4 pointer-events-none" />
+              <div className="relative z-10 min-w-0 pr-2">
+                <h3 className="font-black text-sm tracking-tight flex items-center gap-1.5 truncate">
+                  <Sparkles size={14} className="text-white/80 shrink-0" />
+                  <span className="truncate">{selectedChat ? selectedChat.title : (isExcoMode ? 'Kebajikan AI' : t('nav:ai_assistant', 'JPP Nexus'))}</span>
                 </h3>
-                <p className="text-[11px] text-white/70 font-medium mt-0.5">
+                <p className="text-[10px] text-white/70 font-medium leading-tight truncate">
                   {selectedChat 
                     ? `Perbualan ${selectedChat.type.toUpperCase()}` 
                     : (isExcoMode ? t('portal:ai_kebajikan_assistant_desc', 'Pembantu peribadi Exco Kebajikan POLISAS') : t('nav:help_subtitle', 'Pembantu pintar & Sembang berpusat'))}
@@ -1929,48 +1929,48 @@ export function FloatingAiChat() {
                   onClick={clearHistory}
                   disabled={messages.length === 0}
                   title={t('common:clear', 'Kosongkan sembang')}
-                  className="relative z-10 w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                  className="relative z-10 w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
                 >
-                  <Trash2 size={14} />
+                  <Trash2 size={12} />
                 </motion.button>
               )}
             </div>
 
             {/* Tab bar (only when no inline chat is active) */}
             {!selectedChat && (
-              <div className="flex border-b border-border/40 bg-background/50 p-1.5 gap-1 shrink-0">
+              <div className="flex border-b border-border/40 bg-background/50 p-1 gap-1 shrink-0">
                 <button
                   onClick={() => setActiveTab('ai')}
-                  className={`flex-1 py-2 px-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-1.5 px-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
                     activeTab === 'ai' 
-                      ? `bg-gradient-to-r ${themeColors.bg} text-white shadow-sm` 
+                      ? `bg-gradient-to-r ${themeColors.bg} text-white shadow-xs` 
                       : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
                   }`}
                 >
-                  <Sparkles size={12} /> {t('nav:ai_assistant', 'Tanya AI')}
+                  <Sparkles size={11} /> {t('nav:ai_assistant', 'Tanya AI')}
                 </button>
                 <button
                   onClick={() => setActiveTab('messages')}
-                  className={`flex-1 py-2 px-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 relative ${
+                  className={`flex-1 py-1.5 px-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 relative ${
                     activeTab === 'messages' 
-                      ? `bg-gradient-to-r ${themeColors.bg} text-white shadow-sm` 
+                      ? `bg-gradient-to-r ${themeColors.bg} text-white shadow-xs` 
                       : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
                   }`}
                 >
-                  <MessageSquare size={12} /> {t('nav:notifications', 'Peti Mesej')}
+                  <MessageSquare size={11} /> {t('nav:notifications', 'Peti Mesej')}
                   {unreadTotal > 0 && (
-                    <span className="w-2.5 h-2.5 bg-rose-500 rounded-full border border-card" />
+                    <span className="w-2 h-2 bg-rose-500 rounded-full border border-card" />
                   )}
                 </button>
                 <button
                   onClick={() => setActiveTab('developer')}
-                  className={`flex-1 py-2 px-3 rounded-2xl text-[10px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1.5 ${
+                  className={`flex-1 py-1.5 px-2 rounded-xl text-[9px] font-black uppercase tracking-wider transition-all flex items-center justify-center gap-1 ${
                     activeTab === 'developer' 
-                      ? `bg-gradient-to-r ${themeColors.bg} text-white shadow-sm` 
+                      ? `bg-gradient-to-r ${themeColors.bg} text-white shadow-xs` 
                       : 'text-muted-foreground hover:bg-muted/30 hover:text-foreground'
                   }`}
                 >
-                  <QrCode size={12} /> Dev Tab
+                  <QrCode size={11} /> Dev Tab
                 </button>
               </div>
             )}
@@ -2517,28 +2517,7 @@ export function FloatingAiChat() {
             ) : activeTab === 'messages' ? (
               // ── UNIFIED INBOX TAB ──
               <div className="flex-1 flex flex-col overflow-hidden bg-background p-4 space-y-4">
-                {/* 1. JPP Pinned Announcement Broadcast */}
-                {announcements.length > 0 && (
-                  <div className="bg-indigo-500/5 border border-indigo-500/15 p-3 rounded-2xl flex items-start gap-2.5 relative overflow-hidden shrink-0">
-                    <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-full  pointer-events-none" />
-                    <Megaphone size={16} className="text-indigo-400 shrink-0 mt-0.5" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[8px] font-black text-indigo-400 uppercase tracking-[0.2em]">Pengumuman JPP</span>
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-                      </div>
-                      <p className="font-bold text-[10px] text-white mt-0.5 leading-snug truncate">{announcements[0].title}</p>
-                      <p className="text-[9px] text-slate-400 mt-1 leading-relaxed line-clamp-2">{announcements[0].content_body}</p>
-                      {announcements[0].action_url && (
-                        <a href={announcements[0].action_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[8px] font-black text-indigo-300 hover:text-white uppercase tracking-widest mt-2">
-                          {t('portal:action_link', 'Pautan Tindakan')} <ExternalLink size={8} />
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* 2. Quick Action Shortcuts (Tapisan Inbox Dinamik) */}
+                {/* Quick Action Shortcuts (Tapisan Inbox Dinamik) */}
                 <div className="flex items-center gap-2 shrink-0">
                   <button
                     onClick={() => setInboxFilter(prev => prev === 'kebajikan' ? 'all' : 'kebajikan')}

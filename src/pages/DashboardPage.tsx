@@ -20,8 +20,6 @@ import { useNavigate } from 'react-router-dom';
 import { AddTaskModal } from '@/components/tasks/AddTaskModal';
 import { TaskDetailModal } from '@/components/tasks/TaskDetailModal';
 import { EditAnnouncementModal } from '@/components/ui/EditAnnouncementModal';
-import { NotificationBell } from '@/components/ui/NotificationBell';
-import { ClubSwitcher } from '@/components/ui/ClubSwitcher';
 import { AiAnalysisModal } from '@/components/ai/AiAnalysisModal';
 import { useAiAssistant } from '@/hooks/useAiAssistant';
 import { useAiSettings } from '@/contexts/AiSettingsContext';
@@ -370,40 +368,78 @@ export function DashboardPage() {
       />
 
       {/* ── HEADER ── */}
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 bg-card/40 p-5 sm:p-8 rounded-[2.5rem] border border-border/60 ">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-primary rounded-xl text-white"><LayoutDashboard size={20} /></div>
-            <Badge className="bg-primary/10 text-primary border-none px-3 uppercase text-[10px] font-black">{effectiveRole}</Badge>
+      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card/60 backdrop-blur-md p-6 sm:p-8 rounded-[2rem] border border-border/60 shadow-xs">
+        <div className="space-y-3 max-w-xl">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-primary/10 border border-primary/20 rounded-xl text-primary">
+              <LayoutDashboard size={18} />
+            </div>
+            <Badge className="bg-primary/10 text-primary border border-primary/20 px-2.5 py-0.5 uppercase text-[10px] font-black tracking-wider rounded-lg">
+              {effectiveRole}
+            </Badge>
           </div>
           <div>
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter leading-none">{t('kpp:dashboard_title')}</h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">{t('kpp:dashboard_subtitle')}</p>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight text-foreground leading-tight">
+              {t('kpp:dashboard_title')}
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium mt-1">
+              {t('kpp:dashboard_subtitle')}
+            </p>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto md:justify-end">
-          <Button onClick={() => navigate('/sertai-kelab')} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-primary/30 text-primary bg-primary/10 hover:bg-primary/20">
-            <Users className="w-4 h-4 mr-2" /> {t('kpp:join_club')}
+
+        {/* Clean, consolidated action group */}
+        <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto lg:justify-end">
+          <Button
+            onClick={() => navigate('/sertai-kelab')}
+            className="rounded-xl font-bold text-xs h-10 px-4 bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs transition-all"
+          >
+            <Users className="w-4 h-4 mr-2" />
+            {t('kpp:join_club')}
           </Button>
-          <Button onClick={() => navigate('/laporan')} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-emerald-500/30 text-emerald-600 bg-emerald-500/10 hover:bg-emerald-500/20">
-            <FileText className="w-4 h-4 mr-2" /> {t('kpp:submit_report')}
+
+          <Button
+            onClick={() => navigate('/laporan')}
+            variant="outline"
+            className="rounded-xl font-bold text-xs h-10 px-4 border-emerald-500/30 text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 hover:bg-emerald-500/10 transition-all"
+          >
+            <FileText className="w-4 h-4 mr-2" />
+            {t('kpp:submit_report')}
           </Button>
-          <Button onClick={startTour} variant="outline" size="icon" className="rounded-xl border-amber-500/30 text-amber-600 bg-amber-500/10 hover:bg-amber-500/20">
-            <HelpCircle className="w-5 h-5" />
-          </Button>
-          <ClubSwitcher />
-          <NotificationBell />
+
           {allowAiBudget && (isPresident || isMT || isAdvisor) && (
-            <Button onClick={() => setShowAiModal(true)} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10 border-indigo-500/30 text-indigo-600 bg-indigo-500/10 hover:bg-indigo-500/20 hover:text-indigo-700 shadow-sm transition-all group">
-              <Bot className="w-4 h-4 mr-2 group-hover:animate-pulse" /> {t('portal:ai_analysis', 'Analisis AI')}
+            <Button
+              onClick={() => setShowAiModal(true)}
+              variant="outline"
+              className="rounded-xl font-bold text-xs h-10 px-3.5 border-indigo-500/30 text-indigo-600 dark:text-indigo-400 bg-indigo-500/5 hover:bg-indigo-500/10 transition-all group"
+            >
+              <Bot className="w-4 h-4 mr-1.5 group-hover:scale-110 transition-transform" />
+              {t('portal:ai_analysis', 'Analisis AI')}
             </Button>
           )}
+
           {isAdvisor && (
-            <Button onClick={() => navigate('/logs')} variant="outline" className="rounded-xl font-black text-[10px] uppercase h-10">
-              <Activity className="w-4 h-4 mr-2" /> {t('portal:system_logs', 'Log Sistem')}
+            <Button
+              onClick={() => navigate('/logs')}
+              variant="outline"
+              className="rounded-xl font-bold text-xs h-10 px-3.5 border-border hover:bg-muted/50 transition-all"
+            >
+              <Activity className="w-4 h-4 mr-1.5" />
+              {t('portal:system_logs', 'Log Sistem')}
             </Button>
           )}
+
           {isMT && <AddTaskModal onTaskAdded={fetchData} />}
+
+          <Button
+            onClick={startTour}
+            variant="ghost"
+            size="icon"
+            className="rounded-xl h-10 w-10 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            title={t('portal:tour_nav_title', 'Panduan Sistem')}
+          >
+            <HelpCircle className="w-4 h-4" />
+          </Button>
         </div>
       </header>
 

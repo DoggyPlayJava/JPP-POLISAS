@@ -372,83 +372,83 @@ export function PolyTaskJobDetail() {
   const chatOtherUserName = isRequester ? acceptedBid?.tasker?.full_name : job.requester?.full_name;
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto min-h-screen pb-24">
+    <div className="p-4 md:p-8 max-w-4xl mx-auto min-h-screen pb-24 text-slate-900 dark:text-slate-100 transition-colors">
       <div className="flex items-center justify-between mb-6">
         <button 
           onClick={() => navigate(-1)} 
-          className="flex items-center text-sm text-slate-400 hover:text-white transition-colors"
+          className="flex items-center text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
         >
           <ArrowLeft className="w-4 h-4 mr-2" /> {t('gig:back_btn', 'Kembali')}
         </button>
 
         <button
           onClick={handleShare}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-300 text-xs font-bold hover:bg-indigo-500/20 hover:text-indigo-200 transition-all active:scale-95"
+          className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-purple-500/10 border border-purple-500/20 text-purple-700 dark:text-purple-300 text-xs font-bold hover:bg-purple-500/20 hover:text-purple-800 dark:hover:text-purple-200 transition-all active:scale-95 shadow-xs"
         >
           <Share2 className="w-3.5 h-3.5" /> {t('gig:share_btn', 'Kongsi')}
         </button>
       </div>
 
       {/* Job Details Card */}
-      <div className="bg-slate-900/80 border border-white/10 rounded-3xl p-6 md:p-8 mb-8 relative overflow-hidden">
+      <div className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 rounded-3xl p-6 md:p-8 mb-8 relative overflow-hidden shadow-xs">
         <div className="absolute top-0 right-0 p-6 flex flex-col items-end gap-2">
-           {job.status === 'OPEN' && <span className="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20">{t('gig:status_open', 'DIBUKA')}</span>}
-           {job.status === 'IN_PROGRESS' && <span className="px-4 py-1.5 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full border border-indigo-500/20">{t('gig:status_in_progress', 'SEDANG DIJALANKAN')}</span>}
-           {job.status === 'COMPLETED' && <span className="px-4 py-1.5 bg-slate-500/10 text-slate-400 text-xs font-bold rounded-full border border-slate-500/20">{t('gig:status_completed_task', 'SELESAI')}</span>}
-           {job.status === 'DISPUTED' && <span className="px-4 py-1.5 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20">{t('gig:status_disputed', 'DALAM PERTIKAIAN')}</span>}
+           {job.status === 'OPEN' && <span className="px-4 py-1.5 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-bold rounded-full border border-emerald-500/20">{t('gig:status_open', 'DIBUKA')}</span>}
+           {job.status === 'IN_PROGRESS' && <span className="px-4 py-1.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 text-xs font-bold rounded-full border border-purple-500/20">{t('gig:status_in_progress', 'SEDANG DIJALANKAN')}</span>}
+           {job.status === 'COMPLETED' && <span className="px-4 py-1.5 bg-slate-500/10 text-slate-600 dark:text-slate-400 text-xs font-bold rounded-full border border-slate-500/20">{t('gig:status_completed_task', 'SELESAI')}</span>}
+           {job.status === 'DISPUTED' && <span className="px-4 py-1.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-bold rounded-full border border-rose-500/20">{t('gig:status_disputed', 'DALAM PERTIKAIAN')}</span>}
            
            {/* Dispute Button */}
            {(isRequester || isAcceptedTasker) && (job.status === 'IN_PROGRESS') && (
              <button 
                onClick={() => setIsDisputeModalOpen(true)}
-               className="mt-2 text-[10px] text-rose-400 hover:text-rose-300 font-bold uppercase tracking-wider flex items-center gap-1 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20 transition-colors"
+               className="mt-2 text-[10px] text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 font-bold uppercase tracking-wider flex items-center gap-1 bg-rose-500/10 px-3 py-1 rounded-full border border-rose-500/20 transition-colors"
              >
                <AlertTriangle className="w-3 h-3" /> {t('gig:report_issue', 'Lapor Isu')}
              </button>
            )}
         </div>
 
-        <span className="inline-block px-3 py-1 bg-white/5 text-slate-300 text-[10px] font-bold uppercase tracking-wider rounded-full border border-white/10 mb-4 mt-8 md:mt-0">
+        <span className="inline-block px-3 py-1 bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-slate-300 text-[10px] font-bold uppercase tracking-wider rounded-full border border-slate-200 dark:border-white/10 mb-4 mt-8 md:mt-0">
           {job.category}
         </span>
         
-        <h1 className="text-2xl md:text-3xl font-bold text-white mb-4 pr-24 leading-tight">{job.title}</h1>
-        <p className="text-slate-300 mb-8 whitespace-pre-wrap leading-relaxed">{job.description}</p>
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-4 pr-24 leading-tight">{job.title}</h1>
+        <p className="text-slate-700 dark:text-slate-300 mb-8 whitespace-pre-wrap leading-relaxed">{job.description}</p>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-white/5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-slate-200 dark:border-white/5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center">
-              <MapPin className="w-5 h-5 text-indigo-400" />
+            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center">
+              <MapPin className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
               <p className="text-xs text-slate-500 font-medium">{t('gig:location_label_simple', 'Lokasi')}</p>
-              <p className="text-sm font-semibold text-white truncate max-w-[150px]">{job.location}</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate max-w-[150px]">{job.location}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-800/50 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-indigo-400" />
+            <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800/50 flex items-center justify-center">
+              <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
             </div>
             <div>
               <p className="text-xs text-slate-500 font-medium">{t('gig:deadline_label', 'Tarikh Akhir')}</p>
-              <p className="text-sm font-semibold text-white">{new Date(job.deadline).toLocaleDateString('ms-MY')}</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">{new Date(job.deadline).toLocaleDateString('ms-MY')}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-              <DollarSign className="w-5 h-5 text-emerald-400" />
+              <DollarSign className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
-              <p className="text-xs text-emerald-500/70 font-medium">{t('gig:offered_reward', 'Upah Ditawarkan')}</p>
-              <p className="text-sm font-bold text-emerald-400">RM {job.budget.toFixed(2)}</p>
+              <p className="text-xs text-emerald-600/70 dark:text-emerald-500/70 font-medium">{t('gig:offered_reward', 'Upah Ditawarkan')}</p>
+              <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">RM {job.budget.toFixed(2)}</p>
             </div>
           </div>
         </div>
 
         {/* Requester Info */}
-        <div className="mt-8 p-4 bg-slate-950/50 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between border border-white/5 gap-4">
+        <div className="mt-8 p-4 bg-slate-50 dark:bg-slate-950/50 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between border border-slate-200 dark:border-white/5 gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden">
+            <div className="w-12 h-12 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
               {job.requester?.avatar_url ? (
                 <img src={job.requester.avatar_url} alt="avatar" className="w-full h-full object-cover" />
               ) : (
@@ -457,22 +457,22 @@ export function PolyTaskJobDetail() {
             </div>
             <div>
               <p className="text-xs text-slate-500 font-medium">{t('gig:requester_label', 'Peminta (Requester)')}</p>
-              <p className="text-sm font-bold text-white">{(isRequester || isAcceptedTasker) ? job.requester?.full_name : formatMaskedName(job.requester?.full_name)}</p>
+              <p className="text-sm font-bold text-slate-900 dark:text-white">{(isRequester || isAcceptedTasker) ? job.requester?.full_name : formatMaskedName(job.requester?.full_name)}</p>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full md:w-auto mt-2 md:mt-0">
             {((job.status === 'IN_PROGRESS' || job.status === 'COMPLETED' || job.status === 'DISPUTED') && (isRequester || isAcceptedTasker)) && (
               <>
-                <div className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-500/10 rounded-xl border border-indigo-500/20">
-                  <span className="text-xs text-indigo-300 hidden sm:inline">{t('gig:requester_phone', 'No. Tel Peminta:')}</span>
-                  <a href={`https://wa.me/${job.requester?.phone?.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="text-sm font-bold text-indigo-400 hover:underline">
+                <div className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                  <span className="text-xs text-purple-700 dark:text-purple-300 hidden sm:inline">{t('gig:requester_phone', 'No. Tel Peminta:')}</span>
+                  <a href={`https://wa.me/${job.requester?.phone?.replace(/[^0-9]/g, '')}`} target="_blank" rel="noreferrer" className="text-sm font-bold text-purple-600 dark:text-purple-400 hover:underline">
                     {job.requester?.phone || t('gig:no_phone', 'Tiada Nombor')}
                   </a>
                 </div>
                 <button
                   onClick={() => setIsChatModalOpen(true)}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(79,70,229,0.3)]"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white rounded-xl font-bold transition-all shadow-md shadow-purple-500/25 active:scale-95"
                 >
                   <MessageCircle className="w-4 h-4" /> {t('gig:virtual_chat', 'Chat Maya')}
                 </button>
@@ -484,39 +484,39 @@ export function PolyTaskJobDetail() {
 
       {/* --- TASKER VIEW: BIDDING FORM --- */}
       {!isRequester && job.status === 'OPEN' && !myBid && (
-        <div className="bg-indigo-950/20 border border-indigo-500/20 rounded-3xl p-6 md:p-8 mb-8">
-          <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
-            {t('gig:submit_bid_title', 'Hantar Bidaan')} <ShieldAlert className="w-5 h-5 text-indigo-400" />
+        <div className="bg-purple-50/70 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-500/20 rounded-3xl p-6 md:p-8 mb-8 shadow-xs">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
+            {t('gig:submit_bid_title', 'Hantar Bidaan')} <ShieldAlert className="w-5 h-5 text-purple-600 dark:text-purple-400" />
           </h2>
-          <p className="text-slate-400 text-sm mb-6">{t('gig:submit_bid_desc', 'Tawarkan harga upah anda dan berikan sebab mengapa anda sesuai untuk tugasan ini.')}</p>
+          <p className="text-slate-600 dark:text-slate-400 text-sm mb-6">{t('gig:submit_bid_desc', 'Tawarkan harga upah anda dan berikan sebab mengapa anda sesuai untuk tugasan ini.')}</p>
           
           <form onSubmit={handleSubmitBid} className="space-y-4">
             <div className="flex flex-col sm:flex-row gap-4">
               <div className="flex-1 space-y-2">
-                <label className="text-xs font-medium text-slate-300">{t('gig:bid_price_label', 'Harga Bidaan Anda (RM)')}</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('gig:bid_price_label', 'Harga Bidaan Anda (RM)')}</label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">RM</span>
                   <input 
                     type="number" min="1" step="0.10" required
                     value={bidAmount} onChange={e => setBidAmount(e.target.value)}
                     placeholder={job.budget.toString()} 
-                    className="w-full bg-slate-900 border border-white/10 rounded-xl pl-12 pr-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50"
+                    className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-xl pl-12 pr-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/50 shadow-xs"
                   />
                 </div>
               </div>
               <div className="flex-[2] space-y-2">
-                <label className="text-xs font-medium text-slate-300">{t('gig:bid_message_label', 'Mesej Kepada Peminta (Pilihan)')}</label>
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">{t('gig:bid_message_label', 'Mesej Kepada Peminta (Pilihan)')}</label>
                 <input 
                   type="text" 
                   value={bidMessage} onChange={e => setBidMessage(e.target.value)}
                   placeholder={t('gig:bid_message_placeholder', 'Cth: Saya ada laptop tool set dan boleh siapkan malam ni.')} 
-                  className="w-full bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-indigo-500/50"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/50 shadow-xs"
                 />
               </div>
             </div>
             <button 
               type="submit" disabled={submittingBid}
-              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50"
+              className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white px-8 py-3 rounded-xl font-bold transition-all disabled:opacity-50 shadow-md shadow-purple-500/25 active:scale-95"
             >
               {submittingBid ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : t('gig:submit_bid_button', 'Hantar Bidaan')}
             </button>
@@ -527,26 +527,26 @@ export function PolyTaskJobDetail() {
       {/* --- TASKER VIEW: MY BID STATUS --- */}
       {!isRequester && myBid && (
         <div className={`border rounded-3xl p-6 md:p-8 mb-8 ${
-          myBid.status === 'ACCEPTED' ? 'bg-emerald-950/20 border-emerald-500/30' :
-          myBid.status === 'REJECTED' ? 'bg-rose-950/20 border-rose-500/20' :
-          'bg-slate-900/50 border-white/10'
+          myBid.status === 'ACCEPTED' ? 'bg-emerald-50 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-500/30' :
+          myBid.status === 'REJECTED' ? 'bg-rose-50 dark:bg-rose-950/20 border-rose-300 dark:border-rose-500/20' :
+          'bg-white dark:bg-slate-900/50 border-slate-200 dark:border-white/10'
         }`}>
           <div className="flex items-center gap-3 mb-4">
             <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-              myBid.status === 'ACCEPTED' ? 'bg-emerald-500/20 text-emerald-400' :
-              myBid.status === 'REJECTED' ? 'bg-rose-500/20 text-rose-400' :
-              'bg-indigo-500/20 text-indigo-400'
+              myBid.status === 'ACCEPTED' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
+              myBid.status === 'REJECTED' ? 'bg-rose-500/20 text-rose-600 dark:text-rose-400' :
+              'bg-purple-500/20 text-purple-600 dark:text-purple-400'
             }`}>
               {myBid.status === 'ACCEPTED' ? <CheckCircle className="w-5 h-5" /> : 
                myBid.status === 'REJECTED' ? <ShieldAlert className="w-5 h-5" /> : 
                <Clock className="w-5 h-5" />}
             </div>
             <div>
-              <h3 className="text-lg font-bold text-white">{t('gig:my_bid_status', 'Status Bidaan Anda')}</h3>
+              <h3 className="text-lg font-bold text-slate-900 dark:text-white">{t('gig:my_bid_status', 'Status Bidaan Anda')}</h3>
               <p className={`text-sm font-semibold ${
-                myBid.status === 'ACCEPTED' ? 'text-emerald-400' :
-                myBid.status === 'REJECTED' ? 'text-rose-400' :
-                'text-indigo-400'
+                myBid.status === 'ACCEPTED' ? 'text-emerald-600 dark:text-emerald-400' :
+                myBid.status === 'REJECTED' ? 'text-rose-600 dark:text-rose-400' :
+                'text-purple-600 dark:text-purple-400'
               }`}>
                 {myBid.status === 'PENDING' && t('gig:bid_pending_response', 'Sedang Menunggu Maklum Balas')}
                 {myBid.status === 'ACCEPTED' && t('gig:bid_accepted_congrats', 'Tahniah! Bidaan Diterima')}
@@ -555,36 +555,36 @@ export function PolyTaskJobDetail() {
             </div>
           </div>
           
-          <div className="bg-slate-950/50 p-4 rounded-xl border border-white/5">
+          <div className="bg-slate-100 dark:bg-slate-950/50 p-4 rounded-xl border border-slate-200 dark:border-white/5">
             <div className="flex justify-between items-center mb-2">
-              <span className="text-sm text-slate-400">{t('gig:offered_price', 'Harga Ditawarkan:')}</span>
-              <span className="font-bold text-white">RM {myBid.bid_amount.toFixed(2)}</span>
+              <span className="text-sm text-slate-600 dark:text-slate-400">{t('gig:offered_price', 'Harga Ditawarkan:')}</span>
+              <span className="font-bold text-slate-900 dark:text-white">RM {myBid.bid_amount.toFixed(2)}</span>
             </div>
             {myBid.proposal_note && (
-              <div className="text-sm text-slate-300 mt-2 p-3 bg-white/5 rounded-lg border border-white/5">
+              <div className="text-sm text-slate-700 dark:text-slate-300 mt-2 p-3 bg-white dark:bg-white/5 rounded-lg border border-slate-200 dark:border-white/5">
                 "{myBid.proposal_note}"
               </div>
             )}
 
             {/* TASKER VIEW: PROOF OF WORK */}
             {myBid.status === 'ACCEPTED' && job.status === 'IN_PROGRESS' && (
-              <div className="mt-6 pt-4 border-t border-white/10">
-                <h4 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                  <FileImage className="w-4 h-4 text-emerald-400" /> {t('gig:proof_of_work', 'Bukti Kerja (Proof of Work)')}
+              <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/10">
+                <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                  <FileImage className="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> {t('gig:proof_of_work', 'Bukti Kerja (Proof of Work)')}
                 </h4>
                 
                 {job.proof_image_url ? (
                   <div className="bg-emerald-500/10 border border-emerald-500/20 p-4 rounded-xl flex flex-col items-center gap-3">
-                    <CheckCircle className="w-8 h-8 text-emerald-400" />
-                    <p className="text-sm text-emerald-300 text-center font-bold">{t('gig:proof_submitted', 'Bukti telah dihantar kepada Peminta')}</p>
-                    <a href={job.proof_image_url} target="_blank" rel="noreferrer" className="text-xs text-emerald-400 hover:text-emerald-300 underline flex items-center gap-1 mt-1">
+                    <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+                    <p className="text-sm text-emerald-700 dark:text-emerald-300 text-center font-bold">{t('gig:proof_submitted', 'Bukti telah dihantar kepada Peminta')}</p>
+                    <a href={job.proof_image_url} target="_blank" rel="noreferrer" className="text-xs text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1 mt-1">
                       <ExternalLink className="w-3 h-3" /> {t('gig:view_proof_image', 'Lihat Gambar Bukti')}
                     </a>
-                    <p className="text-xs text-slate-400 mt-2 text-center">{t('gig:awaiting_confirmation_payment', 'Menunggu pengesahan dan bayaran dari Peminta.')}</p>
+                    <p className="text-xs text-slate-600 dark:text-slate-400 mt-2 text-center">{t('gig:awaiting_confirmation_payment', 'Menunggu pengesahan dan bayaran dari Peminta.')}</p>
                   </div>
                 ) : (
-                  <div className="bg-slate-900/50 border border-white/10 border-dashed p-6 rounded-xl flex flex-col items-center text-center">
-                    <p className="text-sm text-slate-300 mb-4">{t('gig:upload_proof_desc', 'Muat naik gambar bukti kerja anda setelah selesai untuk rujukan Peminta dan pihak JPP.')}</p>
+                  <div className="bg-white dark:bg-slate-900/50 border border-slate-300 dark:border-white/10 border-dashed p-6 rounded-xl flex flex-col items-center text-center">
+                    <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{t('gig:upload_proof_desc', 'Muat naik gambar bukti kerja anda setelah selesai untuk rujukan Peminta dan pihak JPP.')}</p>
                     <input
                       type="file"
                       id="proof-upload"
@@ -596,7 +596,7 @@ export function PolyTaskJobDetail() {
                     <label 
                       htmlFor="proof-upload"
                       className={`cursor-pointer px-6 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors ${
-                        uploadingProof ? 'bg-slate-700 text-slate-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                        uploadingProof ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-500 text-white'
                       }`}
                     >
                       {uploadingProof ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
@@ -608,13 +608,13 @@ export function PolyTaskJobDetail() {
             )}
             
             {myBid.status === 'ACCEPTED' && job.status === 'IN_PROGRESS' && (
-              <div className="mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
-                <p className="text-xs text-rose-400 max-w-sm">
+              <div className="mt-6 pt-4 border-t border-slate-200 dark:border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4">
+                <p className="text-xs text-rose-600 dark:text-rose-400 max-w-sm">
                   {t('gig:withdraw_warning', 'Menarik diri dari tugasan ini akan menaikkan Cancellation Rate anda dan direkodkan dalam sistem JPP.')}
                 </p>
                 <button 
                   onClick={handleCancelJobTasker}
-                  className="w-full sm:w-auto px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 rounded-xl text-sm font-bold transition-colors shrink-0 flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-4 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/20 rounded-xl text-sm font-bold transition-colors shrink-0 flex items-center justify-center gap-2"
                 >
                   <AlertTriangle className="w-4 h-4" /> {t('gig:withdraw_task', 'Batal & Tarik Diri')}
                 </button>
@@ -626,22 +626,22 @@ export function PolyTaskJobDetail() {
 
       {/* --- REQUESTER VIEW: MANAGE JOB --- */}
       {isRequester && job.status === 'IN_PROGRESS' && (
-        <div className="bg-emerald-950/20 border border-emerald-500/30 rounded-3xl p-6 md:p-8 mb-8 text-center flex flex-col items-center">
-          <div className="w-16 h-16 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center mb-4">
+        <div className="bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-300 dark:border-emerald-500/30 rounded-3xl p-6 md:p-8 mb-8 text-center flex flex-col items-center shadow-xs">
+          <div className="w-16 h-16 bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mb-4">
             <CheckCircle className="w-8 h-8" />
           </div>
-          <h2 className="text-2xl font-bold text-white mb-2">{t('gig:task_running_title', 'Tugasan Sedang Dijalankan')}</h2>
-          <p className="text-slate-400 max-w-md mx-auto mb-6">
+          <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t('gig:task_running_title', 'Tugasan Sedang Dijalankan')}</h2>
+          <p className="text-slate-600 dark:text-slate-400 max-w-md mx-auto mb-6">
             {t('gig:task_running_desc', 'Tasker yang dilantik sedang melaksanakan tugasan anda. Pastikan kerja siap sebelum mengesahkan.')}
           </p>
 
           {job.proof_image_url && (
-            <div className="w-full max-w-md mb-8 bg-slate-900/50 p-4 rounded-2xl border border-emerald-500/30">
-              <h4 className="text-sm font-bold text-emerald-400 mb-2 flex items-center justify-center gap-2">
+            <div className="w-full max-w-md mb-8 bg-white dark:bg-slate-900/50 p-4 rounded-2xl border border-emerald-500/30">
+              <h4 className="text-sm font-bold text-emerald-600 dark:text-emerald-400 mb-2 flex items-center justify-center gap-2">
                 <FileImage className="w-4 h-4" /> {t('gig:tasker_uploaded_proof', 'Tasker Telah Memuat Naik Bukti')}
               </h4>
               <img src={job.proof_image_url} alt={t('gig:work_proof_alt', 'Bukti Kerja')} className="w-full h-48 object-cover rounded-xl mb-2" />
-              <a href={job.proof_image_url} target="_blank" rel="noreferrer" className="text-xs text-indigo-400 hover:text-indigo-300 underline">{t('gig:view_full_image', 'Lihat Imej Penuh')}</a>
+              <a href={job.proof_image_url} target="_blank" rel="noreferrer" className="text-xs text-purple-600 dark:text-purple-400 hover:underline">{t('gig:view_full_image', 'Lihat Imej Penuh')}</a>
             </div>
           )}
 
@@ -656,10 +656,10 @@ export function PolyTaskJobDetail() {
 
       {/* --- REQUESTER VIEW: REVIEW TASKER --- */}
       {isRequester && job.status === 'COMPLETED' && acceptedBid && (
-        <div className="bg-indigo-950/20 border border-indigo-500/30 rounded-3xl p-6 md:p-8 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="bg-purple-50/70 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-500/30 rounded-3xl p-6 md:p-8 mb-8 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-xs">
           <div>
-            <h2 className="text-xl font-bold text-white mb-2">{t('gig:task_completed_celebration', 'Tugasan Selesai! 🎉')}</h2>
-            <p className="text-slate-400 text-sm">
+            <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{t('gig:task_completed_celebration', 'Tugasan Selesai! 🎉')}</h2>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">
               {hasReviewed 
                 ? t('gig:review_thank_you', 'Terima kasih kerana memberikan ulasan untuk Tasker ini.') 
                 : t('gig:review_prompt', 'Bagaimana hasil kerja Tasker ini? Berikan rating anda.')}
@@ -668,7 +668,7 @@ export function PolyTaskJobDetail() {
           {!hasReviewed && (
             <button 
               onClick={() => setIsReviewModalOpen(true)}
-              className="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-colors shrink-0"
+              className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white px-6 py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all shrink-0 shadow-md shadow-purple-500/25"
             >
               <Star className="w-5 h-5 fill-white text-white" /> {t('gig:rate_tasker_btn', 'Nilaikan Tasker')}
             </button>
@@ -679,19 +679,19 @@ export function PolyTaskJobDetail() {
       {/* --- REQUESTER VIEW: LIST OF BIDS --- */}
       {isRequester && job.status === 'OPEN' && (
         <div>
-          <h2 className="text-xl font-bold text-white mb-6">{t('gig:bids_list_title', 'Senarai Bidaan ({{count}})', { count: bids.length })}</h2>
+          <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6">{t('gig:bids_list_title', 'Senarai Bidaan ({{count}})', { count: bids.length })}</h2>
           
           {bids.length === 0 ? (
-            <div className="bg-slate-900/30 border border-dashed border-white/10 rounded-3xl p-12 text-center">
-              <p className="text-slate-400">{t('gig:no_bids_yet', 'Belum ada sebarang bidaan diterima daripada pelajar lain.')}</p>
+            <div className="bg-white dark:bg-slate-900/30 border border-dashed border-slate-300 dark:border-white/10 rounded-3xl p-12 text-center">
+              <p className="text-slate-500 dark:text-slate-400">{t('gig:no_bids_yet', 'Belum ada sebarang bidaan diterima daripada pelajar lain.')}</p>
             </div>
           ) : (
             <div className="space-y-4">
               {bids.map(bid => (
-                <div key={bid.id} className={`bg-slate-900/60 border rounded-2xl p-6 transition-colors flex flex-col sm:flex-row gap-6 ${
-                  bid.status === 'ACCEPTED' ? 'border-emerald-500/50 bg-emerald-950/10' : 
-                  bid.status === 'REJECTED' ? 'border-white/5 opacity-50' : 
-                  'border-white/10 hover:border-indigo-500/30'
+                <div key={bid.id} className={`bg-white dark:bg-slate-900/60 border rounded-2xl p-6 transition-colors flex flex-col sm:flex-row gap-6 shadow-xs ${
+                  bid.status === 'ACCEPTED' ? 'border-emerald-500/50 bg-emerald-50 dark:bg-emerald-950/10' : 
+                  bid.status === 'REJECTED' ? 'border-slate-200 dark:border-white/5 opacity-50' : 
+                  'border-slate-200 dark:border-white/10 hover:border-purple-500/30'
                 }`}>
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-3">
@@ -702,51 +702,51 @@ export function PolyTaskJobDetail() {
                         }}
                         className="flex items-center gap-3 text-left group hover:opacity-80 transition-opacity"
                       >
-                        <div className="w-10 h-10 rounded-full bg-slate-800 overflow-hidden ring-2 ring-transparent group-hover:ring-indigo-500 transition-all">
+                        <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden ring-2 ring-transparent group-hover:ring-purple-500 transition-all">
                           {bid.tasker?.avatar_url ? (
                             <img src={bid.tasker.avatar_url} alt="avatar" className="w-full h-full object-cover" />
                           ) : (
-                            <User className="w-5 h-5 text-slate-500 m-2.5" />
+                            <User className="w-5 h-5 text-slate-400 dark:text-slate-500 m-2.5" />
                           )}
                         </div>
                         <div>
-                          <h4 className="font-bold text-white group-hover:text-indigo-300 transition-colors">{bid.status === 'ACCEPTED' ? bid.tasker?.full_name : formatMaskedName(bid.tasker?.full_name)}</h4>
-                          <p className="text-xs text-slate-400 flex items-center">
+                          <h4 className="font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors">{bid.status === 'ACCEPTED' ? bid.tasker?.full_name : formatMaskedName(bid.tasker?.full_name)}</h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center">
                             <Clock className="w-3 h-3 mr-1" /> {formatDistanceToNow(new Date(bid.created_at), { addSuffix: true, locale: ms })}
                           </p>
                         </div>
                       </button>
                     </div>
                     {bid.proposal_note && (
-                      <p className="text-sm text-slate-300 italic p-3 bg-white/5 rounded-xl border border-white/5">
+                      <p className="text-sm text-slate-700 dark:text-slate-300 italic p-3 bg-slate-50 dark:bg-white/5 rounded-xl border border-slate-200 dark:border-white/5">
                         "{bid.proposal_note}"
                       </p>
                     )}
                   </div>
                   
-                  <div className="flex flex-row sm:flex-col items-center justify-between sm:justify-center gap-4 sm:border-l border-white/10 sm:pl-6 min-w-[140px]">
+                  <div className="flex flex-row sm:flex-col items-center justify-between sm:justify-center gap-4 sm:border-l border-slate-200 dark:border-white/10 sm:pl-6 min-w-[140px]">
                     <div className="text-center">
-                      <p className="text-xs text-slate-400 font-medium mb-1">{t('gig:price_offer', 'Tawaran Harga')}</p>
-                      <p className="text-xl font-bold text-emerald-400">RM {bid.bid_amount.toFixed(2)}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mb-1">{t('gig:price_offer', 'Tawaran Harga')}</p>
+                      <p className="text-xl font-bold text-emerald-600 dark:text-emerald-400">RM {bid.bid_amount.toFixed(2)}</p>
                     </div>
 
                     {job.status === 'OPEN' && bid.status === 'PENDING' && (
                       <button 
                         onClick={() => handleAcceptBid(bid.id, bid.tasker_id)}
-                        className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-bold w-full transition-colors"
+                        className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white px-4 py-2 rounded-xl text-sm font-bold w-full transition-all shadow-md shadow-purple-500/25 active:scale-95"
                       >
                         {t('gig:accept_bid_btn', 'Terima Bid')}
                       </button>
                     )}
 
                     {bid.status === 'ACCEPTED' && (
-                      <div className="bg-emerald-500/20 text-emerald-400 px-4 py-2 rounded-xl text-sm font-bold w-full text-center flex items-center justify-center gap-2">
+                      <div className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 px-4 py-2 rounded-xl text-sm font-bold w-full text-center flex items-center justify-center gap-2">
                         <CheckCircle className="w-4 h-4" /> {t('gig:bid_accepted_badge', 'Diterima')}
                       </div>
                     )}
                     
                     {bid.status === 'REJECTED' && (
-                      <div className="bg-white/5 text-slate-500 px-4 py-2 rounded-xl text-sm font-bold w-full text-center">
+                      <div className="bg-slate-100 dark:bg-white/5 text-slate-500 px-4 py-2 rounded-xl text-sm font-bold w-full text-center">
                         {t('gig:bid_declined_badge', 'Ditolak')}
                       </div>
                     )}

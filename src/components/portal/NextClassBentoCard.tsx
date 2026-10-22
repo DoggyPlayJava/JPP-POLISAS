@@ -645,35 +645,35 @@ export function NextClassBentoCard({
         </div>
 
         {/* Action Buttons Row */}
-        <div className="flex flex-wrap items-center gap-3 pt-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-3">
           {entry.is_online ? (
             <a
               href="https://teams.microsoft.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white font-bold text-xs sm:text-sm hover:bg-blue-700 transition-colors shadow-sm"
+              className="w-full inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs sm:text-sm transition-all shadow-xs active:scale-[0.99]"
             >
-              <Laptop className="w-4 h-4" />
-              <span>{t('portal:join_online_class', 'Sertai Kelas Dalam Talian')}</span>
-              <ExternalLink className="w-3.5 h-3.5" />
+              <Laptop className="w-4 h-4 shrink-0" />
+              <span className="truncate">{t('portal:join_online_class', 'Sertai Kelas Dalam Talian')}</span>
+              <ExternalLink className="w-3.5 h-3.5 shrink-0 opacity-80" />
             </a>
           ) : (
             <Link
               to={getPolyMapsUrl(entry)}
-              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] font-bold text-xs sm:text-sm hover:opacity-90 transition-all shadow-sm"
+              className="w-full inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] font-bold text-xs sm:text-sm hover:opacity-90 transition-all shadow-xs active:scale-[0.99]"
             >
-              <MapPin className="w-4 h-4 text-emerald-400 dark:text-emerald-600" />
-              <span>{t('portal:polymaps_directions', 'Tunjuk Arah PolyMaps')}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
+              <MapPin className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
+              <span className="truncate">{t('portal:polymaps_directions', 'Tunjuk Arah PolyMaps')}</span>
+              <ArrowRight className="w-3.5 h-3.5 shrink-0 opacity-80" />
             </Link>
           )}
 
           <Link
             to="/akademik/takwim?tab=personal"
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#2E3A2F]/15 dark:border-[#F8F6EE]/15 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/5 dark:hover:bg-[#F8F6EE]/5 transition-colors"
+            className="w-full inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl border border-[#2E3A2F]/20 dark:border-[#F8F6EE]/20 bg-transparent hover:bg-[#2E3A2F]/5 dark:hover:bg-[#F8F6EE]/5 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs sm:text-sm font-bold transition-all active:scale-[0.99]"
           >
-            <Calendar className="w-3.5 h-3.5" />
-            <span>{t('portal:view_full_schedule', 'Lihat Jadual Penuh')}</span>
+            <Calendar className="w-4 h-4 shrink-0 opacity-70" />
+            <span className="truncate">{t('portal:view_full_schedule', 'Lihat Jadual Penuh')}</span>
           </Link>
         </div>
       </div>

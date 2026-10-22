@@ -72,27 +72,27 @@ export function PolyTaskDisputeModal({ isOpen, onClose, jobId, reporterId, onDis
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md p-6 overflow-hidden shadow-2xl"
+            className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-md p-6 overflow-hidden shadow-2xl text-slate-900 dark:text-slate-100"
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors"
+              className="absolute top-4 right-4 p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-slate-700 dark:hover:text-white"
             >
-              <X className="w-4 h-4 text-slate-400" />
+              <X className="w-4 h-4" />
             </button>
 
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-rose-500/20">
                 <AlertTriangle className="w-8 h-8 text-rose-500" />
               </div>
-              <h2 className="text-2xl font-black text-white">{t('gig:dispute_modal_title', 'Lapor Pertikaian')}</h2>
-              <p className="text-sm text-slate-400 mt-2">
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white">{t('gig:dispute_modal_title', 'Lapor Pertikaian')}</h2>
+              <p className="text-sm text-slate-600 dark:text-slate-400 mt-2">
                 {t('gig:dispute_modal_desc', 'Adakah berlaku masalah seperti bayaran tidak diterima, atau tugasan tidak disiapkan? Aduan anda akan dihantar kepada Admin JPP.')}
               </p>
             </div>
 
             <div className="mb-6">
-              <label className="block text-sm font-medium text-slate-300 mb-2">
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 {t('gig:dispute_reason_label', 'Sebab Aduan / Pertikaian')}
               </label>
               <textarea
@@ -100,7 +100,7 @@ export function PolyTaskDisputeModal({ isOpen, onClose, jobId, reporterId, onDis
                 onChange={(e) => setReason(e.target.value)}
                 placeholder={t('gig:dispute_reason_placeholder', 'Cth: Tasker sudah lari dan kerja tidak siap / Peminta enggan membayar upah...')}
                 rows={4}
-                className="w-full bg-slate-950 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:ring-2 focus:ring-rose-500/50 outline-none resize-none"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-300 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:ring-2 focus:ring-rose-500/50 outline-none resize-none"
               />
             </div>
 

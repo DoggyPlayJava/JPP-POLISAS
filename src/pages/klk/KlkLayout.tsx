@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { KlkSidebar } from './KlkSidebar';
 import { Menu, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,6 +15,8 @@ import { BottomNav } from '@/components/layout/BottomNav';
 export function KlkLayout() {
   const { t } = useTranslation(['housing', 'common']);
   const { isLoading, profile, isSuperAdmin } = useAuth();
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
 
@@ -41,8 +45,8 @@ export function KlkLayout() {
 
   if (isLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-slate-950">
-        <div className="animate-pulse font-black text-xs uppercase tracking-[0.3em] opacity-20 text-white">
+      <div className={cn("h-screen w-screen flex items-center justify-center", isDark ? "bg-slate-950" : "bg-slate-50")}>
+        <div className={cn("animate-pulse font-black text-xs uppercase tracking-[0.3em] opacity-40", isDark ? "text-white" : "text-slate-700")}>
           {t('housing:loading_klk', 'Memuatkan Kediaman Luar Kampus...')}
         </div>
       </div>
@@ -58,11 +62,14 @@ export function KlkLayout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-950 text-slate-50 relative">
+    <div className={cn(
+      "flex h-screen overflow-hidden relative transition-colors duration-300",
+      isDark ? "bg-slate-950 text-slate-50" : "bg-slate-50 text-slate-900"
+    )}>
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/60  z-[130] lg:hidden"
+          className="fixed inset-0 bg-black/60 z-[130] lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -78,24 +85,33 @@ export function KlkLayout() {
       </div>
 
       {/* Main content */}
-      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-950 relative min-w-0">
+      <main className={cn(
+        "flex-1 flex flex-col h-screen overflow-hidden relative min-w-0 transition-colors duration-300",
+        isDark ? "bg-slate-950 text-slate-50" : "bg-slate-50 text-slate-900"
+      )}>
         {/* Mobile topbar */}
-        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-white/5 bg-slate-950/80  relative z-30">
+        <div className={cn(
+          "lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b relative z-30 transition-colors duration-300",
+          isDark ? "border-white/5 bg-slate-950/80 backdrop-blur-md" : "border-slate-200 bg-white/80 backdrop-blur-md"
+        )}>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="p-2 -ml-2 text-white/50 hover:text-white transition-colors"
+              className={cn("p-2 -ml-2 transition-colors", isDark ? "text-white/50 hover:text-white" : "text-slate-500 hover:text-slate-900")}
             >
               <Menu className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2 ml-1">
-              <MapPin className="w-3.5 h-3.5 text-blue-400" />
-              <span className="font-black text-[10px] uppercase tracking-widest text-blue-400">
+              <MapPin className="w-3.5 h-3.5 text-blue-500" />
+              <span className="font-black text-[10px] uppercase tracking-widest text-blue-500">
                 {t('housing:title_klk', 'Kediaman Luar Kampus')}
               </span>
             </div>
           </div>
-          <NotificationBell variant="dark" />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <NotificationBell variant={isDark ? "dark" : "light"} />
+          </div>
         </div>
 
         {/* Page content */}

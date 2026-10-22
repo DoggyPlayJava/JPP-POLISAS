@@ -789,20 +789,14 @@ export function PolyMartHome() {
             <span className="text-xs font-bold text-foreground">{t('polymart_title')}</span>
           </div>
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => navigate('/polymart/troli')}
-              className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
-            >
+            <span className="text-xs font-bold text-amber-600 dark:text-amber-400 flex items-center gap-1">
               <ShoppingCart className="w-3.5 h-3.5" />
               <span>{t('cart')}</span>
-            </button>
-            <button
-              onClick={() => navigate('/polymart/pesanan-saya')}
-              className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
-            >
+            </span>
+            <span className="text-xs font-bold text-muted-foreground flex items-center gap-1">
               <Package className="w-3.5 h-3.5" />
               <span>{t('my_orders')}</span>
-            </button>
+            </span>
           </div>
         </div>
 
@@ -852,29 +846,31 @@ export function PolyMartHome() {
 
   return (
     <div className="space-y-5">
-      {/* Quick Navigation Capsule */}
-      <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-muted/30 border border-border/50">
-        <div className="flex items-center gap-2">
-          <ShoppingBag className="w-4 h-4 text-amber-500" />
-          <span className="text-xs font-bold text-foreground">{t('polymart_title')}</span>
+      {/* Quick Navigation Capsule (only when hero banner is hidden during category/search/vendor filter) */}
+      {!(activeCategory === 'all' && !searchQuery && !vendorFilter) && (
+        <div className="flex items-center justify-between gap-3 p-3.5 rounded-2xl bg-muted/30 border border-border/50">
+          <div className="flex items-center gap-2">
+            <ShoppingBag className="w-4 h-4 text-amber-500" />
+            <span className="text-xs font-bold text-foreground">{t('polymart_title')}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/polymart/troli')}
+              className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
+            >
+              <ShoppingCart className="w-3.5 h-3.5" />
+              <span>{t('cart')}</span>
+            </button>
+            <button
+              onClick={() => navigate('/polymart/pesanan-saya')}
+              className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
+            >
+              <Package className="w-3.5 h-3.5" />
+              <span>{t('my_orders')}</span>
+            </button>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => navigate('/polymart/troli')}
-            className="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1 cursor-pointer"
-          >
-            <ShoppingCart className="w-3.5 h-3.5" />
-            <span>{t('cart')}</span>
-          </button>
-          <button
-            onClick={() => navigate('/polymart/pesanan-saya')}
-            className="text-xs font-bold text-muted-foreground hover:text-foreground flex items-center gap-1 cursor-pointer"
-          >
-            <Package className="w-3.5 h-3.5" />
-            <span>{t('my_orders')}</span>
-          </button>
-        </div>
-      </div>
+      )}
 
       {/* Hero / Ads Carousel */}
       {activeCategory === 'all' && !searchQuery && !vendorFilter && (

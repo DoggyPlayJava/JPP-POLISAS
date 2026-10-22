@@ -233,6 +233,16 @@ vi.mock('@/contexts/AiSettingsContext', () => ({
   }),
 }));
 
+// Mock Theme Context
+vi.mock('@/contexts/ThemeContext', () => ({
+  useTheme: () => ({
+    theme: 'dark',
+    setTheme: vi.fn(),
+    toggleTheme: vi.fn(),
+  }),
+  ThemeProvider: ({ children }: any) => React.createElement('div', null, children),
+}));
+
 // Mock AiAssistant Hook
 vi.mock('@/hooks/useAiAssistant', () => ({
   useAiAssistant: () => ({

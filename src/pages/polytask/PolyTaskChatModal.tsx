@@ -118,35 +118,35 @@ export function PolyTaskChatModal({ isOpen, onClose, jobId, jobTitle, otherUserN
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl h-[80vh] flex flex-col overflow-hidden shadow-2xl"
+            className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-2xl h-[80vh] flex flex-col overflow-hidden shadow-2xl text-slate-900 dark:text-slate-100"
           >
             {/* Header */}
-            <div className="bg-slate-950 border-b border-white/10 p-4 flex items-center justify-between shrink-0">
+            <div className="bg-slate-50 dark:bg-slate-950 border-b border-slate-200 dark:border-white/10 p-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-indigo-500/20 text-indigo-400 rounded-full flex items-center justify-center">
+                <div className="w-10 h-10 bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-full flex items-center justify-center">
                   <MessageCircle className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-white leading-tight">{otherUserName}</h3>
-                  <p className="text-xs text-slate-400 truncate max-w-[200px] sm:max-w-xs">{jobTitle}</p>
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white leading-tight">{otherUserName}</h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[200px] sm:max-w-xs">{jobTitle}</p>
                 </div>
               </div>
               <button
                 onClick={onClose}
-                className="p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors"
+                className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full transition-colors text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
-                <X className="w-5 h-5 text-slate-400" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-900/50">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar bg-slate-50/50 dark:bg-slate-900/50">
               {loading ? (
                 <div className="flex justify-center items-center h-full">
-                  <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+                  <Loader2 className="w-8 h-8 text-purple-600 dark:text-purple-400 animate-spin" />
                 </div>
               ) : messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-full text-slate-500">
+                <div className="flex flex-col items-center justify-center h-full text-slate-400 dark:text-slate-500">
                   <MessageCircle className="w-12 h-12 mb-3 opacity-20" />
                   <p>{t('gig:start_chat_with', 'Mula bersembang dengan {{name}}', { name: otherUserName })}</p>
                 </div>
@@ -158,12 +158,12 @@ export function PolyTaskChatModal({ isOpen, onClose, jobId, jobTitle, otherUserN
                     <div key={msg.id || idx} className={`flex flex-col ${isMe ? 'items-end' : 'items-start'}`}>
                       <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
                         isMe 
-                          ? 'bg-indigo-600 text-white rounded-br-none' 
-                          : 'bg-slate-800 text-slate-200 border border-white/5 rounded-bl-none'
+                          ? 'bg-purple-600 text-white rounded-br-none shadow-xs' 
+                          : 'bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-200 border border-slate-200 dark:border-white/5 rounded-bl-none shadow-xs'
                       }`}>
                         <p className="text-sm whitespace-pre-wrap break-words">{msg.message}</p>
                       </div>
-                      <span className="text-[10px] text-slate-500 mt-1 px-1">
+                      <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 px-1">
                         {format(new Date(msg.created_at), 'hh:mm a', { locale: dateFnsLocale })}
                       </span>
                     </div>
@@ -174,19 +174,19 @@ export function PolyTaskChatModal({ isOpen, onClose, jobId, jobTitle, otherUserN
             </div>
 
             {/* Input Area */}
-            <div className="bg-slate-950 p-4 border-t border-white/10 shrink-0">
+            <div className="bg-white dark:bg-slate-950 p-4 border-t border-slate-200 dark:border-white/10 shrink-0">
               <form onSubmit={handleSendMessage} className="flex gap-2">
                 <input
                   type="text"
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder={t('gig:type_message_placeholder', 'Taip mesej anda di sini...')}
-                  className="flex-1 bg-slate-900 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:ring-2 focus:ring-indigo-500/50 outline-none"
+                  className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white focus:ring-2 focus:ring-purple-500/50 outline-none"
                 />
                 <button
                   type="submit"
                   disabled={!newMessage.trim()}
-                  className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:hover:bg-indigo-600 text-white p-3 rounded-xl transition-colors flex items-center justify-center shrink-0"
+                  className="bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:hover:bg-purple-600 text-white p-3 rounded-xl transition-colors flex items-center justify-center shrink-0 shadow-sm"
                 >
                   <Send className="w-5 h-5" />
                 </button>

@@ -1,11 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Shield, CheckCircle, XCircle, FileText, MapPin, Plus, Trash2, GripVertical, Eye, EyeOff, Phone, AlertTriangle, Settings, Upload, MessageCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Shield, CheckCircle, XCircle, FileText, MapPin, Plus, Trash2, GripVertical, Eye, EyeOff, Phone, AlertTriangle, Settings, Upload, MessageCircle, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 import { notifyKLKOnSuspension } from '@/lib/polyRiderNotify';
 import { uploadFileToDrive } from '@/lib/driveUpload';
 import { logAuditAction } from '@/lib/auditLogger';
 import { useTranslation } from 'react-i18next';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 export function PolyRiderAdminDashboard() {
   const { t } = useTranslation(['gig', 'common']);
   const [pendingRiders, setPendingRiders] = useState<any[]>([]);
@@ -421,29 +423,43 @@ export function PolyRiderAdminDashboard() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto pb-32 pt-4 px-4 min-h-screen">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            {t('gig:polyrider_admin_title', 'Kawalan KLK')} <Shield className="w-6 h-6 text-amber-500" />
-          </h1>
-          <p className="text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-widest mt-1">
-            {t('gig:polyrider_management', 'Pengurusan PolyRider')}
-          </p>
-        </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300">
+      <div className="max-w-4xl mx-auto pb-32 pt-6 px-4">
+        {/* Navigation & Header */}
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-slate-200 dark:border-white/10">
+          <div className="flex items-center gap-3">
+            <Link
+              to="/klk/dashboard"
+              className="p-2 rounded-xl bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors shadow-xs"
+              title={t('common:back', 'Kembali ke Dashboard KLK')}
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
+            <div>
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+                {t('gig:polyrider_admin_title', 'Kawalan KLK')} <Shield className="w-5 h-5 text-amber-500" />
+              </h1>
+              <p className="text-xs font-bold text-slate-500 dark:text-white/50 uppercase tracking-widest mt-0.5">
+                {t('gig:polyrider_management', 'Pengurusan PolyRider')}
+              </p>
+            </div>
+          </div>
 
-        {/* Master Switch */}
-        <button 
-          onClick={toggleSystemStatus}
-          className={`px-4 py-2 rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-2 ${
-            systemActive 
-              ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
-              : 'bg-rose-500 text-white shadow-rose-500/20'
-          }`}
-        >
-          {systemActive ? t('gig:system_active_on', 'SISTEM ON') : t('gig:system_active_off', 'SISTEM OFF')}
-        </button>
-      </div>
+          <div className="flex items-center gap-2.5">
+            {/* Master Switch */}
+            <button 
+              onClick={toggleSystemStatus}
+              className={`px-4 py-2 rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-sm flex items-center gap-2 ${
+                systemActive 
+                  ? 'bg-emerald-500 text-white shadow-emerald-500/20' 
+                  : 'bg-rose-500 text-white shadow-rose-500/20'
+              }`}
+            >
+              {systemActive ? t('gig:system_active_on', 'SISTEM ON') : t('gig:system_active_off', 'SISTEM OFF')}
+            </button>
+            <ThemeToggle />
+          </div>
+        </div>
 
       {/* Tab Bar */}
       <div className="flex gap-1.5 mb-8 bg-slate-100 dark:bg-zinc-900 p-1 rounded-2xl overflow-x-auto">
@@ -565,7 +581,7 @@ export function PolyRiderAdminDashboard() {
               {activeRiders.map(rider => {
                 const daysRemaining = getDaysRemaining(rider.subscription_valid_until);
                 return (
-                  <tr key={rider.user_id} className={`hover:bg-slate-50 dark:hover:bg-white dark:bg-zinc-900/5 transition-colors ${rider.status === 'SUSPENDED' ? 'opacity-60' : ''}`}>
+                  <tr key={rider.user_id} className={`hover:bg-slate-50 dark:hover:bg-zinc-800/40 transition-colors ${rider.status === 'SUSPENDED' ? 'opacity-60' : ''}`}>
                     <td className="p-4 border-b border-slate-50 dark:border-white/5">
                       <p className="font-bold text-sm text-slate-900 dark:text-white">{rider.profiles?.full_name}</p>
                       {rider.status === 'SUSPENDED' && <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest bg-rose-500/10 px-2 py-0.5 rounded-md mt-1 inline-block">{t('gig:suspended_badge', 'Digantung')}</span>}
@@ -576,7 +592,7 @@ export function PolyRiderAdminDashboard() {
                     <td className="p-4 border-b border-slate-50 dark:border-white/5">
                       <div className="flex flex-col gap-1">
                         <span className={`text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded-md w-fit ${
-                          rider.is_active ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20' : 'bg-slate-100 text-slate-500 dark:bg-white dark:bg-zinc-900/10 dark:text-white/40'
+                          rider.is_active ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-500/20' : 'bg-slate-100 text-slate-500 dark:bg-zinc-800 dark:text-white/40'
                         }`}>
                           {rider.is_active ? t('gig:on_duty', 'On-Duty') : t('gig:off_duty', 'Off-Duty')}
                         </span>
@@ -929,6 +945,7 @@ export function PolyRiderAdminDashboard() {
           </div>
         </div>
       )}
+      </div>
     </div>
   );
 }

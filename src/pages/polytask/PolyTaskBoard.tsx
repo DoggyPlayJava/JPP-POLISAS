@@ -90,16 +90,14 @@ export function PolyTaskBoard() {
     });
 
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-200 pb-24 font-sans">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-24 font-sans transition-colors duration-300">
       
-      {/* ── HERO SECTION (Fiverr / TaskRabbit Vibe) ── */}
+      {/* ── HERO SECTION (EMS Purple Vibe) ── */}
       <div className="relative pt-12 pb-20 px-4 md:px-8 overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
-        {/* Background Effects */}
-        
         {/* Help Button */}
         <button 
           onClick={startTour} 
-          className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-slate-400 hover:text-white transition-all  border border-white/10"
+          className="absolute top-6 right-6 z-20 w-10 h-10 rounded-full bg-slate-200/60 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 flex items-center justify-center text-slate-700 dark:text-slate-400 hover:text-slate-950 dark:hover:text-white transition-all border border-slate-300/60 dark:border-white/10"
         >
           <HelpCircle className="w-5 h-5" />
         </button>
@@ -109,27 +107,27 @@ export function PolyTaskBoard() {
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10 text-center max-w-2xl w-full"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/5 border border-white/10 rounded-full mb-6 text-xs font-bold text-indigo-300 tracking-wide">
-            <ShieldCheck className="w-3.5 h-3.5" /> {t('gig:polytask_badge', '100% Khidmat Pelajar ke Pelajar')}
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/10 border border-purple-500/20 rounded-full mb-6 text-xs font-bold text-purple-700 dark:text-purple-300 tracking-wide shadow-xs">
+            <ShieldCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> {t('gig:polytask_badge', '100% Khidmat Pelajar ke Pelajar')}
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-slate-200 to-slate-500 tracking-tight leading-[1.1] mb-6">
+          <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-950 via-slate-800 to-violet-950 dark:from-white dark:via-purple-100 dark:to-violet-300 tracking-tight leading-[1.1] mb-6">
             {t('gig:polytask_hero_line1', 'Cari Peluang,')}<br /> {t('gig:polytask_hero_line2', 'Jana Pendapatan.')}
           </h1>
           
           {/* Main Search Bar */}
           <div className="relative group max-w-xl mx-auto w-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-emerald-500 rounded-2xl  opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
-            <div className="relative flex items-center bg-slate-900/80 border border-white/10 rounded-2xl p-2  shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-500 rounded-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 blur-sm" />
+            <div className="relative flex items-center bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 rounded-2xl p-2 shadow-xl backdrop-blur-md">
               <Search className="w-6 h-6 text-slate-400 ml-4 shrink-0" />
               <input 
                 type="text"
                 placeholder={t('gig:search_tasks_placeholder', 'Cari tugasan (Cth: Format Laptop, Beli Makanan...)')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full bg-transparent border-none px-4 py-3 text-white focus:outline-none focus:ring-0 text-base md:text-lg placeholder:text-slate-500"
+                className="w-full bg-transparent border-none px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-0 text-base md:text-lg placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
-              <button className="bg-indigo-600 hover:bg-indigo-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-[0_0_20px_rgba(79,70,229,0.3)] shrink-0">
+              <button className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-[0_4px_16px_rgba(147,51,234,0.35)] shrink-0 active:scale-95">
                 {t('gig:search_btn', 'Cari')}
               </button>
             </div>
@@ -139,12 +137,12 @@ export function PolyTaskBoard() {
 
       <div className="max-w-7xl mx-auto px-4 md:px-8">
         {!moduleEnabled ? (
-          <div className="bg-slate-900/50 border border-white/5 rounded-3xl p-16 text-center flex flex-col items-center mt-8 mb-16">
+          <div className="bg-slate-100/80 dark:bg-slate-900/50 border border-slate-200 dark:border-white/5 rounded-3xl p-16 text-center flex flex-col items-center mt-8 mb-16">
             <div className="w-20 h-20 bg-rose-500/10 rounded-full flex items-center justify-center mb-6 border border-rose-500/20">
               <ShieldCheck className="w-10 h-10 text-rose-500" />
             </div>
-            <h3 className="text-2xl font-black text-white mb-2">{t('gig:module_closed_title', 'Modul Ditutup Sementara')}</h3>
-            <p className="text-slate-400 max-w-md">{t('gig:module_closed_desc', 'Sistem PolyTask sedang diselenggara atau ditutup sementara oleh pihak pentadbir JPP. Sila kembali semula nanti.')}</p>
+            <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">{t('gig:module_closed_title', 'Modul Ditutup Sementara')}</h3>
+            <p className="text-slate-500 dark:text-slate-400 max-w-md">{t('gig:module_closed_desc', 'Sistem PolyTask sedang diselenggara atau ditutup sementara oleh pihak pentadbir JPP. Sila kembali semula nanti.')}</p>
           </div>
         ) : (
           <>
@@ -157,8 +155,8 @@ export function PolyTaskBoard() {
                     onClick={() => setActiveCategory(cat.id)}
                     className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl transition-all duration-300 font-bold text-sm border ${
                       activeCategory === cat.id 
-                        ? 'bg-slate-800 border-indigo-500/50 shadow-[0_0_15px_rgba(79,70,229,0.2)] text-white' 
-                        : 'bg-slate-900/50 border-white/5 text-slate-400 hover:bg-slate-800 hover:text-white'
+                        ? 'bg-purple-600 border-purple-500 shadow-md shadow-purple-500/25 text-white' 
+                        : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
                     <div className={`w-6 h-6 rounded-lg flex items-center justify-center ${cat.bg} ${cat.color}`}>
@@ -172,17 +170,17 @@ export function PolyTaskBoard() {
 
             {/* ── JOB BOARD GRID ── */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 tour-step-board-main">
-              <h2 className="text-xl md:text-2xl font-bold text-white flex items-center gap-2">
+              <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 {t('gig:available_tasks', 'Tugasan Tersedia')}{' '}
-                <span className="text-xs px-2 py-1 bg-indigo-500/20 text-indigo-400 rounded-md">{filteredJobs.length}</span>
+                <span className="text-xs px-2.5 py-1 bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300 rounded-md font-bold">{filteredJobs.length}</span>
               </h2>
 
               <div className="flex items-center gap-3">
-                <span className="text-xs text-slate-400 font-bold uppercase tracking-wider">{t('gig:sort_label', 'Susunan:')}</span>
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">{t('gig:sort_label', 'Susunan:')}</span>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-slate-900/80 border border-white/10 text-slate-200 text-sm font-semibold rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none cursor-pointer hover:bg-slate-800 transition-colors"
+                  className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 text-sm font-semibold rounded-xl px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:outline-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
                 >
                   <option value="LATEST">{t('gig:sort_latest', 'Paling Baru')}</option>
                   <option value="HIGHEST_PAY">{t('gig:sort_highest_pay', 'Upah Tertinggi')}</option>
@@ -198,12 +196,12 @@ export function PolyTaskBoard() {
                 ))}
               </div>
             ) : filteredJobs.length === 0 ? (
-              <div className="bg-slate-900/30 border border-dashed border-white/10 rounded-3xl p-16 text-center flex flex-col items-center">
-                <div className="w-20 h-20 bg-slate-800/50 rounded-full flex items-center justify-center mb-6">
-                  <Briefcase className="w-10 h-10 text-slate-600" />
+              <div className="bg-white dark:bg-slate-900/30 border border-dashed border-slate-300 dark:border-white/10 rounded-3xl p-16 text-center flex flex-col items-center">
+                <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800/50 rounded-full flex items-center justify-center mb-6">
+                  <Briefcase className="w-10 h-10 text-slate-400 dark:text-slate-600" />
                 </div>
-                <h3 className="text-2xl font-black text-white mb-2">{t('gig:no_tasks_found', 'Tiada Hasil Ditemui')}</h3>
-                <p className="text-slate-400 max-w-md">{t('gig:no_tasks_found_desc', 'Cuba gunakan kata kunci yang berbeza atau pilih kategori lain.')}</p>
+                <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-2">{t('gig:no_tasks_found', 'Tiada Hasil Ditemui')}</h3>
+                <p className="text-slate-500 dark:text-slate-400 max-w-md">{t('gig:no_tasks_found_desc', 'Cuba gunakan kata kunci yang berbeza atau pilih kategori lain.')}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -222,35 +220,35 @@ export function PolyTaskBoard() {
                         transition={{ duration: 0.2 }}
                         key={job.id}
                         onClick={() => navigate(`/polytask/job/${job.id}`)}
-                        className={`group relative bg-slate-900 border border-white/5 rounded-3xl p-6 cursor-pointer hover:bg-slate-800/50 transition-all flex flex-col ${idx === 0 ? 'tour-step-bid' : ''}`}
+                        className={`group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-6 cursor-pointer hover:border-purple-300 dark:hover:border-purple-500/40 hover:shadow-xl dark:hover:bg-slate-800/50 shadow-xs transition-all flex flex-col ${idx === 0 ? 'tour-step-bid' : ''}`}
                       >
                         {/* Hover Glow Effect */}
-                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                         
                         {/* Header: Requester Info & Price */}
                         <div className="flex justify-between items-start mb-5 relative z-10 gap-3">
                           <div className="flex items-center gap-3 min-w-0 flex-1">
-                            <div className="w-10 h-10 rounded-full bg-slate-800 overflow-hidden border border-white/10 shrink-0">
+                            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden border border-slate-200 dark:border-white/10 shrink-0">
                               {job.requester?.avatar_url ? (
                                 <img src={job.requester.avatar_url} alt="avatar" className="w-full h-full object-cover" />
                               ) : (
-                                <User className="w-5 h-5 text-slate-500 m-2.5" />
+                                <User className="w-5 h-5 text-slate-400 m-2.5" />
                               )}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <p className="text-sm font-bold text-slate-200 truncate">{formatMaskedName(job.requester?.full_name)}</p>
+                              <p className="text-sm font-bold text-slate-900 dark:text-slate-200 truncate">{formatMaskedName(job.requester?.full_name)}</p>
                               <p className="text-[10px] text-slate-500 uppercase tracking-wider font-semibold truncate">
                                 {formatDistanceToNow(new Date(job.created_at), { addSuffix: true, locale: ms })}
                               </p>
                             </div>
                           </div>
-                          <div className="shrink-0 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl flex items-center shadow-[0_0_15px_rgba(16,185,129,0.1)]">
-                            <span className="text-emerald-400 font-black tracking-tight whitespace-nowrap">RM {job.budget.toFixed(2)}</span>
+                          <div className="shrink-0 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl flex items-center shadow-xs">
+                            <span className="text-emerald-600 dark:text-emerald-400 font-black tracking-tight whitespace-nowrap">RM {job.budget.toFixed(2)}</span>
                           </div>
                         </div>
 
                         {/* Job Title */}
-                        <h3 className="text-xl font-bold text-white leading-tight mb-4 group-hover:text-indigo-300 transition-colors line-clamp-2 relative z-10">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight mb-4 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors line-clamp-2 relative z-10">
                           {job.title}
                         </h3>
 
@@ -260,16 +258,16 @@ export function PolyTaskBoard() {
                             <catInfo.icon className="w-3.5 h-3.5" />
                             {t(`gig:${catInfo.labelKey}`, catInfo.defaultLabel)}
                           </div>
-                          <div className="flex items-center gap-1.5 bg-slate-800/50 border border-white/5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-400">
-                            <MapPin className="w-3.5 h-3.5 text-slate-500" />
+                          <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-white/5 px-2.5 py-1 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400">
+                            <MapPin className="w-3.5 h-3.5 text-slate-400 dark:text-slate-500" />
                             <span className="truncate max-w-[100px]">{job.location}</span>
                           </div>
                           <div className={`flex items-center gap-1.5 border px-2.5 py-1 rounded-lg text-xs font-bold ${
                             isUrgent 
-                              ? 'bg-rose-500/10 border-rose-500/20 text-rose-400' 
-                              : 'bg-slate-800/50 border-white/5 text-slate-400'
+                              ? 'bg-rose-500/10 border-rose-500/20 text-rose-500 dark:text-rose-400' 
+                              : 'bg-slate-100 dark:bg-slate-800/50 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400'
                           }`}>
-                            <Clock className={`w-3.5 h-3.5 ${isUrgent ? 'text-rose-500' : 'text-slate-500'}`} />
+                            <Clock className={`w-3.5 h-3.5 ${isUrgent ? 'text-rose-500' : 'text-slate-400 dark:text-slate-500'}`} />
                             {isUrgent ? t('gig:urgent_badge', 'Segera') : t('gig:days_left', '{{count}} Hari Lagi', { count: daysLeft })}
                           </div>
                         </div>

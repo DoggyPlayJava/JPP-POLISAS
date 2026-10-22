@@ -98,20 +98,20 @@ export function TaskerProfileModal({ isOpen, onClose, taskerId, isAccepted = fal
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="relative bg-slate-900 border border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl p-6 md:p-8"
+            className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-md overflow-hidden shadow-2xl p-6 md:p-8 text-slate-900 dark:text-slate-100"
           >
             <button
               onClick={onClose}
-              className="absolute top-4 right-4 p-2 bg-white/5 hover:bg-white/10 rounded-full transition-colors z-10"
+              className="absolute top-4 right-4 p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full transition-colors z-10 text-slate-400 hover:text-slate-700 dark:hover:text-white"
             >
-              <X className="w-5 h-5 text-slate-400" />
+              <X className="w-5 h-5" />
             </button>
 
             {loading ? (
               <div className="animate-pulse flex flex-col items-center py-8">
-                <div className="w-24 h-24 bg-slate-800 rounded-full mb-4" />
-                <div className="w-40 h-6 bg-slate-800 rounded mb-2" />
-                <div className="w-24 h-4 bg-slate-800 rounded" />
+                <div className="w-24 h-24 bg-slate-200 dark:bg-slate-800 rounded-full mb-4" />
+                <div className="w-40 h-6 bg-slate-200 dark:bg-slate-800 rounded mb-2" />
+                <div className="w-24 h-4 bg-slate-200 dark:bg-slate-800 rounded" />
               </div>
             ) : (
               <div className="flex flex-col items-center">
@@ -120,11 +120,11 @@ export function TaskerProfileModal({ isOpen, onClose, taskerId, isAccepted = fal
                   {isTopTasker && (
                     <div className="absolute inset-0 bg-yellow-500 opacity-30 rounded-full" />
                   )}
-                  <div className={`relative w-24 h-24 rounded-full overflow-hidden border-4 ${isTopTasker ? 'border-yellow-400' : 'border-slate-800'} bg-slate-800 flex items-center justify-center`}>
+                  <div className={`relative w-24 h-24 rounded-full overflow-hidden border-4 ${isTopTasker ? 'border-yellow-400' : 'border-slate-200 dark:border-slate-800'} bg-slate-100 dark:bg-slate-800 flex items-center justify-center`}>
                     {profile?.avatar_url ? (
                       <img src={profile.avatar_url} alt="Tasker" className="w-full h-full object-cover" />
                     ) : (
-                      <User className="w-12 h-12 text-slate-500" />
+                      <User className="w-12 h-12 text-slate-400 dark:text-slate-500" />
                     )}
                   </div>
                   {isTopTasker && (
@@ -135,48 +135,48 @@ export function TaskerProfileModal({ isOpen, onClose, taskerId, isAccepted = fal
                 </div>
 
                 {/* Name & Badge */}
-                <h2 className="text-2xl font-bold text-white mb-1 flex items-center gap-2">
+                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1 flex items-center gap-2">
                   {isAccepted ? (profile?.full_name || t('gig:polisas_student', 'Pelajar POLISAS')) : formatMaskedName(profile?.full_name)}
-                  <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                  <ShieldCheck className="w-5 h-5 text-emerald-500" />
                 </h2>
                 
                 {isTopTasker ? (
-                  <span className="text-sm font-bold text-yellow-400 uppercase tracking-widest mb-6">
+                  <span className="text-sm font-bold text-yellow-600 dark:text-yellow-400 uppercase tracking-widest mb-6">
                     {t('gig:top_tasker', 'Top Tasker')}
                   </span>
                 ) : (
-                  <span className="text-sm text-slate-400 mb-6">
+                  <span className="text-sm text-slate-500 dark:text-slate-400 mb-6">
                     {t('gig:verified_tasker', 'Tasker Disahkan')}
                   </span>
                 )}
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-3 gap-3 w-full mb-6">
-                  <div className="bg-slate-950/50 border border-white/5 rounded-2xl p-3 flex flex-col items-center text-center hover:bg-slate-800/50 transition-colors">
-                    <Star className={`w-5 h-5 mb-1 ${stats.averageRating >= 4 ? 'text-yellow-400 fill-yellow-400' : 'text-slate-500'}`} />
-                    <span className="text-xl font-black text-white">{stats.averageRating.toFixed(1)}</span>
-                    <span className="text-[10px] text-slate-400">{t('gig:stat_rating', 'Rating')}</span>
+                  <div className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-white/5 rounded-2xl p-3 flex flex-col items-center text-center hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors shadow-xs">
+                    <Star className={`w-5 h-5 mb-1 ${stats.averageRating >= 4 ? 'text-yellow-400 fill-yellow-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                    <span className="text-xl font-black text-slate-900 dark:text-white">{stats.averageRating.toFixed(1)}</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">{t('gig:stat_rating', 'Rating')}</span>
                   </div>
                   
-                  <div className="bg-slate-950/50 border border-white/5 rounded-2xl p-3 flex flex-col items-center text-center hover:bg-slate-800/50 transition-colors">
-                    <Briefcase className="w-5 h-5 mb-1 text-indigo-400" />
-                    <span className="text-xl font-black text-white">{stats.completedJobs}</span>
-                    <span className="text-[10px] text-slate-400">{t('gig:stat_completed', 'Selesai')}</span>
+                  <div className="bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-white/5 rounded-2xl p-3 flex flex-col items-center text-center hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors shadow-xs">
+                    <Briefcase className="w-5 h-5 mb-1 text-purple-600 dark:text-purple-400" />
+                    <span className="text-xl font-black text-slate-900 dark:text-white">{stats.completedJobs}</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">{t('gig:stat_completed', 'Selesai')}</span>
                   </div>
 
-                  <div className={`border rounded-2xl p-3 flex flex-col items-center text-center transition-colors ${
-                    cancellationRate > 20 ? 'bg-rose-950/30 border-rose-500/20 hover:bg-rose-900/30' : 'bg-slate-950/50 border-white/5 hover:bg-slate-800/50'
+                  <div className={`border rounded-2xl p-3 flex flex-col items-center text-center transition-colors shadow-xs ${
+                    cancellationRate > 20 ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-500/20' : 'bg-slate-50 dark:bg-slate-950/50 border-slate-200 dark:border-white/5 hover:bg-slate-100 dark:hover:bg-slate-800/50'
                   }`}>
-                    <X className={`w-5 h-5 mb-1 ${cancellationRate > 20 ? 'text-rose-400' : 'text-slate-500'}`} />
-                    <span className={`text-xl font-black ${cancellationRate > 20 ? 'text-rose-400' : 'text-white'}`}>
+                    <X className={`w-5 h-5 mb-1 ${cancellationRate > 20 ? 'text-rose-500 dark:text-rose-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                    <span className={`text-xl font-black ${cancellationRate > 20 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-900 dark:text-white'}`}>
                       {cancellationRate.toFixed(0)}%
                     </span>
-                    <span className="text-[10px] text-slate-400">{t('gig:stat_cancelled', 'Batal')}</span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400">{t('gig:stat_cancelled', 'Batal')}</span>
                   </div>
                 </div>
 
-                <div className="w-full bg-indigo-500/10 border border-indigo-500/20 rounded-2xl p-4">
-                  <p className="text-sm text-indigo-300 text-center">
+                <div className="w-full bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20 rounded-2xl p-4 shadow-xs">
+                  <p className="text-sm text-purple-800 dark:text-purple-300 text-center font-medium">
                     {t('gig:tasker_quote', '"Saya berdedikasi membantu memudahkan urusan anda dengan penuh amanah."')}
                   </p>
                 </div>
