@@ -678,13 +678,6 @@ export const CampusDayTimeline: React.FC = () => {
     ];
   }, [t]);
 
-  const scrollToPhase = (phaseId: string) => {
-    const el = document.getElementById(phaseId);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
-  };
-
   return (
     <section id="hari-kampus" className="py-24 md:py-32 px-4 md:px-6 bg-[#F8F6EE] relative z-20 overflow-hidden">
       {/* Decorative Organic Ambient Halos */}
@@ -713,27 +706,6 @@ export const CampusDayTimeline: React.FC = () => {
               'Satu ruang pintar di mana teknologi moden dan kehidupan kampus berpadu untuk memacu kecemerlangan mahasiswa'
             )}
           </p>
-
-          {/* Quick-Jump Milestone Navigation Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 sm:gap-2.5 mt-8">
-            {localizedPhases.map((phase) => (
-              <button
-                key={phase.id}
-                type="button"
-                onClick={() => scrollToPhase(phase.id)}
-                className="px-3.5 sm:px-4 py-1.5 rounded-full bg-white hover:bg-[#2E3A2F] hover:text-[#F8F6EE] text-[#556453] border border-[#D9C9B2] text-xs font-bold transition-all shadow-2xs flex items-center gap-2 cursor-pointer group"
-              >
-                <span
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: phase.tagColor }}
-                />
-                <span className="font-mono text-[11px]">{phase.time}</span>
-                <span className="text-[11px] text-[#2E3A2F] group-hover:text-[#F8F6EE] font-semibold">
-                  • {phase.title}
-                </span>
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* ── TIMELINE SPINE & ALTERNATING CARDS GRID ── */}
