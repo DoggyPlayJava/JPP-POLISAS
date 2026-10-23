@@ -34,24 +34,26 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ stats }) => {
       <div className="absolute top-1/3 right-10 w-72 h-72 bg-[#C96F4F]/10 rounded-full blur-xl pointer-events-none hidden md:block" />
 
       <div className="relative z-10 text-center px-4 max-w-5xl mx-auto flex flex-col items-center">
-        {/* Institutional Eyebrow Tag (Satisfies i18n contract, clean & authoritative) */}
+        {/* Institutional Eyebrow Tag (Single-line on mobile, sleek & non-wrapping) */}
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/90 border border-[#D9C9B2] text-[#2E3A2F] text-[11px] sm:text-xs font-semibold tracking-wide mb-4 shadow-2xs backdrop-blur-xs"
+          className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full bg-white/90 border border-[#D9C9B2] text-[#2E3A2F] text-[10px] sm:text-xs font-semibold tracking-wide mb-3 sm:mb-4 shadow-2xs backdrop-blur-xs max-w-[94vw] sm:max-w-none"
         >
-          <span className="w-2 h-2 rounded-full bg-[#6B7F5B]" />
-          <span className="font-bold text-[#2E3A2F]">POLISAS •</span>
-          <span className="text-[#556453]">{t('portal:hero_title', 'Ekosistem Digital Kampus & Super App Pelajar')}</span>
+          <span className="w-1.5 sm:w-2 h-1.5 sm:h-2 rounded-full bg-[#6B7F5B] flex-shrink-0" />
+          <span className="font-bold text-[#2E3A2F] flex-shrink-0">POLISAS &bull;</span>
+          <span className="text-[#556453] truncate sm:whitespace-normal">
+            {t('portal:hero_title', 'Ekosistem Digital Kampus & Super App Pelajar')}
+          </span>
         </motion.div>
 
-        {/* Master Punchy Headline (Unobstructed & Clean) */}
+        {/* Master Punchy Headline (Responsive scale: airy on mobile, dramatic on desktop) */}
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-4xl sm:text-6xl md:text-7xl lg:text-[5.5rem] font-black tracking-tight text-[#2E3A2F] mb-5 md:mb-6 leading-[0.98] max-w-4xl"
+          className="text-3xl sm:text-5xl md:text-6xl lg:text-[5.5rem] font-black tracking-tight text-[#2E3A2F] mb-3 sm:mb-6 leading-[1.08] sm:leading-[0.98] max-w-4xl text-balance"
         >
           <span>Satu Kampus. </span>
           <span className="text-[#C96F4F]">Satu Ekosistem Pintar.</span>
@@ -62,7 +64,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ stats }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="text-sm sm:text-base md:text-lg text-[#556453] max-w-2xl mx-auto font-medium leading-relaxed mb-6 md:mb-8 px-2"
+          className="text-xs sm:text-base md:text-lg text-[#556453] max-w-2xl mx-auto font-medium leading-relaxed mb-4 sm:mb-8 px-2"
         >
           {t(
             'portal:hero_subtitle',
@@ -70,16 +72,16 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ stats }) => {
           )}
         </motion.p>
 
-        {/* CTA Actions Group */}
+        {/* CTA Actions Group (Compact, breathable mobile spacing) */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="flex flex-col sm:flex-row items-center justify-center gap-3 w-full sm:w-auto px-4 sm:px-0 mb-6"
+          className="flex flex-col sm:flex-row items-center justify-center gap-2.5 sm:gap-3 w-full sm:w-auto px-2 sm:px-0 mb-4 sm:mb-6"
         >
           <button
             onClick={() => navigate('/portal')}
-            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-[#C96F4F] hover:bg-[#B85F40] text-white font-black uppercase text-xs tracking-widest transition-all duration-300 flex items-center justify-center gap-2.5 shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
+            className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-3.5 rounded-xl sm:rounded-2xl bg-[#C96F4F] hover:bg-[#B85F40] text-white font-black uppercase text-xs tracking-widest transition-all duration-300 flex items-center justify-center gap-2 sm:gap-2.5 shadow-md hover:shadow-lg active:scale-95 cursor-pointer"
           >
             <span>{t('portal:explore_portal', 'Terokai Portal Pelajar')}</span>
             <ArrowRight className="w-4 h-4" />
@@ -87,19 +89,58 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ stats }) => {
 
           <button
             onClick={() => scrollToLandingSection('#hari-kampus')}
-            className="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-white border border-[#D9C9B2] text-[#2E3A2F] hover:bg-[#F2EDE4] font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
+            className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3.5 rounded-xl sm:rounded-2xl bg-white border border-[#D9C9B2] text-[#2E3A2F] hover:bg-[#F2EDE4] font-bold sm:font-black uppercase text-xs tracking-widest transition-all flex items-center justify-center gap-2 shadow-2xs active:scale-95 cursor-pointer"
           >
             <Compass className="w-4 h-4 text-[#6B7F5B]" />
             <span>{t('portal:landing_explore_campus_day', 'Jelajah Hari Kampus')}</span>
           </button>
         </motion.div>
 
-        {/* OpenLearning Inspired Social Proof & Student Community Stack */}
+        {/* ── MOBILE-ONLY DECLUTTERED PROOF STRIP (Zero Visual Slop, Airy & High-End) ── */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
-          className="flex flex-wrap items-center justify-center gap-3 sm:gap-5 mt-2 px-4 py-2.5 rounded-2xl bg-white/90 border border-[#D9C9B2] shadow-2xs backdrop-blur-xs"
+          className="sm:hidden flex flex-col items-center gap-2 w-full mt-1 px-2"
+        >
+          {/* Compact Social Proof Line */}
+          <div className="flex items-center justify-center gap-2 text-[11px] font-semibold text-[#2E3A2F]">
+            <div className="flex -space-x-1">
+              {['FA', 'NR', 'AI'].map((name, idx) => (
+                <div
+                  key={idx}
+                  className="w-5 h-5 rounded-full flex items-center justify-center text-[8px] font-black text-white ring-1 ring-white bg-[#6B7F5B]"
+                >
+                  {name}
+                </div>
+              ))}
+            </div>
+            <span className="font-bold text-[#2E3A2F]">
+              {t('portal:landing_community_proof', '1,080+ Mahasiswa POLISAS Aktif')}
+            </span>
+            <span className="text-[#C96F4F] font-bold">★ 4.9</span>
+          </div>
+
+          {/* Minimal Dot-Separated Departments String */}
+          <div className="text-[10px] font-bold text-[#6B7F5B] uppercase tracking-wider flex items-center justify-center gap-1.5 flex-wrap">
+            <span>JKA</span>
+            <span className="text-[#D9C9B2]">&bull;</span>
+            <span>JKM</span>
+            <span className="text-[#D9C9B2]">&bull;</span>
+            <span>JKE</span>
+            <span className="text-[#D9C9B2]">&bull;</span>
+            <span>JP</span>
+            <span className="text-[#D9C9B2]">&bull;</span>
+            <span>JTMK</span>
+          </div>
+        </motion.div>
+
+        {/* ── DESKTOP/TABLET RICH COMMUNITY STACK (Hidden on mobile to eliminate clutter) ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="hidden sm:flex flex-wrap items-center justify-center gap-3 sm:gap-5 mt-2 px-4 py-2.5 rounded-2xl bg-white/90 border border-[#D9C9B2] shadow-2xs backdrop-blur-xs"
         >
           {/* Stacked Student Avatar Circles + Siswa Aktif */}
           <div className="flex items-center gap-2.5 pr-2 sm:pr-4 border-b sm:border-b-0 sm:border-r border-[#D9C9B2]/70 pb-2 sm:pb-0">
@@ -149,12 +190,12 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ stats }) => {
           </div>
         </motion.div>
 
-        {/* POLISAS 5 Academic Faculties Ribbon (OpenLearning Institutional Brand Style) */}
+        {/* ── DESKTOP/TABLET 5 ACADEMIC FACULTIES RIBBON (Hidden on mobile, represented cleanly above) ── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.45 }}
-          className="flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-4 text-[#556453]"
+          className="hidden sm:flex flex-wrap items-center justify-center gap-3 sm:gap-6 mt-4 text-[#556453]"
         >
           <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B7F5B]">
             {t('portal:landing_academic_departments', '5 Jabatan Akademik:')}
