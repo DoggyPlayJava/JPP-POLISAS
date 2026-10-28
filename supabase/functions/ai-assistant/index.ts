@@ -139,9 +139,7 @@ Deno.serve(async (req: Request) => {
     });
 
     const apiKey = Deno.env.get("GEMINI_API_KEY");
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY tidak dikonfigurasi.");
-    }
+    const mireldApiKey = Deno.env.get("MIRELD_API_KEY");
 
     // Initialize Admin Client for internal operations
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -168,19 +166,34 @@ Deno.serve(async (req: Request) => {
     
     // --- MOD PROXY KESELAMATAN (DARI USEAIASSISTANT) ---
     if (body.action === 'proxy') {
-        const { endpoint, payload } = body;
+        const { endpoint, payload, provider = 'gemini' } = body;
+        const isMireld = provider === 'mireld';
+        const requestKey = isMireld ? mireldApiKey : apiKey;
+        if (!requestKey) throw new Error(`${isMireld ? 'MIRELD_API_KEY' : 'GEMINI_API_KEY'} tidak dikonfigurasi.`);
+        if (isMireld && endpoint !== 'https://api.mireld.my/v1/chat/completions') throw new Error("Endpoint Mireld tidak dibenarkan.");
         
-        if (!endpoint || !endpoint.startsWith('https://generativelanguage.googleapis.com/')) {
+        if (!isMireld && (!endpoint || !endpoint.startsWith('https://generativelanguage.googleapis.com/'))) {
             throw new Error("Endpoint API tidak dibenarkan. Keselamatan diceroboh.");
         }
         
-        const geminiResponse = await fetch(`${endpoint}?key=${apiKey}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+        const requestPayload = isMireld ? {
+          model: 'gpt-6-astra',
+          messages: [
+            ...(payload.system_instruction?.parts?.[0]?.text ? [{ role: 'system', content: payload.system_instruction.parts[0].text }] : []),
+            { role: 'user', content: payload.contents?.[0]?.parts?.map((part: any) => part.text || '').join('') || '' }
+          ],
+          temperature: payload.generationConfig?.temperature,
+          max_tokens: payload.generationConfig?.maxOutputTokens,
+          response_format: { type: 'json_object' }
+        } : payload;
+        const geminiResponse = await fetch(isMireld ? endpoint : `${endpoint}?key=${requestKey}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...(isMireld ? { Authorization: `Bearer ${requestKey}` } : {}) },
+          body: JSON.stringify(requestPayload)
         });
         
-        const geminiData = await geminiResponse.json();
+        const rawData = await geminiResponse.json();
+        const geminiData = isMireld ? { candidates: [{ content: { parts: [{ text: rawData.choices?.[0]?.message?.content }] } }], usageMetadata: { totalTokenCount: rawData.usage?.total_tokens || 0 }, error: rawData.error } : rawData;
         
         // Rekod penggunaan Token ke dalam pangkalan data
         const usedTokens = geminiData?.usageMetadata?.totalTokenCount || 0;

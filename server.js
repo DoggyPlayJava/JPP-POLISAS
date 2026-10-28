@@ -289,10 +289,8 @@ app.post('/api/ai-assistant', requireAuth, aiRateLimiter, async (req, res) => {
     try {
         // Header and token check are now handled by requireAuth middleware
 
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey) {
-            throw new Error("GEMINI_API_KEY tidak dikonfigurasi.");
-        }
+        const geminiApiKey = process.env.GEMINI_API_KEY;
+        const mireldApiKey = process.env.MIRELD_API_KEY;
 
         // Initialize Supabase Client context with the validated header
         const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
@@ -319,21 +317,38 @@ app.post('/api/ai-assistant', requireAuth, aiRateLimiter, async (req, res) => {
         
         // --- MOD PROXY KESELAMATAN (DARI USEAIASSISTANT) ---
         if (body.action === 'proxy') {
-            const { endpoint, payload } = body;
-            
-            if (!endpoint || !endpoint.startsWith('https://generativelanguage.googleapis.com/')) {
+            const { endpoint, payload, provider = 'gemini' } = body;
+            const isMireld = provider === 'mireld';
+            const apiKey = isMireld ? mireldApiKey : geminiApiKey;
+            if (!apiKey) throw new Error(`${isMireld ? 'MIRELD_API_KEY' : 'GEMINI_API_KEY'} tidak dikonfigurasi.`);
+            if (isMireld && endpoint !== 'https://api.mireld.my/v1/chat/completions') {
+                throw new Error("Endpoint Mireld tidak dibenarkan.");
+            }
+            if (!isMireld && (!endpoint || !endpoint.startsWith('https://generativelanguage.googleapis.com/'))) {
                 throw new Error("Endpoint API tidak dibenarkan. Keselamatan diceroboh.");
             }
-            
-            const geminiResponse = await fetch(`${endpoint}?key=${apiKey}`, {
+            const requestPayload = isMireld ? {
+                model: 'gpt-6-astra',
+                messages: [
+                    ...(payload.system_instruction?.parts?.[0]?.text ? [{ role: 'system', content: payload.system_instruction.parts[0].text }] : []),
+                    { role: 'user', content: payload.contents?.[0]?.parts?.map((part) => part.text || '').join('') || '' }
+                ],
+                temperature: payload.generationConfig?.temperature,
+                max_tokens: payload.generationConfig?.maxOutputTokens,
+                response_format: { type: 'json_object' }
+            } : payload;
+            const apiResponse = await fetch(isMireld ? endpoint : `${endpoint}?key=${apiKey}`, {
                 method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
+                headers: { "Content-Type": "application/json", ...(isMireld ? { Authorization: `Bearer ${apiKey}` } : {}) },
+                body: JSON.stringify(requestPayload)
             });
+            const apiData = await apiResponse.json();
+            const responseData = isMireld ? {
+                candidates: [{ content: { parts: [{ text: apiData.choices?.[0]?.message?.content }] } }],
+                usageMetadata: { totalTokenCount: apiData.usage?.total_tokens || 0 }
+            } : apiData;
             
-            const geminiData = await geminiResponse.json();
-            
-            const usedTokens = geminiData?.usageMetadata?.totalTokenCount || 0;
+            const usedTokens = responseData?.usageMetadata?.totalTokenCount || 0;
             if (usedTokens > 0) {
                 const newTotal = totalTokens + usedTokens;
                 const { data: existingTokenRow } = await supabaseAdmin.from('system_settings').select('id').eq('key', 'ai_total_tokens');
@@ -344,7 +359,7 @@ app.post('/api/ai-assistant', requireAuth, aiRateLimiter, async (req, res) => {
                 }
             }
             
-            return res.status(200).json({ status: geminiResponse.status, ...geminiData });
+            return res.status(200).json({ status: apiResponse.status, ...responseData, ...(apiResponse.ok ? {} : { error: apiData.error }) });
         }
 
         return res.status(400).json({ error: "Laluan (route) yang dipanggil bukan proksi. Gunakan modul Edge Functions jika perlukan sokongan kompleks."});

@@ -473,7 +473,9 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
         modelEndpointString = 'gemini-2.5-flash-lite'; // Pantas & Jimat (Untuk Chat/Grammar)
       }
 
-      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelEndpointString}:generateContent`;
+       const endpoint = params.task === 'jana_kertas_kerja'
+         ? 'https://api.mireld.my/v1/chat/completions'
+         : `https://generativelanguage.googleapis.com/v1beta/models/${modelEndpointString}:generateContent`;
 
       const contentsParts: any[] = [{ text: userPrompt }];
 
@@ -518,8 +520,8 @@ Nota Mesyuarat / Perkara Dibincangkan:\n${params.data?.nota || '(tiada nota teks
             await new Promise(res => setTimeout(res, attempt * 2000));
           }
 
-          const { data, error } = await invokeLocalApi('ai-assistant', {
-            body: { action: 'proxy', endpoint, payload: JSON.parse(requestBody) }
+           const { data, error } = await invokeLocalApi('ai-assistant', {
+             body: { action: 'proxy', provider: params.task === 'jana_kertas_kerja' ? 'mireld' : 'gemini', endpoint, payload: JSON.parse(requestBody) }
           });
           
           if (error) {
