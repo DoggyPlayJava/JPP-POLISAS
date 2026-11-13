@@ -28,7 +28,7 @@ interface LogEntry {
   _anomalyReason?: string;
 }
 
-interface AnomalyAlert { user: string; reason: string; count: number; }
+interface AnomalyAlert { user: string; reason: string; count: number; critical?: boolean; }
 
 // ── Anomaly Scanner ───────────────────────────────────────────────────────────
 function scanAnomalies(logs: LogEntry[], t: any): { flagged: Set<string>; alerts: AnomalyAlert[] } {
@@ -52,7 +52,7 @@ function scanAnomalies(logs: LogEntry[], t: any): { flagged: Set<string>; alerts
       const t2 = new Date(entries[i + 2].created_at).getTime();
       if (t2 - t0 <= WINDOW_MS) {
         entries.slice(i, i + 3).forEach(e => flagged.add(e.id));
-        alerts.push({ user, reason: t('jpp:logs_anomaly_delete_burst', '3+ tindakan padam dalam 5 minit'), count: entries.length });
+        alerts.push({ user, reason: t('jpp:logs_anomaly_delete_burst', '3+ tindakan padam dalam 5 minit'), count: entries.length, critical: true });
         break;
       }
     }
@@ -89,6 +89,7 @@ export function JppLogsPage() {
   const [aiSummary, setAiSummary] = useState('');
   const [aiLoading, setAiLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const [storageLoading, setStorageLoading] = useState(false);
   const [storageResult, setStorageResult] = useState<any>(null);
@@ -140,18 +141,22 @@ export function JppLogsPage() {
     setFlaggedIds(flagged);
     setAnomalyAlerts(alerts);
 
-    // Hantar emel jika ada anomali dan belum dihantar dalam sesi ini
-    if (alerts.length > 0 && !sessionStorage.getItem('anomaly_email_sent')) {
-      sendAnomalyEmail(alerts);
+    // Auto-email only for critical alerts (mass deletes). The server enforces
+    // a hard 24h cap, so routine odd-hours noise never triggers mail.
+    const critical = alerts.filter(a => a.critical);
+    if (critical.length > 0) {
+      sendAnomalyEmail(critical, { silent: true });
     }
 
     setLoading(false);
   };
 
-  const sendAnomalyEmail = async (alerts: AnomalyAlert[]) => {
+  const sendAnomalyEmail = async (alerts: AnomalyAlert[], opts: { silent?: boolean } = {}) => {
+    if (sendingEmail) return;
+    setSendingEmail(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      await fetch(`${API_BASE_URL}/api/notify-anomaly`, {
+      const res = await fetch(`${API_BASE_URL}/api/notify-anomaly`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -159,11 +164,29 @@ export function JppLogsPage() {
         },
         body: JSON.stringify({ alerts, sentAt: new Date().toISOString() })
       });
-      sessionStorage.setItem('anomaly_email_sent', '1');
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        if (!opts.silent) toast.error(data?.error || t('jpp:logs_email_fail', 'Gagal hantar emel amaran.'));
+        return;
+      }
+
+      if (data?.skipped) {
+        // Server-side throttle hit: be honest instead of claiming success.
+        if (!opts.silent) {
+          toast(t('jpp:logs_email_throttled', 'Emel sudah dihantar dalam 24 jam lepas. Cuba lagi dalam {{hours}} jam.', { hours: Math.ceil(data.hours_until_next ?? 0) }), { icon: '⏳', duration: 6000 });
+        }
+        return;
+      }
+
       setEmailSent(true);
-      toast.error(t('jpp:logs_anomaly_detected_alert', '⚠️ {{count}} anomali dikesan! Emel amaran dihantar.', { count: alerts.length }), { duration: 6000 });
+      if (!opts.silent) {
+        toast.success(t('jpp:logs_email_sent_ok', 'Emel amaran dihantar ke pentadbir.'), { duration: 5000 });
+      }
     } catch (_) {
-      // Senyap — jangan ganggu UX jika edge function belum deploy
+      if (!opts.silent) toast.error(t('jpp:logs_email_fail', 'Gagal hantar emel amaran.'));
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -435,7 +458,24 @@ export function JppLogsPage() {
             <div className="flex items-center gap-2 text-rose-500 dark:text-rose-400">
               <AlertTriangle className="w-4 h-4" />
               <span className="text-xs font-black uppercase tracking-widest">{t('jpp:logs_anomaly_detected_count', '{{count}} Anomali Dikesan', { count: anomalyAlerts.length })}</span>
-              {emailSent && <span className="ml-auto text-[10px] text-rose-500/60 dark:text-rose-400/60">{t('jpp:logs_warning_email_sent', 'Emel amaran dihantar ✓')}</span>}
+              <button
+                type="button"
+                onClick={() => sendAnomalyEmail(anomalyAlerts)}
+                disabled={sendingEmail}
+                className={cn(
+                  'ml-auto inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors',
+                  'border-rose-500/30 text-rose-600 hover:bg-rose-500/10 dark:text-rose-300',
+                  sendingEmail && 'opacity-50 cursor-wait',
+                )}
+                title={t('jpp:logs_email_btn_hint', 'Hantar laporan anomali ke emel pentadbir')}
+              >
+                <RefreshCw className={cn('w-3 h-3', sendingEmail && 'animate-spin')} />
+                {sendingEmail
+                  ? t('jpp:logs_email_btn_sending', 'Menghantar...')
+                  : emailSent
+                    ? t('jpp:logs_email_btn_resent', 'Hantar Semula')
+                    : t('jpp:logs_email_btn_send', 'Hantar Emel')}
+              </button>
             </div>
             {anomalyAlerts.map((a, i) => (
               <p key={i} className="text-[11px] text-rose-600 dark:text-rose-300/70 font-medium pl-6">

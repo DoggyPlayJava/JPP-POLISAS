@@ -636,7 +636,7 @@ app.post('/api/kebajikan-new-ticket-notify', requireWebhookSecret, async (req, r
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
-                        from: "E-Kebajikan <kebajikan@polisas.edu.my>",
+                        from: "E-Kebajikan <kebajikan@cipher-node.org>",
                         to: exco.email,
                         subject: `[E-Kebajikan] Aduan Baru: ${ticket_no}`,
                         html: `<p>Salam, ${exco.full_name}.<br/>Aduan baru <strong>${ticket_no}</strong> telah diterima.<br/><strong>${title}</strong><br/>Sila log masuk ke sistem untuk mengambil tindakan.</p>`,
@@ -2022,6 +2022,28 @@ app.post('/api/notify-anomaly', requireAuth, anomalyNotifyLimiter, async (req, r
             throw new Error("RESEND_API_KEY belum dikonfigurasi.");
         }
 
+        // Throttle: at most one anomaly email per 24h across the whole portal.
+        // anomaly_email_log enforces this in the DB so restarts / new sessions can't spam.
+        const { data: lastSent } = await supabaseAdmin
+            .from('anomaly_email_log')
+            .select('sent_at')
+            .order('sent_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+        if (lastSent && lastSent.sent_at) {
+            const hoursSince = (Date.now() - new Date(lastSent.sent_at).getTime()) / 36e5;
+            if (hoursSince < 24) {
+                return res.status(200).json({
+                    success: true,
+                    skipped: true,
+                    reason: 'throttled',
+                    hours_until_next: Number((24 - hoursSince).toFixed(1)),
+                    last_sent_at: lastSent.sent_at
+                });
+            }
+        }
+
         const response = await fetch('https://api.resend.com/emails', {
             method: 'POST',
             headers: {
@@ -2029,7 +2051,7 @@ app.post('/api/notify-anomaly', requireAuth, anomalyNotifyLimiter, async (req, r
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                from: 'Audit JPP-POLISAS <noreply@jpp-polisas.com>',
+                from: 'Audit JPP-POLISAS <noreply@cipher-node.org>',
                 to: ADMIN_EMAIL,
                 subject: `🚨 [AMARAN] ${alerts.length} Anomali Sistem Dikesan`,
                 html: html
@@ -2038,6 +2060,14 @@ app.post('/api/notify-anomaly', requireAuth, anomalyNotifyLimiter, async (req, r
 
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Gagal menghantar amaran anomali');
+
+        // Record only after a successful send.
+        await supabaseAdmin.from('anomaly_email_log').insert({
+            sent_at: new Date().toISOString(),
+            alert_count: alerts.length,
+            recipient: ADMIN_EMAIL,
+            resend_id: data && data.id ? data.id : null
+        });
 
         return res.status(200).json({ success: true, data });
     } catch (error) {
