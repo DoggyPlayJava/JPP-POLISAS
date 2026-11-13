@@ -132,6 +132,14 @@ describe('panoStitcher helpers', () => {
     expect(tall.inside).toBe(true)
   })
 
+  it('applies the wide FOV to the long edge for portrait frames', () => {
+    // 1080x1920: FOV mendatar = 2*atan(tan(34°) * 0.5625) ≈ 41.6°, menegak 68°.
+    const aspect = 1080 / 1920
+    expect(projectRectilinearToEquirect(30, 0, 0, DEFAULT_HFOV_DEG, aspect).inside).toBe(false)
+    expect(projectRectilinearToEquirect(18, 0, 0, DEFAULT_HFOV_DEG, aspect).inside).toBe(true)
+    expect(projectRectilinearToEquirect(0, 30, 0, DEFAULT_HFOV_DEG, aspect).inside).toBe(true)
+  })
+
   it('measures shortest angular distance across the 0/360 seam', () => {
     expect(angularDistanceDeg(350, 10)).toBe(20)
     expect(angularDistanceDeg(10, 350)).toBe(20)

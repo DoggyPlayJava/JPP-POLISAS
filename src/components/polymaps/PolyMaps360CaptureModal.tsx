@@ -109,6 +109,7 @@ export function PolyMaps360CaptureModal({
   const [capturedFrames, setCapturedFrames] = useState<string[]>([]);
   const [capturedYaws, setCapturedYaws] = useState<number[]>([]);
   const [panoSweepDeg, setPanoSweepDeg] = useState<number>(240);
+  const [isPortraitFrame, setIsPortraitFrame] = useState(false);
   const [hasGyroscope, setHasGyroscope] = useState(false);
   const [compassHeading, setCompassHeading] = useState<number>(0);
   const [deviceRoll, setDeviceRoll] = useState<number>(0);
@@ -274,9 +275,14 @@ export function PolyMaps360CaptureModal({
       setCapturedYaws([]);
 
       requestAnimationFrame(() => {
-        if (videoRef.current) {
-          videoRef.current.srcObject = mediaStream;
-          videoRef.current.play().catch(() => {});
+        const video = videoRef.current;
+        if (video) {
+          video.srcObject = mediaStream;
+          // Telefon potret -> FOV mendatar ~42°, tak cukup untuk 8 x 45°.
+          const markOrientation = () => setIsPortraitFrame(video.videoHeight > video.videoWidth);
+          video.onloadedmetadata = markOrientation;
+          markOrientation();
+          video.play().catch(() => {});
         }
       });
     } catch (err: any) {
@@ -1000,7 +1006,7 @@ export function PolyMaps360CaptureModal({
                           {t('services:polymaps_studio_ar_heading', 'Rakaman Panorama 360° Berpandu Secara Terus')}
                         </h3>
                         <p className="text-xs text-slate-400 leading-relaxed">
-                          {t('services:polymaps_studio_ar_desc', 'Berdiri di tengah koridor atau hadapan pintu bilik. Pegang telefon menegak pada paras mata dan pusing perlahan-lahan mengikut 8 sasaran kompas (45° setiap langkah).')}
+                          {t('services:polymaps_studio_ar_desc', 'Berdiri di tengah koridor atau hadapan pintu bilik. Pegang telefon MELINTANG (landscape) pada paras mata, dan pusing perlahan-lahan mengikut 8 sasaran kompas (45° setiap langkah). Telefon ditegakkan mengurangkan liputan mendatar dan meninggalkan jurang kabur.')}
                         </p>
                       </div>
                       <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
@@ -1109,6 +1115,13 @@ export function PolyMaps360CaptureModal({
                             </button>
                           </div>
                         </div>
+
+                        {isPortraitFrame && (
+                          <div className="absolute top-16 inset-x-3 px-3 py-2 rounded-xl bg-amber-400/95 text-slate-950 text-[11px] font-bold leading-snug shadow-lg">
+                            <RotateCcw className="w-3.5 h-3.5 inline mr-1 align-[-2px]" />
+                            {t('services:polymaps_studio_portrait_warning', 'Telefon ditegakkan: liputan mendatar hanya ~42°, jadi ada jurang kabur antara segmen. Pusing telefon ke MELINTANG (landscape) untuk hasil penuh.')}
+                          </div>
+                        )}
 
                         {/* Bar Kemajuan 8 Segmen di Bawah Viewfinder */}
                         <div className="absolute bottom-4 inset-x-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-black/75 border border-white/15 p-3 rounded-2xl">

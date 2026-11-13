@@ -99,9 +99,11 @@ export function projectRectilinearToEquirect(
   frameAspect: number
 ): EquirectSamplePoint {
   const safeAspect = frameAspect > 0 ? frameAspect : 16 / 9
-  const safeHfov = Math.min(170, Math.max(10, hfovDeg))
-  const halfH = (safeHfov * DEG) / 2
-  const halfV = Math.atan(Math.tan(halfH) / safeAspect)
+  const wideHalf = (Math.min(170, Math.max(10, hfovDeg)) * DEG) / 2
+  // FOV mendatar yang diukur pada sisi PANJANG bingkai. Video potret menukar sisi:
+  // lebar jadi sisi pendek, jadi FOV mendatar sebenar = 2*atan(tan(halfWide) * aspect).
+  const halfH = safeAspect >= 1 ? wideHalf : Math.atan(Math.tan(wideHalf) * safeAspect)
+  const halfV = safeAspect >= 1 ? Math.atan(Math.tan(wideHalf) / safeAspect) : wideHalf
 
   const dLon = ((((lonDeg - centerYawDeg) % 360) + 540) % 360) - 180
 
@@ -230,8 +232,9 @@ export async function stitchHorizonFramesToEquirectangular(
   for (let f = 0; f < total; f++) {
     const frame = frames[f]
     const aspect = frame.width / frame.height
-    const halfH = (Math.min(170, Math.max(10, hfovDeg)) * DEG) / 2
-    const halfV = Math.atan(Math.tan(halfH) / aspect)
+    const wideHalf = (Math.min(170, Math.max(10, hfovDeg)) * DEG) / 2
+    const halfH = aspect >= 1 ? wideHalf : Math.atan(Math.tan(wideHalf) * aspect)
+    const halfV = aspect >= 1 ? Math.atan(Math.tan(wideHalf) / aspect) : wideHalf
     tanHalfH.push(Math.tan(halfH))
     tanHalfV.push(Math.tan(halfV))
 

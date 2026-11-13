@@ -808,7 +808,7 @@
   "polymaps_studio_method3_title": "Existing 360° File / URL",
   "polymaps_studio_method3_desc": "Upload an Equirectangular file (Insta360 or Street View) or paste an existing 360° image URL.",
   "polymaps_studio_ar_heading": "Direct Guided 360° Panorama Capture",
-  "polymaps_studio_ar_desc": "Stand in the center of the corridor or in front of the room door. Hold your phone upright at eye level and turn slowly following the 8 compass targets (45° per step).",
+  "polymaps_studio_ar_desc": "Stand in the middle of the corridor or in front of the room door. Hold the phone in LANDSCAPE at eye level and turn slowly through the 8 compass targets (45° each). Holding it upright narrows the horizontal coverage and leaves blurry gaps.",
   "polymaps_studio_ar_start_btn": "Activate Camera & 360° Guide",
   "polymaps_studio_use_existing_btn": "Use Existing 360° Image",
   "polymaps_studio_overlap_alt": "Edge overlap guide",
@@ -891,5 +891,6 @@
   "polymaps_studio_notif_title": "🎥 New PolyMaps 360° & Pin Contribution",
   "polymaps_studio_notif_message": "{{name}} submitted a 360° panorama with {{count}} room door pins for building {{code}}.",
   "polymaps_studio_submitted_toast": "Thank you! Your 360° capture & room pins have been sent to JPP for 1-click approval.",
-  "polymaps_studio_save_error": "Error while saving 360° data."
+  "polymaps_studio_save_error": "Error while saving 360° data.",
+  "polymaps_studio_portrait_warning": "Phone is upright: horizontal coverage is only ~42°, so blurry gaps appear between segments. Rotate the phone to LANDSCAPE for full coverage."
 }

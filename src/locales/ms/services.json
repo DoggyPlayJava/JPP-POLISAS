@@ -808,7 +808,7 @@
   "polymaps_studio_method3_title": "Fail 360° Sedia Ada / URL",
   "polymaps_studio_method3_desc": "Muat naik fail Equirectangular (Insta360 / Street View) atau tampal pautan URL imej 360°.",
   "polymaps_studio_ar_heading": "Rakaman Panorama 360° Berpandu Secara Terus",
-  "polymaps_studio_ar_desc": "Berdiri di tengah koridor atau hadapan pintu bilik. Pegang telefon menegak pada paras mata dan pusing perlahan-lahan mengikut 8 sasaran kompas (45° setiap langkah).",
+  "polymaps_studio_ar_desc": "Berdiri di tengah koridor atau hadapan pintu bilik. Pegang telefon MELINTANG (landscape) pada paras mata, dan pusing perlahan-lahan mengikut 8 sasaran kompas (45° setiap langkah). Telefon ditegakkan mengurangkan liputan mendatar dan meninggalkan jurang kabur.",
   "polymaps_studio_ar_start_btn": "Aktifkan Kamera & Panduan 360°",
   "polymaps_studio_use_existing_btn": "Guna Imej 360° Sedia Ada",
   "polymaps_studio_overlap_alt": "Panduan pertindihan sisi",
@@ -891,5 +891,6 @@
   "polymaps_studio_notif_title": "🎥 Sumbangan 360° & Pin PolyMaps Baharu",
   "polymaps_studio_notif_message": "{{name}} telah menghantar panorama 360° dengan {{count}} pin pintu bilik bagi bangunan {{code}}.",
   "polymaps_studio_submitted_toast": "Terima kasih! Rakaman 360° & pin bilik anda telah dihantar kepada JPP untuk pengesahan 1-klik.",
-  "polymaps_studio_save_error": "Ralat semasa menyimpan data 360°."
+  "polymaps_studio_save_error": "Ralat semasa menyimpan data 360°.",
+  "polymaps_studio_portrait_warning": "Telefon ditegakkan: liputan mendatar hanya ~42°, jadi ada jurang kabur antara segmen. Pusing telefon ke MELINTANG (landscape) untuk hasil penuh."
 }
