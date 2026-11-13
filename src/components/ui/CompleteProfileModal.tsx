@@ -21,9 +21,8 @@ import {
 } from '@/types';
 import { cn } from '@/lib/utils';
 
-const LEADER_ROLES: UserRole[] = ['CLUB_PRESIDENT', 'CLUB_MT'];
 const STAFF_ROLES: UserRole[] = ['STAFF', 'CLUB_ADVISOR'];
-type RegisterMode = 'student' | 'leader' | 'staff';
+type RegisterMode = 'student' | 'staff';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -154,7 +153,6 @@ export function CompleteProfileModal() {
   const [intakePeriod,     setIntakePeriod]     = useState<1 | 2 | ''>(profile?.intake_period || '');
   const [showSemOverride,  setShowSemOverride]  = useState(false);
   const [semOverride,      setSemOverride]      = useState<number | ''>(profile?.semester_override || '');
-  const [leaderRole,       setLeaderRole]       = useState<UserRole>('CLUB_PRESIDENT');
   const [staffRole,        setStaffRole]        = useState<UserRole>('STAFF');
   const [leaderClubId,     setLeaderClubId]     = useState('');
   const [passcode,         setPasscode]         = useState('');
@@ -467,9 +465,6 @@ export function CompleteProfileModal() {
       if (!jabatan) { toast.error(t('auth:select_department')); return; }
       if (!isFtv && !programmeCode) { toast.error(t('auth:error_program_required', 'Sila pilih program pengajian.')); return; }
       if (!intakeYear || !intakePeriod) { toast.error(t('auth:error_session_required', 'Sila pilih tahun dan sesi pengambilan.')); return; }
-      if (registerMode === 'leader' && !leaderClubId) {
-        toast.error(t('auth:select_club')); return;
-      }
     }
 
     // Semakan kata laluan untuk pendaftaran baharu (Google SSO dual-auth)
@@ -497,12 +492,11 @@ export function CompleteProfileModal() {
         throw new Error(t('auth:error_setting_password', 'Gagal menetapkan kata laluan akaun: {{msg}}', { msg: pwdErr.message }));
       }
 
-      const isLeader  = registerMode === 'leader';
       const isStaff   = registerMode === 'staff';
       const isAdvisor = isStaff && staffRole === 'CLUB_ADVISOR';
       const academikClubId = isStaff ? null : getAkademikClubId(jabatan as JabatanValue, programmeCode);
-      const roleToAssign   = isStaff ? staffRole : (isLeader ? leaderRole : 'CLUB_MEMBER');
-      const initialStatus  = (isLeader || isAdvisor) ? 'PENDING' : 'APPROVED';
+      const roleToAssign   = isStaff ? staffRole : 'CLUB_MEMBER';
+      const initialStatus  = isAdvisor ? 'PENDING' : 'APPROVED';
       // PENTING: Sentiasa gunakan nama yang dimasukkan pengguna. Tiada fallback ke Google untuk pelajar.
       const nameToSave     = isStaff
         ? (fullName.trim().toUpperCase() || profile?.full_name || '')
@@ -529,12 +523,11 @@ export function CompleteProfileModal() {
 
       // 2. Academic club membership
       if (!isStaff && academikClubId) {
-        const isLeadingAcademic = isLeader && leaderClubId === academikClubId;
         const { error: memberErr } = await supabase.from('student_club_memberships').insert({
           user_id: user.id,
           club_id: academikClubId,
-          role: isLeadingAcademic ? leaderRole : 'CLUB_MEMBER',
-          account_status: isLeadingAcademic ? 'PENDING' : initialStatus,
+          role: 'CLUB_MEMBER',
+          account_status: initialStatus,
           is_primary: true,
         });
         // Abaikan duplicate key error (pengguna sudah ada keahlian)
@@ -543,8 +536,8 @@ export function CompleteProfileModal() {
         }
       }
 
-      // 3. Target leadership/advisor club
-      if ((isLeader && leaderClubId !== academikClubId) || isAdvisor) {
+      // 3. Advisor club
+      if (isAdvisor) {
         const { error: leaderErr } = await supabase.from('student_club_memberships').insert({
           user_id: user.id,
           club_id: leaderClubId,
@@ -553,12 +546,12 @@ export function CompleteProfileModal() {
           is_primary: !academikClubId,
         });
         if (leaderErr && !leaderErr.message?.includes('duplicate')) {
-          console.warn('[CompleteProfile] Leader membership insert error:', leaderErr.message);
+          console.warn('[CompleteProfile] Advisor membership insert error:', leaderErr.message);
         }
       }
 
-      // 4. Notify admins for new leader/advisor
-      if ((isLeader && leaderRole === 'CLUB_PRESIDENT') || isAdvisor) {
+      // 4. Notify admins for new advisor
+      if (isAdvisor) {
         const { data: admins } = await supabase.from('profiles').select('id')
           .in('role', ['SUPER_ADMIN_JPP', 'ADMIN', 'JPP']);
         if (admins?.length) {
@@ -908,9 +901,9 @@ export function CompleteProfileModal() {
                 <>
                   {/* Role tabs */}
                   <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-white/5">
-                    <button type="button" onClick={() => setRegisterMode(registerMode === 'leader' ? 'leader' : 'student')}
+                    <button type="button" onClick={() => setRegisterMode('student')}
                       className={cn('flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200',
-                        (registerMode === 'student' || registerMode === 'leader') ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white')}>
+                        registerMode === 'student' ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white')}>
                       <Sparkles className="w-3.5 h-3.5 text-emerald-500" /> {t('auth:student_role_tab', 'Pelajar')}
                     </button>
                     <button type="button" onClick={() => setRegisterMode('staff')}
@@ -1097,53 +1090,8 @@ export function CompleteProfileModal() {
                   {/* Student-specific fields */}
                   {registerMode !== 'staff' && (
                     <>
-                      {/* Student / Leader sub-tabs */}
-                      <div className="grid grid-cols-2 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/60 rounded-xl border border-slate-200/60 dark:border-white/5">
-                        <button type="button" onClick={() => setRegisterMode('student')}
-                          className={cn('flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200',
-                            registerMode === 'student' ? 'bg-white dark:bg-slate-900 shadow-sm text-slate-900 dark:text-white border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white')}>
-                          <GraduationCap className="w-3.5 h-3.5" /> {t('auth:student_normal', 'Pelajar Biasa')}
-                        </button>
-                        <button type="button" onClick={() => setRegisterMode('leader')}
-                          className={cn('flex items-center justify-center gap-2 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all duration-200',
-                            registerMode === 'leader' ? 'bg-white dark:bg-slate-900 shadow-sm text-amber-600 dark:text-amber-400 border border-slate-200/50 dark:border-white/10' : 'text-slate-500 hover:text-amber-600 dark:hover:text-amber-400')}>
-                          <Crown className="w-3.5 h-3.5 text-amber-500" /> {t('auth:club_leadership', 'Pimpinan Kelab')}
-                        </button>
-                      </div>
-
                       {/* Cohort fields for students */}
                       <CohortFields />
-
-                      {/* Leader-specific */}
-                      {registerMode === 'leader' && (
-                        <>
-                          <div className="p-3 rounded-xl bg-amber-500/8 border border-amber-500/20 text-[11px] text-amber-700 font-medium leading-relaxed">
-                            {t('auth:leadership_approval_note', '👑 Permohonan jawatan kepimpinan tertakluk pada kelulusan Penasihat kelab.')}
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">{t('common:role', 'Peranan')}</Label>
-                            <Select value={leaderRole} onValueChange={v => setLeaderRole(v as UserRole)}>
-                              <SelectTrigger className="h-12 rounded-xl bg-slate-100 dark:bg-slate-800/50 font-medium"><SelectValue /></SelectTrigger>
-                              <SelectContent className="z-[10000] rounded-2xl">
-                                {LEADER_ROLES.map(r => (
-                                  <SelectItem key={r} value={r} className="py-3 font-medium">{ROLE_LABELS[r]}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-1.5">
-                            <Label className="text-[11px] font-black uppercase tracking-widest text-slate-500">{t('auth:club_apply_leadership', 'Kelab (Mohon Kepimpinan)')}</Label>
-                            <Select value={leaderClubId} onValueChange={setLeaderClubId} required>
-                              <SelectTrigger className="h-12 rounded-xl bg-slate-100 dark:bg-slate-800/50 font-medium"><SelectValue placeholder={t('auth:select_club_placeholder', 'Pilih kelab...')} /></SelectTrigger>
-                              <SelectContent className="z-[10000] rounded-2xl max-h-60">
-                                {ALL_CLUBS.filter(c => c.category !== 'Badan Beruniform').map(c => (
-                                  <SelectItem key={c.id} value={c.id} className="py-3 font-medium">{c.name}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </>
-                      )}
                     </>
                   )}
 
