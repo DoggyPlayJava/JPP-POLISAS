@@ -18,7 +18,6 @@ import {
   ChevronLeft,
   ChevronDown,
   Sparkles,
-  Crown,
   Link2,
   PhoneCall,
   Lightbulb,
@@ -35,12 +34,102 @@ import { UserRole, JABATAN_LIST, JabatanValue, ALL_CLUBS, ROLE_LABELS, getAkadem
 import { cn } from '@/lib/utils';
 import { sanitizeRedirect } from '@/utils/sanitizeRedirect';
 
-// Roles yang boleh self-register (Presiden dan MT perlu pilih kelab)
-const LEADER_ROLES: UserRole[] = ['CLUB_PRESIDENT', 'CLUB_MT'];
 const STAFF_ROLES: UserRole[] = ['STAFF', 'CLUB_ADVISOR'];
 
-type RegisterMode = 'student' | 'leader' | 'staff';
+type RegisterMode = 'student' | 'staff';
 type Step = 1 | 2;
+
+function BrandPanel({ stats }: { stats: { clubCount: number; unitCount: number; deptCount: number } }) {
+  const { t } = useTranslation(['auth', 'common']);
+  const features = [
+    t('auth:brand_panel_ft1', 'Kebajikan, KLK & MAKMP dalam satu aliran kerja'),
+    t('auth:brand_panel_ft2', 'Keahlian kelab, unit exco dan merit mahasiswa'),
+    t('auth:brand_panel_ft3', 'Statistik institusi masa nyata untuk semua jabatan'),
+  ];
+  const tiles = [
+    { value: stats.clubCount, label: t('auth:brand_panel_stat_clubs', 'Kelab') },
+    { value: stats.unitCount, label: t('auth:brand_panel_stat_units', 'Unit Exco') },
+    { value: stats.deptCount, label: t('auth:brand_panel_stat_depts', 'Jabatan') },
+  ];
+
+  return (
+    <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-[#2E3A2F] dark:bg-[#0F160F] px-14 py-12">
+      {/* Ambient glows + hairline grid (cheap CSS paint, no filters) */}
+      <div className="absolute -top-32 -left-24 w-[540px] h-[540px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(107,127,91,0.42)_0%,transparent_65%)]" />
+      <div className="absolute -bottom-32 -right-20 w-[460px] h-[460px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(201,111,79,0.26)_0%,transparent_65%)]" />
+      <div
+        className="absolute inset-0 opacity-[0.055] pointer-events-none"
+        style={{
+          backgroundImage:
+            'linear-gradient(#F8F6EE 1px, transparent 1px), linear-gradient(90deg, #F8F6EE 1px, transparent 1px)',
+          backgroundSize: '58px 58px',
+        }}
+      />
+      <div className="absolute inset-y-0 right-0 w-px bg-gradient-to-b from-transparent via-[#6B7F5B]/40 to-transparent pointer-events-none" />
+
+      <motion.div
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 flex items-center gap-3.5"
+      >
+        <img src="/jpp-logo.png" alt="JPP POLISAS" className="w-14 h-14 object-contain drop-shadow-lg select-none" />
+        <div className="leading-tight">
+          <p className="text-[15px] font-black tracking-tight text-[#F8F6EE]">JPP POLISAS</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#A3B39F]">
+            {t('auth:brand_panel_org', 'Politeknik Sultan Haji Ahmad Shah')}
+          </p>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.55, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 max-w-md"
+      >
+        <span className="inline-flex items-center gap-1.5 rounded-full border border-[#6B7F5B]/40 bg-[#6B7F5B]/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.16em] text-[#C3D3BE]">
+          <ShieldCheck className="w-3 h-3" />
+          {t('auth:brand_panel_badge', 'Portal Rasmi Mahasiswa')}
+        </span>
+        <h2 className="mt-5 text-[38px] xl:text-[42px] font-black leading-[1.08] tracking-tight text-[#F8F6EE]">
+          {t('auth:brand_panel_title', 'Satu portal untuk seluruh kehidupan kampus anda.')}
+        </h2>
+        <p className="mt-4 text-sm leading-relaxed text-[#A3B39F]">
+          {t('auth:brand_panel_subtitle', 'Kebajikan, keahlian kelab, aktiviti exco dan statistik institusi — semuanya di satu tempat.')}
+        </p>
+
+        <ul className="mt-7 space-y-3">
+          {features.map((f, i) => (
+            <li key={i} className="flex items-start gap-2.5 text-[13px] font-medium leading-relaxed text-[#E4EADF]">
+              <CheckCircle2 className="mt-[1px] w-4 h-4 shrink-0 text-[#8FA87C]" />
+              <span>{f}</span>
+            </li>
+          ))}
+        </ul>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+        className="relative z-10 border-t border-[#F8F6EE]/10 pt-6"
+      >
+        <div className="grid grid-cols-3 gap-3">
+          {tiles.map((s, i) => (
+            <div key={i} className="rounded-2xl border border-[#F8F6EE]/10 bg-[#F8F6EE]/[0.04] px-3.5 py-3">
+              <p className="text-2xl font-black tracking-tight text-[#F8F6EE]">{s.value}</p>
+              <p className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#A3B39F]">{s.label}</p>
+            </div>
+          ))}
+        </div>
+        <p className="mt-5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#A3B39F]/80">
+          {t('auth:motto', 'Perpaduan Progresif Demi Mahasiswa')}
+        </p>
+      </motion.div>
+    </div>
+  );
+}
 
 export function LoginPage() {
   const { t } = useTranslation(['auth', 'common']);
@@ -72,7 +161,6 @@ export function LoginPage() {
   const [step, setStep] = useState<Step>(1);
   const [registerMode, setRegisterMode] = useState<RegisterMode>('student');
   const [jabatan, setJabatan] = useState<JabatanValue | ''>('');
-  const [leaderRole, setLeaderRole] = useState<UserRole>('CLUB_PRESIDENT');
   const [staffRole, setStaffRole] = useState<UserRole>('STAFF');
   const [leaderClubId, setLeaderClubId] = useState('');
   const [phone, setPhone] = useState('');
@@ -82,7 +170,6 @@ export function LoginPage() {
     setStep(1);
     setRegisterMode('student');
     setJabatan('');
-    setLeaderRole('CLUB_PRESIDENT');
     setStaffRole('STAFF');
     setLeaderClubId('');
     setFullName('');
@@ -260,10 +347,6 @@ export function LoginPage() {
         toast.error(t('auth:select_department'));
         return;
       }
-      if (registerMode === 'leader' && !leaderClubId) {
-        toast.error(t('auth:select_club'));
-        return;
-      }
     }
 
     setIsLoading(true);
@@ -299,11 +382,10 @@ export function LoginPage() {
         return;
       }
 
-      const isLeader = registerMode === 'leader';
       const isStaff = registerMode === 'staff';
       const isAdvisor = isStaff && staffRole === 'CLUB_ADVISOR';
       const academikClubId = isStaff ? null : getAkademikClubId(jabatan as JabatanValue);
-      const roleToAssign = isStaff ? staffRole : (isLeader ? leaderRole : 'CLUB_MEMBER');
+      const roleToAssign = isStaff ? staffRole : 'CLUB_MEMBER';
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -316,7 +398,6 @@ export function LoginPage() {
             role: roleToAssign,
             department: isStaff ? null : jabatan,
             phone: phone.trim(),
-            is_leader: isLeader,
             is_advisor: isAdvisor,
             leader_club_id: leaderClubId,
           },
@@ -361,42 +442,88 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-between p-6 sm:p-10 bg-[#F8F6EE] dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] font-sans antialiased selection:bg-[#6B7F5B]/20 relative overflow-x-hidden">
-      {/* Ambient background glows (radial-gradient = cheap CSS paint, no backdrop filter) */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[280px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(107,127,91,0.08)_0%,transparent_70%)]" />
-      <div className="absolute bottom-0 right-1/4 w-[350px] h-[220px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(201,111,79,0.06)_0%,transparent_70%)]" />
+    <div className="min-h-screen flex flex-col lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] bg-[#F8F6EE] dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] font-sans antialiased selection:bg-[#6B7F5B]/20 relative overflow-x-hidden">
+      {/* ── Mobile / tablet header: compact dark banner, form sheet floats over it ── */}
+      <header className="lg:hidden relative overflow-hidden bg-[#2E3A2F] dark:bg-[#0F160F] px-6 pt-6 pb-16 sm:px-10">
+        <div className="absolute -top-24 -left-16 w-[320px] h-[320px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(107,127,91,0.45)_0%,transparent_65%)]" />
+        <div className="absolute -bottom-20 -right-10 w-[260px] h-[260px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(201,111,79,0.28)_0%,transparent_65%)]" />
+        <div
+          className="absolute inset-0 opacity-[0.06] pointer-events-none"
+          style={{
+            backgroundImage:
+              'linear-gradient(#F8F6EE 1px, transparent 1px), linear-gradient(90deg, #F8F6EE 1px, transparent 1px)',
+            backgroundSize: '44px 44px',
+          }}
+        />
 
-      {/* Top spacer for balanced optical centering and language switcher */}
-      <div className="w-full max-w-sm flex items-center justify-between pt-2 relative z-10">
-        <span className="text-[11px] font-bold tracking-widest uppercase text-[#556453] dark:text-[#A3B39F]">
-          JPP POLISAS
-        </span>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] font-medium text-[#556453]/80 dark:text-[#A3B39F]/80">
-            Sesi 2026/2027
-          </span>
-          <LanguageToggle />
-        </div>
-      </div>
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+          className="relative z-10 flex items-center justify-between"
+        >
+          <div className="flex items-center gap-3">
+            <img src="/jpp-logo.png" alt="JPP Logo" className="w-11 h-11 object-contain drop-shadow-md select-none" />
+            <div className="leading-tight">
+              <p className="text-[14px] font-black tracking-tight text-[#F8F6EE]">JPP POLISAS</p>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#A3B39F]">
+                {t('auth:brand_panel_badge', 'Portal Rasmi Mahasiswa')}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline text-[10px] font-medium text-[#A3B39F]/80">Sesi 2026/2027</span>
+            <LanguageToggle />
+          </div>
+        </motion.div>
 
-      {/* Main Content Column (Authentic Amy-Style Cleanliness) */}
-      <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="w-full max-w-sm my-auto py-8 flex flex-col"
-      >
-        {/* Free-Floating Emblem (No box, no borders, natural breathing air) */}
-        <div className="mb-6 flex justify-center">
-          <img
-            src="/jpp-logo.png"
-            alt="JPP Logo"
-            className="w-20 h-20 sm:w-24 sm:h-24 object-contain filter drop-shadow-sm select-none"
-          />
-        </div>
+        <motion.p
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+          className="relative z-10 mt-6 max-w-md text-[13px] font-medium leading-relaxed text-[#C3D3BE]"
+        >
+          {t('auth:brand_panel_subtitle', 'Kebajikan, keahlian kelab, aktiviti exco dan statistik institusi — semuanya di satu tempat.')}
+        </motion.p>
+      </header>
+
+      <BrandPanel stats={realStats} />
+
+      <div className="relative z-10 flex flex-1 lg:flex-none flex-col lg:h-screen lg:overflow-y-auto">
+        {/* Form sheet: lifts over the dark header on mobile, plain column on desktop */}
+        <div className="flex-1 flex flex-col items-center justify-between -mt-10 sm:-mt-12 lg:mt-0 rounded-t-[26px] bg-[#F8F6EE] dark:bg-[#151D16] shadow-[0_-10px_34px_rgba(21,29,22,0.16)] lg:rounded-none lg:shadow-none px-6 pt-9 pb-7 sm:px-10 sm:pt-10 lg:pt-10 lg:pb-6 lg:px-10">
+          {/* Ambient background glows (radial-gradient = cheap CSS paint, no backdrop filter) */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[280px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(107,127,91,0.08)_0%,transparent_70%)]" />
+          <div className="absolute bottom-0 right-1/4 w-[350px] h-[220px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(201,111,79,0.06)_0%,transparent_70%)]" />
+
+          {/* Desktop top bar (mobile keeps these inside the header) */}
+          <div className="hidden lg:flex w-full max-w-[420px] items-center justify-between relative z-10">
+            <span className="text-[11px] font-bold tracking-widest uppercase text-[#556453] dark:text-[#A3B39F]">
+              {t('auth:login_title')}
+            </span>
+            <span className="text-[10px] font-medium text-[#556453]/80 dark:text-[#A3B39F]/80">
+              Sesi 2026/2027
+            </span>
+          </div>
+
+          {/* Main Content Column (Authentic Amy-Style Cleanliness) */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="w-full max-w-sm lg:max-w-[420px] my-auto py-4 lg:py-6 flex flex-col relative z-10"
+          >
+            {/* Free-Floating Emblem (desktop only — mobile shows it in the header) */}
+            <div className="mb-6 hidden lg:block">
+              <img
+                src="/jpp-logo.png"
+                alt="JPP Logo"
+                className="w-14 h-14 object-contain filter drop-shadow-sm select-none"
+              />
+            </div>
 
         {/* Dynamic Headings */}
-        <div className="text-left mb-8">
+        <div className="text-left mb-6 lg:mb-7">
           <h1 className="text-3xl sm:text-[34px] font-black tracking-tight leading-[1.15] text-[#2E3A2F] dark:text-[#F8F6EE]">
             {isForgotPassword
               ? t('auth:reset_password', 'Tetapkan Semula Kata Laluan')
@@ -539,10 +666,10 @@ export function LoginPage() {
                   <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#F2EDE4]/80 dark:bg-[#1E271F] rounded-2xl border border-[#D9C9B2]/60 dark:border-[#3A4A3B]">
                     <button
                       type="button"
-                      onClick={() => { setRegisterMode(registerMode === 'leader' ? 'leader' : 'student'); setShowManualRegister(false); }}
+                      onClick={() => setRegisterMode('student')}
                       className={cn(
                         "flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
-                        (registerMode === 'student' || registerMode === 'leader')
+                        registerMode === 'student'
                           ? "bg-white dark:bg-[#2E3A2F] shadow-xs text-[#2E3A2F] dark:text-white"
                           : "text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F]"
                       )}
@@ -700,29 +827,6 @@ export function LoginPage() {
 
                 {registerMode !== 'staff' && (
                   <div className="space-y-3">
-                    <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#F2EDE4]/80 dark:bg-[#1E271F] rounded-xl border border-[#D9C9B2]/60 dark:border-[#3A4A3B]">
-                      <button
-                        type="button"
-                        onClick={() => setRegisterMode('student')}
-                        className={cn(
-                          "flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
-                          registerMode === 'student' ? "bg-white dark:bg-[#2E3A2F] shadow-xs text-[#2E3A2F] dark:text-white" : "text-[#556453] dark:text-[#A3B39F]"
-                        )}
-                      >
-                        <Sparkles className="w-3.5 h-3.5 text-[#6B7F5B]" /> {t('auth:regular_student', 'Pelajar Biasa')}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRegisterMode('leader')}
-                        className={cn(
-                          "flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all cursor-pointer",
-                          registerMode === 'leader' ? "bg-white dark:bg-[#2E3A2F] shadow-xs text-[#2E3A2F] dark:text-white" : "text-[#556453] dark:text-[#A3B39F]"
-                        )}
-                      >
-                        <Crown className="w-3.5 h-3.5 text-[#C96F4F]" /> AJK / Presiden
-                      </button>
-                    </div>
-
                     <div className="space-y-1">
                       <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">
                         {t('auth:your_academic_dept', 'Jabatan Akademik Anda')}
@@ -744,48 +848,9 @@ export function LoginPage() {
                 )}
 
                 <AnimatePresence mode="wait">
-                  {registerMode === 'student' && (
+                  {registerMode !== 'staff' && (
                     <div className="p-3.5 rounded-2xl bg-[#6B7F5B]/10 border border-[#6B7F5B]/25 text-xs text-[#2E3A2F] dark:text-[#F8F6EE] leading-relaxed">
                       <span className="font-bold">{t('common:info', 'Info')}:</span> {t('auth:academic_club_reg_info', 'Anda akan didaftarkan ke Kelab Akademik secara rasmi. Selepas log masuk, layari modul kelab untuk menyertai persatuan sukan atau beruniform yang lain.')}
-                    </div>
-                  )}
-
-                  {registerMode === 'leader' && (
-                    <div className="space-y-3">
-                      <div className="p-3.5 rounded-2xl bg-[#C96F4F]/10 border border-[#C96F4F]/25 text-xs text-[#2E3A2F] dark:text-[#F8F6EE] leading-relaxed">
-                        <span className="font-bold">{t('common:attention', 'Perhatian:')}</span> {t('auth:leadership_advisor_approval_notice', 'Permohonan jawatan kepimpinan kelab tertakluk kepada kelulusan Penasihat kelab masing-masing.')}
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('common:position', 'Jawatan')}</Label>
-                        <Select value={leaderRole} onValueChange={v => setLeaderRole(v as UserRole)}>
-                          <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl border-[#D9C9B2]">
-                            {LEADER_ROLES.map(r => (
-                              <SelectItem key={r} value={r} className="text-xs py-2.5">
-                                {ROLE_LABELS[r]}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#556453] dark:text-[#A3B39F]">{t('auth:club_lead_label', 'Kelab (Diterajui)')}</Label>
-                        <Select value={leaderClubId} onValueChange={setLeaderClubId} required>
-                          <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#242E25] border-[#D9C9B2] text-xs">
-                            <SelectValue placeholder={t('auth:select_club_lead_placeholder', 'Pilih kelab untuk diterajui...')} />
-                          </SelectTrigger>
-                          <SelectContent className="rounded-xl border-[#D9C9B2] max-h-60">
-                            {ALL_CLUBS.filter(c => !['Badan Beruniform', 'badan_beruniform'].includes(c.category)).map(c => (
-                              <SelectItem key={c.id} value={c.id} className="text-xs py-2.5">
-                                <span className="font-bold">{c.name}</span>
-                                <span className="ml-2 text-[10px] text-[#556453] dark:text-[#A3B39F]">&middot; {c.category}</span>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
                     </div>
                   )}
 
@@ -991,7 +1056,7 @@ export function LoginPage() {
 
         {/* Bottom Switcher: Clean Unboxed Links */}
         {!resetSent && !verificationSent && (
-          <div className="mt-8 text-center text-sm font-medium text-[#556453] dark:text-[#A3B39F]">
+          <div className="mt-6 text-center text-sm font-medium text-[#556453] dark:text-[#A3B39F]">
             {isForgotPassword ? (
               <button
                 type="button"
@@ -1020,7 +1085,7 @@ export function LoginPage() {
         )}
 
         {/* WhatsApp Support Help Link */}
-        <div className="mt-5 text-center">
+        <div className="mt-4 text-center">
           <a
             href="https://wa.me/601139413699"
             target="_blank"
@@ -1033,22 +1098,24 @@ export function LoginPage() {
         </div>
       </motion.div>
 
-      {/* Institutional Micro-Footer (Airy, dignified, calm) */}
-      <footer className="w-full max-w-sm pb-2 pt-6 text-center border-t border-[#D9C9B2]/40 dark:border-[#3A4A3B]/40 space-y-1">
-        <p className="text-[10px] font-bold text-[#2E3A2F]/80 dark:text-[#F8F6EE]/80 uppercase tracking-widest">
-          {t('auth:motto', 'Perpaduan Progresif Demi Mahasiswa')}
-        </p>
-        <p className="text-[10px] text-[#556453]/70 dark:text-[#A3B39F]/60">
-          {t('auth:footer_org_name', 'Jawatankuasa Perwakilan Pelajar · Politeknik Sultan Haji Ahmad Shah')}
-        </p>
-        <p className="text-[9px] text-[#556453]/50 dark:text-[#A3B39F]/40 font-mono">
-          {t('auth:footer_stats', '{{clubCount}} Kelab · {{unitCount}} Unit Exco JPP · {{deptCount}} Jabatan Akademik', {
-            clubCount: realStats.clubCount,
-            unitCount: realStats.unitCount,
-            deptCount: realStats.deptCount,
-          })}
-        </p>
-      </footer>
+          {/* Institutional Micro-Footer (Airy, dignified, calm) */}
+          <footer className="w-full max-w-sm lg:max-w-[420px] pb-1 pt-6 text-center border-t border-[#D9C9B2]/40 dark:border-[#3A4A3B]/40 space-y-1 relative z-10">
+            <p className="text-[10px] font-bold text-[#2E3A2F]/80 dark:text-[#F8F6EE]/80 uppercase tracking-widest">
+              {t('auth:motto', 'Perpaduan Progresif Demi Mahasiswa')}
+            </p>
+            <p className="text-[10px] text-[#556453]/70 dark:text-[#A3B39F]/60">
+              {t('auth:footer_org_name', 'Jawatankuasa Perwakilan Pelajar · Politeknik Sultan Haji Ahmad Shah')}
+            </p>
+            <p className="text-[9px] text-[#556453]/50 dark:text-[#A3B39F]/40 font-mono">
+              {t('auth:footer_stats', '{{clubCount}} Kelab · {{unitCount}} Unit Exco JPP · {{deptCount}} Jabatan Akademik', {
+                clubCount: realStats.clubCount,
+                unitCount: realStats.unitCount,
+                deptCount: realStats.deptCount,
+              })}
+            </p>
+          </footer>
+        </div>
+      </div>
     </div>
   );
 }
