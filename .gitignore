@@ -80,3 +80,9 @@ e2e/fixtures/oversized_*.pdf
 
 # tesseract.js loads traineddata from CDN; this is a dead local copy
 eng.traineddata
+# ── Backups & env variants (may contain secrets) ──
+.env*
+!.env.example
+*.bak
+*.bak-*
+server.js.bak*
