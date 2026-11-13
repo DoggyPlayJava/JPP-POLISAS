@@ -101,8 +101,14 @@ export function PolyMaps360CaptureModal({
   // State Kamera Berpandu AR
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  // Kunci auto-snap: elak 3-4 tangkapan pada bearing yang sama sebelum React sempat render.
+  const snapLockRef = useRef<number>(0);
+  // Penapis lulus-rendah bulat (circular EMA) untuk bearing kompas.
+  const headingRef = useRef<{ deg: number; init: boolean }>({ deg: 0, init: false });
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedFrames, setCapturedFrames] = useState<string[]>([]);
+  const [capturedYaws, setCapturedYaws] = useState<number[]>([]);
+  const [panoSweepDeg, setPanoSweepDeg] = useState<number>(240);
   const [hasGyroscope, setHasGyroscope] = useState(false);
   const [compassHeading, setCompassHeading] = useState<number>(0);
   const [deviceRoll, setDeviceRoll] = useState<number>(0);
@@ -173,14 +179,36 @@ export function PolyMaps360CaptureModal({
   }, [stitchedBlobUrl]);
 
   // Listener Sensor Giroskop / Kompas Telefon
+  // iOS Safari: `alpha` BUKAN bearing utara (rujukan arbitrary) — wajib `webkitCompassHeading`.
+  // Android Chrome: `deviceorientationabsolute` -> bearing = 360 - alpha. `deviceorientation` biasa relatif, tak dipakai.
   useEffect(() => {
     if (!isOpen || !isCameraActive) return;
 
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+
     const handleOrientation = (event: DeviceOrientationEvent) => {
-      if (typeof event.alpha === 'number') {
-        setHasGyroscope(true);
-        setCompassHeading(Math.round(event.alpha));
+      const webkitHeading = (event as DeviceOrientationEvent & { webkitCompassHeading?: number })
+        .webkitCompassHeading;
+      let rawHeading: number | null = null;
+      if (typeof webkitHeading === 'number' && webkitHeading >= 0) {
+        rawHeading = webkitHeading;
+      } else if (!isIOS && event.absolute === true && typeof event.alpha === 'number') {
+        rawHeading = (360 - event.alpha + 360) % 360;
       }
+
+      if (rawHeading !== null) {
+        const state = headingRef.current;
+        if (!state.init) {
+          state.deg = rawHeading;
+          state.init = true;
+        } else {
+          const delta = ((rawHeading - state.deg + 540) % 360) - 180;
+          state.deg = (state.deg + delta * 0.25 + 360) % 360;
+        }
+        setHasGyroscope(true);
+        setCompassHeading(Math.round(headingRef.current.deg));
+      }
+
       if (typeof event.gamma === 'number') {
         setDeviceRoll(Math.round(event.gamma));
       }
@@ -190,11 +218,23 @@ export function PolyMaps360CaptureModal({
       }
     };
 
+    window.addEventListener('deviceorientationabsolute', handleOrientation as EventListener, true);
     window.addEventListener('deviceorientation', handleOrientation, true);
     return () => {
+      window.removeEventListener('deviceorientationabsolute', handleOrientation as EventListener, true);
       window.removeEventListener('deviceorientation', handleOrientation, true);
     };
   }, [isOpen, isCameraActive]);
+
+  // WebKit bug 329556: deviceorientation berhenti semasa halaman di-scroll -> kunci scroll.
+  useEffect(() => {
+    if (!isCameraActive) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [isCameraActive]);
 
   const startGuidedCamera = async () => {
     try {
@@ -202,11 +242,22 @@ export function PolyMaps360CaptureModal({
       const DevOrient = window.DeviceOrientationEvent as any;
       if (DevOrient && typeof DevOrient.requestPermission === 'function') {
         try {
-          await DevOrient.requestPermission();
+          const permission = await DevOrient.requestPermission();
+          if (permission !== 'granted') throw new Error('motion-denied');
         } catch {
-          // Teruskan dengan mod Ghost-Edge jika ditolak
+          // Kamera tetap jalan; panduan kompas dimatikan secara jujur.
+          setHasGyroscope(false);
+          toast.warning(
+            t(
+              'services:polymaps_studio_motion_denied',
+              'Akses sensor gerakan ditolak. Panduan kompas dimatikan — anda masih boleh tangkap segmen secara manual. Benarkan di Settings › Safari › Motion & Orientation Access.'
+            )
+          );
         }
       }
+
+      headingRef.current = { deg: 0, init: false };
+      snapLockRef.current = 0;
 
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -220,6 +271,7 @@ export function PolyMaps360CaptureModal({
       streamRef.current = mediaStream;
       setIsCameraActive(true);
       setCapturedFrames([]);
+      setCapturedYaws([]);
 
       requestAnimationFrame(() => {
         if (videoRef.current) {
@@ -249,9 +301,16 @@ export function PolyMaps360CaptureModal({
     const nextFrames = [...capturedFrames, dataUrl];
     setCapturedFrames(nextFrames);
 
+    // Simpan bearing sebenar segmen ini; tanpa kompas, anggap taburan sekata 45°.
+    const yaw = hasGyroscope
+      ? headingRef.current.deg
+      : TARGET_YAW_ANGLES[capturedFrames.length] ?? 0;
+    const nextYaws = [...capturedYaws, yaw];
+    setCapturedYaws(nextYaws);
+
     if (nextFrames.length === 8) {
       toast.success(t('services:polymaps_studio_8_segments_toast', 'Lengkap 8 segmen pusingan 360°! Mencantumkan panorama...'));
-      void handleStitchCapturedFrames(nextFrames);
+      void handleStitchCapturedFrames(nextFrames, nextYaws);
     } else {
       toast.info(
         t('services:polymaps_studio_segment_toast', 'Segmen {{count}}/8 dirakam. Pusing sedikit ke kanan untuk segmen seterusnya.', {
@@ -270,7 +329,8 @@ export function PolyMaps360CaptureModal({
     const diff = Math.abs((((compassHeading - targetAngle) % 360) + 540) % 360 - 180);
     const isLevel = Math.abs(deviceRoll) <= 12 && Math.abs(devicePitch) <= 18;
 
-    if (diff <= 8 && isLevel) {
+    if (diff <= 8 && isLevel && Date.now() - snapLockRef.current > 1500) {
+      snapLockRef.current = Date.now();
       captureCurrentVideoFrame();
     }
   }, [compassHeading, deviceRoll, devicePitch, autoSnapEnabled, isCameraActive, hasGyroscope, capturedFrames.length]);
@@ -295,7 +355,10 @@ export function PolyMaps360CaptureModal({
     return publicUrl;
   };
 
-  const handleStitchCapturedFrames = async (framesToUse = capturedFrames) => {
+  const handleStitchCapturedFrames = async (
+    framesToUse = capturedFrames,
+    yawsToUse = capturedYaws
+  ) => {
     if (framesToUse.length < 4) {
       toast.warning(t('services:polymaps_studio_min_4_segments', 'Sila rakam sekurang-kurangnya 4 segmen gambar sebelum cantum.'));
       return;
@@ -303,7 +366,12 @@ export function PolyMaps360CaptureModal({
 
     setIsStitching(true);
     try {
-      const equirectBlob = await stitchHorizonFramesToEquirectangular(framesToUse, 4096, 2048);
+      const equirectBlob = await stitchHorizonFramesToEquirectangular(
+        framesToUse,
+        4096,
+        2048,
+        yawsToUse
+      );
       if (stitchedBlobUrl) URL.revokeObjectURL(stitchedBlobUrl);
       const localUrl = URL.createObjectURL(equirectBlob);
       setStitchedBlobUrl(localUrl);
@@ -329,7 +397,7 @@ export function PolyMaps360CaptureModal({
 
     setIsUploading(true);
     try {
-      const convertedBlob = await convertPhonePanoramaToEquirectangular(file, 4096);
+      const convertedBlob = await convertPhonePanoramaToEquirectangular(file, 4096, panoSweepDeg);
       if (stitchedBlobUrl) URL.revokeObjectURL(stitchedBlobUrl);
       setStitchedBlobUrl(URL.createObjectURL(convertedBlob));
 
@@ -367,7 +435,7 @@ export function PolyMaps360CaptureModal({
 
       if (check.isWidePanorama) {
         toast.info(t('services:polymaps_studio_wide_pano_detected', 'Mengesan foto Panorama memanjang telefon — menukar secara automatik ke nisbah 2:1...'));
-        blobToUpload = await convertPhonePanoramaToEquirectangular(file, 4096);
+        blobToUpload = await convertPhonePanoramaToEquirectangular(file, 4096, panoSweepDeg);
       }
 
       const uploadedUrl = await uploadBlobToImapsAssets(blobToUpload, 'studio360_direct');
@@ -1030,7 +1098,10 @@ export function PolyMaps360CaptureModal({
                             )}
                             <button
                               type="button"
-                              onClick={() => setCapturedFrames([])}
+                              onClick={() => {
+                                setCapturedFrames([]);
+                                setCapturedYaws([]);
+                              }}
                               className="px-3 py-1.5 rounded-full bg-black/70 hover:bg-black/90 text-xs font-bold border border-white/15"
                             >
                               <RotateCcw className="w-3.5 h-3.5 inline mr-1" />
@@ -1107,9 +1178,31 @@ export function PolyMaps360CaptureModal({
                       {t('services:polymaps_studio_pano_heading', "Auto-Konversi Foto Mod 'Panorama' Kamera Telefon")}
                     </h3>
                     <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                      {t('services:polymaps_studio_pano_desc', 'Buka aplikasi Kamera asal telefon anda, pilih mod Pano / Panorama, dan pusing satu pusingan. Kemudian muat naik gambar tersebut di sini — sistem akan menukarkannya kepada sfera 360° Equirectangular (2:1) secara automatik.')}
+                      {t('services:polymaps_studio_pano_desc', 'Buka aplikasi Kamera asal telefon anda, pilih mod Pano / Panorama, dan pusing perlahan sehingga kamera berhenti sendiri (iPhone berhenti pada ~240°). Kemudian muat naik gambar tersebut di sini — sistem akan menukarkannya kepada sfera 360° Equirectangular (2:1) secara automatik.')}
                     </p>
                   </div>
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                      {t('services:polymaps_studio_pano_sweep_label', 'Lebar sapuan pano:')}
+                    </span>
+                    {[180, 240, 360].map((deg) => (
+                      <button
+                        key={deg}
+                        type="button"
+                        onClick={() => setPanoSweepDeg(deg)}
+                        className={`px-3 py-1 rounded-lg text-[11px] font-black border transition-colors ${
+                          panoSweepDeg === deg
+                            ? 'bg-indigo-600 text-white border-indigo-500'
+                            : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
+                        }`}
+                      >
+                        {deg}°
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 max-w-md mx-auto">
+                    {t('services:polymaps_studio_pano_sweep_hint', 'Padankan dengan sudut sebenar sapuan anda. Jika tidak padan, lebar bilik akan nampak tersasar (terlalu lebar atau termampat).')}
+                  </p>
                   <div>
                     <label className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs cursor-pointer shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
                       {isUploading ? (

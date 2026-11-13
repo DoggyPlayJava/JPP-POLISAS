@@ -10,6 +10,9 @@ import {
   normalizePannellumYaw,
   validateEquirectangularDimensions,
   computeHorizonSlotPlacement,
+  projectRectilinearToEquirect,
+  angularDistanceDeg,
+  DEFAULT_HFOV_DEG,
 } from '../lib/panoStitcher'
 
 describe('polyMapsSmartEntry', () => {
@@ -98,5 +101,41 @@ describe('panoStitcher helpers', () => {
     expect(slot0.slotWidth).toBe(512)
     expect(slot4.x).toBe(2048)
     expect(slot4.centerYaw).toBe(0)
+  })
+
+  it('projects the frame centre to the middle of the source image', () => {
+    const centre = projectRectilinearToEquirect(120, 0, 120, DEFAULT_HFOV_DEG, 16 / 9)
+    expect(centre.inside).toBe(true)
+    expect(centre.u).toBeCloseTo(0.5, 6)
+    expect(centre.v).toBeCloseTo(0.5, 6)
+  })
+
+  it('maps the exact horizontal FOV edge to the source image border', () => {
+    const right = projectRectilinearToEquirect(120 + DEFAULT_HFOV_DEG / 2, 0, 120, DEFAULT_HFOV_DEG, 16 / 9)
+    expect(right.u).toBeCloseTo(1, 6)
+    expect(right.inside).toBe(true)
+
+    const left = projectRectilinearToEquirect(120 - DEFAULT_HFOV_DEG / 2, 0, 120, DEFAULT_HFOV_DEG, 16 / 9)
+    expect(left.u).toBeCloseTo(0, 6)
+    expect(left.inside).toBe(true)
+  })
+
+  it('reports outside when the direction falls beyond the frame', () => {
+    expect(projectRectilinearToEquirect(200, 0, 120, DEFAULT_HFOV_DEG, 16 / 9).inside).toBe(false)
+    expect(projectRectilinearToEquirect(120, 60, 120, DEFAULT_HFOV_DEG, 16 / 9).inside).toBe(false)
+  })
+
+  it('gives a narrower vertical FOV for a wider frame aspect', () => {
+    const wide = projectRectilinearToEquirect(0, 25, 0, DEFAULT_HFOV_DEG, 16 / 9)
+    const tall = projectRectilinearToEquirect(0, 25, 0, DEFAULT_HFOV_DEG, 4 / 3)
+    expect(wide.inside).toBe(false)
+    expect(tall.inside).toBe(true)
+  })
+
+  it('measures shortest angular distance across the 0/360 seam', () => {
+    expect(angularDistanceDeg(350, 10)).toBe(20)
+    expect(angularDistanceDeg(10, 350)).toBe(20)
+    expect(angularDistanceDeg(0, 180)).toBe(180)
+    expect(angularDistanceDeg(45, 45)).toBe(0)
   })
 })
