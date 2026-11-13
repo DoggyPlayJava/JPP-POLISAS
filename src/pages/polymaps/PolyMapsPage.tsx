@@ -9,7 +9,7 @@ import {
   ChevronDown, ChevronRight, ChevronUp, Share2, Coffee, Moon, Droplets, 
   CreditCard, BookOpen, ImageIcon, Map as MapIcon, DoorOpen,
   CloudRain, Sun, HelpCircle, Loader2, Umbrella, CornerUpLeft, 
-  CornerUpRight, Compass, Trophy, ShoppingBag, Calendar, ExternalLink
+  CornerUpRight, Compass, Trophy, ShoppingBag, Calendar, ExternalLink, Camera
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -23,6 +23,8 @@ import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { Pannellum360Viewer } from '@/components/polymaps/Pannellum360Viewer';
+import { PolyMaps360CaptureModal } from '@/components/polymaps/PolyMaps360CaptureModal';
+import type { PolyMaps360HotspotDraft } from '@/lib/polyMapsSmartEntry';
 import { 
   getBuilding360Url, 
   getLocation360Url, 
@@ -544,6 +546,8 @@ interface Location {
   direction_text: string;
   image_url?: string;
   panorama_360_url?: string | null;
+  target_yaw?: number | null;
+  target_pitch?: number | null;
   building: Building;
   building_id: string;
   is_360_enabled?: boolean;
@@ -913,6 +917,8 @@ export function PolyMapsPage() {
   const [showFullscreenImage, setShowFullscreenImage] = useState<string | null>(null);
   const [fullscreen360Url, setFullscreen360Url] = useState<string | null>(null);
   const [fullscreen360Title, setFullscreen360Title] = useState<string>('');
+  const [hotspotsByPanorama, setHotspotsByPanorama] = useState<Record<string, PolyMaps360HotspotDraft[]>>({});
+  const [showVolunteer360Studio, setShowVolunteer360Studio] = useState<boolean>(false);
   const [cardExpanded, setCardExpanded] = useState(true);
   
   const [currentStep, setCurrentStep] = useState(0);
@@ -1128,13 +1134,24 @@ export function PolyMapsPage() {
       // Ignore auth errors: page is public, auth is optional
     }
 
-    // Fetch buildings, locations, walkways, and ems_events in parallel
-    const [bRes, lRes, wRes, eRes] = await Promise.all([
+    // Fetch buildings, locations, walkways, ems_events, and 360 hotspots in parallel
+    const [bRes, lRes, wRes, eRes, hsRes] = await Promise.all([
       supabase.from('imaps_buildings').select('*').order('name'),
       supabase.from('imaps_locations').select('*, building:building_id(*)').order('floor_level'),
       supabase.from('imaps_walkways').select('*').order('created_at', { ascending: false }),
-      supabase.from('ems_events').select('*').in('status', ['ACTIVE', 'APPROVED']).order('event_date', { ascending: true })
+      supabase.from('ems_events').select('*').in('status', ['ACTIVE', 'APPROVED']).order('event_date', { ascending: true }),
+      supabase.from('imaps_360_hotspots').select('*').order('created_at', { ascending: true }),
     ]);
+
+    if (!hsRes.error && Array.isArray(hsRes.data)) {
+      const grouped: Record<string, PolyMaps360HotspotDraft[]> = {};
+      for (const hs of hsRes.data) {
+        if (!hs.panorama_url) continue;
+        if (!grouped[hs.panorama_url]) grouped[hs.panorama_url] = [];
+        grouped[hs.panorama_url].push(hs);
+      }
+      setHotspotsByPanorama(grouped);
+    }
 
     if (bRes.error) {
       console.error('PolyMaps: Failed to load buildings:', bRes.error.message);
@@ -1234,9 +1251,9 @@ export function PolyMapsPage() {
       const { data, error } = await supabase
         .from('imaps_locations')
         .select(`
-          id, room_code, floor_level, direction_text, search_tags, image_url,
+          id, room_code, floor_level, direction_text, search_tags, image_url, panorama_360_url, is_360_enabled, target_yaw, target_pitch,
           building:building_id (
-            id, name, code, center_lat, center_lng, entrance_image_url, floorplan_image_url, zone_name
+            id, name, code, center_lat, center_lng, entrance_image_url, floorplan_image_url, panorama_360_url, is_360_enabled, zone_name
           )
         `)
         .or(`room_code.ilike.%${query}%,search_tags.ilike.%${query}%`)
@@ -2877,8 +2894,29 @@ export function PolyMapsPage() {
                                   <Pannellum360Viewer
                                     imageUrl={activePanoUrl}
                                     title={selectedLocation ? selectedLocation.room_code : activeBuilding.name}
+                                    hotspots={hotspotsByPanorama[activePanoUrl] || []}
+                                    initialYaw={selectedLocation?.target_yaw ?? null}
+                                    initialPitch={selectedLocation?.target_pitch ?? null}
+                                    highlightRoomCode={selectedLocation?.room_code ?? null}
                                     height="100%"
                                     className="w-full h-full"
+                                    onHotspotClick={(hs) => {
+                                      if (hs.pin_type === 'room') {
+                                        const matchedLoc = allLocations.find(
+                                          (l) =>
+                                            (hs.location_id && l.id === hs.location_id) ||
+                                            (hs.room_code &&
+                                              l.room_code.trim().toLowerCase() === hs.room_code.trim().toLowerCase())
+                                        );
+                                        if (matchedLoc) {
+                                          handleSelectLocation(matchedLoc);
+                                        }
+                                      }
+                                    }}
+                                    onSceneChangeRequest={(targetUrl) => {
+                                      setFullscreen360Url(targetUrl);
+                                      setFullscreen360Title(activeBuilding.name);
+                                    }}
                                     onToggleFullscreen={() => {
                                       setFullscreen360Url(activePanoUrl);
                                       setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
@@ -3066,6 +3104,19 @@ export function PolyMapsPage() {
                               {t('services:drive_from_outside_google_maps', 'Memandu dari luar kampus? Buka Google Maps')}
                             </button>
 
+                            <button
+                              type="button"
+                              onClick={() => setShowVolunteer360Studio(true)}
+                              className="w-full mt-1 py-2.5 px-3 rounded-xl border border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-black flex items-center justify-center gap-1.5 transition-colors"
+                            >
+                              <Camera className="w-3.5 h-3.5" />
+                              <span>
+                                {isAdmin
+                                  ? t('services:polymaps_open_studio_admin', 'Buka Studio Rakaman 360° & Pin Pintu Bilik (JPP)')
+                                  : t('services:polymaps_open_studio_volunteer', 'Sumbang Rakaman 360° & Pin Pintu Bilik (Sukarelawan)')}
+                              </span>
+                            </button>
+
                             {/* FULL Snap Level: Full Building Directory */}
                             {sheetSnap === 'FULL' && (
                               <div className="mt-3 pt-3 border-t border-[#D9C9B2]/50 dark:border-[#3A4A3B]">
@@ -3148,9 +3199,31 @@ export function PolyMapsPage() {
             <Pannellum360Viewer
               imageUrl={fullscreen360Url}
               title={fullscreen360Title || activeBuilding?.name || 'POLISAS 360°'}
+              hotspots={hotspotsByPanorama[fullscreen360Url] || []}
+              initialYaw={selectedLocation?.target_yaw ?? null}
+              initialPitch={selectedLocation?.target_pitch ?? null}
+              highlightRoomCode={selectedLocation?.room_code ?? null}
               height="100%"
               className="w-full h-full"
               isFullscreen={true}
+              onHotspotClick={(hs) => {
+                if (hs.pin_type === 'room') {
+                  const matchedLoc = allLocations.find(
+                    (l) =>
+                      (hs.location_id && l.id === hs.location_id) ||
+                      (hs.room_code &&
+                        l.room_code.trim().toLowerCase() === hs.room_code.trim().toLowerCase())
+                  );
+                  if (matchedLoc) {
+                    setSelectedLocation(matchedLoc);
+                    setFullscreen360Title(`${matchedLoc.room_code} (${activeBuilding?.name || ''})`);
+                  }
+                }
+              }}
+              onSceneChangeRequest={(targetUrl, hs) => {
+                setFullscreen360Url(targetUrl);
+                if (hs.label) setFullscreen360Title(hs.label);
+              }}
               onClose={() => setFullscreen360Url(null)}
               onToggleFullscreen={() => setFullscreen360Url(null)}
             />
@@ -3185,6 +3258,28 @@ export function PolyMapsPage() {
                   className="p-1.5 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors"
                 >
                   <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="mb-4 p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-2">
+                <div className="text-xs">
+                  <p className="font-black text-emerald-800 dark:text-emerald-300">
+                    Sedang berada di lokasi ini?
+                  </p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                    Rakam panorama 360° & tandakan pin pintu bilik terus dari pelayar!
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsReportModalOpen(false);
+                    setShowVolunteer360Studio(true);
+                  }}
+                  className="shrink-0 px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs inline-flex items-center gap-1.5 shadow-sm"
+                >
+                  <Camera className="w-3.5 h-3.5" />
+                  Rakam 360°
                 </button>
               </div>
 
@@ -3303,6 +3398,46 @@ export function PolyMapsPage() {
 
       {/* duplicate lightbox removed */}
 
+
+      <PolyMaps360CaptureModal
+        isOpen={showVolunteer360Studio}
+        onClose={() => setShowVolunteer360Studio(false)}
+        buildings={allBuildings.map((b) => ({
+          id: b.id,
+          code: b.code,
+          name: b.name,
+          latitude: b.center_lat,
+          longitude: b.center_lng,
+        }))}
+        existingLocations={allLocations.map((l) => ({
+          id: l.id,
+          building_id: l.building_id,
+          room_code: l.room_code,
+          floor_level: String(l.floor_level ?? '1'),
+          panorama_360_url: l.panorama_360_url,
+          target_yaw: l.target_yaw,
+          target_pitch: l.target_pitch,
+        }))}
+        initialBuildingId={activeBuilding?.id || allBuildings[0]?.id}
+        initialLocationId={selectedLocation?.id}
+        initialPanoramaUrl={
+          selectedLocation?.panorama_360_url || activeBuilding?.panorama_360_url || ''
+        }
+        initialFloorLevel={String(selectedLocation?.floor_level ?? '1')}
+        initialHotspots={
+          (selectedLocation?.panorama_360_url &&
+            hotspotsByPanorama[selectedLocation.panorama_360_url]) ||
+          (activeBuilding?.panorama_360_url &&
+            hotspotsByPanorama[activeBuilding.panorama_360_url]) ||
+          []
+        }
+        isAdminMode={isAdmin}
+        currentUserId={user?.id}
+        currentUserName={profile?.full_name || 'Sukarelawan Kampus'}
+        onSaved={() => {
+          fetchInitialData();
+        }}
+      />
 
       {/* ── GLOBAL BOTTOM NAV ── */}
       <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} forceShowDesktop={true} />

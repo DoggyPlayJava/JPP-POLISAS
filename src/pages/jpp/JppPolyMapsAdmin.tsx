@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import { 
   Map, MapPin, Building2, Plus, Edit2, Trash2, 
   Search, RefreshCw, AlertCircle, Save, X, Navigation, UploadCloud, Image as ImageIcon,
-  Compass, LayoutGrid, List, Eye, ToggleLeft, ToggleRight
+  Compass, LayoutGrid, List, Eye, ToggleLeft, ToggleRight, Camera, Sparkles, FileSpreadsheet, CheckCircle2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
@@ -25,6 +25,13 @@ import {
   isLocation360Active
 } from '@/lib/polymaps360Data';
 import { Pannellum360Viewer } from '@/components/polymaps/Pannellum360Viewer';
+import { PolyMaps360CaptureModal } from '@/components/polymaps/PolyMaps360CaptureModal';
+import { PolyMapsBulkImportModal } from '@/components/polymaps/PolyMapsBulkImportModal';
+import {
+  inferRoomMetadata,
+  findNearestBuildingByGps,
+  type PolyMaps360HotspotDraft,
+} from '@/lib/polyMapsSmartEntry';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 // Fix for default marker icons in React-Leaflet
@@ -274,9 +281,26 @@ interface Location {
   search_tags: string;
   image_url?: string;
   panorama_360_url?: string | null;
+  target_yaw?: number | null;
+  target_pitch?: number | null;
   op_start?: string | null;
   op_end?: string | null;
   is_360_enabled?: boolean;
+}
+
+interface FieldSubmission {
+  id: string;
+  building_id?: string | null;
+  location_id?: string | null;
+  contributor_id?: string | null;
+  contributor_name?: string | null;
+  floor_level?: string | null;
+  room_code_hint?: string | null;
+  panorama_360_url: string;
+  hotspots_json: PolyMaps360HotspotDraft[];
+  notes?: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
 }
 
 interface MissingReport {
@@ -298,7 +322,8 @@ interface MissingReport {
 }
 
 export function JppPolyMapsAdmin() {
-  const { t } = useTranslation(['services', 'jpp', 'common']);
+  const { t, i18n } = useTranslation(['services', 'jpp', 'common']);
+  const currentLang: 'en' | 'ms' = i18n.language?.startsWith('en') ? 'en' : 'ms';
   const [activeTab, setActiveTab] = useState<'buildings' | 'locations' | 'reports' | 'walkways'>('buildings');
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
@@ -330,7 +355,20 @@ export function JppPolyMapsAdmin() {
   const [filter360Status, setFilter360Status] = useState<'all' | 'active' | 'available' | 'none'>('all');
   const [preview360Url, setPreview360Url] = useState<string | null>(null);
   const [preview360Title, setPreview360Title] = useState<string>('');
+  const [preview360Hotspots, setPreview360Hotspots] = useState<PolyMaps360HotspotDraft[]>([]);
   const [toggleRevision, setToggleRevision] = useState<number>(0);
+
+  // Studio 360° & Pin + Import Pukal Pintar + Sumbangan Sukarelawan State
+  const [hotspotsByPanorama, setHotspotsByPanorama] = useState<Record<string, PolyMaps360HotspotDraft[]>>({});
+  const [fieldSubmissions, setFieldSubmissions] = useState<FieldSubmission[]>([]);
+  const [studioConfig, setStudioConfig] = useState<{
+    isOpen: boolean;
+    buildingId?: string;
+    locationId?: string;
+    panoramaUrl?: string;
+    floorLevel?: string;
+  }>({ isOpen: false });
+  const [showBulkImportModal, setShowBulkImportModal] = useState(false);
   const [confirmConfig, setConfirmConfig] = useState<{
     isOpen: boolean;
     title: string;
@@ -460,7 +498,7 @@ export function JppPolyMapsAdmin() {
   const [filterDropdownSearch, setFilterDropdownSearch] = useState('');
   const [isZoneModalDropdownOpen, setIsZoneModalDropdownOpen] = useState(false);
   
-  const { isSuperAdmin, isJppMember } = useAuth();
+  const { user, profile, isSuperAdmin, isJppMember } = useAuth();
 
   useEffect(() => {
     fetchData();
@@ -474,7 +512,7 @@ export function JppPolyMapsAdmin() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [buildingsRes, locationsRes, reportsRes, walkwaysRes] = await Promise.all([
+      const [buildingsRes, locationsRes, reportsRes, walkwaysRes, hotspotsRes, fieldSubRes] = await Promise.all([
         supabase.from('imaps_buildings').select('*').order('name'),
         supabase.from('imaps_locations').select('*').order('room_code'),
         supabase.from('imaps_missing_reports').select(`
@@ -485,7 +523,9 @@ export function JppPolyMapsAdmin() {
             matric_no
           )
         `).order('created_at', { ascending: false }),
-        supabase.from('imaps_walkways').select('*').order('created_at', { ascending: false })
+        supabase.from('imaps_walkways').select('*').order('created_at', { ascending: false }),
+        supabase.from('imaps_360_hotspots').select('*').order('created_at', { ascending: true }),
+        supabase.from('imaps_field_submissions').select('*').order('created_at', { ascending: false }),
       ]);
 
       if (buildingsRes.error) throw buildingsRes.error;
@@ -505,6 +545,26 @@ export function JppPolyMapsAdmin() {
       setBuildings(enhancedBuildings);
       setLocations(enhancedLocations);
       setReports(reportsRes.data || []);
+
+      if (!hotspotsRes.error && Array.isArray(hotspotsRes.data)) {
+        const grouped: Record<string, PolyMaps360HotspotDraft[]> = {};
+        for (const hs of hotspotsRes.data) {
+          const key = hs.panorama_url;
+          if (!key) continue;
+          if (!grouped[key]) grouped[key] = [];
+          grouped[key].push(hs);
+        }
+        setHotspotsByPanorama(grouped);
+      }
+
+      if (!fieldSubRes.error && Array.isArray(fieldSubRes.data)) {
+        setFieldSubmissions(
+          fieldSubRes.data.map((item: any) => ({
+            ...item,
+            hotspots_json: Array.isArray(item.hotspots_json) ? item.hotspots_json : [],
+          }))
+        );
+      }
       
       const parsedWalkways = (walkwaysRes.data || []).map((w: any) => ({
         id: w.id,
@@ -519,6 +579,151 @@ export function JppPolyMapsAdmin() {
       toast.error(t('services:failed_load_polymaps', 'Gagal memuat turun data PolyMaps'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const approveFieldSubmission = async (sub: FieldSubmission) => {
+    setIsProcessingReport(prev => ({ ...prev, [sub.id]: true }));
+    const toastId = toast.loading(t('services:polymaps_sub_approving_toast', 'Menerbitkan 360° & semua pin bilik sukarelawan...'));
+    try {
+      const targetBuildingId = sub.building_id || buildings[0]?.id;
+      const matchedBuilding = buildings.find(b => b.id === targetBuildingId);
+
+      if (sub.location_id) {
+        await supabase
+          .from('imaps_locations')
+          .update({
+            panorama_360_url: sub.panorama_360_url,
+            is_360_enabled: true,
+          })
+          .eq('id', sub.location_id);
+      } else if (targetBuildingId) {
+        await supabase
+          .from('imaps_buildings')
+          .update({
+            panorama_360_url: sub.panorama_360_url,
+            is_360_enabled: true,
+          })
+          .eq('id', targetBuildingId);
+      }
+
+      const pins = Array.isArray(sub.hotspots_json) ? sub.hotspots_json : [];
+      const roomPins = pins.filter(p => p.pin_type === 'room' && (p.room_code || p.label));
+
+      const updatePromises: Promise<unknown>[] = [];
+      const newLocationsPayload: Array<Record<string, unknown>> = [];
+
+      for (const pin of roomPins) {
+        const codeText = (pin.room_code || pin.label).trim();
+        const inferred = inferRoomMetadata(codeText, matchedBuilding?.code, pin.yaw, currentLang);
+        const existingLoc = locations.find(
+          l => l.building_id === targetBuildingId && l.room_code.trim().toLowerCase() === codeText.toLowerCase()
+        );
+
+        if (existingLoc) {
+          updatePromises.push(
+            Promise.resolve(
+              supabase
+                .from('imaps_locations')
+                .update({
+                  panorama_360_url: sub.panorama_360_url,
+                  is_360_enabled: true,
+                  target_yaw: pin.yaw,
+                  target_pitch: pin.pitch,
+                  direction_text: pin.description || existingLoc.direction_text || inferred.direction_text,
+                })
+                .eq('id', existingLoc.id)
+            )
+          );
+        } else if (targetBuildingId) {
+          newLocationsPayload.push({
+            building_id: targetBuildingId,
+            room_code: codeText,
+            floor_level: parseInt(pin.floor_level || sub.floor_level || inferred.floor_level) || 1,
+            direction_text: pin.description || inferred.direction_text,
+            search_tags: inferred.search_tags,
+            panorama_360_url: sub.panorama_360_url,
+            is_360_enabled: true,
+            target_yaw: pin.yaw,
+            target_pitch: pin.pitch,
+          });
+        }
+      }
+
+      await Promise.all([
+        Promise.all(updatePromises),
+        newLocationsPayload.length > 0
+          ? supabase.from('imaps_locations').insert(newLocationsPayload)
+          : Promise.resolve(),
+      ]);
+
+      if (pins.length > 0) {
+        await supabase.from('imaps_360_hotspots').delete().eq('panorama_url', sub.panorama_360_url);
+        const hsPayload = pins.map(p => ({
+          panorama_url: sub.panorama_360_url,
+          building_id: targetBuildingId || null,
+          location_id: sub.location_id || null,
+          pin_type: p.pin_type,
+          label: p.label,
+          room_code: p.room_code || null,
+          floor_level: p.floor_level || sub.floor_level || '1',
+          description: p.description || null,
+          pitch: p.pitch,
+          yaw: p.yaw,
+          target_panorama_url: p.target_panorama_url || null,
+          created_by: sub.contributor_id || user?.id || null,
+        }));
+        await supabase.from('imaps_360_hotspots').insert(hsPayload);
+      }
+
+      await supabase
+        .from('imaps_field_submissions')
+        .update({
+          status: 'approved',
+          reviewed_by: user?.id || null,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq('id', sub.id);
+
+      if (sub.contributor_id) {
+        await supabase.from('notifications').insert({
+          user_id: sub.contributor_id,
+          title: t('services:polymaps_sub_notif_title', '🎥 Sumbangan 360° PolyMaps Diluluskan!'),
+          message: t('services:polymaps_sub_notif_message', 'Rakaman 360° dan {{count}} pin pintu bilik sumbangan anda telah diterbitkan ke dalam PolyMaps. Terima kasih!', { count: pins.length }),
+          type: 'MAPS_REPORT_APPROVED',
+          module: 'AKADEMIK',
+          link: '/polymaps',
+        });
+      }
+
+      toast.success(t('services:polymaps_sub_approved_toast', 'Sumbangan 360° & pin bilik berjaya diluluskan dan diterbitkan!'), { id: toastId });
+      fetchData();
+    } catch (err: any) {
+      console.error('Gagal meluluskan sumbangan 360:', err);
+      toast.error(err.message || t('services:polymaps_sub_approve_failed', 'Gagal menerbitkan sumbangan 360°.'), { id: toastId });
+    } finally {
+      setIsProcessingReport(prev => ({ ...prev, [sub.id]: false }));
+    }
+  };
+
+  const rejectFieldSubmission = async (subId: string) => {
+    setIsProcessingReport(prev => ({ ...prev, [subId]: true }));
+    try {
+      const { error } = await supabase
+        .from('imaps_field_submissions')
+        .update({
+          status: 'rejected',
+          reviewed_by: user?.id || null,
+          reviewed_at: new Date().toISOString(),
+        })
+        .eq('id', subId);
+      if (error) throw error;
+      toast.success(t('services:polymaps_sub_rejected_toast', 'Sumbangan 360° telah ditolak.'));
+      setFieldSubmissions(prev => prev.map(s => (s.id === subId ? { ...s, status: 'rejected' } : s)));
+    } catch (err: any) {
+      toast.error(err.message || t('services:polymaps_sub_reject_failed', 'Gagal menolak sumbangan.'));
+    } finally {
+      setIsProcessingReport(prev => ({ ...prev, [subId]: false }));
     }
   };
 
@@ -874,12 +1079,29 @@ export function JppPolyMapsAdmin() {
           </div>
         </div>
         
-        <div className="flex items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           <button 
             onClick={fetchData}
             className="p-2.5 rounded-xl bg-slate-200/60 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/70 transition-colors"
+            title={t('services:polymaps_admin_btn_refresh', 'Muat Semula Data')}
           >
             <RefreshCw className={cn("w-5 h-5", loading && "animate-spin")} />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setStudioConfig({ isOpen: true })}
+            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm tracking-wide transition-colors shadow-lg shadow-emerald-600/20"
+          >
+            <Camera className="w-4 h-4" /> {t('services:polymaps_admin_btn_studio', 'Studio 360° & Pin')}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowBulkImportModal(true)}
+            className="flex items-center justify-center gap-2 px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-black text-sm tracking-wide transition-colors shadow-lg shadow-amber-500/20"
+          >
+            <FileSpreadsheet className="w-4 h-4" /> {t('services:polymaps_admin_btn_bulk_import', 'Import Pukal Pintar')}
           </button>
           
           {activeTab === 'buildings' ? (
@@ -929,9 +1151,9 @@ export function JppPolyMapsAdmin() {
             )}
           >
             <AlertCircle className="w-4 h-4" /> {t('jpp:polymaps_tab_reports')}
-            {reports.filter(r => r.status === 'pending').length > 0 && (
+            {(reports.filter(r => r.status === 'pending').length + fieldSubmissions.filter(s => s.status === 'pending').length) > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-pulse">
-                {reports.filter(r => r.status === 'pending').length}
+                {reports.filter(r => r.status === 'pending').length + fieldSubmissions.filter(s => s.status === 'pending').length}
               </span>
             )}
           </button>
@@ -1193,20 +1415,43 @@ export function JppPolyMapsAdmin() {
                   </div>
 
                   {/* 360 Admin Controls Footer */}
-                  {has360Panorama && (
-                    <div className="pt-3 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between gap-2 mt-4">
+                  <div className="pt-3 border-t border-slate-200/60 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 mt-4">
+                    <div className="flex items-center gap-1.5">
+                      {has360Panorama && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPreview360Url(panoramaUrl);
+                            setPreview360Title(t('services:preview_360_title', 'Pratonton 360°: {{name}}', { name: b.name }));
+                            setPreview360Hotspots(panoramaUrl ? hotspotsByPanorama[panoramaUrl] || [] : []);
+                          }}
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                        >
+                          <Eye className="w-3.5 h-3.5 text-sky-500" />
+                          <span>{t('services:preview', 'Pratonton')}</span>
+                        </button>
+                      )}
                       <button
                         type="button"
-                        onClick={() => {
-                          setPreview360Url(panoramaUrl);
-                          setPreview360Title(t('services:preview_360_title', 'Pratonton 360°: {{name}}', { name: b.name }));
-                        }}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                        onClick={() =>
+                          setStudioConfig({
+                            isOpen: true,
+                            buildingId: b.id,
+                            panoramaUrl: panoramaUrl || '',
+                          })
+                        }
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 transition-colors"
                       >
-                        <Eye className="w-3.5 h-3.5 text-sky-500" />
-                        <span>{t('services:preview', 'Pratonton')}</span>
+                        <Camera className="w-3.5 h-3.5" />
+                        <span>
+                          {has360Panorama
+                            ? t('services:polymaps_admin_btn_pin_count', 'Pin 360° ({{count}})', { count: (panoramaUrl && hotspotsByPanorama[panoramaUrl]?.length) || 0 })
+                            : t('services:polymaps_admin_btn_capture_360', 'Rakam 360°')}
+                        </span>
                       </button>
+                    </div>
 
+                    {has360Panorama && (
                       <button
                         type="button"
                         onClick={async () => {
@@ -1233,8 +1478,8 @@ export function JppPolyMapsAdmin() {
                           </>
                         )}
                       </button>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               );
             })
@@ -1348,22 +1593,47 @@ export function JppPolyMapsAdmin() {
                       </div>
 
                       {/* 360 Admin Controls Footer for Location */}
-                      {has360Panorama && (
-                        <div className="pt-3 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between gap-2 mt-4">
+                      <div className="pt-3 border-t border-slate-200/60 dark:border-white/10 flex flex-wrap items-center justify-between gap-2 mt-4">
+                        <div className="flex items-center gap-1.5">
+                          {has360Panorama && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (panoramaUrl) {
+                                  setPreview360Url(panoramaUrl);
+                                  setPreview360Title(t('services:preview_360_location_title', 'Pratonton 360°: {{room}} ({{building}})', { room: l.room_code, building: matchedBuilding?.name || '' }));
+                                  setPreview360Hotspots(hotspotsByPanorama[panoramaUrl] || []);
+                                }
+                              }}
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                            >
+                              <Eye className="w-3.5 h-3.5 text-sky-500" />
+                              <span>{t('services:preview', 'Pratonton')}</span>
+                            </button>
+                          )}
                           <button
                             type="button"
-                            onClick={() => {
-                              if (panoramaUrl) {
-                                setPreview360Url(panoramaUrl);
-                                setPreview360Title(t('services:preview_360_location_title', 'Pratonton 360°: {{room}} ({{building}})', { room: l.room_code, building: matchedBuilding?.name || '' }));
-                              }
-                            }}
-                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                            onClick={() =>
+                              setStudioConfig({
+                                isOpen: true,
+                                buildingId: l.building_id,
+                                locationId: l.id,
+                                panoramaUrl: panoramaUrl || '',
+                                floorLevel: String(l.floor_level || '1'),
+                              })
+                            }
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 transition-colors"
                           >
-                            <Eye className="w-3.5 h-3.5 text-sky-500" />
-                            <span>{t('services:preview', 'Pratonton')}</span>
+                            <Camera className="w-3.5 h-3.5" />
+                            <span>
+                              {has360Panorama
+                                ? t('services:polymaps_admin_btn_pin_count', 'Pin 360° ({{count}})', { count: (panoramaUrl && hotspotsByPanorama[panoramaUrl]?.length) || 0 })
+                                : t('services:polymaps_admin_btn_capture_360', 'Rakam 360°')}
+                            </span>
                           </button>
+                        </div>
 
+                        {has360Panorama && (
                           <button
                             type="button"
                             onClick={async () => {
@@ -1390,8 +1660,8 @@ export function JppPolyMapsAdmin() {
                               </>
                             )}
                           </button>
-                        </div>
-                      )}
+                        )}
+                      </div>
                     </div>
                   );
                 })
@@ -1520,7 +1790,141 @@ export function JppPolyMapsAdmin() {
           )}
         </div>
       ) : activeTab === 'reports' ? (
-        <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
+        <div className="space-y-6">
+          {/* Bahagian 1: Sumbangan 360° & Pin Pintu Bilik Daripada Sukarelawan */}
+          <div className="bg-white dark:bg-white/5 border border-emerald-500/30 rounded-2xl overflow-hidden shadow-sm">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-white/10 bg-emerald-500/10 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5">
+                <Camera className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                <div>
+                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                    {t('services:polymaps_sub_section_title', 'Sumbangan 360° & Pin Pintu Bilik Sukarelawan ({{count}})', { count: fieldSubmissions.length })}
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                    {t('services:polymaps_sub_section_subtitle', 'Pratonton gambar 360° & pin bilik yang dirakam oleh sukarelawan, kemudian luluskan dengan 1 klik.')}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                    <th className="p-4">{t('services:polymaps_sub_th_contributor', 'Penyumbang')}</th>
+                    <th className="p-4">{t('services:polymaps_sub_th_building_floor', 'Bangunan & Aras')}</th>
+                    <th className="p-4">{t('services:polymaps_sub_th_pins', 'Pin Pintu Bilik')}</th>
+                    <th className="p-4">{t('services:polymaps_sub_th_notes', 'Nota')}</th>
+                    <th className="p-4">{t('services:polymaps_sub_th_status', 'Status')}</th>
+                    <th className="p-4 text-right">{t('services:polymaps_sub_th_actions', 'Tindakan')}</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm font-medium text-slate-700 dark:text-white/70">
+                  {fieldSubmissions.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-6 text-center text-slate-400 dark:text-white/40 italic">
+                        {t('services:polymaps_sub_empty', 'Belum ada sumbangan rakaman 360° lapangan daripada sukarelawan.')}
+                      </td>
+                    </tr>
+                  ) : (
+                    fieldSubmissions.map((sub) => {
+                      const bld = buildings.find((b) => b.id === sub.building_id);
+                      const pinCount = Array.isArray(sub.hotspots_json) ? sub.hotspots_json.length : 0;
+                      return (
+                        <tr
+                          key={sub.id}
+                          className="border-b border-slate-100 dark:border-white/[0.05] hover:bg-slate-50/80 dark:hover:bg-white/[0.02]"
+                        >
+                          <td className="p-4 font-bold text-slate-900 dark:text-white">
+                            {sub.contributor_name || t('services:polymaps_sub_default_contributor', 'Sukarelawan')}
+                          </td>
+                          <td className="p-4">
+                            <span className="font-bold">{bld ? `${bld.code} - ${bld.name}` : '-'}</span>
+                            <span className="block text-xs text-slate-500">
+                              {t('services:polymaps_sub_floor_prefix', 'Aras {{level}}', { level: sub.floor_level || '1' })}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-black">
+                              📍 {t('services:polymaps_sub_pin_summary', '{{count}} Pin ({{hint}})', {
+                                count: pinCount,
+                                hint: sub.room_code_hint || t('services:polymaps_sub_corridor_default', 'Koridor'),
+                              })}
+                            </span>
+                          </td>
+                          <td className="p-4 max-w-xs truncate text-xs text-slate-500">
+                            {sub.notes || '-'}
+                          </td>
+                          <td className="p-4">
+                            <span
+                              className={cn(
+                                'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border',
+                                sub.status === 'pending' &&
+                                  'bg-amber-500/10 text-amber-500 border-amber-500/20',
+                                sub.status === 'approved' &&
+                                  'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+                                sub.status === 'rejected' &&
+                                  'bg-rose-500/10 text-rose-600 border-rose-500/20'
+                              )}
+                            >
+                              {sub.status === 'pending'
+                                ? t('services:polymaps_sub_status_pending', 'Menunggu Semakan')
+                                : sub.status === 'approved'
+                                ? t('services:polymaps_sub_status_approved', 'Diterbitkan')
+                                : t('services:polymaps_sub_status_rejected', 'Ditolak')}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setPreview360Url(sub.panorama_360_url);
+                                  setPreview360Title(
+                                    t('services:polymaps_sub_preview_title', 'Pratonton Sumbangan 360°: {{code}} (Aras {{level}})', {
+                                      code: bld?.code || '',
+                                      level: sub.floor_level || '1',
+                                    })
+                                  );
+                                  setPreview360Hotspots(sub.hotspots_json || []);
+                                }}
+                                className="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-white/10 text-xs font-bold inline-flex items-center gap-1"
+                              >
+                                <Eye className="w-3.5 h-3.5 text-sky-500" /> {t('services:polymaps_sub_btn_preview', 'Pratonton 360°')}
+                              </button>
+                              {sub.status === 'pending' && (
+                                <>
+                                  <button
+                                    type="button"
+                                    disabled={isProcessingReport[sub.id]}
+                                    onClick={() => approveFieldSubmission(sub)}
+                                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black inline-flex items-center gap-1 disabled:opacity-50"
+                                  >
+                                    <CheckCircle2 className="w-3.5 h-3.5" /> {t('services:polymaps_sub_btn_approve', '1-Klik Lulus & Terbit')}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    disabled={isProcessingReport[sub.id]}
+                                    onClick={() => rejectFieldSubmission(sub.id)}
+                                    className="px-2.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold disabled:opacity-50"
+                                  >
+                                    {t('services:polymaps_sub_btn_reject', 'Tolak')}
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Bahagian 2: Laporan Tempat Hilang Pelajar Sedia Ada */}
+          <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -1610,6 +2014,7 @@ export function JppPolyMapsAdmin() {
                 )}
               </tbody>
             </table>
+          </div>
           </div>
         </div>
       ) : (
@@ -1963,9 +2368,25 @@ export function JppPolyMapsAdmin() {
                     type="url" 
                     value={currentBuilding.panorama_360_url || ''} 
                     onChange={e => setCurrentBuilding({...currentBuilding, panorama_360_url: e.target.value})} 
-                    className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-emerald-500 transition-all" 
+                    className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-emerald-500 transition-all mb-2" 
                     placeholder={t('services:paste_360_url_placeholder', 'Atau tampal URL langsung 360...')} 
                   />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowBuildingModal(false);
+                      setStudioConfig({
+                        isOpen: true,
+                        buildingId: currentBuilding.id || buildings[0]?.id,
+                        panoramaUrl: currentBuilding.panorama_360_url || '',
+                      });
+                    }}
+                    className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    Buka Perakam 360° Berpandu & Editor Pin Pintu Bilik
+                  </button>
                 </div>
 
                 <div className="p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-white/5 space-y-4">
@@ -2109,10 +2530,46 @@ export function JppPolyMapsAdmin() {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:class_code_multiple_label', 'Kod Kelas/Bilik (Boleh masuk banyak, pisah koma)')}</label>
-                    <input type="text" value={currentLocation.room_code || ''} onChange={e => setCurrentLocation({...currentLocation, room_code: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50 transition-all font-mono" placeholder={t('services:class_code_example', 'Cth: A301, A302, A303')} />
+                    <input
+                      type="text"
+                      value={currentLocation.room_code || ''}
+                      onChange={e => {
+                        const val = e.target.value;
+                        const matchedBld = buildings.find(b => b.id === currentLocation.building_id);
+                        const inferred = inferRoomMetadata(val.split(',')[0] || val, matchedBld?.code, undefined, currentLang);
+                        setCurrentLocation(prev => ({
+                          ...prev,
+                          room_code: val,
+                          floor_level: prev.floor_level || (inferred.floor_level === 'G' ? 0 : parseInt(inferred.floor_level) || 1),
+                          search_tags: prev.search_tags || inferred.search_tags,
+                          direction_text: prev.direction_text || inferred.direction_text,
+                        }));
+                      }}
+                      className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50 transition-all font-mono"
+                      placeholder={t('services:class_code_example', 'Cth: A301, A302, A303')}
+                    />
                   </div>
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:floor_level_label', 'Aras (Tingkat)')}</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40">{t('services:floor_level_label', 'Aras (Tingkat)')}</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const matchedBld = buildings.find(b => b.id === currentLocation.building_id);
+                          const inferred = inferRoomMetadata(currentLocation.room_code || '', matchedBld?.code, undefined, currentLang);
+                          setCurrentLocation(prev => ({
+                            ...prev,
+                            floor_level: inferred.floor_level === 'G' ? 0 : parseInt(inferred.floor_level) || 1,
+                            search_tags: inferred.search_tags,
+                            direction_text: inferred.direction_text,
+                          }));
+                          toast.success(t('services:polymaps_admin_auto_infer_toast', 'Aras, Kata Kunci & Panduan Arah dijana secara pintar!'));
+                        }}
+                        className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 inline-flex items-center gap-1 hover:underline"
+                      >
+                        <Sparkles className="w-3 h-3" /> {t('services:polymaps_admin_auto_infer', 'Auto-Teka')}
+                      </button>
+                    </div>
                     <input type="number" value={currentLocation.floor_level || 0} onChange={e => setCurrentLocation({...currentLocation, floor_level: parseInt(e.target.value) || 0})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50 transition-all" />
                   </div>
                 </div>
@@ -2239,9 +2696,27 @@ export function JppPolyMapsAdmin() {
                     type="url" 
                     value={currentLocation.panorama_360_url || ''} 
                     onChange={e => setCurrentLocation({...currentLocation, panorama_360_url: e.target.value})} 
-                    className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-emerald-500 transition-all" 
+                    className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-emerald-500 transition-all mb-2" 
                     placeholder={t('services:paste_360_url_short_placeholder', 'Atau paste URL 360...')} 
                   />
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowLocationModal(false);
+                      setStudioConfig({
+                        isOpen: true,
+                        buildingId: currentLocation.building_id || buildings[0]?.id,
+                        locationId: currentLocation.id,
+                        panoramaUrl: currentLocation.panorama_360_url || '',
+                        floorLevel: String(currentLocation.floor_level || '1'),
+                      });
+                    }}
+                    className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+                  >
+                    <Camera className="w-3.5 h-3.5" />
+                    Rakam 360° & Letak Pin Pintu Bilik Ini
+                  </button>
                 </div>
               </div>
 
@@ -2293,6 +2768,7 @@ export function JppPolyMapsAdmin() {
                 <Pannellum360Viewer
                   imageUrl={preview360Url}
                   title={preview360Title}
+                  hotspots={preview360Hotspots}
                   height="100%"
                   className="w-full h-full"
                 />
@@ -2312,6 +2788,55 @@ export function JppPolyMapsAdmin() {
           </div>
         )}
       </AnimatePresence>
+
+      <PolyMaps360CaptureModal
+        isOpen={studioConfig.isOpen}
+        onClose={() => setStudioConfig({ isOpen: false })}
+        buildings={buildings.map(b => ({
+          id: b.id,
+          code: b.code,
+          name: b.name,
+          latitude: b.center_lat,
+          longitude: b.center_lng,
+        }))}
+        existingLocations={locations.map(l => ({
+          id: l.id,
+          building_id: l.building_id,
+          room_code: l.room_code,
+          floor_level: String(l.floor_level ?? '1'),
+          panorama_360_url: l.panorama_360_url,
+          target_yaw: l.target_yaw,
+          target_pitch: l.target_pitch,
+        }))}
+        initialBuildingId={studioConfig.buildingId}
+        initialLocationId={studioConfig.locationId}
+        initialPanoramaUrl={studioConfig.panoramaUrl}
+        initialFloorLevel={studioConfig.floorLevel}
+        initialHotspots={
+          studioConfig.panoramaUrl ? hotspotsByPanorama[studioConfig.panoramaUrl] || [] : []
+        }
+        isAdminMode={true}
+        currentUserId={user?.id}
+        currentUserName={profile?.full_name || 'Admin JPP'}
+        onSaved={() => {
+          fetchData();
+        }}
+      />
+
+      <PolyMapsBulkImportModal
+        isOpen={showBulkImportModal}
+        onClose={() => setShowBulkImportModal(false)}
+        buildings={buildings.map(b => ({
+          id: b.id,
+          code: b.code,
+          name: b.name,
+          latitude: b.center_lat,
+          longitude: b.center_lng,
+        }))}
+        onImported={() => {
+          fetchData();
+        }}
+      />
 
       <ConfirmDialog
         isOpen={confirmConfig.isOpen}

@@ -342,6 +342,12 @@ import { supabase } from '@/lib/supabase';
 | `ems_scores` | Modul EMS — Markah penilaian & ulasan juri |
 | `ems_certificates` | Modul EMS — Rekod sijil digital, nombor siri & QR verifikasi |
 | `ems_visitors` | Modul EMS — Kehadiran pengunjung audience & pemenang cabutan bertuah |
+| `imaps_buildings` | Modul PolyMaps — Bangunan, koordinat GPS, zon, pelan lantai & panorama 360° |
+| `imaps_locations` | Modul PolyMaps — Direktori bilik/makmal/ruang berserta `panorama_360_url`, `target_yaw` & `target_pitch` |
+| `imaps_360_hotspots` | Modul PolyMaps — Pin/hotspot interaktif (`room`, `scene`, `info`) di atas imej panorama 360° |
+| `imaps_field_submissions` | Modul PolyMaps — Sumbangan rakaman 360° & pin pintu bilik lapangan oleh sukarelawan untuk kelulusan 1-klik JPP |
+| `imaps_walkways` | Modul PolyMaps — Rangkaian laluan pejalan kaki kampus (berbumbung/terbuka/sekat) |
+| `imaps_missing_reports` | Modul PolyMaps — Laporan lokasi/bilik tiada daripada pelajar |
 
 ### Logging:
 ```typescript
