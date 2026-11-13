@@ -7,6 +7,7 @@ import { Users, Search, Sparkles, ShieldCheck, FileText, ChevronDown, CheckCircl
 import { toast } from 'react-hot-toast';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { JppStudentDetailModal } from './JppStudentDetailModal';
 import { hexToRgba, cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { getSemesterInfo } from '@/types';
@@ -30,8 +31,11 @@ interface DuplicateGroup {
 
 export function JppUsersPage() {
     const { t } = useTranslation(['jpp', 'common']);
-    const { isSuperAdmin, profile } = useAuth();
+    const { isSuperAdmin, profile, isLoading: authLoading } = useAuth();
     const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || profile?.jpp_position === 'YDP' || isSuperAdmin;
+    // Hanya YDP + SUPER_ADMIN_JPP boleh buka popup maklumat penuh pelajar
+    const canViewStudentDetail = isSuperAdmin || profile?.jpp_position === 'YANG_DIPERTUA' || profile?.jpp_position === 'YDP';
+    const [detailUserId, setDetailUserId] = useState<string | null>(null);
 
     const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
     const [allUsers, setAllUsers] = useState<any[]>([]);
@@ -199,16 +203,17 @@ export function JppUsersPage() {
         }
     };
 
+    // Tunggu auth siap (session restore) sebelum query — elak senarai kosong pada hard-reload
     useEffect(() => {
-        fetchAdminData();
-    }, []);
+        if (!authLoading && profile) fetchAdminData();
+    }, [authLoading, profile?.id]);
 
     // Re-fetch users when search or programme filter changes (server-side)
     useEffect(() => {
-        if (userSearch !== undefined) {
+        if (!authLoading && profile && userSearch !== undefined) {
             fetchUsers(userSearch, filterProg);
         }
-    }, [userSearch, filterProg]);
+    }, [authLoading, profile?.id, userSearch, filterProg]);
 
     const executeTierApprove = async () => {
         if (!tierApproveTarget) return;
@@ -683,9 +688,23 @@ export function JppUsersPage() {
                                             return (
                                             <tr key={u.id} className="border-b border-slate-200 dark:border-white/[0.02] last:border-0 hover:bg-slate-100/50 dark:hover:bg-white/[0.02] transition-colors">
                                                 <td className="px-5 py-3.5">
-                                                    <div className="font-bold text-sm text-slate-900 dark:text-white/90">{u.full_name || 'Pelajar'}</div>
-                                                    <div className="text-[11px] text-slate-500 dark:text-white/40">{u.email}</div>
-                                                    <div className="text-[10px] text-slate-400 dark:text-white/25 mt-0.5">{u.matric_no || ''}</div>
+                                                    {canViewStudentDetail ? (
+                                                        <button
+                                                            onClick={() => setDetailUserId(u.id)}
+                                                            className="text-left group/name focus:outline-none"
+                                                            title={t('jpp:users_view_full_profile', 'Lihat maklumat penuh')}
+                                                        >
+                                                            <div className="font-bold text-sm text-slate-900 dark:text-white/90 group-hover/name:underline decoration-dotted underline-offset-4">{u.full_name || 'Pelajar'}</div>
+                                                            <div className="text-[11px] text-slate-500 dark:text-white/40">{u.email}</div>
+                                                            <div className="text-[10px] text-slate-400 dark:text-white/25 mt-0.5">{u.matric_no || ''}</div>
+                                                        </button>
+                                                    ) : (
+                                                        <>
+                                                            <div className="font-bold text-sm text-slate-900 dark:text-white/90">{u.full_name || 'Pelajar'}</div>
+                                                            <div className="text-[11px] text-slate-500 dark:text-white/40">{u.email}</div>
+                                                            <div className="text-[10px] text-slate-400 dark:text-white/25 mt-0.5">{u.matric_no || ''}</div>
+                                                        </>
+                                                    )}
                                                 </td>
                                                 {/* Kohort column */}
                                                 <td className="px-5 py-3.5">
@@ -848,6 +867,15 @@ export function JppUsersPage() {
                 cancelLabel={t('common:cancel')}
                 onConfirm={executeTierToggle}
             />
+
+            {/* Student full-detail popup — YDP + SUPER_ADMIN_JPP sahaja */}
+            {canViewStudentDetail && (
+                <JppStudentDetailModal
+                    userId={detailUserId}
+                    onClose={() => setDetailUserId(null)}
+                    themeColor={themeColor}
+                />
+            )}
         </div>
     );
 }
