@@ -8,8 +8,10 @@ ALTER TABLE public.imaps_360_hotspots
 
 ALTER TABLE public.imaps_field_submissions
     ALTER COLUMN floor_level TYPE TEXT USING floor_level::TEXT,
-    ALTER COLUMN floor_level SET DEFAULT '1',
-    ALTER COLUMN contributor_id DROP NOT NULL;
+    ALTER COLUMN floor_level SET DEFAULT '1';
+
+-- `contributor_id DROP NOT NULL` sengaja TIDAK dijalankan: sukarelawan mesti log
+-- masuk, jadi setiap baris mesti ada pemilik. Kekalkan NOT NULL sebagai pengawal.
 
 -- 2. Add missing volunteer studio metadata columns to imaps_field_submissions
 ALTER TABLE public.imaps_field_submissions
@@ -28,8 +30,13 @@ DROP POLICY IF EXISTS "imaps_field_submissions_insert_policy" ON public.imaps_fi
 CREATE POLICY "imaps_field_submissions_insert_policy"
 ON public.imaps_field_submissions FOR INSERT
 WITH CHECK (
-    contributor_id IS NULL
-    OR contributor_id = (SELECT auth.uid())
+    -- Sukarelawan mesti log masuk. `anon` tiada GRANT, jadi baris ini bukan
+    -- satu-satunya pengawal; ia menghalang insert atas nama pengguna lain.
+    contributor_id = (SELECT auth.uid())
 );
 
-GRANT INSERT ON public.imaps_field_submissions TO anon, authenticated;
+-- Dikurangkan daripada `anon, authenticated` dengan sengaja: bucket imaps_assets
+-- juga memerlukan authenticated untuk upload, jadi laluan anon tidak berfungsi.
+-- Elak insert terbuka ke internet. Naik taraf: benarkan `contributor_id IS NULL`
+-- di sini HANYA selepas policy upload storage dibuka untuk anon.
+GRANT INSERT ON public.imaps_field_submissions TO authenticated;
