@@ -607,7 +607,11 @@ export function JppPolyMapsAdmin() {
           .eq('id', targetBuildingId);
       }
 
-      const pins = Array.isArray(sub.hotspots_json) ? sub.hotspots_json : [];
+      const pins = Array.isArray(sub.hotspots_json)
+        ? sub.hotspots_json
+        : Array.isArray((sub as any).hotspots_payload)
+        ? (sub as any).hotspots_payload
+        : [];
       const roomPins = pins.filter(p => p.pin_type === 'room' && (p.room_code || p.label));
 
       const updatePromises: Promise<unknown>[] = [];

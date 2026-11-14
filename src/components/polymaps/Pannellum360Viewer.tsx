@@ -7,6 +7,11 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PolyMaps360HotspotDraft } from '@/lib/polyMapsSmartEntry';
+import {
+  computeVerticalPitchBounds,
+  parsePanoramaSweepFromUrl,
+  parsePanoramaVerticalSweepFromUrl,
+} from '@/lib/panoStitcher';
 
 declare global {
   interface Window {
@@ -30,6 +35,10 @@ export interface Pannellum360ViewerProps {
   initialYaw?: number | null;
   /** Sudut kamera permulaan (pitch: -90..90) */
   initialPitch?: number | null;
+  /** Sudut liputan mendatar sebenar (cth: 230 bagi 1-Pano iPhone, 360 bagi 360° penuh) */
+  horizontalSweepDeg?: number | null;
+  /** Sudut liputan menegak sebenar (cth: 65 bagi panorama telefon satu baris, 180 bagi sfera penuh) */
+  verticalSweepDeg?: number | null;
   /** Kod bilik sasaran carian pelajar untuk diserlahkan (pulse) & dipusingkan automatik */
   highlightRoomCode?: string | null;
   /** Mod Editor Pin JPP / Sukarelawan: klik atas 360° untuk letak pin pintu bilik */
@@ -117,6 +126,8 @@ export function Pannellum360Viewer({
   hotspots = [],
   initialYaw = null,
   initialPitch = null,
+  horizontalSweepDeg = null,
+  verticalSweepDeg = null,
   highlightRoomCode = null,
   editable = false,
   onMapClick,
@@ -139,6 +150,43 @@ export function Pannellum360Viewer({
     onSceneChangeRequestRef.current = onSceneChangeRequest;
     onMapClickRef.current = onMapClick;
   }, [onHotspotClick, onSceneChangeRequest, onMapClick]);
+
+  const effectiveSweepDeg = useMemo(() => {
+    if (typeof horizontalSweepDeg === 'number' && horizontalSweepDeg >= 60 && horizontalSweepDeg <= 360) {
+      return Math.round(horizontalSweepDeg);
+    }
+    const parsed = parsePanoramaSweepFromUrl(imageUrl);
+    return parsed ?? 360;
+  }, [horizontalSweepDeg, imageUrl]);
+
+  const isPartialPanorama = effectiveSweepDeg < 350;
+  const halfSweepBound = Math.round(effectiveSweepDeg / 2);
+
+  const effectiveVaovDeg = useMemo(() => {
+    if (typeof verticalSweepDeg === 'number' && verticalSweepDeg >= 30 && verticalSweepDeg <= 180) {
+      return Math.round(verticalSweepDeg);
+    }
+    const parsedV = parsePanoramaVerticalSweepFromUrl(imageUrl);
+    if (parsedV !== null) return parsedV;
+    // Panorama separa lama (#haov=230 tanpa #vaov) sentiasa tangkapan satu baris (~72°)
+    return isPartialPanorama ? 72 : 180;
+  }, [verticalSweepDeg, imageUrl, isPartialPanorama]);
+
+  const isVerticalConstrained = effectiveVaovDeg < 165;
+  const verticalPitchBound = useMemo(
+    () => computeVerticalPitchBounds(effectiveVaovDeg),
+    [effectiveVaovDeg]
+  );
+  const defaultHfov = isVerticalConstrained
+    ? Math.min(76, isPartialPanorama ? effectiveSweepDeg - 15 : 76)
+    : isPartialPanorama
+      ? Math.min(92, effectiveSweepDeg - 15)
+      : 100;
+  const maxHfovLimit = isVerticalConstrained
+    ? Math.min(88, isPartialPanorama ? effectiveSweepDeg - 10 : 88)
+    : isPartialPanorama
+      ? Math.min(110, effectiveSweepDeg - 10)
+      : 120;
 
   // Kira yaw & pitch permulaan (keutamaan kepada initialYaw/initialPitch, diikuti hotspot bilik sasaran)
   const resolvedStartCoords = useMemo(() => {
@@ -300,6 +348,13 @@ export function Pannellum360Viewer({
         });
 
         try {
+          const clampedStartYaw = isPartialPanorama
+            ? Math.max(-halfSweepBound + 15, Math.min(halfSweepBound - 15, resolvedStartCoords.yaw))
+            : resolvedStartCoords.yaw;
+          const clampedStartPitch = isVerticalConstrained
+            ? Math.max(-verticalPitchBound, Math.min(verticalPitchBound, resolvedStartCoords.pitch))
+            : resolvedStartCoords.pitch;
+
           const viewer = window.pannellum.viewer(containerId, {
             type: 'equirectangular',
             panorama: imageUrl,
@@ -311,11 +366,23 @@ export function Pannellum360Viewer({
             mouseZoom: true,
             touchPanSpeedCoeffFactor: 1,
             friction: 0.15,
-            hfov: 100,
+            hfov: defaultHfov,
             minHfov: 40,
-            maxHfov: 120,
-            pitch: resolvedStartCoords.pitch,
-            yaw: resolvedStartCoords.yaw,
+            maxHfov: maxHfovLimit,
+            ...(isPartialPanorama
+              ? {
+                  minYaw: -halfSweepBound,
+                  maxYaw: halfSweepBound,
+                }
+              : {}),
+            ...(isVerticalConstrained
+              ? {
+                  minPitch: -verticalPitchBound,
+                  maxPitch: verticalPitchBound,
+                }
+              : {}),
+            pitch: clampedStartPitch,
+            yaw: clampedStartYaw,
             hotSpots: pannellumHotSpots,
             strings: {
               loadingLabel: t('services:pannellum_loading_label', 'Memuatkan panorama 360°...'),
@@ -332,7 +399,7 @@ export function Pannellum360Viewer({
             setHasError(false);
             if (resolvedStartCoords.hasTargetFocus && typeof viewer.lookAt === 'function') {
               try {
-                viewer.lookAt(resolvedStartCoords.pitch, resolvedStartCoords.yaw, 92, 600);
+                viewer.lookAt(clampedStartPitch, clampedStartYaw, Math.min(maxHfovLimit, 82), 600);
               } catch {
                 // ignore
               }
@@ -378,6 +445,13 @@ export function Pannellum360Viewer({
     imageUrl,
     loadKey,
     effectiveAutoRotate,
+    effectiveSweepDeg,
+    isPartialPanorama,
+    halfSweepBound,
+    isVerticalConstrained,
+    verticalPitchBound,
+    defaultHfov,
+    maxHfovLimit,
     hotspotsSignature,
     highlightRoomCode,
     resolvedStartCoords.pitch,
@@ -430,7 +504,9 @@ export function Pannellum360Viewer({
         const centerYaw = typeof viewer.getYaw === 'function' ? viewer.getYaw() : 0;
         const centerPitch = typeof viewer.getPitch === 'function' ? viewer.getPitch() : 0;
         yaw = Math.round((centerYaw + relX * hfov) * 100) / 100;
-        pitch = Math.max(-85, Math.min(85, Math.round((centerPitch + relY * vfov) * 100) / 100));
+        const rawPitch = Math.round((centerPitch + relY * vfov) * 100) / 100;
+        const maxAbsPitch = isVerticalConstrained ? verticalPitchBound : 85;
+        pitch = Math.max(-maxAbsPitch, Math.min(maxAbsPitch, rawPitch));
       }
 
       onMapClickRef.current({ pitch, yaw });
@@ -447,10 +523,14 @@ export function Pannellum360Viewer({
           viewerRef.current.stopAutoRotate();
           setIsRotating(false);
         }
+        const safePitch = isVerticalConstrained
+          ? Math.max(-verticalPitchBound, Math.min(verticalPitchBound, hs.pitch))
+          : hs.pitch;
+        const focusHfov = Math.min(maxHfovLimit, 82);
         if (typeof viewerRef.current.lookAt === 'function') {
-          viewerRef.current.lookAt(hs.pitch, hs.yaw, 90, 650);
+          viewerRef.current.lookAt(safePitch, hs.yaw, focusHfov, 650);
         } else {
-          viewerRef.current.setPitch(hs.pitch);
+          viewerRef.current.setPitch(safePitch);
           viewerRef.current.setYaw(hs.yaw);
         }
       } catch (e) {
@@ -484,9 +564,15 @@ export function Pannellum360Viewer({
   const handleResetView = () => {
     if (!viewerRef.current) return;
     try {
-      viewerRef.current.setPitch(resolvedStartCoords.pitch);
-      viewerRef.current.setYaw(resolvedStartCoords.yaw);
-      viewerRef.current.setHfov(100);
+      const safePitch = isVerticalConstrained
+        ? Math.max(-verticalPitchBound, Math.min(verticalPitchBound, resolvedStartCoords.pitch))
+        : resolvedStartCoords.pitch;
+      const safeYaw = isPartialPanorama
+        ? Math.max(-halfSweepBound + 15, Math.min(halfSweepBound - 15, resolvedStartCoords.yaw))
+        : resolvedStartCoords.yaw;
+      viewerRef.current.setPitch(safePitch);
+      viewerRef.current.setYaw(safeYaw);
+      viewerRef.current.setHfov(defaultHfov);
     } catch (e) {
       console.warn('Failed to reset view', e);
     }
@@ -535,7 +621,9 @@ export function Pannellum360Viewer({
       <div className="absolute top-3 left-3 z-10 flex flex-wrap items-center gap-2 pointer-events-none pr-12">
         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/65 border border-white/15 text-white text-xs font-black shadow-lg uppercase tracking-wider">
           <Compass className="w-3.5 h-3.5 text-emerald-400 animate-spin" style={{ animationDuration: '6s' }} />
-          360° Street View
+          {isPartialPanorama
+            ? t('services:pannellum_partial_pano_badge', 'Panorama {{deg}}° (Tajam)', { deg: effectiveSweepDeg })
+            : '360° Street View'}
         </span>
         {title && (
           <span className="hidden sm:inline-block px-3 py-1.5 rounded-full bg-slate-900/75 border border-white/10 text-slate-200 text-xs font-bold shadow-md max-w-xs truncate">

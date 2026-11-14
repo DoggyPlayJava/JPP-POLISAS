@@ -13,6 +13,15 @@ import {
   projectRectilinearToEquirect,
   angularDistanceDeg,
   DEFAULT_HFOV_DEG,
+  estimatePhonePanoSweepDeg,
+  appendPanoramaSweepHash,
+  parsePanoramaSweepFromUrl,
+  parsePanoramaVerticalSweepFromUrl,
+  computeVerticalPitchBounds,
+  computePhonePanoBandMetrics,
+  computeHorizonVerticalSweepDeg,
+  computeDeviceLevelAngles,
+  computeDualPanoBlendWeights,
 } from '../lib/panoStitcher'
 
 describe('polyMapsSmartEntry', () => {
@@ -145,5 +154,86 @@ describe('panoStitcher helpers', () => {
     expect(angularDistanceDeg(10, 350)).toBe(20)
     expect(angularDistanceDeg(0, 180)).toBe(180)
     expect(angularDistanceDeg(45, 45)).toBe(0)
+  })
+
+  it('estimates phone panorama sweep angle from aspect ratio (e.g. ~230 deg for iPhone pano)', () => {
+    // Typical full iPhone panorama (~12000 x 3400, ratio ~3.53) -> ~230 deg
+    expect(estimatePhonePanoSweepDeg(12000, 3400)).toBe(230)
+    // Half sweep panorama (~8000 x 3000, ratio ~2.67) -> ~180 deg
+    expect(estimatePhonePanoSweepDeg(8000, 3000)).toBe(180)
+    // Ultra-wide 360 panorama -> clamped at 360 deg
+    expect(estimatePhonePanoSweepDeg(18000, 3000)).toBe(360)
+  })
+
+  it('encodes and parses #haov=... panorama horizontal sweep from URLs', () => {
+    const tagged = appendPanoramaSweepHash('https://cdn.example.com/pano1.jpg', 230)
+    expect(tagged).toBe('https://cdn.example.com/pano1.jpg#haov=230')
+    expect(parsePanoramaSweepFromUrl(tagged)).toBe(230)
+
+    const replaced = appendPanoramaSweepHash(tagged, 360)
+    expect(replaced).toBe('https://cdn.example.com/pano1.jpg#haov=360')
+    expect(parsePanoramaSweepFromUrl(replaced)).toBe(360)
+    expect(parsePanoramaSweepFromUrl('https://cdn.example.com/normal.jpg')).toBeNull()
+  })
+
+  it('computes accurate spirit-level roll & pitch in both Portrait and Landscape orientations', () => {
+    // Portrait upright at eye level: beta ~ 90, gamma ~ 0
+    const portraitLevel = computeDeviceLevelAngles(88, 2, false)
+    expect(portraitLevel.roll).toBe(2)
+    expect(portraitLevel.pitch).toBe(-2)
+    expect(portraitLevel.isLevel).toBe(true)
+
+    // Landscape upright at eye level: beta ~ 0 (roll), gamma ~ -85 (pitch near 90)
+    const landscapeLevel = computeDeviceLevelAngles(3, -84, true)
+    expect(landscapeLevel.roll).toBe(3)
+    expect(landscapeLevel.pitch).toBe(6)
+    expect(landscapeLevel.isLevel).toBe(true)
+
+    // Landscape tilted 35 deg sideways -> not level
+    const landscapeTilted = computeDeviceLevelAngles(35, -85, true)
+    expect(landscapeTilted.isLevel).toBe(false)
+  })
+
+  it('computes seamless dual-pano (Front 230° + Back 230°) blend weights across 360°', () => {
+    const { frontWeight, backWeight } = computeDualPanoBlendWeights(360, 230)
+    // Center of canvas (index 180 -> yaw 0°): 100% front pano
+    expect(frontWeight[180]).toBeCloseTo(1, 3)
+    expect(backWeight[180]).toBeCloseTo(0, 3)
+    // Back seam (index 0 -> yaw -180°): 100% back pano
+    expect(frontWeight[0]).toBeCloseTo(0, 3)
+    expect(backWeight[0]).toBeCloseTo(1, 3)
+    // Overlap midpoint at yaw +90° (index 270): ~50% front + ~50% back
+    expect(frontWeight[270]).toBeCloseTo(0.5, 1)
+    expect(backWeight[270]).toBeCloseTo(0.5, 1)
+  })
+
+  it('encodes & parses #vaov vertical sweep and computes safe single-row pitch bounds', () => {
+    const taggedBoth = appendPanoramaSweepHash('https://cdn.example.com/corridor.jpg', 230, 65)
+    expect(taggedBoth).toBe('https://cdn.example.com/corridor.jpg#haov=230&vaov=65')
+    expect(parsePanoramaSweepFromUrl(taggedBoth)).toBe(230)
+    expect(parsePanoramaVerticalSweepFromUrl(taggedBoth)).toBe(65)
+
+    // Replacing #haov=230&vaov=65 with full-sphere 360x180 omits vaov cleanly
+    const fullSphere = appendPanoramaSweepHash(taggedBoth, 360, 180)
+    expect(fullSphere).toBe('https://cdn.example.com/corridor.jpg#haov=360')
+    expect(parsePanoramaVerticalSweepFromUrl(fullSphere)).toBeNull()
+    expect(parsePanoramaVerticalSweepFromUrl('https://cdn.example.com/normal.jpg')).toBeNull()
+
+    expect(computeVerticalPitchBounds(65)).toBe(47)
+    expect(computeVerticalPitchBounds(180)).toBe(90)
+  })
+
+  it('computes centered phone pano band metrics and vertical horizon FOV accurately', () => {
+    const metrics = computePhonePanoBandMetrics(4000, 1000, 230, 4096)
+    expect(metrics.targetHeight).toBe(2048)
+    expect(metrics.bandWidth).toBe(2617)
+    expect(metrics.bandX).toBe(740)
+    expect(metrics.bandHeight).toBeGreaterThanOrEqual(Math.round(2048 * 0.36))
+    expect(metrics.verticalSweepDeg).toBe(65)
+
+    // Portrait 3:4 horizon capture at 68 deg wide-FOV -> vertical FOV ~68 deg
+    expect(computeHorizonVerticalSweepDeg(0.75, 68)).toBe(68)
+    // Landscape 4:3 horizon capture at 68 deg horizontal -> vertical FOV ~54 deg
+    expect(computeHorizonVerticalSweepDeg(4 / 3, 68)).toBe(54)
   })
 })

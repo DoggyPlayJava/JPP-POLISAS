@@ -5425,3 +5425,49 @@ Untuk menghapuskan isu logo dan nama JPP terhimpit (*header squish*) apabila pel
    - **Bekas Teks & Tipografi:** Menggunakan `min-w-0 flex-1` untuk memastikan teks tajuk dan kapsyen mengalir secara fleksibel tanpa memicit nisbah aspek logo rasmi JPP.
    - Memastikan identiti visual kekal konsisten, berkontras tajam, dan selesa dipandang pada semua nisbah skrin dari telefon pintar hingga paparan monitor lebar.
 
+
+
+---
+
+## 38. Modul PolyMaps 360° Studio & Enjin Pemetaan Lapangan Sukarelawan (V2)
+
+> Dikemas kini: November 2026 (Studio 360° Dalam Pelayar, Kunci Sudut Panorama 230° Tajam, Jahitan Dwi-Pano 360° & Pemerkasaan Sukarelawan)
+
+Modul PolyMaps (`/polymaps` dan `/jpp/polymaps`) menyediakan sistem pemetaan 3D dan navigasi dalaman 360° berskala penuh yang membolehkan JPP serta sukarelawan memetakan koridor bangunan dan menandakan pintu makmal/bilik kuliah secara terus daripada pelayar telefon pintar.
+
+### 38.1 Jadual Pangkalan Data & Migrasi
+
+| Jadual | Fungsi Utama | Migrasi Berkaitan |
+|---|---|---|
+| `imaps_buildings` | Data bangunan kampus, poligon 3D, `panorama_url`, `floor_panoramas` (`Record<string, string>`), `floor_maps` | Asal + `20261113000001` |
+| `imaps_locations` | Bilik, makmal, bengkel, pejabat, kemudahan berserta `panorama_url`, `floor_level`, `building_id`, `code`, `yaw_deg`, `pitch_deg` | Asal + `20261113000001` |
+| `imaps_360_hotspots` | Pin interaktif (`door`, `stairs`, `info`, `exit`) di dalam sfera 360° (`yaw`, `pitch`, `label`, `room_code`, `target_location_id`, `floor_level`) | `20261113000001_polymaps_360_hotspots_and_field_submissions.sql` |
+| `imaps_field_submissions` | Baris gilir semakan sumbangan lapangan sukarelawan (`building_id`, `location_id`, `floor_level` TEXT, `panorama_url`, `hotspots_json`, `hotspots_payload`, `contributor_name`, `room_code_hint`, `status`) | `20261113000001` & `20261114000001_polymaps_volunteer_submissions_and_partial_pano_fix.sql` |
+
+- **Peraturan RLS (`imaps_field_submissions` & `imaps_360_hotspots`):**
+  - Menggunakan `(SELECT auth.uid())` sepenuhnya mengikut Seksyen 15.1.
+  - Sukarelawan boleh menghantar sumbangan 360° sama ada telah log masuk (`contributor_id = (SELECT auth.uid())`) atau secara mod sukarelawan terbuka (`contributor_id IS NULL`) dengan mengisi `contributor_name`.
+  - Indeks kunci asing `idx_imaps_field_submissions_location_id` ditambah pada `location_id`.
+
+### 38.2 Tiga Kaedah Tangkapan Panorama & Penyelesaian Had 230° Telefon (`src/lib/panoStitcher.ts`)
+
+Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asal kepada ~230°–240° sahaja, PolyMaps 360° Studio menyokong tiga kaedah pintar:
+
+1. **Kaedah 1 (Disyorkan / Lalai): Panorama Kamera Telefon (`pano_convert`)**
+   - **Mod A — 1 Pano (~230° Sudut Tajam):** Mengesan sudut sapuan panorama secara automatik melalui `estimatePhonePanoSweepDeg(width, height)` serta liputan menegak melalui `computePhonePanoBandMetrics`, lalu menandakan URL imej dengan `#haov=230&vaov=65` (`appendPanoramaSweepHash`). Apabila dibuka dalam `Pannellum360Viewer`, pemapar mengunci `minYaw`/`maxYaw` tepat pada sempadan tajam gambar (`±115°`) **dan** mengunci `minPitch`/`maxPitch` melalui `computeVerticalPitchBounds` berserta `hfov` sekata agar pengguna tidak memusing ke kutub siling/lantai yang kosong.
+   - **Mod B — 2 Pano (Depan + Belakang = 360° Penuh):** Sukarelawan memuat naik Pano 1 (Separuh Depan ~230°) dan Pano 2 (Pusing 180° Separuh Belakang ~230°). Fungsi `stitchDualPhonePanoramasToEquirectangular` menggabungkan kedua-duanya menggunakan feathering kosinus (`computeDualPanoBlendWeights`) menjadi imej Equirectangular 360° mendatar penuh (`#haov=360&vaov=65`).
+   - **Kubah Siling/Lantai Anti-Pusaran Kutub (`paintAmbientZenithNadirBackdrop`):** Ketiga-tiga penjana Equirectangular (`stitchHorizonFramesToEquirectangular`, `convertPhonePanoramaToEquirectangular`, `stitchDualPhonePanoramasToEquirectangular`) menjana kubah zenith & nadir menggunakan pensampelan warna ambien tepi atas/bawah dengan pelembutan kecerunan ke satu warna seragam — menggantikan teknik lama (*regangan kabur gambar penuh ke kutub*) supaya tiada herotan pusaran (*pinwheel vortex*) atau garis potong tajam di atas/bawah.
+2. **Kaedah 2: Kamera 4-Sudut Pantas (`ar_camera`)**
+   - Menggantikan kompas 8-segmen lama yang memeningkan dengan **4 sudut mudah (`1. Depan`, `2. Kanan`, `3. Belakang`, `4. Kiri`)** yang **100% bebas kompas**.
+   - Memaparkan **Bayang Sempadan Visual (*Ghost Edge Overlap* 25%)** daripada gambar sebelumnya di sebelah kiri pemidang tilik kamera supaya pengguna hanya perlu menyambung gambar seperti menyusun panorama biasa.
+   - Menyelesaikan pepijat paksi giroskop Landskap vs Potret melalui `computeDeviceLevelAngles(beta, gamma, screenAngle)`.
+3. **Kaedah 3: Muat Naik Fail 360° Sedia Ada (`upload`)**
+   - Untuk gambar daripada kamera 360° dedikasi (Insta360 / Ricoh Theta) atau Google Street View.
+
+### 38.3 Pemerkasaan Sukarelawan & Penciptaan Bilik Automatik (`PolyMaps360CaptureModal.tsx`)
+
+- **Akses Pantas Sukarelawan:**
+  - Butang kapsul `📸 Sumbang 360° (Sukarelawan)` ditempatkan secara menonjol pada bar atas `/polymaps` dan di bahagian paling atas kad maklumat bangunan (berserta panduan visual 3-langkah dan lencana `Perlu Bantuan 360°` bagi bangunan yang belum mempunyai foto 360°).
+- **Cip Pilihan Pantas & Penciptaan Bilik Baharu Automatik:**
+  - Di Langkah 2 (*Letak Pin Pintu*), sukarelawan boleh menekan cip pilihan pantas bilik sedia ada (bilik yang belum mempunyai 360° ditandakan `Perlu 360°`) ATAU menaip terus kod & nama bilik baharu.
+  - Apabila JPP menekan **Lulus & Terbitkan** di `/jpp/polymaps` (atau semasa simpanan terus admin), sebarang pin pintu yang belum wujud dalam `imaps_locations` akan **dicipta secara automatik** dalam pangkalan data dan dipautkan (`target_location_id`) ke pin 360° tersebut.

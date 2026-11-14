@@ -1702,6 +1702,15 @@ export function PolyMapsPage() {
             >
               <Droplets className="w-3.5 h-3.5" /> {t('services:filter_toilet', 'Tandas')}
             </button>
+            <button
+              type="button"
+              onClick={() => setShowVolunteer360Studio(true)}
+              className="px-3.5 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition-all border flex items-center gap-1.5 shadow-md bg-emerald-600 hover:bg-emerald-500 text-white border-emerald-400 active:scale-95"
+              title={t('services:polymaps_top_volunteer_tooltip', 'Bantu pelajar baharu! Muat naik Panorama telefon atau rakam 360° & letak pin pintu bilik.')}
+            >
+              <Camera className="w-3.5 h-3.5" />
+              <span>{t('services:polymaps_top_volunteer_pill', '📸 Sumbang 360° (Sukarelawan)')}</span>
+            </button>
           </div>
 
           {/* Search Results Dropdown */}
@@ -2835,6 +2844,14 @@ export function PolyMapsPage() {
                             </button>
                           )}
                           <button
+                            onClick={(e) => { e.stopPropagation(); setShowVolunteer360Studio(true); }}
+                            className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-2 rounded-xl font-black text-xs transition-colors shadow-md active:scale-95"
+                            title={t('services:polymaps_open_studio_volunteer', 'Sumbang Rakaman 360° & Pin Pintu Bilik (Sukarelawan)')}
+                          >
+                            <Camera className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">360°</span>
+                          </button>
+                          <button
                             onClick={(e) => { e.stopPropagation(); startNavigation(); }}
                             className="flex items-center gap-1.5 bg-[#C96F4F] hover:bg-[#B35F41] text-white px-4 py-2 rounded-xl font-black text-xs transition-colors shadow-lg shadow-[#C96F4F]/25 active:scale-95"
                           >
@@ -3003,11 +3020,11 @@ export function PolyMapsPage() {
                         <div className="p-5">
                           <div className="flex items-start justify-between mb-4">
                             <div>
-                              <div className="flex items-center gap-2 mb-1">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
                                 <h2 className="text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">
                                   {selectedLocation ? selectedLocation.room_code : activeBuilding.name}
                                 </h2>
-                                {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) && (
+                                {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) ? (
                                   <button
                                     type="button"
                                     onClick={(e) => {
@@ -3023,6 +3040,10 @@ export function PolyMapsPage() {
                                   >
                                     <Compass className="w-3 h-3" /> {t('services:panorama_360_active', '360 AKTIF')}
                                   </button>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 text-[10px] bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-black tracking-wider uppercase">
+                                    <Camera className="w-3 h-3" /> {t('services:polymaps_needs_360_badge', 'Perlu Bantuan 360°')}
+                                  </span>
                                 )}
                               </div>
                               
@@ -3069,6 +3090,39 @@ export function PolyMapsPage() {
                             </div>
                           </div>
 
+                          {/* ── KAD SUKARELAWAN 360° & PIN PINTU BILIK (DI BAHAGIAN ATAS SUPAYA TIDAK TERNANAM) ── */}
+                          <div className="mb-3.5 p-3 rounded-2xl border border-emerald-500/35 bg-emerald-500/10 dark:bg-emerald-950/35 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <div>
+                                <p className="text-[11px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                                  <Camera className="w-3.5 h-3.5 shrink-0" />
+                                  {t('services:polymaps_volunteer_card_title', 'Bantu Pelajar Baharu Kenal Pintu Bilik (Mod Sukarelawan)')}
+                                </p>
+                                <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-0.5 leading-snug">
+                                  {t(
+                                    'services:polymaps_volunteer_card_steps',
+                                    '1. Muat naik Pano telefon (~230° iPhone / 2-Pano 360°) → 2. Klik pintu bilik untuk letak pin → 3. Hantar kepada JPP!'
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setShowVolunteer360Studio(true);
+                              }}
+                              className="w-full py-2.5 px-3.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black flex items-center justify-center gap-2 shadow-md shadow-emerald-600/20 transition-all active:scale-[0.98]"
+                            >
+                              <Camera className="w-4 h-4" />
+                              <span>
+                                {isAdmin
+                                  ? t('services:polymaps_open_studio_admin', 'Buka Studio Rakaman 360° & Pin Pintu Bilik (JPP)')
+                                  : t('services:polymaps_open_studio_volunteer', '📸 Sumbang Rakaman 360° & Pin Pintu Bilik (Sukarelawan)')}
+                              </span>
+                            </button>
+                          </div>
+
                           {/* Snap Toggle Button */}
                           {sheetSnap === 'HALF' ? (
                             <button
@@ -3102,19 +3156,6 @@ export function PolyMapsPage() {
                               className="w-full text-center text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-white text-xs font-bold transition-colors mt-1 underline underline-offset-2"
                             >
                               {t('services:drive_from_outside_google_maps', 'Memandu dari luar kampus? Buka Google Maps')}
-                            </button>
-
-                            <button
-                              type="button"
-                              onClick={() => setShowVolunteer360Studio(true)}
-                              className="w-full mt-1 py-2.5 px-3 rounded-xl border border-emerald-600/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-800 dark:text-emerald-300 text-xs font-black flex items-center justify-center gap-1.5 transition-colors"
-                            >
-                              <Camera className="w-3.5 h-3.5" />
-                              <span>
-                                {isAdmin
-                                  ? t('services:polymaps_open_studio_admin', 'Buka Studio Rakaman 360° & Pin Pintu Bilik (JPP)')
-                                  : t('services:polymaps_open_studio_volunteer', 'Sumbang Rakaman 360° & Pin Pintu Bilik (Sukarelawan)')}
-                              </span>
                             </button>
 
                             {/* FULL Snap Level: Full Building Directory */}

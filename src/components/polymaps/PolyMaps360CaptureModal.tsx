@@ -13,12 +13,14 @@ import {
   Loader2,
   Download,
   Navigation,
-  Layers,
-  Building2,
-  Wand2,
   RotateCcw,
   Eye,
   ArrowRight,
+  ChevronDown,
+  DoorOpen,
+  Smartphone,
+  Link2,
+  SlidersHorizontal,
   Info,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -34,9 +36,30 @@ import {
 import {
   stitchHorizonFramesToEquirectangular,
   convertPhonePanoramaToEquirectangular,
+  stitchDualPhonePanoramasToEquirectangular,
   validateEquirectangularDimensions,
+  estimatePhonePanoSweepDeg,
+  computePhonePanoBandMetrics,
+  appendPanoramaSweepHash,
+  computeDeviceLevelAngles,
 } from '@/lib/panoStitcher';
 import { sendNotificationToJppAndSuperAdmin } from '@/lib/notifications';
+
+function readImageDimensions(file: File): Promise<{ w: number; h: number }> {
+  const objectUrl = URL.createObjectURL(file);
+  return new Promise<{ w: number; h: number }>((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve({ w: img.width, h: img.height });
+    };
+    img.onerror = (err) => {
+      URL.revokeObjectURL(objectUrl);
+      reject(err);
+    };
+    img.src = objectUrl;
+  });
+}
 
 export interface PolyMaps360CaptureModalProps {
   isOpen: boolean;
@@ -67,7 +90,9 @@ export interface PolyMaps360CaptureModalProps {
   }) => void;
 }
 
-const TARGET_YAW_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
+const FOUR_CORNER_ANGLES = [0, 90, 180, 270];
+const FOUR_CORNER_LABELS_MS = ['1. Depan', '2. Kanan', '3. Belakang', '4. Kiri'];
+const FOUR_CORNER_LABELS_EN = ['1. Front', '2. Right', '3. Back', '4. Left'];
 
 export function PolyMaps360CaptureModal({
   isOpen,
@@ -87,7 +112,10 @@ export function PolyMaps360CaptureModal({
   const { t, i18n } = useTranslation(['services', 'common']);
   const currentLang: 'en' | 'ms' = i18n.language?.startsWith('en') ? 'en' : 'ms';
   const [step, setStep] = useState<'capture' | 'pins'>(initialPanoramaUrl ? 'pins' : 'capture');
-  const [captureTab, setCaptureTab] = useState<'camera' | 'pano_convert' | 'upload'>('camera');
+  const [captureTab, setCaptureTab] = useState<'pano_convert' | 'camera' | 'upload'>('pano_convert');
+  const [panoMode, setPanoMode] = useState<'single' | 'dual'>('single');
+  const [dualFrontFile, setDualFrontFile] = useState<File | null>(null);
+  const [dualBackFile, setDualBackFile] = useState<File | null>(null);
 
   const [selectedBuildingId, setSelectedBuildingId] = useState<string>(
     initialBuildingId || buildings[0]?.id || ''
@@ -98,7 +126,7 @@ export function PolyMaps360CaptureModal({
   const [stitchedBlobUrl, setStitchedBlobUrl] = useState<string | null>(null);
   const [volunteerNotes, setVolunteerNotes] = useState<string>('');
 
-  // State Kamera Berpandu AR
+  // State Kamera 4-Sudut Pantas
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   // Kunci auto-snap: elak 3-4 tangkapan pada bearing yang sama sebelum React sempat render.
@@ -108,7 +136,8 @@ export function PolyMaps360CaptureModal({
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [capturedFrames, setCapturedFrames] = useState<string[]>([]);
   const [capturedYaws, setCapturedYaws] = useState<number[]>([]);
-  const [panoSweepDeg, setPanoSweepDeg] = useState<number>(240);
+  const [panoSweepDeg, setPanoSweepDeg] = useState<number>(230);
+  const [panoVerticalSweepDeg, setPanoVerticalSweepDeg] = useState<number | null>(null);
   const [isPortraitFrame, setIsPortraitFrame] = useState(false);
   const [hasGyroscope, setHasGyroscope] = useState(false);
   const [compassHeading, setCompassHeading] = useState<number>(0);
@@ -118,6 +147,9 @@ export function PolyMaps360CaptureModal({
   const [isStitching, setIsStitching] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isDetectingGps, setIsDetectingGps] = useState(false);
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [showManualAngle, setShowManualAngle] = useState(false);
+  const [showPinAdvanced, setShowPinAdvanced] = useState(false);
 
   // State Editor Pin 360°
   const [hotspots, setHotspots] = useState<PolyMaps360HotspotDraft[]>(initialHotspots);
@@ -156,6 +188,7 @@ export function PolyMaps360CaptureModal({
     setSelectedLocationId(initialLocationId || '');
     setFloorLevel(initialFloorLevel || '1');
     setPanoramaUrl(initialPanoramaUrl || '');
+    setPanoVerticalSweepDeg(null);
     setHotspots(initialHotspots || []);
     setStep(initialPanoramaUrl ? 'pins' : 'capture');
     setDraftPin(null);
@@ -179,9 +212,7 @@ export function PolyMaps360CaptureModal({
     };
   }, [stitchedBlobUrl]);
 
-  // Listener Sensor Giroskop / Kompas Telefon
-  // iOS Safari: `alpha` BUKAN bearing utara (rujukan arbitrary) — wajib `webkitCompassHeading`.
-  // Android Chrome: `deviceorientationabsolute` -> bearing = 360 - alpha. `deviceorientation` biasa relatif, tak dipakai.
+  // Listener Sensor Giroskop / Penimbang Tegak Telefon (Membetulkan paksi Melintang vs Menegak)
   useEffect(() => {
     if (!isOpen || !isCameraActive) return;
 
@@ -210,13 +241,16 @@ export function PolyMaps360CaptureModal({
         setCompassHeading(Math.round(headingRef.current.deg));
       }
 
-      if (typeof event.gamma === 'number') {
-        setDeviceRoll(Math.round(event.gamma));
-      }
-      if (typeof event.beta === 'number') {
-        // Telefon dipegang menegak pada paras mata mempunyai beta ~ 90 darjah
-        setDevicePitch(Math.round(event.beta - 90));
-      }
+      const screenAngle =
+        typeof window.screen?.orientation?.angle === 'number'
+          ? window.screen.orientation.angle
+          : typeof (window as any).orientation === 'number'
+          ? Number((window as any).orientation)
+          : 0;
+      const isLandscape = !isPortraitFrame || Math.abs(screenAngle) === 90 || Math.abs(screenAngle) === 270;
+      const level = computeDeviceLevelAngles(event.beta, event.gamma, isLandscape);
+      setDeviceRoll(level.roll);
+      setDevicePitch(level.pitch);
     };
 
     window.addEventListener('deviceorientationabsolute', handleOrientation as EventListener, true);
@@ -225,7 +259,7 @@ export function PolyMaps360CaptureModal({
       window.removeEventListener('deviceorientationabsolute', handleOrientation as EventListener, true);
       window.removeEventListener('deviceorientation', handleOrientation, true);
     };
-  }, [isOpen, isCameraActive]);
+  }, [isOpen, isCameraActive, isPortraitFrame]);
 
   // WebKit bug 329556: deviceorientation berhenti semasa halaman di-scroll -> kunci scroll.
   useEffect(() => {
@@ -239,21 +273,13 @@ export function PolyMaps360CaptureModal({
 
   const startGuidedCamera = async () => {
     try {
-      // Minta izin sensor pada iOS 13+ jika ada
       const DevOrient = window.DeviceOrientationEvent as any;
       if (DevOrient && typeof DevOrient.requestPermission === 'function') {
         try {
           const permission = await DevOrient.requestPermission();
           if (permission !== 'granted') throw new Error('motion-denied');
         } catch {
-          // Kamera tetap jalan; panduan kompas dimatikan secara jujur.
           setHasGyroscope(false);
-          toast.warning(
-            t(
-              'services:polymaps_studio_motion_denied',
-              'Akses sensor gerakan ditolak. Panduan kompas dimatikan — anda masih boleh tangkap segmen secara manual. Benarkan di Settings › Safari › Motion & Orientation Access.'
-            )
-          );
         }
       }
 
@@ -278,7 +304,6 @@ export function PolyMaps360CaptureModal({
         const video = videoRef.current;
         if (video) {
           video.srcObject = mediaStream;
-          // Telefon potret -> FOV mendatar ~42°, tak cukup untuk 8 x 45°.
           const markOrientation = () => setIsPortraitFrame(video.videoHeight > video.videoWidth);
           video.onloadedmetadata = markOrientation;
           markOrientation();
@@ -288,13 +313,13 @@ export function PolyMaps360CaptureModal({
     } catch (err: any) {
       console.error('Ralat akses kamera:', err);
       toast.error(
-        t('services:polymaps_studio_camera_error', 'Kamera tidak dapat diakses. Sila benarkan akses kamera atau gunakan tab Auto-Konversi Foto Pano Telefon.')
+        t('services:polymaps_studio_camera_error', 'Kamera tidak dapat diakses. Sila benarkan akses kamera atau gunakan tab Panorama Kamera Telefon.')
       );
     }
   };
 
   const captureCurrentVideoFrame = () => {
-    if (!videoRef.current || capturedFrames.length >= 8) return;
+    if (!videoRef.current || capturedFrames.length >= 4) return;
     const video = videoRef.current;
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth || 1280;
@@ -307,76 +332,102 @@ export function PolyMaps360CaptureModal({
     const nextFrames = [...capturedFrames, dataUrl];
     setCapturedFrames(nextFrames);
 
-    // Simpan bearing sebenar segmen ini; tanpa kompas, anggap taburan sekata 45°.
-    const yaw = hasGyroscope
-      ? headingRef.current.deg
-      : TARGET_YAW_ANGLES[capturedFrames.length] ?? 0;
+    // Gunakan sudut kardinal 4-arah yang sekata (0°, 90°, 180°, 270°) supaya bebas daripada gangguan kompas magnetik bangunan
+    const yaw = FOUR_CORNER_ANGLES[capturedFrames.length] ?? 0;
     const nextYaws = [...capturedYaws, yaw];
     setCapturedYaws(nextYaws);
 
-    if (nextFrames.length === 8) {
-      toast.success(t('services:polymaps_studio_8_segments_toast', 'Lengkap 8 segmen pusingan 360°! Mencantumkan panorama...'));
+    if (nextFrames.length === 4) {
+      toast.success(
+        t('services:polymaps_studio_4_corners_done_toast', 'Lengkap 4 sudut (Depan, Kanan, Belakang, Kiri)! Mencantumkan panorama 360°...')
+      );
       void handleStitchCapturedFrames(nextFrames, nextYaws);
     } else {
+      const nextLabel =
+        currentLang === 'en'
+          ? FOUR_CORNER_LABELS_EN[nextFrames.length]
+          : FOUR_CORNER_LABELS_MS[nextFrames.length];
       toast.info(
-        t('services:polymaps_studio_segment_toast', 'Segmen {{count}}/8 dirakam. Pusing sedikit ke kanan untuk segmen seterusnya.', {
-          count: nextFrames.length,
-        })
+        t(
+          'services:polymaps_studio_4_corner_step_toast',
+          'Sudut {{count}}/4 dirakam! Pusing ke kanan sehingga tepi gambar selari dengan jalur hijau di kiri ({{next}}).',
+          {
+            count: nextFrames.length,
+            next: nextLabel,
+          }
+        )
       );
     }
   };
 
-  // Auto-snap apabila kompas sejajar dengan sudut sasaran & telefon tegak
-  useEffect(() => {
-    if (!isCameraActive || !autoSnapEnabled || !hasGyroscope) return;
-    if (capturedFrames.length >= 8) return;
-
-    const targetAngle = TARGET_YAW_ANGLES[capturedFrames.length];
-    const diff = Math.abs((((compassHeading - targetAngle) % 360) + 540) % 360 - 180);
-    const isLevel = Math.abs(deviceRoll) <= 12 && Math.abs(devicePitch) <= 18;
-
-    if (diff <= 8 && isLevel && Date.now() - snapLockRef.current > 1500) {
-      snapLockRef.current = Date.now();
-      captureCurrentVideoFrame();
+  const blobToCompactDataUrl = async (blob: Blob, maxW = 2048): Promise<string> => {
+    const tempUrl = URL.createObjectURL(blob);
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const el = new Image();
+        el.onload = () => resolve(el);
+        el.onerror = reject;
+        el.src = tempUrl;
+      });
+      const w = Math.min(maxW, img.width || maxW);
+      const h = Math.max(1, Math.round((img.height / Math.max(1, img.width)) * w));
+      const canvas = document.createElement('canvas');
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Canvas context unavailable');
+      ctx.drawImage(img, 0, 0, w, h);
+      return canvas.toDataURL('image/jpeg', 0.82);
+    } finally {
+      URL.revokeObjectURL(tempUrl);
     }
-  }, [compassHeading, deviceRoll, devicePitch, autoSnapEnabled, isCameraActive, hasGyroscope, capturedFrames.length]);
+  };
 
   const uploadBlobToImapsAssets = async (blob: Blob, prefix = 'pano360'): Promise<string> => {
     const fileName = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
     const filePath = `polymaps/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
-      .from('imaps_assets')
-      .upload(filePath, blob, {
-        contentType: 'image/jpeg',
-        upsert: false,
-      });
+    try {
+      const { error: uploadError } = await supabase.storage
+        .from('imaps_assets')
+        .upload(filePath, blob, {
+          contentType: 'image/jpeg',
+          upsert: false,
+        });
 
-    if (uploadError) throw uploadError;
+      if (uploadError) throw uploadError;
 
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from('imaps_assets').getPublicUrl(filePath);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from('imaps_assets').getPublicUrl(filePath);
 
-    return publicUrl;
+      return publicUrl;
+    } catch (storageErr) {
+      console.warn('Muat naik storan terus tidak tersedia (mod sukarelawan awam), menggunakan imej terbenam:', storageErr);
+      return await blobToCompactDataUrl(blob, 2048);
+    }
   };
 
   const handleStitchCapturedFrames = async (
     framesToUse = capturedFrames,
     yawsToUse = capturedYaws
   ) => {
-    if (framesToUse.length < 4) {
-      toast.warning(t('services:polymaps_studio_min_4_segments', 'Sila rakam sekurang-kurangnya 4 segmen gambar sebelum cantum.'));
+    if (framesToUse.length < 2) {
+      toast.warning(
+        t('services:polymaps_studio_min_2_segments', 'Sila rakam sekurang-kurangnya 2 sudut gambar sebelum cantum.')
+      );
       return;
     }
 
     setIsStitching(true);
     try {
+      const effectiveHfov = framesToUse.length <= 4 ? 96 : 68;
       const equirectBlob = await stitchHorizonFramesToEquirectangular(
         framesToUse,
         4096,
         2048,
-        yawsToUse
+        yawsToUse,
+        effectiveHfov
       );
       if (stitchedBlobUrl) URL.revokeObjectURL(stitchedBlobUrl);
       const localUrl = URL.createObjectURL(equirectBlob);
@@ -384,10 +435,15 @@ export function PolyMaps360CaptureModal({
 
       stopCameraStream();
       setIsUploading(true);
-      const uploadedUrl = await uploadBlobToImapsAssets(equirectBlob, 'studio360_ar');
-      setPanoramaUrl(uploadedUrl);
+      const uploadedUrl = await uploadBlobToImapsAssets(equirectBlob, 'studio360_4corner');
+      const sweepTag = framesToUse.length >= 4 ? 360 : Math.min(360, framesToUse.length * 95);
+      const approxVaov = framesToUse.length <= 4 ? 76 : 66;
+      setPanoVerticalSweepDeg(approxVaov);
+      setPanoramaUrl(appendPanoramaSweepHash(uploadedUrl, sweepTag, approxVaov));
       setStep('pins');
-      toast.success(t('services:polymaps_studio_stitch_success', 'Panorama 360° berjaya dicantum & dimuat naik! Sila klik pintu bilik untuk letak pin.'));
+      toast.success(
+        t('services:polymaps_studio_stitch_success', 'Panorama 360° berjaya dicantum & dimuat naik! Sila klik pintu bilik untuk letak pin.')
+      );
     } catch (err: any) {
       console.error('Gagal mencantum/memuat naik 360:', err);
       toast.error(err.message || t('services:polymaps_studio_stitch_failed', 'Gagal mencantum panorama 360°.'));
@@ -397,55 +453,120 @@ export function PolyMaps360CaptureModal({
     }
   };
 
-  const handlePhonePanoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processPhonePanoFile = async (file: File) => {
     setIsUploading(true);
     try {
-      const convertedBlob = await convertPhonePanoramaToEquirectangular(file, 4096, panoSweepDeg);
+      // Semak dimensi imej untuk menganggar sudut sapuan sebenar (cth: ~230° pada iPhone Pano)
+      const dims = await readImageDimensions(file);
+      let detectedSweep = panoSweepDeg;
+      if (dims.w / Math.max(1, dims.h) > 2.2 && panoSweepDeg === 230) {
+        detectedSweep = estimatePhonePanoSweepDeg(dims.w, dims.h);
+        setPanoSweepDeg(detectedSweep);
+      }
+      const { verticalSweepDeg } = computePhonePanoBandMetrics(dims.w, dims.h, detectedSweep, 4096);
+
+      const convertedBlob = await convertPhonePanoramaToEquirectangular(file, 4096, detectedSweep);
       if (stitchedBlobUrl) URL.revokeObjectURL(stitchedBlobUrl);
       setStitchedBlobUrl(URL.createObjectURL(convertedBlob));
 
       const uploadedUrl = await uploadBlobToImapsAssets(convertedBlob, 'studio360_pano');
-      setPanoramaUrl(uploadedUrl);
+      const taggedUrl = appendPanoramaSweepHash(uploadedUrl, detectedSweep, verticalSweepDeg);
+      setPanoVerticalSweepDeg(verticalSweepDeg);
+      setPanoramaUrl(taggedUrl);
+      setDualFrontFile(file);
       setStep('pins');
-      toast.success(t('services:polymaps_studio_pano_converted_toast', 'Foto Panorama Telefon berjaya ditukar kepada 360° Equirectangular (2:1)!'));
+      toast.success(
+        detectedSweep < 350
+          ? t(
+              'services:polymaps_studio_partial_pano_toast',
+              'Panorama {{deg}}° siap! Sudut pusingan dikunci pada {{deg}}° supaya tiada dinding kabur di belakang.',
+              { deg: detectedSweep }
+            )
+          : t('services:polymaps_studio_pano_converted_toast', 'Foto Panorama Telefon berjaya ditukar kepada 360° Equirectangular (2:1)!')
+      );
     } catch (err: any) {
       console.error('Ralat konversi pano:', err);
       toast.error(err.message || t('services:polymaps_studio_pano_convert_failed', 'Gagal menukar foto panorama telefon.'));
     } finally {
       setIsUploading(false);
-      e.target.value = '';
     }
   };
 
-  const handleDirect360Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handlePhonePanoFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
+    await processPhonePanoFile(file);
+  };
+
+  const handleDualPhonePanoStitch = async (frontOverride?: File | null, backOverride?: File | null) => {
+    const fFile = frontOverride ?? dualFrontFile;
+    const bFile = backOverride ?? dualBackFile;
+    if (!fFile || !bFile) {
+      toast.warning(
+        t('services:polymaps_studio_dual_need_both', 'Sila pilih kedua-dua gambar: Pano 1 (Menghadap Depan) dan Pano 2 (Menghadap Belakang).')
+      );
+      return;
+    }
 
     setIsUploading(true);
     try {
-      // Semak nisbah dimensi imej terlebih dahulu
-      const objectUrl = URL.createObjectURL(file);
-      const dims = await new Promise<{ w: number; h: number }>((resolve, reject) => {
-        const img = new Image();
-        img.onload = () => resolve({ w: img.width, h: img.height });
-        img.onerror = reject;
-        img.src = objectUrl;
-      });
-      URL.revokeObjectURL(objectUrl);
+      const effectiveSweep = panoSweepDeg || 230;
+      const frontDims = await readImageDimensions(fFile);
+      const { verticalSweepDeg } = computePhonePanoBandMetrics(
+        frontDims.w,
+        frontDims.h,
+        effectiveSweep,
+        4096
+      );
+      const mergedBlob = await stitchDualPhonePanoramasToEquirectangular(
+        fFile,
+        bFile,
+        4096,
+        effectiveSweep
+      );
+      if (stitchedBlobUrl) URL.revokeObjectURL(stitchedBlobUrl);
+      setStitchedBlobUrl(URL.createObjectURL(mergedBlob));
 
+      const uploadedUrl = await uploadBlobToImapsAssets(mergedBlob, 'studio360_dualpano');
+      setPanoVerticalSweepDeg(verticalSweepDeg);
+      setPanoramaUrl(appendPanoramaSweepHash(uploadedUrl, 360, verticalSweepDeg));
+      setStep('pins');
+      toast.success(
+        t(
+          'services:polymaps_studio_dual_stitched_toast',
+          '2 Panorama (Depan + Belakang) berjaya digabung menjadi 360° Penuh Tanpa Kabur!'
+        )
+      );
+    } catch (err: any) {
+      console.error('Ralat cantuman 2 pano:', err);
+      toast.error(err.message || t('services:polymaps_studio_pano_convert_failed', 'Gagal mencantumkan 2 panorama telefon.'));
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const processDirect360File = async (file: File) => {
+    setIsUploading(true);
+    try {
+      const dims = await readImageDimensions(file);
       const check = validateEquirectangularDimensions(dims.w, dims.h);
       let blobToUpload: Blob = file;
+      let verticalVaov = 180;
 
       if (check.isWidePanorama) {
         toast.info(t('services:polymaps_studio_wide_pano_detected', 'Mengesan foto Panorama memanjang telefon — menukar secara automatik ke nisbah 2:1...'));
+        verticalVaov = computePhonePanoBandMetrics(dims.w, dims.h, panoSweepDeg, 4096).verticalSweepDeg;
         blobToUpload = await convertPhonePanoramaToEquirectangular(file, 4096, panoSweepDeg);
       }
 
       const uploadedUrl = await uploadBlobToImapsAssets(blobToUpload, 'studio360_direct');
-      setPanoramaUrl(uploadedUrl);
+      setPanoVerticalSweepDeg(verticalVaov);
+      setPanoramaUrl(
+        check.isWidePanorama
+          ? appendPanoramaSweepHash(uploadedUrl, panoSweepDeg, verticalVaov)
+          : uploadedUrl
+      );
       setStep('pins');
       toast.success(t('services:polymaps_studio_direct_upload_success', 'Imej 360° berjaya dimuat naik! Sekarang klik pada pintu bilik untuk letak pin.'));
     } catch (err: any) {
@@ -453,8 +574,14 @@ export function PolyMaps360CaptureModal({
       toast.error(err.message || t('services:polymaps_studio_upload_failed', 'Gagal memuat naik imej 360°.'));
     } finally {
       setIsUploading(false);
-      e.target.value = '';
     }
+  };
+
+  const handleDirect360Upload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    await processDirect360File(file);
   };
 
   const handleAutoDetectGpsBuilding = () => {
@@ -500,6 +627,7 @@ export function PolyMaps360CaptureModal({
   // Apabila pengguna klik pada titik dalam 360° untuk letak pin baharu
   const handle360CanvasClick = ({ pitch, yaw }: { pitch: number; yaw: number }) => {
     const clockHint = formatYawToClockDirection(yaw, currentLang);
+    setShowPinAdvanced(false);
     setDraftPin({
       index: null,
       pin_type: 'room',
@@ -721,9 +849,11 @@ export function PolyMaps360CaptureModal({
             contributor_id: currentUserId || null,
             contributor_name: currentUserName || t('services:polymaps_studio_default_volunteer', 'Sukarelawan Kampus'),
             floor_level: floorLevel || '1',
+            corridor_label: roomCodesHint || `Aras ${floorLevel || '1'}`,
             room_code_hint: roomCodesHint || null,
             panorama_360_url: panoramaUrl,
             hotspots_json: hotspots,
+            hotspots_payload: hotspots,
             notes: volunteerNotes.trim() || null,
             status: 'pending',
           },
@@ -769,85 +899,89 @@ export function PolyMaps360CaptureModal({
 
   const prevCapturedFrame =
     capturedFrames.length > 0 ? capturedFrames[capturedFrames.length - 1] : null;
+  const cornerLabels = currentLang === 'en' ? FOUR_CORNER_LABELS_EN : FOUR_CORNER_LABELS_MS;
+  const unmappedRoomsInBuilding = buildingLocations.filter((l) => !l.panorama_360_url);
+  const selectedLocation = buildingLocations.find((l) => l.id === selectedLocationId) || null;
+  const floorLevels = ['G', '1', '2', '3', '4', '5'];
+
+  const handleCloseModal = () => {
+    stopCameraStream();
+    onClose();
+  };
 
   return (
-    <div className="fixed inset-0 z-[1100] flex items-center justify-center p-2 sm:p-4 bg-slate-950/80">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl w-full max-w-6xl max-h-[94vh] flex flex-col overflow-hidden shadow-2xl">
-        {/* Header Studio */}
-        <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3 bg-slate-50/70 dark:bg-slate-900">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
-              <Compass className="w-5 h-5" />
+    <div className="fixed inset-0 z-[1100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/75">
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl w-full max-w-5xl max-h-[95vh] sm:max-h-[92vh] flex flex-col overflow-hidden shadow-2xl">
+        {/* Header Studio Ringkas */}
+        <div className="px-4 sm:px-5 py-3 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 bg-white dark:bg-slate-900">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+              <Compass className="w-4 h-4" />
             </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
-                  {t('services:polymaps_studio_title', 'Studio Rakaman 360° & Pin Pintu Bilik')}
-                </h2>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-300">
-                  {isAdminMode
-                    ? t('services:polymaps_studio_mode_jpp', 'Mod JPP (Terbit Terus)')
-                    : t('services:polymaps_studio_mode_volunteer', 'Mod Sukarelawan Lapangan')}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {t('services:polymaps_studio_subtitle', 'Rakam 360° terus dari pelayar atau tukar foto Pano telefon, kemudian klik pintu bilik untuk letak pin interaktif.')}
-              </p>
+            <div className="flex items-center gap-2 min-w-0">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate">
+                {t('services:polymaps_studio_v3_title', 'Studio 360°')}
+              </h2>
+              <span className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 shrink-0">
+                {isAdminMode
+                  ? t('services:polymaps_studio_v3_badge_admin', 'Admin JPP')
+                  : t('services:polymaps_studio_v3_badge_volunteer', 'Sukarelawan')}
+              </span>
             </div>
           </div>
 
-          {/* Stepper Switch */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center bg-slate-200/70 dark:bg-slate-800 p-1 rounded-xl text-xs font-bold">
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Stepper Ringkas */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl text-xs font-semibold">
               <button
                 type="button"
                 onClick={() => setStep('capture')}
-                className={`px-3 py-1.5 rounded-lg transition-all ${
+                className={`px-2.5 sm:px-3 py-1 rounded-[10px] transition-colors duration-150 ${
                   step === 'capture'
-                    ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm font-black'
-                    : 'text-slate-600 dark:text-slate-400'
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
-                {t('services:polymaps_studio_step_capture', '1. Rakam / Muat Naik 360°')}
+                {t('services:polymaps_studio_v3_step1', '1. Foto 360°')}
               </button>
               <button
                 type="button"
                 disabled={!panoramaUrl}
                 onClick={() => setStep('pins')}
-                className={`px-3 py-1.5 rounded-lg transition-all disabled:opacity-40 ${
+                className={`px-2.5 sm:px-3 py-1 rounded-[10px] transition-colors duration-150 disabled:opacity-40 ${
                   step === 'pins'
-                    ? 'bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm font-black'
-                    : 'text-slate-600 dark:text-slate-400'
+                    ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                    : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
               >
-                {t('services:polymaps_studio_step_pins', '2. Letak Pin Pintu ({{count}})', { count: hotspots.length })}
+                {hotspots.length > 0
+                  ? t('services:polymaps_studio_v3_step2_count', '2. Pin Pintu ({{count}})', { count: hotspots.length })
+                  : t('services:polymaps_studio_v3_step2', '2. Pin Pintu')}
               </button>
             </div>
 
             <button
               type="button"
-              onClick={() => {
-                stopCameraStream();
-                onClose();
-              }}
-              className="p-2 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors"
+              onClick={handleCloseModal}
+              aria-label={t('services:polymaps_bulk_cancel', 'Batal')}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* Bar Konteks Bangunan & Aras (Sentiasa Kelihatan) */}
-        <div className="px-5 py-3 bg-slate-100/70 dark:bg-slate-950/60 border-b border-slate-200/70 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
-          <div className="sm:col-span-5 flex items-center gap-2">
-            <Building2 className="w-4 h-4 text-slate-400 shrink-0" />
+        {/* Bar Konteks Lokasi 1-Baris (Bangunan + GPS + Cip Aras Terus) */}
+        <div className="px-4 sm:px-5 py-2 bg-slate-50/70 dark:bg-slate-950/40 border-b border-slate-100 dark:border-slate-800/80 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 flex-1 min-w-[200px]">
             <select
               value={selectedBuildingId}
               onChange={(e) => {
                 setSelectedBuildingId(e.target.value);
                 setSelectedLocationId('');
               }}
-              className="w-full px-3 py-2 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100"
+              aria-label={t('services:polymaps_studio_select_building', '-- Pilih Bangunan / Blok --')}
+              className="flex-1 min-w-[140px] sm:max-w-[260px] px-2.5 py-1.5 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500"
             >
               <option value="">{t('services:polymaps_studio_select_building', '-- Pilih Bangunan / Blok --')}</option>
               {buildings.map((b) => (
@@ -856,115 +990,96 @@ export function PolyMaps360CaptureModal({
                 </option>
               ))}
             </select>
+
             <button
               type="button"
               onClick={handleAutoDetectGpsBuilding}
               disabled={isDetectingGps}
-              className="shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-sm transition-colors disabled:opacity-50"
+              className="shrink-0 inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:border-emerald-500 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors duration-150 active:scale-[0.97] disabled:opacity-50"
               title={t('services:polymaps_studio_gps_tooltip', 'Kesan bangunan terdekat menggunakan GPS telefon anda')}
             >
               {isDetectingGps ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-emerald-500" />
               ) : (
-                <Navigation className="w-3.5 h-3.5" />
+                <Navigation className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
               )}
-              <span className="hidden md:inline">{t('services:polymaps_studio_gps_btn', 'Kesan GPS')}</span>
+              <span>{t('services:polymaps_studio_v3_gps_short', 'GPS')}</span>
             </button>
+
+            {selectedLocation && (
+              <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold">
+                <MapPin className="w-3 h-3" />
+                <span>{selectedLocation.room_code}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedLocationId('')}
+                  className="hover:text-emerald-900 dark:hover:text-white ml-0.5"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
           </div>
 
-          <div className="sm:col-span-3 flex items-center gap-2">
-            <Layers className="w-4 h-4 text-slate-400 shrink-0" />
-            <select
-              value={floorLevel}
-              onChange={(e) => setFloorLevel(e.target.value)}
-              className="w-full px-3 py-2 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100"
-            >
-              <option value="G">{t('services:polymaps_studio_floor_g', 'Aras Bawah (G)')}</option>
-              <option value="1">{t('services:polymaps_studio_floor_n', 'Aras {{level}}', { level: 1 })}</option>
-              <option value="2">{t('services:polymaps_studio_floor_n', 'Aras {{level}}', { level: 2 })}</option>
-              <option value="3">{t('services:polymaps_studio_floor_n', 'Aras {{level}}', { level: 3 })}</option>
-              <option value="4">{t('services:polymaps_studio_floor_n', 'Aras {{level}}', { level: 4 })}</option>
-              <option value="5">{t('services:polymaps_studio_floor_n', 'Aras {{level}}', { level: 5 })}</option>
-            </select>
-          </div>
-
-          <div className="sm:col-span-4 flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-            <select
-              value={selectedLocationId}
-              onChange={(e) => setSelectedLocationId(e.target.value)}
-              className="w-full px-3 py-2 text-xs font-bold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-slate-800 dark:text-slate-100"
-            >
-              <option value="">{t('services:polymaps_studio_corridor_option', 'Koridor Umum / Pelbagai Bilik Serentak')}</option>
-              {buildingLocations.map((loc) => (
-                <option key={loc.id} value={loc.id}>
-                  {t('services:polymaps_studio_specific_room_option', 'Bilik Spesifik: {{code}} (Aras {{level}})', {
-                    code: loc.room_code,
-                    level: loc.floor_level,
-                  })}
-                </option>
-              ))}
-            </select>
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-medium text-slate-500 dark:text-slate-400 mr-0.5">
+              {t('services:polymaps_studio_v3_level_prefix', 'Aras')}:
+            </span>
+            <div className="flex items-center bg-slate-200/70 dark:bg-slate-800 p-0.5 rounded-lg">
+              {floorLevels.map((lvl) => {
+                const active = (floorLevel || '1') === lvl;
+                return (
+                  <button
+                    key={lvl}
+                    type="button"
+                    onClick={() => setFloorLevel(lvl)}
+                    className={`min-w-[26px] px-1.5 py-0.5 rounded-md text-[11px] font-bold transition-colors duration-150 ${
+                      active
+                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {lvl}
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
 
         {/* Kandungan Utama */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-5">
           {step === 'capture' ? (
-            <div className="space-y-5">
-              {/* Pilihan 3 Kaedah Input 360° */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setCaptureTab('camera')}
-                  className={`p-4 rounded-2xl border text-left transition-all ${
-                    captureTab === 'camera'
-                      ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-500/10 shadow-sm'
-                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                      <Camera className="w-4 h-4" /> {t('services:polymaps_studio_method1_badge', 'Kaedah 1 (Disyorkan)')}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
-                      {t('services:polymaps_studio_method1_tag', 'Terus Dalam Web')}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                    {t('services:polymaps_studio_method1_title', 'Perakam 360° Berpandu AR')}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {t('services:polymaps_studio_method1_desc', 'Pusing 360° mengikut panduan cincin 8-titik & penimbang tegak. Sistem cantum automatik.')}
-                  </p>
-                </button>
-
+            <div className="max-w-2xl mx-auto space-y-4">
+              {/* Bar Tab Kaedah Ringkas (3 Pilihan Padat) */}
+              <div className="grid grid-cols-3 gap-1 p-1 rounded-2xl bg-slate-100 dark:bg-slate-800/80">
                 <button
                   type="button"
                   onClick={() => {
                     stopCameraStream();
                     setCaptureTab('pano_convert');
                   }}
-                  className={`p-4 rounded-2xl border text-left transition-all ${
+                  className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-colors duration-150 ${
                     captureTab === 'pano_convert'
-                      ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-500/10 shadow-sm'
-                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-                      <Wand2 className="w-4 h-4" /> {t('services:polymaps_studio_method2_badge', 'Kaedah 2 (Paling Tajam)')}
-                    </span>
-                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-500/15 text-indigo-700 dark:text-indigo-300">
-                      {t('services:polymaps_studio_method2_tag', 'Auto-Nisbah 2:1')}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                    {t('services:polymaps_studio_method2_title', "Tukar Foto Mod 'Pano' Telefon")}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {t('services:polymaps_studio_method2_desc', 'Ambil gambar guna mod Panorama asal kamera iPhone/Android & muat naik untuk ditukar ke 360°.')}
-                  </p>
+                  <Smartphone className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                  <span className="truncate">{t('services:polymaps_studio_v3_tab_pano', 'Panorama Telefon')}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setCaptureTab('camera')}
+                  className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-colors duration-150 ${
+                    captureTab === 'camera'
+                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  <Camera className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span className="truncate">{t('services:polymaps_studio_v3_tab_camera', 'Kamera 4-Sudut')}</span>
                 </button>
 
                 <button
@@ -973,66 +1088,300 @@ export function PolyMaps360CaptureModal({
                     stopCameraStream();
                     setCaptureTab('upload');
                   }}
-                  className={`p-4 rounded-2xl border text-left transition-all ${
+                  className={`flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold transition-colors duration-150 ${
                     captureTab === 'upload'
-                      ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-500/10 shadow-sm'
-                      : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-1.5">
-                    <span className="inline-flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
-                      <Upload className="w-4 h-4" /> {t('services:polymaps_studio_method3_badge', 'Kaedah 3')}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                    {t('services:polymaps_studio_method3_title', 'Fail 360° Sedia Ada / URL')}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    {t('services:polymaps_studio_method3_desc', 'Muat naik fail Equirectangular (Insta360 / Street View) atau tampal pautan URL imej 360°.')}
-                  </p>
+                  <Link2 className="w-3.5 h-3.5 text-slate-500 dark:text-slate-400 shrink-0" />
+                  <span className="truncate">{t('services:polymaps_studio_v3_tab_file', 'Fail / URL')}</span>
                 </button>
               </div>
 
-              {/* Kandungan Mengikut Tab */}
-              {captureTab === 'camera' && (
-                <div className="rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-white overflow-hidden">
-                  {!isCameraActive ? (
-                    <div className="p-8 text-center space-y-4">
-                      <div className="w-16 h-16 rounded-3xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto">
-                        <Camera className="w-8 h-8" />
-                      </div>
-                      <div className="max-w-lg mx-auto space-y-1.5">
-                        <h3 className="text-base font-black">
-                          {t('services:polymaps_studio_ar_heading', 'Rakaman Panorama 360° Berpandu Secara Terus')}
+              {/* TAB 1 (DEFAULT): PANORAMA KAMERA TELEFON */}
+              {captureTab === 'pano_convert' && (
+                <div className="space-y-3.5">
+                  <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
+                      {t('services:polymaps_studio_v3_pano_hint', 'Rakam guna mod Pano kamera telefon.')}
+                    </p>
+                    <div className="inline-flex bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl text-[11px] font-semibold">
+                      <button
+                        type="button"
+                        onClick={() => setPanoMode('single')}
+                        className={`px-2.5 py-1 rounded-[10px] transition-colors duration-150 ${
+                          panoMode === 'single'
+                            ? 'bg-white dark:bg-slate-900 text-emerald-700 dark:text-emerald-400 shadow-sm'
+                            : 'text-slate-500 dark:text-slate-400'
+                        }`}
+                      >
+                        {t('services:polymaps_studio_v3_mode_1pano', '1 Pano (~230°)')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setPanoMode('dual')}
+                        className={`px-2.5 py-1 rounded-[10px] transition-colors duration-150 ${
+                          panoMode === 'dual'
+                            ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                            : 'text-slate-500 dark:text-slate-400'
+                        }`}
+                      >
+                        {t('services:polymaps_studio_v3_mode_2pano', '2 Pano (360° Penuh)')}
+                      </button>
+                    </div>
+                  </div>
+
+                  {panoMode === 'single' ? (
+                    <div className="space-y-3">
+                      <label
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setIsDraggingOver(true);
+                        }}
+                        onDragLeave={() => setIsDraggingOver(false)}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setIsDraggingOver(false);
+                          const dropped = e.dataTransfer.files?.[0];
+                          if (dropped) void processPhonePanoFile(dropped);
+                        }}
+                        className={`flex flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 py-8 sm:py-10 text-center cursor-pointer transition-colors duration-150 ${
+                          isDraggingOver
+                            ? 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-500/15'
+                            : 'border-slate-300 dark:border-slate-700 hover:border-emerald-500/70 bg-slate-50/50 dark:bg-slate-950/30 hover:bg-emerald-50/30 dark:hover:bg-emerald-500/5'
+                        }`}
+                      >
+                        {/* Ilustrasi Ringkas Sapuan Panorama 230° */}
+                        <div className="mb-3 text-emerald-600 dark:text-emerald-400" aria-hidden="true">
+                          <svg width="72" height="34" viewBox="0 0 72 34" fill="none">
+                            <path
+                              d="M6 26C16 10 56 10 66 26"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeDasharray="4 4"
+                              opacity="0.45"
+                            />
+                            <path
+                              d="M12 23C22 11 50 11 60 23"
+                              stroke="currentColor"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                            />
+                            <rect
+                              x="30"
+                              y="16"
+                              width="12"
+                              height="16"
+                              rx="2.5"
+                              fill="currentColor"
+                              fillOpacity="0.14"
+                              stroke="currentColor"
+                              strokeWidth="1.75"
+                            />
+                          </svg>
+                        </div>
+
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+                          {t('services:polymaps_studio_v3_drop_title', 'Pilih atau seret gambar Panorama')}
                         </h3>
-                        <p className="text-xs text-slate-400 leading-relaxed">
-                          {t('services:polymaps_studio_ar_desc', 'Berdiri di tengah koridor atau hadapan pintu bilik. Pegang telefon MELINTANG (landscape) pada paras mata, dan pusing perlahan-lahan mengikut 8 sasaran kompas (45° setiap langkah). Telefon ditegakkan mengurangkan liputan mendatar dan meninggalkan jurang kabur.')}
+                        <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md text-balance leading-relaxed">
+                          {t(
+                            'services:polymaps_studio_v3_drop_sub',
+                            'Sudut ~230° iPhone & Android dikunci kemas tanpa dinding belakang kabur.'
+                          )}
                         </p>
+
+                        <span className="mt-5 inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-transform duration-150 active:scale-[0.97]">
+                          {isUploading ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Upload className="w-4 h-4" />
+                          )}
+                          <span>
+                            {isUploading
+                              ? t('services:polymaps_studio_pano_uploading', 'Memproses & Memuat Naik Panorama...')
+                              : t('services:polymaps_studio_v3_pick_photo_btn', 'Pilih Foto Panorama')}
+                          </span>
+                        </span>
+
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhonePanoFileSelect}
+                          disabled={isUploading}
+                          className="hidden"
+                        />
+                      </label>
+
+                      {/* Pendedahan Progresif: Kalibrasi Sudut Manual */}
+                      <div className="flex flex-col items-center">
+                        <button
+                          type="button"
+                          onClick={() => setShowManualAngle((prev) => !prev)}
+                          className="inline-flex items-center gap-1.5 text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 py-1 px-2 rounded-lg transition-colors duration-150"
+                        >
+                          <SlidersHorizontal className="w-3 h-3" />
+                          <span>
+                            {t('services:polymaps_studio_v3_advanced_angle', 'Tetapan sudut manual')} · {t('services:polymaps_studio_v3_auto_tag', 'Auto')} ({panoSweepDeg}°)
+                          </span>
+                          <ChevronDown
+                            className={`w-3 h-3 transition-transform duration-150 ${
+                              showManualAngle ? 'rotate-180' : ''
+                            }`}
+                          />
+                        </button>
+
+                        {showManualAngle && (
+                          <div className="mt-2 inline-flex items-center gap-1.5 bg-slate-100 dark:bg-slate-800/80 p-1 rounded-xl">
+                            {[
+                              { deg: 180, label: '180°' },
+                              { deg: 230, label: '230° (iPhone)' },
+                              { deg: 360, label: '360°' },
+                            ].map((item) => (
+                              <button
+                                key={item.deg}
+                                type="button"
+                                onClick={() => setPanoSweepDeg(item.deg)}
+                                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-colors duration-150 ${
+                                  panoSweepDeg === item.deg
+                                    ? 'bg-emerald-600 text-white shadow-sm'
+                                    : 'text-slate-600 dark:text-slate-300 hover:bg-white/70 dark:hover:bg-slate-700'
+                                }`}
+                              >
+                                {item.label}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                    </div>
+                  ) : (
+                    /* Sub-Mod 2 Pano: Depan + Belakang = 360° Penuh */
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <label
+                          className={`p-5 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-colors duration-150 ${
+                            dualFrontFile
+                              ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-500/10'
+                              : 'border-slate-300 dark:border-slate-700 hover:border-emerald-500/70 bg-slate-50/50 dark:bg-slate-950/30'
+                          }`}
+                        >
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
+                            {t('services:polymaps_studio_v3_dual_front_short', 'Pano 1: Depan')}
+                          </span>
+                          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 font-medium truncate max-w-full">
+                            {dualFrontFile
+                              ? `✓ ${dualFrontFile.name}`
+                              : t('services:polymaps_studio_dual_front_title', 'Separuh Pertama Koridor (~230°)')}
+                          </p>
+                          <span className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 shadow-sm">
+                            <Upload className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>{t('services:polymaps_studio_v3_dual_front_pick', 'Pilih Pano Depan')}</span>
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0] || null;
+                              if (f) setDualFrontFile(f);
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+
+                        <label
+                          className={`p-5 rounded-2xl border-2 border-dashed flex flex-col items-center justify-center text-center cursor-pointer transition-colors duration-150 ${
+                            dualBackFile
+                              ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-500/10'
+                              : 'border-slate-300 dark:border-slate-700 hover:border-emerald-500/70 bg-slate-50/50 dark:bg-slate-950/30'
+                          }`}
+                        >
+                          <span className="text-[11px] font-bold uppercase tracking-wide text-slate-600 dark:text-slate-300">
+                            {t('services:polymaps_studio_v3_dual_back_short', 'Pano 2: Belakang')}
+                          </span>
+                          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 font-medium truncate max-w-full">
+                            {dualBackFile
+                              ? `✓ ${dualBackFile.name}`
+                              : t('services:polymaps_studio_dual_back_title', 'Pusing Badan Menghadap Belakang (~230°)')}
+                          </p>
+                          <span className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-800 dark:text-slate-100 shadow-sm">
+                            <Upload className="w-3.5 h-3.5 text-emerald-600" />
+                            <span>{t('services:polymaps_studio_v3_dual_back_pick', 'Pilih Pano Belakang')}</span>
+                          </span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => {
+                              const f = e.target.files?.[0] || null;
+                              if (f) {
+                                setDualBackFile(f);
+                                if (dualFrontFile) {
+                                  void handleDualPhonePanoStitch(dualFrontFile, f);
+                                }
+                              }
+                            }}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+
+                      <div className="flex justify-center">
+                        <button
+                          type="button"
+                          disabled={!dualFrontFile || !dualBackFile || isUploading}
+                          onClick={() => handleDualPhonePanoStitch()}
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm disabled:opacity-40 transition-transform duration-150 active:scale-[0.97]"
+                        >
+                          {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                          <span>{t('services:polymaps_studio_v3_dual_stitch_short', 'Gabung Jadi 360° Penuh')}</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 2: KAMERA 4-SUDUT PANTAS + BAYANG SEMPADAN VISUAL */}
+              {captureTab === 'camera' && (
+                <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-white overflow-hidden">
+                  {!isCameraActive ? (
+                    <div className="py-10 px-6 text-center space-y-4">
+                      <div className="flex items-center justify-center gap-3 text-[11px] font-semibold text-slate-400">
+                        {cornerLabels.map((lbl) => (
+                          <span key={lbl} className="px-2.5 py-1 rounded-full bg-white/5 border border-white/10">
+                            {lbl}
+                          </span>
+                        ))}
+                      </div>
+                      <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                        {t('services:polymaps_studio_v3_camera_short', 'Tangkap 4 sudut (Depan, Kanan, Belakang, Kiri) berpandukan bayang tepi.')}
+                      </p>
+                      <div className="flex flex-wrap items-center justify-center gap-2.5 pt-1">
                         <button
                           type="button"
                           onClick={startGuidedCamera}
-                          className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
+                          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs sm:text-sm shadow-sm transition-transform duration-150 active:scale-[0.97]"
                         >
                           <Camera className="w-4 h-4" />
-                          {t('services:polymaps_studio_ar_start_btn', 'Aktifkan Kamera & Panduan 360°')}
+                          {t('services:polymaps_studio_v3_open_camera', 'Buka Kamera')}
                         </button>
                         {panoramaUrl && (
                           <button
                             type="button"
                             onClick={() => setStep('pins')}
-                            className="inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-white font-bold text-xs transition-all"
+                            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/15 text-white font-semibold text-xs transition-colors duration-150"
                           >
                             {t('services:polymaps_studio_use_existing_btn', 'Guna Imej 360° Sedia Ada')}
-                            <ArrowRight className="w-4 h-4" />
+                            <ArrowRight className="w-3.5 h-3.5" />
                           </button>
                         )}
                       </div>
                     </div>
                   ) : (
                     <div className="relative">
-                      <div className="relative w-full h-[360px] sm:h-[440px] bg-black overflow-hidden">
+                      <div className="relative w-full h-[360px] sm:h-[420px] bg-black overflow-hidden">
                         <video
                           ref={videoRef}
                           playsInline
@@ -1040,108 +1389,78 @@ export function PolyMaps360CaptureModal({
                           className="w-full h-full object-cover"
                         />
 
-                        {/* Panduan Pertindihan Ghost-Edge (25% sisi kanan gambar sebelum ini di sebelah kiri skrin) */}
+                        {/* Panduan Pertindihan Ghost-Edge */}
                         {prevCapturedFrame && (
-                          <div className="absolute inset-y-0 left-0 w-1/4 overflow-hidden pointer-events-none border-r-2 border-dashed border-emerald-400/80 opacity-55">
+                          <div className="absolute inset-y-0 left-0 w-1/4 overflow-hidden pointer-events-none border-r-2 border-dashed border-emerald-400/90 opacity-65">
                             <img
                               src={prevCapturedFrame}
                               alt={t('services:polymaps_studio_overlap_alt', 'Panduan pertindihan sisi')}
                               className="h-full max-w-none object-cover"
                               style={{ width: '400%', transform: 'translateX(-75%)' }}
                             />
-                            <div className="absolute top-2 left-2 px-2 py-0.5 rounded bg-black/75 text-[10px] font-black text-emerald-300">
-                              {t('services:polymaps_studio_overlap_label', 'Tindihkan Sisi Ini')}
+                            <div className="absolute top-14 left-2 px-2 py-1 rounded-lg bg-emerald-500 text-slate-950 text-[10px] font-bold shadow-md">
+                              {t('services:polymaps_studio_overlap_label', '👈 Selarikan Dengan Sisi Ini')}
                             </div>
                           </div>
                         )}
 
-                        {/* Garisan Ufuk & Sasaran Tengah (Spirit Level HUD) */}
+                        {/* Garisan Ufuk & Sasaran Tengah */}
                         <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                           <div
-                            className="w-48 h-0.5 bg-white/40 transition-transform"
+                            className="w-44 h-0.5 bg-white/50 transition-transform"
                             style={{ transform: `rotate(${deviceRoll}deg)` }}
                           />
-                          <div className="w-14 h-14 rounded-full border-2 border-emerald-400/90 flex items-center justify-center shadow-[0_0_25px_rgba(16,185,129,0.5)]">
-                            <div className="w-2.5 h-2.5 rounded-full bg-emerald-400" />
+                          <div className="w-12 h-12 rounded-full border-2 border-emerald-400/90 flex items-center justify-center">
+                            <div className="w-2 h-2 rounded-full bg-emerald-400" />
                           </div>
                         </div>
 
                         {/* Status Bar Atas Viewfinder */}
-                        <div className="absolute top-3 inset-x-3 flex flex-wrap items-center justify-between gap-2">
-                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/70 border border-white/15 text-xs font-black">
+                        <div className="absolute top-3 inset-x-3 flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/75 border border-white/15 text-xs font-semibold">
                             <span className="text-emerald-400">
-                              {t('services:polymaps_studio_segment_counter', 'Segmen {{current}} / 8', { current: capturedFrames.length })}
+                              {t('services:polymaps_studio_4corner_counter', 'Sudut {{current}} / 4', {
+                                current: Math.min(4, capturedFrames.length + 1),
+                              })}
                             </span>
-                            <span className="text-slate-400">•</span>
-                            <span>
-                              {t('services:polymaps_studio_target_angle', 'Sasaran: {{angle}}°', { angle: TARGET_YAW_ANGLES[capturedFrames.length] ?? 360 })}
+                            <span className="text-slate-400">·</span>
+                            <span className="text-amber-300">
+                              {cornerLabels[capturedFrames.length] || 'Siap'}
                             </span>
-                            {hasGyroscope && (
-                              <>
-                                <span className="text-slate-400">•</span>
-                                <span className="text-amber-300">
-                                  {t('services:polymaps_studio_compass_angle', 'Kompas: {{angle}}°', { angle: compassHeading })}
-                                </span>
-                              </>
-                            )}
                           </div>
 
-                          <div className="flex items-center gap-2">
-                            {hasGyroscope && (
-                              <button
-                                type="button"
-                                onClick={() => setAutoSnapEnabled((v) => !v)}
-                                className={`px-3 py-1.5 rounded-full text-xs font-black border transition-colors ${
-                                  autoSnapEnabled
-                                    ? 'bg-emerald-500 text-slate-950 border-white'
-                                    : 'bg-black/70 text-slate-200 border-white/20'
-                                }`}
-                              >
-                                {autoSnapEnabled
-                                  ? t('services:polymaps_studio_autosnap_on', '⚡ Auto-Snap Aktif')
-                                  : t('services:polymaps_studio_autosnap_off', 'Auto-Snap: Mati')}
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setCapturedFrames([]);
-                                setCapturedYaws([]);
-                              }}
-                              className="px-3 py-1.5 rounded-full bg-black/70 hover:bg-black/90 text-xs font-bold border border-white/15"
-                            >
-                              <RotateCcw className="w-3.5 h-3.5 inline mr-1" />
-                              {t('services:polymaps_studio_restart', 'Mula Semula')}
-                            </button>
-                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setCapturedFrames([]);
+                              setCapturedYaws([]);
+                            }}
+                            className="px-3 py-1.5 rounded-full bg-black/70 hover:bg-black/90 text-xs font-semibold border border-white/15"
+                          >
+                            <RotateCcw className="w-3.5 h-3.5 inline mr-1" />
+                            {t('services:polymaps_studio_restart', 'Mula Semula')}
+                          </button>
                         </div>
 
-                        {isPortraitFrame && (
-                          <div className="absolute top-16 inset-x-3 px-3 py-2 rounded-xl bg-amber-400/95 text-slate-950 text-[11px] font-bold leading-snug shadow-lg">
-                            <RotateCcw className="w-3.5 h-3.5 inline mr-1 align-[-2px]" />
-                            {t('services:polymaps_studio_portrait_warning', 'Telefon ditegakkan: liputan mendatar hanya ~42°, jadi ada jurang kabur antara segmen. Pusing telefon ke MELINTANG (landscape) untuk hasil penuh.')}
-                          </div>
-                        )}
-
-                        {/* Bar Kemajuan 8 Segmen di Bawah Viewfinder */}
-                        <div className="absolute bottom-4 inset-x-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-black/75 border border-white/15 p-3 rounded-2xl">
-                          <div className="flex items-center gap-1.5">
-                            {TARGET_YAW_ANGLES.map((deg, idx) => {
+                        {/* Bar Kemajuan 4 Sudut di Bawah Viewfinder */}
+                        <div className="absolute bottom-3 inset-x-3 flex flex-col sm:flex-row items-center justify-between gap-2.5 bg-black/80 border border-white/15 p-2.5 rounded-2xl">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {FOUR_CORNER_ANGLES.map((deg, idx) => {
                               const done = idx < capturedFrames.length;
                               const current = idx === capturedFrames.length;
                               return (
-                                <div
+                                <span
                                   key={deg}
-                                  className={`w-8 h-8 rounded-xl flex flex-col items-center justify-center text-[10px] font-black border transition-all ${
+                                  className={`px-2 py-1 rounded-lg text-[11px] font-semibold border ${
                                     done
                                       ? 'bg-emerald-500 text-slate-950 border-emerald-300'
                                       : current
-                                      ? 'bg-amber-400 text-slate-950 border-white scale-110'
+                                      ? 'bg-amber-400 text-slate-950 border-white'
                                       : 'bg-white/10 text-slate-400 border-white/10'
                                   }`}
                                 >
-                                  <span>{idx + 1}</span>
-                                </div>
+                                  {cornerLabels[idx]}
+                                </span>
                               );
                             })}
                           </div>
@@ -1150,25 +1469,25 @@ export function PolyMaps360CaptureModal({
                             <button
                               type="button"
                               onClick={captureCurrentVideoFrame}
-                              disabled={isStitching || isUploading || capturedFrames.length >= 8}
-                              className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs shadow-lg active:scale-95 disabled:opacity-50"
+                              disabled={isStitching || isUploading || capturedFrames.length >= 4}
+                              className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-sm active:scale-[0.97] disabled:opacity-50"
                             >
-                              {t('services:polymaps_studio_capture_btn', '📸 Tangkap Segmen {{num}}/8', {
-                                num: Math.min(8, capturedFrames.length + 1),
+                              {t('services:polymaps_studio_capture_4corner_btn', '📸 Tangkap {{label}}', {
+                                label: cornerLabels[capturedFrames.length] || '4/4',
                               })}
                             </button>
 
-                            {capturedFrames.length >= 4 && (
+                            {capturedFrames.length >= 2 && (
                               <button
                                 type="button"
-                                onClick={() => handleStitchCapturedFrames(capturedFrames)}
+                                onClick={() => handleStitchCapturedFrames(capturedFrames, capturedYaws)}
                                 disabled={isStitching || isUploading}
-                                className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs shadow-lg active:scale-95 disabled:opacity-50"
+                                className="px-3.5 py-2 rounded-xl bg-white text-slate-900 font-bold text-xs shadow-sm active:scale-[0.97] disabled:opacity-50"
                               >
                                 {isStitching || isUploading ? (
-                                  <Loader2 className="w-4 h-4 animate-spin inline mr-1" />
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin inline mr-1" />
                                 ) : null}
-                                {t('services:polymaps_studio_stitch_btn', 'Cantum Sekarang ({{count}})', {
+                                {t('services:polymaps_studio_stitch_btn', 'Cantum ({{count}})', {
                                   count: capturedFrames.length,
                                 })}
                               </button>
@@ -1181,117 +1500,54 @@ export function PolyMaps360CaptureModal({
                 </div>
               )}
 
-              {captureTab === 'pano_convert' && (
-                <div className="p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/50 text-center space-y-4">
-                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto">
-                    <Wand2 className="w-7 h-7" />
-                  </div>
-                  <div className="max-w-lg mx-auto space-y-1">
-                    <h3 className="text-base font-black text-slate-900 dark:text-white">
-                      {t('services:polymaps_studio_pano_heading', "Auto-Konversi Foto Mod 'Panorama' Kamera Telefon")}
+              {/* TAB 3: FAIL 360° SEDIA ADA / URL */}
+              {captureTab === 'upload' && (
+                <div className="space-y-4">
+                  <label className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-emerald-500/70 bg-slate-50/50 dark:bg-slate-950/30 px-6 py-8 text-center cursor-pointer transition-colors duration-150">
+                    <Upload className="w-6 h-6 text-emerald-600 dark:text-emerald-400 mb-2" />
+                    <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+                      {t('services:polymaps_studio_upload_heading', 'Muat Naik Fail Imej 360° Sedia Ada')}
                     </h3>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-                      {t('services:polymaps_studio_pano_desc', 'Buka aplikasi Kamera asal telefon anda, pilih mod Pano / Panorama, dan pusing perlahan sehingga kamera berhenti sendiri (iPhone berhenti pada ~240°). Kemudian muat naik gambar tersebut di sini — sistem akan menukarkannya kepada sfera 360° Equirectangular (2:1) secara automatik.')}
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-md">
+                      {t('services:polymaps_studio_upload_desc', 'Menyokong sebarang imej JPG/PNG/WebP daripada kamera Insta360, Ricoh Theta, Google Street View, atau foto Panorama telefon.')}
                     </p>
-                  </div>
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
-                      {t('services:polymaps_studio_pano_sweep_label', 'Lebar sapuan pano:')}
-                    </span>
-                    {[180, 240, 360].map((deg) => (
-                      <button
-                        key={deg}
-                        type="button"
-                        onClick={() => setPanoSweepDeg(deg)}
-                        className={`px-3 py-1 rounded-lg text-[11px] font-black border transition-colors ${
-                          panoSweepDeg === deg
-                            ? 'bg-indigo-600 text-white border-indigo-500'
-                            : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-                        }`}
-                      >
-                        {deg}°
-                      </button>
-                    ))}
-                  </div>
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 max-w-md mx-auto">
-                    {t('services:polymaps_studio_pano_sweep_hint', 'Padankan dengan sudut sebenar sapuan anda. Jika tidak padan, lebar bilik akan nampak tersasar (terlalu lebar atau termampat).')}
-                  </p>
-                  <div>
-                    <label className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs cursor-pointer shadow-lg shadow-indigo-600/20 transition-all active:scale-95">
-                      {isUploading ? (
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                      ) : (
-                        <Upload className="w-4 h-4" />
-                      )}
+                    <span className="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-transform duration-150 active:scale-[0.97]">
+                      {isUploading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                       <span>
                         {isUploading
-                          ? t('services:polymaps_studio_pano_uploading', 'Menukar & Memuat Naik 360°...')
-                          : t('services:polymaps_studio_pano_choose', 'Pilih Foto Panorama Telefon')}
+                          ? t('services:polymaps_studio_uploading', 'Memuat Naik...')
+                          : t('services:polymaps_studio_upload_btn', 'Muat Naik Fail 360°')}
                       </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhonePanoFileSelect}
-                        disabled={isUploading}
-                        className="hidden"
-                      />
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleDirect360Upload}
+                      disabled={isUploading}
+                      className="hidden"
+                    />
+                  </label>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold text-slate-600 dark:text-slate-400">
+                      {t('services:polymaps_studio_v3_url_or', 'Atau tampal pautan imej 360°')}
                     </label>
-                  </div>
-                </div>
-              )}
-
-              {captureTab === 'upload' && (
-                <div className="p-6 rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/50 space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
-                    <div className="space-y-2">
-                      <h3 className="text-sm font-black text-slate-900 dark:text-white">
-                        {t('services:polymaps_studio_upload_heading', 'Muat Naik Fail Imej 360° Sedia Ada')}
-                      </h3>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">
-                        {t('services:polymaps_studio_upload_desc', 'Menyokong sebarang imej JPG/PNG/WebP daripada kamera Insta360, Ricoh Theta, Google Street View, atau foto Panorama telefon.')}
-                      </p>
-                      <label className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs cursor-pointer shadow-md transition-all">
-                        {isUploading ? (
-                          <Loader2 className="w-4 h-4 animate-spin" />
-                        ) : (
-                          <Upload className="w-4 h-4" />
-                        )}
-                        <span>
-                          {isUploading
-                            ? t('services:polymaps_studio_uploading', 'Memuat Naik...')
-                            : t('services:polymaps_studio_upload_btn', 'Muat Naik Fail 360°')}
-                        </span>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleDirect360Upload}
-                          disabled={isUploading}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="block text-xs font-black text-slate-700 dark:text-slate-300">
-                        {t('services:polymaps_studio_paste_url_label', 'Atau Tampal URL Panorama 360° Sedia Ada:')}
-                      </label>
-                      <div className="flex gap-2">
-                        <input
-                          type="url"
-                          value={panoramaUrl}
-                          onChange={(e) => setPanoramaUrl(e.target.value)}
-                          placeholder="https://.../panorama_360.jpg"
-                          className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
-                        />
-                        <button
-                          type="button"
-                          disabled={!panoramaUrl.trim()}
-                          onClick={() => setStep('pins')}
-                          className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-emerald-500 text-white dark:text-slate-950 font-black text-xs disabled:opacity-40"
-                        >
-                          {t('services:polymaps_studio_continue_pins', 'Teruskan Ke Pin')}
-                        </button>
-                      </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={panoramaUrl}
+                        onChange={(e) => setPanoramaUrl(e.target.value)}
+                        placeholder="https://.../panorama_360.jpg"
+                        className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                      />
+                      <button
+                        type="button"
+                        disabled={!panoramaUrl.trim()}
+                        onClick={() => setStep('pins')}
+                        className="px-4 py-2 rounded-xl bg-slate-900 dark:bg-emerald-600 text-white font-semibold text-xs disabled:opacity-40 transition-transform duration-150 active:scale-[0.97]"
+                      >
+                        {t('services:polymaps_studio_continue_pins', 'Teruskan Ke Pin')}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -1299,31 +1555,45 @@ export function PolyMaps360CaptureModal({
             </div>
           ) : (
             /* STEP 2: INTERACTIVE 360 PIN STUDIO */
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
               {/* Kiri: Kanvas 360° Interaktif */}
-              <div className="lg:col-span-8 space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-2 bg-emerald-500/10 border border-emerald-500/25 px-3.5 py-2.5 rounded-2xl">
-                  <div className="flex items-center gap-2 text-xs font-bold text-emerald-800 dark:text-emerald-300">
-                    <Sparkles className="w-4 h-4 shrink-0 text-emerald-500" />
-                    <span>
-                      {t('services:polymaps_studio_how_to_pin', 'Cara Letak Pin: Pusing 360° ke arah pintu bilik / makmal / tangga, kemudian klik terus pada pintu tersebut.')}
-                    </span>
+              <div className="lg:col-span-8 space-y-2">
+                <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+                  <span className="text-xs font-medium text-slate-600 dark:text-slate-300">
+                    {t('services:polymaps_studio_v3_pin_guide', 'Pusing & klik terus di atas pintu bilik.')}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {dualFrontFile && !dualBackFile && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPanoMode('dual');
+                          setCaptureTab('pano_convert');
+                          setStep('capture');
+                        }}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-semibold transition-colors duration-150"
+                      >
+                        <Plus className="w-3 h-3 text-emerald-600" />
+                        {t('services:polymaps_studio_add_back_pano_btn', 'Tambah Pano Belakang (Jadikan 360°)')}
+                      </button>
+                    )}
+                    {stitchedBlobUrl && (
+                      <a
+                        href={stitchedBlobUrl}
+                        download={`polymaps_360_${selectedBuilding?.code || 'campus'}_level_${floorLevel}.jpg`}
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-[11px] font-semibold transition-colors duration-150"
+                      >
+                        <Download className="w-3 h-3" />
+                        {t('services:polymaps_studio_save_jpg', 'Simpan .JPG')}
+                      </a>
+                    )}
                   </div>
-                  {stitchedBlobUrl && (
-                    <a
-                      href={stitchedBlobUrl}
-                      download={`polymaps_360_${selectedBuilding?.code || 'campus'}_level_${floorLevel}.jpg`}
-                      className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 text-[11px] font-bold border border-slate-200 dark:border-slate-700 shadow-sm"
-                    >
-                      <Download className="w-3.5 h-3.5" />
-                      {t('services:polymaps_studio_save_jpg', 'Simpan .JPG')}
-                    </a>
-                  )}
                 </div>
 
-                <div className="rounded-3xl overflow-hidden border-2 border-emerald-500/40 shadow-xl h-[380px] sm:h-[460px]">
+                <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-sm h-[360px] sm:h-[460px]">
                   <Pannellum360Viewer
                     imageUrl={panoramaUrl}
+                    verticalSweepDeg={panoVerticalSweepDeg}
                     title={t('services:polymaps_studio_canvas_title', '{{code}} • Aras {{level}}', {
                       code: selectedBuilding?.code || 'Kampus',
                       level: floorLevel,
@@ -1338,6 +1608,7 @@ export function PolyMaps360CaptureModal({
                       );
                       if (idx >= 0) {
                         const target = hotspots[idx];
+                        setShowPinAdvanced(false);
                         setDraftPin({
                           index: idx,
                           pin_type: target.pin_type,
@@ -1355,180 +1626,274 @@ export function PolyMaps360CaptureModal({
                 </div>
               </div>
 
-              {/* Kanan: Panel Borang Pin & Senarai Pin Koridor */}
-              <div className="lg:col-span-4 flex flex-col gap-4">
+              {/* Kanan: Panel Pin Ringkas (Satu Permukaan Bersih) */}
+              <div className="lg:col-span-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/60 dark:bg-slate-950/40 p-4 flex flex-col gap-3.5">
                 {draftPin ? (
-                  <div className="p-4 rounded-2xl border-2 border-emerald-500 bg-emerald-50/40 dark:bg-slate-800/90 space-y-3 shadow-lg">
+                  <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
+                      <span className="text-xs font-bold text-slate-900 dark:text-white">
                         {draftPin.index !== null
-                          ? t('services:polymaps_studio_edit_pin', '✏️ Kemas Kini Pin 360°')
-                          : t('services:polymaps_studio_add_pin', '📍 Tambah Pin Pintu Baharu')}
+                          ? t('services:polymaps_studio_edit_pin', 'Kemas Kini Pin')
+                          : t('services:polymaps_studio_add_pin', 'Tanda Pin Baharu')}
                       </span>
-                      <span className="text-[11px] font-mono font-bold text-slate-500">
-                        Yaw: {draftPin.yaw}° | Pitch: {draftPin.pitch}°
-                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setDraftPin(null)}
+                        className="p-1 rounded-md text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
                     </div>
 
                     {/* Jenis Pin */}
-                    <div className="grid grid-cols-3 gap-1.5">
+                    <div className="grid grid-cols-3 gap-1 p-0.5 rounded-xl bg-slate-200/70 dark:bg-slate-800">
                       {[
-                        { id: 'room', label: t('services:polymaps_studio_pin_type_room', '🚪 Bilik/Makmal') },
-                        { id: 'info', label: t('services:polymaps_studio_pin_type_info', '🪜 Tangga/Tandas') },
-                        { id: 'scene', label: t('services:polymaps_studio_pin_type_scene', '🧭 Ke Koridor') },
-                      ].map((tItem) => (
-                        <button
-                          key={tItem.id}
-                          type="button"
-                          onClick={() =>
-                            setDraftPin({
-                              ...draftPin,
-                              pin_type: tItem.id as 'room' | 'info' | 'scene',
-                            })
-                          }
-                          className={`py-1.5 px-2 rounded-xl text-[11px] font-black border transition-all ${
-                            draftPin.pin_type === tItem.id
-                              ? 'bg-emerald-600 text-white border-emerald-500 shadow-sm'
-                              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'
-                          }`}
-                        >
-                          {tItem.label}
-                        </button>
-                      ))}
+                        {
+                          id: 'room',
+                          icon: DoorOpen,
+                          label: t('services:polymaps_studio_pin_type_room_short', 'Bilik'),
+                        },
+                        {
+                          id: 'info',
+                          icon: Info,
+                          label: t('services:polymaps_studio_pin_type_info_short', 'Kemudahan'),
+                        },
+                        {
+                          id: 'scene',
+                          icon: Compass,
+                          label: t('services:polymaps_studio_pin_type_scene_short', 'Laluan'),
+                        },
+                      ].map((tItem) => {
+                        const IconComp = tItem.icon;
+                        const active = draftPin.pin_type === tItem.id;
+                        return (
+                          <button
+                            key={tItem.id}
+                            type="button"
+                            onClick={() =>
+                              setDraftPin({
+                                ...draftPin,
+                                pin_type: tItem.id as 'room' | 'info' | 'scene',
+                              })
+                            }
+                            className={`flex items-center justify-center gap-1 py-1.5 px-2 rounded-[10px] text-[11px] font-semibold transition-colors duration-150 ${
+                              active
+                                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                                : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+                            }`}
+                          >
+                            <IconComp className="w-3 h-3 shrink-0" />
+                            <span>{tItem.label}</span>
+                          </button>
+                        );
+                      })}
                     </div>
 
                     {draftPin.pin_type === 'room' ? (
-                      <div>
-                        <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 mb-1">
-                          {t('services:polymaps_studio_pin_room_label', 'Kod & Nama Bilik (Auto-Teka Aras & Arah):')}
-                        </label>
-                        <input
-                          type="text"
-                          value={draftPin.room_code}
-                          onChange={(e) => handleDraftRoomCodeChange(e.target.value)}
-                          placeholder={t('services:polymaps_studio_pin_room_placeholder', 'Cth: EA301 - Makmal Komputer 1')}
-                          className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
-                          autoFocus
-                        />
+                      <div className="space-y-2.5">
+                        <div>
+                          <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                            {t('services:polymaps_studio_pin_room_short', 'Kod / Nama Bilik')}
+                          </label>
+                          <input
+                            type="text"
+                            value={draftPin.room_code}
+                            onChange={(e) => handleDraftRoomCodeChange(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                handleSaveDraftPin();
+                              }
+                            }}
+                            placeholder={t('services:polymaps_studio_pin_room_placeholder', 'Cth: JKE101 - Makmal Elektronik 1')}
+                            className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                            autoFocus
+                          />
+                          {draftPin.room_code.trim() && (
+                            <p className="text-[11px] font-medium mt-1">
+                              {buildingLocations.some(
+                                (l) => l.room_code.trim().toLowerCase() === draftPin.room_code.trim().toLowerCase()
+                              ) ? (
+                                <span className="text-emerald-600 dark:text-emerald-400">
+                                  ✓ {t('services:polymaps_studio_existing_room_match', 'Bilik sedia ada — dipautkan automatik.')}
+                                </span>
+                              ) : (
+                                <span className="text-emerald-600 dark:text-emerald-400">
+                                  ✨ {t('services:polymaps_studio_new_room_auto_create', 'Bilik baharu — akan dicipta automatik.')}
+                                </span>
+                              )}
+                            </p>
+                          )}
+                        </div>
+
+                        {buildingLocations.length > 0 && (
+                          <div className="flex flex-wrap gap-1 max-h-20 overflow-y-auto">
+                            {buildingLocations.slice(0, 12).map((loc) => {
+                              const needs360 = !loc.panorama_360_url;
+                              const isSelected =
+                                draftPin.room_code.trim().toLowerCase() === loc.room_code.trim().toLowerCase();
+                              return (
+                                <button
+                                  key={loc.id}
+                                  type="button"
+                                  onClick={() => handleDraftRoomCodeChange(loc.room_code)}
+                                  className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium border transition-colors duration-150 ${
+                                    isSelected
+                                      ? 'bg-emerald-600 text-white border-emerald-600'
+                                      : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-emerald-500'
+                                  }`}
+                                >
+                                  {needs360 && !isSelected && (
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                  )}
+                                  <span>{loc.room_code}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <div>
-                        <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 mb-1">
-                          {t('services:polymaps_studio_pin_label', 'Label Pin Kemudahan / Laluan:')}
+                        <label className="block text-[11px] font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                          {t('services:polymaps_studio_pin_label', 'Label Pin Kemudahan / Laluan')}
                         </label>
                         <input
                           type="text"
                           value={draftPin.label}
                           onChange={(e) => setDraftPin({ ...draftPin, label: e.target.value })}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              e.preventDefault();
+                              handleSaveDraftPin();
+                            }
+                          }}
                           placeholder={
                             draftPin.pin_type === 'scene'
                               ? t('services:polymaps_studio_pin_scene_placeholder', 'Cth: Terus Ke Koridor Sayap B')
                               : t('services:polymaps_studio_pin_info_placeholder', 'Cth: Tangga Utama Aras 3 / Tandas')
                           }
-                          className="w-full px-3 py-2 text-xs font-bold rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                          className="w-full px-3 py-2 text-xs font-semibold rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
                           autoFocus
                         />
                       </div>
                     )}
 
-                    {draftPin.pin_type === 'scene' && (
-                      <div>
-                        <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 mb-1">
-                          {t('services:polymaps_studio_pin_target_pano', 'Pautan Panorama Sasaran (Pilihan):')}
-                        </label>
-                        <input
-                          type="url"
-                          value={draftPin.target_panorama_url}
-                          onChange={(e) =>
-                            setDraftPin({ ...draftPin, target_panorama_url: e.target.value })
-                          }
-                          placeholder="https://.../koridor_sebelah.jpg"
-                          className="w-full px-3 py-2 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
-                        />
-                      </div>
-                    )}
-
+                    {/* Butiran Pilihan (Pendedahan Progresif) */}
                     <div>
-                      <label className="block text-[11px] font-black text-slate-700 dark:text-slate-300 mb-1">
-                        {t('services:polymaps_studio_pin_desc_label', 'Panduan Arah Ringkas (Dijana Automatik):')}
-                      </label>
-                      <textarea
-                        rows={2}
-                        value={draftPin.description}
-                        onChange={(e) => setDraftPin({ ...draftPin, description: e.target.value })}
-                        className="w-full px-3 py-1.5 text-xs rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
-                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPinAdvanced((prev) => !prev)}
+                        className="text-[11px] font-medium text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200"
+                      >
+                        {t('services:polymaps_studio_pin_optional_more', '+ Tambah nota arah / pautan (pilihan)')}
+                      </button>
+
+                      {showPinAdvanced && (
+                        <div className="mt-2 space-y-2">
+                          <textarea
+                            rows={2}
+                            value={draftPin.description}
+                            onChange={(e) => setDraftPin({ ...draftPin, description: e.target.value })}
+                            placeholder={t('services:polymaps_studio_pin_desc_label', 'Panduan Arah Ringkas')}
+                            className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                          />
+                          {draftPin.pin_type === 'scene' && (
+                            <input
+                              type="url"
+                              value={draftPin.target_panorama_url}
+                              onChange={(e) =>
+                                setDraftPin({ ...draftPin, target_panorama_url: e.target.value })
+                              }
+                              placeholder="https://.../koridor_sebelah.jpg"
+                              className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white"
+                            />
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-2 pt-1">
                       <button
                         type="button"
                         onClick={handleSaveDraftPin}
-                        className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md"
+                        className="flex-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-transform duration-150 active:scale-[0.97]"
                       >
                         <Plus className="w-3.5 h-3.5 inline mr-1" />
-                        {t('services:polymaps_studio_save_pin_btn', 'Simpan Pin Ini')}
+                        {t('services:polymaps_studio_save_pin_btn', 'Simpan Pin')}
                       </button>
                       <button
                         type="button"
                         onClick={() => setDraftPin(null)}
-                        className="py-2 px-3 rounded-xl bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs"
+                        className="py-2 px-3 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-200/70 dark:hover:bg-slate-800 font-semibold text-xs transition-colors duration-150"
                       >
                         {t('services:polymaps_bulk_cancel', 'Batal')}
                       </button>
                     </div>
                   </div>
                 ) : (
-                  <div className="p-4 rounded-2xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50/70 dark:bg-slate-900/50 text-center">
-                    <MapPin className="w-6 h-6 text-emerald-500 mx-auto mb-1.5" />
-                    <p className="text-xs font-black text-slate-800 dark:text-slate-200">
-                      {t('services:polymaps_studio_empty_pin_title', 'Klik Mana-Mana Pintu Dalam Gambar 360°')}
+                  <div className="py-4 px-2 text-center space-y-1.5">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto">
+                      <MapPin className="w-4 h-4" />
+                    </div>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white">
+                      {t('services:polymaps_studio_v3_pin_panel_empty', 'Klik atas pintu dalam foto 360°')}
                     </p>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                      {t('services:polymaps_studio_empty_pin_desc', 'Anda boleh letak banyak pin bilik serentak (cth: A301, A302, A303) dalam satu gambar koridor yang sama!')}
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {t('services:polymaps_studio_v3_pin_panel_empty_sub', 'Anda boleh tanda banyak bilik dalam satu foto koridor.')}
                     </p>
+                    {unmappedRoomsInBuilding.length > 0 && (
+                      <div className="pt-2 flex flex-wrap items-center justify-center gap-1">
+                        {unmappedRoomsInBuilding.slice(0, 6).map((loc) => (
+                          <span
+                            key={loc.id}
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-[10px] font-semibold"
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                            {loc.room_code}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
                 {/* Senarai Pin Dalam 360° Ini */}
-                <div className="flex-1 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40 p-3.5 flex flex-col min-h-[200px]">
-                  <div className="flex items-center justify-between mb-2.5">
-                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                      {t('services:polymaps_studio_pins_list_title', 'Senarai Pin Dalam 360° ({{count}})', { count: hotspots.length })}
-                    </h4>
-                  </div>
+                <div className="pt-3 border-t border-slate-200/80 dark:border-slate-800 space-y-2.5">
+                  <h4 className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    {t('services:polymaps_studio_v3_pins_saved_count', 'Pin Ditanda ({{count}})', {
+                      count: hotspots.length,
+                    })}
+                  </h4>
 
-                  {hotspots.length === 0 ? (
-                    <div className="flex-1 flex items-center justify-center text-center text-xs text-slate-400 py-8">
-                      {t('services:polymaps_studio_pins_empty', 'Belum ada pin diletakkan pada panorama ini.')}
-                    </div>
-                  ) : (
-                    <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
+                  {hotspots.length > 0 && (
+                    <div className="space-y-1.5 max-h-[190px] overflow-y-auto pr-1">
                       {hotspots.map((hs, idx) => (
                         <div
                           key={hs.id || idx}
-                          className="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 shadow-sm"
+                          className="flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800"
                         >
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-1.5">
-                              <span>
-                                {hs.pin_type === 'room' ? '🚪' : hs.pin_type === 'scene' ? '🧭' : '🪜'}
-                              </span>
-                              <p className="text-xs font-black text-slate-900 dark:text-white truncate">
+                          <div className="min-w-0 flex-1 flex items-center gap-2">
+                            <span className="text-emerald-600 dark:text-emerald-400 shrink-0">
+                              {hs.pin_type === 'room' ? (
+                                <DoorOpen className="w-3.5 h-3.5" />
+                              ) : hs.pin_type === 'scene' ? (
+                                <Compass className="w-3.5 h-3.5" />
+                              ) : (
+                                <Info className="w-3.5 h-3.5" />
+                              )}
+                            </span>
+                            <div className="min-w-0">
+                              <p className="text-xs font-semibold text-slate-900 dark:text-white truncate">
                                 {hs.room_code || hs.label}
                               </p>
                             </div>
-                            <p className="text-[10px] text-slate-500 truncate mt-0.5">
-                              {t('services:polymaps_studio_pin_meta', 'Aras {{level}} • Yaw {{yaw}}°', {
-                                level: hs.floor_level || floorLevel,
-                                yaw: hs.yaw,
-                              })}
-                            </p>
                           </div>
-                          <div className="flex items-center gap-1 shrink-0">
+                          <div className="flex items-center gap-0.5 shrink-0">
                             <button
                               type="button"
-                              onClick={() =>
+                              onClick={() => {
+                                setShowPinAdvanced(false);
                                 setDraftPin({
                                   index: idx,
                                   pin_type: hs.pin_type,
@@ -1539,9 +1904,9 @@ export function PolyMaps360CaptureModal({
                                   pitch: hs.pitch,
                                   yaw: hs.yaw,
                                   target_panorama_url: hs.target_panorama_url || '',
-                                })
-                              }
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                                });
+                              }}
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-slate-100 dark:hover:bg-slate-800"
                               title={t('services:polymaps_studio_edit_pin_title', 'Sunting Pin')}
                             >
                               <Eye className="w-3.5 h-3.5" />
@@ -1549,7 +1914,7 @@ export function PolyMaps360CaptureModal({
                             <button
                               type="button"
                               onClick={() => handleDeletePin(idx)}
-                              className="p-1.5 rounded-lg text-slate-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
+                              className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30"
                               title={t('services:polymaps_studio_delete_pin_title', 'Padam Pin')}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1560,37 +1925,26 @@ export function PolyMaps360CaptureModal({
                     </div>
                   )}
 
-                  {/* Opsyen 1-Koridor Multi-Pin Batch Creator */}
-                  {isAdminMode && (
-                    <label className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-start gap-2 cursor-pointer">
+                  {isAdminMode ? (
+                    <label className="pt-1 flex items-start gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={batchCreateRooms}
                         onChange={(e) => setBatchCreateRooms(e.target.checked)}
                         className="mt-0.5 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
                       />
-                      <span className="text-[11px] text-slate-600 dark:text-slate-300 leading-snug">
-                        <strong className="text-slate-900 dark:text-white">
-                          {t('services:polymaps_studio_batch_create_title', 'Auto-Daftarkan Semua Pin Bilik Ke Direktori Carian:')}
-                        </strong>{' '}
-                        {t('services:polymaps_studio_batch_create_desc', 'Setiap pin pintu bilik akan terus boleh dicari oleh pelajar dan menghadap tepat ke pintu tersebut.')}
+                      <span className="text-[11px] text-slate-600 dark:text-slate-400 leading-snug">
+                        {t('services:polymaps_studio_batch_create_title', 'Auto-daftarkan pin bilik baharu ke direktori carian')}
                       </span>
                     </label>
-                  )}
-
-                  {!isAdminMode && (
-                    <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-800">
-                      <label className="block text-[11px] font-bold text-slate-600 dark:text-slate-400 mb-1">
-                        {t('services:polymaps_studio_volunteer_notes_label', 'Nota Tambahan Untuk JPP (Pilihan):')}
-                      </label>
-                      <input
-                        type="text"
-                        value={volunteerNotes}
-                        onChange={(e) => setVolunteerNotes(e.target.value)}
-                        placeholder={t('services:polymaps_studio_volunteer_notes_placeholder', 'Cth: Koridor Aras 3 berhadapan Makmal Rangkaian')}
-                        className="w-full px-2.5 py-1.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900"
-                      />
-                    </div>
+                  ) : (
+                    <input
+                      type="text"
+                      value={volunteerNotes}
+                      onChange={(e) => setVolunteerNotes(e.target.value)}
+                      placeholder={t('services:polymaps_studio_volunteer_notes_placeholder', 'Nota tambahan untuk JPP (pilihan)...')}
+                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-emerald-500"
+                    />
                   )}
                 </div>
               </div>
@@ -1598,47 +1952,71 @@ export function PolyMaps360CaptureModal({
           )}
         </div>
 
-        {/* Footer Actions */}
-        <div className="px-5 py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-            <Info className="w-4 h-4 text-emerald-500 shrink-0" />
-            <span>
-              {isAdminMode
-                ? t('services:polymaps_studio_footer_admin', 'Semua pin bilik akan disimpan ke pangkalan data & diaktifkan dalam 360° serta-merta.')
-                : t('services:polymaps_studio_footer_volunteer', 'Sumbangan anda akan dipratonton oleh JPP dan diterbitkan dengan 1 klik.')}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => {
-                stopCameraStream();
-                onClose();
-              }}
-              className="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-            >
-              {t('services:polymaps_bulk_cancel', 'Batal')}
-            </button>
-
-            <button
-              type="button"
-              disabled={!panoramaUrl || isSavingAll || isUploading}
-              onClick={handlePublishOrSubmit}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg shadow-emerald-600/20 transition-all active:scale-95 disabled:opacity-50"
-            >
-              {isSavingAll ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <CheckCircle2 className="w-4 h-4" />
-              )}
-              <span>
-                {isAdminMode
-                  ? t('services:polymaps_studio_submit_admin', 'Simpan & Terbitkan 360° ({{count}} Pin)', { count: hotspots.length })
-                  : t('services:polymaps_studio_submit_volunteer', 'Hantar Sumbangan 360° ({{count}} Pin)', { count: hotspots.length })}
+        {/* Footer Kontekstual */}
+        <div className="px-4 sm:px-5 py-3 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between gap-3">
+          {step === 'capture' ? (
+            <>
+              <span className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                {t('services:polymaps_studio_v3_footer_step1', 'Muat naik foto panorama untuk mula menanda pintu bilik.')}
               </span>
-            </button>
-          </div>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
+                >
+                  {t('services:polymaps_bulk_cancel', 'Batal')}
+                </button>
+                {panoramaUrl && (
+                  <button
+                    type="button"
+                    onClick={() => setStep('pins')}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-transform duration-150 active:scale-[0.97]"
+                  >
+                    <span>{t('services:polymaps_studio_v3_next_pins', 'Seterusnya: Letak Pin →')}</span>
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => setStep('capture')}
+                className="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
+              >
+                {t('services:polymaps_studio_v3_back_photo', '← Tukar Foto')}
+              </button>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors duration-150"
+                >
+                  {t('services:polymaps_bulk_cancel', 'Batal')}
+                </button>
+
+                <button
+                  type="button"
+                  disabled={!panoramaUrl || isSavingAll || isUploading}
+                  onClick={handlePublishOrSubmit}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs shadow-sm transition-transform duration-150 active:scale-[0.97] disabled:opacity-50"
+                >
+                  {isSavingAll ? (
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  ) : (
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                  )}
+                  <span>
+                    {isAdminMode
+                      ? t('services:polymaps_studio_submit_admin', 'Simpan & Terbitkan 360° ({{count}} Pin)', { count: hotspots.length })
+                      : t('services:polymaps_studio_submit_volunteer', 'Hantar Sumbangan 360° ({{count}} Pin)', { count: hotspots.length })}
+                  </span>
+                </button>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>
