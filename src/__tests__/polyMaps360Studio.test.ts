@@ -5,6 +5,8 @@ import {
   calculateGpsDistanceMeters,
   findNearestBuildingByGps,
   parseBulkRoomsInput,
+  computeDeclutteredLabelSet,
+  filterCampusSearchLocally,
 } from '../lib/polyMapsSmartEntry'
 import {
   normalizePannellumYaw,
@@ -83,6 +85,50 @@ describe('polyMapsSmartEntry', () => {
     expect(parsed[0].floor_level).toBe('3')
     expect(parsed[1].building_id).toBe('id-jke')
     expect(parsed[1].floor_level).toBe('2')
+  })
+
+  it('declutters overlapping labels at zoom 16 while preserving priority 0 and unfolding at zoom 19', () => {
+    const denseMarkers = [
+      { id: 'b:ea', lat: 3.8625, lng: 103.3153, label: 'BLOK EA', priority: 2 },
+      { id: 'b:eb', lat: 3.86255, lng: 103.31545, label: 'BLOK EB', priority: 0 },
+      { id: 'b:hep', lat: 3.8648, lng: 103.3182, label: 'HEP POLISAS', priority: 2 },
+    ]
+
+    const zoomedOutLabels = computeDeclutteredLabelSet(denseMarkers, 16)
+    expect(zoomedOutLabels.has('b:eb')).toBe(true) // priority 0 active always kept
+    expect(zoomedOutLabels.has('b:ea')).toBe(false) // overlaps EB at z16
+    expect(zoomedOutLabels.has('b:hep')).toBe(true) // distant marker keeps label
+
+    // Unfolds when zoomed into zoom 19 where pixel separation > pill width/height
+    const zoomedInLabels = computeDeclutteredLabelSet(
+      [
+        { id: 'b:ea', lat: 3.8625, lng: 103.3153, label: 'BLOK EA', priority: 2 },
+        { id: 'b:eb', lat: 3.8632, lng: 103.3160, label: 'BLOK EB', priority: 2 },
+      ],
+      19
+    )
+    expect(zoomedInLabels.has('b:ea')).toBe(true)
+    expect(zoomedInLabels.has('b:eb')).toBe(true)
+  })
+
+  it('filters campus buildings and rooms locally without duplicate results', () => {
+    const buildings = [
+      { id: '1', code: 'JKE', name: 'Jabatan Kejuruteraan Elektrik', zone_name: 'Zon Kejuruteraan' },
+      { id: '2', code: 'HEP', name: 'Hal Ehwal Pelajar', zone_name: 'Zon Pentadbiran', facility_type: 'Pejabat' },
+    ]
+    const locations = [
+      { id: 'loc-1', room_code: 'JKE101', floor_level: 1, search_tags: 'makmal elektronik, lab', building: buildings[0] },
+      { id: 'loc-2', room_code: 'BK12', floor_level: 2, search_tags: 'jke kuliyyah', building: buildings[0] },
+      { id: 'loc-3', room_code: 'KAF-1', floor_level: 0, search_tags: 'kafe makan', building: buildings[1] },
+    ]
+
+    expect(filterCampusSearchLocally('   ', buildings, locations)).toEqual([])
+
+    const jkeResults = filterCampusSearchLocally('jke', buildings, locations)
+    expect(jkeResults.map((r) => r.id)).toEqual(['b-1', 'loc-1', 'loc-2'])
+
+    const multiToken = filterCampusSearchLocally('makmal jke', buildings, locations)
+    expect(multiToken.map((r) => r.id)).toEqual(['loc-1'])
   })
 })
 

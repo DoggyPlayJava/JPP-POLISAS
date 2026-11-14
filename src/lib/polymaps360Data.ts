@@ -8,6 +8,7 @@
  */
 
 import { supabase } from '@/lib/supabase';
+import { queryCache } from '@/lib/cache';
 import i18n from '@/lib/i18n';
 
 export interface PolyMaps360Building {
@@ -418,6 +419,7 @@ export async function toggleBuilding360(building: any, forceState?: boolean): Pr
     return current; // kekalkan status sedia ada jika gagal
   }
   building.is_360_enabled = next; // mutasi objek lokal supaya UI refresh serta-merta
+  queryCache.invalidate('polymaps:');
   return next;
 }
 
@@ -439,6 +441,7 @@ export async function toggleLocation360(location: any, forceState?: boolean): Pr
     return current;
   }
   location.is_360_enabled = next;
+  queryCache.invalidate('polymaps:');
   return next;
 }
 

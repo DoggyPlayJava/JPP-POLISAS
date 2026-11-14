@@ -331,3 +331,176 @@ export function parseBulkRoomsInput(
 
   return results
 }
+
+
+export interface DeclutterMarkerInput {
+  id: string;
+  lat: number;
+  lng: number;
+  label: string;
+  /** Lower number = higher priority. Priority 0 (e.g. active pin) is never hidden. */
+  priority?: number;
+}
+
+interface ScreenBox {
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+}
+
+const MAX_MERCATOR_SIN = 0.9999;
+
+function projectToWorldPixels(lat: number, lng: number, zoom: number): { x: number; y: number } {
+  const safeZoom = Number.isFinite(zoom) ? zoom : 16;
+  const worldSize = 256 * Math.pow(2, safeZoom);
+  const x = ((lng + 180) / 360) * worldSize;
+  const sinLat = Math.sin((lat * Math.PI) / 180);
+  const clampedSin = Math.max(-MAX_MERCATOR_SIN, Math.min(MAX_MERCATOR_SIN, sinLat));
+  const y = (0.5 - Math.log((1 + clampedSin) / (1 - clampedSin)) / (4 * Math.PI)) * worldSize;
+  return { x, y };
+}
+
+function boxesOverlap(a: ScreenBox, b: ScreenBox): boolean {
+  return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+}
+
+/**
+ * Compute which map markers should display their full floating text pill at the given zoom.
+ * Overlapping lower-priority markers should still render their clickable dot pin, only hiding
+ * the label badge until the user zooms in or selects them.
+ */
+export function computeDeclutteredLabelSet(
+  markers: DeclutterMarkerInput[],
+  zoom: number
+): Set<string> {
+  const visible = new Set<string>();
+  if (!markers.length) return visible;
+
+  const sorted = [...markers].sort((a, b) => {
+    const pa = a.priority ?? 1;
+    const pb = b.priority ?? 1;
+    if (pa !== pb) return pa - pb;
+    return a.id.localeCompare(b.id);
+  });
+
+  const placedBoxes: ScreenBox[] = [];
+
+  for (const m of sorted) {
+    if (!Number.isFinite(m.lat) || !Number.isFinite(m.lng)) continue;
+    const { x, y } = projectToWorldPixels(m.lat, m.lng, zoom);
+    const charCount = Math.max(2, (m.label || '').trim().length);
+    // Pill width ~ 16px horizontal padding + ~7.1px per uppercase bold char + 6px breathing gap
+    const halfWidth = Math.max(26, (16 + charCount * 7.1) / 2 + 3);
+    // Dot (18px) + pill (~22px) centered at anchor -> vertical extent ~ +/-23px with gap
+    const halfHeight = 23;
+
+    const box: ScreenBox = {
+      left: x - halfWidth,
+      right: x + halfWidth,
+      top: y - halfHeight,
+      bottom: y + halfHeight,
+    };
+
+    const priority = m.priority ?? 1;
+    const hasCollision = placedBoxes.some((placed) => boxesOverlap(box, placed));
+
+    if (priority <= 0 || !hasCollision) {
+      visible.add(m.id);
+      placedBoxes.push(box);
+    }
+  }
+
+  return visible;
+}
+
+export interface SearchableBuildingLike {
+  id: string;
+  name: string;
+  code: string;
+  zone_name?: string | null;
+  facility_type?: string | null;
+}
+
+export interface SearchableLocationLike<B extends SearchableBuildingLike = SearchableBuildingLike> {
+  id: string;
+  room_code: string;
+  floor_level: number;
+  direction_text?: string | null;
+  search_tags?: string | null;
+  building?: B | null;
+}
+
+/**
+ * Filter loaded buildings & rooms purely in memory so search keystrokes cause zero DB queries.
+ */
+export function filterCampusSearchLocally<
+  B extends SearchableBuildingLike,
+  L extends SearchableLocationLike<B>
+>(
+  query: string,
+  buildings: B[],
+  locations: L[],
+  limit = 20
+): L[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+
+  const tokens = q.split(/\s+/).filter(Boolean);
+  const scored: Array<{ score: number; isBuilding: boolean; item: L }> = [];
+  const seenLocationIds = new Set<string>();
+
+  for (const b of buildings) {
+    const code = (b.code || '').toLowerCase();
+    const name = (b.name || '').toLowerCase();
+    const zone = (b.zone_name || '').toLowerCase();
+    const fac = (b.facility_type || '').toLowerCase();
+    const combined = `${code} ${name} ${zone} ${fac}`;
+
+    if (!tokens.every((tok) => combined.includes(tok))) continue;
+
+    let score = 40;
+    if (code === q || name === q) score = 100;
+    else if (code.startsWith(q) || name.startsWith(q)) score = 82;
+    else if (code.includes(q) || name.includes(q)) score = 62;
+
+    const syntheticBuildingItem = {
+      id: `b-${b.id}`,
+      room_code: b.name,
+      floor_level: 0,
+      direction_text: '',
+      building: b,
+    } as unknown as L;
+
+    scored.push({ score, isBuilding: true, item: syntheticBuildingItem });
+  }
+
+  for (const loc of locations) {
+    if (!loc.id || seenLocationIds.has(loc.id)) continue;
+    const room = (loc.room_code || '').toLowerCase();
+    const tags = (loc.search_tags || '').toLowerCase();
+    const dir = (loc.direction_text || '').toLowerCase();
+    const bCode = (loc.building?.code || '').toLowerCase();
+    const bName = (loc.building?.name || '').toLowerCase();
+    const combined = `${room} ${tags} ${dir} ${bCode} ${bName}`;
+
+    if (!tokens.every((tok) => combined.includes(tok))) continue;
+
+    seenLocationIds.add(loc.id);
+    let score = 35;
+    if (room === q) score = 100;
+    else if (room.startsWith(q)) score = 84;
+    else if (room.includes(q)) score = 66;
+    else if (tags.includes(q)) score = 52;
+
+    scored.push({ score, isBuilding: false, item: loc });
+  }
+
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    if (a.isBuilding !== b.isBuilding) return a.isBuilding ? -1 : 1;
+    return (a.item.room_code || '').localeCompare(b.item.room_code || '');
+  });
+
+  return scored.slice(0, Math.max(1, limit)).map((entry) => entry.item);
+}

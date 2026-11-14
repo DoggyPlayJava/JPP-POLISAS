@@ -10,6 +10,7 @@ import {
   Compass, LayoutGrid, List, Eye, ToggleLeft, ToggleRight, Camera, Sparkles, FileSpreadsheet, CheckCircle2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import { queryCache } from '@/lib/cache';
 import { toast } from 'react-hot-toast';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -511,6 +512,7 @@ export function JppPolyMapsAdmin() {
 
   const fetchData = async () => {
     setLoading(true);
+    queryCache.invalidate('polymaps:');
     try {
       const [buildingsRes, locationsRes, reportsRes, walkwaysRes, hotspotsRes, fieldSubRes] = await Promise.all([
         supabase.from('imaps_buildings').select('*').order('name'),

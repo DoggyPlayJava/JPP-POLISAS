@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useDragControls } from 'framer-motion';
-import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, CircleMarker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, CircleMarker, useMapEvents, Tooltip } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { 
@@ -24,7 +24,12 @@ import { useTour } from '@/hooks/useTour';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { Pannellum360Viewer } from '@/components/polymaps/Pannellum360Viewer';
 import { PolyMaps360CaptureModal } from '@/components/polymaps/PolyMaps360CaptureModal';
-import type { PolyMaps360HotspotDraft } from '@/lib/polyMapsSmartEntry';
+import { queryCache, CACHE_TTL } from '@/lib/cache';
+import {
+  computeDeclutteredLabelSet,
+  filterCampusSearchLocally,
+  type PolyMaps360HotspotDraft,
+} from '@/lib/polyMapsSmartEntry';
 import { 
   getBuilding360Url, 
   getLocation360Url, 
@@ -112,10 +117,28 @@ function MapDragDetector({ onDrag }: { onDrag: () => void }) {
 // Cache: divIcon builders are pure functions of their args — building one per render
 // forces react-leaflet to redraw every marker DOM node on any state change.
 const _iconCache = new Map<string, L.DivIcon>();
-const getCustomIcon = (code: string, isActive: boolean) => {
-  const key = `${code}|${isActive}`;
+const getCustomIcon = (code: string, isActive: boolean, showLabel: boolean = true) => {
+  const key = `${code}|${isActive}|${showLabel}`;
   const hit = _iconCache.get(key);
   if (hit) return hit;
+
+  if (!showLabel) {
+    const safeTitle = code.replace(/"/g, '&quot;');
+    const compactHtml = `
+      <div title="${safeTitle}" style="position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: ${isActive ? 1000 : 8};">
+        <div style="width: 13px; height: 13px; border-radius: 50%; background-color: ${isActive ? '#ef4444' : '#0ea5e9'}; border: 2.5px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.45);"></div>
+      </div>
+    `;
+    const compactIcon = L.divIcon({
+      className: '',
+      html: compactHtml,
+      iconSize: [0, 0],
+      iconAnchor: [0, 0],
+    });
+    _iconCache.set(key, compactIcon);
+    return compactIcon;
+  }
+
   const labelStyle = `background-color: rgba(15, 23, 42, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.15); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 10}; position: relative;`;
 
   const html = `
@@ -544,6 +567,7 @@ interface Location {
   room_code: string;
   floor_level: number;
   direction_text: string;
+  search_tags?: string | null;
   image_url?: string;
   panorama_360_url?: string | null;
   target_yaw?: number | null;
@@ -553,6 +577,17 @@ interface Location {
   is_360_enabled?: boolean;
   op_start?: string;
   op_end?: string;
+}
+
+const POLYMAPS_BUNDLE_CACHE_KEY = 'polymaps:campus_bundle:v1';
+const POLYMAPS_WEATHER_CACHE_KEY = 'polymaps:weather:v1';
+
+interface PolyMapsCampusBundle {
+  hotspotsByPanorama: Record<string, PolyMaps360HotspotDraft[]>;
+  buildings: Building[];
+  locations: Location[];
+  walkways: { id: string; name: string; coordinates: [number, number][]; is_covered: boolean; is_blocked: boolean }[];
+  useFallbackEmsEvent: boolean;
 }
 
 interface ZoneMarkerInfo {
@@ -931,33 +966,41 @@ export function PolyMapsPage() {
 
   useEffect(() => {
     fetchInitialData();
-    
-    // Fetch basic weather for Kuantan (POLISAS coords)
-    // Best-effort with timeout: open-meteo can 503/504 transiently; never block the page.
-    const weatherCtrl = new AbortController();
-    const weatherTimeout = setTimeout(() => weatherCtrl.abort(), 8000);
-    fetch('https://api.open-meteo.com/v1/forecast?latitude=3.8168&longitude=103.3317&current_weather=true', {
-      signal: weatherCtrl.signal,
-    })
-      .then(res => {
-        if (!res.ok) throw new Error('weather HTTP ' + res.status);
-        return res.json();
-      })
-      .then(data => {
-        if (data && data.current_weather) {
-          const code = data.current_weather.weathercode;
-          const temp = data.current_weather.temperature;
-          setWeather({
-            isRaining: code >= 50 && code <= 99,
-            isHot: temp >= 32
-          });
-        }
-      })
-      .catch(e => {
-        if (e?.name === 'AbortError') console.log('Weather fetch timed out');
-        else console.log('Weather fetch failed', e);
-      })
-      .finally(() => clearTimeout(weatherTimeout));
+
+    // Fetch basic weather for POLISAS Semambu campus coordinates (cached 10 min)
+    const cachedWeather = queryCache.get<{ isRaining: boolean; isHot: boolean }>(POLYMAPS_WEATHER_CACHE_KEY);
+    if (cachedWeather) {
+      setWeather(cachedWeather);
+    } else {
+      // Best-effort with timeout: open-meteo can 503/504 transiently; never block the page.
+      const weatherCtrl = new AbortController();
+      const weatherTimeout = setTimeout(() => weatherCtrl.abort(), 8000);
+      fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${polisasCenter[0]}&longitude=${polisasCenter[1]}&current_weather=true`,
+        { signal: weatherCtrl.signal }
+      )
+        .then(res => {
+          if (!res.ok) throw new Error('weather HTTP ' + res.status);
+          return res.json();
+        })
+        .then(data => {
+          if (data && data.current_weather) {
+            const code = data.current_weather.weathercode;
+            const temp = data.current_weather.temperature;
+            const nextWeather = {
+              isRaining: code >= 50 && code <= 99,
+              isHot: temp >= 32
+            };
+            queryCache.set(POLYMAPS_WEATHER_CACHE_KEY, nextWeather, 10 * 60 * 1000);
+            setWeather(nextWeather);
+          }
+        })
+        .catch(e => {
+          if (e?.name === 'AbortError') console.log('Weather fetch timed out');
+          else console.log('Weather fetch failed', e);
+        })
+        .finally(() => clearTimeout(weatherTimeout));
+    }
   }, []);
 
   useEffect(() => {
@@ -1070,6 +1113,72 @@ export function PolyMapsPage() {
     setZones(parsedZones);
   }, [allBuildings]);
 
+  const visibleMapBuildings = useMemo(() => {
+    if (activeOverlayFilter !== 'ALL' && activeOverlayFilter !== 'BUILDINGS') return [];
+    const filter = activeFilter?.toLowerCase() || null;
+    const isToiletFilterActive = filter === 'toilet' || filter === 'tandas';
+
+    return allBuildings.filter(b => {
+      if (!b.center_lat || !b.center_lng) return false;
+      const isActive = activeBuilding?.id === b.id;
+
+      // Sembunyikan bangunan dalam zon kalau masih zoom out, TAPI biarkan kalau bangunan tu tengah aktif (dipilih)
+      if (b.zone_name && mapZoom < 18 && !isActive) return false;
+
+      // Jika activeFilter wujud, sembunyikan bangunan yang tak sepadan
+      if (filter) {
+        const bType = b.facility_type?.toLowerCase() || '';
+        const isMatch = bType === filter ||
+          (filter === 'cafe' && bType === 'kafe') ||
+          (filter === 'kafe' && bType === 'cafe') ||
+          (filter === 'surau' && bType.includes('surau')) ||
+          (filter === 'toilet' && bType === 'tandas') ||
+          (filter === 'tandas' && bType === 'toilet');
+        if (!isMatch && !isActive) return false;
+      }
+
+      // Sembunyikan fasiliti kecil (seperti Tandas) secara default melainkan difilter atau sedang aktif
+      const isTandas = b.facility_type?.toLowerCase() === 'tandas' || b.facility_type?.toLowerCase() === 'toilet';
+      if (b.is_facility && isTandas && !isToiletFilterActive && !isActive) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [allBuildings, activeBuilding, activeFilter, activeOverlayFilter, mapZoom]);
+
+  const declutteredLabelIds = useMemo(() => {
+    if (activeOverlayFilter !== 'ALL' && activeOverlayFilter !== 'BUILDINGS') {
+      return new Set<string>();
+    }
+    const candidates: Array<{ id: string; lat: number; lng: number; label: string; priority: number }> = [];
+
+    if (mapZoom < 18) {
+      zones.forEach(z => {
+        candidates.push({
+          id: `zone:${z.zone_name}`,
+          lat: z.lat,
+          lng: z.lng,
+          label: z.zone_name,
+          priority: 1,
+        });
+      });
+    }
+
+    visibleMapBuildings.forEach(b => {
+      const isActive = activeBuilding?.id === b.id;
+      candidates.push({
+        id: `b:${b.id}`,
+        lat: b.center_lat,
+        lng: b.center_lng,
+        label: b.code,
+        priority: isActive ? 0 : 2,
+      });
+    });
+
+    return computeDeclutteredLabelSet(candidates, mapZoom);
+  }, [zones, visibleMapBuildings, activeBuilding, activeOverlayFilter, mapZoom]);
+
   // ── Nexus AI State Bridge (sessionStorage) ───────────────────────────────
   // Writes current PolyMaps state so FloatingChatAI can read it lazily.
   // No realtime subscription needed: AI reads once on chat open.
@@ -1115,7 +1224,20 @@ export function PolyMapsPage() {
     return null;
   };
 
-  const fetchInitialData = async () => {
+  const buildFallbackEmsEvent = (): EmsEventItem => ({
+    id: 'ems-showcase-1',
+    title: t('services:ems_fallback_event_title', 'Karnival Inovasi & TVET POLISAS 2026'),
+    description: t('services:ems_fallback_event_desc', 'Pameran projek inovasi, pertandingan teknikal, dan showcase industri siswa POLISAS.'),
+    category: 'INOVASI',
+    event_type: 'EXHIBITION',
+    event_date: new Date(Date.now() + 86400000 * 2).toISOString(),
+    location: t('services:dewan_jubli_perak', 'Dewan Jubli Perak'),
+    status: 'ACTIVE',
+    lat: 3.8620,
+    lng: 103.3150
+  });
+
+  const fetchInitialData = async (forceRefresh = false) => {
     // Check if user is logged in and is an admin/JPP member
     // This is optional: page works fully for unauthenticated users too
     try {
@@ -1134,42 +1256,77 @@ export function PolyMapsPage() {
       // Ignore auth errors: page is public, auth is optional
     }
 
-    // Fetch buildings, locations, walkways, ems_events, and 360 hotspots in parallel
+    const cachedBundle = !forceRefresh
+      ? queryCache.get<PolyMapsCampusBundle>(POLYMAPS_BUNDLE_CACHE_KEY)
+      : null;
+
+    if (cachedBundle) {
+      setHotspotsByPanorama(cachedBundle.hotspotsByPanorama);
+      setAllBuildings(cachedBundle.buildings);
+      if (cachedBundle.locations.length > 0) {
+        setAllLocations(cachedBundle.locations);
+      }
+      setWalkways(cachedBundle.walkways);
+      if (cachedBundle.useFallbackEmsEvent) {
+        setEmsEvents([buildFallbackEmsEvent()]);
+      }
+      return;
+    }
+
+    // Fetch buildings, locations, walkways, ems_events, and 360 hotspots in parallel (explicit columns only)
     const [bRes, lRes, wRes, eRes, hsRes] = await Promise.all([
-      supabase.from('imaps_buildings').select('*').order('name'),
-      supabase.from('imaps_locations').select('*, building:building_id(*)').order('floor_level'),
-      supabase.from('imaps_walkways').select('*').order('created_at', { ascending: false }),
-      supabase.from('ems_events').select('*').in('status', ['ACTIVE', 'APPROVED']).order('event_date', { ascending: true }),
-      supabase.from('imaps_360_hotspots').select('*').order('created_at', { ascending: true }),
+      supabase
+        .from('imaps_buildings')
+        .select('id, name, code, center_lat, center_lng, zone_name, is_facility, facility_type, op_start, op_end, floorplan_image_url, entrance_image_url, drone_image_url, panorama_360_url, is_360_enabled')
+        .order('name'),
+      supabase
+        .from('imaps_locations')
+        .select('id, building_id, room_code, floor_level, direction_text, search_tags, image_url, panorama_360_url, is_360_enabled, target_yaw, target_pitch, op_start, op_end, building:building_id(id, name, code, center_lat, center_lng, zone_name, is_facility, facility_type, op_start, op_end, floorplan_image_url, entrance_image_url, drone_image_url, panorama_360_url, is_360_enabled)')
+        .order('floor_level'),
+      supabase
+        .from('imaps_walkways')
+        .select('id, name, coordinates, is_covered, is_blocked, created_at')
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('ems_events')
+        .select('id, title, description, category, event_type, event_date, location, status')
+        .in('status', ['ACTIVE', 'APPROVED'])
+        .order('event_date', { ascending: true }),
+      supabase
+        .from('imaps_360_hotspots')
+        .select('id, building_id, location_id, panorama_url, pin_type, label, room_code, floor_level, pitch, yaw, description, target_panorama_url, target_location_id')
+        .order('created_at', { ascending: true }),
     ]);
 
+    const groupedHotspots: Record<string, PolyMaps360HotspotDraft[]> = {};
     if (!hsRes.error && Array.isArray(hsRes.data)) {
-      const grouped: Record<string, PolyMaps360HotspotDraft[]> = {};
       for (const hs of hsRes.data) {
         if (!hs.panorama_url) continue;
-        if (!grouped[hs.panorama_url]) grouped[hs.panorama_url] = [];
-        grouped[hs.panorama_url].push(hs);
+        if (!groupedHotspots[hs.panorama_url]) groupedHotspots[hs.panorama_url] = [];
+        groupedHotspots[hs.panorama_url].push(hs);
       }
-      setHotspotsByPanorama(grouped);
+      setHotspotsByPanorama(groupedHotspots);
     }
 
     if (bRes.error) {
       console.error('PolyMaps: Failed to load buildings:', bRes.error.message);
     }
     const bData = bRes.data;
+    const enhancedBuildings: Building[] = bData
+      ? bData.map((b: any) => ({
+          ...b,
+          panorama_360_url: b.panorama_360_url || getBuilding360Url(b)
+        }))
+      : [];
     if (bData) {
-      const enhancedBuildings = bData.map((b: any) => ({
-        ...b,
-        panorama_360_url: b.panorama_360_url || getBuilding360Url(b)
-      }));
       setAllBuildings(enhancedBuildings);
     }
-    
+
     if (lRes.error) {
       console.error('PolyMaps: Failed to load locations:', lRes.error.message);
     }
     const lData = lRes.data;
-    const formatted = (lData || []).map((item: any) => {
+    const formattedLocations: Location[] = (lData || []).map((item: any) => {
       const building = Array.isArray(item.building) ? item.building[0] : item.building;
       const enhancedBuilding = building ? {
         ...building,
@@ -1181,19 +1338,23 @@ export function PolyMapsPage() {
         panorama_360_url: item.panorama_360_url || getLocation360Url({ ...item, building: enhancedBuilding })
       };
     });
-    if (formatted.length > 0) {
-      setAllLocations(formatted);
+    if (formattedLocations.length > 0) {
+      setAllLocations(formattedLocations);
     }
 
     if (wRes.error) {
       console.error('PolyMaps: Failed to load walkways:', wRes.error.message);
     }
+    const parsedWalkways = wRes.data
+      ? wRes.data.map((w: any) => ({
+          id: w.id,
+          name: w.name,
+          coordinates: Array.isArray(w.coordinates) ? w.coordinates : JSON.parse(w.coordinates),
+          is_covered: Boolean(w.is_covered),
+          is_blocked: Boolean(w.is_blocked),
+        }))
+      : [];
     if (wRes.data) {
-      const parsedWalkways = wRes.data.map((w: any) => ({
-        id: w.id,
-        name: w.name,
-        coordinates: Array.isArray(w.coordinates) ? w.coordinates : JSON.parse(w.coordinates)
-      }));
       setWalkways(parsedWalkways);
     }
 
@@ -1209,37 +1370,46 @@ export function PolyMapsPage() {
         lng: coords[1]
       };
     });
-    if (mappedEvents.length === 0) {
-      setEmsEvents([
+    const useFallbackEmsEvent = mappedEvents.length === 0;
+    if (useFallbackEmsEvent) {
+      setEmsEvents([buildFallbackEmsEvent()]);
+    }
+
+    if (!bRes.error && !lRes.error && !wRes.error) {
+      queryCache.set(
+        POLYMAPS_BUNDLE_CACHE_KEY,
         {
-          id: 'ems-showcase-1',
-          title: t('services:ems_fallback_event_title', 'Karnival Inovasi & TVET POLISAS 2026'),
-          description: t('services:ems_fallback_event_desc', 'Pameran projek inovasi, pertandingan teknikal, dan showcase industri siswa POLISAS.'),
-          category: 'INOVASI',
-          event_type: 'EXHIBITION',
-          event_date: new Date(Date.now() + 86400000 * 2).toISOString(),
-          location: t('services:dewan_jubli_perak', 'Dewan Jubli Perak'),
-          status: 'ACTIVE',
-          lat: 3.8620,
-          lng: 103.3150
-        }
-      ]);
+          hotspotsByPanorama: groupedHotspots,
+          buildings: enhancedBuildings,
+          locations: formattedLocations,
+          walkways: parsedWalkways,
+          useFallbackEmsEvent,
+        },
+        CACHE_TTL.ANNOUNCEMENT
+      );
     }
   };
 
   const fetchLocations = async (query: string) => {
     if (!query.trim()) {
-      setSearchResults([]);
+      if (!activeFilter) setSearchResults([]);
       return;
     }
-    
+
+    // Use already-loaded campus arrays first to eliminate per-keystroke Supabase queries
+    if (allBuildings.length > 0 || allLocations.length > 0) {
+      setSearchResults(filterCampusSearchLocally(query, allBuildings, allLocations, 20));
+      setIsSearching(false);
+      return;
+    }
+
     setIsSearching(true);
     try {
       const q = query.toLowerCase();
-      const matchedBuildings = allBuildings.filter(b => 
+      const matchedBuildings = allBuildings.filter(b =>
         b.name.toLowerCase().includes(q) || b.code.toLowerCase().includes(q)
       );
-      
+
       const buildingResults = matchedBuildings.map(b => ({
         id: `b-${b.id}`,
         room_code: b.name,
@@ -1260,7 +1430,7 @@ export function PolyMapsPage() {
         .limit(10);
 
       if (error) throw error;
-      
+
       const formattedData = (data || []).map((item: any) => {
         const rawBuilding = Array.isArray(item.building) ? item.building[0] : item.building;
         const enhancedBuilding = rawBuilding ? {
@@ -1284,11 +1454,19 @@ export function PolyMapsPage() {
   };
 
   useEffect(() => {
+    if (allBuildings.length > 0 || allLocations.length > 0) {
+      if (!searchQuery.trim()) {
+        if (!activeFilter) setSearchResults([]);
+      } else {
+        setSearchResults(filterCampusSearchLocally(searchQuery, allBuildings, allLocations, 20));
+      }
+      return;
+    }
     const delayDebounceFn = setTimeout(() => {
       fetchLocations(searchQuery);
     }, 500);
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery]);
+  }, [searchQuery, allBuildings, allLocations, activeFilter]);
 
   useEffect(() => {
     if (activeFilter) {
@@ -1870,61 +2048,51 @@ export function PolyMapsPage() {
             </Marker>
           )}
 
-          {/* Render Zones when zoomed out */}
-          {(activeOverlayFilter === 'ALL' || activeOverlayFilter === 'BUILDINGS') && mapZoom < 18 && zones.map(z => (
-            <Marker 
-              key={`zone-${z.zone_name}`}
-              position={[z.lat, z.lng]}
-              icon={getCustomIcon(z.zone_name, false)}
-              eventHandlers={{
-                click: () => {
-                  // Apabila zon ditekan, auto-zoom in supaya pecah jadi bangunan
-                  const map = z.buildings[0];
-                  if (map) {
-                     // We just fake an active building select so it centers and zooms in
-                     handleSelectBuildingMapMarker(map);
-                  }
-                }
-              }}
-            />
-          ))}
-
-          {(activeOverlayFilter === 'ALL' || activeOverlayFilter === 'BUILDINGS') && allBuildings.map(b => {
-            if (!b.center_lat) return null;
-            const isActive = activeBuilding?.id === b.id;
-            
-            // Sembunyikan bangunan dalam zon kalau masih zoom out, TAPI biarkan kalau bangunan tu tengah aktif (dipilih)
-            if (b.zone_name && mapZoom < 18 && !isActive) return null;
-
-            // Jika activeFilter wujud, sembunyikan bangunan yang tak sepadan
-            if (activeFilter) {
-              const bType = b.facility_type?.toLowerCase() || '';
-              const filter = activeFilter.toLowerCase();
-              const isMatch = bType === filter || 
-                             (filter === 'cafe' && bType === 'kafe') ||
-                             (filter === 'kafe' && bType === 'cafe') ||
-                             (filter === 'surau' && bType.includes('surau')) ||
-                             (filter === 'toilet' && bType === 'tandas') ||
-                             (filter === 'tandas' && bType === 'toilet');
-              if (!isMatch && !isActive) return null;
-            }
-
-            // Sembunyikan fasiliti kecil (seperti Tandas) secara default melainkan difilter atau sedang aktif
-            const isTandas = b.facility_type?.toLowerCase() === 'tandas' || b.facility_type?.toLowerCase() === 'toilet';
-            const isToiletFilterActive = activeFilter?.toLowerCase() === 'toilet' || activeFilter?.toLowerCase() === 'tandas';
-            if (b.is_facility && isTandas && !isToiletFilterActive && !isActive) {
-              return null;
-            }
-            
+          {/* Render Zones when zoomed out (decluttered) */}
+          {(activeOverlayFilter === 'ALL' || activeOverlayFilter === 'BUILDINGS') && mapZoom < 18 && zones.map(z => {
+            const showLabel = declutteredLabelIds.has(`zone:${z.zone_name}`);
             return (
-              <Marker 
+              <Marker
+                key={`zone-${z.zone_name}`}
+                position={[z.lat, z.lng]}
+                icon={getCustomIcon(z.zone_name, false, showLabel)}
+                eventHandlers={{
+                  click: () => {
+                    // Apabila zon ditekan, auto-zoom in supaya pecah jadi bangunan
+                    const map = z.buildings[0];
+                    if (map) {
+                      // We just fake an active building select so it centers and zooms in
+                      handleSelectBuildingMapMarker(map);
+                    }
+                  }
+                }}
+              >
+                {!showLabel && (
+                  <Tooltip direction="top" offset={[0, -8]}>
+                    {z.zone_name}
+                  </Tooltip>
+                )}
+              </Marker>
+            );
+          })}
+
+          {visibleMapBuildings.map(b => {
+            const isActive = activeBuilding?.id === b.id;
+            const showLabel = declutteredLabelIds.has(`b:${b.id}`);
+            return (
+              <Marker
                 key={b.id}
                 position={[b.center_lat, b.center_lng]}
-                icon={getCustomIcon(b.code, isActive)}
+                icon={getCustomIcon(b.code, isActive, showLabel)}
                 eventHandlers={{
                   click: () => handleSelectBuildingMapMarker(b)
                 }}
               >
+                {!showLabel && (
+                  <Tooltip direction="top" offset={[0, -8]}>
+                    {b.code} — {b.name}
+                  </Tooltip>
+                )}
               </Marker>
             );
           })}
@@ -3476,7 +3644,8 @@ export function PolyMapsPage() {
         currentUserId={user?.id}
         currentUserName={profile?.full_name || 'Sukarelawan Kampus'}
         onSaved={() => {
-          fetchInitialData();
+          queryCache.invalidate('polymaps:');
+          fetchInitialData(true);
         }}
       />
 
