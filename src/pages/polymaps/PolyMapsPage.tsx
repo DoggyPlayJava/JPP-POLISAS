@@ -587,6 +587,7 @@ interface PolyMapsCampusBundle {
   buildings: Building[];
   locations: Location[];
   walkways: { id: string; name: string; coordinates: [number, number][]; is_covered: boolean; is_blocked: boolean }[];
+  emsEvents: EmsEventItem[];
   useFallbackEmsEvent: boolean;
 }
 
@@ -1267,9 +1268,8 @@ export function PolyMapsPage() {
         setAllLocations(cachedBundle.locations);
       }
       setWalkways(cachedBundle.walkways);
-      if (cachedBundle.useFallbackEmsEvent) {
-        setEmsEvents([buildFallbackEmsEvent()]);
-      }
+      // Event sebenar mesti dipulihkan dari cache; tanpa ini peta jatuh balik ke event palsu.
+      setEmsEvents(cachedBundle.emsEvents ?? [buildFallbackEmsEvent()]);
       return;
     }
 
@@ -1373,6 +1373,10 @@ export function PolyMapsPage() {
     const useFallbackEmsEvent = mappedEvents.length === 0;
     if (useFallbackEmsEvent) {
       setEmsEvents([buildFallbackEmsEvent()]);
+    } else {
+      // Sebelum ini `mappedEvents` dikira tetapi tidak pernah masuk state, jadi peta
+      // sentiasa memaparkan event palsu walaupun DB ada event sebenar.
+      setEmsEvents(mappedEvents);
     }
 
     if (!bRes.error && !lRes.error && !wRes.error) {
@@ -1383,6 +1387,7 @@ export function PolyMapsPage() {
           buildings: enhancedBuildings,
           locations: formattedLocations,
           walkways: parsedWalkways,
+          emsEvents: useFallbackEmsEvent ? [] : mappedEvents,
           useFallbackEmsEvent,
         },
         CACHE_TTL.ANNOUNCEMENT
