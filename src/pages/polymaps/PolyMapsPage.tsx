@@ -268,7 +268,15 @@ function mapEventLocationToCoords(locationStr: string | null | undefined, buildi
   return [3.8625 + offsetLat, 103.3153 + offsetLng];
 }
 
+const _emsIconCache = new Map<string, L.DivIcon>();
+
 const getEmsMarkerIcon = (title: string, isActive: boolean) => {
+  // Leaflet L.divIcon + React re-render = DOM yang Leaflet pegang dah null.
+  // Cache kekal supaya instance ikon yang sama dipulangkan setiap render.
+  const key = `${title}|${isActive}`;
+  const hit = _emsIconCache.get(key);
+  if (hit) return hit;
+
   const pingEffect = '<span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span></span>';
   const labelStyle = `background-color: rgba(180, 83, 9, 0.95); color: white; font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 8px; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.3); border: 1px solid rgba(251,191,36,0.6); text-transform: uppercase; letter-spacing: 0.5px; z-index: ${isActive ? 1000 : 20}; position: relative;`;
 
@@ -285,12 +293,14 @@ const getEmsMarkerIcon = (title: string, isActive: boolean) => {
       </div>
     </div>
   `;
-  return L.divIcon({
+  const icon = L.divIcon({
     className: '',
     html,
     iconSize: [0, 0],
     iconAnchor: [0, 0],
   });
+  _emsIconCache.set(key, icon);
+  return icon;
 };
 
 const getPolyMartMarkerIcon = (name: string, isActive: boolean) => {
