@@ -598,6 +598,7 @@ interface PolyMapsCampusBundle {
   locations: Location[];
   walkways: { id: string; name: string; coordinates: [number, number][]; is_covered: boolean; is_blocked: boolean }[];
   emsEvents: EmsEventItem[];
+  segments: { id: string; walkway_id: string; start_idx: number; end_idx: number; is_blocked: boolean; is_covered: boolean }[];
   useFallbackEmsEvent: boolean;
 }
 
@@ -655,6 +656,7 @@ export function PolyMapsPage() {
   });
 
   const [walkways, setWalkways] = useState<{ id: string; name: string; coordinates: [number, number][]; is_covered?: boolean; is_blocked?: boolean }[]>([]);
+  const [segments, setSegments] = useState<{ id: string; walkway_id: string; start_idx: number; end_idx: number; is_blocked: boolean; is_covered: boolean }[]>([]);
   const [heading, setHeading] = useState<number | null>(null);
   const [preferCovered, setPreferCovered] = useState(false);
   const [showTbtSteps, setShowTbtSteps] = useState(false);
@@ -663,7 +665,28 @@ export function PolyMapsPage() {
     const nodesMap = new Map<string, GraphNode>();
     
     walkways.forEach(w => {
-      if (w.is_blocked) return; // Skip blocked walkways
+      // Build blocked segments lookup for this walkway
+      const blockedSegs = segments.filter(s => s.walkway_id === w.id && s.is_blocked);
+      const coveredSegs = segments.filter(s => s.walkway_id === w.id && s.is_covered);
+
+      // Helper: is edge (i -> i+1) inside any blocked segment?
+      const isBlockedEdge = (idxA: number, idxB: number) => {
+        return blockedSegs.some(seg => {
+          // Edge is blocked if it falls entirely within the segment range
+          return (idxA >= seg.start_idx && idxA < seg.end_idx) ||
+                 (idxB > seg.start_idx && idxB <= seg.end_idx) ||
+                 (idxA <= seg.start_idx && idxB >= seg.end_idx);
+        });
+      };
+
+      // Helper: is this edge part of any covered segment?
+      const isCoveredEdge = (idxA: number, idxB: number) => {
+        return coveredSegs.some(seg => {
+          return (idxA >= seg.start_idx && idxA < seg.end_idx) ||
+                 (idxB > seg.start_idx && idxB <= seg.end_idx) ||
+                 (idxA <= seg.start_idx && idxB >= seg.end_idx);
+        });
+      };
 
       w.coordinates.forEach((coord, i) => {
         const lat = coord[0];
@@ -684,9 +707,12 @@ export function PolyMapsPage() {
           const prevLat = prevCoord[0];
           const prevLng = prevCoord[1];
           const prevKey = `${prevLat.toFixed(6)},${prevLng.toFixed(6)}`;
-          
+
+          // Skip this edge if it's fully inside a blocked segment
+          if (isBlockedEdge(i-1, i)) return;
+
           const d = calculateDistanceInMeters(prevLat, prevLng, lat, lng);
-          const isCovered = w.is_covered || false;
+          const isCovered = w.is_covered || isCoveredEdge(i-1, i);
           
           nodesMap.get(prevKey)?.neighbors.set(key, { distance: d, isCovered });
           nodesMap.get(key)?.neighbors.set(prevKey, { distance: d, isCovered });
@@ -709,7 +735,7 @@ export function PolyMapsPage() {
     }
     
     return nodesMap;
-  }, [walkways]);
+  }, [walkways, segments]);
 
   const shortestPath = useMemo(() => {
     if (isNavigating && userLocation && activeBuilding?.center_lat) {
@@ -1284,7 +1310,7 @@ export function PolyMapsPage() {
     }
 
     // Fetch buildings, locations, walkways, ems_events, and 360 hotspots in parallel (explicit columns only)
-    const [bRes, lRes, wRes, eRes, hsRes] = await Promise.all([
+    const [bRes, lRes, wRes, eRes, hsRes, segRes] = await Promise.all([
       supabase
         .from('imaps_buildings')
         .select('id, name, code, center_lat, center_lng, zone_name, is_facility, facility_type, op_start, op_end, floorplan_image_url, entrance_image_url, drone_image_url, panorama_360_url, is_360_enabled')
@@ -1306,6 +1332,10 @@ export function PolyMapsPage() {
         .from('imaps_360_hotspots')
         .select('id, building_id, location_id, panorama_url, pin_type, label, room_code, floor_level, pitch, yaw, description, target_panorama_url, target_location_id')
         .order('created_at', { ascending: true }),
+      supabase
+        .from('imaps_walkway_segments')
+        .select('*')
+        .order('created_at', { ascending: false }),
     ]);
 
     const groupedHotspots: Record<string, PolyMaps360HotspotDraft[]> = {};
@@ -1367,6 +1397,7 @@ export function PolyMapsPage() {
     if (wRes.data) {
       setWalkways(parsedWalkways);
     }
+    if (!segRes?.error && segRes?.data) setSegments(segRes.data);
 
     if (eRes.error) {
       console.warn('PolyMaps: Failed to load ems_events:', eRes.error.message);
@@ -2049,11 +2080,30 @@ export function PolyMapsPage() {
               opacity = 0.6;
             }
             return (
-              <Polyline
-                key={`walkway-${w.id || idx}`}
-                positions={w.coordinates}
-                pathOptions={{ color, weight, dashArray, opacity }}
-              />
+              <React.Fragment key={`walkway-${w.id || idx}`}>
+                <Polyline
+                  positions={w.coordinates}
+                  pathOptions={{ color, weight, dashArray, opacity }}
+                />
+                {/* Render segment overlays */}
+                {segments
+                  .filter(s => s.walkway_id === w.id)
+                  .map(seg => {
+                    const subCoords = w.coordinates.slice(seg.start_idx, seg.end_idx + 1);
+                    return (
+                      <Polyline
+                        key={`seg-${seg.id}`}
+                        positions={subCoords}
+                        pathOptions={{
+                          color: seg.is_blocked ? '#ef4444' : '#10b981',
+                          weight: 5,
+                          dashArray: seg.is_blocked ? '4,4' : undefined,
+                          opacity: 0.75,
+                        }}
+                      />
+                    );
+                  })}
+              </React.Fragment>
             );
           })}
 
