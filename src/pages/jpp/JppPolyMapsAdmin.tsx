@@ -325,7 +325,7 @@ interface MissingReport {
 export function JppPolyMapsAdmin() {
   const { t, i18n } = useTranslation(['services', 'jpp', 'common']);
   const currentLang: 'en' | 'ms' = i18n.language?.startsWith('en') ? 'en' : 'ms';
-  const [activeTab, setActiveTab] = useState<'buildings' | 'locations' | 'reports' | 'walkways'>('buildings');
+  const [activeTab, setActiveTab] = useState<'buildings' | 'locations' | 'submissions' | 'reports' | 'walkways'>('buildings');
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [reports, setReports] = useState<MissingReport[]>([]);
@@ -1150,6 +1150,20 @@ export function JppPolyMapsAdmin() {
             <Navigation className="w-4 h-4" /> {t('jpp:polymaps_tab_locations')}
           </button>
           <button
+            onClick={() => setActiveTab('submissions')}
+            className={cn(
+              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
+              activeTab === 'submissions' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
+            )}
+          >
+            <Camera className="w-4 h-4" /> {t('jpp:polymaps_tab_submissions', 'Sumbangan 360°')}
+            {fieldSubmissions.filter(s => s.status === 'pending').length > 0 && (
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-pulse">
+                {fieldSubmissions.filter(s => s.status === 'pending').length}
+              </span>
+            )}
+          </button>
+          <button
             onClick={() => setActiveTab('reports')}
             className={cn(
               "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
@@ -1157,9 +1171,9 @@ export function JppPolyMapsAdmin() {
             )}
           >
             <AlertCircle className="w-4 h-4" /> {t('jpp:polymaps_tab_reports')}
-            {(reports.filter(r => r.status === 'pending').length + fieldSubmissions.filter(s => s.status === 'pending').length) > 0 && (
+            {reports.filter(r => r.status === 'pending').length > 0 && (
               <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-pulse">
-                {reports.filter(r => r.status === 'pending').length + fieldSubmissions.filter(s => s.status === 'pending').length}
+                {reports.filter(r => r.status === 'pending').length}
               </span>
             )}
           </button>
@@ -1795,9 +1809,9 @@ export function JppPolyMapsAdmin() {
             </div>
           )}
         </div>
-      ) : activeTab === 'reports' ? (
+      ) : activeTab === 'submissions' ? (
         <div className="space-y-6">
-          {/* Bahagian 1: Sumbangan 360° & Pin Pintu Bilik Daripada Sukarelawan */}
+          {/* Sumbangan 360° & Pin Pintu Bilik Daripada Sukarelawan */}
           <div className="bg-white dark:bg-white/5 border border-emerald-500/30 rounded-2xl overflow-hidden shadow-sm">
             <div className="px-5 py-4 border-b border-slate-200 dark:border-white/10 bg-emerald-500/10 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-center gap-2.5">
@@ -1928,8 +1942,10 @@ export function JppPolyMapsAdmin() {
               </table>
             </div>
           </div>
-
-          {/* Bahagian 2: Laporan Tempat Hilang Pelajar Sedia Ada */}
+        </div>
+      ) : activeTab === 'reports' ? (
+        <div className="space-y-6">
+          {/* Laporan Tempat Hilang Pelajar */}
           <div className="bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
