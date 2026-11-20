@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import { 
   Map, MapPin, Building2, Plus, Edit2, Trash2, 
   Search, RefreshCw, AlertCircle, Save, X, Navigation, UploadCloud, Image as ImageIcon,
-  Compass, LayoutGrid, List, Eye, ToggleLeft, ToggleRight, Camera, Sparkles, FileSpreadsheet, CheckCircle, Shield, Umbrella
+  Compass, LayoutGrid, List, Eye, ToggleLeft, ToggleRight, Camera, Sparkles, FileSpreadsheet, CheckCircle2, Shield, Umbrella
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { queryCache } from '@/lib/cache';
@@ -252,6 +252,77 @@ function WalkwayDrawingMap({
     </div>
   );
 }
+function WalkwaySegmentMap({
+  walkwayCoords,
+  segments,
+  startIdx,
+  onSetStartIdx,
+  segType,
+}: {
+  walkwayCoords: [number, number][];
+  segments: { id: string; start_idx: number; end_idx: number; is_blocked: boolean; is_covered: boolean }[];
+  startIdx: number | null;
+  onSetStartIdx: (idx: number | null) => void;
+  segType: 'block' | 'cover';
+}) {
+  const { t } = useTranslation(['services', 'jpp', 'common']);
+  const color = segType === 'block' ? '#ef4444' : '#10b981';
+  const fillColor = segType === 'block' ? '#fecaca' : '#a7f3d0';
+
+  const MapEvents = () => {
+    useMapEvents({
+      click(e) {
+        const latlng: [number, number] = [e.latlng.lat, e.latlng.lng];
+        let nearestIdx = -1;
+        let minDist = Infinity;
+        walkwayCoords.forEach((c, i) => {
+          const d = calculateDistanceInMeters(latlng[0], latlng[1], c[0], c[1]);
+          if (d < minDist) { minDist = d; nearestIdx = i; }
+        });
+        if (minDist > 8) {
+          toast.error(t('services:seg_too_far', 'Klik lebih dekat pada nod laluan.'));
+          return;
+        }
+        onSetStartIdx(nearestIdx);
+      },
+    });
+    return null;
+  };
+
+  const center = walkwayCoords[Math.floor(walkwayCoords.length / 2)] || [3.8625, 103.3153];
+
+  return (
+    <div className="w-full h-[320px] rounded-xl overflow-hidden border border-slate-200 dark:border-white/10 relative z-0">
+      <MapContainer center={center} zoom={19} className="w-full h-full" zoomControl={true}>
+        <TileLayer attribution="&copy; Google" url="https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}" maxZoom={20} />
+        <MapEvents />
+        <Polyline positions={walkwayCoords} pathOptions={{ color: '#94a3b8', weight: 3, dashArray: '5,5' }} />
+        {segments.map((seg, i) => {
+          const sub = walkwayCoords.slice(seg.start_idx, seg.end_idx + 1);
+          return <Polyline key={`seg-${seg.id || i}`} positions={sub} pathOptions={{
+            color: seg.is_blocked ? '#ef4444' : '#10b981',
+            weight: 6,
+            dashArray: seg.is_blocked ? '4,4' : undefined,
+          }} />;
+        })}
+        {walkwayCoords.map((c, i) => (
+          <CircleMarker key={i} center={c} radius={5}
+            pathOptions={{
+              color: startIdx === i ? color : '#6366f1',
+              fillColor: startIdx === i ? fillColor : '#c7d2fe',
+              fillOpacity: startIdx === i ? 1 : 0.5,
+              weight: startIdx === i ? 3 : 1.5,
+            }}
+          >
+            <Tooltip>#{i}{startIdx === i ? ' ★' : ''}</Tooltip>
+          </CircleMarker>
+        ))}
+      </MapContainer>
+    </div>
+  );
+}
+
+
 
 
 interface Building {
@@ -519,7 +590,7 @@ export function JppPolyMapsAdmin() {
     setLoading(true);
     queryCache.invalidate('polymaps:');
     try {
-      const [buildingsRes, locationsRes, reportsRes, walkwaysRes, hotspotsRes, fieldSubRes] = await Promise.all([
+      const [buildingsRes, locationsRes, reportsRes, walkwaysRes, segsRes, hotspotsRes, fieldSubRes] = await Promise.all([
         supabase.from('imaps_buildings').select('*').order('name'),
         supabase.from('imaps_locations').select('*').order('room_code'),
         supabase.from('imaps_missing_reports').select(`
@@ -532,6 +603,7 @@ export function JppPolyMapsAdmin() {
         `).order('created_at', { ascending: false }),
         supabase.from('imaps_walkway_segments').select('*').order('created_at', { ascending: false }),
         supabase.from('imaps_walkways').select('*').order('created_at', { ascending: false }),
+        supabase.from('imaps_walkway_segments').select('*').order('created_at', { ascending: false }),
         supabase.from('imaps_360_hotspots').select('*').order('created_at', { ascending: true }),
         supabase.from('imaps_field_submissions').select('*').order('created_at', { ascending: false }),
       ]);
@@ -2216,6 +2288,12 @@ export function JppPolyMapsAdmin() {
                           )}
                         </div>
                         <p className="text-[10px] font-medium text-slate-500 dark:text-white/40 mt-0.5">{t('services:coord_points_count', '{{count}} titik koordinat', { count: w.coordinates.length })}</p>
+{/* Show segments on this walkway */}
+                        {segments.filter(s => s.walkway_id === w.id).length > 0 && (
+                          <p className="text-[10px] font-medium text-amber-600 dark:text-amber-400 mt-0.5">
+                            {t('services:seg_count_label', '{{count}} segmen aktif', { count: segments.filter(s => s.walkway_id === w.id).length })}
+                          </p>
+                        )}
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
                         {/* Toggle block status */}
@@ -2275,6 +2353,67 @@ export function JppPolyMapsAdmin() {
         </div>
       )}
 
+      {/* Segment Picker Modal */}
+      <AnimatePresence>
+        {segPicker.walkwayId && (
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={cancelSegmentPick} className="absolute inset-0 bg-black/60 " />
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg max-h-[90vh] bg-white dark:bg-[#0f1015] border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-2xl overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  {segType === 'block'
+                    ? <Shield className="w-5 h-5 text-rose-500" />
+                    : <Umbrella className="w-5 h-5 text-emerald-500" />
+                  }
+                  <h3 className="font-bold text-lg text-slate-900 dark:text-white">
+                    {segType === 'block'
+                      ? t('services:seg_block_title', 'Sekat Segmen')
+                      : t('services:seg_cover_title', 'Tanda Segmen Berbumbung')
+                    }
+                  </h3>
+                </div>
+                <button onClick={cancelSegmentPick} className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/10 text-slate-400 dark:text-white/50">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-xs text-slate-500 dark:text-white/40 mb-3">
+                {segPicker.startIdx === null
+                  ? t('services:seg_click_first_hint', 'Klik nod MULA pada peta untuk pilih permulaan segmen.')
+                  : t('services:seg_click_second_hint', 'Klik nod AKHIR pada peta untuk melengkapkan segmen.')
+                }
+              </p>
+              <WalkwaySegmentMap
+                walkwayCoords={segPicker.coords}
+                segments={segments.filter(s => s.walkway_id === segPicker.walkwayId)}
+                startIdx={segPicker.startIdx}
+                onSetStartIdx={(idx) => {
+                  if (segPicker.startIdx === null) {
+                    // First click — set start
+                    setSegPicker({ ...segPicker, startIdx: idx });
+                  } else if (idx !== segPicker.startIdx) {
+                    // Second click — save
+                    const startIdx = Math.min(segPicker.startIdx, idx);
+                    const endIdx = Math.max(segPicker.startIdx, idx);
+                    confirmSaveSegment(startIdx, endIdx);
+                  }
+                }}
+                segType={segType}
+              />
+              <div className="mt-3">
+                <input
+                  type="text"
+                  value={segReason}
+                  onChange={e => setSegReason(e.target.value)}
+                  placeholder={t('services:seg_reason_placeholder', 'Sebab (pilihan) — cth: Tapak gerai karnival seminggu')}
+                  className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder:text-slate-400"
+                />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      
       {/* Building Modal */}
       <AnimatePresence>
         {showBuildingModal && (
