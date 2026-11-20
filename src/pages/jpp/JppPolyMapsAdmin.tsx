@@ -7,7 +7,7 @@ import 'leaflet/dist/leaflet.css';
 import { 
   Map, MapPin, Building2, Plus, Edit2, Trash2, 
   Search, RefreshCw, AlertCircle, Save, X, Navigation, UploadCloud, Image as ImageIcon,
-  Compass, LayoutGrid, List, Eye, ToggleLeft, ToggleRight, Camera, Sparkles, FileSpreadsheet, CheckCircle2
+  Compass, LayoutGrid, List, Eye, ToggleLeft, ToggleRight, Camera, Sparkles, FileSpreadsheet, CheckCircle, Shield, Umbrella
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { queryCache } from '@/lib/cache';
@@ -330,6 +330,11 @@ export function JppPolyMapsAdmin() {
   const [locations, setLocations] = useState<Location[]>([]);
   const [reports, setReports] = useState<MissingReport[]>([]);
   const [walkways, setWalkways] = useState<{ id: string; name: string; coordinates: [number, number][]; is_covered?: boolean; is_blocked?: boolean }[]>([]);
+  const [segments, setSegments] = useState<{ id: string; walkway_id: string; segment_name?: string | null; start_idx: number; end_idx: number; is_blocked: boolean; is_covered: boolean; reason?: string | null }[]>([]);
+  // Segment picking: two-click mode on a single walkway
+  const [segPicker, setSegPicker] = useState<{ walkwayId: string | null; coords: [number,number][]; startIdx: number | null }>({ walkwayId: null, coords: [], startIdx: null });
+  const [segReason, setSegReason] = useState('');
+  const [segType, setSegType] = useState<'block' | 'cover'>('block');
   const [drawingPoints, setDrawingPoints] = useState<[number, number][]>([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const [walkwayName, setWalkwayName] = useState('');
@@ -525,6 +530,7 @@ export function JppPolyMapsAdmin() {
             matric_no
           )
         `).order('created_at', { ascending: false }),
+        supabase.from('imaps_walkway_segments').select('*').order('created_at', { ascending: false }),
         supabase.from('imaps_walkways').select('*').order('created_at', { ascending: false }),
         supabase.from('imaps_360_hotspots').select('*').order('created_at', { ascending: true }),
         supabase.from('imaps_field_submissions').select('*').order('created_at', { ascending: false }),
@@ -576,6 +582,7 @@ export function JppPolyMapsAdmin() {
         is_blocked: w.is_blocked || false
       }));
       setWalkways(parsedWalkways);
+      if (!segsRes.error) setSegments(segsRes.data || []);
     } catch (error: any) {
       console.error('Error fetching PolyMaps data:', error);
       toast.error(t('services:failed_load_polymaps', 'Gagal memuat turun data PolyMaps'));
@@ -862,6 +869,62 @@ export function JppPolyMapsAdmin() {
       fetchData();
     } catch (err: any) {
       toast.error(t('services:failed_toggle_cover_walkway', 'Gagal menukar status bumbung laluan'));
+    }
+  };
+
+
+  // --- Segment CRUD (partial block/cover on existing walkways) ---
+  const openSegmentPicker = (walkwayId: string, type: 'block' | 'cover') => {
+    const w = walkways.find(x => x.id === walkwayId);
+    if (!w) return;
+    setSegType(type);
+    setSegReason('');
+    setSegPicker({ walkwayId, coords: w.coordinates, startIdx: null });
+  };
+
+  const cancelSegmentPick = () => {
+    setSegPicker({ walkwayId: null, coords: [], startIdx: null });
+    setSegReason('');
+  };
+
+  const saveSegment = async () => {
+    const { walkwayId, startIdx } = segPicker;
+    if (!walkwayId || startIdx === null) return;
+    // endIdx must be set by the map click handler via a second click
+    toast.error(t('services:seg_pick_both_nodes', 'Klik dua titik pada peta untuk pilih segmen.'));
+  };
+
+  const confirmSaveSegment = async (startIdx: number, endIdx: number) => {
+    const { walkwayId } = segPicker;
+    if (!walkwayId) return;
+    if (startIdx >= endIdx) { toast.error(t('services:seg_invalid', 'Indeks mula mesti kurang dari indeks akhir.')); return; }
+    try {
+      const { error } = await supabase.from('imaps_walkway_segments').insert([{
+        walkway_id: walkwayId,
+        start_idx: startIdx,
+        end_idx: endIdx,
+        is_blocked: segType === 'block',
+        is_covered: segType === 'cover',
+        reason: segReason || null,
+        created_by: (await supabase.auth.getUser()).data.user?.id,
+      }]);
+      if (error) throw error;
+      toast.success(t('services:seg_saved', 'Segmen disimpan!'));
+      cancelSegmentPick();
+      fetchData();
+    } catch (err: any) {
+      toast.error(t('services:seg_save_failed', 'Gagal menyimpan segmen.'));
+    }
+  };
+
+  const deleteSegment = async (id: string) => {
+    try {
+      const { error } = await supabase.from('imaps_walkway_segments').delete().eq('id', id);
+      if (error) throw error;
+      toast.success(t('services:seg_deleted', 'Segmen dipadam.'));
+      fetchData();
+    } catch (err: any) {
+      toast.error(t('services:seg_delete_failed', 'Gagal memadam segmen.'));
     }
   };
 
@@ -2180,6 +2243,21 @@ export function JppPolyMapsAdmin() {
                           title={w.is_covered ? t('services:change_to_uncovered', 'Tukar ke Tanpa Bumbung') : t('services:change_to_covered', 'Tukar ke Berbumbung')}
                         >
                           {t('services:roof_label', 'Bumbung')}
+                        </button>
+                        {/* Segment pickers */}
+                        <button
+                          onClick={() => openSegmentPicker(w.id, 'block')}
+                          className="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-wider transition-all"
+                          title={t('services:seg_block_title', 'Sekat sebahagian laluan')}
+                        >
+                          <Shield className="w-3 h-3 inline mr-0.5" /> {t('services:seg_block_short', 'Segmen Sekat')}
+                        </button>
+                        <button
+                          onClick={() => openSegmentPicker(w.id, 'cover')}
+                          className="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider transition-all"
+                          title={t('services:seg_cover_title', 'Tandakan sebahagian sebagai berbumbung')}
+                        >
+                          <Umbrella className="w-3 h-3 inline mr-0.5" /> {t('services:seg_cover_short', 'Segmen Bumbung')}
                         </button>
                         <button
                           onClick={() => deleteWalkway(w.id)}
