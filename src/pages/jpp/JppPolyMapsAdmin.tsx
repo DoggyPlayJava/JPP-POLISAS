@@ -1130,11 +1130,11 @@ export function JppPolyMapsAdmin() {
 
       {/* Tabs & Search */}
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-100 dark:bg-white/5 p-2 rounded-2xl border border-slate-200 dark:border-white/10">
-        <div className="flex items-center gap-1 w-full md:w-auto p-1 bg-slate-200/80 dark:bg-black/20 rounded-xl">
+        <div className="flex items-center gap-1 w-full md:w-auto p-1 bg-slate-200/80 dark:bg-black/20 rounded-xl overflow-x-auto max-w-full">
           <button
             onClick={() => setActiveTab('buildings')}
             className={cn(
-              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all",
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all",
               activeTab === 'buildings' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
             )}
           >
@@ -1143,7 +1143,7 @@ export function JppPolyMapsAdmin() {
           <button
             onClick={() => setActiveTab('locations')}
             className={cn(
-              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all",
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all",
               activeTab === 'locations' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
             )}
           >
@@ -1152,7 +1152,7 @@ export function JppPolyMapsAdmin() {
           <button
             onClick={() => setActiveTab('submissions')}
             className={cn(
-              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
               activeTab === 'submissions' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
             )}
           >
@@ -1166,7 +1166,7 @@ export function JppPolyMapsAdmin() {
           <button
             onClick={() => setActiveTab('reports')}
             className={cn(
-              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
               activeTab === 'reports' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
             )}
           >
@@ -1180,7 +1180,7 @@ export function JppPolyMapsAdmin() {
           <button
             onClick={() => setActiveTab('walkways')}
             className={cn(
-              "flex-1 md:flex-none flex items-center justify-center gap-2 px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
               activeTab === 'walkways' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
             )}
           >
