@@ -601,7 +601,6 @@ export function JppPolyMapsAdmin() {
             matric_no
           )
         `).order('created_at', { ascending: false }),
-        supabase.from('imaps_walkway_segments').select('*').order('created_at', { ascending: false }),
         supabase.from('imaps_walkways').select('*').order('created_at', { ascending: false }),
         supabase.from('imaps_walkway_segments').select('*').order('created_at', { ascending: false }),
         supabase.from('imaps_360_hotspots').select('*').order('created_at', { ascending: true }),
