@@ -88,3 +88,7 @@ export function normalizePendingPins<T extends Record<string, any>>(pins: T[]): 
     ...(typeof pin.room_code === 'string' ? { room_code: pin.room_code.trim().toUpperCase() } : {}),
   }));
 }
+
+export function canMarkSubmissionApproved(errors: Array<unknown | null | undefined>): boolean {
+  return errors.every((error) => !error);
+}

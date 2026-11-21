@@ -34,7 +34,7 @@ import {
   type PolyMaps360HotspotDraft,
 } from '@/lib/polyMapsSmartEntry';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { buildPolyMaps360Directory, filterPolyMaps360Directory, normalizePendingPins, type DirectoryStatus } from '@/lib/polymaps360Directory';
+import { buildPolyMaps360Directory, canMarkSubmissionApproved, filterPolyMaps360Directory, normalizePendingPins, type DirectoryStatus } from '@/lib/polymaps360Directory';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -708,59 +708,37 @@ export function JppPolyMapsAdmin() {
     const toastId = toast.loading(t('services:polymaps_sub_approving_toast', 'Menerbitkan 360° & semua pin bilik sukarelawan...'));
     try {
       const targetBuildingId = sub.building_id || buildings[0]?.id;
-      const matchedBuilding = buildings.find(b => b.id === targetBuildingId);
+      if (!targetBuildingId) throw new Error('Bangunan sasaran submission tiada.');
+      const matchedBuilding = buildings.find((b) => b.id === targetBuildingId);
+      if (!matchedBuilding) throw new Error('Bangunan sasaran submission tidak ditemui.');
+
+      const pins = Array.isArray(sub.hotspots_json) ? sub.hotspots_json : [];
+      const roomPins = pins.filter((pin) => pin.pin_type === 'room' && (pin.room_code || pin.label));
+      const roomCodeToLocationId = new Map<string, string>();
+      const updates: Array<Promise<{ error: any }>> = [];
+      const newLocationsPayload: Array<Record<string, unknown>> = [];
 
       if (sub.location_id) {
-        await supabase
-          .from('imaps_locations')
-          .update({
-            panorama_360_url: sub.panorama_360_url,
-            is_360_enabled: true,
-          })
-          .eq('id', sub.location_id);
-      } else if (targetBuildingId) {
-        await supabase
-          .from('imaps_buildings')
-          .update({
-            panorama_360_url: sub.panorama_360_url,
-            is_360_enabled: true,
-          })
-          .eq('id', targetBuildingId);
+        updates.push(supabase.from('imaps_locations').update({ panorama_360_url: sub.panorama_360_url, is_360_enabled: true }).eq('id', sub.location_id));
+      } else {
+        updates.push(supabase.from('imaps_buildings').update({ panorama_360_url: sub.panorama_360_url, is_360_enabled: true }).eq('id', targetBuildingId));
       }
-
-      const pins = Array.isArray(sub.hotspots_json)
-        ? sub.hotspots_json
-        : Array.isArray((sub as any).hotspots_payload)
-        ? (sub as any).hotspots_payload
-        : [];
-      const roomPins = pins.filter(p => p.pin_type === 'room' && (p.room_code || p.label));
-
-      const updatePromises: Promise<unknown>[] = [];
-      const newLocationsPayload: Array<Record<string, unknown>> = [];
 
       for (const pin of roomPins) {
         const codeText = (pin.room_code || pin.label).trim();
-        const inferred = inferRoomMetadata(codeText, matchedBuilding?.code, pin.yaw, currentLang);
-        const existingLoc = locations.find(
-          l => l.building_id === targetBuildingId && l.room_code.trim().toLowerCase() === codeText.toLowerCase()
-        );
-
+        const inferred = inferRoomMetadata(codeText, matchedBuilding.code, pin.yaw, currentLang);
+        const existingLoc = locations.find((location) => location.building_id === targetBuildingId && location.room_code.trim().toLowerCase() === codeText.toLowerCase());
         if (existingLoc) {
-          updatePromises.push(
-            Promise.resolve(
-              supabase
-                .from('imaps_locations')
-                .update({
-                  panorama_360_url: sub.panorama_360_url,
-                  is_360_enabled: true,
-                  target_yaw: pin.yaw,
-                  target_pitch: pin.pitch,
-                  direction_text: pin.description || existingLoc.direction_text || inferred.direction_text,
-                })
-                .eq('id', existingLoc.id)
-            )
-          );
-        } else if (targetBuildingId) {
+          roomCodeToLocationId.set(codeText.toLowerCase(), existingLoc.id);
+          updates.push(supabase.from('imaps_locations').update({
+            panorama_360_url: sub.panorama_360_url,
+            is_360_enabled: true,
+            target_yaw: pin.yaw,
+            target_pitch: pin.pitch,
+            floor_level: pin.floor_level || existingLoc.floor_level || inferred.floor_level,
+            direction_text: pin.description || existingLoc.direction_text || inferred.direction_text,
+          }).eq('id', existingLoc.id));
+        } else {
           newLocationsPayload.push({
             building_id: targetBuildingId,
             room_code: codeText,
@@ -775,59 +753,65 @@ export function JppPolyMapsAdmin() {
         }
       }
 
-      await Promise.all([
-        Promise.all(updatePromises),
-        newLocationsPayload.length > 0
-          ? supabase.from('imaps_locations').insert(newLocationsPayload)
-          : Promise.resolve(),
-      ]);
+      const updateResults = await Promise.all(updates);
+      const failures = updateResults.map((result) => result.error);
+      let insertedLocations: Array<{ id: string; room_code: string }> = [];
+      if (newLocationsPayload.length) {
+        const { data, error } = await supabase.from('imaps_locations').insert(newLocationsPayload).select('id, room_code');
+        failures.push(error);
+        insertedLocations = data || [];
+      }
+      for (const row of insertedLocations) roomCodeToLocationId.set(row.room_code.trim().toLowerCase(), row.id);
 
-      if (pins.length > 0) {
-        await supabase.from('imaps_360_hotspots').delete().eq('panorama_url', sub.panorama_360_url);
-        const hsPayload = pins.map(p => ({
-          panorama_url: sub.panorama_360_url,
-          building_id: targetBuildingId || null,
-          location_id: sub.location_id || null,
-          pin_type: p.pin_type,
-          label: p.label,
-          room_code: p.room_code || null,
-          floor_level: p.floor_level || sub.floor_level || '1',
-          description: p.description || null,
-          pitch: p.pitch,
-          yaw: p.yaw,
-          target_panorama_url: p.target_panorama_url || null,
-          created_by: sub.contributor_id || user?.id || null,
-        }));
-        await supabase.from('imaps_360_hotspots').insert(hsPayload);
+      if (pins.length) {
+        const { error: deleteError } = await supabase.from('imaps_360_hotspots').delete().eq('panorama_url', sub.panorama_360_url);
+        failures.push(deleteError);
+        if (deleteError) throw deleteError;
+        const hsPayload = pins.map((pin) => {
+          const key = (pin.room_code || pin.label || '').trim().toLowerCase();
+          return {
+            panorama_url: sub.panorama_360_url,
+            building_id: targetBuildingId,
+            location_id: roomCodeToLocationId.get(key) || pin.location_id || sub.location_id || null,
+            pin_type: pin.pin_type,
+            label: pin.label,
+            room_code: pin.room_code || null,
+            floor_level: pin.floor_level || sub.floor_level || '1',
+            description: pin.description || null,
+            pitch: pin.pitch,
+            yaw: pin.yaw,
+            target_panorama_url: pin.target_panorama_url || null,
+            created_by: sub.contributor_id || user?.id || null,
+          };
+        });
+        const { error: hotspotError } = await supabase.from('imaps_360_hotspots').insert(hsPayload);
+        failures.push(hotspotError);
       }
 
-      await supabase
-        .from('imaps_field_submissions')
-        .update({
-          status: 'approved',
-          reviewed_by: user?.id || null,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq('id', sub.id);
+      if (!canMarkSubmissionApproved(failures)) {
+        const failed = failures.find(Boolean);
+        throw failed || new Error('Gagal menerbitkan panorama atau pin.');
+      }
+
+      const { error: statusError } = await supabase.from('imaps_field_submissions').update({ status: 'approved', reviewed_by: user?.id || null, reviewed_at: new Date().toISOString() }).eq('id', sub.id).eq('status', 'pending');
+      if (statusError) throw statusError;
 
       if (sub.contributor_id) {
-        await supabase.from('notifications').insert({
+        const { error: notificationError } = await supabase.from('notifications').insert({
           user_id: sub.contributor_id,
           title: t('services:polymaps_sub_notif_title', '🎥 Sumbangan 360° PolyMaps Diluluskan!'),
           message: t('services:polymaps_sub_notif_message', 'Rakaman 360° dan {{count}} pin pintu bilik sumbangan anda telah diterbitkan ke dalam PolyMaps. Terima kasih!', { count: pins.length }),
-          type: 'MAPS_REPORT_APPROVED',
-          module: 'AKADEMIK',
-          link: '/polymaps',
+          type: 'MAPS_REPORT_APPROVED', module: 'AKADEMIK', link: '/polymaps',
         });
+        if (notificationError) console.warn('Submission approved; contributor notification failed:', notificationError.message);
       }
-
       toast.success(t('services:polymaps_sub_approved_toast', 'Sumbangan 360° & pin bilik berjaya diluluskan dan diterbitkan!'), { id: toastId });
       fetchData();
     } catch (err: any) {
       console.error('Gagal meluluskan sumbangan 360:', err);
       toast.error(err.message || t('services:polymaps_sub_approve_failed', 'Gagal menerbitkan sumbangan 360°.'), { id: toastId });
     } finally {
-      setIsProcessingReport(prev => ({ ...prev, [sub.id]: false }));
+      setIsProcessingReport((prev) => ({ ...prev, [sub.id]: false }));
     }
   };
 
