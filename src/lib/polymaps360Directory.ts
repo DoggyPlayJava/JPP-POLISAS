@@ -80,3 +80,11 @@ export function filterPolyMaps360Directory<T extends DirectoryEntry>(entries: T[
   return entries.filter((entry) => (status === 'all' || entry.status === status)
     && (!needle || `${entry.label || ''} ${entry.buildingId || ''} ${entry.source}`.toLocaleLowerCase().includes(needle)));
 }
+
+export function normalizePendingPins<T extends Record<string, any>>(pins: T[]): T[] {
+  return pins.map((pin) => ({
+    ...pin,
+    label: typeof pin.label === 'string' ? pin.label.trim() : pin.label,
+    ...(typeof pin.room_code === 'string' ? { room_code: pin.room_code.trim().toUpperCase() } : {}),
+  }));
+}

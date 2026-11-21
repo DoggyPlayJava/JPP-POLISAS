@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPolyMaps360Directory, filterPolyMaps360Directory, normalizeStorageObjectPath } from '../polymaps360Directory';
+import { buildPolyMaps360Directory, filterPolyMaps360Directory, normalizePendingPins, normalizeStorageObjectPath } from '../polymaps360Directory';
 
 describe('PolyMaps 360 directory resolver', () => {
   it('normalizes public storage URLs and ignores viewer fragments', () => {
@@ -15,6 +15,11 @@ describe('PolyMaps 360 directory resolver', () => {
     ] as const;
     expect(filterPolyMaps360Directory([...entries], 'unused', '').map((entry) => entry.id)).toEqual(['b']);
     expect(filterPolyMaps360Directory([...entries], 'all', 'blok').map((entry) => entry.id)).toEqual(['a']);
+  });
+
+  it('normalizes pending pin edits without losing yaw, pitch, or room code', () => {
+    const pins = normalizePendingPins([{ label: ' B101 ', room_code: ' b101 ', yaw: 42, pitch: -3 }, { label: 'Door', yaw: 8, pitch: 2 }]);
+    expect(pins).toEqual([{ label: 'B101', room_code: 'B101', yaw: 42, pitch: -3 }, { label: 'Door', yaw: 8, pitch: 2 }]);
   });
 
   it('keeps shared panoramas referenced and maps pending submissions as pending', () => {

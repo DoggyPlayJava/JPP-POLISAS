@@ -34,7 +34,7 @@ import {
   type PolyMaps360HotspotDraft,
 } from '@/lib/polyMapsSmartEntry';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { buildPolyMaps360Directory, filterPolyMaps360Directory, type DirectoryStatus } from '@/lib/polymaps360Directory';
+import { buildPolyMaps360Directory, filterPolyMaps360Directory, normalizePendingPins, type DirectoryStatus } from '@/lib/polymaps360Directory';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -444,6 +444,10 @@ export function JppPolyMapsAdmin() {
   const [directoryError, setDirectoryError] = useState<string | null>(null);
   const [directoryFilter, setDirectoryFilter] = useState<DirectoryStatus | 'all'>('all');
   const [directorySearch, setDirectorySearch] = useState('');
+  const [editingSubmission, setEditingSubmission] = useState<FieldSubmission | null>(null);
+  const [draftSubmissionPins, setDraftSubmissionPins] = useState<PolyMaps360HotspotDraft[]>([]);
+  const [savingSubmissionPins, setSavingSubmissionPins] = useState(false);
+  const [directoryTargetBuildingId, setDirectoryTargetBuildingId] = useState('');
   const [studioConfig, setStudioConfig] = useState<{
     isOpen: boolean;
     buildingId?: string;
@@ -825,6 +829,41 @@ export function JppPolyMapsAdmin() {
     } finally {
       setIsProcessingReport(prev => ({ ...prev, [sub.id]: false }));
     }
+  };
+
+  const savePendingSubmissionPins = async () => {
+    if (!editingSubmission || editingSubmission.status !== 'pending') return;
+    setSavingSubmissionPins(true);
+    try {
+      const pins = normalizePendingPins(draftSubmissionPins) as PolyMaps360HotspotDraft[];
+      const { error } = await supabase.from('imaps_field_submissions').update({ hotspots_json: pins, hotspots_payload: pins }).eq('id', editingSubmission.id).eq('status', 'pending');
+      if (error) throw error;
+      setFieldSubmissions((prev) => prev.map((item) => item.id === editingSubmission.id ? { ...item, hotspots_json: pins } : item));
+      setEditingSubmission(null);
+      toast.success('Pin dikemas kini. Submission masih menunggu kelulusan.');
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal menyimpan pin submission.');
+    } finally {
+      setSavingSubmissionPins(false);
+    }
+  };
+
+  const applyPanoramaToBuilding = async (entry: { panoramaUrl: string; buildingId?: string | null; label?: string | null }) => {
+    const targetBuildingId = entry.buildingId || directoryTargetBuildingId;
+    if (!targetBuildingId || !entry.panoramaUrl || entry.status === 'pending') return;
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Guna panorama untuk bangunan?',
+      description: `Panorama ${entry.label || ''} akan jadi paparan aktif bangunan terpilih. Tindakan ini tidak meluluskan submission.`,
+      confirmLabel: 'Guna panorama',
+      variant: 'default',
+      onConfirm: async () => {
+        const { error } = await supabase.from('imaps_buildings').update({ panorama_360_url: entry.panoramaUrl, is_360_enabled: true }).eq('id', targetBuildingId);
+        if (error) { toast.error(error.message); return; }
+        toast.success('Panorama bangunan dikemas kini.');
+        fetchData();
+      },
+    });
   };
 
   const rejectFieldSubmission = async (subId: string) => {
@@ -2004,7 +2043,10 @@ export function JppPolyMapsAdmin() {
                     <h2 className="font-black text-lg">360 Directory</h2>
                     <p className="text-xs text-slate-500">{filtered.length} / {entries.length} gambar</p>
                   </div>
-                  <input value={directorySearch} onChange={(e) => setDirectorySearch(e.target.value)} placeholder="Cari nama, bilik, bangunan..." className="w-full sm:max-w-xs rounded-xl border border-slate-200 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input value={directorySearch} onChange={(e) => setDirectorySearch(e.target.value)} placeholder="Cari nama, bilik, bangunan..." className="w-full sm:max-w-xs rounded-xl border border-slate-200 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+                    <select value={directoryTargetBuildingId} onChange={(e) => setDirectoryTargetBuildingId(e.target.value)} aria-label="Pilih bangunan sasaran panorama" className="w-full sm:max-w-xs rounded-xl border border-slate-200 dark:border-white/10 bg-white px-3 py-2 text-sm dark:bg-slate-900"><option value="">Pilih bangunan sasaran...</option>{buildings.map((building) => <option key={building.id} value={building.id}>{building.code} · {building.name}</option>)}</select>
+                  </div>
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter status panorama">
                   {(['all', 'active', 'pending', 'approved', 'rejected', 'disabled', 'unused'] as const).map((status) => (
@@ -2030,10 +2072,37 @@ export function JppPolyMapsAdmin() {
                         <div className="space-y-2 p-3">
                           <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-bold">{entry.label || entry.id}</p><p className="truncate text-xs text-slate-500">{building ? `${building.code} · ${building.name}` : entry.source}</p></div><span className={cn('shrink-0 rounded-full px-2 py-1 text-[10px] font-black uppercase', statusClass)}>{statusLabels[entry.status]}</span></div>
                           <div className="flex justify-between text-xs text-slate-500"><span>{entry.pinCount} pin</span><span>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ''}</span></div>
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            {entry.source === 'submission' && entry.status === 'pending' && (() => {
+                              const submission = fieldSubmissions.find((item) => item.id === entry.id.replace('submission:', ''));
+                              return submission ? <button type="button" onClick={() => { setEditingSubmission(submission); setDraftSubmissionPins([...submission.hotspots_json]); }} className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white">Edit pin (pending)</button> : null;
+                            })()}
+                            {entry.status !== 'pending' && (entry.buildingId || directoryTargetBuildingId) && <button type="button" onClick={() => applyPanoramaToBuilding(entry)} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Guna untuk bangunan</button>}
+                          </div>
                         </div>
                       </article>
                     );
                   })}
+                </div>
+              )}
+              {editingSubmission && (
+                <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/70 p-3" role="dialog" aria-modal="true" aria-label="Edit pin submission pending">
+                  <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4 dark:bg-slate-900">
+                    <div className="mb-4 flex items-center justify-between gap-2"><h3 className="font-black">Edit pin submission · kekal pending</h3><button type="button" onClick={() => setEditingSubmission(null)} aria-label="Tutup"><X className="h-5 w-5" /></button></div>
+                    <div className="space-y-3">
+                      {draftSubmissionPins.map((pin, index) => (
+                        <div key={`${index}-${pin.yaw}-${pin.pitch}`} className="grid grid-cols-2 gap-2 rounded-xl border p-3">
+                          <label className="text-xs font-semibold">Kod/nama bilik<input value={pin.room_code || pin.label || ''} onChange={(e) => setDraftSubmissionPins((prev) => prev.map((item, i) => i === index ? { ...item, room_code: e.target.value, label: e.target.value } : item))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-black/20" /></label>
+                          <label className="text-xs font-semibold">Jenis pin<select value={pin.pin_type} onChange={(e) => setDraftSubmissionPins((prev) => prev.map((item, i) => i === index ? { ...item, pin_type: e.target.value as any } : item))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-black/20"><option value="room">Bilik</option><option value="door">Pintu</option><option value="info">Info</option></select></label>
+                          <label className="text-xs font-semibold">Yaw<input type="number" step="0.01" value={pin.yaw} onChange={(e) => setDraftSubmissionPins((prev) => prev.map((item, i) => i === index ? { ...item, yaw: Number(e.target.value) } : item))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-black/20" /></label>
+                          <label className="text-xs font-semibold">Pitch<input type="number" step="0.01" value={pin.pitch} onChange={(e) => setDraftSubmissionPins((prev) => prev.map((item, i) => i === index ? { ...item, pitch: Number(e.target.value) } : item))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-black/20" /></label>
+                          <button type="button" onClick={() => setDraftSubmissionPins((prev) => prev.filter((_, i) => i !== index))} className="justify-self-start rounded-lg border border-rose-300 px-3 py-1 text-xs font-bold text-rose-600">Buang pin</button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => setDraftSubmissionPins((prev) => [...prev, { pin_type: 'room', label: '', room_code: '', yaw: 0, pitch: 0 } as PolyMaps360HotspotDraft])} className="rounded-lg border px-3 py-2 text-xs font-bold">Tambah pin</button>
+                    </div>
+                    <div className="mt-4 flex justify-end gap-2"><button type="button" onClick={() => setEditingSubmission(null)} className="rounded-lg border px-4 py-2 text-sm">Batal</button><button type="button" onClick={savePendingSubmissionPins} disabled={savingSubmissionPins} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{savingSubmissionPins ? 'Simpan...' : 'Simpan sebagai pending'}</button></div>
+                  </div>
                 </div>
               )}
             </section>
