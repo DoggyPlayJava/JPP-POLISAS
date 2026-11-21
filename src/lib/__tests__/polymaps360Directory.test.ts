@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPolyMaps360Directory, filterPolyMaps360Directory, normalizePendingPins, normalizeStorageObjectPath, canMarkSubmissionApproved } from '../polymaps360Directory';
+import { buildPolyMaps360Directory, filterPolyMaps360Directory, normalizePendingPins, normalizeStorageObjectPath, canMarkSubmissionApproved, canApplyPanoramaToBuilding } from '../polymaps360Directory';
 
 describe('PolyMaps 360 directory resolver', () => {
   it('normalizes public storage URLs and ignores viewer fragments', () => {
@@ -25,6 +25,11 @@ describe('PolyMaps 360 directory resolver', () => {
   it('blocks approval status when any publication write failed', () => {
     expect(canMarkSubmissionApproved([null, new Error('insert failed')])).toBe(false);
     expect(canMarkSubmissionApproved([null, null, null])).toBe(true);
+  });
+
+  it('never allows disabled external backup panorama to be reactivated', () => {
+    expect(canApplyPanoramaToBuilding({ source: 'disabled', status: 'disabled' })).toBe(false);
+    expect(canApplyPanoramaToBuilding({ source: 'storage', status: 'unused' })).toBe(true);
   });
 
   it('keeps shared panoramas referenced and maps pending submissions as pending', () => {

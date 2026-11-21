@@ -92,3 +92,7 @@ export function normalizePendingPins<T extends Record<string, any>>(pins: T[]): 
 export function canMarkSubmissionApproved(errors: Array<unknown | null | undefined>): boolean {
   return errors.every((error) => !error);
 }
+
+export function canApplyPanoramaToBuilding(entry: { source: string; status: string }): boolean {
+  return entry.source !== 'disabled' && entry.status !== 'disabled' && entry.status !== 'pending';
+}

@@ -3705,7 +3705,8 @@ export function PolyMapsPage() {
             hotspotsByPanorama[activeBuilding.panorama_360_url]) ||
           []
         }
-        isAdminMode={isAdmin}
+        // This entry point is always a volunteer submission, even for signed-in admins.
+        isAdminMode={false}
         currentUserId={user?.id}
         currentUserName={profile?.full_name || 'Sukarelawan Kampus'}
         onSaved={() => {

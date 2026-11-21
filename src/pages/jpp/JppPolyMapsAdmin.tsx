@@ -34,7 +34,7 @@ import {
   type PolyMaps360HotspotDraft,
 } from '@/lib/polyMapsSmartEntry';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { buildPolyMaps360Directory, canMarkSubmissionApproved, filterPolyMaps360Directory, normalizePendingPins, type DirectoryStatus } from '@/lib/polymaps360Directory';
+import { buildPolyMaps360Directory, canApplyPanoramaToBuilding, canMarkSubmissionApproved, filterPolyMaps360Directory, normalizePendingPins, type DirectoryStatus } from '@/lib/polymaps360Directory';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -834,7 +834,7 @@ export function JppPolyMapsAdmin() {
 
   const applyPanoramaToBuilding = async (entry: { panoramaUrl: string; buildingId?: string | null; label?: string | null }) => {
     const targetBuildingId = entry.buildingId || directoryTargetBuildingId;
-    if (!targetBuildingId || !entry.panoramaUrl || entry.status === 'pending') return;
+    if (!targetBuildingId || !entry.panoramaUrl || !canApplyPanoramaToBuilding(entry)) return;
     setConfirmConfig({
       isOpen: true,
       title: 'Guna panorama untuk bangunan?',
@@ -2061,7 +2061,7 @@ export function JppPolyMapsAdmin() {
                               const submission = fieldSubmissions.find((item) => item.id === entry.id.replace('submission:', ''));
                               return submission ? <button type="button" onClick={() => { setEditingSubmission(submission); setDraftSubmissionPins([...submission.hotspots_json]); }} className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white">Edit pin (pending)</button> : null;
                             })()}
-                            {entry.status !== 'pending' && (entry.buildingId || directoryTargetBuildingId) && <button type="button" onClick={() => applyPanoramaToBuilding(entry)} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Guna untuk bangunan</button>}
+                            {canApplyPanoramaToBuilding(entry) && (entry.buildingId || directoryTargetBuildingId) && <button type="button" onClick={() => applyPanoramaToBuilding(entry)} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Guna untuk bangunan</button>}
                           </div>
                         </div>
                       </article>
