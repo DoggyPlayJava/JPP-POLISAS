@@ -74,3 +74,9 @@ export function buildPolyMaps360Directory(
 
   return entries;
 }
+
+export function filterPolyMaps360Directory<T extends DirectoryEntry>(entries: T[], status: DirectoryStatus | 'all', query: string): T[] {
+  const needle = query.trim().toLocaleLowerCase();
+  return entries.filter((entry) => (status === 'all' || entry.status === status)
+    && (!needle || `${entry.label || ''} ${entry.buildingId || ''} ${entry.source}`.toLocaleLowerCase().includes(needle)));
+}

@@ -1,11 +1,20 @@
 import { describe, expect, it } from 'vitest';
-import { buildPolyMaps360Directory, normalizeStorageObjectPath } from '../polymaps360Directory';
+import { buildPolyMaps360Directory, filterPolyMaps360Directory, normalizeStorageObjectPath } from '../polymaps360Directory';
 
 describe('PolyMaps 360 directory resolver', () => {
   it('normalizes public storage URLs and ignores viewer fragments', () => {
     expect(normalizeStorageObjectPath('https://api.example/storage/v1/object/public/imaps_assets/polymaps/pano.jpg#haov=230'))
       .toBe('polymaps/pano.jpg');
     expect(normalizeStorageObjectPath('not a url')).toBeNull();
+  });
+
+  it('filters directory by status and query', () => {
+    const entries = [
+      { id: 'a', status: 'active', label: 'Blok A', source: 'building', panoramaUrl: 'a.jpg', pinCount: 0 },
+      { id: 'b', status: 'unused', label: 'upload-b.jpg', source: 'storage', panoramaUrl: 'b.jpg', pinCount: 0 },
+    ] as const;
+    expect(filterPolyMaps360Directory([...entries], 'unused', '').map((entry) => entry.id)).toEqual(['b']);
+    expect(filterPolyMaps360Directory([...entries], 'all', 'blok').map((entry) => entry.id)).toEqual(['a']);
   });
 
   it('keeps shared panoramas referenced and maps pending submissions as pending', () => {

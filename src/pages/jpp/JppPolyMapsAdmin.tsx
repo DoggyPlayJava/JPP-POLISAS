@@ -34,6 +34,7 @@ import {
   type PolyMaps360HotspotDraft,
 } from '@/lib/polyMapsSmartEntry';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { buildPolyMaps360Directory, filterPolyMaps360Directory, type DirectoryStatus } from '@/lib/polymaps360Directory';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -396,7 +397,7 @@ interface MissingReport {
 export function JppPolyMapsAdmin() {
   const { t, i18n } = useTranslation(['services', 'jpp', 'common']);
   const currentLang: 'en' | 'ms' = i18n.language?.startsWith('en') ? 'en' : 'ms';
-  const [activeTab, setActiveTab] = useState<'buildings' | 'locations' | 'submissions' | 'reports' | 'walkways'>('buildings');
+  const [activeTab, setActiveTab] = useState<'buildings' | 'locations' | '360directory' | 'submissions' | 'reports' | 'walkways'>('buildings');
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [reports, setReports] = useState<MissingReport[]>([]);
@@ -438,6 +439,11 @@ export function JppPolyMapsAdmin() {
   // Studio 360° & Pin + Import Pukal Pintar + Sumbangan Sukarelawan State
   const [hotspotsByPanorama, setHotspotsByPanorama] = useState<Record<string, PolyMaps360HotspotDraft[]>>({});
   const [fieldSubmissions, setFieldSubmissions] = useState<FieldSubmission[]>([]);
+  const [storageObjects, setStorageObjects] = useState<any[]>([]);
+  const [disabled360Rows, setDisabled360Rows] = useState<any[]>([]);
+  const [directoryError, setDirectoryError] = useState<string | null>(null);
+  const [directoryFilter, setDirectoryFilter] = useState<DirectoryStatus | 'all'>('all');
+  const [directorySearch, setDirectorySearch] = useState('');
   const [studioConfig, setStudioConfig] = useState<{
     isOpen: boolean;
     buildingId?: string;
@@ -643,6 +649,37 @@ export function JppPolyMapsAdmin() {
             hotspots_json: Array.isArray(item.hotspots_json) ? item.hotspots_json : [],
           }))
         );
+      }
+
+      // Storage inventory + reversible GitHub-disabled backup feed the 360 directory.
+      setDirectoryError(null);
+      const [disabledRes, firstPage] = await Promise.all([
+        supabase.from('_backup_github_360_disabled_20261121').select('*').order('backed_up_at', { ascending: false }),
+        supabase.storage.from('imaps_assets').list('polymaps', { limit: 100, offset: 0, sortBy: { column: 'created_at', order: 'desc' } }),
+      ]);
+      if (disabledRes.error) setDirectoryError(`Disabled backup: ${disabledRes.error.message}`);
+      else setDisabled360Rows(disabledRes.data || []);
+      if (firstPage.error) {
+        setDirectoryError((prev) => [prev, `Storage inventory: ${firstPage.error.message}`].filter(Boolean).join(' | '));
+        setStorageObjects([]);
+      } else {
+        const objects = [...(firstPage.data || [])];
+        let offset = objects.length;
+        while ((firstPage.data || []).length === 100) {
+          const { data, error } = await supabase.storage.from('imaps_assets').list('polymaps', { limit: 100, offset, sortBy: { column: 'created_at', order: 'desc' } });
+          if (error) {
+            setDirectoryError((prev) => [prev, `Storage inventory: ${error.message}`].filter(Boolean).join(' | '));
+            break;
+          }
+          objects.push(...(data || []));
+          offset += (data || []).length;
+          if ((data || []).length < 100) break;
+        }
+        setStorageObjects(objects.map((item: any) => ({
+          ...item,
+          name: `polymaps/${item.name}`,
+          publicUrl: supabase.storage.from('imaps_assets').getPublicUrl(`polymaps/${item.name}`).data.publicUrl,
+        })));
       }
       
       const parsedWalkways = (walkwaysRes.data || []).map((w: any) => ({
@@ -1298,6 +1335,15 @@ export function JppPolyMapsAdmin() {
             )}
           </button>
           <button
+            onClick={() => setActiveTab('360directory')}
+            className={cn(
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all",
+              activeTab === '360directory' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
+            )}
+          >
+            <Compass className="w-4 h-4" /> 360 Directory
+          </button>
+          <button
             onClick={() => setActiveTab('reports')}
             className={cn(
               "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
@@ -1943,6 +1989,56 @@ export function JppPolyMapsAdmin() {
             </div>
           )}
         </div>
+      ) : activeTab === '360directory' ? (
+        (() => {
+          const entries = buildPolyMaps360Directory(buildings, locations, fieldSubmissions, Object.values(hotspotsByPanorama).flat(), storageObjects, disabled360Rows);
+          const filtered = filterPolyMaps360Directory(entries, directoryFilter, directorySearch);
+          const statusLabels: Record<DirectoryStatus | 'all', string> = {
+            all: 'Semua', active: 'Aktif', pending: 'Menunggu', approved: 'Diluluskan', rejected: 'Ditolak', disabled: 'Disabled', unused: 'Belum digunakan',
+          };
+          return (
+            <section className="space-y-4" aria-label="PolyMaps 360 Directory">
+              <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="font-black text-lg">360 Directory</h2>
+                    <p className="text-xs text-slate-500">{filtered.length} / {entries.length} gambar</p>
+                  </div>
+                  <input value={directorySearch} onChange={(e) => setDirectorySearch(e.target.value)} placeholder="Cari nama, bilik, bangunan..." className="w-full sm:max-w-xs rounded-xl border border-slate-200 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter status panorama">
+                  {(['all', 'active', 'pending', 'approved', 'rejected', 'disabled', 'unused'] as const).map((status) => (
+                    <button key={status} type="button" onClick={() => setDirectoryFilter(status)} aria-pressed={directoryFilter === status} className={cn('shrink-0 rounded-full px-3 py-1.5 text-xs font-bold', directoryFilter === status ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-white/10')}>
+                      {statusLabels[status]} ({entries.filter((entry) => status === 'all' || entry.status === status).length})
+                    </button>
+                  ))}
+                </div>
+                {directoryError && <p role="alert" className="text-sm text-amber-700 dark:text-amber-300">Sebahagian senarai mungkin tak lengkap: {directoryError}</p>}
+              </div>
+              {filtered.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">Tiada gambar untuk filter ini.</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {filtered.map((entry) => {
+                    const building = buildings.find((item) => item.id === entry.buildingId);
+                    const statusClass = entry.status === 'active' || entry.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : entry.status === 'pending' ? 'bg-amber-100 text-amber-800' : entry.status === 'unused' ? 'bg-slate-200 text-slate-700' : 'bg-rose-100 text-rose-800';
+                    return (
+                      <article key={entry.id} className="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03]">
+                        <button type="button" onClick={() => { setPreview360Url(entry.panoramaUrl); setPreview360Title(entry.label || building?.name || '360 panorama'); setPreview360Hotspots(hotspotsByPanorama[entry.panoramaUrl] || []); }} className="block w-full text-left" aria-label={`Pratonton ${entry.label || entry.id}`}>
+                          {entry.panoramaUrl ? <img src={entry.panoramaUrl.split('#')[0]} alt={entry.label || 'Panorama 360'} loading="lazy" className="h-40 w-full object-cover bg-slate-100" /> : <div className="h-40 flex items-center justify-center bg-slate-100 text-sm text-slate-500">Tiada URL preview</div>}
+                        </button>
+                        <div className="space-y-2 p-3">
+                          <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-bold">{entry.label || entry.id}</p><p className="truncate text-xs text-slate-500">{building ? `${building.code} · ${building.name}` : entry.source}</p></div><span className={cn('shrink-0 rounded-full px-2 py-1 text-[10px] font-black uppercase', statusClass)}>{statusLabels[entry.status]}</span></div>
+                          <div className="flex justify-between text-xs text-slate-500"><span>{entry.pinCount} pin</span><span>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ''}</span></div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+            </section>
+          );
+        })()
       ) : activeTab === 'submissions' ? (
         <div className="space-y-6">
           {/* Sumbangan 360° & Pin Pintu Bilik Daripada Sukarelawan */}
