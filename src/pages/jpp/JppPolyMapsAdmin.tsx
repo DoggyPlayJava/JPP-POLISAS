@@ -34,7 +34,7 @@ import {
   type PolyMaps360HotspotDraft,
 } from '@/lib/polyMapsSmartEntry';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { buildPolyMaps360Directory, canApplyPanoramaToBuilding, canMarkSubmissionApproved, filterPolyMaps360Directory, normalizePendingPins, type DirectoryStatus } from '@/lib/polymaps360Directory';
+import { buildPolyMaps360Directory, canApplyPanoramaToBuilding, canMarkSubmissionApproved, filterPolyMaps360Directory, findRoomPanoramaConflicts, getPanoramaUsage, normalizePendingPins, type DirectoryStatus } from '@/lib/polymaps360Directory';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -445,6 +445,11 @@ export function JppPolyMapsAdmin() {
   const [directoryFilter, setDirectoryFilter] = useState<DirectoryStatus | 'all'>('all');
   const [directorySearch, setDirectorySearch] = useState('');
   const [editingSubmission, setEditingSubmission] = useState<FieldSubmission | null>(null);
+  const [usagePanoramaUrl, setUsagePanoramaUrl] = useState<string | null>(null);
+  const [editingUsageLocationId, setEditingUsageLocationId] = useState<string | null>(null);
+  const [addingUsage, setAddingUsage] = useState(false);
+  const [usageDraft, setUsageDraft] = useState<{ buildingId: string; floor: string; roomCode: string }>({ buildingId: '', floor: '1', roomCode: '' });
+  const [savingUsage, setSavingUsage] = useState(false);
   const [draftSubmissionPins, setDraftSubmissionPins] = useState<PolyMaps360HotspotDraft[]>([]);
   const [savingSubmissionPins, setSavingSubmissionPins] = useState(false);
   const [directoryTargetBuildingId, setDirectoryTargetBuildingId] = useState('');
@@ -829,6 +834,36 @@ export function JppPolyMapsAdmin() {
       toast.error(error.message || 'Gagal menyimpan pin submission.');
     } finally {
       setSavingSubmissionPins(false);
+    }
+  };
+
+  const savePanoramaRoomUsage = async () => {
+    if (!usagePanoramaUrl || (!editingUsageLocationId && !addingUsage)) return;
+    const roomCode = usageDraft.roomCode.trim();
+    if (!roomCode || !usageDraft.buildingId) { toast.error('Pilih bangunan dan masukkan kod bilik.'); return; }
+    const conflicts = findRoomPanoramaConflicts(locations, { ...usageDraft, roomCode, panoramaUrl: usagePanoramaUrl, locationId: editingUsageLocationId || undefined });
+    if (conflicts.length) {
+      const details = conflicts.map((conflict) => { const b = buildings.find((item) => item.id === conflict.building_id); return `• ${b?.code || 'Bangunan'} aras ${conflict.floor_level ?? '1'} · ${conflict.room_code}: ${conflict.panorama_360_url || '(tiada URL)'}`; }).join('\n');
+      const message = `Konflik bilik ditemui (${conflicts.length}):\n${details}\n\nTerus simpan dan ganti kaitan untuk bilik ini sahaja?`;
+      if (!window.confirm(message)) return;
+    }
+    setSavingUsage(true);
+    try {
+      const payload = { building_id: usageDraft.buildingId, floor_level: Number(usageDraft.floor) || 1, room_code: roomCode, panorama_360_url: usagePanoramaUrl, is_360_enabled: true };
+      const result = !addingUsage && editingUsageLocationId
+        ? await supabase.from('imaps_locations').update(payload).eq('id', editingUsageLocationId)
+        : await supabase.from('imaps_locations').insert({ ...payload, direction_text: '', search_tags: '' });
+      const { error } = result;
+      if (error) throw error;
+      toast.success('Kaitan panorama bilik dikemas kini. Bilik lain kekal tidak berubah.');
+      setEditingUsageLocationId(null);
+      setAddingUsage(false);
+      setUsageDraft({ buildingId: '', floor: '1', roomCode: '' });
+      await fetchData();
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal menyimpan kaitan panorama bilik.');
+    } finally {
+      setSavingUsage(false);
     }
   };
 
@@ -2057,6 +2092,7 @@ export function JppPolyMapsAdmin() {
                           <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-bold">{entry.label || entry.id}</p><p className="truncate text-xs text-slate-500">{building ? `${building.code} · ${building.name}` : entry.source}</p></div><span className={cn('shrink-0 rounded-full px-2 py-1 text-[10px] font-black uppercase', statusClass)}>{statusLabels[entry.status]}</span></div>
                           <div className="flex justify-between text-xs text-slate-500"><span>{entry.pinCount} pin</span><span>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ''}</span></div>
                           <div className="flex flex-wrap gap-2 pt-1">
+                            <button type="button" onClick={() => setUsagePanoramaUrl(entry.panoramaUrl)} className="rounded-lg border px-3 py-1.5 text-xs font-bold">Penggunaan & Edit</button>
                             {entry.source === 'submission' && entry.status === 'pending' && (() => {
                               const submission = fieldSubmissions.find((item) => item.id === entry.id.replace('submission:', ''));
                               return submission ? <button type="button" onClick={() => { setEditingSubmission(submission); setDraftSubmissionPins([...submission.hotspots_json]); }} className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white">Edit pin (pending)</button> : null;
@@ -2069,6 +2105,19 @@ export function JppPolyMapsAdmin() {
                   })}
                 </div>
               )}
+              {usagePanoramaUrl && (() => {
+                const usages = getPanoramaUsage(locations, Object.values(hotspotsByPanorama).flat(), buildings, usagePanoramaUrl);
+                const selected = locations.find((location) => location.id === editingUsageLocationId);
+                return <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/70 p-3" role="dialog" aria-modal="true" aria-label="Penggunaan dan edit panorama">
+                  <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-4 dark:bg-slate-900">
+                    <div className="mb-4 flex items-center justify-between"><h3 className="font-black">Penggunaan & Edit 360°</h3><button type="button" onClick={() => { setUsagePanoramaUrl(null); setEditingUsageLocationId(null); setAddingUsage(false); }} aria-label="Tutup"><X className="h-5 w-5" /></button></div>
+                    <img src={usagePanoramaUrl.split('#')[0]} alt="Pratonton panorama" className="mb-4 h-44 w-full rounded-xl object-cover bg-slate-100" />
+                    <h4 className="mb-2 text-sm font-bold">Digunakan untuk {usages.length} bilik/kelas</h4>
+                    {usages.length ? <div className="mb-4 space-y-2"><button type="button" onClick={() => { setEditingUsageLocationId(null); setAddingUsage(true); setUsageDraft({ buildingId: directoryTargetBuildingId || buildings[0]?.id || '', floor: '1', roomCode: '' }); }} className="mb-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Tambah bilik/kelas untuk panorama</button>{usages.map((usage) => <article key={usage.locationId} className="rounded-xl border p-3 dark:border-white/10"><div className="flex items-start justify-between gap-2"><div><p className="font-bold">{usage.building} · Aras {usage.floor} · {usage.roomCode}</p><p className="text-xs text-slate-500">{usage.pins.length} pin{usage.pins.length ? `: ${usage.pins.map((pin) => `${pin.label} (yaw ${pin.yaw ?? '—'}, pitch ${pin.pitch ?? '—'})`).join('; ')}` : ''}</p></div><button type="button" onClick={() => { const loc = locations.find((item) => item.id === usage.locationId)!; setEditingUsageLocationId(loc.id); setAddingUsage(false); setUsageDraft({ buildingId: loc.building_id, floor: String(loc.floor_level ?? 1), roomCode: loc.room_code }); }} className="rounded-lg border px-3 py-1.5 text-xs font-bold">Edit bilik ini</button></div></article>)}</div> : <div className="mb-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-white/5"><p>Belum dikaitkan dengan bilik.</p><button type="button" onClick={() => { setEditingUsageLocationId(null); setAddingUsage(true); setUsageDraft({ buildingId: directoryTargetBuildingId || buildings[0]?.id || '', floor: '1', roomCode: '' }); }} className="mt-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Tambah kaitan bilik</button></div>}
+                    {(selected || addingUsage) && <div className="space-y-3 rounded-xl border border-indigo-300 p-3 dark:border-indigo-500/40"><h4 className="font-bold">Edit satu bilik sahaja</h4><label className="block text-xs font-semibold">Bangunan<select value={usageDraft.buildingId} onChange={(e) => setUsageDraft((d) => ({ ...d, buildingId: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-slate-800">{buildings.map((b) => <option key={b.id} value={b.id}>{b.code} · {b.name}</option>)}</select></label><div className="grid grid-cols-2 gap-2"><label className="text-xs font-semibold">Aras<input value={usageDraft.floor} onChange={(e) => setUsageDraft((d) => ({ ...d, floor: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-slate-800" /></label><label className="text-xs font-semibold">Bilik/kelas<input value={usageDraft.roomCode} onChange={(e) => setUsageDraft((d) => ({ ...d, roomCode: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-slate-800" /></label></div><p className="text-xs text-emerald-700 dark:text-emerald-300">Simpan hanya ubah kaitan bilik ini. Bilik lain yang berkongsi panorama kekal.</p><div className="flex justify-end gap-2"><button type="button" onClick={() => { setEditingUsageLocationId(null); setAddingUsage(false); setUsageDraft({ buildingId: '', floor: '1', roomCode: '' }); }} className="rounded-lg border px-3 py-2 text-sm">Batal</button><button type="button" disabled={savingUsage} onClick={savePanoramaRoomUsage} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{savingUsage ? 'Menyimpan…' : 'Simpan bilik'}</button></div></div>}
+                  </div>
+                </div>;
+              })()}
               {editingSubmission && (
                 <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/70 p-3" role="dialog" aria-modal="true" aria-label="Edit pin submission pending">
                   <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4 dark:bg-slate-900">

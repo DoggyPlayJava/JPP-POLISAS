@@ -96,3 +96,38 @@ export function canMarkSubmissionApproved(errors: Array<unknown | null | undefin
 export function canApplyPanoramaToBuilding(entry: { source: string; status: string }): boolean {
   return entry.source !== 'disabled' && entry.status !== 'disabled' && entry.status !== 'pending';
 }
+
+
+export interface PanoramaRoomUsage {
+  locationId: string;
+  buildingId: string;
+  building: string;
+  floor: string;
+  roomCode: string;
+  pins: Array<{ id: string; label: string; yaw: number | null; pitch: number | null }>;
+}
+
+export function getPanoramaUsage(locations: Row[], hotspots: Row[], buildings: Row[], panoramaUrl: string): PanoramaRoomUsage[] {
+  const matching = (url: string | null | undefined) => !!url && (normalizeStorageObjectPath(url) || url.split('#')[0]) === (normalizeStorageObjectPath(panoramaUrl) || panoramaUrl.split('#')[0]);
+  return locations.filter((location) => matching(location.panorama_360_url)).map((location) => {
+    const building = buildings.find((item) => item.id === location.building_id);
+    return {
+      locationId: location.id,
+      buildingId: location.building_id,
+      building: building ? `${building.code} · ${building.name}` : 'Bangunan tidak diketahui',
+      floor: String(location.floor_level ?? '1'),
+      roomCode: location.room_code || 'Tanpa kod bilik',
+      pins: hotspots.filter((pin) => matching(pin.panorama_url) && pin.location_id === location.id).map((pin) => ({ id: pin.id, label: pin.label || pin.room_code || pin.pin_type || 'Pin', yaw: pin.yaw ?? null, pitch: pin.pitch ?? null })),
+    };
+  });
+}
+
+export function findRoomPanoramaConflicts(locations: Row[], target: { buildingId: string; floor: string | number; roomCode: string; panoramaUrl: string; locationId?: string }): Row[] {
+  const normalizeUrl = (url: string | null | undefined) => normalizeStorageObjectPath(url || '') || (url || '').split('#')[0];
+  const key = (value: unknown) => { const text = String(value ?? '').trim().toLocaleLowerCase(); const number = Number(text); return text && Number.isFinite(number) ? String(number) : text; };
+  return locations.filter((location) => location.id !== target.locationId
+    && location.building_id === target.buildingId
+    && key(location.floor_level) === key(target.floor)
+    && key(location.room_code) === key(target.roomCode)
+    && normalizeUrl(location.panorama_360_url) !== normalizeUrl(target.panoramaUrl));
+}
