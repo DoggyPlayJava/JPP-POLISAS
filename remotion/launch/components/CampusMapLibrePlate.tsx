@@ -325,10 +325,6 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
           <CanvasImage
             name="POLISAS Static Campus Map Fallback"
             src={staticFile('GAMBAR/Polymap View Phone.png')}
-            width={width}
-            height={height}
-            fit="cover"
-            objectPosition="center 44%"
             premountFor={fps}
             style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 44%' }}
           />

@@ -91,12 +91,13 @@ const PolyMapsCampusInner: React.FC<PolyMapsSceneProps> = ({
   const arrivalFrame = Math.round(5.8 * fps);
 
   // Exact target coordinates on the right-side action pill inside the DIT3013 schedule card:
-  // Sidebar x=84..704, Card height=462 bottom-aligned at y=1002 (top y=540), Row 3 center y=695, Button center x=591
+  // Sidebar x=84..704, Card height=462 bottom-aligned at y=1002 (top y=540) with 1.5px border-box inset:
+  // Row 3 vertical center y=696.5, right-aligned 170px CTA button horizontal center x=589.5
   const cursorKeyframes: readonly GhostCursorKeyframe[] = [
     { frame: cursorAppearFrame, x: 960, y: 810 },
-    { frame: Math.max(cursorAppearFrame + 2, clickFrame - Math.round(0.08 * fps)), x: 591, y: 695, label: classCode },
-    { frame: clickFrame, x: 591, y: 695, click: true, label: 'Mula Laluan' },
-    { frame: cursorHoldEnd, x: 591, y: 695, label: 'Laluan Aktif' },
+    { frame: Math.max(cursorAppearFrame + 2, clickFrame - Math.round(0.08 * fps)), x: 589.5, y: 696.5, label: classCode },
+    { frame: clickFrame, x: 589.5, y: 696.5, click: true, label: 'Mula Laluan' },
+    { frame: cursorHoldEnd, x: 589.5, y: 696.5, label: 'Laluan Aktif' },
     { frame: cursorLeaveFrame, x: 785, y: 745 },
   ];
 
@@ -130,8 +131,8 @@ const PolyMapsCampusInner: React.FC<PolyMapsSceneProps> = ({
   );
 
   const routeProgress = computeCampusRouteProgress(frame, clickFrame, arrivalFrame);
-  const remainingMeters = Math.round(310 * (1 - routeProgress));
-  const hasArrived = frame >= arrivalFrame || remainingMeters === 0;
+  const hasArrived = frame >= arrivalFrame;
+  const remainingMeters = hasArrived ? 0 : Math.max(1, Math.round(310 * (1 - routeProgress)));
   const etaMinutes = Math.max(1, Math.ceil(4 * (1 - routeProgress)));
   const etaDisplay = hasArrived ? 'Tiba!' : `${etaMinutes} Min`;
 
@@ -557,7 +558,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsSceneProps> = ({
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
-                  {Math.round(routeProgress * 100)}%
+                  {hasArrived ? 100 : Math.min(99, Math.round(routeProgress * 100))}%
                 </span>
               </div>
 
