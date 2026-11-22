@@ -28,11 +28,10 @@
     "noImplicitOverride": false,
     "allowUnreachableCode": true,
     "allowUnusedLabels": true,
-    "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src"],
+  "include": ["src", "remotion"],
   "references": [{ "path": "./tsconfig.node.json" }]
 } 

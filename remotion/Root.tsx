@@ -1,9 +1,19 @@
 import React from 'react';
-import { Composition } from 'remotion';
+import { Composition, Folder } from 'remotion';
 import { JppIntroVideo } from './JppIntroVideo';
 import { JppIntroVideoSchema, type JppIntroVideoProps } from './schema';
+import { JppLaunchCinema, calculateLaunchMetadata } from './launch/JppLaunchCinema';
+import { LaunchShowcaseSchema } from './launch/schema';
+import { OpeningHeroScene } from './launch/scenes/OpeningHeroScene';
+import { PolyMapsCampusScene } from './launch/scenes/PolyMapsCampusScene';
+import { PolyMartCommerceScene } from './launch/scenes/PolyMartCommerceScene';
+import { PolySuaraVoiceScene } from './launch/scenes/PolySuaraVoiceScene';
+import { WelfareCareScene } from './launch/scenes/WelfareCareScene';
+import { ClubsEmsScene } from './launch/scenes/ClubsEmsScene';
+import { ImpactNumbersScene } from './launch/scenes/ImpactNumbersScene';
+import { ClosingVaultScene } from './launch/scenes/ClosingVaultScene';
 
-const defaultProps: JppIntroVideoProps = {
+const legacyIntroDefaultProps: JppIntroVideoProps = {
   institutionName: 'POLITEKNIK SULTAN HAJI AHMAD SHAH',
   councilName: 'JAWATANKUASA PERWAKILAN PELAJAR',
   sessionLabel: 'SESI AKADEMIK 2026/2027',
@@ -48,15 +58,161 @@ const defaultProps: JppIntroVideoProps = {
 
 export const RemotionRoot: React.FC = () => {
   return (
-    <Composition
-      id="JppIntroVideo"
-      component={JppIntroVideo}
-      durationInFrames={1200}
-      fps={30}
-      width={1920}
-      height={1080}
-      schema={JppIntroVideoSchema}
-      defaultProps={defaultProps}
-    />
+    <>
+      <Folder name="Launch-Cinema">
+        <Composition
+          id="JppLaunchCinema"
+          component={JppLaunchCinema}
+          durationInFrames={1470}
+          fps={30}
+          width={1920}
+          height={1080}
+          schema={LaunchShowcaseSchema}
+          calculateMetadata={calculateLaunchMetadata}
+          defaultProps={{
+            institutionName: 'POLITEKNIK SULTAN HAJI AHMAD SHAH',
+            councilName: 'JAWATANKUASA PERWAKILAN PELAJAR',
+            sessionLabel: 'SESI AKADEMIK 2026/2027',
+            headlinePrimary: 'Satu Kampus. Satu Ekosistem Pintar.',
+            headlineItalic: 'Mendepani Digitalisasi Mahasiswa POLISAS.',
+            portalUrl: 'https://jpp.polisas.edu.my',
+            bgmSrc: '',
+            bgmVolume: 0.35,
+            stats: {
+              clubsCount: 21,
+              activitiesCount: 41,
+              studentsCount: 1083,
+              productsCount: 277,
+              ordersCount: 344,
+            },
+          }}
+        />
+      </Folder>
+
+      <Folder name="Launch-Scenes">
+        <Composition
+          id="OpeningHeroScene"
+          component={OpeningHeroScene}
+          durationInFrames={150}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{
+            institutionName: 'POLITEKNIK SULTAN HAJI AHMAD SHAH',
+            sessionLabel: 'SESI AKADEMIK 2026/2027',
+            headlinePrimary: 'Satu Kampus. Satu Ekosistem Pintar.',
+          }}
+        />
+        <Composition
+          id="PolyMapsCampusScene"
+          component={PolyMapsCampusScene}
+          durationInFrames={240}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{
+            classCode: 'DIT3013',
+            classTitle: 'Pembangunan Aplikasi Web',
+            roomName: 'Makmal Komputer 3 • Blok JTMK',
+            scheduleTime: '10:00 AM – 12:00 PM • 4 Min Berjalan',
+          }}
+        />
+        <Composition
+          id="PolyMartCommerceScene"
+          component={PolyMartCommerceScene}
+          durationInFrames={195}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{
+            productsCount: 277,
+            ordersCount: 344,
+            headline: 'Niaga Kampus Dalam Genggaman.',
+          }}
+        />
+        <Composition
+          id="PolySuaraVoiceScene"
+          component={PolySuaraVoiceScene}
+          durationInFrames={180}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{
+            pollTitle: 'Cadangan Menu Sihat Kafeteria Siswa 2026/2027',
+            optionA: 'Set Ayam Percik & Salad Segar',
+            optionB: 'Sandwic Telur Herba & Buah',
+            percentageA: 68,
+            totalVotes: 412,
+          }}
+        />
+        <Composition
+          id="WelfareCareScene"
+          component={WelfareCareScene}
+          durationInFrames={180}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{
+            ticketNo: 'KBJ-2026-0842',
+            slaLabel: '< 48 JAM',
+            headline: 'Kebajikan Disantuni Dengan Telus.',
+          }}
+        />
+        <Composition
+          id="ClubsEmsScene"
+          component={ClubsEmsScene}
+          durationInFrames={195}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{
+            clubsCount: 21,
+            activitiesCount: 41,
+            certSerial: 'EMS-CERT-2026-9041',
+          }}
+        />
+        <Composition
+          id="ImpactNumbersScene"
+          component={ImpactNumbersScene}
+          durationInFrames={180}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{
+            clubsCount: 21,
+            studentsCount: 1083,
+            activitiesCount: 41,
+            productsCount: 277,
+            ordersCount: 344,
+          }}
+        />
+        <Composition
+          id="ClosingVaultScene"
+          component={ClosingVaultScene}
+          durationInFrames={225}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{
+            headlinePrimary: 'Satu Kampus. Satu Ekosistem Pintar.',
+            headlineItalic: 'Mendepani Digitalisasi Mahasiswa POLISAS.',
+            portalUrl: 'https://jpp.polisas.edu.my',
+          }}
+        />
+      </Folder>
+
+      <Folder name="Legacy">
+        <Composition
+          id="JppIntroVideo"
+          component={JppIntroVideo}
+          durationInFrames={1200}
+          fps={30}
+          width={1920}
+          height={1080}
+          schema={JppIntroVideoSchema}
+          defaultProps={legacyIntroDefaultProps}
+        />
+      </Folder>
+    </>
   );
 };

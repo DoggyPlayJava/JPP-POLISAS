@@ -15,7 +15,7 @@ function walk(dir: string): string[] {
 describe('GPU baseline — satu code path, semua device ringan', () => {
   const css = readFileSync(join(SRC, 'index.css'), 'utf8');
   const tsxFiles = walk(SRC).filter(
-    (f) => f.endsWith('.tsx') && !f.includes('LaunchVideo') && !f.includes('PromoPage')
+    (f) => f.endsWith('.tsx') && !f.includes('PromoPage')
   );
 
   it('index.css tiada backdrop-filter nilai blur (kekal hanya kill-switch none)', () => {

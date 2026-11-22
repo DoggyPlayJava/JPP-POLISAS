@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { supabase } from '@/lib/supabase';
-import { queryCache, CACHE_TTL } from '@/lib/cache';
+import { useCampusStats } from '@/hooks/useCampusStats';
 import { CampusStats } from '@/components/landing/landingTypes';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { LandingHero } from '@/components/landing/LandingHero';
@@ -21,64 +20,7 @@ import { LandingFooter } from '@/components/landing/LandingFooter';
 // #F8F6EE: Background (Warm Milk Porcelain)
 
 export type { CampusStats };
-
-const LANDING_STATS_CACHE_KEY = 'landing_campus_stats';
-
-const DEFAULT_CAMPUS_STATS: CampusStats = {
-  clubsCount: 21,
-  activitiesCount: 41,
-  studentsCount: 1083,
-  productsCount: 277,
-  ordersCount: 344,
-};
-
-// ── Hook Data Masa Nyata Kampus (Real Production Data via queryCache + Promise.all) ───────
-export function useCampusStats(): CampusStats {
-  const cached = queryCache.get<CampusStats>(LANDING_STATS_CACHE_KEY);
-  const [stats, setStats] = useState<CampusStats>(cached ?? DEFAULT_CAMPUS_STATS);
-
-  useEffect(() => {
-    let isMounted = true;
-    async function fetchLiveStats() {
-      const activeCache = queryCache.get<CampusStats>(LANDING_STATS_CACHE_KEY);
-      if (activeCache && isMounted) {
-        setStats(activeCache);
-        return;
-      }
-
-      try {
-        const [clubsRes, actsRes, prodsRes, ordersRes, klkRes] = await Promise.all([
-          supabase.from('clubs').select('id', { count: 'exact', head: true }),
-          supabase.from('club_activities').select('id', { count: 'exact', head: true }),
-          supabase.from('business_products').select('id', { count: 'exact', head: true }),
-          supabase.from('polymart_orders').select('id', { count: 'exact', head: true }),
-          supabase.from('klk_student_residency').select('id', { count: 'exact', head: true }),
-        ]);
-
-        if (isMounted) {
-          const freshStats: CampusStats = {
-            clubsCount: clubsRes.count ?? 21,
-            activitiesCount: actsRes.count ?? 41,
-            studentsCount: klkRes.count ?? 1083,
-            productsCount: prodsRes.count ?? 277,
-            ordersCount: ordersRes.count ?? 344,
-          };
-          queryCache.set(LANDING_STATS_CACHE_KEY, freshStats, CACHE_TTL.DASHBOARD);
-          setStats(freshStats);
-        }
-      } catch {
-        // Fallback selamat kepada nombor data sebenar pangkalan data POLISAS
-      }
-    }
-
-    fetchLiveStats();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  return stats;
-}
+export { useCampusStats };
 
 // ── Backward-Compatible Section Wrappers ──────────────────────
 export const Navbar: React.FC = () => <LandingNavbar />;

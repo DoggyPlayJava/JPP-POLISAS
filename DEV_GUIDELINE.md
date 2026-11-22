@@ -104,6 +104,7 @@ src/
 │   ├── supsas/                ← Modul SUPSAS (sukan & pertandingan)
 │   ├── ems/                   ← Modul EMS (Event Management System)
 │   ├── karnival/              ← Modul Karnival (sistem undian & booth)
+│   ├── LaunchVideo.tsx        ← Pure Stage Cinema (/launch) berasaskan @remotion/player + JppLaunchCinema
 │   └── LandingPage.tsx        ← Halaman pendaratan rasmi (/ & /landing) dengan seni bina neo-campus, dwibahasa (BM/EN), header mudah alih ramping (bebas kapsul AI slop) & visual OpenLearning
 │
 ├── components/
@@ -128,6 +129,7 @@ src/
 │
 ├── hooks/
 │   ├── useAiAssistant.ts     ← Hook Gemini AI (callAi + sendChatMessage)
+│   ├── useCampusStats.ts     ← Hook telemetri kampus kongsi (Promise.all + queryCache CACHE_TTL.DASHBOARD, digunakan LandingPage & LaunchVideo)
 │   ├── useDashboardData.ts   ← Fetch data dashboard
 │   ├── useReports.ts         ← Fetch dan urus laporan
 │   ├── useJppExcoUnits.ts    ← Fetch unit exco JPP
@@ -155,6 +157,19 @@ src/
 │
 └── config/
     └── excoModules.ts        ← Config modul exco (nama, warna, route, aktif/tidak)
+
+remotion/
+├── index.ts                  ← Titik masuk Remotion CLI & Studio (registerRoot)
+├── Root.tsx                  ← Pendaftaran Folder Launch-Cinema (JppLaunchCinema), Launch-Scenes (8 babak), & Legacy (JppIntroVideo)
+├── JppIntroVideo.tsx         ← Komposisi legasi 1,200 frame (dikekalkan)
+├── schema.ts                 ← Skema Zod JppIntroVideoSchema (legasi)
+└── launch/                   ← Seni bina modular terhubung JppLaunchCinema (Remotion 4.0.545)
+    ├── JppLaunchCinema.tsx   ← Komposisi utama TransitionSeries 1,470 frame + calculateLaunchMetadata
+    ├── schema.ts             ← LaunchShowcaseSchema, LAUNCH_CHAPTERS (8 bab), LAUNCH_TOTAL_FRAMES
+    ├── tokens.ts             ← Palet 05 Earthy Minimal, tipografi, & koordinat rasmi POLISAS_COORDS
+    ├── components/           ← EditorialChrome.tsx (LightLeakOverlay) & CampusMapLibrePlate.tsx
+    ├── lib/                  ← campusRoute.ts (@turf/turf GeoJSON) & mediaProbe.ts (mediabunny)
+    └── scenes/               ← 8 komposisi kendiri terhubung (OpeningHeroScene .. ClosingVaultScene)
 ```
 
 ### 2.1 Piawaian Reka Bentuk UI/UX & Token Tema Digital Flagship (Hybrid Precision-Editorial)
@@ -389,7 +404,7 @@ import { something } from '../lib/supabase';  // ❌ Elakkan relative
 
 ---
 
-## 9. Contexts (State Global)
+## 9. Contexts (State Global) & Shared Hooks
 
 | Context | Eksport | Kegunaan |
 |---|---|---|
@@ -401,7 +416,14 @@ import { something } from '../lib/supabase';  // ❌ Elakkan relative
 | `ExcoThemeContext` | `useExcoTheme()` | Warna exco aktif untuk theming |
 | `SupsasContext` | `useSupsas()` | Data edisi, kontingen, sukan, fixtures, medal tally SUPSAS |
 | `JppConfigContext` | `useJppConfig()` | Konfigurasi portal JPP (tetapan, feature flags) |
-| `useDevicePerformance` | `useDevicePerformance()` | Pengesanan **runtime-adaptive** jank (ukur rAF frame drop + `deviceMemory<=4GB` + Data Saver), BUKAN teka hardware. Core count TIDAK lagi dipakai. |
+
+> **Pematuhan GPU Baseline:** `useDevicePerformance` telah dipadam dan dikuatkuasakan oleh `src/__tests__/gpuBaseline.test.ts` (termasuk `src/pages/LaunchVideo.tsx` tanpa sebarang pengecualian) supaya semua peranti berkongsi satu laluan kod yang ringan.
+
+### Shared Hooks
+
+| Hook | Fail | Kontrak & Caching |
+|---|---|---|
+| `useCampusStats()` | `src/hooks/useCampusStats.ts` | Mengambil kiraan langsung daripada 5 jadual Supabase (`clubs`, `club_activities`, `business_products`, `polymart_orders`, `klk_student_residency`) secara selari melalui `Promise.all`, disimpan dalam `queryCache` dengan kunci `landing_campus_stats` (`CACHE_TTL.DASHBOARD`), fallback segera `DEFAULT_CAMPUS_STATS`, dan sifar langganan Realtime. Dikongsi antara `LandingPage` dan `LaunchVideo`. |
 
 ---
 
@@ -4524,37 +4546,46 @@ Bagi pembentangan kepada pihak pengurusan kanan POLISAS, JHEP, dan agensi luar, 
 
 ## 35. Video Pengenalan Sinematik Remotion (`remotion/`)
 
-> Dikemas kini: Oktober 2026 (Pelancaran Video Pengenalan Rasmi Remotion 4.x)
+> Dikemas kini: November 2026 (Naik Taraf Remotion `4.0.545`, `JppLaunchCinema` 8 Komposisi Terhubung & Pure Stage Cinema `/launch`)
 
-Bagi tujuan montaj pembukaan rasmi, paparan kiosk orientasi, dan demonstrasi keupayaan digital mahasiswa, sistem ini dilengkapi dengan enjin penjanaan video teraturcara berasaskan **Remotion v4** dalam folder `remotion/`.
+Bagi tujuan pelancaran rasmi, paparan kiosk orientasi, dan demonstrasi keupayaan digital mahasiswa, sistem ini menggunakan enjin video teraturcara **Remotion `4.0.545`** (semua pakej `remotion`, `@remotion/cli`, `@remotion/player`, `@remotion/transitions`, `@remotion/effects`, `@remotion/media`, dan `@remotion/paths` diselaraskan pada versi `4.0.545`, bersama `mediabunny` `1.66.0`, `maplibre-gl` `6.19.0`, dan `@turf/turf` `7.4.0`).
 
-### 35.1 Arkitektur Fail & Kawalan Dinamik
-- **`remotion/schema.ts`:** Menakrifkan skema Zod (`JppIntroVideoSchema`) bagi penyesuaian teks, nama acara, subjek kelas, dan data produk secara langsung melalui panel kawalan (Sidebar UI) Remotion Studio tanpa mengubah kod sumber.
-- **`remotion/JppIntroVideo.tsx`:** Komposisi video utama 100% *self-contained* yang merangkumi animasi fizik *spring*, tipografi Swiss berwibawa, dan susun atur kad bento.
-- **`remotion/Root.tsx`:** Pendaftaran komposisi `<Composition id="JppIntroVideo">` (1920×1080 @ 30 FPS, 1,200 frame / 40 saat).
-- **`remotion/index.ts`:** Titik masuk rasmi untuk enjin Remotion CLI dan Studio.
+### 35.1 Arkitektur Modular Terhubung (`remotion/launch/`)
+- **`remotion/launch/tokens.ts`:** Token palet rasmi **05 Earthy Minimal**, tipografi (`Geist`, `Instrument Serif`, `JetBrains Mono`), spesifikasi kanvas (`1920×1080`, `30 FPS`), serta koordinat rasmi POLISAS Semambu `[103.3153, 3.8625]` (`3.8625° N, 103.3153° E`).
+- **`remotion/launch/schema.ts`:** Skema Zod `LaunchShowcaseSchema`, kontrak `LAUNCH_CHAPTERS` (8 bab, `LAUNCH_TOTAL_FRAMES = 1470` = 49 saat), serta pemalar transisi (`LAUNCH_TRANSITION_FRAMES = 15`, `LAUNCH_OVERLAY_FRAMES = 24`).
+- **`remotion/launch/JppLaunchCinema.tsx`:** Komposisi utama yang merangkai 8 babak menggunakan `<TransitionSeries>` (`fade()`, `slide()`, dan `LightLeakOverlay`), `premountFor={fps}`, penskalaan `output: 'perceptual-scale'`, serta `calculateLaunchMetadata` yang memanggil prob metadata `mediabunny`.
+- **`remotion/launch/components/CampusMapLibrePlate.tsx` & `lib/campusRoute.ts`:** Peta vektor langsung `maplibre-gl` (gaya OpenFreeMap Positron) berpusat pada kampus POLISAS Semambu dengan jejak berjalan kaki `@turf/turf` (Dataran Siswa → Blok JTMK), penyegerakan deterministik `delayRender`/`continueRender`, dan mod sandaran luar talian (*4s timeout / error fallback* melalui `<CanvasImage>` + `interpolatePaths` dari `@remotion/paths`).
+- **`remotion/launch/lib/mediaProbe.ts`:** Prob metadata media berasaskan `mediabunny` (`probeMediaDurationSeconds`, `probeVideoDimensions`) dengan pembersihan `Input.dispose()` dalam blok `finally`.
+- **`remotion/Root.tsx`:** Mendaftarkan folder `Launch-Cinema` (`JppLaunchCinema`), `Launch-Scenes` (8 komposisi babak kendiri), serta mengekalkan komposisi legasi `Legacy/JppIntroVideo` (1,200 frame) tanpa perubahan.
 
-### 35.2 Palet Warna Rasmi (05 Earthy Minimal / Anti-Slop Directive)
-Mematuhi piawaian reka bentuk institusi `design-taste-frontend`:
+### 35.2 Pure Stage Cinema `/launch` (`src/pages/LaunchVideo.tsx`)
+- **Hos `@remotion/player`:** Membenamkan `<Player component={JppLaunchCinema} />` dalam pentas 16:9 penuh yang menyuapkan data langsung daripada `useCampusStats()` (dikongsi bersama `LandingPage` melalui `queryCache`).
+- **HUD Auto-Sembunyi Patuh GPU Baseline:** Bar kawalan terapung bawah (auto-sembunyi selepas 2.5s) menggunakan permukaan legap (`bg-[#F8F6EE]`, sempadan `#D9C9B2`, aksen `#C96F4F`) tanpa `backdrop-filter` atau `blur-2xl/3xl`. Pengecualian `LaunchVideo` telah dikeluarkan daripada `src/__tests__/gpuBaseline.test.ts`.
+- **Kawalan Interaktif & Pemisahan Chunk:** Menyokong 8 butang lompat bab, bar skrub, pintasan papan kekunci (`Space`, `F`, `R`, `ArrowLeft`/`ArrowRight`, `1`–`8`), dan CTA `/login`. Dimuatkan secara *lazy chunk* terasing daripada `index-*.js` dan dikecualikan daripada precache PWA (`vite.config.ts`).
+
+### 35.3 Palet Warna Rasmi (05 Earthy Minimal / Anti-Slop Directive)
 - **Primary (`#2E3A2F`):** Deep Forest Moss Green (Tipografi tajuk utama, garis struktur).
 - **Secondary (`#6B7F5B`):** Sage Olive Green (Sub-tajuk, lencana kelulusan, penunjuk aktif).
 - **Tertiary (`#D9C9B2`):** Warm Sand Linen (Sempadan kad bento, garis pemisah halus).
-- **Accent (`#C96F4F`):** Terracotta Clay Orange (Titik fokus, alur laser imbasan, butang tindakan).
-- **Background (`#F8F6EE`):** Warm Milk Porcelain (Kanvas mewah bertekstur kertas lembut).
+- **Accent (`#C96F4F`):** Terracotta Clay Orange (Titik fokus, laluan peta, penunjuk kemajuan).
+- **Background (`#F8F6EE`) & Surface Muted (`#F2EDE4`):** Warm Milk Porcelain & Oatmeal Cream.
 
-### 35.3 Pecahan 7 Babak Sinematik
-1. **Babak 0 (Frame 0–120):** Pembukaan Rasmi & Lambang JPP POLISAS — Slogan rasmi: *“Perpaduan Progresif Demi Mahasiswa”*.
-2. **Babak 1 (Frame 120–315):** Integrasi Jadual Kuliah & PolyMaps — Kad kelas seterusnya (`DIT3013`) berhubung terus ke peta 2D kampus dengan laluan berpandu masa nyata.
-3. **Babak 2 (Frame 315–510):** Pasaran Digital Siswa PolyMart — Produk siswa (*CHICKEN POPCORN*, *Lanyard JPP*), kaunter jualan masa nyata, dan lencana transaksi selamat JPP Pay.
-4. **Babak 3 (Frame 510–705):** Sosial Media Kampus PolySuara — Undian langsung (*Live Poll: 68% vs 32%*), suapan komuniti siswa, dan lencana mikro-reaksi beranimasi.
-5. **Babak 4 (Frame 705–900):** E-Aduan & Kebajikan Siswa — Penjejakan 4 peringkat status aduan (`#KBJ-2026-0842`) dengan SLA pantas < 48 jam.
-6. **Babak 5 (Frame 900–1095):** EMS (Event Management System) — Pas acara VIP siswa, imbasan laser QR, letupan konfeti perayaan, dan penjanaan Sijil Digital (*e-Certificate*) rasmi bertandatangan.
-7. **Babak 6 (Frame 1095–1200):** Penutup Agung Outro — Logo JPP POLISAS, 4 Pilar Strategik, dan alamat portal `jpp.polisas.edu.my`.
+### 35.4 Pecahan 8 Babak `JppLaunchCinema` (1,470 Frame @ 30 FPS)
+1. **01 Pembukaan (`OpeningHeroScene`, f=0–150):** Identiti rasmi POLISAS & JPP bersama pratonton dwi-perspektif Portal Laptop dan Telefon.
+2. **02 PolyMaps (`PolyMapsCampusScene`, f=135–375):** Jadual `DIT3013` berintegrasi terus ke peta langsung MapLibre GL + laluan Turf Semambu (`3.8625° N, 103.3153° E`).
+3. **03 PolyMart (`PolyMartCommerceScene`, f=375–570):** Pasaran digital siswa dengan kaunter langsung produk & pesanan selesai serta transaksi JPP Pay.
+4. **04 PolySuara (`PolySuaraVoiceScene`, f=555–735):** Undian kampus langsung (`68% vs 32%`, `412 UNDI DISAHKAN`) dan moderasi komuniti.
+5. **05 E-Kebajikan (`WelfareCareScene`, f=720–900):** Penjejakan tiket aduan (`#KBJ-2026-0842`), SLA `< 48 JAM`, dan integrasi Food Bank.
+6. **06 Kelab & EMS (`ClubsEmsScene`, f=885–1080):** Tadbir urus kelab berdaftar, pemantauan aktiviti, dan e-Sijil digital automatik (`EMS-CERT-2026-9041`).
+7. **07 Impak (`ImpactNumbersScene`, f=1080–1260):** Paparan telemetri langsung Supabase pada kanvas gelap `#2E3A2F` (kelab, pelajar, aktiviti, produk, pesanan).
+8. **08 Penutup (`ClosingVaultScene`, f=1245–1470):** Tajuk kemuncak seragam, kod QR dinamik akses portal rasmi, dan kredit JPP POLISAS.
 
-### 35.4 Perintah CLI Rasmi
+### 35.5 Perintah CLI & Verifikasi Rasmi
+- **Semak Versi Seragam Remotion:** `npx remotion versions`
 - **Buka Remotion Studio (Interaktif):** `npm run remotion:studio`
-- **Render Video MP4 Penuh:** `npm run remotion:render`
-- **Render Sampel Frame (Still):** `npx remotion still remotion/index.ts JppIntroVideo --frame=<nombor> out/frame.png`
+- **Render Video MP4 `JppLaunchCinema`:** `npm run remotion:launch:render`
+- **Render Sampel Frame (Still):** `npx remotion still remotion/index.ts JppLaunchCinema out/still.png --frame=<nombor> --gl=angle`
+- **Ujian Kontrak & GPU Baseline:** `npx vitest run src/__tests__/gpuBaseline.test.ts src/__tests__/LaunchCinema.test.ts`
 
 ---
 
