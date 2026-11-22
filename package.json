@@ -21,7 +21,9 @@
     "test:e2e": "playwright test",
     "cleanup:storage": "node scripts/storage-cleanup.js",
     "remotion:studio": "remotion studio remotion/index.ts",
-    "remotion:render": "remotion render remotion/index.ts JppIntroVideo out/jpp-intro.mp4"
+    "remotion:render": "remotion render remotion/index.ts JppIntroVideo out/jpp-intro.mp4",
+    "remotion:launch:render": "remotion render remotion/index.ts JppLaunchCinema out/jpp-launch-cinema.mp4 --gl=angle --concurrency=1",
+    "remotion:launch:still": "remotion still remotion/index.ts JppLaunchCinema out/launch-still.png --gl=angle"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",
