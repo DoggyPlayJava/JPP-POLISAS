@@ -1,4 +1,6 @@
 import { describe, it, expect } from 'vitest';
+import { readFileSync } from 'fs';
+import { join } from 'path';
 import { DEFAULT_CAMPUS_STATS, LANDING_STATS_CACHE_KEY } from '@/hooks/useCampusStats';
 import {
   LaunchShowcaseSchema,
@@ -7,7 +9,7 @@ import {
   LAUNCH_TOTAL_FRAMES,
   LAUNCH_TRANSITION_FRAMES,
 } from '../../remotion/launch/schema';
-import { LAUNCH_FPS } from '../../remotion/launch/tokens';
+import { LAUNCH_FPS, LAUNCH_PALETTE } from '../../remotion/launch/tokens';
 import {
   CAMPUS_ROUTE_KM,
   sliceCampusRoute,
@@ -17,6 +19,14 @@ import {
   probeMediaDurationSeconds,
   probeVideoDimensions,
 } from '../../remotion/launch/lib/mediaProbe';
+import {
+  kineticCameraPush,
+  editorialSplitCurtain,
+  depthLiftMatch,
+  orbitalIrisMatch,
+  EditorialShutterOverlay,
+  WarmLightSweepOverlay,
+} from '../../remotion/launch/motion/transitions';
 
 describe('Shared Campus Stats Contract', () => {
   it('exposes safe non-zero fallback defaults and stable cache key', () => {
@@ -88,5 +98,56 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
     await expect(probeVideoDimensions('')).resolves.toBeNull();
     await expect(probeMediaDurationSeconds('not-a-valid-url')).resolves.toBeNull();
     await expect(probeVideoDimensions('not-a-valid-url')).resolves.toBeNull();
+  });
+});
+
+describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
+  it('returns valid native TransitionPresentation objects for all 4 bespoke factories', () => {
+    const pushDefault = kineticCameraPush();
+    const pushLeft = kineticCameraPush({ direction: 'from-left', accentColor: LAUNCH_PALETTE.SECONDARY });
+    const curtainDefault = editorialSplitCurtain();
+    const curtainCustom = editorialSplitCurtain({ accentColor: LAUNCH_PALETTE.ACCENT });
+    const liftDefault = depthLiftMatch();
+    const irisDefault = orbitalIrisMatch();
+    const irisCustom = orbitalIrisMatch({ ringColor: LAUNCH_PALETTE.ACCENT });
+
+    for (const presentation of [
+      pushDefault,
+      pushLeft,
+      curtainDefault,
+      curtainCustom,
+      liftDefault,
+      irisDefault,
+      irisCustom,
+    ]) {
+      expect(presentation).toBeDefined();
+      expect(typeof presentation.component).toBe('function');
+      expect(presentation.props).toBeTypeOf('object');
+      expect(presentation.props).not.toBeNull();
+      expect(presentation.canvas).toBeUndefined();
+    }
+
+    expect(pushDefault.props.direction).toBe('from-right');
+    expect(pushLeft.props.direction).toBe('from-left');
+    expect(pushLeft.props.accentColor).toBe(LAUNCH_PALETTE.SECONDARY);
+    expect(curtainDefault.props.accentColor).toBe(LAUNCH_PALETTE.ACCENT);
+    expect(curtainCustom.props.accentColor).toBe(LAUNCH_PALETTE.ACCENT);
+    expect(irisDefault.props.ringColor).toBe(LAUNCH_PALETTE.ACCENT);
+    expect(irisCustom.props.ringColor).toBe(LAUNCH_PALETTE.ACCENT);
+
+    expect(typeof EditorialShutterOverlay).toBe('function');
+    expect(typeof WarmLightSweepOverlay).toBe('function');
+  });
+
+  it('uses 100% Chrome-native transforms/clip-paths/effects with zero experimental or CSS animations', () => {
+    const source = readFileSync(
+      join(process.cwd(), 'remotion', 'launch', 'motion', 'transitions.tsx'),
+      'utf8',
+    );
+    expect(source).not.toMatch(/HtmlInCanvas/i);
+    expect(source).not.toMatch(/blur-slide|zoom-in-out|film-burn/);
+    expect(source).not.toMatch(/@keyframes|\banimate-|transition\s*:/);
+    expect(source).toContain('premountFor={fps}');
+    expect(source).toContain("from '@remotion/effects/light-leak'");
   });
 });
