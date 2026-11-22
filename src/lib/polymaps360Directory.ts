@@ -131,3 +131,32 @@ export function findRoomPanoramaConflicts(locations: Row[], target: { buildingId
     && key(location.room_code) === key(target.roomCode)
     && normalizeUrl(location.panorama_360_url) !== normalizeUrl(target.panoramaUrl));
 }
+
+
+export function buildSubmissionEditPlan(status: 'pending' | 'approved' | 'rejected', selectedLocationId: string | null): { updateSubmission: boolean; targetLocationId: string | null; updateStatus: false } {
+  return { updateSubmission: status !== 'approved', targetLocationId: selectedLocationId, updateStatus: false };
+}
+
+
+export function filter360Submissions<T extends Row>(rows: T[], filters: { status: string; buildingId: string; query: string }): T[] {
+  const query = filters.query.trim().toLocaleLowerCase();
+  return rows.filter((row) => (filters.status === 'all' || row.status === filters.status)
+    && (filters.buildingId === 'all' || row.building_id === filters.buildingId)
+    && (!query || `${row.contributor_name || ''} ${row.notes || ''} ${row.room_code_hint || ''} ${row.corridor_label || ''}`.toLocaleLowerCase().includes(query)));
+}
+
+export function filterLocationsForSelection<T extends Row>(locations: T[], buildingId: string, floor: string | number): T[] {
+  const floorKey = (value: unknown) => { const text = String(value ?? '').trim(); const n = Number(text); return text && Number.isFinite(n) ? String(n) : text.toLocaleLowerCase(); };
+  return locations.filter((location) => location.building_id === buildingId && floorKey(location.floor_level ?? 1) === floorKey(floor));
+}
+
+
+export function getHotspotsForLocation<T extends Row>(hotspots: T[], location: Row): T[] {
+  const key = (value: unknown) => String(value ?? '').trim().toLocaleLowerCase();
+  const floorKey = (value: unknown) => { const n = Number(value); return Number.isFinite(n) ? String(n) : key(value); };
+  return hotspots.filter((pin) => pin.location_id === location.id || (!pin.location_id
+    && pin.building_id === location.building_id
+    && floorKey(pin.floor_level ?? 1) === floorKey(location.floor_level ?? 1)
+    && key(pin.room_code) === key(location.room_code)
+    && (!location.panorama_360_url || (normalizeStorageObjectPath(pin.panorama_url || '') || pin.panorama_url) === (normalizeStorageObjectPath(location.panorama_360_url) || location.panorama_360_url))));
+}

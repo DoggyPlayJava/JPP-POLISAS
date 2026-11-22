@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPolyMaps360Directory, filterPolyMaps360Directory, normalizePendingPins, normalizeStorageObjectPath, canMarkSubmissionApproved, canApplyPanoramaToBuilding, getPanoramaUsage, findRoomPanoramaConflicts } from '../polymaps360Directory';
+import { buildPolyMaps360Directory, filterPolyMaps360Directory, normalizePendingPins, normalizeStorageObjectPath, canMarkSubmissionApproved, canApplyPanoramaToBuilding, getPanoramaUsage, findRoomPanoramaConflicts, buildSubmissionEditPlan, filter360Submissions, filterLocationsForSelection, getHotspotsForLocation } from '../polymaps360Directory';
 
 describe('PolyMaps 360 directory resolver', () => {
   it('normalizes public storage URLs and ignores viewer fragments', () => {
@@ -51,6 +51,43 @@ describe('PolyMaps 360 directory resolver', () => {
     ];
     expect(findRoomPanoramaConflicts(locations, { buildingId: 'b1', floor: '1', roomCode: 'B101', panoramaUrl: 'new.jpg' })).toEqual([locations[0]]);
     expect(findRoomPanoramaConflicts(locations, { buildingId: 'b1', floor: '1', roomCode: 'B101', panoramaUrl: 'old.jpg', locationId: 'same' })).toEqual([]);
+  });
+
+
+  it('keeps pending edits on submission and scopes approved edits to one location', () => {
+    expect(buildSubmissionEditPlan('pending', 'loc-1')).toEqual({ updateSubmission: true, targetLocationId: 'loc-1', updateStatus: false });
+    expect(buildSubmissionEditPlan('approved', 'loc-2')).toEqual({ updateSubmission: false, targetLocationId: 'loc-2', updateStatus: false });
+    expect(buildSubmissionEditPlan('rejected', null)).toEqual({ updateSubmission: true, targetLocationId: null, updateStatus: false });
+  });
+
+
+  it('filters 360 submissions by status, building, and contributor/notes query', () => {
+    const rows = [
+      { id: '1', status: 'pending', building_id: 'b1', contributor_name: 'Amin', notes: 'Makmal' },
+      { id: '2', status: 'approved', building_id: 'b2', contributor_name: 'Siti', notes: 'Koridor' },
+    ];
+    expect(filter360Submissions(rows, { status: 'pending', buildingId: 'all', query: '' }).map((x) => x.id)).toEqual(['1']);
+    expect(filter360Submissions(rows, { status: 'all', buildingId: 'b2', query: 'koridor' }).map((x) => x.id)).toEqual(['2']);
+  });
+
+  it('lists selectable rooms only for selected building and floor', () => {
+    const rows = [
+      { id: '1', building_id: 'b1', floor_level: 1, room_code: 'B101' },
+      { id: '2', building_id: 'b1', floor_level: 2, room_code: 'B201' },
+      { id: '3', building_id: 'b2', floor_level: 1, room_code: 'C101' },
+    ];
+    expect(filterLocationsForSelection(rows, 'b1', '1').map((x) => x.id)).toEqual(['1']);
+  });
+
+
+  it('loads legacy room pins without location_id by building, floor, and room code only', () => {
+    const rows = [
+      { id: 'owned', location_id: 'loc-1', building_id: 'b1', floor_level: 1, room_code: 'B101', panorama_url: 'pano.jpg' },
+      { id: 'legacy', location_id: null, building_id: 'b1', floor_level: '01', room_code: 'b101', panorama_url: 'pano.jpg' },
+      { id: 'sibling', location_id: null, building_id: 'b1', floor_level: 1, room_code: 'B102', panorama_url: 'pano.jpg' },
+      { id: 'other-building', location_id: null, building_id: 'b2', floor_level: 1, room_code: 'B101', panorama_url: 'pano.jpg' },
+    ];
+    expect(getHotspotsForLocation(rows, { id: 'loc-1', building_id: 'b1', floor_level: 1, room_code: 'B101', panorama_360_url: 'pano.jpg' }).map((x) => x.id)).toEqual(['owned', 'legacy']);
   });
 
   it('keeps shared panoramas referenced and maps pending submissions as pending', () => {

@@ -34,7 +34,7 @@ import {
   type PolyMaps360HotspotDraft,
 } from '@/lib/polyMapsSmartEntry';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { buildPolyMaps360Directory, canApplyPanoramaToBuilding, canMarkSubmissionApproved, filterPolyMaps360Directory, findRoomPanoramaConflicts, getPanoramaUsage, normalizePendingPins, type DirectoryStatus } from '@/lib/polymaps360Directory';
+import { buildPolyMaps360Directory, canApplyPanoramaToBuilding, canMarkSubmissionApproved, filterPolyMaps360Directory, findRoomPanoramaConflicts, getPanoramaUsage, normalizePendingPins, filter360Submissions, filterLocationsForSelection, buildSubmissionEditPlan, getHotspotsForLocation, type DirectoryStatus } from '@/lib/polymaps360Directory';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -445,6 +445,8 @@ export function JppPolyMapsAdmin() {
   const [directoryFilter, setDirectoryFilter] = useState<DirectoryStatus | 'all'>('all');
   const [directorySearch, setDirectorySearch] = useState('');
   const [editingSubmission, setEditingSubmission] = useState<FieldSubmission | null>(null);
+  const [submissionFilters, setSubmissionFilters] = useState({ status: 'all', buildingId: 'all', query: '' });
+  const [submissionEditConfig, setSubmissionEditConfig] = useState<FieldSubmission | null>(null);
   const [usagePanoramaUrl, setUsagePanoramaUrl] = useState<string | null>(null);
   const [editingUsageLocationId, setEditingUsageLocationId] = useState<string | null>(null);
   const [addingUsage, setAddingUsage] = useState(false);
@@ -798,7 +800,7 @@ export function JppPolyMapsAdmin() {
         throw failed || new Error('Gagal menerbitkan panorama atau pin.');
       }
 
-      const { error: statusError } = await supabase.from('imaps_field_submissions').update({ status: 'approved', reviewed_by: user?.id || null, reviewed_at: new Date().toISOString() }).eq('id', sub.id).eq('status', 'pending');
+      const { error: statusError } = await supabase.from('imaps_field_submissions').update({ status: 'approved', reviewed_by: user?.id || null, reviewed_at: new Date().toISOString() }).eq('id', sub.id).eq('status', sub.status);
       if (statusError) throw statusError;
 
       if (sub.contributor_id) {
@@ -818,6 +820,124 @@ export function JppPolyMapsAdmin() {
     } finally {
       setIsProcessingReport((prev) => ({ ...prev, [sub.id]: false }));
     }
+  };
+
+  const openSubmissionEditor = (sub: FieldSubmission) => {
+    setSubmissionEditConfig(sub);
+    setStudioConfig({ isOpen: true, buildingId: sub.building_id || undefined, locationId: sub.location_id || undefined, panoramaUrl: sub.panorama_360_url, floorLevel: sub.floor_level || '1' });
+  };
+
+  const openDirectoryEntryEditor = (entry: { id: string; panoramaUrl: string; buildingId?: string | null; label?: string | null }) => {
+    const locationId = entry.id.startsWith('location:') ? entry.id.slice('location:'.length) : undefined;
+    const location = locations.find((item) => item.id === locationId);
+    const synthetic: FieldSubmission = {
+      id: `directory:${entry.id}`,
+      building_id: location?.building_id || entry.buildingId || null,
+      location_id: location?.id || null,
+      contributor_name: 'Admin JPP',
+      floor_level: String(location?.floor_level ?? 1),
+      room_code_hint: location?.room_code || '',
+      panorama_360_url: entry.panoramaUrl,
+      hotspots_json: ((Object.values(hotspotsByPanorama).flat() as PolyMaps360HotspotDraft[])).filter((pin) => pin.panorama_url === entry.panoramaUrl),
+      notes: '',
+      status: 'approved',
+      created_at: new Date().toISOString(),
+    };
+    setSubmissionEditConfig(synthetic);
+    setStudioConfig({ isOpen: true, buildingId: synthetic.building_id || undefined, locationId, panoramaUrl: entry.panoramaUrl, floorLevel: synthetic.floor_level || '1' });
+  };
+
+  const saveSubmissionEdit = async (sub: FieldSubmission, edit: { panoramaUrl: string; hotspots: PolyMaps360HotspotDraft[]; buildingId: string; locationId?: string; contributorName: string; notes: string; corridorLabel: string; floorLevel: string; roomCode: string }) => {
+    const isDirectoryEdit = sub.id.startsWith('directory:');
+    const isNewRoom = edit.locationId === '__new__';
+    const plan = buildSubmissionEditPlan(sub.status, isNewRoom ? null : edit.locationId || sub.location_id || null);
+    if (plan.updateSubmission) {
+      const { error } = await supabase.from('imaps_field_submissions').update({
+        panorama_360_url: edit.panoramaUrl,
+        contributor_name: edit.contributorName.trim(),
+        building_id: edit.buildingId,
+        location_id: !isNewRoom ? edit.locationId || null : null,
+        floor_level: edit.floorLevel,
+        corridor_label: edit.corridorLabel,
+        room_code_hint: edit.hotspots.filter((pin) => pin.pin_type === 'room').map((pin) => pin.room_code || pin.label).filter(Boolean).join(', '),
+        notes: edit.notes,
+        hotspots_json: edit.hotspots,
+        hotspots_payload: edit.hotspots,
+      }).eq('id', sub.id).eq('status', sub.status);
+      if (error) throw error;
+      toast.success(sub.status === 'pending' ? 'Submission dikemas kini dan kekal pending.' : 'Submission dikemas kini; status kekal rejected.');
+      await fetchData();
+      return;
+    }
+    if (sub.status !== 'approved') throw new Error('Submission rejected tidak boleh diterbitkan semula melalui edit.');
+    if (!plan.targetLocationId && !isNewRoom) throw new Error('Pilih bilik/kelas sasaran untuk edit submission approved.');
+    let target = isNewRoom ? undefined : locations.find((location) => location.id === plan.targetLocationId);
+    if (!target && !isNewRoom) throw new Error('Bilik sasaran tidak ditemui.');
+    const roomCode = (edit.roomCode || target?.room_code || '').trim();
+    if (!roomCode) throw new Error('Masukkan atau pilih kod bilik/kelas.');
+    const conflicts = findRoomPanoramaConflicts(locations, { buildingId: edit.buildingId, floor: edit.floorLevel, roomCode, panoramaUrl: edit.panoramaUrl, locationId: target?.id });
+    if (conflicts.length) {
+      const details = conflicts.map((row) => { const b = buildings.find((item) => item.id === row.building_id); return `${b?.code || 'Bangunan'} · ${row.room_code} (aras ${row.floor_level}): ${row.panorama_360_url || 'tiada panorama'}`; }).join('\n');
+      if (!window.confirm(`Konflik bilik ditemui:\n${details}\n\nTeruskan untuk bilik terpilih sahaja?`)) throw new Error('Edit dibatalkan kerana konflik bilik.');
+    }
+    if (!isDirectoryEdit) {
+      const { error: revisionError } = await supabase.from('imaps_field_submission_revisions').insert({ submission_id: sub.id, snapshot: sub, edited_by: user?.id || null });
+      if (revisionError) throw revisionError;
+    }
+    if (!target && isNewRoom) {
+      const { data, error } = await supabase.from('imaps_locations').insert({ building_id: edit.buildingId, room_code: roomCode.toUpperCase(), floor_level: Number(edit.floorLevel) || 1, direction_text: '', search_tags: '', panorama_360_url: edit.panoramaUrl, is_360_enabled: true }).select('*').single();
+      if (error) throw error;
+      target = data;
+    }
+    if (!target) throw new Error('Bilik sasaran tidak ditemui.');
+    const firstRoomPin = edit.hotspots.find((pin) => pin.pin_type === 'room');
+    const targetHotspots = getHotspotsForLocation((Object.values(hotspotsByPanorama).flat() as PolyMaps360HotspotDraft[]), target);
+    const legacyHotspotIds = targetHotspots.filter((pin) => !pin.location_id).map((pin) => pin.id).filter(Boolean);
+    const rows = edit.hotspots.map((pin) => ({ panorama_url: edit.panoramaUrl, building_id: edit.buildingId, location_id: target.id, pin_type: pin.pin_type, label: pin.label, room_code: pin.room_code || null, floor_level: pin.floor_level || edit.floorLevel, description: pin.description || null, pitch: pin.pitch, yaw: pin.yaw, target_panorama_url: pin.target_panorama_url || null, created_by: user?.id || null }));
+    let insertedIds: string[] = [];
+    if (rows.length) {
+      const { data, error } = await supabase.from('imaps_360_hotspots').insert(rows).select('id');
+      if (error) throw error;
+      insertedIds = (data || []).map((row) => row.id).filter(Boolean);
+    }
+    const { error: locationError } = await supabase.from('imaps_locations').update({
+      building_id: edit.buildingId,
+      room_code: roomCode.toUpperCase(),
+      floor_level: Number(edit.floorLevel) || target.floor_level || 1,
+      panorama_360_url: edit.panoramaUrl,
+      is_360_enabled: true,
+      target_yaw: firstRoomPin?.yaw ?? target.target_yaw,
+      target_pitch: firstRoomPin?.pitch ?? target.target_pitch,
+    }).eq('id', target.id);
+    if (locationError) {
+      if (insertedIds.length) await supabase.from('imaps_360_hotspots').delete().in('id', insertedIds);
+      throw locationError;
+    }
+    const [ownedDelete, legacyDelete] = await Promise.all([
+      supabase.from('imaps_360_hotspots').delete().eq('location_id', target.id).not('id', 'in', `(${insertedIds.join(',') || '00000000-0000-0000-0000-000000000000'})`),
+      legacyHotspotIds.length ? supabase.from('imaps_360_hotspots').delete().in('id', legacyHotspotIds) : Promise.resolve({ error: null }),
+    ]);
+    if (ownedDelete.error || legacyDelete.error) {
+      console.warn('Room edited; old pin cleanup incomplete:', ownedDelete.error?.message || legacyDelete.error?.message);
+      toast.error('Bilik disimpan, tetapi pin lama tak dapat dibersihkan sepenuhnya. Semak pin bilik ini.');
+    }
+    if (!isDirectoryEdit) {
+      const { error: submissionError } = await supabase.from('imaps_field_submissions').update({
+      panorama_360_url: edit.panoramaUrl,
+      contributor_name: edit.contributorName.trim(),
+      building_id: edit.buildingId,
+      location_id: target.id,
+      floor_level: edit.floorLevel,
+      corridor_label: edit.corridorLabel,
+      room_code_hint: edit.hotspots.filter((pin) => pin.pin_type === 'room').map((pin) => pin.room_code || pin.label).filter(Boolean).join(', '),
+      notes: edit.notes,
+      hotspots_json: edit.hotspots,
+      hotspots_payload: edit.hotspots,
+      }).eq('id', sub.id).eq('status', 'approved');
+      if (submissionError) throw submissionError;
+    }
+    toast.success(isDirectoryEdit ? 'Bilik terpilih dikemas kini; bilik lain kekal.' : 'Bilik terpilih dikemas kini. Rekod lama disimpan dalam sejarah; bilik lain kekal.');
+    await fetchData();
   };
 
   const savePendingSubmissionPins = async () => {
@@ -867,7 +987,7 @@ export function JppPolyMapsAdmin() {
     }
   };
 
-  const applyPanoramaToBuilding = async (entry: { panoramaUrl: string; buildingId?: string | null; label?: string | null }) => {
+  const applyPanoramaToBuilding = async (entry: { panoramaUrl: string; buildingId?: string | null; label?: string | null; source: string; status: string }) => {
     const targetBuildingId = entry.buildingId || directoryTargetBuildingId;
     if (!targetBuildingId || !entry.panoramaUrl || !canApplyPanoramaToBuilding(entry)) return;
     setConfirmConfig({
@@ -2049,7 +2169,7 @@ export function JppPolyMapsAdmin() {
         </div>
       ) : activeTab === '360directory' ? (
         (() => {
-          const entries = buildPolyMaps360Directory(buildings, locations, fieldSubmissions, Object.values(hotspotsByPanorama).flat(), storageObjects, disabled360Rows);
+          const entries = buildPolyMaps360Directory(buildings, locations, fieldSubmissions, (Object.values(hotspotsByPanorama).flat() as PolyMaps360HotspotDraft[]), storageObjects, disabled360Rows);
           const filtered = filterPolyMaps360Directory(entries, directoryFilter, directorySearch);
           const statusLabels: Record<DirectoryStatus | 'all', string> = {
             all: 'Semua', active: 'Aktif', pending: 'Menunggu', approved: 'Diluluskan', rejected: 'Ditolak', disabled: 'Disabled', unused: 'Belum digunakan',
@@ -2093,9 +2213,10 @@ export function JppPolyMapsAdmin() {
                           <div className="flex justify-between text-xs text-slate-500"><span>{entry.pinCount} pin</span><span>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ''}</span></div>
                           <div className="flex flex-wrap gap-2 pt-1">
                             <button type="button" onClick={() => setUsagePanoramaUrl(entry.panoramaUrl)} className="rounded-lg border px-3 py-1.5 text-xs font-bold">Penggunaan & Edit</button>
-                            {entry.source === 'submission' && entry.status === 'pending' && (() => {
+                            {entry.status === 'active' && (entry.source === 'building' || entry.source === 'location') && <button type="button" onClick={() => openDirectoryEntryEditor(entry)} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Edit pin · tap gambar</button>}
+                            {entry.source === 'submission' && (entry.status === 'pending' || entry.status === 'approved') && (() => {
                               const submission = fieldSubmissions.find((item) => item.id === entry.id.replace('submission:', ''));
-                              return submission ? <button type="button" onClick={() => { setEditingSubmission(submission); setDraftSubmissionPins([...submission.hotspots_json]); }} className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white">Edit pin (pending)</button> : null;
+                              return submission ? <button type="button" onClick={() => openSubmissionEditor(submission as FieldSubmission)} className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white">Edit submission · tap pin</button> : null;
                             })()}
                             {canApplyPanoramaToBuilding(entry) && (entry.buildingId || directoryTargetBuildingId) && <button type="button" onClick={() => applyPanoramaToBuilding(entry)} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Guna untuk bangunan</button>}
                           </div>
@@ -2106,7 +2227,7 @@ export function JppPolyMapsAdmin() {
                 </div>
               )}
               {usagePanoramaUrl && (() => {
-                const usages = getPanoramaUsage(locations, Object.values(hotspotsByPanorama).flat(), buildings, usagePanoramaUrl);
+                const usages = getPanoramaUsage(locations, (Object.values(hotspotsByPanorama).flat() as PolyMaps360HotspotDraft[]), buildings, usagePanoramaUrl);
                 const selected = locations.find((location) => location.id === editingUsageLocationId);
                 return <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/70 p-3" role="dialog" aria-modal="true" aria-label="Penggunaan dan edit panorama">
                   <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-4 dark:bg-slate-900">
@@ -2158,6 +2279,12 @@ export function JppPolyMapsAdmin() {
                 </div>
               </div>
             </div>
+            <div className="flex flex-col gap-2 border-b border-slate-200 p-4 sm:flex-row dark:border-white/10">
+              <input value={submissionFilters.query} onChange={(e) => setSubmissionFilters((f) => ({ ...f, query: e.target.value }))} placeholder="Cari penyumbang, bilik atau nota…" aria-label="Cari submission 360" className="min-w-0 flex-1 rounded-lg border px-3 py-2 text-sm dark:bg-slate-900" />
+              <select value={submissionFilters.status} onChange={(e) => setSubmissionFilters((f) => ({ ...f, status: e.target.value }))} aria-label="Filter status submission" className="rounded-lg border px-3 py-2 text-sm dark:bg-slate-900"><option value="all">Semua status</option><option value="pending">Pending</option><option value="approved">Approved</option><option value="rejected">Rejected</option></select>
+              <select value={submissionFilters.buildingId} onChange={(e) => setSubmissionFilters((f) => ({ ...f, buildingId: e.target.value }))} aria-label="Filter bangunan submission" className="rounded-lg border px-3 py-2 text-sm dark:bg-slate-900"><option value="all">Semua bangunan</option>{buildings.map((b) => <option key={b.id} value={b.id}>{b.code} · {b.name}</option>)}</select>
+            </div>
+            <p className="px-4 pt-2 text-xs text-slate-500">{filter360Submissions(fieldSubmissions, submissionFilters).length} / {fieldSubmissions.length} submission</p>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
@@ -2179,7 +2306,7 @@ export function JppPolyMapsAdmin() {
                       </td>
                     </tr>
                   ) : (
-                    fieldSubmissions.map((sub) => {
+                    filter360Submissions(fieldSubmissions, submissionFilters).map((sub: FieldSubmission) => {
                       const bld = buildings.find((b) => b.id === sub.building_id);
                       const pinCount = Array.isArray(sub.hotspots_json) ? sub.hotspots_json.length : 0;
                       return (
@@ -2228,6 +2355,7 @@ export function JppPolyMapsAdmin() {
                           </td>
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end gap-2">
+                              <button type="button" onClick={() => openSubmissionEditor(sub as FieldSubmission)} className="rounded-lg bg-indigo-600 px-2.5 py-1.5 text-xs font-bold text-white">Edit 360° · tap pin</button>
                               <button
                                 type="button"
                                 onClick={() => {
@@ -3227,7 +3355,7 @@ export function JppPolyMapsAdmin() {
 
       <PolyMaps360CaptureModal
         isOpen={studioConfig.isOpen}
-        onClose={() => setStudioConfig({ isOpen: false })}
+        onClose={() => { setStudioConfig({ isOpen: false }); setSubmissionEditConfig(null); }}
         buildings={buildings.map(b => ({
           id: b.id,
           code: b.code,
@@ -3248,9 +3376,8 @@ export function JppPolyMapsAdmin() {
         initialLocationId={studioConfig.locationId}
         initialPanoramaUrl={studioConfig.panoramaUrl}
         initialFloorLevel={studioConfig.floorLevel}
-        initialHotspots={
-          studioConfig.panoramaUrl ? hotspotsByPanorama[studioConfig.panoramaUrl] || [] : []
-        }
+        initialHotspots={submissionEditConfig?.hotspots_json || (studioConfig.panoramaUrl ? hotspotsByPanorama[studioConfig.panoramaUrl] || [] : [])}
+        adminEdit={submissionEditConfig ? { contributorName: submissionEditConfig.contributor_name || '', notes: submissionEditConfig.notes || '', corridorLabel: submissionEditConfig.corridor_label || '', status: submissionEditConfig.status, allHotspots: (Object.values(hotspotsByPanorama).flat() as PolyMaps360HotspotDraft[]), activeHotspotsByLocation: Object.fromEntries(((Object.values(hotspotsByPanorama).flat() as PolyMaps360HotspotDraft[]).filter((pin) => pin.location_id)).reduce((map, pin) => { const list = map.get(pin.location_id!) || []; list.push(pin); map.set(pin.location_id!, list); return map; }, new Map<string, PolyMaps360HotspotDraft[]>())), onSave: (edit) => saveSubmissionEdit(submissionEditConfig, edit) } : undefined}
         isAdminMode={true}
         currentUserId={user?.id}
         currentUserName={profile?.full_name || 'Admin JPP'}

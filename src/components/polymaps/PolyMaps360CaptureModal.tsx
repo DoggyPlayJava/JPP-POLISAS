@@ -26,6 +26,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { Pannellum360Viewer } from './Pannellum360Viewer';
+import { getHotspotsForLocation } from '@/lib/polymaps360Directory';
 import {
   inferRoomMetadata,
   findNearestBuildingByGps,
@@ -82,6 +83,7 @@ export interface PolyMaps360CaptureModalProps {
   isAdminMode: boolean;
   currentUserId?: string | null;
   currentUserName?: string | null;
+  adminEdit?: { contributorName: string; notes: string; corridorLabel: string; allHotspots: PolyMaps360HotspotDraft[]; status: 'pending' | 'approved' | 'rejected'; activeHotspotsByLocation: Record<string, PolyMaps360HotspotDraft[]>; onSave: (result: { panoramaUrl: string; hotspots: PolyMaps360HotspotDraft[]; buildingId: string; locationId?: string; contributorName: string; notes: string; corridorLabel: string; floorLevel: string; roomCode: string }) => Promise<void> };
   onSaved?: (result: {
     panoramaUrl: string;
     hotspots: PolyMaps360HotspotDraft[];
@@ -107,6 +109,7 @@ export function PolyMaps360CaptureModal({
   isAdminMode,
   currentUserId,
   currentUserName,
+  adminEdit,
   onSaved,
 }: PolyMaps360CaptureModalProps) {
   const { t, i18n } = useTranslation(['services', 'common']);
@@ -124,7 +127,10 @@ export function PolyMaps360CaptureModal({
   const [floorLevel, setFloorLevel] = useState<string>(initialFloorLevel || '1');
   const [panoramaUrl, setPanoramaUrl] = useState<string>(initialPanoramaUrl || '');
   const [stitchedBlobUrl, setStitchedBlobUrl] = useState<string | null>(null);
-  const [volunteerNotes, setVolunteerNotes] = useState<string>('');
+  const [volunteerNotes, setVolunteerNotes] = useState<string>(adminEdit?.notes || '');
+  const [adminContributorName, setAdminContributorName] = useState(adminEdit?.contributorName || currentUserName || '');
+  const [adminRoomCode, setAdminRoomCode] = useState('');
+  const [adminCorridorLabel, setAdminCorridorLabel] = useState(adminEdit?.corridorLabel || '');
 
   // State Kamera 4-Sudut Pantas
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -188,11 +194,15 @@ export function PolyMaps360CaptureModal({
     setSelectedLocationId(initialLocationId || '');
     setFloorLevel(initialFloorLevel || '1');
     setPanoramaUrl(initialPanoramaUrl || '');
+    setVolunteerNotes(adminEdit?.notes || '');
+    setAdminContributorName(adminEdit?.contributorName || currentUserName || '');
+    setAdminCorridorLabel(adminEdit?.corridorLabel || '');
+    setAdminRoomCode(initialHotspots.find((pin) => pin.pin_type === 'room')?.room_code || '');
     setPanoVerticalSweepDeg(null);
-    setHotspots(initialHotspots || []);
+    setHotspots(adminEdit?.status === 'approved' && initialLocationId ? getHotspotsForLocation(adminEdit.allHotspots, existingLocations.find((loc) => loc.id === initialLocationId) || { id: initialLocationId }) : initialHotspots || []);
     setStep(initialPanoramaUrl ? 'pins' : 'capture');
     setDraftPin(null);
-  }, [isOpen, initialBuildingId, initialLocationId, initialPanoramaUrl, initialFloorLevel]);
+  }, [isOpen, initialBuildingId, initialLocationId, initialPanoramaUrl, initialFloorLevel, adminEdit?.notes, adminEdit?.contributorName]);
 
   // Bersihkan kamera apabila modal ditutup
   const stopCameraStream = () => {
@@ -628,17 +638,9 @@ export function PolyMaps360CaptureModal({
   const handle360CanvasClick = ({ pitch, yaw }: { pitch: number; yaw: number }) => {
     const clockHint = formatYawToClockDirection(yaw, currentLang);
     setShowPinAdvanced(false);
-    setDraftPin({
-      index: null,
-      pin_type: 'room',
-      room_code: '',
-      label: '',
-      floor_level: floorLevel || '1',
-      description: t('services:polymaps_studio_door_direction_prefix', 'Pintu terletak {{hint}}.', { hint: clockHint }),
-      pitch,
-      yaw,
-      target_panorama_url: '',
-    });
+    setDraftPin((current) => current?.index !== null && current?.index !== undefined
+      ? { ...current, pitch, yaw, description: t('services:polymaps_studio_door_direction_prefix', 'Pintu terletak {{hint}}.', { hint: clockHint }) }
+      : { index: null, pin_type: 'room', room_code: '', label: '', floor_level: floorLevel || '1', description: t('services:polymaps_studio_door_direction_prefix', 'Pintu terletak {{hint}}.', { hint: clockHint }), pitch, yaw, target_panorama_url: '' });
   };
 
   const handleDraftRoomCodeChange = (value: string) => {
@@ -714,6 +716,14 @@ export function PolyMaps360CaptureModal({
 
     setIsSavingAll(true);
     try {
+      if (adminEdit) {
+        if (adminEdit.status === 'approved' && !selectedLocationId) { toast.error('Pilih bilik/kelas sasaran dahulu.'); return; }
+        if (selectedLocationId === '__new__' && !adminRoomCode.trim()) { toast.error('Masukkan kod bilik baharu.'); return; }
+        await adminEdit.onSave({ panoramaUrl, hotspots, buildingId: selectedBuildingId, locationId: selectedLocationId || undefined, contributorName: adminContributorName, notes: volunteerNotes, floorLevel, corridorLabel: adminCorridorLabel, roomCode: selectedLocationId === '__new__' ? adminRoomCode.trim() : (buildingLocations.find((loc) => loc.id === selectedLocationId)?.room_code || adminRoomCode) });
+        onSaved?.({ panoramaUrl, hotspots, buildingId: selectedBuildingId, locationId: selectedLocationId || undefined });
+        onClose();
+        return;
+      }
       if (isAdminMode) {
         // 1. Jika lokasi spesifik dipilih, kemas kini lokasi tersebut; jika tidak, kemas kini bangunan
         if (selectedLocationId) {
@@ -979,7 +989,7 @@ export function PolyMaps360CaptureModal({
               value={selectedBuildingId}
               onChange={(e) => {
                 setSelectedBuildingId(e.target.value);
-                setSelectedLocationId('');
+                setSelectedLocationId(adminEdit?.status === 'approved' ? '' : '');
               }}
               aria-label={t('services:polymaps_studio_select_building', '-- Pilih Bangunan / Blok --')}
               className="flex-1 min-w-[140px] sm:max-w-[260px] px-2.5 py-1.5 text-xs font-semibold bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-800 dark:text-slate-100 focus:outline-none focus:border-emerald-500"
@@ -1007,6 +1017,7 @@ export function PolyMaps360CaptureModal({
               <span>{t('services:polymaps_studio_v3_gps_short', 'GPS')}</span>
             </button>
 
+            {adminEdit && <select aria-label="Pilih bilik atau kelas sedia ada" value={selectedLocationId} onChange={(e) => { const next = buildingLocations.find((loc) => loc.id === e.target.value); setSelectedLocationId(e.target.value); if (next) { setFloorLevel(String(next.floor_level ?? '1')); setAdminRoomCode(next.room_code); if (adminEdit?.status === 'approved') setHotspots(getHotspotsForLocation(adminEdit.allHotspots, next)); } }} className="max-w-[220px] rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:bg-slate-900"><option value="">Pilih bilik/kelas…</option>{buildingLocations.filter((loc) => String(loc.floor_level ?? '1') === String(floorLevel || '1')).map((loc) => <option key={loc.id} value={loc.id}>{loc.room_code} · Aras {loc.floor_level ?? 1}</option>)}<option value="__new__">+ Daftar bilik baharu</option></select>}{adminEdit && selectedLocationId === '__new__' && <input aria-label="Kod bilik baharu" value={adminRoomCode} onChange={(e) => setAdminRoomCode(e.target.value)} placeholder="Kod bilik/kelas baharu" className="w-36 rounded-lg border px-2 py-1 text-xs dark:bg-slate-900" />}
             {selectedLocation && (
               <span className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 text-[11px] font-semibold">
                 <MapPin className="w-3 h-3" />
@@ -1033,7 +1044,7 @@ export function PolyMaps360CaptureModal({
                   <button
                     key={lvl}
                     type="button"
-                    onClick={() => setFloorLevel(lvl)}
+                    onClick={() => { setFloorLevel(lvl); if (adminEdit) setSelectedLocationId(''); }}
                     className={`min-w-[26px] px-1.5 py-0.5 rounded-md text-[11px] font-bold transition-colors duration-150 ${
                       active
                         ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
@@ -1926,7 +1937,9 @@ export function PolyMaps360CaptureModal({
                     </div>
                   )}
 
-                  {isAdminMode ? (
+                  {adminEdit ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2"><label className="text-xs font-semibold">Nama penyumbang<input value={adminContributorName} onChange={(e) => setAdminContributorName(e.target.value)} className="mt-1 w-full rounded-lg border p-2 text-xs dark:bg-slate-900" /></label><label className="text-xs font-semibold">Label koridor<input value={adminCorridorLabel} onChange={(e) => setAdminCorridorLabel(e.target.value)} className="mt-1 w-full rounded-lg border p-2 text-xs dark:bg-slate-900" /></label><label className="text-xs font-semibold">Nota<input value={volunteerNotes} onChange={(e) => setVolunteerNotes(e.target.value)} className="mt-1 w-full rounded-lg border p-2 text-xs dark:bg-slate-900" /></label></div>
+                  ) : isAdminMode ? (
                     <label className="pt-1 flex items-start gap-2 cursor-pointer">
                       <input
                         type="checkbox"
@@ -2010,7 +2023,7 @@ export function PolyMaps360CaptureModal({
                     <CheckCircle2 className="w-3.5 h-3.5" />
                   )}
                   <span>
-                    {isAdminMode
+                    {adminEdit ? 'Simpan pembetulan submission' : isAdminMode
                       ? t('services:polymaps_studio_submit_admin', 'Simpan & Terbitkan 360° ({{count}} Pin)', { count: hotspots.length })
                       : t('services:polymaps_studio_submit_volunteer', 'Hantar Sumbangan 360° ({{count}} Pin)', { count: hotspots.length })}
                   </span>
