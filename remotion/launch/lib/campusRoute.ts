@@ -15,7 +15,7 @@ export const CAMPUS_LANDMARKS = turf.featureCollection([
   turf.point(POLISAS_COORDS.BLOK_JTMK, { name: 'Blok JTMK • Makmal 3', role: 'destination' }),
 ]);
 
-const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const clamp01 = (v: number) => (Number.isFinite(v) ? Math.min(1, Math.max(0, v)) : 0);
 
 export function sliceCampusRoute(progress: number) {
   const distKm = Math.max(0.001, CAMPUS_ROUTE_KM * clamp01(progress));
