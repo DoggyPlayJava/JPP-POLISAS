@@ -347,7 +347,7 @@ export const EvolvingPath: React.FC<EvolvingPathProps> = ({
     }
   }, [d]);
 
-  if (!d || !d.trim()) return null;
+  if (!d || !d.trim() || totalLength <= 0.5) return null;
 
   const safeDuration = Math.max(1, durationFrames);
   const rawProgress = interpolate(frame, [startFrame, startFrame + safeDuration], [0, 1], {
@@ -359,12 +359,13 @@ export const EvolvingPath: React.FC<EvolvingPathProps> = ({
   const resolvedDotColor = headDotColor ?? stroke;
   const glowId = `evolving-dot-glow-${uid.replace(/:/g, '')}`;
 
-  const evolved = progress > 0.0001 ? evolvePath(progress, d) : null;
+  const isStarted = progress > 0.0001;
+  const isComplete = progress >= 0.9999;
+  const evolved = isStarted && !isComplete ? evolvePath(progress, d) : null;
 
   let headPoint: { readonly x: number; readonly y: number } | null = null;
   if (
     showHeadDot &&
-    totalLength > 0.5 &&
     progress > 0.002 &&
     (!hideDotWhenComplete || progress < 0.998)
   ) {
@@ -401,7 +402,7 @@ export const EvolvingPath: React.FC<EvolvingPathProps> = ({
         />
       ) : null}
 
-      {evolved ? (
+      {isStarted ? (
         <path
           d={d}
           fill="none"
@@ -409,8 +410,12 @@ export const EvolvingPath: React.FC<EvolvingPathProps> = ({
           strokeWidth={strokeWidth}
           strokeLinecap={strokeLinecap}
           strokeLinejoin={strokeLinejoin}
-          strokeDasharray={evolved.strokeDasharray}
-          strokeDashoffset={evolved.strokeDashoffset}
+          {...(evolved
+            ? {
+                strokeDasharray: evolved.strokeDasharray,
+                strokeDashoffset: evolved.strokeDashoffset,
+              }
+            : undefined)}
         />
       ) : null}
 
@@ -461,27 +466,32 @@ export const GeometricSparkBurst: React.FC<GeometricSparkBurstProps> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
+  const safeCount = Number.isFinite(count) ? Math.floor(count) : 0;
+
+  const particles = useMemo(() => {
+    if (safeCount <= 0) return [];
+    return Array.from({ length: safeCount }, (_, i) => {
+      const baseAngle = (i / safeCount) * Math.PI * 2;
+      const jitterAngle = (random(`${seed}-angle-${i}`) - 0.5) * 0.28;
+      const angle = baseAngle + jitterAngle;
+      const distScale = 0.68 + random(`${seed}-dist-${i}`) * 0.44;
+      const size = 5 + random(`${seed}-size-${i}`) * 6.5;
+      const isStar = i % 2 === 0;
+      const color = colors[i % colors.length] ?? LAUNCH_PALETTE.ACCENT;
+      const spinDir = i % 2 === 0 ? 1 : -1;
+      const spinDeg = spinDir * (45 + random(`${seed}-spin-${i}`) * 70);
+      return { angle, distScale, size, isStar, color, spinDeg };
+    });
+  }, [safeCount, seed, colors]);
+
   const safeDuration = Math.max(4, durationFrames);
   const localFrame = frame - triggerFrame;
-  if (localFrame < 0 || localFrame > safeDuration) return null;
+  if (safeCount <= 0 || localFrame < 0 || localFrame > safeDuration) return null;
 
   const progress = interpolate(localFrame, [0, safeDuration], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: SPARK_BURST_EASING,
-  });
-
-  const particles = Array.from({ length: Math.max(1, count) }, (_, i) => {
-    const baseAngle = (i / Math.max(1, count)) * Math.PI * 2;
-    const jitterAngle = (random(`${seed}-angle-${i}`) - 0.5) * 0.28;
-    const angle = baseAngle + jitterAngle;
-    const distScale = 0.68 + random(`${seed}-dist-${i}`) * 0.44;
-    const size = 5 + random(`${seed}-size-${i}`) * 6.5;
-    const isStar = i % 2 === 0;
-    const color = colors[i % colors.length] ?? LAUNCH_PALETTE.ACCENT;
-    const spinDir = i % 2 === 0 ? 1 : -1;
-    const spinDeg = spinDir * (45 + random(`${seed}-spin-${i}`) * 70);
-    return { angle, distScale, size, isStar, color, spinDeg };
   });
 
   const ringRadius = interpolate(progress, [0, 1], [8, radius * 0.85]);

@@ -39,6 +39,7 @@ const isWordAccented = (word: string, index: number, target?: AccentWordsTarget)
       return (target as readonly number[]).includes(index);
     }
     const cleanWord = normalizeWordToken(word);
+    if (cleanWord === '') return false;
     return (target as readonly string[]).some((needle) => normalizeWordToken(needle) === cleanWord);
   }
   const range = target as { readonly start: number; readonly end: number };
@@ -125,6 +126,8 @@ export const KineticWords: React.FC<KineticWordsProps> = ({
               marginTop: '-0.06em',
               paddingBottom: '0.16em',
               marginBottom: '-0.16em',
+              paddingRight: '0.08em',
+              marginRight: '-0.08em',
             }}
           >
             <span

@@ -29,17 +29,61 @@ export const EditorialBackdrop: React.FC<EditorialBackdropProps> = ({
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
 
-  const safeWidth = Math.max(1, Math.round(width));
-  const safeHeight = Math.max(1, Math.round(height));
-  const safeSeed = Math.min(1000, Math.max(0, seed));
+  const safeWidth = Math.max(1, Math.round(Number.isFinite(width) ? width : 1920));
+  const safeHeight = Math.max(1, Math.round(Number.isFinite(height) ? height : 1080));
+  const safeSeed = Math.min(1000, Math.max(0, Number.isFinite(seed) ? seed : 12));
+  const safeContourSpeed = Number.isFinite(contourSpeed) ? contourSpeed : 1;
   const timeSec = frame / Math.max(1, fps);
 
   const baseColor = dark ? LAUNCH_PALETTE.PRIMARY : LAUNCH_PALETTE.BACKGROUND;
-  const resolvedPaperAmount = clampUnit(paperAmount ?? (dark ? 0.16 : 0.22));
+  const defaultPaperAmount = dark ? 0.16 : 0.22;
+  const resolvedPaperAmount = clampUnit(
+    paperAmount !== undefined && Number.isFinite(paperAmount) ? paperAmount : defaultPaperAmount,
+  );
 
   const strokeColor = dark ? 'rgba(217, 201, 178, 0.08)' : 'rgba(46, 58, 47, 0.045)';
   const dotColor = dark ? 'rgba(217, 201, 178, 0.15)' : 'rgba(46, 58, 47, 0.095)';
   const patternId = `editorial-grid-${dark ? 'dark' : 'light'}-${uid.replace(/:/g, '')}`;
+
+  const backdropEffects = [
+    paper({
+      amount: resolvedPaperAmount,
+      colorFront: dark ? LAUNCH_PALETTE.MUTED_OLIVE : LAUNCH_PALETTE.CARD_BG,
+      colorBack: dark ? LAUNCH_PALETTE.PRIMARY_DARK : LAUNCH_PALETTE.SURFACE_MUTED,
+      contrast: dark ? 0.16 : 0.2,
+      roughness: dark ? 0.06 : 0.24,
+      fiber: dark ? 0.28 : 0.28,
+      fiberSize: dark ? 0.32 : 0.26,
+      crumples: 0,
+      crumpleSize: 0.45,
+      folds: 0,
+      foldCount: 0,
+      drops: 0.04,
+      scale: dark ? 1.15 : 0.9,
+      seed: safeSeed,
+    }),
+    noise({
+      amount: dark ? 0.038 : 0.024,
+      seed: safeSeed,
+      premultiply: false,
+    }),
+    ...(showContours
+      ? [
+          contourLines({
+            lineColor: dark ? LAUNCH_PALETTE.TERTIARY : LAUNCH_PALETTE.SECONDARY,
+            lineWidth: 1.15,
+            spacing: 42,
+            scale: 280,
+            complexity: 0.55,
+            smoothness: 0.72,
+            seed: safeSeed,
+            offsetX: timeSec * 14 * safeContourSpeed,
+            offsetY: timeSec * 8 * safeContourSpeed,
+            opacity: dark ? 0.11 : 0.08,
+          }),
+        ]
+      : []),
+  ];
 
   return (
     <div
@@ -57,42 +101,7 @@ export const EditorialBackdrop: React.FC<EditorialBackdropProps> = ({
         color={baseColor}
         premountFor={fps}
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
-        effects={[
-          paper({
-            amount: resolvedPaperAmount,
-            colorFront: dark ? LAUNCH_PALETTE.MUTED_OLIVE : LAUNCH_PALETTE.CARD_BG,
-            colorBack: dark ? LAUNCH_PALETTE.PRIMARY_DARK : LAUNCH_PALETTE.SURFACE_MUTED,
-            contrast: dark ? 0.16 : 0.2,
-            roughness: dark ? 0.06 : 0.24,
-            fiber: dark ? 0.28 : 0.28,
-            fiberSize: dark ? 0.32 : 0.26,
-            crumples: 0,
-            crumpleSize: 0.45,
-            folds: 0,
-            foldCount: 0,
-            drops: 0.04,
-            scale: dark ? 1.15 : 0.9,
-            seed: safeSeed,
-          }),
-          noise({
-            amount: dark ? 0.038 : 0.024,
-            seed: safeSeed,
-            premultiply: false,
-          }),
-          contourLines({
-            disabled: !showContours,
-            lineColor: dark ? LAUNCH_PALETTE.TERTIARY : LAUNCH_PALETTE.SECONDARY,
-            lineWidth: 1.15,
-            spacing: 42,
-            scale: 280,
-            complexity: 0.55,
-            smoothness: 0.72,
-            seed: safeSeed,
-            offsetX: timeSec * 14 * contourSpeed,
-            offsetY: timeSec * 8 * contourSpeed,
-            opacity: dark ? 0.11 : 0.08,
-          }),
-        ]}
+        effects={backdropEffects}
       />
 
       {showGrid ? (
@@ -180,15 +189,18 @@ export const LightLeakOverlay: React.FC<{
     }),
   );
 
+  const safeSeed = Number.isFinite(seed) ? seed : 0;
+  const safeHueShift = Number.isFinite(hueShift) ? Math.min(360, Math.max(0, hueShift)) : 0;
+
   return (
     <Solid
-      width={Math.max(1, Math.round(width))}
-      height={Math.max(1, Math.round(height))}
+      width={Math.max(1, Math.round(Number.isFinite(width) ? width : 1920))}
+      height={Math.max(1, Math.round(Number.isFinite(height) ? height : 1080))}
       premountFor={fps}
       effects={[
         lightLeak({
-          seed,
-          hueShift: Math.min(360, Math.max(0, hueShift)),
+          seed: safeSeed,
+          hueShift: safeHueShift,
           progress,
         }),
       ]}

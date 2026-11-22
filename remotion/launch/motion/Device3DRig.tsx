@@ -122,7 +122,7 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
   const rotateX = baseRotateX + interpolate(enterProgress, [0, 1], [entryRotateX, 0]) + floatRotateX;
   const rotateY = baseRotateY + interpolate(enterProgress, [0, 1], [entryRotateY, 0]) + floatRotateY;
 
-  const blurRadius = Math.max(
+  const rawBlurRadius = Math.max(
     0,
     interpolate(
       frame,
@@ -135,8 +135,9 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
       },
     ),
   );
+  const blurRadius = rawBlurRadius < 0.4 ? 0 : rawBlurRadius;
 
-  const aberrationAmount = Math.max(
+  const rawAberrationAmount = Math.max(
     0,
     interpolate(
       frame,
@@ -149,6 +150,7 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
       },
     ),
   );
+  const aberrationAmount = rawAberrationAmount < 0.25 ? 0 : rawAberrationAmount;
 
   const rawShine = interpolate(
     frame,
