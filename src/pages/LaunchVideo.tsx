@@ -24,8 +24,16 @@ export function LaunchVideo() {
   const [hudVisible, setHudVisible] = useState(true);
 
   const inputProps = useMemo<LaunchShowcaseProps>(() => {
+    const isLocalHost =
+      typeof window !== 'undefined' &&
+      (window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.hostname === '[::1]');
+
     const portalOrigin =
-      typeof window !== 'undefined' && window.location.origin.startsWith('http')
+      typeof window !== 'undefined' &&
+      !isLocalHost &&
+      window.location.origin.startsWith('http')
         ? window.location.origin
         : DEFAULT_LAUNCH_PROPS.portalUrl;
 
@@ -45,6 +53,9 @@ export function LaunchVideo() {
     }
     return idx;
   }, [currentFrame]);
+
+  const activeChapterIdxRef = useRef(activeChapterIdx);
+  activeChapterIdxRef.current = activeChapterIdx;
 
   const jumpToChapter = useCallback((chapterIndex: number) => {
     const clamped = Math.max(0, Math.min(LAUNCH_CHAPTERS.length - 1, chapterIndex));
@@ -74,11 +85,18 @@ export function LaunchVideo() {
   }, []);
 
   const toggleFullscreen = useCallback(async () => {
-    if (!stageRef.current) return;
-    if (document.fullscreenElement) {
-      await document.exitFullscreen();
-    } else {
-      await stageRef.current.requestFullscreen();
+    const stage = stageRef.current;
+    if (!stage) return;
+    try {
+      if (document.fullscreenElement) {
+        if (typeof document.exitFullscreen === 'function') {
+          await document.exitFullscreen();
+        }
+      } else if (typeof stage.requestFullscreen === 'function') {
+        await stage.requestFullscreen();
+      }
+    } catch {
+      // Ignore unsupported fullscreen in restricted browsers or iframes
     }
   }, []);
 
@@ -111,17 +129,29 @@ export function LaunchVideo() {
     revealHud();
     window.addEventListener('mousemove', revealHud);
     window.addEventListener('keydown', revealHud);
+    window.addEventListener('touchstart', revealHud, { passive: true });
     return () => {
       window.removeEventListener('mousemove', revealHud);
       window.removeEventListener('keydown', revealHud);
+      window.removeEventListener('touchstart', revealHud);
       window.clearTimeout(hideTimer);
     };
   }, []);
 
-  // Fullscreen & keyboard stage shortcuts (Space, F, R, Arrows, 1-8)
+  // Sync fullscreen state once on mount
   useEffect(() => {
     const onFsChange = () => setIsFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => {
+      document.removeEventListener('fullscreenchange', onFsChange);
+    };
+  }, []);
+
+  // Keyboard stage shortcuts (Space, F, R, Arrows, 1-8)
+  useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+
       if (e.code === 'Space') {
         e.preventDefault();
         togglePlay();
@@ -132,21 +162,19 @@ export function LaunchVideo() {
         e.preventDefault();
         replayFromStart();
       } else if (e.key === 'ArrowRight') {
-        jumpToChapter(activeChapterIdx + 1);
+        jumpToChapter(activeChapterIdxRef.current + 1);
       } else if (e.key === 'ArrowLeft') {
-        jumpToChapter(activeChapterIdx - 1);
+        jumpToChapter(activeChapterIdxRef.current - 1);
       } else if (e.key >= '1' && e.key <= '8') {
         jumpToChapter(Number(e.key) - 1);
       }
     };
 
-    document.addEventListener('fullscreenchange', onFsChange);
     window.addEventListener('keydown', onKeyDown);
     return () => {
-      document.removeEventListener('fullscreenchange', onFsChange);
       window.removeEventListener('keydown', onKeyDown);
     };
-  }, [activeChapterIdx, jumpToChapter, replayFromStart, toggleFullscreen, togglePlay]);
+  }, [jumpToChapter, replayFromStart, toggleFullscreen, togglePlay]);
 
   const progressPct = (currentFrame / Math.max(1, LAUNCH_TOTAL_FRAMES - 1)) * 100;
 
@@ -177,7 +205,7 @@ export function LaunchVideo() {
 
       {/* Minimal Auto-Hide Stage HUD (Opaque surfaces — 100% GPU Baseline Compliant) */}
       <div
-        className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[min(94vw,1120px)] rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2] shadow-lg px-4 py-3 transition-opacity duration-300 ${
+        className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[min(96vw,1220px)] rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2] shadow-lg px-4 py-3 transition-opacity duration-300 ${
           hudVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
@@ -191,6 +219,7 @@ export function LaunchVideo() {
           tabIndex={0}
           onClick={(e) => {
             const rect = e.currentTarget.getBoundingClientRect();
+            if (rect.width <= 0) return;
             const ratio = Math.min(1, Math.max(0, (e.clientX - rect.left) / rect.width));
             const target = Math.round(ratio * (LAUNCH_TOTAL_FRAMES - 1));
             playerRef.current?.seekTo(target);
@@ -201,9 +230,9 @@ export function LaunchVideo() {
           <div className="h-full bg-[#C96F4F] rounded-full" style={{ width: `${progressPct}%` }} />
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-2.5">
           {/* Transport Controls */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={togglePlay}
@@ -231,7 +260,7 @@ export function LaunchVideo() {
           </div>
 
           {/* 8 Chapter Jump Pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto max-w-full">
+          <div className="flex items-center gap-1 overflow-x-auto min-w-0 max-w-full">
             {LAUNCH_CHAPTERS.map((ch, idx) => {
               const active = idx === activeChapterIdx;
               return (
@@ -239,7 +268,7 @@ export function LaunchVideo() {
                   key={ch.id}
                   type="button"
                   onClick={() => jumpToChapter(idx)}
-                  className={`px-2.5 py-1.5 rounded-lg text-xs font-bold tracking-wide whitespace-nowrap border ${
+                  className={`px-2 py-1 rounded-lg text-[11px] font-bold tracking-wide whitespace-nowrap border ${
                     active
                       ? 'bg-[#2E3A2F] text-[#F8F6EE] border-[#2E3A2F]'
                       : 'bg-[#FFFFFF] text-[#556453] border-[#D9C9B2] hover:text-[#2E3A2F]'
@@ -255,7 +284,7 @@ export function LaunchVideo() {
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#C96F4F] text-[#F8F6EE] text-xs font-extrabold uppercase tracking-wider hover:bg-[#2E3A2F]"
+            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#C96F4F] text-[#F8F6EE] text-xs font-extrabold uppercase tracking-wider hover:bg-[#2E3A2F]"
           >
             <span>Masuk Portal</span>
             <ArrowRight className="w-3.5 h-3.5" />
