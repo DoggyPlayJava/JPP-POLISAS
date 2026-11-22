@@ -12,18 +12,54 @@ import {
   useDelayRender,
   useVideoConfig,
 } from 'remotion';
-import { interpolatePaths } from '@remotion/paths';
+import { evolvePath, getLength, getPointAtLength } from '@remotion/paths';
 import { LAUNCH_FONTS, LAUNCH_PALETTE, POLISAS_COORDS } from '../tokens';
 import { CAMPUS_LANDMARKS, getWalkerCoordinate, sliceCampusRoute } from '../lib/campusRoute';
 
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
+const ROUTE_EASING = Easing.bezier(0.25, 0.1, 0.25, 1);
+
+const OFFLINE_ROUTE_PATH = 'M 315 535 L 468 435 L 590 347';
+const OFFLINE_ROUTE_LENGTH = getLength(OFFLINE_ROUTE_PATH);
+
+const OFFLINE_LANDMARKS = [
+  { x: 315, y: 535, label: 'Dataran Siswa', role: 'origin' as const },
+  { x: 468, y: 435, label: 'Laluan Berbumbung', role: 'waypoint' as const },
+  { x: 590, y: 347, label: 'Blok JTMK • Makmal 3', role: 'destination' as const },
+] as const;
 
 let workerUrlConfigured = false;
 
-export const CampusMapLibrePlate: React.FC<{
+export type CampusMapLibrePlateProps = {
   readonly width: number;
   readonly height: number;
-}> = ({ width, height }) => {
+  readonly routeStartFrame?: number;
+  readonly routeEndFrame?: number;
+};
+
+/**
+ * Deterministic frame-to-route progress calculation shared between MapLibre GeoJSON updates,
+ * the offline fallback route path, and synchronized scene telemetry readouts.
+ */
+export function computeCampusRouteProgress(
+  frame: number,
+  startFrame: number,
+  endFrame: number,
+): number {
+  const safeEnd = Math.max(startFrame + 1, endFrame);
+  return interpolate(frame, [startFrame, safeEnd], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: ROUTE_EASING,
+  });
+}
+
+export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
+  width,
+  height,
+  routeStartFrame,
+  routeEndFrame,
+}) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
   const settledRef = useRef(false);
@@ -35,6 +71,13 @@ export const CampusMapLibrePlate: React.FC<{
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [fallbackMode, setFallbackMode] = useState(false);
   const [loadingHandle] = useState(() => delayRender('Loading POLISAS MapLibre campus map'));
+
+  const resolvedStartFrame = routeStartFrame ?? Math.round(0.6 * fps);
+  const resolvedEndFrame = Math.max(
+    resolvedStartFrame + 1,
+    routeEndFrame ?? durationInFrames - Math.round(1.0 * fps),
+  );
+  const routeProgress = computeCampusRouteProgress(frame, resolvedStartFrame, resolvedEndFrame);
 
   useEffect(() => {
     if (settledRef.current) return;
@@ -200,16 +243,11 @@ export const CampusMapLibrePlate: React.FC<{
     if (!map || fallbackMode) return;
 
     const handle = delayRender('Updating POLISAS MapLibre route frame');
-    const progress = interpolate(frame, [15, Math.max(16, durationInFrames - 30)], [0, 1], {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-    });
 
     const traceSource = map.getSource('campus-trace') as GeoJSONSource | undefined;
-    traceSource?.setData(sliceCampusRoute(progress));
+    traceSource?.setData(sliceCampusRoute(routeProgress));
 
-    const [wx, wy] = getWalkerCoordinate(progress);
+    const [wx, wy] = getWalkerCoordinate(routeProgress);
     const walkerSource = map.getSource('campus-walker') as GeoJSONSource | undefined;
     walkerSource?.setData({
       type: 'Feature',
@@ -231,13 +269,23 @@ export const CampusMapLibrePlate: React.FC<{
       map.off('idle', finish);
       finish();
     };
-  }, [continueRender, delayRender, durationInFrames, fallbackMode, frame, map]);
+  }, [continueRender, delayRender, fallbackMode, map, routeProgress]);
 
   useEffect(() => {
     if ((!map && !fallbackMode) || loadingClearedRef.current) return;
     loadingClearedRef.current = true;
     continueRender(loadingHandle);
   }, [continueRender, fallbackMode, loadingHandle, map]);
+
+  const clampedFallbackProgress = Math.min(1, Math.max(0, routeProgress));
+  const isRouteStarted = clampedFallbackProgress > 0.0001;
+  const isRouteComplete = clampedFallbackProgress >= 0.9999;
+  const evolvedFallback =
+    isRouteStarted && !isRouteComplete ? evolvePath(clampedFallbackProgress, OFFLINE_ROUTE_PATH) : null;
+  const walkerPoint = getPointAtLength(
+    OFFLINE_ROUTE_PATH,
+    Math.min(OFFLINE_ROUTE_LENGTH, Math.max(0, clampedFallbackProgress * OFFLINE_ROUTE_LENGTH)),
+  );
 
   return (
     <div
@@ -280,38 +328,121 @@ export const CampusMapLibrePlate: React.FC<{
             width={width}
             height={height}
             fit="cover"
+            objectPosition="center 44%"
             premountFor={fps}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 44%' }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              backgroundColor: 'rgba(248, 246, 238, 0.16)',
+              pointerEvents: 'none',
+            }}
           />
           <Interactive.Svg
             width={width}
             height={height}
-            viewBox="0 0 1000 720"
+            viewBox="0 0 1000 830"
             premountFor={fps}
             style={{ position: 'absolute', inset: 0 }}
           >
-            <Interactive.Path
-              name="Offline Campus Walking Route"
-              premountFor={fps}
-              d={interpolatePaths(
-                frame,
-                [15, Math.max(16, durationInFrames - 30)],
-                [
-                  'M 210 540 L 240 520 L 260 510',
-                  'M 210 540 L 490 385 L 770 215',
-                ],
-                {
-                  easing: Easing.bezier(0.25, 0.1, 0.25, 1),
-                  extrapolateLeft: 'clamp',
-                  extrapolateRight: 'clamp',
-                },
-              )}
+            <path
+              d={OFFLINE_ROUTE_PATH}
               fill="none"
-              stroke={LAUNCH_PALETTE.ACCENT}
-              strokeWidth={10}
+              stroke="rgba(255, 255, 255, 0.55)"
+              strokeWidth={11}
+              strokeDasharray="10 10"
               strokeLinecap="round"
               strokeLinejoin="round"
             />
+            {isRouteStarted ? (
+              <>
+                <path
+                  d={OFFLINE_ROUTE_PATH}
+                  fill="none"
+                  stroke={LAUNCH_PALETTE.CARD_BG}
+                  strokeWidth={14}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  {...(evolvedFallback
+                    ? {
+                        strokeDasharray: evolvedFallback.strokeDasharray,
+                        strokeDashoffset: evolvedFallback.strokeDashoffset,
+                      }
+                    : undefined)}
+                />
+                <Interactive.Path
+                  name="Offline Campus Walking Route"
+                  premountFor={fps}
+                  d={OFFLINE_ROUTE_PATH}
+                  fill="none"
+                  stroke={LAUNCH_PALETTE.ACCENT}
+                  strokeWidth={8.5}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  {...(evolvedFallback
+                    ? {
+                        strokeDasharray: evolvedFallback.strokeDasharray,
+                        strokeDashoffset: evolvedFallback.strokeDashoffset,
+                      }
+                    : undefined)}
+                />
+              </>
+            ) : null}
+
+            {OFFLINE_LANDMARKS.map((lm) => {
+              const isDest = lm.role === 'destination';
+              const isOrigin = lm.role === 'origin';
+              const pillWidth = isDest ? 222 : isOrigin ? 156 : 196;
+              return (
+                <g key={lm.label} transform={`translate(${lm.x}, ${lm.y})`}>
+                  <circle
+                    cx={0}
+                    cy={0}
+                    r={isDest ? 10 : 8}
+                    fill={isDest ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.PRIMARY}
+                    stroke={LAUNCH_PALETTE.CARD_BG}
+                    strokeWidth={3.5}
+                  />
+                  <g transform={`translate(${-pillWidth / 2}, ${isDest ? 18 : 16})`}>
+                    <rect
+                      x={0}
+                      y={0}
+                      width={pillWidth}
+                      height={30}
+                      rx={15}
+                      fill={isDest ? LAUNCH_PALETTE.PRIMARY : 'rgba(248, 246, 238, 0.96)'}
+                      stroke={isDest ? LAUNCH_PALETTE.TERTIARY : LAUNCH_PALETTE.PRIMARY}
+                      strokeWidth={1.5}
+                    />
+                    <text
+                      x={pillWidth / 2}
+                      y={20}
+                      textAnchor="middle"
+                      fill={isDest ? LAUNCH_PALETTE.BACKGROUND : LAUNCH_PALETTE.PRIMARY}
+                      fontFamily={LAUNCH_FONTS.MONO}
+                      fontSize={13}
+                      fontWeight={700}
+                    >
+                      {lm.label}
+                    </text>
+                  </g>
+                </g>
+              );
+            })}
+
+            <g transform={`translate(${walkerPoint.x}, ${walkerPoint.y})`}>
+              <circle cx={0} cy={0} r={19} fill="rgba(201, 111, 79, 0.25)" />
+              <circle
+                cx={0}
+                cy={0}
+                r={11.5}
+                fill={LAUNCH_PALETTE.ACCENT}
+                stroke={LAUNCH_PALETTE.CARD_BG}
+                strokeWidth={3.5}
+              />
+            </g>
           </Interactive.Svg>
         </>
       )}
