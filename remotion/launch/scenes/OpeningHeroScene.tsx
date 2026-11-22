@@ -68,10 +68,10 @@ const HERO_MODULE_PILLS: readonly ModulePillSpec[] = [
     id: 'polymaps',
     title: 'PolyMaps • GPS',
     subtitle: 'Navigasi Kampus Masa Nyata',
-    left: 92,
-    top: 452,
-    startOffsetX: -140,
-    startOffsetY: 54,
+    left: 112,
+    top: 446,
+    startOffsetX: 36,
+    startOffsetY: 32,
     accentBg: LAUNCH_PALETTE.ACCENT,
     iconKind: 'maps',
   },
@@ -81,8 +81,8 @@ const HERO_MODULE_PILLS: readonly ModulePillSpec[] = [
     subtitle: 'Keusahawanan Siswa Aktif',
     left: 248,
     top: 834,
-    startOffsetX: -112,
-    startOffsetY: 96,
+    startOffsetX: 24,
+    startOffsetY: 56,
     dark: true,
     accentBg: LAUNCH_PALETTE.SECONDARY,
     iconKind: 'mart',
@@ -91,10 +91,10 @@ const HERO_MODULE_PILLS: readonly ModulePillSpec[] = [
     id: 'polysuara',
     title: 'PolySuara • Live',
     subtitle: 'Undian & Suara Pelajar',
-    left: 1534,
+    left: 1528,
     top: 492,
-    startOffsetX: 140,
-    startOffsetY: 46,
+    startOffsetX: -36,
+    startOffsetY: 32,
     accentBg: LAUNCH_PALETTE.ACCENT,
     iconKind: 'suara',
   },
@@ -132,7 +132,7 @@ const HeroModulePills: React.FC<{
         const hoverZ = Math.cos(timeSec * 1.7 + driftPhase) * 18 * progress;
         const tx = interpolate(progress, [0, 1], [pill.startOffsetX, 0]);
         const ty = interpolate(progress, [0, 1], [pill.startOffsetY, 0]) + hoverY;
-        const tz = interpolate(progress, [0, 1], [-220, 86]) + hoverZ;
+        const tz = interpolate(progress, [0, 1], [-120, 36]) + hoverZ;
         const scale = interpolate(progress, [0, 0.72, 1], [0.68, 1.04, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
@@ -606,7 +606,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
             position: 'absolute',
             inset: 0,
             pointerEvents: 'none',
-            transform: 'translate3d(0px, 0px, 120px)',
+            transform: 'translate3d(0px, 0px, 42px)',
             zIndex: 12,
           }}
         >

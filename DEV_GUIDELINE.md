@@ -163,13 +163,14 @@ remotion/
 ├── Root.tsx                  ← Pendaftaran Folder Launch-Cinema (JppLaunchCinema), Launch-Scenes (8 babak), & Legacy (JppIntroVideo)
 ├── JppIntroVideo.tsx         ← Komposisi legasi 1,200 frame (dikekalkan)
 ├── schema.ts                 ← Skema Zod JppIntroVideoSchema (legasi)
-└── launch/                   ← Seni bina modular terhubung JppLaunchCinema (Remotion 4.0.545)
-    ├── JppLaunchCinema.tsx   ← Komposisi utama TransitionSeries 1,470 frame + calculateLaunchMetadata
-    ├── schema.ts             ← LaunchShowcaseSchema, LAUNCH_CHAPTERS (8 bab), LAUNCH_TOTAL_FRAMES
-    ├── tokens.ts             ← Palet 05 Earthy Minimal, tipografi, & koordinat rasmi POLISAS_COORDS
-    ├── components/           ← EditorialChrome.tsx (LightLeakOverlay) & CampusMapLibrePlate.tsx
+└── launch/                   ← Seni bina modular terhubung JppLaunchCinema v2 (Remotion 4.0.545 @ 60 FPS)
+    ├── JppLaunchCinema.tsx   ← Komposisi utama TransitionSeries 2,940 frame (49.00s) + calculateLaunchMetadata
+    ├── schema.ts             ← LaunchShowcaseSchema, LAUNCH_CHAPTERS (8 bab), LAUNCH_TOTAL_FRAMES (2940)
+    ├── tokens.ts             ← Palet 05 Earthy Minimal, tipografi, 60 FPS, & koordinat rasmi POLISAS_COORDS
+    ├── motion/               ← Kit Motion Graphics (CameraStage, KineticTypography, Device3DRig, MotionActors, transitions)
+    ├── components/           ← EditorialChrome.tsx (paper/noise/contourLines/LightLeakOverlay) & CampusMapLibrePlate.tsx
     ├── lib/                  ← campusRoute.ts (@turf/turf GeoJSON) & mediaProbe.ts (mediabunny)
-    └── scenes/               ← 8 komposisi kendiri terhubung (OpeningHeroScene .. ClosingVaultScene)
+    └── scenes/               ← 8 komposisi kendiri terhubung 60fps (OpeningHeroScene .. ClosingVaultScene)
 ```
 
 ### 2.1 Piawaian Reka Bentuk UI/UX & Token Tema Digital Flagship (Hybrid Precision-Editorial)
@@ -4546,46 +4547,55 @@ Bagi pembentangan kepada pihak pengurusan kanan POLISAS, JHEP, dan agensi luar, 
 
 ## 35. Video Pengenalan Sinematik Remotion (`remotion/`)
 
-> Dikemas kini: November 2026 (Naik Taraf Remotion `4.0.545`, `JppLaunchCinema` 8 Komposisi Terhubung & Pure Stage Cinema `/launch`)
+> Dikemas kini: November 2026 (Naik Taraf v2 Swiss Editorial **60 FPS Motion Graphics**, Remotion `4.0.545`, `JppLaunchCinema` 2,940 Frame & Pure Stage Cinema `/launch`)
 
-Bagi tujuan pelancaran rasmi, paparan kiosk orientasi, dan demonstrasi keupayaan digital mahasiswa, sistem ini menggunakan enjin video teraturcara **Remotion `4.0.545`** (semua pakej `remotion`, `@remotion/cli`, `@remotion/player`, `@remotion/transitions`, `@remotion/effects`, `@remotion/media`, dan `@remotion/paths` diselaraskan pada versi `4.0.545`, bersama `mediabunny` `1.66.0`, `maplibre-gl` `6.19.0`, dan `@turf/turf` `7.4.0`).
+Bagi tujuan pelancaran rasmi, paparan kiosk orientasi, dan demonstrasi keupayaan digital mahasiswa, sistem ini menggunakan enjin video teraturcara **Remotion `4.0.545`** (semua pakej `remotion`, `@remotion/cli`, `@remotion/player`, `@remotion/transitions`, `@remotion/effects`, `@remotion/media`, `@remotion/paths`, `@remotion/rough-notation`, `@remotion/motion-blur`, dan `@remotion/shapes` diselaraskan pada versi `4.0.545`, bersama `mediabunny` `1.66.0`, `maplibre-gl` `6.19.0`, dan `@turf/turf` `7.4.0`).
 
-### 35.1 Arkitektur Modular Terhubung (`remotion/launch/`)
-- **`remotion/launch/tokens.ts`:** Token palet rasmi **05 Earthy Minimal**, tipografi (`Geist`, `Instrument Serif`, `JetBrains Mono`), spesifikasi kanvas (`1920×1080`, `30 FPS`), serta koordinat rasmi POLISAS Semambu `[103.3153, 3.8625]` (`3.8625° N, 103.3153° E`).
-- **`remotion/launch/schema.ts`:** Skema Zod `LaunchShowcaseSchema`, kontrak `LAUNCH_CHAPTERS` (8 bab, `LAUNCH_TOTAL_FRAMES = 1470` = 49 saat), serta pemalar transisi (`LAUNCH_TRANSITION_FRAMES = 15`, `LAUNCH_OVERLAY_FRAMES = 24`).
-- **`remotion/launch/JppLaunchCinema.tsx`:** Komposisi utama yang merangkai 8 babak menggunakan `<TransitionSeries>` (`fade()`, `slide()`, dan `LightLeakOverlay`), `premountFor={fps}`, penskalaan `output: 'perceptual-scale'`, serta `calculateLaunchMetadata` yang memanggil prob metadata `mediabunny`.
-- **`remotion/launch/components/CampusMapLibrePlate.tsx` & `lib/campusRoute.ts`:** Peta vektor langsung `maplibre-gl` (gaya OpenFreeMap Positron) berpusat pada kampus POLISAS Semambu dengan jejak berjalan kaki `@turf/turf` (Dataran Siswa → Blok JTMK), penyegerakan deterministik `delayRender`/`continueRender`, dan mod sandaran luar talian (*4s timeout / error fallback* melalui `<CanvasImage>` + `interpolatePaths` dari `@remotion/paths`).
+### 35.1 Arkitektur Modular Terhubung & Kit Motion Graphics (`remotion/launch/`)
+- **`remotion/launch/tokens.ts`:** Token palet rasmi **05 Earthy Minimal**, tipografi (`Geist`, `Instrument Serif`, `JetBrains Mono`), spesifikasi kanvas (`1920×1080`, `LAUNCH_FPS = 60`), serta koordinat rasmi POLISAS Semambu `[103.3153, 3.8625]` (`3.8625° N, 103.3153° E`).
+- **`remotion/launch/schema.ts`:** Skema Zod `LaunchShowcaseSchema`, kontrak `LAUNCH_CHAPTERS` (8 bab @ 60fps, `LAUNCH_TOTAL_FRAMES = 2940` = 49.00 saat, mula pada frame `[0, 270, 750, 1110, 1440, 1770, 2160, 2490]`), serta pemalar transisi (`LAUNCH_TRANSITION_FRAMES = 30`, `LAUNCH_OVERLAY_FRAMES = 48`).
+- **`remotion/launch/motion/` (Kit Motion Graphics v2):**
+  - **`CameraStage.tsx`:** Pentas kamera perspektif 3D (`perspective: 1800px`, `transformStyle: 'preserve-3d'`) dengan *dolly zoom*, pan, kecondongan X/Y (*tilt*), dan ayunan Steadicam berterusan dipacu `useCurrentFrame()`.
+  - **`KineticTypography.tsx`:** `KineticWords` (pendedahan kata demi kata bertopeng *Expo-Out*), `KineticReveal`, dan `EditorialAnnotation` (`<Underline>`, `<Highlight>`, `<Circle>` daripada `@remotion/rough-notation`).
+  - **`Device3DRig.tsx`:** Bingkai peranti 3D (`laptop`, `phone`, `card`) dengan apungan sinus berterusan serta shader WebGL2 pada `<CanvasImage>` (`lensBlur` 48 sampel *rack-focus*, `chromaticAberration`, dan `shine` kilauan kaca pepenjuru — dimatikan secara automatik di luar tetingkap transisi untuk prestasi 60fps).
+  - **`MotionActors.tsx`:** `GhostCursor` (penunjuk vektor beralun Bezier dengan riak klik SVG berganda), `EvolvingPath` (`evolvePath` & `getPointAtLength` daripada `@remotion/paths`), dan `GeometricSparkBurst` (`<Star>` & `<Circle>` daripada `@remotion/shapes`).
+  - **`transitions.tsx`:** 4 kilang `TransitionPresentation` tersuai (`kineticCameraPush`, `editorialSplitCurtain`, `depthLiftMatch`, `orbitalIrisMatch`) serta 2 komponen `<TransitionSeries.Overlay>` 48-frame (`EditorialShutterOverlay`, `WarmLightSweepOverlay` berasaskan `@remotion/effects/light-leak`).
+- **`remotion/launch/components/EditorialChrome.tsx`:** Permukaan editorial taktil GPU WebGL2 (`paper()`, `noise()`, serta `contourLines()` opsyenal pada `<Solid>`), `EditorialFrameMarks`, dan `LightLeakOverlay`.
+- **`remotion/launch/JppLaunchCinema.tsx`:** Komposisi utama 60fps (`2,940` frame) yang merangkai 8 babak menggunakan `<TransitionSeries>` (`kineticCameraPush`, `EditorialShutterOverlay`, `editorialSplitCurtain`, `clockWipe` dari `@remotion/transitions/clock-wipe`, `depthLiftMatch`, `WarmLightSweepOverlay`, `orbitalIrisMatch`), `springTiming({ config: { damping: 200 }, durationInFrames: 30 })`, `premountFor={fps}` pada setiap `Sequence`/`Overlay`/`Audio`, senyap secara lalai (tiada SFX; `<Audio>` dipasang hanya jika `bgmSrc` diisi), serta `calculateLaunchMetadata` (memulangkan `durationInFrames: 2940`, `fps: 60`, `width: 1920`, `height: 1080` dan prob metadata `mediabunny`).
+- **`remotion/launch/components/CampusMapLibrePlate.tsx` & `lib/campusRoute.ts`:** Peta vektor langsung `maplibre-gl` (gaya OpenFreeMap Positron) berpusat pada kampus POLISAS Semambu dengan jejak berjalan kaki `@turf/turf` (Dataran Siswa → Blok JTMK) berskala `fps`, penyegerakan deterministik `delayRender`/`continueRender`, dan mod sandaran luar talian (*4s timeout / error fallback* melalui `<CanvasImage>` + `evolvePath` / `getPointAtLength` dari `@remotion/paths`).
 - **`remotion/launch/lib/mediaProbe.ts`:** Prob metadata media berasaskan `mediabunny` (`probeMediaDurationSeconds`, `probeVideoDimensions`) dengan pembersihan `Input.dispose()` dalam blok `finally`.
-- **`remotion/Root.tsx`:** Mendaftarkan folder `Launch-Cinema` (`JppLaunchCinema`), `Launch-Scenes` (8 komposisi babak kendiri), serta mengekalkan komposisi legasi `Legacy/JppIntroVideo` (1,200 frame) tanpa perubahan.
+- **`remotion/Root.tsx`:** Mendaftarkan folder `Launch-Cinema` (`JppLaunchCinema` @ 60fps / 2,940f), `Launch-Scenes` (8 komposisi babak kendiri @ 60fps: `300, 480, 390, 360, 360, 390, 360, 450`), serta mengekalkan komposisi legasi `Legacy/JppIntroVideo` (1,200 frame @ 30fps) tanpa perubahan.
 
-### 35.2 Pure Stage Cinema `/launch` (`src/pages/LaunchVideo.tsx`)
-- **Hos `@remotion/player`:** Membenamkan `<Player component={JppLaunchCinema} />` dalam pentas 16:9 penuh yang menyuapkan data langsung daripada `useCampusStats()` (dikongsi bersama `LandingPage` melalui `queryCache`).
-- **HUD Auto-Sembunyi Patuh GPU Baseline:** Bar kawalan terapung bawah (auto-sembunyi selepas 2.5s) menggunakan permukaan legap (`bg-[#F8F6EE]`, sempadan `#D9C9B2`, aksen `#C96F4F`) tanpa `backdrop-filter` atau `blur-2xl/3xl`. Pengecualian `LaunchVideo` telah dikeluarkan daripada `src/__tests__/gpuBaseline.test.ts`.
+### 35.2 Guardrail Keserasian Pelayar & Pure Stage Cinema `/launch` (`src/pages/LaunchVideo.tsx`)
+- **100% Chrome Laptop Natif (Sifar `<HtmlInCanvas>` & Transisi Eksperimen):** Dilarang keras mengimport `<HtmlInCanvas>`, `<HtmlInCanvasMotionBlur>`, `blur-slide`, `zoom-in-out`, atau `film-burn`. Semua animasi dalam `remotion/` mesti bebas CSS `transition`, `@keyframes`, dan kelas `animate-*` — dipacu sepenuhnya oleh `useCurrentFrame()` dan `fps` supaya berfungsi lancar dalam Chrome biasa tanpa flag eksperimen serta `remotion render --gl=angle`.
+- **Hos `@remotion/player`:** `LaunchVideo.tsx` membenamkan `<Player component={JppLaunchCinema} fps={LAUNCH_FPS} durationInFrames={LAUNCH_TOTAL_FRAMES} />` dalam pentas 16:9 penuh yang menyuapkan data langsung daripada `useCampusStats()` (dikongsi bersama `LandingPage` melalui `queryCache`).
+- **HUD Auto-Sembunyi Patuh GPU Baseline:** Bar kawalan terapung bawah (auto-sembunyi selepas 2.5s) menggunakan permukaan legap (`bg-[#F8F6EE]`, sempadan `#D9C9B2`, aksen `#C96F4F`) tanpa `backdrop-filter` atau `blur-2xl/3xl`. `src/__tests__/gpuBaseline.test.ts` kekal ketat tanpa pengecualian untuk `LaunchVideo.tsx`.
 - **Kawalan Interaktif & Pemisahan Chunk:** Menyokong 8 butang lompat bab, bar skrub, pintasan papan kekunci (`Space`, `F`, `R`, `ArrowLeft`/`ArrowRight`, `1`–`8`), dan CTA `/login`. Dimuatkan secara *lazy chunk* terasing daripada `index-*.js` dan dikecualikan daripada precache PWA (`vite.config.ts`).
 
 ### 35.3 Palet Warna Rasmi (05 Earthy Minimal / Anti-Slop Directive)
-- **Primary (`#2E3A2F`):** Deep Forest Moss Green (Tipografi tajuk utama, garis struktur).
-- **Secondary (`#6B7F5B`):** Sage Olive Green (Sub-tajuk, lencana kelulusan, penunjuk aktif).
+- **Primary (`#2E3A2F` & `#1F2720`):** Deep Forest Moss Green & Obsidian Forest (Tipografi tajuk utama, garis struktur, latar gelap editorial).
+- **Secondary (`#6B7F5B` & `#556453`):** Sage Olive Green & Muted Olive Ink (Sub-tajuk, lencana kelulusan, penunjuk aktif).
 - **Tertiary (`#D9C9B2`):** Warm Sand Linen (Sempadan kad bento, garis pemisah halus).
-- **Accent (`#C96F4F`):** Terracotta Clay Orange (Titik fokus, laluan peta, penunjuk kemajuan).
-- **Background (`#F8F6EE`) & Surface Muted (`#F2EDE4`):** Warm Milk Porcelain & Oatmeal Cream.
+- **Accent (`#C96F4F`):** Terracotta Clay Orange (Titik fokus, laluan peta, penunjuk kemajuan, anotasi `@remotion/rough-notation`).
+- **Background (`#F8F6EE`), Surface Muted (`#F2EDE4`) & Card (`#FFFFFF`):** Warm Milk Porcelain, Oatmeal Cream & Pure White.
 
-### 35.4 Pecahan 8 Babak `JppLaunchCinema` (1,470 Frame @ 30 FPS)
-1. **01 Pembukaan (`OpeningHeroScene`, f=0–150):** Identiti rasmi POLISAS & JPP bersama pratonton dwi-perspektif Portal Laptop dan Telefon.
-2. **02 PolyMaps (`PolyMapsCampusScene`, f=135–375):** Jadual `DIT3013` berintegrasi terus ke peta langsung MapLibre GL + laluan Turf Semambu (`3.8625° N, 103.3153° E`).
-3. **03 PolyMart (`PolyMartCommerceScene`, f=375–570):** Pasaran digital siswa dengan kaunter langsung produk & pesanan selesai serta transaksi JPP Pay.
-4. **04 PolySuara (`PolySuaraVoiceScene`, f=555–735):** Undian kampus langsung (`68% vs 32%`, `412 UNDI DISAHKAN`) dan moderasi komuniti.
-5. **05 E-Kebajikan (`WelfareCareScene`, f=720–900):** Penjejakan tiket aduan (`#KBJ-2026-0842`), SLA `< 48 JAM`, dan integrasi Food Bank.
-6. **06 Kelab & EMS (`ClubsEmsScene`, f=885–1080):** Tadbir urus kelab berdaftar, pemantauan aktiviti, dan e-Sijil digital automatik (`EMS-CERT-2026-9041`).
-7. **07 Impak (`ImpactNumbersScene`, f=1080–1260):** Paparan telemetri langsung Supabase pada kanvas gelap `#2E3A2F` (kelab, pelajar, aktiviti, produk, pesanan).
-8. **08 Penutup (`ClosingVaultScene`, f=1245–1470):** Tajuk kemuncak seragam, kod QR dinamik akses portal rasmi, dan kredit JPP POLISAS.
+### 35.4 Pecahan 8 Babak & Transisi `JppLaunchCinema` (2,940 Frame @ 60 FPS = 49.00s)
+1. **01 Pembukaan (`OpeningHeroScene`, `300f`, `f=0–300`, `0.0s`):** Identiti rasmi POLISAS & JPP, `KineticWords` + `<Underline>` pada *"Ekosistem Pintar."*, dwi-perspektif `Device3DRig` Laptop + Telefon (*rack-focus* `lensBlur` + `shine`), serta pil modul `<Trail>` → Transisi **`kineticCameraPush`** (`30f`, `springTiming`).
+2. **02 PolyMaps (`PolyMapsCampusScene`, `480f`, `f=270–750`, `4.5s`):** Jadual `DIT3013` dengan `<Circle>` rough-notation, `GhostCursor` klik langsung memacu peta vektor MapLibre GL + laluan Turf Semambu (`3.8625° N, 103.3153° E`) dan penunjuk tiba → Overlay **`EditorialShutterOverlay`** (`48f`, `BAB 03 — EKONOMI KAMPUS`, 0 pertindihan).
+3. **03 PolyMart (`PolyMartCommerceScene`, `390f`, `f=750–1140`, `12.5s`):** Dwi-telefon `Device3DRig`, kad terapung `<Trail>`, cop **JPP PAY DISAHKAN ✓**, nadi `chromaticAberration`, dan kaunter `277+` / `344+` → Transisi **`editorialSplitCurtain`** (`30f`, `springTiming`).
+4. **04 PolySuara (`PolySuaraVoiceScene`, `360f`, `f=1110–1470`, `18.5s`):** Perlumbaan undian langsung dipacu klik `GhostCursor` (`68% vs 32%`), pil reaksi terapung, `<Circle>` pada `68%`, dan `412 UNDI DISAHKAN` → Transisi **`clockWipe`** (`30f`, `springTiming`).
+5. **05 E-Kebajikan (`WelfareCareScene`, `360f`, `f=1440–1800`, `24.0s`):** Pratonton `Foodbank Admin` dalam `Device3DRig`, tulang belakang `EvolvingPath` 4 fasa SLA (`#KBJ-2026-0842`), `<Highlight>` pada `< 48 JAM`, dan cop **SELESAI & DISANTUNI ✓** → Transisi **`depthLiftMatch`** (`30f`, `springTiming`).
+6. **06 Kelab & EMS (`ClubsEmsScene`, `390f`, `f=1770–2160`, `29.5s`):** Dwi-paparan `Kelab` & `EMS`, imbasan laser QR kehadiran langsung, lencana e-Sijil (`EMS-CERT-2026-9041`), dan letusan **`GeometricSparkBurst`** → Overlay **`WarmLightSweepOverlay`** (`48f`, `lightLeak` GPU + sorotan suam, 0 pertindihan).
+7. **07 Impak (`ImpactNumbersScene`, `360f`, `f=2160–2520`, `36.0s`):** Telemetri langsung Supabase pada kanvas gelap `#2E3A2F` (`21`, `1,083+`, `41`, `277+`) dengan arka kemajuan `<Pie>` (`@remotion/shapes`), jalur *ticker* modul, dan pil transaksi `344+` → Transisi **`orbitalIrisMatch`** (`30f`, `springTiming`).
+8. **08 Penutup (`ClosingVaultScene`, `450f`, `f=2490–2940`, `41.5s`):** `vignette` Deep Forest, pendakap L `EvolvingPath`, `<Underline>` seragam pada tajuk penutup, dan kad QR Portal Rasmi dengan cincin radar berdenyut berterusan hingga frame `2940`.
 
 ### 35.5 Perintah CLI & Verifikasi Rasmi
 - **Semak Versi Seragam Remotion:** `npx remotion versions`
+- **Semak Senarai Komposisi & FPS:** `npx remotion compositions remotion/index.ts`
 - **Buka Remotion Studio (Interaktif):** `npm run remotion:studio`
 - **Render Video MP4 `JppLaunchCinema`:** `npm run remotion:launch:render`
 - **Render Sampel Frame (Still):** `npx remotion still remotion/index.ts JppLaunchCinema out/still.png --frame=<nombor> --gl=angle`
-- **Ujian Kontrak & GPU Baseline:** `npx vitest run src/__tests__/gpuBaseline.test.ts src/__tests__/LaunchCinema.test.ts`
+- **Ujian Kontrak & GPU Baseline:** `npx vitest run src/__tests__/gpuBaseline.test.ts src/__tests__/LaunchCinema.test.ts src/__tests__/LandingPageRedesign.test.tsx`
 
 ---
 

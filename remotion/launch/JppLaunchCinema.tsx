@@ -1,18 +1,24 @@
 import React from 'react';
 import { AbsoluteFill, staticFile, useVideoConfig, type CalculateMetadataFunction } from 'remotion';
 import { Audio } from '@remotion/media';
-import { TransitionSeries, linearTiming, springTiming } from '@remotion/transitions';
-import { fade } from '@remotion/transitions/fade';
-import { slide } from '@remotion/transitions/slide';
+import { TransitionSeries, springTiming } from '@remotion/transitions';
+import { clockWipe } from '@remotion/transitions/clock-wipe';
 import {
   LAUNCH_OVERLAY_FRAMES,
   LAUNCH_TOTAL_FRAMES,
   LAUNCH_TRANSITION_FRAMES,
   type LaunchShowcaseProps,
 } from './schema';
-import { LAUNCH_PALETTE } from './tokens';
+import { LAUNCH_FPS, LAUNCH_HEIGHT, LAUNCH_PALETTE, LAUNCH_WIDTH } from './tokens';
 import { probeMediaDurationSeconds } from './lib/mediaProbe';
-import { LightLeakOverlay } from './components/EditorialChrome';
+import {
+  EditorialShutterOverlay,
+  WarmLightSweepOverlay,
+  depthLiftMatch,
+  editorialSplitCurtain,
+  kineticCameraPush,
+  orbitalIrisMatch,
+} from './motion/transitions';
 import { OpeningHeroScene } from './scenes/OpeningHeroScene';
 import { PolyMapsCampusScene } from './scenes/PolyMapsCampusScene';
 import { PolyMartCommerceScene } from './scenes/PolyMartCommerceScene';
@@ -25,23 +31,29 @@ import { ClosingVaultScene } from './scenes/ClosingVaultScene';
 export const calculateLaunchMetadata: CalculateMetadataFunction<LaunchShowcaseProps> = async ({
   props,
 }) => {
+  const baseMetadata = {
+    durationInFrames: LAUNCH_TOTAL_FRAMES,
+    fps: LAUNCH_FPS,
+    width: LAUNCH_WIDTH,
+    height: LAUNCH_HEIGHT,
+  };
   const trimmedBgm = props.bgmSrc.trim();
   if (trimmedBgm) {
     const resolvedSrc = trimmedBgm.startsWith('http') ? trimmedBgm : staticFile(trimmedBgm);
     const audioDurationSec = await probeMediaDurationSeconds(resolvedSrc);
     if (audioDurationSec === null) {
       return {
-        durationInFrames: LAUNCH_TOTAL_FRAMES,
+        ...baseMetadata,
         props: { ...props, bgmSrc: '' },
       };
     }
   } else if (props.bgmSrc) {
     return {
-      durationInFrames: LAUNCH_TOTAL_FRAMES,
+      ...baseMetadata,
       props: { ...props, bgmSrc: '' },
     };
   }
-  return { durationInFrames: LAUNCH_TOTAL_FRAMES };
+  return baseMetadata;
 };
 
 export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
@@ -69,7 +81,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
       ) : null}
 
       <TransitionSeries>
-        <TransitionSeries.Sequence name="01 Opening Hero" durationInFrames={150} premountFor={fps}>
+        <TransitionSeries.Sequence name="01 Opening Hero" durationInFrames={300} premountFor={fps}>
           <OpeningHeroScene
             name="Opening Hero"
             institutionName={institutionName}
@@ -79,11 +91,11 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
+          presentation={kineticCameraPush({ direction: 'from-right' })}
+          timing={springTiming({ config: { damping: 200 }, durationInFrames: LAUNCH_TRANSITION_FRAMES })}
         />
 
-        <TransitionSeries.Sequence name="02 PolyMaps Campus" durationInFrames={240} premountFor={fps}>
+        <TransitionSeries.Sequence name="02 PolyMaps Campus" durationInFrames={480} premountFor={fps}>
           <PolyMapsCampusScene
             name="PolyMaps Campus"
             classCode="DIT3013"
@@ -94,10 +106,10 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Overlay durationInFrames={LAUNCH_OVERLAY_FRAMES} premountFor={fps}>
-          <LightLeakOverlay />
+          <EditorialShutterOverlay chapterCode="03" chapterLabel="EKONOMI KAMPUS" />
         </TransitionSeries.Overlay>
 
-        <TransitionSeries.Sequence name="03 PolyMart Commerce" durationInFrames={195} premountFor={fps}>
+        <TransitionSeries.Sequence name="03 PolyMart Commerce" durationInFrames={390} premountFor={fps}>
           <PolyMartCommerceScene
             name="PolyMart Commerce"
             productsCount={stats.productsCount}
@@ -107,11 +119,11 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition
-          presentation={slide({ direction: 'from-right' })}
+          presentation={editorialSplitCurtain()}
           timing={springTiming({ config: { damping: 200 }, durationInFrames: LAUNCH_TRANSITION_FRAMES })}
         />
 
-        <TransitionSeries.Sequence name="04 PolySuara Voice" durationInFrames={180} premountFor={fps}>
+        <TransitionSeries.Sequence name="04 PolySuara Voice" durationInFrames={360} premountFor={fps}>
           <PolySuaraVoiceScene
             name="PolySuara Voice"
             pollTitle="Cadangan Menu Sihat Kafeteria Siswa 2026/2027"
@@ -123,11 +135,11 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
+          presentation={clockWipe({ width: LAUNCH_WIDTH, height: LAUNCH_HEIGHT })}
+          timing={springTiming({ config: { damping: 200 }, durationInFrames: LAUNCH_TRANSITION_FRAMES })}
         />
 
-        <TransitionSeries.Sequence name="05 Welfare & Care" durationInFrames={180} premountFor={fps}>
+        <TransitionSeries.Sequence name="05 Welfare & Care" durationInFrames={360} premountFor={fps}>
           <WelfareCareScene
             name="Welfare & Care"
             ticketNo="KBJ-2026-0842"
@@ -137,11 +149,11 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition
-          presentation={slide({ direction: 'from-right' })}
+          presentation={depthLiftMatch()}
           timing={springTiming({ config: { damping: 200 }, durationInFrames: LAUNCH_TRANSITION_FRAMES })}
         />
 
-        <TransitionSeries.Sequence name="06 Clubs & EMS" durationInFrames={195} premountFor={fps}>
+        <TransitionSeries.Sequence name="06 Clubs & EMS" durationInFrames={390} premountFor={fps}>
           <ClubsEmsScene
             name="Clubs & EMS"
             clubsCount={stats.clubsCount}
@@ -151,10 +163,10 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Overlay durationInFrames={LAUNCH_OVERLAY_FRAMES} premountFor={fps}>
-          <LightLeakOverlay />
+          <WarmLightSweepOverlay />
         </TransitionSeries.Overlay>
 
-        <TransitionSeries.Sequence name="07 Impact Numbers" durationInFrames={180} premountFor={fps}>
+        <TransitionSeries.Sequence name="07 Impact Numbers" durationInFrames={360} premountFor={fps}>
           <ImpactNumbersScene
             name="Impact Numbers"
             clubsCount={stats.clubsCount}
@@ -166,11 +178,11 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
         </TransitionSeries.Sequence>
 
         <TransitionSeries.Transition
-          presentation={fade()}
-          timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
+          presentation={orbitalIrisMatch()}
+          timing={springTiming({ config: { damping: 200 }, durationInFrames: LAUNCH_TRANSITION_FRAMES })}
         />
 
-        <TransitionSeries.Sequence name="08 Closing Vault" durationInFrames={225} premountFor={fps}>
+        <TransitionSeries.Sequence name="08 Closing Vault" durationInFrames={450} premountFor={fps}>
           <ClosingVaultScene
             name="Closing Vault"
             headlinePrimary={headlinePrimary}

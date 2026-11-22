@@ -3,7 +3,8 @@ import { Composition, Folder } from 'remotion';
 import { JppIntroVideo } from './JppIntroVideo';
 import { JppIntroVideoSchema, type JppIntroVideoProps } from './schema';
 import { JppLaunchCinema, calculateLaunchMetadata } from './launch/JppLaunchCinema';
-import { LaunchShowcaseSchema } from './launch/schema';
+import { LAUNCH_TOTAL_FRAMES, LaunchShowcaseSchema } from './launch/schema';
+import { LAUNCH_FPS, LAUNCH_HEIGHT, LAUNCH_WIDTH } from './launch/tokens';
 import { OpeningHeroScene } from './launch/scenes/OpeningHeroScene';
 import { PolyMapsCampusScene } from './launch/scenes/PolyMapsCampusScene';
 import { PolyMartCommerceScene } from './launch/scenes/PolyMartCommerceScene';
@@ -63,10 +64,10 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="JppLaunchCinema"
           component={JppLaunchCinema}
-          durationInFrames={1470}
-          fps={30}
-          width={1920}
-          height={1080}
+          durationInFrames={LAUNCH_TOTAL_FRAMES}
+          fps={LAUNCH_FPS}
+          width={LAUNCH_WIDTH}
+          height={LAUNCH_HEIGHT}
           schema={LaunchShowcaseSchema}
           calculateMetadata={calculateLaunchMetadata}
           defaultProps={{
@@ -93,10 +94,10 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="OpeningHeroScene"
           component={OpeningHeroScene}
-          durationInFrames={150}
-          fps={30}
-          width={1920}
-          height={1080}
+          durationInFrames={300}
+          fps={LAUNCH_FPS}
+          width={LAUNCH_WIDTH}
+          height={LAUNCH_HEIGHT}
           defaultProps={{
             institutionName: 'POLITEKNIK SULTAN HAJI AHMAD SHAH',
             sessionLabel: 'SESI AKADEMIK 2026/2027',
@@ -106,10 +107,10 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="PolyMapsCampusScene"
           component={PolyMapsCampusScene}
-          durationInFrames={240}
-          fps={30}
-          width={1920}
-          height={1080}
+          durationInFrames={480}
+          fps={LAUNCH_FPS}
+          width={LAUNCH_WIDTH}
+          height={LAUNCH_HEIGHT}
           defaultProps={{
             classCode: 'DIT3013',
             classTitle: 'Pembangunan Aplikasi Web',
@@ -120,10 +121,10 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="PolyMartCommerceScene"
           component={PolyMartCommerceScene}
-          durationInFrames={195}
-          fps={30}
-          width={1920}
-          height={1080}
+          durationInFrames={390}
+          fps={LAUNCH_FPS}
+          width={LAUNCH_WIDTH}
+          height={LAUNCH_HEIGHT}
           defaultProps={{
             productsCount: 277,
             ordersCount: 344,
@@ -133,10 +134,10 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="PolySuaraVoiceScene"
           component={PolySuaraVoiceScene}
-          durationInFrames={180}
-          fps={30}
-          width={1920}
-          height={1080}
+          durationInFrames={360}
+          fps={LAUNCH_FPS}
+          width={LAUNCH_WIDTH}
+          height={LAUNCH_HEIGHT}
           defaultProps={{
             pollTitle: 'Cadangan Menu Sihat Kafeteria Siswa 2026/2027',
             optionA: 'Set Ayam Percik & Salad Segar',
@@ -148,10 +149,10 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="WelfareCareScene"
           component={WelfareCareScene}
-          durationInFrames={180}
-          fps={30}
-          width={1920}
-          height={1080}
+          durationInFrames={360}
+          fps={LAUNCH_FPS}
+          width={LAUNCH_WIDTH}
+          height={LAUNCH_HEIGHT}
           defaultProps={{
             ticketNo: 'KBJ-2026-0842',
             slaLabel: '< 48 JAM',
@@ -161,10 +162,10 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="ClubsEmsScene"
           component={ClubsEmsScene}
-          durationInFrames={195}
-          fps={30}
-          width={1920}
-          height={1080}
+          durationInFrames={390}
+          fps={LAUNCH_FPS}
+          width={LAUNCH_WIDTH}
+          height={LAUNCH_HEIGHT}
           defaultProps={{
             clubsCount: 21,
             activitiesCount: 41,
@@ -174,10 +175,10 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="ImpactNumbersScene"
           component={ImpactNumbersScene}
-          durationInFrames={180}
-          fps={30}
-          width={1920}
-          height={1080}
+          durationInFrames={360}
+          fps={LAUNCH_FPS}
+          width={LAUNCH_WIDTH}
+          height={LAUNCH_HEIGHT}
           defaultProps={{
             clubsCount: 21,
             studentsCount: 1083,
@@ -189,10 +190,10 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="ClosingVaultScene"
           component={ClosingVaultScene}
-          durationInFrames={225}
-          fps={30}
-          width={1920}
-          height={1080}
+          durationInFrames={450}
+          fps={LAUNCH_FPS}
+          width={LAUNCH_WIDTH}
+          height={LAUNCH_HEIGHT}
           defaultProps={{
             headlinePrimary: 'Satu Kampus. Satu Ekosistem Pintar.',
             headlineItalic: 'Mendepani Digitalisasi Mahasiswa POLISAS.',

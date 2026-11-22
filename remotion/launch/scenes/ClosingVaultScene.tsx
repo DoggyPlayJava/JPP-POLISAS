@@ -116,7 +116,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
     },
   );
 
-  const pillStart = Math.round(0.26 * fps);
+  const pillStart = 0;
   const pillElapsed = frame - pillStart;
   const pillSpring =
     pillElapsed >= 0
@@ -126,23 +126,23 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
           config: { damping: 180, stiffness: 220, mass: 0.9 },
         })
       : 0;
-  const pillScaleX = 0.78 + 0.22 * pillSpring;
-  const pillScaleY = 0.92 + 0.08 * pillSpring;
+  const pillScaleX = 0.84 + 0.16 * pillSpring;
+  const pillScaleY = 0.94 + 0.06 * pillSpring;
   const pillOpacity =
     pillElapsed >= 0
-      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.20 * fps))], [0, 1], {
+      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.18 * fps))], [0.45, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
       : 0;
 
-  // Beat 2 (1.2..3.6s): KineticWords primary headline -> Masked Instrument Serif italic + terracotta <Underline>
-  const headlineStart = Math.round(1.18 * fps);
+  // Beat 2 (0.3..3.0s): KineticWords primary headline -> Masked Instrument Serif italic + terracotta <Underline>
+  const headlineStart = Math.round(0.32 * fps);
   const wordStagger = Math.max(2, Math.round(0.065 * fps));
   const wordDuration = Math.max(8, Math.round(0.38 * fps));
 
-  const italicStart = Math.round(1.62 * fps);
-  const italicEnd = Math.max(italicStart + 12, Math.round(2.38 * fps));
+  const italicStart = Math.round(0.85 * fps);
+  const italicEnd = Math.max(italicStart + 12, Math.round(1.65 * fps));
   const italicProgress = interpolate(frame, [italicStart, italicEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -154,11 +154,11 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
     extrapolateRight: 'clamp',
   });
 
-  const underlineStart = Math.round(2.38 * fps);
+  const underlineStart = Math.round(1.65 * fps);
   const underlineDuration = Math.max(12, Math.round(0.78 * fps));
 
-  // Beat 3 (2.8..7.5s): 3D Portal QR card + 2s deterministic <Circle> radar ring + gentle diagonal sheen glide
-  const qrStart = Math.round(2.80 * fps);
+  // Beat 3 (2.1..7.5s): 3D Portal QR card + 2s deterministic <Circle> radar ring + gentle diagonal sheen glide
+  const qrStart = Math.round(2.1 * fps);
   const qrElapsed = frame - qrStart;
   const qrSpring =
     qrElapsed >= 0
