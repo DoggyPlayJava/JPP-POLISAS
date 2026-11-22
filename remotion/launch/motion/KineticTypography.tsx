@@ -22,7 +22,7 @@ export type KineticWordsProps = {
   readonly align?: 'left' | 'center' | 'right';
   readonly gap?: number | string;
   readonly rowGap?: number | string;
-  readonly as?: 'h1' | 'h2' | 'h3' | 'p' | 'div';
+  readonly as?: 'h1' | 'h2' | 'h3' | 'p' | 'div' | 'span';
   readonly style?: React.CSSProperties;
   readonly wordStyle?: React.CSSProperties;
   readonly easing?: (t: number) => number;
@@ -80,7 +80,7 @@ export const KineticWords: React.FC<KineticWordsProps> = ({
     <ContainerTag
       style={{
         margin: 0,
-        display: 'flex',
+        display: as === 'span' ? 'inline-flex' : 'flex',
         flexWrap: 'wrap',
         justifyContent,
         columnGap: gap,

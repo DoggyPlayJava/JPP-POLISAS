@@ -441,7 +441,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
             >
               {prefix ? (
                 <KineticWords
-                  as="div"
+                  as="span"
                   text={prefix}
                   startFrame={headlineStart}
                   staggerFrames={wordStagger}
@@ -468,7 +468,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                     padding={4}
                   >
                     <KineticWords
-                      as="div"
+                      as="span"
                       text={underlined}
                       startFrame={underlineWordsStart}
                       staggerFrames={wordStagger}
@@ -490,7 +490,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
 
               {suffix ? (
                 <KineticWords
-                  as="div"
+                  as="span"
                   text={suffix}
                   startFrame={suffixWordsStart}
                   staggerFrames={wordStagger}

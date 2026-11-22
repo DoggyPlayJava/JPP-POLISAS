@@ -1,4 +1,4 @@
-import React, { useId } from 'react';
+import React, { useId, useMemo } from 'react';
 import { Solid, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
 import { contourLines } from '@remotion/effects/contour-lines';
 import { lightLeak } from '@remotion/effects/light-leak';
@@ -17,6 +17,49 @@ export type EditorialBackdropProps = {
 
 const clampUnit = (value: number): number => Math.min(1, Math.max(0, value));
 
+const ContourSolidOverlay: React.FC<{
+  readonly dark: boolean;
+  readonly contourSpeed: number;
+  readonly seed: number;
+}> = ({ dark, contourSpeed, seed }) => {
+  const frame = useCurrentFrame();
+  const { fps, width, height } = useVideoConfig();
+
+  const safeWidth = Math.max(1, Math.round(Number.isFinite(width) ? width : 1920));
+  const safeHeight = Math.max(1, Math.round(Number.isFinite(height) ? height : 1080));
+  const safeContourSpeed = Number.isFinite(contourSpeed) ? contourSpeed : 1;
+  const timeSec = frame / Math.max(1, fps);
+
+  const contourEffects = useMemo(
+    () => [
+      contourLines({
+        lineColor: dark ? LAUNCH_PALETTE.TERTIARY : LAUNCH_PALETTE.SECONDARY,
+        lineWidth: 1.15,
+        spacing: 42,
+        scale: 280,
+        complexity: 0.55,
+        smoothness: 0.72,
+        seed,
+        offsetX: timeSec * 14 * safeContourSpeed,
+        offsetY: timeSec * 8 * safeContourSpeed,
+        opacity: dark ? 0.11 : 0.08,
+      }),
+    ],
+    [dark, safeContourSpeed, seed, timeSec],
+  );
+
+  return (
+    <Solid
+      width={safeWidth}
+      height={safeHeight}
+      color="rgba(46, 58, 47, 0)"
+      premountFor={fps}
+      style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
+      effects={contourEffects}
+    />
+  );
+};
+
 export const EditorialBackdrop: React.FC<EditorialBackdropProps> = ({
   dark = false,
   showContours = false,
@@ -26,64 +69,49 @@ export const EditorialBackdrop: React.FC<EditorialBackdropProps> = ({
   seed = 12,
 }) => {
   const uid = useId();
-  const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
 
+  const isDark = Boolean(dark);
   const safeWidth = Math.max(1, Math.round(Number.isFinite(width) ? width : 1920));
   const safeHeight = Math.max(1, Math.round(Number.isFinite(height) ? height : 1080));
   const safeSeed = Math.min(1000, Math.max(0, Number.isFinite(seed) ? seed : 12));
-  const safeContourSpeed = Number.isFinite(contourSpeed) ? contourSpeed : 1;
-  const timeSec = frame / Math.max(1, fps);
 
-  const baseColor = dark ? LAUNCH_PALETTE.PRIMARY : LAUNCH_PALETTE.BACKGROUND;
-  const defaultPaperAmount = dark ? 0.16 : 0.22;
+  const baseColor = isDark ? LAUNCH_PALETTE.PRIMARY : LAUNCH_PALETTE.BACKGROUND;
+  const defaultPaperAmount = isDark ? 0.16 : 0.22;
   const resolvedPaperAmount = clampUnit(
     paperAmount !== undefined && Number.isFinite(paperAmount) ? paperAmount : defaultPaperAmount,
   );
 
-  const strokeColor = dark ? 'rgba(217, 201, 178, 0.08)' : 'rgba(46, 58, 47, 0.045)';
-  const dotColor = dark ? 'rgba(217, 201, 178, 0.15)' : 'rgba(46, 58, 47, 0.095)';
-  const patternId = `editorial-grid-${dark ? 'dark' : 'light'}-${uid.replace(/:/g, '')}`;
+  const strokeColor = isDark ? 'rgba(217, 201, 178, 0.08)' : 'rgba(46, 58, 47, 0.045)';
+  const dotColor = isDark ? 'rgba(217, 201, 178, 0.15)' : 'rgba(46, 58, 47, 0.095)';
+  const patternId = `editorial-grid-${isDark ? 'dark' : 'light'}-${uid.replace(/:/g, '')}`;
 
-  const backdropEffects = [
-    paper({
-      amount: resolvedPaperAmount,
-      colorFront: dark ? LAUNCH_PALETTE.MUTED_OLIVE : LAUNCH_PALETTE.CARD_BG,
-      colorBack: dark ? LAUNCH_PALETTE.PRIMARY_DARK : LAUNCH_PALETTE.SURFACE_MUTED,
-      contrast: dark ? 0.16 : 0.2,
-      roughness: dark ? 0.06 : 0.24,
-      fiber: dark ? 0.28 : 0.28,
-      fiberSize: dark ? 0.32 : 0.26,
-      crumples: 0,
-      crumpleSize: 0.45,
-      folds: 0,
-      foldCount: 0,
-      drops: 0.04,
-      scale: dark ? 1.15 : 0.9,
-      seed: safeSeed,
-    }),
-    noise({
-      amount: dark ? 0.038 : 0.024,
-      seed: safeSeed,
-      premultiply: false,
-    }),
-    ...(showContours
-      ? [
-          contourLines({
-            lineColor: dark ? LAUNCH_PALETTE.TERTIARY : LAUNCH_PALETTE.SECONDARY,
-            lineWidth: 1.15,
-            spacing: 42,
-            scale: 280,
-            complexity: 0.55,
-            smoothness: 0.72,
-            seed: safeSeed,
-            offsetX: timeSec * 14 * safeContourSpeed,
-            offsetY: timeSec * 8 * safeContourSpeed,
-            opacity: dark ? 0.11 : 0.08,
-          }),
-        ]
-      : []),
-  ];
+  const backdropEffects = useMemo(
+    () => [
+      paper({
+        amount: resolvedPaperAmount,
+        colorFront: isDark ? LAUNCH_PALETTE.MUTED_OLIVE : LAUNCH_PALETTE.CARD_BG,
+        colorBack: isDark ? LAUNCH_PALETTE.PRIMARY_DARK : LAUNCH_PALETTE.SURFACE_MUTED,
+        contrast: isDark ? 0.16 : 0.2,
+        roughness: isDark ? 0.06 : 0.24,
+        fiber: 0.28,
+        fiberSize: isDark ? 0.32 : 0.26,
+        crumples: 0,
+        crumpleSize: 0.45,
+        folds: 0,
+        foldCount: 0,
+        drops: 0.04,
+        scale: isDark ? 1.15 : 0.9,
+        seed: safeSeed,
+      }),
+      noise({
+        amount: isDark ? 0.038 : 0.024,
+        seed: safeSeed,
+        premultiply: false,
+      }),
+    ],
+    [isDark, resolvedPaperAmount, safeSeed],
+  );
 
   return (
     <div
@@ -103,6 +131,10 @@ export const EditorialBackdrop: React.FC<EditorialBackdropProps> = ({
         style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
         effects={backdropEffects}
       />
+
+      {showContours ? (
+        <ContourSolidOverlay dark={isDark} contourSpeed={contourSpeed} seed={safeSeed} />
+      ) : null}
 
       {showGrid ? (
         <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>

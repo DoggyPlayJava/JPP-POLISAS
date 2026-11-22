@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import * as maplibregl from 'maplibre-gl';
 import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
@@ -64,13 +64,13 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
   const mapInstanceRef = useRef<MapLibreMap | null>(null);
   const settledRef = useRef(false);
   const safetyTimerRef = useRef<number | null>(null);
+  const loadingHandleRef = useRef<number | null>(null);
   const loadingClearedRef = useRef(false);
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
   const { delayRender, continueRender } = useDelayRender();
   const [map, setMap] = useState<MapLibreMap | null>(null);
   const [fallbackMode, setFallbackMode] = useState(false);
-  const [loadingHandle] = useState(() => delayRender('Loading POLISAS MapLibre campus map'));
 
   const resolvedStartFrame = routeStartFrame ?? Math.round(0.6 * fps);
   const resolvedEndFrame = Math.max(
@@ -79,8 +79,25 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
   );
   const routeProgress = computeCampusRouteProgress(frame, resolvedStartFrame, resolvedEndFrame);
 
+  // Acquire the initial delayRender handle in useLayoutEffect so React StrictMode
+  // double-mounts and mid-load unmounts cleanly release any pending handle, while
+  // still blocking synchronously before requestAnimationFrame / remotion still capture.
+  useLayoutEffect(() => {
+    if (loadingClearedRef.current) return;
+    const handle = delayRender('Loading POLISAS MapLibre campus map');
+    loadingHandleRef.current = handle;
+    return () => {
+      if (loadingHandleRef.current === handle) {
+        loadingHandleRef.current = null;
+        continueRender(handle);
+      }
+    };
+  }, [continueRender, delayRender]);
+
   useEffect(() => {
     if (settledRef.current) return;
+
+    let cancelled = false;
 
     const clearSafetyTimer = () => {
       if (safetyTimerRef.current !== null) {
@@ -89,14 +106,28 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
       }
     };
 
+    const disposeMap = () => {
+      try {
+        mapInstanceRef.current?.remove();
+      } catch {
+        // Ignore teardown errors if the WebGL2 context was already lost or disposed.
+      }
+      mapInstanceRef.current = null;
+    };
+
     const activateFallback = () => {
-      if (settledRef.current) return;
+      if (cancelled || settledRef.current) return;
       settledRef.current = true;
       clearSafetyTimer();
+      disposeMap();
+      setMap(null);
       setFallbackMode(true);
     };
 
-    safetyTimerRef.current = window.setTimeout(activateFallback, 4000);
+    safetyTimerRef.current = window.setTimeout(() => {
+      if (cancelled) return;
+      activateFallback();
+    }, 4000);
 
     if (!mapInstanceRef.current && containerRef.current) {
       try {
@@ -135,98 +166,105 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
         mapInstanceRef.current = mapInstance;
 
         mapInstance.on('error', () => {
+          if (cancelled) return;
           activateFallback();
         });
 
         mapInstance.on('load', () => {
-          if (settledRef.current) return;
+          if (cancelled || settledRef.current) return;
 
-          mapInstance.addSource('campus-trace', {
-            type: 'geojson',
-            data: sliceCampusRoute(0),
-          });
+          try {
+            mapInstance.addSource('campus-trace', {
+              type: 'geojson',
+              data: sliceCampusRoute(0),
+            });
 
-          mapInstance.addLayer({
-            id: 'campus-trace-casing',
-            type: 'line',
-            source: 'campus-trace',
-            layout: { 'line-cap': 'round', 'line-join': 'round' },
-            paint: { 'line-color': '#FFFFFF', 'line-width': 12 },
-          });
+            mapInstance.addLayer({
+              id: 'campus-trace-casing',
+              type: 'line',
+              source: 'campus-trace',
+              layout: { 'line-cap': 'round', 'line-join': 'round' },
+              paint: { 'line-color': '#FFFFFF', 'line-width': 12 },
+            });
 
-          mapInstance.addLayer({
-            id: 'campus-trace-line',
-            type: 'line',
-            source: 'campus-trace',
-            layout: { 'line-cap': 'round', 'line-join': 'round' },
-            paint: { 'line-color': LAUNCH_PALETTE.ACCENT, 'line-width': 7 },
-          });
+            mapInstance.addLayer({
+              id: 'campus-trace-line',
+              type: 'line',
+              source: 'campus-trace',
+              layout: { 'line-cap': 'round', 'line-join': 'round' },
+              paint: { 'line-color': LAUNCH_PALETTE.ACCENT, 'line-width': 7 },
+            });
 
-          mapInstance.addSource('campus-landmarks', {
-            type: 'geojson',
-            data: CAMPUS_LANDMARKS,
-          });
+            mapInstance.addSource('campus-landmarks', {
+              type: 'geojson',
+              data: CAMPUS_LANDMARKS,
+            });
 
-          mapInstance.addLayer({
-            id: 'campus-landmark-dots',
-            type: 'circle',
-            source: 'campus-landmarks',
-            paint: {
-              'circle-color': LAUNCH_PALETTE.PRIMARY,
-              'circle-radius': 10,
-              'circle-stroke-color': '#FFFFFF',
-              'circle-stroke-width': 4,
-            },
-          });
+            mapInstance.addLayer({
+              id: 'campus-landmark-dots',
+              type: 'circle',
+              source: 'campus-landmarks',
+              paint: {
+                'circle-color': LAUNCH_PALETTE.PRIMARY,
+                'circle-radius': 10,
+                'circle-stroke-color': '#FFFFFF',
+                'circle-stroke-width': 4,
+              },
+            });
 
-          mapInstance.addLayer({
-            id: 'campus-landmark-labels',
-            type: 'symbol',
-            source: 'campus-landmarks',
-            layout: {
-              'text-allow-overlap': true,
-              'text-anchor': 'top',
-              'text-field': ['get', 'name'],
-              'text-font': ['Noto Sans Regular'],
-              'text-offset': [0, 1.1],
-              'text-size': 18,
-            },
-            paint: {
-              'text-color': LAUNCH_PALETTE.PRIMARY,
-              'text-halo-color': '#F8F6EE',
-              'text-halo-width': 3,
-            },
-          });
+            mapInstance.addLayer({
+              id: 'campus-landmark-labels',
+              type: 'symbol',
+              source: 'campus-landmarks',
+              layout: {
+                'text-allow-overlap': true,
+                'text-anchor': 'top',
+                'text-field': ['get', 'name'],
+                'text-font': ['Noto Sans Regular'],
+                'text-offset': [0, 1.1],
+                'text-size': 18,
+              },
+              paint: {
+                'text-color': LAUNCH_PALETTE.PRIMARY,
+                'text-halo-color': '#F8F6EE',
+                'text-halo-width': 3,
+              },
+            });
 
-          const [wx, wy] = getWalkerCoordinate(0);
-          mapInstance.addSource('campus-walker', {
-            type: 'geojson',
-            data: {
-              type: 'Feature',
-              properties: {},
-              geometry: { type: 'Point', coordinates: [wx, wy] },
-            },
-          });
+            const [wx, wy] = getWalkerCoordinate(0);
+            mapInstance.addSource('campus-walker', {
+              type: 'geojson',
+              data: {
+                type: 'Feature',
+                properties: {},
+                geometry: { type: 'Point', coordinates: [wx, wy] },
+              },
+            });
 
-          mapInstance.addLayer({
-            id: 'campus-walker-dot',
-            type: 'circle',
-            source: 'campus-walker',
-            paint: {
-              'circle-color': LAUNCH_PALETTE.ACCENT,
-              'circle-radius': 13,
-              'circle-stroke-color': '#FFFFFF',
-              'circle-stroke-width': 4,
-            },
-          });
+            mapInstance.addLayer({
+              id: 'campus-walker-dot',
+              type: 'circle',
+              source: 'campus-walker',
+              paint: {
+                'circle-color': LAUNCH_PALETTE.ACCENT,
+                'circle-radius': 13,
+                'circle-stroke-color': '#FFFFFF',
+                'circle-stroke-width': 4,
+              },
+            });
 
-          mapInstance.jumpTo({ center: POLISAS_COORDS.CENTER, zoom: 16.4 });
-          mapInstance.once('idle', () => {
-            if (settledRef.current) return;
-            settledRef.current = true;
-            clearSafetyTimer();
-            setMap(mapInstance);
-          });
+            mapInstance.jumpTo({ center: POLISAS_COORDS.CENTER, zoom: 16.4 });
+            mapInstance.once('idle', () => {
+              if (cancelled || settledRef.current) return;
+              settledRef.current = true;
+              clearSafetyTimer();
+              setMap(mapInstance);
+            });
+          } catch {
+            if (!cancelled) {
+              activateFallback();
+            }
+          }
         });
       } catch {
         activateFallback();
@@ -234,7 +272,12 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
     }
 
     return () => {
+      cancelled = true;
       clearSafetyTimer();
+      disposeMap();
+      setMap(null);
+      setFallbackMode(false);
+      settledRef.current = false;
     };
   }, []);
 
@@ -266,7 +309,11 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
     map.triggerRepaint();
 
     return () => {
-      map.off('idle', finish);
+      try {
+        map.off('idle', finish);
+      } catch {
+        // Ignore listener removal errors if map was already disposed.
+      }
       finish();
     };
   }, [continueRender, delayRender, fallbackMode, map, routeProgress]);
@@ -274,8 +321,12 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
   useEffect(() => {
     if ((!map && !fallbackMode) || loadingClearedRef.current) return;
     loadingClearedRef.current = true;
-    continueRender(loadingHandle);
-  }, [continueRender, fallbackMode, loadingHandle, map]);
+    const handle = loadingHandleRef.current;
+    if (handle !== null) {
+      loadingHandleRef.current = null;
+      continueRender(handle);
+    }
+  }, [continueRender, fallbackMode, map]);
 
   const clampedFallbackProgress = Math.min(1, Math.max(0, routeProgress));
   const isRouteStarted = clampedFallbackProgress > 0.0001;

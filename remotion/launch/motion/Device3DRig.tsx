@@ -184,7 +184,7 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
       disabled: aberrationAmount < 0.25,
     }),
     shine({
-      progress: shineProgress,
+      progress: enableShine ? shineProgress : 0,
       angle: 32,
       haloSigma: 180,
       coreSigma: 52,

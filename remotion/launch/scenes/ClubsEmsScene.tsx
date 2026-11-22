@@ -362,7 +362,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 {liveClubs}
               </span>
               <KineticWords
-                as="div"
+                as="span"
                 text="Kelab Berdaftar."
                 startFrame={headlineStart}
                 staggerFrames={wordStagger}
@@ -388,7 +388,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 {liveActivities}
               </span>
               <KineticWords
-                as="div"
+                as="span"
                 text="Program Dipantau."
                 startFrame={headlineStart + wordStagger * 2}
                 staggerFrames={wordStagger}
