@@ -1,12 +1,13 @@
-import React from 'react';
+import React, { useId } from 'react';
 import { Solid, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
 import { lightLeak } from '@remotion/effects/light-leak';
 import { LAUNCH_FONTS, LAUNCH_PALETTE, POLISAS_COORDS } from '../tokens';
 
 export const EditorialBackdrop: React.FC<{ readonly dark?: boolean }> = ({ dark = false }) => {
+  const uid = useId();
   const strokeColor = dark ? 'rgba(217, 201, 178, 0.08)' : 'rgba(46, 58, 47, 0.05)';
   const dotColor = dark ? 'rgba(217, 201, 178, 0.14)' : 'rgba(46, 58, 47, 0.1)';
-  const patternId = dark ? 'editorial-grid-dark' : 'editorial-grid-light';
+  const patternId = `editorial-grid-${dark ? 'dark' : 'light'}-${uid.replace(/:/g, '')}`;
 
   return (
     <div
