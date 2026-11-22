@@ -24,6 +24,7 @@ export type Device3DRigProps = {
   readonly enterDuration?: number;
   readonly initialBlur?: number;
   readonly initialAberration?: number;
+  readonly extraAberration?: number;
   readonly shineStartFrame?: number;
   readonly shineDuration?: number;
   readonly enableShine?: boolean;
@@ -66,6 +67,7 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
   enterDuration = 38,
   initialBlur = 11,
   initialAberration = 4.2,
+  extraAberration = 0,
   shineStartFrame = 30,
   shineDuration = 42,
   enableShine = true,
@@ -137,7 +139,7 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
   );
   const blurRadius = rawBlurRadius < 0.4 ? 0 : rawBlurRadius;
 
-  const rawAberrationAmount = Math.max(
+  const entryAberration = Math.max(
     0,
     interpolate(
       frame,
@@ -150,6 +152,8 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
       },
     ),
   );
+  const safeExtraAberration = Number.isFinite(extraAberration) ? Math.max(0, extraAberration) : 0;
+  const rawAberrationAmount = Math.max(entryAberration, safeExtraAberration);
   const aberrationAmount = rawAberrationAmount < 0.25 ? 0 : rawAberrationAmount;
 
   const rawShine = interpolate(

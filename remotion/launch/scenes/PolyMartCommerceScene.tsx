@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  CanvasImage,
   Easing,
   Interactive,
   interpolate,
@@ -10,7 +9,6 @@ import {
   useVideoConfig,
   type InteractivitySchema,
 } from 'remotion';
-import { chromaticAberration } from '@remotion/effects/chromatic-aberration';
 import { Trail } from '@remotion/motion-blur';
 import { Check, Receipt, ShieldCheck, ShoppingBag, Sparkles } from 'lucide-react';
 import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialChrome';
@@ -252,24 +250,16 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   const pulseStart = stampStart + Math.max(1, Math.round((4 / 60) * fps));
   const pulseDuration = Math.max(4, Math.round((8 / 60) * fps));
   const pulseEnd = pulseStart + pulseDuration;
+  const pulsePeakFrame = pulseStart + Math.max(1, Math.round(pulseDuration * 0.35));
   const inPulseWindow = frame >= pulseStart && frame < pulseEnd;
 
   const pulseProgress = inPulseWindow
-    ? interpolate(frame, [pulseStart, pulseStart + pulseDuration * 0.4, pulseEnd], [0, 1, 0], {
+    ? interpolate(frame, [pulseStart - 1, pulsePeakFrame, pulseEnd], [0, 1, 0], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'clamp',
       })
     : 0;
   const pulseAberrationAmount = inPulseWindow ? Number((pulseProgress * 9.5).toFixed(2)) : 0;
-  const pulseDisabled = !inPulseWindow || pulseAberrationAmount < 0.25;
-
-  const checkoutPulseEffects = [
-    chromaticAberration({
-      amount: pulseAberrationAmount,
-      angle: 22,
-      disabled: pulseDisabled,
-    }),
-  ];
 
   const stampSpring =
     frame >= stampStart
@@ -550,6 +540,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               enterDuration={phone2Duration}
               initialBlur={18}
               initialAberration={3.8}
+              extraAberration={pulseAberrationAmount}
               shineStartFrame={phone2ShineStart}
               shineDuration={phone2ShineDuration}
               baseRotateX={1.5}
@@ -561,21 +552,6 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               floatAmplitude={0.9}
               floatPhase={1.5}
               objectPosition="top center"
-              screenOverlay={
-                <CanvasImage
-                  name="PolyMart Checkout Impact Pulse"
-                  src={staticFile('GAMBAR/Inside Polymart View Phone.png')}
-                  premountFor={fps}
-                  effects={checkoutPulseEffects}
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: 'cover',
-                    objectPosition: 'top center',
-                    opacity: pulseDisabled ? 0 : 1,
-                  }}
-                />
-              }
               style={{
                 position: 'absolute',
                 left: 468,

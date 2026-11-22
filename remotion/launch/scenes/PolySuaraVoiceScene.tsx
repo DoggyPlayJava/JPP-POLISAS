@@ -94,8 +94,8 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   const votesEndFrame = Math.round(4.65 * fps);
 
   // At default percentageA=68: Option B leads 0% -> 44% while Option A rises 0% -> 38%.
-  // Handles any clamped percentageA in 0..100 cleanly.
-  const preClickA = Math.min(38, Math.max(12, Math.round(clampedA * 0.56)));
+  // Guard preClickA <= clampedA so low percentageA (< 12) never dips backward post-click.
+  const preClickA = Math.min(clampedA, Math.min(38, Math.max(12, Math.round(clampedA * 0.56))));
   const preClickB = Math.min(48, Math.max(44, Math.round(clampedB * 0.9)));
 
   const phase1A = interpolate(frame, [racePhase1Start, clickFrame], [0, preClickA], {
