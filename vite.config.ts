@@ -52,6 +52,8 @@ export default defineConfig({
           '**/docxGenerator*',
           '**/IGStoryExportCard*',
           '**/LaunchVideo*',
+          '**/maplibre*',
+          '**/remotion*',
           '**/PolyMartVendorDashboard*',
           '**/JppPolyMapsAdmin*',
           '**/pdf.worker*',
