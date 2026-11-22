@@ -1,7 +1,17 @@
 import { z } from 'zod';
 
-export const LAUNCH_TRANSITION_FRAMES = 15;
-export const LAUNCH_OVERLAY_FRAMES = 24;
+export const LAUNCH_TRANSITION_FRAMES = 30;
+export const LAUNCH_OVERLAY_FRAMES = 48;
+
+export type LaunchTransitionKind =
+  | 'kinetic-push'
+  | 'editorial-shutter'
+  | 'split-curtain'
+  | 'clock-wipe'
+  | 'depth-lift'
+  | 'light-sweep'
+  | 'orbital-iris'
+  | 'none';
 
 export interface LaunchChapterMeta {
   readonly id: string;
@@ -10,21 +20,21 @@ export interface LaunchChapterMeta {
   readonly subtitle: string;
   readonly durationInFrames: number;
   readonly startFrame: number;
-  readonly transitionAfter: 'fade' | 'slide' | 'light-leak' | 'none';
+  readonly transitionAfter: LaunchTransitionKind;
 }
 
 export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
-  { id: 'OpeningHero', indexLabel: '01', title: 'Pembukaan', subtitle: 'Identiti & Portal Rasmi', durationInFrames: 150, startFrame: 0, transitionAfter: 'fade' },
-  { id: 'PolyMapsCampus', indexLabel: '02', title: 'PolyMaps', subtitle: 'Navigasi Kampus & Jadual', durationInFrames: 240, startFrame: 135, transitionAfter: 'light-leak' },
-  { id: 'PolyMartCommerce', indexLabel: '03', title: 'PolyMart', subtitle: 'Keusahawanan Siswa', durationInFrames: 195, startFrame: 375, transitionAfter: 'slide' },
-  { id: 'PolySuaraVoice', indexLabel: '04', title: 'PolySuara', subtitle: 'Suara & Undian Kampus', durationInFrames: 180, startFrame: 555, transitionAfter: 'fade' },
-  { id: 'WelfareCare', indexLabel: '05', title: 'E-Kebajikan', subtitle: 'Aduan & Food Bank', durationInFrames: 180, startFrame: 720, transitionAfter: 'slide' },
-  { id: 'ClubsEms', indexLabel: '06', title: 'Kelab & EMS', subtitle: 'Aktiviti & Sijil Digital', durationInFrames: 195, startFrame: 885, transitionAfter: 'light-leak' },
-  { id: 'ImpactNumbers', indexLabel: '07', title: 'Impak', subtitle: 'Angka Sebenar POLISAS', durationInFrames: 180, startFrame: 1080, transitionAfter: 'fade' },
-  { id: 'ClosingVault', indexLabel: '08', title: 'Penutup', subtitle: 'Akses Portal Rasmi', durationInFrames: 225, startFrame: 1245, transitionAfter: 'none' },
+  { id: 'OpeningHero', indexLabel: '01', title: 'Pembukaan', subtitle: 'Identiti & Portal Rasmi', durationInFrames: 300, startFrame: 0, transitionAfter: 'kinetic-push' },
+  { id: 'PolyMapsCampus', indexLabel: '02', title: 'PolyMaps', subtitle: 'Navigasi Kampus & Jadual', durationInFrames: 480, startFrame: 270, transitionAfter: 'editorial-shutter' },
+  { id: 'PolyMartCommerce', indexLabel: '03', title: 'PolyMart', subtitle: 'Keusahawanan Siswa', durationInFrames: 390, startFrame: 750, transitionAfter: 'split-curtain' },
+  { id: 'PolySuaraVoice', indexLabel: '04', title: 'PolySuara', subtitle: 'Suara & Undian Kampus', durationInFrames: 360, startFrame: 1110, transitionAfter: 'clock-wipe' },
+  { id: 'WelfareCare', indexLabel: '05', title: 'E-Kebajikan', subtitle: 'Aduan & Food Bank', durationInFrames: 360, startFrame: 1440, transitionAfter: 'depth-lift' },
+  { id: 'ClubsEms', indexLabel: '06', title: 'Kelab & EMS', subtitle: 'Aktiviti & Sijil Digital', durationInFrames: 390, startFrame: 1770, transitionAfter: 'light-sweep' },
+  { id: 'ImpactNumbers', indexLabel: '07', title: 'Impak', subtitle: 'Angka Sebenar POLISAS', durationInFrames: 360, startFrame: 2160, transitionAfter: 'orbital-iris' },
+  { id: 'ClosingVault', indexLabel: '08', title: 'Penutup', subtitle: 'Akses Portal Rasmi', durationInFrames: 450, startFrame: 2490, transitionAfter: 'none' },
 ];
 
-export const LAUNCH_TOTAL_FRAMES = 1470;
+export const LAUNCH_TOTAL_FRAMES = 2940;
 
 export const LaunchShowcaseSchema = z.object({
   institutionName: z.string().default('POLITEKNIK SULTAN HAJI AHMAD SHAH'),

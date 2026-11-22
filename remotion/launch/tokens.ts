@@ -1,4 +1,4 @@
-export const LAUNCH_FPS = 30;
+export const LAUNCH_FPS = 60;
 export const LAUNCH_WIDTH = 1920;
 export const LAUNCH_HEIGHT = 1080;
 

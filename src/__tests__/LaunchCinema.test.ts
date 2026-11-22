@@ -3,8 +3,11 @@ import { DEFAULT_CAMPUS_STATS, LANDING_STATS_CACHE_KEY } from '@/hooks/useCampus
 import {
   LaunchShowcaseSchema,
   LAUNCH_CHAPTERS,
+  LAUNCH_OVERLAY_FRAMES,
   LAUNCH_TOTAL_FRAMES,
+  LAUNCH_TRANSITION_FRAMES,
 } from '../../remotion/launch/schema';
+import { LAUNCH_FPS } from '../../remotion/launch/tokens';
 import {
   CAMPUS_ROUTE_KM,
   sliceCampusRoute,
@@ -26,14 +29,30 @@ describe('Shared Campus Stats Contract', () => {
 });
 
 describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
-  it('computes exact 1470-frame TransitionSeries timeline and chapter offsets', () => {
-    expect(LAUNCH_TOTAL_FRAMES).toBe(1470);
+  it('computes exact 2940-frame 60fps TransitionSeries timeline and chapter offsets', () => {
+    expect(LAUNCH_FPS).toBe(60);
+    expect(LAUNCH_TRANSITION_FRAMES).toBe(30);
+    expect(LAUNCH_OVERLAY_FRAMES).toBe(48);
+    expect(LAUNCH_TOTAL_FRAMES).toBe(2940);
     expect(LAUNCH_CHAPTERS).toHaveLength(8);
+    expect(LAUNCH_CHAPTERS.map((c) => c.durationInFrames)).toEqual([
+      300, 480, 390, 360, 360, 390, 360, 450,
+    ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.startFrame)).toEqual([
-      0, 135, 375, 555, 720, 885, 1080, 1245,
+      0, 270, 750, 1110, 1440, 1770, 2160, 2490,
+    ]);
+    expect(LAUNCH_CHAPTERS.map((c) => c.transitionAfter)).toEqual([
+      'kinetic-push',
+      'editorial-shutter',
+      'split-curtain',
+      'clock-wipe',
+      'depth-lift',
+      'light-sweep',
+      'orbital-iris',
+      'none',
     ]);
     const last = LAUNCH_CHAPTERS[LAUNCH_CHAPTERS.length - 1];
-    expect(last.startFrame + last.durationInFrames).toBe(1470);
+    expect(last.startFrame + last.durationInFrames).toBe(2940);
   });
 
   it('validates Zod defaults with official POLISAS identity', () => {
