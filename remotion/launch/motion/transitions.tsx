@@ -388,6 +388,24 @@ const DepthLiftMatchPresentation: React.FC<
   const isUntouched = !isEntering && p <= 0.0001;
   const isDecorVisible = isEntering && p > 0.0005 && p < 0.9995;
 
+  const outerStyle = useMemo<React.CSSProperties>(() => {
+    if (isEntering) {
+      return isSettled
+        ? { width: '100%', height: '100%' }
+        : { width: '100%', height: '100%', zIndex: 2 };
+    }
+    if (isUntouched) {
+      return { width: '100%', height: '100%' };
+    }
+    return {
+      width: '100%',
+      height: '100%',
+      zIndex: 1,
+      overflow: 'hidden',
+      backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+    };
+  }, [isEntering, isSettled, isUntouched]);
+
   const cardStyle = useMemo<React.CSSProperties>(() => {
     if (isEntering) {
       if (isSettled) {
@@ -407,7 +425,6 @@ const DepthLiftMatchPresentation: React.FC<
       return {
         width: '100%',
         height: '100%',
-        zIndex: 2,
         overflow: 'hidden',
         transformOrigin: '50% 0%',
         willChange: 'transform',
@@ -429,7 +446,6 @@ const DepthLiftMatchPresentation: React.FC<
     return {
       width: '100%',
       height: '100%',
-      zIndex: 1,
       willChange: 'transform',
       transformOrigin: '50% 50%',
       transform: `translate3d(0px, ${exitY.toFixed(3)}%, 0px) scale(${exitScale.toFixed(5)})`,
@@ -451,8 +467,25 @@ const DepthLiftMatchPresentation: React.FC<
       : 0;
 
   return (
-    <AbsoluteFill showInTimeline={false} style={cardStyle}>
-      {children}
+    <AbsoluteFill showInTimeline={false} style={outerStyle}>
+      <AbsoluteFill showInTimeline={false} style={cardStyle}>
+        {children}
+
+        {isDecorVisible && topEdgeOpacity > 0.005 ? (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: 2,
+              backgroundColor: borderColor,
+              opacity: topEdgeOpacity,
+              pointerEvents: 'none',
+            }}
+          />
+        ) : null}
+      </AbsoluteFill>
 
       {!isEntering && exitDimOpacity > 0.001 ? (
         <div
@@ -461,21 +494,6 @@ const DepthLiftMatchPresentation: React.FC<
             inset: 0,
             backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
             opacity: exitDimOpacity,
-            pointerEvents: 'none',
-          }}
-        />
-      ) : null}
-
-      {isDecorVisible && topEdgeOpacity > 0.005 ? (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 2,
-            backgroundColor: borderColor,
-            opacity: topEdgeOpacity,
             pointerEvents: 'none',
           }}
         />
@@ -844,7 +862,7 @@ export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = (
                 color: LAUNCH_PALETTE.TERTIARY,
               }}
             >
-              POLISAS • EKOSISTEM DIGITAL SISWA
+              JPP POLISAS • EKOSISTEM DIGITAL MAHASISWA
             </div>
           </div>
         </div>
@@ -935,6 +953,7 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
             seed: safeSeed,
             hueShift: safeHueShift,
             progress,
+            disabled: leakOpacity <= 0.001,
           }),
         ]}
       />
