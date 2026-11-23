@@ -29,7 +29,7 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath, GhostCursor, type GhostCursorKeyframe } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
 import {
   ExplodedLayer,
   KineticWindow,
@@ -102,6 +102,11 @@ type ServiceTileSpec = {
   readonly label: string;
   readonly sublabel: string;
   readonly badge?: string;
+  readonly badgeBg?: string;
+  readonly iconColor: string;
+  readonly wellBg: string;
+  readonly wellBorder: string;
+  readonly darkColor: string;
   readonly iconKind:
     | 'polysuara'
     | 'polymart'
@@ -114,14 +119,90 @@ type ServiceTileSpec = {
 };
 
 const CAMPUS_SERVICE_TILES: readonly ServiceTileSpec[] = [
-  { id: 'polysuara', label: 'PolySuara', sublabel: 'Suara Siswa', iconKind: 'polysuara' },
-  { id: 'polymart', label: 'PolyMart', sublabel: 'Makanan & Niaga', iconKind: 'polymart' },
-  { id: 'takwim', label: 'Takwim', sublabel: 'Jadual & Acara', iconKind: 'takwim' },
-  { id: 'polymaps', label: 'PolyMaps', sublabel: 'Peta Kampus', iconKind: 'polymaps' },
-  { id: 'polyrent', label: 'PolyRent', sublabel: 'Bilik & Rumah Sewa', iconKind: 'polyrent' },
-  { id: 'kebajikan', label: 'E-Kebajikan', sublabel: 'Aduan & Food Bank', iconKind: 'kebajikan' },
-  { id: 'scan_qr', label: 'Scan QR Merit', sublabel: 'Kumpul Merit & Sijil', badge: 'MERIT', iconKind: 'scan_qr' },
-  { id: 'ekpp', label: 'Kelab EKPP', sublabel: '21 Persatuan Siswa', badge: 'KELAB', iconKind: 'ekpp' },
+  {
+    id: 'polysuara',
+    label: 'PolySuara',
+    sublabel: 'Suara Siswa',
+    iconColor: LAUNCH_MODULE_THEMES.polysuara.dark,
+    wellBg: LAUNCH_MODULE_THEMES.polysuara.soft,
+    wellBorder: LAUNCH_MODULE_THEMES.polysuara.border,
+    darkColor: LAUNCH_MODULE_THEMES.polysuara.primary,
+    iconKind: 'polysuara',
+  },
+  {
+    id: 'polymart',
+    label: 'PolyMart',
+    sublabel: 'Makanan & Niaga',
+    iconColor: LAUNCH_MODULE_THEMES.polymart.dark,
+    wellBg: LAUNCH_MODULE_THEMES.polymart.soft,
+    wellBorder: LAUNCH_MODULE_THEMES.polymart.border,
+    darkColor: LAUNCH_MODULE_THEMES.polymart.primary,
+    iconKind: 'polymart',
+  },
+  {
+    id: 'takwim',
+    label: 'Takwim',
+    sublabel: 'Jadual & Acara',
+    iconColor: LAUNCH_MODULE_THEMES.takwim.dark,
+    wellBg: LAUNCH_MODULE_THEMES.takwim.soft,
+    wellBorder: LAUNCH_MODULE_THEMES.takwim.border,
+    darkColor: LAUNCH_MODULE_THEMES.takwim.primary,
+    iconKind: 'takwim',
+  },
+  {
+    id: 'polymaps',
+    label: 'PolyMaps',
+    sublabel: 'Peta Kampus',
+    iconColor: LAUNCH_MODULE_THEMES.polymaps.dark,
+    wellBg: LAUNCH_MODULE_THEMES.polymaps.soft,
+    wellBorder: LAUNCH_MODULE_THEMES.polymaps.border,
+    darkColor: LAUNCH_MODULE_THEMES.polymaps.primary,
+    iconKind: 'polymaps',
+  },
+  {
+    id: 'polyrent',
+    label: 'PolyRent',
+    sublabel: 'Bilik & Rumah Sewa',
+    iconColor: LAUNCH_MODULE_THEMES.polyrent.dark,
+    wellBg: LAUNCH_MODULE_THEMES.polyrent.soft,
+    wellBorder: LAUNCH_MODULE_THEMES.polyrent.border,
+    darkColor: LAUNCH_MODULE_THEMES.polyrent.primary,
+    iconKind: 'polyrent',
+  },
+  {
+    id: 'kebajikan',
+    label: 'E-Kebajikan',
+    sublabel: 'Aduan & Food Bank',
+    iconColor: LAUNCH_MODULE_THEMES.kebajikan.dark,
+    wellBg: LAUNCH_MODULE_THEMES.kebajikan.soft,
+    wellBorder: LAUNCH_MODULE_THEMES.kebajikan.border,
+    darkColor: LAUNCH_MODULE_THEMES.kebajikan.primary,
+    iconKind: 'kebajikan',
+  },
+  {
+    id: 'scan_qr',
+    label: 'Scan QR Merit',
+    sublabel: 'Kumpul Merit & Sijil',
+    badge: 'MERIT',
+    badgeBg: LAUNCH_MODULE_THEMES.meritQr.dark,
+    iconColor: LAUNCH_MODULE_THEMES.meritQr.dark,
+    wellBg: LAUNCH_MODULE_THEMES.meritQr.soft,
+    wellBorder: LAUNCH_MODULE_THEMES.meritQr.border,
+    darkColor: LAUNCH_MODULE_THEMES.meritQr.primary,
+    iconKind: 'scan_qr',
+  },
+  {
+    id: 'ekpp',
+    label: 'Kelab EKPP',
+    sublabel: '21 Persatuan Siswa',
+    badge: 'KELAB',
+    badgeBg: LAUNCH_MODULE_THEMES.kelab.dark,
+    iconColor: LAUNCH_MODULE_THEMES.kelab.dark,
+    wellBg: LAUNCH_MODULE_THEMES.kelab.soft,
+    wellBorder: LAUNCH_MODULE_THEMES.kelab.border,
+    darkColor: LAUNCH_MODULE_THEMES.kelab.primary,
+    iconKind: 'ekpp',
+  },
 ];
 
 const renderServiceIcon = (kind: ServiceTileSpec['iconKind'], color: string) => {
@@ -238,9 +319,9 @@ const PolyMapsQuickLaunchToast: React.FC<PolyMapsQuickLaunchToastProps> = ({
           gap: 10,
           padding: '10px 18px 10px 12px',
           borderRadius: 999,
-          backgroundColor: LAUNCH_PALETTE.PRIMARY,
-          border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-          boxShadow: '0 16px 36px rgba(31, 39, 32, 0.28)',
+          backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+          border: `1.5px solid ${LAUNCH_MODULE_THEMES.polymaps.primary}`,
+          boxShadow: '0 16px 36px rgba(5, 150, 105, 0.28), 0 8px 20px rgba(31, 39, 32, 0.24)',
           color: LAUNCH_PALETTE.BACKGROUND,
           fontFamily: LAUNCH_FONTS.DISPLAY,
           fontSize: 13.5,
@@ -254,7 +335,7 @@ const PolyMapsQuickLaunchToast: React.FC<PolyMapsQuickLaunchToastProps> = ({
             width: 24,
             height: 24,
             borderRadius: 999,
-            backgroundColor: LAUNCH_PALETTE.ACCENT,
+            backgroundColor: LAUNCH_MODULE_THEMES.polymaps.primary,
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -418,7 +499,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
   });
 
   const polymapsScale = (1 + liftProgress * 0.18 + finalRampProgress * 0.2) * pressDip;
-  const polymapsZ = liftProgress * 36 + finalRampProgress * 22;
+  const polymapsZ = liftProgress * 56 + finalRampProgress * 28;
 
   // Expanding terracotta ripple halo centered on PolyMaps squircle
   const rippleDuration = Math.max(14, Math.round(0.56 * safeFps));
@@ -1004,9 +1085,9 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                   transformStyle: 'preserve-3d',
                 }}
               >
-                {/* 2. Live NextClassBentoCard Bar (<ExplodedLayer zDepth={24}>) */}
+                {/* 2. Live NextClassBentoCard Bar (<ExplodedLayer zDepth={36}>) */}
                 <ExplodedLayer
-                  zDepth={24}
+                  zDepth={36}
                   enterFrame={nextClassEnterFrame}
                   enterOffsetY={18}
                   floatAmplitude={1.4}
@@ -1019,8 +1100,8 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                       padding: '12px 20px',
                       borderRadius: 20,
                       backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                      border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                      boxShadow: '0 10px 26px rgba(46, 58, 47, 0.08)',
+                      border: `1.5px solid ${LAUNCH_MODULE_THEMES.takwim.border}`,
+                      boxShadow: '0 12px 28px rgba(99, 102, 241, 0.08), 0 4px 12px rgba(46, 58, 47, 0.06)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -1034,8 +1115,8 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                           width: 40,
                           height: 40,
                           borderRadius: 12,
-                          backgroundColor: 'rgba(201, 111, 79, 0.14)',
-                          border: '1px solid rgba(201, 111, 79, 0.34)',
+                          backgroundColor: LAUNCH_MODULE_THEMES.takwim.soft,
+                          border: `1px solid ${LAUNCH_MODULE_THEMES.takwim.border}`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -1048,7 +1129,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                             width: 12,
                             height: 12,
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.ACCENT,
+                            backgroundColor: LAUNCH_MODULE_THEMES.polymaps.primary,
                             opacity: activeHaloOpacity,
                             transform: `scale(${activeHaloScale.toFixed(3)})`,
                           }}
@@ -1058,7 +1139,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                             width: 10,
                             height: 10,
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.ACCENT,
+                            backgroundColor: LAUNCH_MODULE_THEMES.polymaps.primary,
                             transform: `scale(${activeDotScale.toFixed(3)})`,
                           }}
                         />
@@ -1072,7 +1153,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                               fontSize: 11,
                               fontWeight: 800,
                               letterSpacing: '0.09em',
-                              color: LAUNCH_PALETTE.ACCENT,
+                              color: LAUNCH_MODULE_THEMES.takwim.dark,
                             }}
                           >
                             KELAS PERTAMA BERMULA DALAM 15 MINIT • DIT3013
@@ -1081,11 +1162,12 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                             style={{
                               padding: '1.5px 8px',
                               borderRadius: 999,
-                              backgroundColor: 'rgba(107, 127, 91, 0.14)',
+                              backgroundColor: LAUNCH_MODULE_THEMES.takwim.soft,
+                              border: `1px solid ${LAUNCH_MODULE_THEMES.takwim.border}`,
                               fontFamily: LAUNCH_FONTS.MONO,
                               fontSize: 9.5,
                               fontWeight: 800,
-                              color: LAUNCH_PALETTE.SECONDARY,
+                              color: LAUNCH_MODULE_THEMES.takwim.dark,
                             }}
                           >
                             AMALI
@@ -1115,23 +1197,23 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                           gap: 6,
                           padding: '7px 14px',
                           borderRadius: 999,
-                          backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                          border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                          backgroundColor: LAUNCH_MODULE_THEMES.polymaps.soft,
+                          border: `1px solid ${LAUNCH_MODULE_THEMES.polymaps.border}`,
                           fontFamily: LAUNCH_FONTS.MONO,
                           fontSize: 12,
                           fontWeight: 800,
-                          color: LAUNCH_PALETTE.PRIMARY,
+                          color: LAUNCH_MODULE_THEMES.polymaps.dark,
                         }}
                       >
-                        <MapPin size={13} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
+                        <MapPin size={13} color={LAUNCH_MODULE_THEMES.polymaps.dark} strokeWidth={2.4} />
                         <span>ARAS 2 · JTMK</span>
                       </div>
                       <div
                         style={{
                           padding: '7px 14px',
                           borderRadius: 999,
-                          backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                          color: LAUNCH_PALETTE.BACKGROUND,
+                          backgroundColor: LAUNCH_MODULE_THEMES.takwim.dark,
+                          color: LAUNCH_PALETTE.CARD_BG,
                           fontFamily: LAUNCH_FONTS.MONO,
                           fontSize: 11.5,
                           fontWeight: 800,
@@ -1144,7 +1226,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                   </div>
                 </ExplodedLayer>
 
-                {/* 3. Live 8-Squircle CampusServicesGrid (4 columns x 2 rows in 05 Earthy Minimal) */}
+                {/* 3. Live 8-Squircle CampusServicesGrid with Authentic Per-Module Signature Colors */}
                 <div
                   style={{
                     display: 'grid',
@@ -1174,44 +1256,46 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                         : 0;
                     const baseScale = 0.76 + 0.24 * popSpring;
                     const baseLiftY = (1 - popSpring) * 18;
+                    const baseZ = popSpring * 14;
+
+                    const emerald = LAUNCH_MODULE_THEMES.polymaps.primary;
+                    const emeraldDark = LAUNCH_MODULE_THEMES.polymaps.dark;
 
                     const tileBg = isPolyMaps
                       ? interpolateColors(
                           igniteT,
                           [0, 1],
-                          [LAUNCH_PALETTE.CARD_BG, LAUNCH_PALETTE.ACCENT],
+                          [LAUNCH_PALETTE.CARD_BG, emeraldDark],
                         )
                       : LAUNCH_PALETTE.CARD_BG;
                     const tileBorder = isPolyMaps
                       ? interpolateColors(
                           igniteT,
                           [0, 1],
-                          [LAUNCH_PALETTE.TERTIARY, LAUNCH_PALETTE.ACCENT],
+                          [tile.wellBorder, emerald],
                         )
-                      : LAUNCH_PALETTE.TERTIARY;
+                      : tile.wellBorder;
                     const wellBg = isPolyMaps
                       ? interpolateColors(
                           igniteT,
                           [0, 1],
-                          [LAUNCH_PALETTE.SURFACE_MUTED, 'rgba(255, 255, 255, 0.22)'],
+                          [tile.wellBg, 'rgba(255, 255, 255, 0.22)'],
                         )
-                      : LAUNCH_PALETTE.SURFACE_MUTED;
+                      : tile.wellBg;
                     const wellBorder = isPolyMaps
                       ? interpolateColors(
                           igniteT,
                           [0, 1],
-                          [LAUNCH_PALETTE.TERTIARY, 'rgba(255, 255, 255, 0.45)'],
+                          [tile.wellBorder, 'rgba(255, 255, 255, 0.48)'],
                         )
-                      : LAUNCH_PALETTE.TERTIARY;
+                      : tile.wellBorder;
                     const iconColor = isPolyMaps
                       ? interpolateColors(
                           igniteT,
                           [0, 1],
-                          [LAUNCH_PALETTE.PRIMARY, LAUNCH_PALETTE.CARD_BG],
+                          [tile.iconColor, LAUNCH_PALETTE.CARD_BG],
                         )
-                      : idx % 2 === 0
-                        ? LAUNCH_PALETTE.PRIMARY
-                        : LAUNCH_PALETTE.SECONDARY;
+                      : tile.iconColor;
                     const titleColor = isPolyMaps
                       ? interpolateColors(
                           igniteT,
@@ -1223,12 +1307,12 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                       ? interpolateColors(
                           igniteT,
                           [0, 1],
-                          [LAUNCH_PALETTE.MUTED_OLIVE, LAUNCH_PALETTE.BACKGROUND],
+                          [LAUNCH_PALETTE.MUTED_OLIVE, LAUNCH_MODULE_THEMES.polymaps.soft],
                         )
                       : LAUNCH_PALETTE.MUTED_OLIVE;
 
                     const combinedScale = isPolyMaps ? baseScale * polymapsScale : baseScale;
-                    const combinedZ = isPolyMaps ? polymapsZ : 0;
+                    const combinedZ = isPolyMaps ? baseZ + polymapsZ : baseZ;
 
                     return (
                       <div
@@ -1242,8 +1326,8 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                           backgroundColor: tileBg,
                           border: `1.5px solid ${tileBorder}`,
                           boxShadow: isPolyMaps && igniteT > 0.05
-                            ? '0 26px 54px rgba(201, 111, 79, 0.36), 0 8px 20px rgba(31, 39, 32, 0.14)'
-                            : '0 8px 20px rgba(46, 58, 47, 0.05)',
+                            ? '0 26px 56px rgba(16, 185, 129, 0.38), 0 8px 20px rgba(31, 39, 32, 0.14)'
+                            : `0 10px 24px rgba(46, 58, 47, 0.06)`,
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',
@@ -1256,7 +1340,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                           transform: `translate3d(0px, ${baseLiftY.toFixed(2)}px, ${combinedZ.toFixed(2)}px) scale(${combinedScale.toFixed(4)})`,
                         }}
                       >
-                        {/* Expanding Terracotta Ripple Halo on PolyMaps Click */}
+                        {/* Expanding Emerald Ripple Halo on PolyMaps Click */}
                         {isPolyMaps && rippleVisible && rippleOpacity > 0.002 ? (
                           <>
                             <div
@@ -1264,7 +1348,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                                 position: 'absolute',
                                 inset: -4,
                                 borderRadius: 28,
-                                border: `2.5px solid ${LAUNCH_PALETTE.ACCENT}`,
+                                border: `2.5px solid ${emerald}`,
                                 opacity: rippleOpacity,
                                 transform: `scale(${rippleScale.toFixed(4)})`,
                                 pointerEvents: 'none',
@@ -1276,7 +1360,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                                   position: 'absolute',
                                   inset: -4,
                                   borderRadius: 28,
-                                  border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                                  border: `2px solid ${LAUNCH_MODULE_THEMES.polymaps.border}`,
                                   opacity: secondaryRippleOpacity,
                                   transform: `scale(${secondaryRippleScale.toFixed(4)})`,
                                   pointerEvents: 'none',
@@ -1311,13 +1395,13 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                                 right: -10,
                                 padding: '2px 7px',
                                 borderRadius: 999,
-                                backgroundColor: LAUNCH_PALETTE.PRIMARY,
+                                backgroundColor: tile.badgeBg ?? LAUNCH_PALETTE.PRIMARY,
                                 border: `1.5px solid ${LAUNCH_PALETTE.CARD_BG}`,
                                 fontFamily: LAUNCH_FONTS.MONO,
                                 fontSize: 9,
                                 fontWeight: 800,
                                 letterSpacing: '0.08em',
-                                color: LAUNCH_PALETTE.BACKGROUND,
+                                color: LAUNCH_PALETTE.CARD_BG,
                                 lineHeight: 1.2,
                               }}
                             >
@@ -1377,7 +1461,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
           appearFrame={cursorAppearFrame}
           disappearFrame={cursorDisappearFrame}
           color={LAUNCH_PALETTE.PRIMARY}
-          rippleColor={LAUNCH_PALETTE.ACCENT}
+          rippleColor={LAUNCH_MODULE_THEMES.polymaps.primary}
           scale={1.1}
           style={{ zIndex: 30 }}
         />

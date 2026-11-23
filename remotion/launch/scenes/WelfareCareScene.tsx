@@ -23,8 +23,18 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
 import { DeterministicQrMatrix, ExplodedLayer, KineticWindow } from '../ui/KineticCard';
+
+const TEAL = LAUNCH_MODULE_THEMES.kebajikan.primary; // #14B8A6
+const TEAL_DARK = LAUNCH_MODULE_THEMES.kebajikan.dark; // #0D9488
+const TEAL_INK = '#0F766E'; // WCAG AA+ Teal-700 behind white text badges & checkmarks
+const TEAL_SOFT = LAUNCH_MODULE_THEMES.kebajikan.soft; // #F0FDFA
+const TEAL_BORDER = LAUNCH_MODULE_THEMES.kebajikan.border; // #99F6E4
+
+const AMBER = LAUNCH_MODULE_THEMES.foodbank.primary; // #F59E0B
+const AMBER_DARK = LAUNCH_MODULE_THEMES.foodbank.dark; // #D97706
+const AMBER_BORDER = LAUNCH_MODULE_THEMES.foodbank.border; // #FDE68A
 
 export type WelfareCareProps = {
   readonly ticketNo: string;
@@ -120,11 +130,11 @@ const SPINE_PATH_D = `M ${SPINE_X} ${FIRST_NODE_Y} L ${SPINE_X} ${LAST_NODE_Y}`;
 const renderScheduleIcon = (kind: (typeof PICKUP_SCHEDULE)[number]['kind']) => {
   switch (kind) {
     case 'date':
-      return <Calendar size={15} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />;
+      return <Calendar size={15} color={AMBER} strokeWidth={2.4} />;
     case 'time':
-      return <Clock size={15} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />;
+      return <Clock size={15} color={AMBER} strokeWidth={2.4} />;
     case 'location':
-      return <MapPin size={15} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.4} />;
+      return <MapPin size={15} color={TEAL} strokeWidth={2.4} />;
   }
 };
 
@@ -329,7 +339,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
 
   return (
     <>
-      <EditorialBackdrop />
+      <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.kebajikan.tint} />
 
       <CameraStage
         zoomFrom={1}
@@ -384,16 +394,16 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                   gap: 9,
                   padding: '6px 18px',
                   borderRadius: 999,
-                  backgroundColor: 'rgba(107, 127, 91, 0.14)',
-                  border: `1.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
-                  color: LAUNCH_PALETTE.PRIMARY,
+                  backgroundColor: TEAL_SOFT,
+                  border: `1.5px solid ${TEAL}`,
+                  color: TEAL_DARK,
                   fontFamily: LAUNCH_FONTS.MONO,
                   fontSize: 12,
                   fontWeight: 800,
                   letterSpacing: '0.16em',
                 }}
               >
-                <ShieldCheck size={15} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.4} />
+                <ShieldCheck size={15} color={TEAL_DARK} strokeWidth={2.4} />
                 <span>PRIHATIN SISWA • ADUAN KAMSIS &amp; FOOD BANK</span>
               </div>
             </KineticReveal>
@@ -406,7 +416,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
               wordDurationFrames={wordDuration}
               align="center"
               accentWords={['Kami', 'Ada.']}
-              accentColor={LAUNCH_PALETTE.ACCENT}
+              accentColor={TEAL_DARK}
               style={{
                 margin: 0,
                 fontSize: 47,
@@ -433,7 +443,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
             </KineticReveal>
           </Interactive.Div>
 
-          {/* Left Deck (840px): Student KebajikanLiveTrackerCard */}
+          {/* Left Deck (840px): Teal Student KebajikanLiveTrackerCard */}
           <Interactive.Div
             name="Kamsis Student Tracker Deck"
             premountFor={safeFps}
@@ -444,7 +454,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
               width: DECK_WIDTH,
               height: DECK_HEIGHT,
               opacity: leftDeckOpacity,
-              transform: `translate3d(${leftDeckX.toFixed(2)}px, ${(leftDeckY + leftDeckFloatY + deckExitLift).toFixed(2)}px, 0px)`,
+              transform: `translate3d(${leftDeckX.toFixed(2)}px, ${(leftDeckY + leftDeckFloatY + deckExitLift).toFixed(2)}px, 16px) rotateY(1.2deg)`,
+              transformStyle: 'preserve-3d',
               overflow: 'visible',
             }}
           >
@@ -453,13 +464,17 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
               routeLabel="jpp.polisas.edu.my/kebajikan"
               statusPill={allStagesComplete ? 'SELESAI ✓' : 'TIKET AKTIF'}
               statusAccent={!allStagesComplete}
+              accentColor={TEAL_DARK}
+              accentSoftBg={TEAL_SOFT}
+              accentBorderColor={TEAL}
               width={DECK_WIDTH}
               height={DECK_HEIGHT}
               borderRadius={26}
               sheenStartFrame={Math.round(0.95 * safeFps)}
               sheenDuration={44}
               style={{
-                borderColor: allStagesComplete ? LAUNCH_PALETTE.SECONDARY : LAUNCH_PALETTE.TERTIARY,
+                borderColor: allStagesComplete ? TEAL : TEAL_BORDER,
+                boxShadow: '0 26px 56px rgba(20, 184, 166, 0.12), 0 8px 20px rgba(31, 39, 32, 0.08)',
                 overflow: 'visible',
               }}
             >
@@ -472,6 +487,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                   justifyContent: 'space-between',
                   boxSizing: 'border-box',
                   overflow: 'visible',
+                  transformStyle: 'preserve-3d',
                 }}
               >
                 {/* Ticket Header Row with < 48 JAM <Highlight> & Beat 3 Architectural Seal */}
@@ -482,8 +498,9 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                     justifyContent: 'space-between',
                     gap: 18,
                     paddingBottom: 18,
-                    borderBottom: `1.5px solid ${LAUNCH_PALETTE.SURFACE_MUTED}`,
+                    borderBottom: `1.5px solid ${TEAL_SOFT}`,
                     overflow: 'visible',
+                    transformStyle: 'preserve-3d',
                   }}
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
@@ -496,7 +513,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         fontSize: 11,
                         fontWeight: 800,
                         letterSpacing: '0.14em',
-                        color: LAUNCH_PALETTE.SECONDARY,
+                        color: TEAL_DARK,
                       }}
                     >
                       <span
@@ -504,9 +521,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           width: 7,
                           height: 7,
                           borderRadius: 999,
-                          backgroundColor: allStagesComplete
-                            ? LAUNCH_PALETTE.SECONDARY
-                            : LAUNCH_PALETTE.ACCENT,
+                          backgroundColor: allStagesComplete ? TEAL_DARK : TEAL,
                           transform: `scale(${liveDotScale.toFixed(3)})`,
                           display: 'inline-block',
                         }}
@@ -520,7 +535,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         fontSize: 22,
                         fontWeight: 900,
                         letterSpacing: '0.02em',
-                        color: LAUNCH_PALETTE.ACCENT,
+                        color: TEAL_DARK,
                         fontVariantNumeric: 'tabular-nums',
                       }}
                     >
@@ -559,13 +574,13 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         gap: 8,
                         padding: '6px 14px',
                         borderRadius: 999,
-                        backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                        border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                        backgroundColor: TEAL_SOFT,
+                        border: `1.5px solid ${TEAL_BORDER}`,
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 12,
                         fontWeight: 800,
                         letterSpacing: '0.1em',
-                        color: LAUNCH_PALETTE.MUTED_OLIVE,
+                        color: TEAL_DARK,
                         overflow: 'visible',
                       }}
                     >
@@ -575,7 +590,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           type="highlight"
                           startFrame={highlightStart}
                           durationFrames={highlightDuration}
-                          color="rgba(201, 111, 79, 0.40)"
+                          color="rgba(20, 184, 166, 0.34)"
                           padding={{ top: 4, right: 9, bottom: 4, left: 9 }}
                           iterations={1}
                           seed={22}
@@ -597,6 +612,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         alignItems: 'center',
                         justifyContent: 'flex-end',
                         overflow: 'visible',
+                        transformStyle: 'preserve-3d',
                       }}
                     >
                       <div
@@ -606,21 +622,21 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           gap: 8,
                           padding: '7px 14px',
                           borderRadius: 999,
-                          backgroundColor: 'rgba(107, 127, 91, 0.12)',
-                          border: `1px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          backgroundColor: TEAL_SOFT,
+                          border: `1px solid ${TEAL}`,
                           fontFamily: LAUNCH_FONTS.MONO,
                           fontSize: 11.5,
                           fontWeight: 800,
                           letterSpacing: '0.11em',
-                          color: LAUNCH_PALETTE.PRIMARY,
+                          color: TEAL_DARK,
                           opacity: Math.max(0, 1 - sealOpacity),
                         }}
                       >
-                        <Clock size={13} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.5} />
+                        <Clock size={13} color={TEAL_DARK} strokeWidth={2.5} />
                         <span>PASUKAN KEBAJIKAN SISWA</span>
                       </div>
 
-                      {/* Beat 3 Architectural Seal */}
+                      {/* Beat 3 Architectural Seal elevated in 3D */}
                       <div
                         style={{
                           position: 'absolute',
@@ -629,7 +645,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           opacity: sealOpacity,
                           visibility: sealOpacity <= 0.001 ? 'hidden' : 'visible',
                           transformOrigin: '50% 50%',
-                          transform: `translate3d(0px, calc(-50% + ${sealFloatY.toFixed(2)}px), 0px) rotate(${sealRotate.toFixed(2)}deg) scale(${sealScale.toFixed(4)})`,
+                          transform: `translate3d(0px, calc(-50% + ${sealFloatY.toFixed(2)}px), 48px) rotate(${sealRotate.toFixed(2)}deg) scale(${sealScale.toFixed(4)})`,
                         }}
                       >
                         <div
@@ -639,10 +655,10 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                             gap: 9,
                             padding: '8px 14px',
                             borderRadius: 12,
-                            backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                            border: `2px solid ${LAUNCH_PALETTE.ACCENT}`,
+                            backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                            border: `2px solid ${TEAL}`,
                             boxShadow:
-                              '0 12px 28px rgba(31, 39, 32, 0.22), inset 0 0 0 1px rgba(217, 201, 178, 0.35)',
+                              '0 12px 28px rgba(20, 184, 166, 0.24), inset 0 0 0 1px rgba(153, 246, 228, 0.35)',
                             whiteSpace: 'nowrap',
                           }}
                         >
@@ -651,7 +667,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                               width: 20,
                               height: 20,
                               borderRadius: 999,
-                              backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                              backgroundColor: TEAL,
                               display: 'inline-flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -677,7 +693,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                   </div>
                 </div>
 
-                {/* Beat 2: Vertical EvolvingPath Resolution Spine + 4 Student-Visible Nodes */}
+                {/* Beat 2: Vertical Teal EvolvingPath Resolution Spine + 4 Student-Visible Nodes */}
                 <div
                   style={{
                     position: 'relative',
@@ -692,12 +708,12 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                     viewBox={`0 0 56 ${TIMELINE_HEIGHT}`}
                     startFrame={spineStart}
                     durationFrames={spineDuration}
-                    stroke={LAUNCH_PALETTE.SECONDARY}
-                    trackStroke={LAUNCH_PALETTE.TERTIARY}
+                    stroke={TEAL}
+                    trackStroke={TEAL_BORDER}
                     strokeWidth={3.5}
                     showHeadDot
                     headDotRadius={6}
-                    headDotColor={LAUNCH_PALETTE.ACCENT}
+                    headDotColor={TEAL_DARK}
                     hideDotWhenComplete
                     easing={SPINE_EASING}
                     style={{ position: 'absolute', left: 0, top: 0, pointerEvents: 'none', zIndex: 1 }}
@@ -734,25 +750,25 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                     const isFinalStage = idx === STAGES.length - 1;
 
                     const nodeBg = !isStepDone
-                      ? LAUNCH_PALETTE.SURFACE_MUTED
+                      ? TEAL_SOFT
                       : isFinalStage
-                        ? LAUNCH_PALETTE.PRIMARY
-                        : LAUNCH_PALETTE.SECONDARY;
+                        ? TEAL_DARK
+                        : TEAL_INK;
                     const nodeBorder = !isStepDone
-                      ? LAUNCH_PALETTE.TERTIARY
+                      ? TEAL_BORDER
                       : isFinalStage
-                        ? LAUNCH_PALETTE.ACCENT
-                        : LAUNCH_PALETTE.SECONDARY;
+                        ? TEAL_DARK
+                        : TEAL;
                     const cardBg = !isStepDone
                       ? LAUNCH_PALETTE.SURFACE_MUTED
                       : isFinalStage
-                        ? 'rgba(46, 58, 47, 0.08)'
-                        : 'rgba(107, 127, 91, 0.11)';
+                        ? TEAL_SOFT
+                        : 'rgba(20, 184, 166, 0.08)';
                     const cardBorder = !isStepDone
                       ? LAUNCH_PALETTE.TERTIARY
                       : isFinalStage
-                        ? LAUNCH_PALETTE.PRIMARY
-                        : LAUNCH_PALETTE.SECONDARY;
+                        ? TEAL_DARK
+                        : TEAL;
 
                     return (
                       <React.Fragment key={stage.title}>
@@ -763,9 +779,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                             top: nodeY - 1,
                             width: 18,
                             height: 2,
-                            backgroundColor: isStepDone
-                              ? LAUNCH_PALETTE.SECONDARY
-                              : LAUNCH_PALETTE.TERTIARY,
+                            backgroundColor: isStepDone ? TEAL : TEAL_BORDER,
                             zIndex: 1,
                           }}
                         />
@@ -786,7 +800,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                             justifyContent: 'center',
                             zIndex: 3,
                             boxShadow: isStepDone
-                              ? '0 6px 14px rgba(46, 58, 47, 0.16)'
+                              ? '0 6px 14px rgba(13, 148, 136, 0.24)'
                               : 'none',
                             transform: `translate(-50%, -50%) scale(${nodeScale.toFixed(4)})`,
                           }}
@@ -801,7 +815,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                                 fontFamily: LAUNCH_FONTS.MONO,
                                 fontSize: 12,
                                 fontWeight: 800,
-                                color: LAUNCH_PALETTE.MUTED_OLIVE,
+                                color: TEAL_DARK,
                               }}
                             >
                               0{idx + 1}
@@ -847,9 +861,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                                 fontFamily: LAUNCH_FONTS.MONO,
                                 fontSize: 12,
                                 fontWeight: 600,
-                                color: isStepDone
-                                  ? LAUNCH_PALETTE.SECONDARY
-                                  : LAUNCH_PALETTE.MUTED_OLIVE,
+                                color: isStepDone ? TEAL_DARK : LAUNCH_PALETTE.MUTED_OLIVE,
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
@@ -865,14 +877,12 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                               borderRadius: 999,
                               backgroundColor: !isStepDone
                                 ? LAUNCH_PALETTE.CARD_BG
-                                : isFinalStage
-                                  ? LAUNCH_PALETTE.PRIMARY
-                                  : LAUNCH_PALETTE.SECONDARY,
+                                : TEAL_INK,
                               border: `1px solid ${
-                                !isStepDone ? LAUNCH_PALETTE.TERTIARY : 'transparent'
+                                !isStepDone ? TEAL_BORDER : 'transparent'
                               }`,
                               color: !isStepDone
-                                ? LAUNCH_PALETTE.MUTED_OLIVE
+                                ? TEAL_DARK
                                 : LAUNCH_PALETTE.CARD_BG,
                               fontFamily: LAUNCH_FONTS.MONO,
                               fontSize: 11,
@@ -895,8 +905,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                 <div
                   style={{
                     borderRadius: 16,
-                    backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                    border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                    backgroundColor: TEAL_SOFT,
+                    border: `1.5px solid ${TEAL_BORDER}`,
                     padding: '14px 20px',
                     display: 'flex',
                     alignItems: 'center',
@@ -912,7 +922,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           fontSize: 11,
                           fontWeight: 800,
                           letterSpacing: '0.14em',
-                          color: LAUNCH_PALETTE.MUTED_OLIVE,
+                          color: TEAL_DARK,
                         }}
                       >
                         TEMPOH PENYELESAIAN · {elapsedLabel} · {allStagesComplete ? 'PANTAS' : 'PROSES'}
@@ -923,9 +933,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           fontSize: 11,
                           fontWeight: 800,
                           letterSpacing: '0.08em',
-                          color: allStagesComplete
-                            ? LAUNCH_PALETTE.SECONDARY
-                            : LAUNCH_PALETTE.ACCENT,
+                          color: TEAL_DARK,
                         }}
                       >
                         {allStagesComplete ? '100% SELESAI' : 'DALAM TINDAKAN'}
@@ -935,7 +943,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       style={{
                         height: 6,
                         borderRadius: 999,
-                        backgroundColor: 'rgba(217, 201, 178, 0.55)',
+                        backgroundColor: 'rgba(153, 246, 228, 0.55)',
                         overflow: 'hidden',
                       }}
                     >
@@ -944,9 +952,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           width: '100%',
                           height: '100%',
                           borderRadius: 999,
-                          backgroundColor: allStagesComplete
-                            ? LAUNCH_PALETTE.SECONDARY
-                            : LAUNCH_PALETTE.ACCENT,
+                          backgroundColor: allStagesComplete ? TEAL_DARK : TEAL,
                           transformOrigin: '0% 50%',
                           transform: `scaleX(${slaMeterScaleX.toFixed(4)})`,
                         }}
@@ -962,11 +968,9 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       padding: '8px 15px',
                       borderRadius: 12,
                       backgroundColor: allStagesComplete
-                        ? LAUNCH_PALETTE.PRIMARY
+                        ? LAUNCH_PALETTE.PRIMARY_DARK
                         : LAUNCH_PALETTE.CARD_BG,
-                      border: `1.5px solid ${
-                        allStagesComplete ? LAUNCH_PALETTE.PRIMARY : LAUNCH_PALETTE.TERTIARY
-                      }`,
+                      border: `1.5px solid ${TEAL}`,
                       flexShrink: 0,
                     }}
                   >
@@ -978,7 +982,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         fontVariantNumeric: 'tabular-nums',
                         color: allStagesComplete
                           ? LAUNCH_PALETTE.BACKGROUND
-                          : LAUNCH_PALETTE.PRIMARY,
+                          : TEAL_DARK,
                         whiteSpace: 'nowrap',
                       }}
                     >
@@ -988,16 +992,12 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       style={{
                         padding: '3px 8px',
                         borderRadius: 999,
-                        backgroundColor: allStagesComplete
-                          ? LAUNCH_PALETTE.SECONDARY
-                          : 'rgba(201, 111, 79, 0.14)',
+                        backgroundColor: allStagesComplete ? TEAL : TEAL_SOFT,
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 10.5,
                         fontWeight: 900,
                         letterSpacing: '0.1em',
-                        color: allStagesComplete
-                          ? LAUNCH_PALETTE.CARD_BG
-                          : LAUNCH_PALETTE.ACCENT,
+                        color: allStagesComplete ? LAUNCH_PALETTE.CARD_BG : TEAL_DARK,
                         whiteSpace: 'nowrap',
                       }}
                     >
@@ -1009,7 +1009,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
             </KineticWindow>
           </Interactive.Div>
 
-          {/* Right Deck (840px): Confidential Food Bank JPP Pickup Pass */}
+          {/* Right Deck (840px): Amber Confidential Food Bank JPP Pickup Pass */}
           <Interactive.Div
             name="Food Bank Confidential Pass Deck"
             premountFor={safeFps}
@@ -1020,7 +1020,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
               width: DECK_WIDTH,
               height: DECK_HEIGHT,
               opacity: rightDeckOpacity,
-              transform: `translate3d(${rightDeckX.toFixed(2)}px, ${(rightDeckY + rightDeckFloatY + deckExitLift).toFixed(2)}px, 0px)`,
+              transform: `translate3d(${rightDeckX.toFixed(2)}px, ${(rightDeckY + rightDeckFloatY + deckExitLift).toFixed(2)}px, 16px) rotateY(-1.2deg)`,
               transformStyle: 'preserve-3d',
             }}
           >
@@ -1028,15 +1028,19 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
               surface="dark"
               routeLabel="foodbank · pas rahsia siswa"
               statusPill="RAHSIA ✓"
+              statusAccent
+              accentColor={AMBER}
+              accentSoftBg="rgba(245, 158, 11, 0.22)"
+              accentBorderColor={AMBER}
               width={DECK_WIDTH}
               height={DECK_HEIGHT}
               borderRadius={26}
               sheenStartFrame={Math.round(1.18 * safeFps)}
               sheenDuration={48}
               style={{
-                borderColor: 'rgba(217, 201, 178, 0.28)',
+                borderColor: AMBER,
                 boxShadow:
-                  '0 28px 64px rgba(31, 39, 32, 0.24), 0 8px 20px rgba(31, 39, 32, 0.14)',
+                  '0 28px 64px rgba(245, 158, 11, 0.16), 0 8px 20px rgba(31, 39, 32, 0.18)',
               }}
             >
               <div
@@ -1059,7 +1063,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                     justifyContent: 'space-between',
                     gap: 14,
                     paddingBottom: 14,
-                    borderBottom: '1px solid rgba(217, 201, 178, 0.16)',
+                    borderBottom: '1px solid rgba(253, 230, 138, 0.22)',
                   }}
                 >
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
@@ -1072,11 +1076,11 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         fontSize: 11.5,
                         fontWeight: 800,
                         letterSpacing: '0.12em',
-                        color: LAUNCH_PALETTE.ACCENT,
+                        color: AMBER,
                         fontVariantNumeric: 'tabular-nums',
                       }}
                     >
-                      <Package size={14} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.5} />
+                      <Package size={14} color={AMBER} strokeWidth={2.5} />
                       <span>FOOD BANK JPP · PAS PENGAMBILAN TERLINDUNG</span>
                     </div>
 
@@ -1099,14 +1103,14 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         fontSize: 12,
                         fontWeight: 600,
                         letterSpacing: '0.07em',
-                        color: LAUNCH_PALETTE.TERTIARY,
+                        color: AMBER_BORDER,
                       }}
                     >
                       Aiman Hakim · Kamsis Blok B
                     </div>
                   </div>
 
-                  {/* Animated Privacy Shield Badge */}
+                  {/* Animated Teal Privacy Shield Badge */}
                   <div
                     style={{
                       display: 'inline-flex',
@@ -1114,8 +1118,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       gap: 7,
                       padding: '8px 14px',
                       borderRadius: 999,
-                      backgroundColor: 'rgba(107, 127, 91, 0.28)',
-                      border: `1.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                      backgroundColor: 'rgba(20, 184, 166, 0.22)',
+                      border: `1.5px solid ${TEAL}`,
                       color: LAUNCH_PALETTE.BACKGROUND,
                       fontFamily: LAUNCH_FONTS.MONO,
                       fontSize: 10.5,
@@ -1126,19 +1130,19 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       transform: `scale(${(0.92 + 0.08 * privacyBadgeSpring).toFixed(3)})`,
                     }}
                   >
-                    <ShieldCheck size={14} color={LAUNCH_PALETTE.TERTIARY} strokeWidth={2.5} />
+                    <ShieldCheck size={14} color={TEAL_BORDER} strokeWidth={2.5} />
                     <span>100% RAHSIA &amp; BERMARUAH</span>
                   </div>
                 </div>
 
-                {/* Live 3-Step Student Mini-Stepper (Dimohon ✓ -> Diluluskan ✓ -> Sedia Diambil ✓) */}
+                {/* Live 3-Step Student Mini-Stepper */}
                 <div
                   style={{
                     position: 'relative',
                     padding: '14px 18px',
                     borderRadius: 18,
-                    backgroundColor: 'rgba(248, 246, 238, 0.06)',
-                    border: '1px solid rgba(217, 201, 178, 0.18)',
+                    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                    border: '1px solid rgba(253, 230, 138, 0.24)',
                   }}
                 >
                   <div
@@ -1158,7 +1162,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         right: '16.5%',
                         height: 3,
                         borderRadius: 999,
-                        backgroundColor: 'rgba(217, 201, 178, 0.2)',
+                        backgroundColor: 'rgba(253, 230, 138, 0.22)',
                         overflow: 'hidden',
                         zIndex: 0,
                       }}
@@ -1168,7 +1172,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           width: '100%',
                           height: '100%',
                           borderRadius: 999,
-                          backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                          backgroundColor: AMBER,
                           transformOrigin: '0% 50%',
                           transform: `scaleX(${fbTrackScaleX.toFixed(4)})`,
                         }}
@@ -1187,10 +1191,10 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         padding: '2px 5px',
                         borderRadius: 999,
                         backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                        border: '1px solid rgba(217, 201, 178, 0.25)',
+                        border: `1px solid ${AMBER}`,
                       }}
                     >
-                      <ArrowRight size={10} color={LAUNCH_PALETTE.TERTIARY} strokeWidth={2.8} />
+                      <ArrowRight size={10} color={AMBER_BORDER} strokeWidth={2.8} />
                     </span>
                     <span
                       style={{
@@ -1203,10 +1207,10 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         padding: '2px 5px',
                         borderRadius: 999,
                         backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                        border: '1px solid rgba(217, 201, 178, 0.25)',
+                        border: `1px solid ${AMBER}`,
                       }}
                     >
-                      <ArrowRight size={10} color={LAUNCH_PALETTE.TERTIARY} strokeWidth={2.8} />
+                      <ArrowRight size={10} color={AMBER_BORDER} strokeWidth={2.8} />
                     </span>
 
                     {FOOD_BANK_STEPS.map((step, idx) => {
@@ -1243,14 +1247,14 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                               backgroundColor: !isDone
                                 ? LAUNCH_PALETTE.PRIMARY_DARK
                                 : isFinal
-                                  ? LAUNCH_PALETTE.ACCENT
-                                  : LAUNCH_PALETTE.SECONDARY,
+                                  ? AMBER
+                                  : TEAL,
                               border: `2px solid ${
                                 !isDone
-                                  ? 'rgba(217, 201, 178, 0.35)'
+                                  ? 'rgba(253, 230, 138, 0.35)'
                                   : isFinal
-                                    ? LAUNCH_PALETTE.TERTIARY
-                                    : LAUNCH_PALETTE.SECONDARY
+                                    ? AMBER_BORDER
+                                    : TEAL_BORDER
                               }`,
                               display: 'flex',
                               alignItems: 'center',
@@ -1261,7 +1265,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           >
                             {isDone ? (
                               isFinal ? (
-                                <Sparkles size={15} color={LAUNCH_PALETTE.BACKGROUND} strokeWidth={2.5} />
+                                <Sparkles size={15} color={LAUNCH_PALETTE.PRIMARY_DARK} strokeWidth={2.5} />
                               ) : (
                                 <Check size={16} color={LAUNCH_PALETTE.BACKGROUND} strokeWidth={3} />
                               )
@@ -1271,7 +1275,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                                   fontFamily: LAUNCH_FONTS.MONO,
                                   fontSize: 11,
                                   fontWeight: 800,
-                                  color: LAUNCH_PALETTE.TERTIARY,
+                                  color: AMBER_BORDER,
                                 }}
                               >
                                 0{idx + 1}
@@ -1286,7 +1290,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                                 fontWeight: 800,
                                 color: isDone
                                   ? LAUNCH_PALETTE.BACKGROUND
-                                  : 'rgba(217, 201, 178, 0.65)',
+                                  : 'rgba(253, 230, 138, 0.65)',
                               }}
                             >
                               {step.label}
@@ -1296,7 +1300,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                                 fontFamily: LAUNCH_FONTS.MONO,
                                 fontSize: 10.5,
                                 fontWeight: 600,
-                                color: isDone ? LAUNCH_PALETTE.TERTIARY : 'rgba(217, 201, 178, 0.48)',
+                                color: isDone ? AMBER_BORDER : 'rgba(253, 230, 138, 0.48)',
                               }}
                             >
                               {step.subLabel}
@@ -1336,7 +1340,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           padding: '13px 14px',
                           borderRadius: 16,
                           backgroundColor: 'rgba(248, 246, 238, 0.06)',
-                          border: '1px solid rgba(217, 201, 178, 0.2)',
+                          border: '1px solid rgba(253, 230, 138, 0.24)',
                           display: 'flex',
                           flexDirection: 'column',
                           gap: 6,
@@ -1353,7 +1357,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                               fontWeight: 800,
                               letterSpacing: '0.11em',
                               textTransform: 'uppercase',
-                              color: LAUNCH_PALETTE.TERTIARY,
+                              color: AMBER_BORDER,
                             }}
                           >
                             {item.label}
@@ -1386,14 +1390,14 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                   <div
                     style={{
                       width: '100%',
-                      borderTop: '2px dashed rgba(217, 201, 178, 0.3)',
+                      borderTop: '2px dashed rgba(253, 230, 138, 0.34)',
                     }}
                   />
                 </div>
 
-                {/* Elevated Porcelain QR Pickup Ticket (ExplodedLayer zDepth=26) */}
+                {/* Elevated Porcelain QR Pickup Ticket (ExplodedLayer zDepth=62) */}
                 <ExplodedLayer
-                  zDepth={26}
+                  zDepth={62}
                   enterFrame={qrTicketEnterFrame}
                   enterOffsetY={24}
                   floatAmplitude={2.2}
@@ -1406,7 +1410,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       flex: 1,
                       borderRadius: 20,
                       backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                      border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                      border: `1.5px solid ${AMBER}`,
                       boxShadow:
                         '0 22px 46px rgba(31, 39, 32, 0.38), 0 4px 12px rgba(31, 39, 32, 0.2)',
                       padding: '18px 22px',
@@ -1435,7 +1439,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       />
                     ) : null}
 
-                    {/* Left: Warm Porcelain QR Pedestal + DeterministicQrMatrix + Gentle Laser Glide */}
+                    {/* Left: Warm Porcelain QR Pedestal + DeterministicQrMatrix + Amber Laser Glide */}
                     <div
                       style={{
                         position: 'relative',
@@ -1444,7 +1448,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         flexShrink: 0,
                         borderRadius: 16,
                         backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                        border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                        border: `1.5px solid ${AMBER_BORDER}`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1458,8 +1462,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           top: 7,
                           width: 12,
                           height: 12,
-                          borderTop: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
-                          borderLeft: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderTop: `2.5px solid ${TEAL}`,
+                          borderLeft: `2.5px solid ${TEAL}`,
                           borderTopLeftRadius: 4,
                         }}
                       />
@@ -1470,8 +1474,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           top: 7,
                           width: 12,
                           height: 12,
-                          borderTop: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
-                          borderRight: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderTop: `2.5px solid ${TEAL}`,
+                          borderRight: `2.5px solid ${TEAL}`,
                           borderTopRightRadius: 4,
                         }}
                       />
@@ -1482,8 +1486,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           bottom: 7,
                           width: 12,
                           height: 12,
-                          borderBottom: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
-                          borderLeft: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderBottom: `2.5px solid ${TEAL}`,
+                          borderLeft: `2.5px solid ${TEAL}`,
                           borderBottomLeftRadius: 4,
                         }}
                       />
@@ -1494,8 +1498,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           bottom: 7,
                           width: 12,
                           height: 12,
-                          borderBottom: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
-                          borderRight: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderBottom: `2.5px solid ${TEAL}`,
+                          borderRight: `2.5px solid ${TEAL}`,
                           borderBottomRightRadius: 4,
                         }}
                       />
@@ -1507,7 +1511,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         bgColor={LAUNCH_PALETTE.CARD_BG}
                       />
 
-                      {/* Subtle Terracotta Verification Laser Glide */}
+                      {/* Subtle Amber Verification Laser Glide */}
                       <div
                         style={{
                           position: 'absolute',
@@ -1526,7 +1530,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                             position: 'absolute',
                             inset: 0,
                             background:
-                              'linear-gradient(180deg, rgba(201, 111, 79, 0) 0%, rgba(201, 111, 79, 0.24) 50%, rgba(201, 111, 79, 0) 100%)',
+                              'linear-gradient(180deg, rgba(245, 158, 11, 0) 0%, rgba(245, 158, 11, 0.28) 50%, rgba(245, 158, 11, 0) 100%)',
                           }}
                         />
                         <div
@@ -1534,8 +1538,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                             width: '100%',
                             height: 2,
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.ACCENT,
-                            opacity: 0.72,
+                            backgroundColor: AMBER_DARK,
+                            opacity: 0.78,
                           }}
                         />
                       </div>
@@ -1569,21 +1573,21 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                             gap: 6,
                             padding: '5px 10px',
                             borderRadius: 999,
-                            backgroundColor: 'rgba(107, 127, 91, 0.16)',
-                            border: `1px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                            backgroundColor: TEAL_SOFT,
+                            border: `1px solid ${TEAL}`,
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 10,
                             fontWeight: 900,
                             letterSpacing: '0.07em',
-                            color: LAUNCH_PALETTE.PRIMARY,
+                            color: TEAL_DARK,
                             whiteSpace: 'nowrap',
                           }}
                         >
-                          <QrCode size={12} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.5} />
+                          <QrCode size={12} color={TEAL_DARK} strokeWidth={2.5} />
                           <span>PAS PENGAMBILAN RAHSIA · IMBAS DI KAUNTER</span>
                         </div>
 
-                        {/* Beat 3 Animated Sage/Terracotta Claim Checkmark Stamp */}
+                        {/* Beat 3 Animated Teal/Amber Claim Checkmark Stamp */}
                         <div
                           style={{
                             display: 'inline-flex',
@@ -1591,9 +1595,9 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                             gap: 6,
                             padding: '5px 11px',
                             borderRadius: 10,
-                            backgroundColor: LAUNCH_PALETTE.SECONDARY,
-                            border: `1.5px solid ${LAUNCH_PALETTE.ACCENT}`,
-                            boxShadow: '0 8px 18px rgba(46, 58, 47, 0.22)',
+                            backgroundColor: TEAL_DARK,
+                            border: `1.5px solid ${AMBER}`,
+                            boxShadow: '0 8px 18px rgba(13, 148, 136, 0.26)',
                             opacity: claimStampOpacity,
                             visibility: claimStampOpacity <= 0.001 ? 'hidden' : 'visible',
                             transformOrigin: '50% 50%',
@@ -1607,14 +1611,14 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                               width: 15,
                               height: 15,
                               borderRadius: 999,
-                              backgroundColor: LAUNCH_PALETTE.ACCENT,
+                              backgroundColor: AMBER,
                               display: 'inline-flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               flexShrink: 0,
                             }}
                           >
-                            <Check size={10} color={LAUNCH_PALETTE.CARD_BG} strokeWidth={3.2} />
+                            <Check size={10} color={LAUNCH_PALETTE.PRIMARY_DARK} strokeWidth={3.2} />
                           </span>
                           <span
                             style={{
@@ -1662,8 +1666,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                             style={{
                               padding: '4px 10px',
                               borderRadius: 999,
-                              backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                              border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                              backgroundColor: LAUNCH_MODULE_THEMES.foodbank.soft,
+                              border: `1px solid ${AMBER_BORDER}`,
                               fontSize: 11.5,
                               fontWeight: 700,
                               color: LAUNCH_PALETTE.PRIMARY,
@@ -1678,7 +1682,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       <div
                         style={{
                           paddingTop: 8,
-                          borderTop: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                          borderTop: `1px solid ${AMBER_BORDER}`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
@@ -1686,7 +1690,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           fontSize: 10,
                           fontWeight: 800,
                           letterSpacing: '0.1em',
-                          color: LAUNCH_PALETTE.SECONDARY,
+                          color: TEAL_DARK,
                         }}
                       >
                         <span>SAH HARI INI · 2:00 PM – 4:00 PM</span>

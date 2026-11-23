@@ -18,7 +18,7 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
 
 type ClosingVaultProps = {
   readonly headlinePrimary: string;
@@ -245,7 +245,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
 
   return (
     <>
-      <EditorialBackdrop />
+      <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.closing.tint} />
 
       <Solid
         width={safeWidth}
@@ -472,7 +472,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                 transform: `translate3d(0px, ${qrTranslateY.toFixed(2)}px, 0px) rotateX(${qrRotateX.toFixed(2)}deg) rotateY(${qrRotateY.toFixed(2)}deg) scale(${qrScale.toFixed(4)})`,
               }}
             >
-              {/* Inner Clipped Layer for Diagonal Sheen Glide */}
+              {/* Inner Clipped Layer for 8-Module Top Spectrum Ribbon & Diagonal Sheen Glide */}
               <div
                 style={{
                   position: 'absolute',
@@ -483,6 +483,36 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                   zIndex: 4,
                 }}
               >
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    height: 5,
+                    display: 'flex',
+                  }}
+                >
+                  {[
+                    LAUNCH_MODULE_THEMES.polymaps.primary,
+                    LAUNCH_MODULE_THEMES.takwim.primary,
+                    LAUNCH_MODULE_THEMES.polymart.primary,
+                    LAUNCH_MODULE_THEMES.polyrent.primary,
+                    LAUNCH_MODULE_THEMES.polysuara.primary,
+                    LAUNCH_MODULE_THEMES.kebajikan.primary,
+                    LAUNCH_MODULE_THEMES.kelab.primary,
+                    LAUNCH_MODULE_THEMES.meritQr.primary,
+                  ].map((stripeColor) => (
+                    <span
+                      key={stripeColor}
+                      style={{
+                        flex: 1,
+                        height: '100%',
+                        backgroundColor: stripeColor,
+                      }}
+                    />
+                  ))}
+                </div>
                 {sheenOpacity > 0.005 ? (
                   <div
                     style={{
@@ -553,7 +583,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                       key={`qr-radar-${ringIdx}`}
                       radius={104}
                       fill="none"
-                      stroke={ringIdx === 0 ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.SECONDARY}
+                      stroke={ringIdx === 0 ? LAUNCH_PALETTE.ACCENT : LAUNCH_MODULE_THEMES.polymaps.primary}
                       strokeWidth={2.2}
                       vectorEffect="non-scaling-stroke"
                       premountFor={safeFps}
@@ -618,7 +648,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                       width: 8,
                       height: 8,
                       borderRadius: 999,
-                      backgroundColor: LAUNCH_PALETTE.ACCENT,
+                      backgroundColor: LAUNCH_MODULE_THEMES.polymaps.primary,
                       transform: `scale(${liveDotScale.toFixed(3)})`,
                       display: 'inline-block',
                     }}
@@ -750,7 +780,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                       width: 8,
                       height: 8,
                       borderRadius: 999,
-                      backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                      backgroundColor: LAUNCH_MODULE_THEMES.polymaps.primary,
                       transform: `scale(${liveDotScale.toFixed(3)})`,
                       display: 'inline-block',
                       flexShrink: 0,

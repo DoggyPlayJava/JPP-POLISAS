@@ -24,8 +24,14 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath, GhostCursor, type GhostCursorKeyframe } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
 import { ExplodedLayer, KineticWindow, PersonaMonogram } from '../ui/KineticCard';
+
+const ROSE = LAUNCH_MODULE_THEMES.polysuara.primary; // #F43F5E
+const ROSE_DARK = LAUNCH_MODULE_THEMES.polysuara.dark; // #E11D48
+const ROSE_SOFT = LAUNCH_MODULE_THEMES.polysuara.soft; // #FFF1F2
+const ROSE_BORDER = LAUNCH_MODULE_THEMES.polysuara.border; // #FECDD3
+const AMBER = LAUNCH_MODULE_THEMES.polymart.primary; // #F59E0B
 
 export type PolySuaraProps = {
   readonly pollTitle: string;
@@ -93,9 +99,9 @@ const RACE_EASE = Easing.bezier(0.25, 1, 0.5, 1);
 const VOTES_SETTLE_EASE = Easing.bezier(0.22, 1, 0.36, 1);
 
 const REACTION_SPECS = [
-  { id: 'flame', target: 128, icon: 'flame' as const, color: LAUNCH_PALETTE.ACCENT },
-  { id: 'thumbsup', target: 84, icon: 'thumbsup' as const, color: LAUNCH_PALETTE.SECONDARY },
-  { id: 'heart', target: 62, icon: 'heart' as const, color: LAUNCH_PALETTE.ACCENT },
+  { id: 'flame', target: 128, icon: 'flame' as const, color: ROSE_DARK, softBg: ROSE_SOFT, border: ROSE_BORDER },
+  { id: 'thumbsup', target: 84, icon: 'thumbsup' as const, color: LAUNCH_MODULE_THEMES.polymart.dark, softBg: LAUNCH_MODULE_THEMES.polymart.soft, border: LAUNCH_MODULE_THEMES.polymart.border },
+  { id: 'heart', target: 62, icon: 'heart' as const, color: ROSE, softBg: ROSE_SOFT, border: ROSE_BORDER },
 ] as const;
 
 const renderReactionIcon = (kind: (typeof REACTION_SPECS)[number]['icon'], color: string) => {
@@ -315,7 +321,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
 
   return (
     <>
-      <EditorialBackdrop />
+      <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.polysuara.tint} />
 
       <CameraStage
         zoomFrom={0.99}
@@ -345,7 +351,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             transformStyle: 'preserve-3d',
           }}
         >
-          {/* Beat 1A: Student Header + Live Student Votes Counter */}
+          {/* Beat 1A: Student Header + Live Rose Votes Counter */}
           <Interactive.Div
             name="PolySuara Header"
             premountFor={safeFps}
@@ -372,9 +378,9 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                     alignSelf: 'flex-start',
                     padding: '6px 16px',
                     borderRadius: 999,
-                    backgroundColor: 'rgba(107, 127, 91, 0.14)',
-                    border: `1px solid ${LAUNCH_PALETTE.SECONDARY}`,
-                    color: LAUNCH_PALETTE.PRIMARY,
+                    backgroundColor: ROSE_SOFT,
+                    border: `1.5px solid ${ROSE}`,
+                    color: ROSE_DARK,
                     fontFamily: LAUNCH_FONTS.MONO,
                     fontSize: 12,
                     fontWeight: 800,
@@ -382,7 +388,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                     textTransform: 'uppercase',
                   }}
                 >
-                  <MessageSquare size={15} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.4} />
+                  <MessageSquare size={15} color={ROSE_DARK} strokeWidth={2.4} />
                   <span>KOMUNITI SISWA • LUAH &amp; UNDI TANPA NAMA</span>
                 </div>
               </KineticReveal>
@@ -394,7 +400,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                 staggerFrames={wordStagger}
                 wordDurationFrames={wordDuration}
                 accentWords={['Luah', 'Tanpa', 'Nama.']}
-                accentColor={LAUNCH_PALETTE.ACCENT}
+                accentColor={ROSE_DARK}
                 style={{
                   margin: 0,
                   fontSize: 49,
@@ -413,11 +419,9 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                 gap: 11,
                 padding: '13px 22px',
                 borderRadius: 18,
-                backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                border: `1.5px solid ${
-                  isOptionASelected ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.TERTIARY
-                }`,
-                boxShadow: '0 14px 32px rgba(46, 58, 47, 0.08)',
+                backgroundColor: isOptionASelected ? ROSE_SOFT : LAUNCH_PALETTE.CARD_BG,
+                border: `1.5px solid ${isOptionASelected ? ROSE : ROSE_BORDER}`,
+                boxShadow: '0 14px 32px rgba(244, 63, 94, 0.1)',
                 fontFamily: LAUNCH_FONTS.MONO,
                 fontSize: 17,
                 fontWeight: 800,
@@ -426,7 +430,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                 flexShrink: 0,
               }}
             >
-              <Users size={19} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
+              <Users size={19} color={ROSE_DARK} strokeWidth={2.4} />
               <span>{liveVotes} UNDI PELAJAR</span>
             </div>
           </Interactive.Div>
@@ -448,16 +452,16 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
               height={10}
               startFrame={0}
               durationFrames={dividerDuration}
-              stroke={LAUNCH_PALETTE.TERTIARY}
+              stroke={ROSE_BORDER}
               strokeWidth={2}
-              headDotColor={LAUNCH_PALETTE.ACCENT}
+              headDotColor={ROSE}
               headDotRadius={4.5}
               hideDotWhenComplete
               style={{ position: 'absolute', inset: 0 }}
             />
           </div>
 
-          {/* LEFT COLUMN (width=840px): Live Anonymous Confession Card + 3D Pop-Out IGStoryExportCard */}
+          {/* LEFT COLUMN (width=840px): Live Rose Anonymous Confession Card + 3D Pop-Out IGStoryExportCard */}
           <Interactive.Div
             name="PolySuara Confession Card"
             premountFor={safeFps}
@@ -469,7 +473,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
               height: CONFESSION_HEIGHT,
               zIndex: 10,
               opacity: leftCardOpacity,
-              transform: `translate3d(0px, ${(leftCardY + leftCardFloat).toFixed(2)}px, 0px)`,
+              transform: `translate3d(0px, ${(leftCardY + leftCardFloat).toFixed(2)}px, 16px)`,
               transformStyle: 'preserve-3d',
             }}
           >
@@ -478,14 +482,18 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
               routeLabel="jpp.polisas.edu.my/polysuara"
               statusPill="ANONIM AKTIF"
               statusAccent
+              accentColor={ROSE_DARK}
+              accentSoftBg={ROSE_SOFT}
+              accentBorderColor={ROSE}
               width={LEFT_COL_WIDTH}
               height={CONFESSION_HEIGHT}
               borderRadius={26}
               sheenStartFrame={Math.round(0.8 * safeFps)}
               sheenDuration={42}
               style={{
+                borderColor: ROSE_BORDER,
                 boxShadow:
-                  '0 24px 54px rgba(31, 39, 32, 0.11), 0 6px 16px rgba(31, 39, 32, 0.05)',
+                  '0 24px 54px rgba(244, 63, 94, 0.1), 0 6px 16px rgba(31, 39, 32, 0.05)',
               }}
             >
               <div
@@ -499,10 +507,15 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                   boxSizing: 'border-box',
                 }}
               >
-                {/* Anonymous Persona Header with Origami Fox Monogram */}
+                {/* Anonymous Persona Header with Rose Origami Fox Monogram */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
-                    <PersonaMonogram size={46} />
+                    <PersonaMonogram
+                      size={46}
+                      accentColor={ROSE}
+                      softBgColor={ROSE_SOFT}
+                      borderColor={ROSE_BORDER}
+                    />
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <span
                         style={{
@@ -535,16 +548,16 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                       gap: 7,
                       padding: '6px 13px',
                       borderRadius: 999,
-                      backgroundColor: 'rgba(107, 127, 91, 0.14)',
-                      border: '1px solid rgba(107, 127, 91, 0.36)',
+                      backgroundColor: ROSE_SOFT,
+                      border: `1px solid ${ROSE_BORDER}`,
                       fontFamily: LAUNCH_FONTS.MONO,
                       fontSize: 11,
                       fontWeight: 800,
-                      color: LAUNCH_PALETTE.PRIMARY,
+                      color: ROSE_DARK,
                       flexShrink: 0,
                     }}
                   >
-                    <ShieldCheck size={14} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.5} />
+                    <ShieldCheck size={14} color={ROSE_DARK} strokeWidth={2.5} />
                     <span>#FASILITI · #KAMSIS</span>
                   </div>
                 </div>
@@ -555,7 +568,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                     padding: '14px 18px',
                     borderRadius: 18,
                     backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                    border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                    border: `1px solid ${ROSE_BORDER}`,
                   }}
                 >
                   <p
@@ -611,12 +624,9 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                             gap: 8,
                             padding: '7px 15px',
                             borderRadius: 999,
-                            backgroundColor:
-                              idx === 0 ? LAUNCH_PALETTE.SURFACE_MUTED : LAUNCH_PALETTE.CARD_BG,
-                            border: `1.5px solid ${
-                              idx === 0 ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.TERTIARY
-                            }`,
-                            boxShadow: '0 6px 16px rgba(46, 58, 47, 0.06)',
+                            backgroundColor: spec.softBg,
+                            border: `1.5px solid ${spec.border}`,
+                            boxShadow: '0 6px 16px rgba(244, 63, 94, 0.08)',
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 13.5,
                             fontWeight: 900,
@@ -639,13 +649,9 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                       gap: 7,
                       padding: '7px 14px',
                       borderRadius: 999,
-                      backgroundColor: shareBadgeActive
-                        ? LAUNCH_PALETTE.PRIMARY
-                        : LAUNCH_PALETTE.SURFACE_MUTED,
-                      border: `1.5px solid ${
-                        shareBadgeActive ? LAUNCH_PALETTE.PRIMARY : LAUNCH_PALETTE.TERTIARY
-                      }`,
-                      color: shareBadgeActive ? LAUNCH_PALETTE.BACKGROUND : LAUNCH_PALETTE.PRIMARY,
+                      backgroundColor: shareBadgeActive ? ROSE_DARK : ROSE_SOFT,
+                      border: `1.5px solid ${shareBadgeActive ? ROSE : ROSE_BORDER}`,
+                      color: shareBadgeActive ? LAUNCH_PALETTE.CARD_BG : ROSE_DARK,
                       fontFamily: LAUNCH_FONTS.MONO,
                       fontSize: 11,
                       fontWeight: 800,
@@ -661,7 +667,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             </KineticWindow>
           </Interactive.Div>
 
-          {/* Beat 2–3 (2.4..6.1s): Elevated 3D Pop-Out IGStoryExportCard (Deep Forest + Terracotta + Warm Sand) */}
+          {/* Beat 2–3 (2.4..6.1s): Elevated 3D Pop-Out IGStoryExportCard (Rose + Obsidian Forest) */}
           <Interactive.Div
             name="PolySuara IG Story Export Card"
             premountFor={safeFps}
@@ -676,187 +682,181 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             }}
           >
             <ExplodedLayer
-              zDepth={34}
+              zDepth={74}
+              rotateY={-3.5}
+              rotateZ={-1.6}
               enterFrame={shareCardEnterFrame}
               enterOffsetY={28}
               enterOffsetX={-12}
-              floatAmplitude={2.0}
+              floatAmplitude={2.2}
               floatPhase={0.9}
             >
-              <div
+              <KineticWindow
+                surface="dark"
+                width={SHARE_CARD_WIDTH}
+                height={SHARE_CARD_HEIGHT}
+                borderRadius={24}
+                sheenStartFrame={Math.round(3.0 * safeFps)}
+                sheenDuration={46}
                 style={{
-                  transform: 'rotate(-2.0deg)',
-                  transformOrigin: '50% 50%',
-                  transformStyle: 'preserve-3d',
+                  boxShadow:
+                    '0 34px 72px rgba(225, 29, 72, 0.22), 0 12px 26px rgba(31, 39, 32, 0.24)',
+                  border: `1.5px solid ${ROSE}`,
+                  overflow: 'hidden',
                 }}
               >
-                <KineticWindow
-                  surface="dark"
-                  width={SHARE_CARD_WIDTH}
-                  height={SHARE_CARD_HEIGHT}
-                  borderRadius={24}
-                  sheenStartFrame={Math.round(3.0 * safeFps)}
-                  sheenDuration={46}
+                {/* Subtle Rose corner ambient accent */}
+                <div
                   style={{
-                    boxShadow:
-                      '0 32px 68px rgba(31, 39, 32, 0.34), 0 10px 24px rgba(31, 39, 32, 0.18)',
-                    border: '1.5px solid rgba(217, 201, 178, 0.35)',
-                    overflow: 'hidden',
+                    position: 'absolute',
+                    right: -60,
+                    top: -60,
+                    width: 240,
+                    height: 240,
+                    borderRadius: 999,
+                    background:
+                      'radial-gradient(circle, rgba(244, 63, 94, 0.28) 0%, rgba(244, 63, 94, 0) 70%)',
+                    pointerEvents: 'none',
+                  }}
+                />
+
+                <div
+                  style={{
+                    position: 'relative',
+                    zIndex: 2,
+                    flex: 1,
+                    padding: '18px 24px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: 10,
+                    boxSizing: 'border-box',
                   }}
                 >
-                  {/* Subtle Earthy Minimal corner ambient accent */}
+                  {/* Header: PolySuara · KONGSI KE IG STORY • 1 KLIK + #FASILITI */}
                   <div
                     style={{
-                      position: 'absolute',
-                      right: -60,
-                      top: -60,
-                      width: 240,
-                      height: 240,
-                      borderRadius: 999,
-                      background:
-                        'radial-gradient(circle, rgba(201, 111, 79, 0.18) 0%, rgba(201, 111, 79, 0) 70%)',
-                      pointerEvents: 'none',
-                    }}
-                  />
-
-                  <div
-                    style={{
-                      position: 'relative',
-                      zIndex: 2,
-                      flex: 1,
-                      padding: '18px 24px',
                       display: 'flex',
-                      flexDirection: 'column',
+                      alignItems: 'center',
                       justifyContent: 'space-between',
-                      gap: 10,
-                      boxSizing: 'border-box',
+                      gap: 12,
                     }}
                   >
-                    {/* Header: PolySuara · KONGSI KE IG STORY • 1 KLIK + #FASILITI */}
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
+                      <span
+                        style={{
+                          fontSize: 22,
+                          fontWeight: 900,
+                          letterSpacing: '-0.03em',
+                          color: LAUNCH_PALETTE.BACKGROUND,
+                        }}
+                      >
+                        Poly<span style={{ color: ROSE }}>Suara</span>
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 10.5,
+                          fontWeight: 800,
+                          letterSpacing: '0.11em',
+                          color: ROSE_BORDER,
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        · KONGSI KE IG STORY • 1 KLIK
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
+                      <span
+                        style={{
+                          padding: '4px 11px',
+                          borderRadius: 999,
+                          backgroundColor: 'rgba(244, 63, 94, 0.24)',
+                          border: `1px solid ${ROSE}`,
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 10.5,
+                          fontWeight: 800,
+                          letterSpacing: '0.1em',
+                          color: LAUNCH_PALETTE.BACKGROUND,
+                        }}
+                      >
+                        #FASILITI
+                      </span>
+                      <span
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: 999,
+                          backgroundColor: 'rgba(248, 246, 238, 0.08)',
+                          border: '1px solid rgba(254, 205, 211, 0.3)',
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 10.5,
+                          fontWeight: 700,
+                          color: ROSE_BORDER,
+                        }}
+                      >
+                        Anon #409
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Quote preview strip */}
+                  <div
+                    style={{
+                      padding: '11px 15px',
+                      borderRadius: 14,
+                      backgroundColor: 'rgba(248, 246, 238, 0.06)',
+                      border: '1px solid rgba(254, 205, 211, 0.22)',
+                      fontSize: 14.5,
+                      fontWeight: 500,
+                      lineHeight: 1.4,
+                      color: 'rgba(248, 246, 238, 0.92)',
+                    }}
+                  >
+                    &ldquo;Harap dapat tambah meja belajar &amp; plug point di Dataran Siswa — senang nak siapkan tugasan berkumpulan antara waktu kuliah.&rdquo;
+                  </div>
+
+                  {/* Quick Action Block: TINDAKAN PANTAS JPP ✓ */}
+                  <div
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: 16,
+                      backgroundColor: 'rgba(244, 63, 94, 0.16)',
+                      border: `1.5px solid ${ROSE_BORDER}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 5,
+                    }}
+                  >
                     <div
                       style={{
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 12,
+                        gap: 7,
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        letterSpacing: '0.13em',
+                        color: ROSE_BORDER,
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
-                        <span
-                          style={{
-                            fontSize: 22,
-                            fontWeight: 900,
-                            letterSpacing: '-0.03em',
-                            color: LAUNCH_PALETTE.BACKGROUND,
-                          }}
-                        >
-                          Poly<span style={{ color: LAUNCH_PALETTE.ACCENT }}>Suara</span>
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 10.5,
-                            fontWeight: 800,
-                            letterSpacing: '0.11em',
-                            color: LAUNCH_PALETTE.TERTIARY,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          · KONGSI KE IG STORY • 1 KLIK
-                        </span>
-                      </div>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                        <span
-                          style={{
-                            padding: '4px 11px',
-                            borderRadius: 999,
-                            backgroundColor: 'rgba(201, 111, 79, 0.22)',
-                            border: '1px solid rgba(201, 111, 79, 0.5)',
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 10.5,
-                            fontWeight: 800,
-                            letterSpacing: '0.1em',
-                            color: LAUNCH_PALETTE.BACKGROUND,
-                          }}
-                        >
-                          #FASILITI
-                        </span>
-                        <span
-                          style={{
-                            padding: '4px 10px',
-                            borderRadius: 999,
-                            backgroundColor: 'rgba(248, 246, 238, 0.08)',
-                            border: '1px solid rgba(217, 201, 178, 0.28)',
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 10.5,
-                            fontWeight: 700,
-                            color: LAUNCH_PALETTE.TERTIARY,
-                          }}
-                        >
-                          Anon #409
-                        </span>
-                      </div>
+                      <CheckCircle2 size={14} color={ROSE} strokeWidth={2.8} />
+                      <span>TINDAKAN PANTAS JPP ✓</span>
                     </div>
-
-                    {/* Quote preview strip */}
-                    <div
+                    <p
                       style={{
-                        padding: '11px 15px',
-                        borderRadius: 14,
-                        backgroundColor: 'rgba(248, 246, 238, 0.06)',
-                        border: '1px solid rgba(217, 201, 178, 0.2)',
-                        fontSize: 14.5,
-                        fontWeight: 500,
-                        lineHeight: 1.4,
-                        color: 'rgba(248, 246, 238, 0.92)',
+                        margin: 0,
+                        fontSize: 15,
+                        fontWeight: 700,
+                        lineHeight: 1.38,
+                        color: LAUNCH_PALETTE.BACKGROUND,
                       }}
                     >
-                      &ldquo;Harap dapat tambah meja belajar &amp; plug point di Dataran Siswa — senang nak siapkan tugasan berkumpulan antara waktu kuliah.&rdquo;
-                    </div>
-
-                    {/* Quick Action Block: TINDAKAN PANTAS JPP ✓ */}
-                    <div
-                      style={{
-                        padding: '12px 16px',
-                        borderRadius: 16,
-                        backgroundColor: 'rgba(107, 127, 91, 0.24)',
-                        border: '1.5px solid rgba(217, 201, 178, 0.38)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 5,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 7,
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11,
-                          fontWeight: 900,
-                          letterSpacing: '0.13em',
-                          color: LAUNCH_PALETTE.TERTIARY,
-                        }}
-                      >
-                        <CheckCircle2 size={14} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.8} />
-                        <span>TINDAKAN PANTAS JPP ✓</span>
-                      </div>
-                      <p
-                        style={{
-                          margin: 0,
-                          fontSize: 15,
-                          fontWeight: 700,
-                          lineHeight: 1.38,
-                          color: LAUNCH_PALETTE.BACKGROUND,
-                        }}
-                      >
-                        &ldquo;Cadangan dimasukkan ke senarai naik taraf ruang siswa semester ini.&rdquo;
-                      </p>
-                    </div>
+                      &ldquo;Cadangan dimasukkan ke senarai naik taraf ruang siswa semester ini.&rdquo;
+                    </p>
                   </div>
-                </KineticWindow>
-              </div>
+                </div>
+              </KineticWindow>
             </ExplodedLayer>
           </Interactive.Div>
 
@@ -880,13 +880,18 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
               surface="light"
               routeLabel="jpp.polisas.edu.my/undian"
               statusPill="UNDIAN SISWA AKTIF"
+              statusAccent
+              accentColor={ROSE_DARK}
+              accentSoftBg={ROSE_SOFT}
+              accentBorderColor={ROSE}
               width={POLL_WIDTH}
               height={POLL_HEIGHT}
               borderRadius={26}
               sheenStartFrame={Math.round(4.45 * safeFps)}
               sheenDuration={44}
               style={{
-                boxShadow: '0 28px 64px rgba(46, 58, 47, 0.12)',
+                borderColor: ROSE_BORDER,
+                boxShadow: '0 28px 64px rgba(244, 63, 94, 0.12)',
               }}
             >
               <div
@@ -911,14 +916,14 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Vote size={17} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
+                    <Vote size={17} color={ROSE_DARK} strokeWidth={2.4} />
                     <span
                       style={{
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 11,
                         fontWeight: 800,
                         letterSpacing: '0.13em',
-                        color: LAUNCH_PALETTE.ACCENT,
+                        color: ROSE_DARK,
                       }}
                     >
                       UNDIAN KOMUNITI SISWA
@@ -946,13 +951,13 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                     borderRadius: 22,
                     padding: '18px 24px',
                     backgroundColor: isOptionASelected
-                      ? 'rgba(201, 111, 79, 0.06)'
+                      ? ROSE_SOFT
                       : LAUNCH_PALETTE.BACKGROUND,
                     border: `2px solid ${
-                      isOptionASelected ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.TERTIARY
+                      isOptionASelected ? ROSE : ROSE_BORDER
                     }`,
                     boxShadow: isOptionASelected
-                      ? `0 0 0 5px rgba(201, 111, 79, ${(0.18 * optionARingFlash).toFixed(3)}), 0 14px 30px rgba(201, 111, 79, ${(0.14 * optionARingFlash).toFixed(3)})`
+                      ? `0 0 0 5px rgba(244, 63, 94, ${(0.18 * optionARingFlash).toFixed(3)}), 0 14px 30px rgba(244, 63, 94, ${(0.14 * optionARingFlash).toFixed(3)})`
                       : 'none',
                     display: 'flex',
                     flexDirection: 'column',
@@ -988,10 +993,10 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                           height: 24,
                           borderRadius: 999,
                           border: `2px solid ${
-                            isOptionASelected ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.SECONDARY
+                            isOptionASelected ? ROSE_DARK : LAUNCH_PALETTE.SECONDARY
                           }`,
                           backgroundColor: isOptionASelected
-                            ? LAUNCH_PALETTE.ACCENT
+                            ? ROSE_DARK
                             : LAUNCH_PALETTE.CARD_BG,
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -1022,7 +1027,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                         type="circle"
                         startFrame={circleStart}
                         durationFrames={circleDuration}
-                        color={LAUNCH_PALETTE.ACCENT}
+                        color={ROSE_DARK}
                         strokeWidth={3.5}
                         padding={{ top: 6, right: 14, bottom: 6, left: 14 }}
                         iterations={2}
@@ -1034,7 +1039,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 28,
                             fontWeight: 900,
-                            color: LAUNCH_PALETTE.ACCENT,
+                            color: ROSE_DARK,
                             fontVariantNumeric: 'tabular-nums',
                           }}
                         >
@@ -1044,12 +1049,12 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                     </div>
                   </div>
 
-                  {/* Progress Track */}
+                  {/* Rose Progress Track */}
                   <div
                     style={{
                       height: 28,
                       borderRadius: 999,
-                      backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
+                      backgroundColor: isOptionASelected ? '#FFE4E6' : LAUNCH_PALETTE.SURFACE_MUTED,
                       overflow: 'hidden',
                     }}
                   >
@@ -1058,7 +1063,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                         width: `${Math.min(100, Math.max(0, barA)).toFixed(2)}%`,
                         height: '100%',
                         borderRadius: 999,
-                        backgroundColor: LAUNCH_PALETTE.ACCENT,
+                        backgroundColor: ROSE,
                       }}
                     />
                   </div>
@@ -1083,7 +1088,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                           style={{
                             padding: '4px 11px',
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.ACCENT,
+                            backgroundColor: ROSE_DARK,
                             color: LAUNCH_PALETTE.CARD_BG,
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 10.5,
@@ -1242,7 +1247,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
           appearFrame={cursorAppearFrame}
           disappearFrame={cursorDisappearFrame}
           color={LAUNCH_PALETTE.PRIMARY}
-          rippleColor={LAUNCH_PALETTE.ACCENT}
+          rippleColor={ROSE}
           scale={1.08}
           style={{ zIndex: 28 }}
         />

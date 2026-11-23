@@ -8,7 +8,7 @@ import {
   LAUNCH_TRANSITION_FRAMES,
   type LaunchShowcaseProps,
 } from './schema';
-import { LAUNCH_FPS, LAUNCH_HEIGHT, LAUNCH_PALETTE, LAUNCH_WIDTH } from './tokens';
+import { LAUNCH_FPS, LAUNCH_HEIGHT, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LAUNCH_WIDTH } from './tokens';
 import { probeMediaDurationSeconds } from './lib/mediaProbe';
 import { CinemaChromeContext, GlobalCinemaGate } from './components/EditorialChrome';
 import {
@@ -98,6 +98,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             presentation={portalZoomMorph({
               originXPercent: PORTAL_POLYMAPS_ORIGIN.xPercent,
               originYPercent: PORTAL_POLYMAPS_ORIGIN.yPercent,
+              secondaryRingColor: LAUNCH_MODULE_THEMES.polymaps.primary,
             })}
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
@@ -113,7 +114,13 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Overlay durationInFrames={LAUNCH_OVERLAY_FRAMES} premountFor={fps}>
-            <EditorialShutterOverlay chapterCode="03" chapterLabel="MAKAN & BILIK SEWA SISWA" />
+            <EditorialShutterOverlay
+              chapterCode="03"
+              chapterLabel="MAKAN & BILIK SEWA SISWA"
+              leadBladeColor={LAUNCH_MODULE_THEMES.polymart.dark}
+              midBladeColor={LAUNCH_MODULE_THEMES.polyrent.dark}
+              accentColor={LAUNCH_MODULE_THEMES.polymart.primary}
+            />
           </TransitionSeries.Overlay>
 
           <TransitionSeries.Sequence name="03 PolyMart Commerce" durationInFrames={396} premountFor={fps}>
@@ -126,7 +133,9 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
-            presentation={editorialSplitCurtain()}
+            presentation={editorialSplitCurtain({
+              echoColor: LAUNCH_MODULE_THEMES.polysuara.primary,
+            })}
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
@@ -142,7 +151,14 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
-            presentation={swissLouversWipe()}
+            presentation={swissLouversWipe({
+              palette: [
+                LAUNCH_MODULE_THEMES.polysuara.primary,
+                LAUNCH_MODULE_THEMES.kebajikan.primary,
+                LAUNCH_MODULE_THEMES.foodbank.primary,
+                LAUNCH_PALETTE.PRIMARY_DARK,
+              ],
+            })}
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
@@ -156,7 +172,9 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
-            presentation={depthLiftMatch()}
+            presentation={depthLiftMatch({
+              accentColor: LAUNCH_MODULE_THEMES.kelab.primary,
+            })}
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
@@ -170,7 +188,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Overlay durationInFrames={LAUNCH_OVERLAY_FRAMES} premountFor={fps}>
-            <WarmLightSweepOverlay />
+            <WarmLightSweepOverlay accentColor={LAUNCH_MODULE_THEMES.meritQr.primary} />
           </TransitionSeries.Overlay>
 
           <TransitionSeries.Sequence name="07 Impact Numbers" durationInFrames={366} premountFor={fps}>
@@ -185,7 +203,9 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
-            presentation={orbitalIrisMatch()}
+            presentation={orbitalIrisMatch({
+              outerRingColor: LAUNCH_MODULE_THEMES.polymaps.primary,
+            })}
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 

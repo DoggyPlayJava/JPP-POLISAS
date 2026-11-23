@@ -15,6 +15,9 @@ export type KineticWindowProps = {
   readonly routeLabel?: string;
   readonly statusPill?: string;
   readonly statusAccent?: boolean;
+  readonly accentColor?: string;
+  readonly accentSoftBg?: string;
+  readonly accentBorderColor?: string;
   readonly width?: number | string;
   readonly height?: number | string;
   readonly borderRadius?: number;
@@ -98,6 +101,9 @@ export const KineticWindow: React.FC<KineticWindowProps> = ({
   routeLabel,
   statusPill,
   statusAccent = false,
+  accentColor = LAUNCH_PALETTE.ACCENT,
+  accentSoftBg,
+  accentBorderColor,
   width,
   height,
   borderRadius = 26,
@@ -133,17 +139,16 @@ export const KineticWindow: React.FC<KineticWindowProps> = ({
 
   const innerRadius = Math.max(0, borderRadius - 1.5);
   const statusPillBg = statusAccent
-    ? surface === 'dark'
-      ? 'rgba(201, 111, 79, 0.24)'
-      : 'rgba(201, 111, 79, 0.12)'
+    ? accentSoftBg ??
+      (surface === 'dark' ? 'rgba(201, 111, 79, 0.24)' : 'rgba(201, 111, 79, 0.12)')
     : theme.statusBackground;
   const statusPillBorder = statusAccent
-    ? 'rgba(201, 111, 79, 0.5)'
+    ? accentBorderColor ?? accentColor
     : theme.statusBorder;
   const statusPillColor = statusAccent
     ? surface === 'dark'
       ? LAUNCH_PALETTE.BACKGROUND
-      : LAUNCH_PALETTE.ACCENT
+      : accentColor
     : theme.statusColor;
 
   return (
@@ -189,7 +194,7 @@ export const KineticWindow: React.FC<KineticWindowProps> = ({
                   width: 8,
                   height: 8,
                   borderRadius: 999,
-                  backgroundColor: LAUNCH_PALETTE.ACCENT,
+                  backgroundColor: accentColor,
                   display: 'inline-block',
                 }}
               />
@@ -260,7 +265,7 @@ export const KineticWindow: React.FC<KineticWindowProps> = ({
                   height: 6,
                   borderRadius: 999,
                   backgroundColor: statusAccent
-                    ? LAUNCH_PALETTE.ACCENT
+                    ? accentColor
                     : LAUNCH_PALETTE.SECONDARY,
                   display: 'inline-block',
                 }}
@@ -309,6 +314,9 @@ export type ExplodedLayerProps = {
   readonly enterFrame?: number;
   readonly enterOffsetY?: number;
   readonly enterOffsetX?: number;
+  readonly rotateX?: number;
+  readonly rotateY?: number;
+  readonly rotateZ?: number;
   readonly floatAmplitude?: number;
   readonly floatPhase?: number;
   readonly style?: React.CSSProperties;
@@ -324,6 +332,9 @@ export const ExplodedLayer: React.FC<ExplodedLayerProps> = ({
   enterFrame = 0,
   enterOffsetY = 24,
   enterOffsetX = 0,
+  rotateX = 0,
+  rotateY = 0,
+  rotateZ = 0,
   floatAmplitude = 3,
   floatPhase = 0,
   style,
@@ -357,6 +368,10 @@ export const ExplodedLayer: React.FC<ExplodedLayerProps> = ({
     Math.sin((frame / safeFps) * 1.45 + floatPhase) * floatAmplitude * enterSpring;
   const tx = (1 - enterSpring) * enterOffsetX;
   const ty = (1 - enterSpring) * enterOffsetY + floatY;
+  const rotSuffix =
+    rotateX !== 0 || rotateY !== 0 || rotateZ !== 0
+      ? ` rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) rotateZ(${rotateZ.toFixed(2)}deg)`
+      : '';
 
   return (
     <div
@@ -365,7 +380,7 @@ export const ExplodedLayer: React.FC<ExplodedLayerProps> = ({
         transformStyle: 'preserve-3d',
         opacity,
         willChange: 'transform, opacity',
-        transform: `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, ${zDepth.toFixed(2)}px)`,
+        transform: `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, ${zDepth.toFixed(2)}px)${rotSuffix}`,
       }}
     >
       {children}
@@ -431,15 +446,21 @@ export const LiveTypewriterText: React.FC<LiveTypewriterTextProps> = ({
 
 export type PersonaMonogramProps = {
   readonly size?: number;
+  readonly accentColor?: string;
+  readonly softBgColor?: string;
+  readonly borderColor?: string;
   readonly style?: React.CSSProperties;
 };
 
 /**
  * Custom Swiss architectural origami Fox Monogram SVG representing "Rubah Semambu"
- * strictly in the 05 Earthy Minimal palette.
+ * with configurable module accent tones.
  */
 export const PersonaMonogram: React.FC<PersonaMonogramProps> = ({
   size = 44,
+  accentColor = LAUNCH_PALETTE.ACCENT,
+  softBgColor = LAUNCH_PALETTE.SURFACE_MUTED,
+  borderColor = LAUNCH_PALETTE.TERTIARY,
   style,
 }) => {
   const safeSize = Math.max(16, Number.isFinite(size) ? size : 44);
@@ -460,20 +481,20 @@ export const PersonaMonogram: React.FC<PersonaMonogramProps> = ({
         width={60}
         height={60}
         rx={16}
-        fill={LAUNCH_PALETTE.SURFACE_MUTED}
-        stroke={LAUNCH_PALETTE.TERTIARY}
+        fill={softBgColor}
+        stroke={borderColor}
         strokeWidth={2}
       />
 
       {/* Base folded-origami fox head silhouette */}
       <polygon
         points="15,13 26,22 38,22 49,13 51,33 32,51 13,33"
-        fill={LAUNCH_PALETTE.ACCENT}
+        fill={accentColor}
       />
 
       {/* Inner ear origami facets */}
-      <polygon points="17.5,18 24,23.5 17.5,29" fill={LAUNCH_PALETTE.SURFACE_MUTED} />
-      <polygon points="46.5,18 40,23.5 46.5,29" fill={LAUNCH_PALETTE.SURFACE_MUTED} />
+      <polygon points="17.5,18 24,23.5 17.5,29" fill={softBgColor} />
+      <polygon points="46.5,18 40,23.5 46.5,29" fill={softBgColor} />
 
       {/* Lower cheek muzzle blazes */}
       <polygon points="13,33 26,37 32,51" fill={LAUNCH_PALETTE.BACKGROUND} />

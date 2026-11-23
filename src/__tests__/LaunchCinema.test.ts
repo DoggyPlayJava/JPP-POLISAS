@@ -9,11 +9,20 @@ import {
   LAUNCH_TOTAL_FRAMES,
   LAUNCH_TRANSITION_FRAMES,
 } from '../../remotion/launch/schema';
-import { LAUNCH_FPS, LAUNCH_PALETTE } from '../../remotion/launch/tokens';
 import {
+  CHAPTER_MODULE_THEMES,
+  LAUNCH_FPS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+} from '../../remotion/launch/tokens';
+import {
+  CAMPUS_ROUTE_CURVATURE_RATIO,
   CAMPUS_ROUTE_KM,
-  sliceCampusRoute,
+  CAMPUS_WALK_ROUTE,
+  getCampusTurnStep,
+  getWalkerBearing,
   getWalkerCoordinate,
+  sliceCampusRoute,
 } from '../../remotion/launch/lib/campusRoute';
 import {
   probeMediaDurationSeconds,
@@ -37,6 +46,7 @@ import {
   EditorialFrameMarks,
   GlobalCinemaGate,
 } from '../../remotion/launch/components/EditorialChrome';
+import { computeCampusRouteProgress } from '../../remotion/launch/components/CampusMapLibrePlate';
 import { CameraStage } from '../../remotion/launch/motion/CameraStage';
 import {
   KineticWindow,
@@ -120,13 +130,38 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
     expect(parsed.stats.clubsCount).toBe(21);
   });
 
-  it('generates deterministic Turf walking route inside POLISAS Semambu coordinates', () => {
-    expect(CAMPUS_ROUTE_KM).toBeGreaterThan(0.1);
+  it('generates deterministic 17-waypoint Turf walking route inside POLISAS Semambu coordinates & distinct module themes', () => {
+    expect(CAMPUS_ROUTE_KM).toBeGreaterThan(0.2);
     expect(CAMPUS_ROUTE_KM).toBeLessThan(1.5);
+    expect(CAMPUS_WALK_ROUTE.geometry.coordinates).toHaveLength(17);
+    expect(CAMPUS_ROUTE_CURVATURE_RATIO).toBeGreaterThanOrEqual(1.18);
+
+    expect(getCampusTurnStep(0).turnKind).toBe('straight');
+    expect(getCampusTurnStep(0.35).isCovered).toBe(true);
+    expect(getCampusTurnStep(0.65).turnKind).toBe('left');
+    expect(getCampusTurnStep(0.9).turnKind).toBe('right');
+    expect(getCampusTurnStep(1).turnKind).toBe('arrived');
+    expect(getCampusTurnStep(Number.NaN).turnKind).toBe('straight');
+    expect(Number.isFinite(getWalkerBearing(0.5))).toBe(true);
+    expect(computeCampusRouteProgress(10, 60, 260)).toBe(0);
+    expect(computeCampusRouteProgress(260, 60, 260)).toBe(1);
+    expect(computeCampusRouteProgress(Number.NaN, 60, 260)).toBe(0);
+    expect(computeCampusRouteProgress(100, Number.NaN, Number.NaN)).toBe(1);
+
+    expect(CHAPTER_MODULE_THEMES).toHaveLength(8);
+    const distinctChapterAccents = new Set(CHAPTER_MODULE_THEMES.map((ch) => ch.accent));
+    expect(distinctChapterAccents.size).toBeGreaterThanOrEqual(7);
+    expect(CHAPTER_MODULE_THEMES.map((c) => c.accent)).toEqual(
+      expect.arrayContaining(['#10B981', '#F59E0B', '#F43F5E', '#14B8A6', '#3B82F6', '#A855F7']),
+    );
+    expect(LAUNCH_MODULE_THEMES.polyrent.primary).toBe('#06B6D4');
+    expect(LAUNCH_MODULE_THEMES.takwim.primary).toBe('#6366F1');
+    expect(LAUNCH_MODULE_THEMES.ems.primary).toBe('#EC4899');
+
     const startSlice = sliceCampusRoute(0);
     const fullSlice = sliceCampusRoute(1);
     expect(startSlice.geometry.type).toBe('LineString');
-    expect(fullSlice.geometry.coordinates.length).toBeGreaterThanOrEqual(2);
+    expect(fullSlice.geometry.coordinates.length).toBeGreaterThanOrEqual(12);
     const [lng, lat] = getWalkerCoordinate(0.5);
     expect(lng).toBeGreaterThan(103.31);
     expect(lng).toBeLessThan(103.32);
@@ -263,13 +298,16 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
     expect(kineticSource).not.toMatch(/HtmlInCanvas|Math\.random|@keyframes|\banimate-|transition\s*:/i);
   });
 
-  it('renders CampusMapLibrePlate fallback with 100% procedural SVG blueprint and zero screenshot assets', () => {
+  it('renders CampusMapLibrePlate fallback with 17-waypoint procedural SVG blueprint and zero screenshot assets', () => {
     const mapSource = readFileSync(
       join(process.cwd(), 'remotion', 'launch', 'components', 'CampusMapLibrePlate.tsx'),
       'utf8',
     );
     expect(mapSource).not.toMatch(/Polymap View Phone\.png|GAMBAR\/|CanvasImage|staticFile/);
-    expect(mapSource).toContain('M 380 548 L 478 446 L 590 347');
+    expect(mapSource).toContain('M 376 616 L 379 556');
+    expect(mapSource).toContain('360° Street View Tersedia');
+    expect(mapSource).toContain('Laluan Berbumbung');
+    expect(mapSource).toContain('campus-3d-buildings');
     expect(mapSource).toContain('JALAN SEMAMBU');
     expect(mapSource).toContain('BLOK JTMK');
   });
@@ -356,6 +394,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
       /@keyframes/i,
       /\banimate-/i,
       /transition\s*:/i,
+      /backdrop-filter|backdropFilter/i,
     ];
 
     for (const filePath of launchFiles) {

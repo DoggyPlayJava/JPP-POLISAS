@@ -26,12 +26,31 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath, GeometricSparkBurst } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
 import {
   DeterministicQrMatrix,
   ExplodedLayer,
   KineticWindow,
 } from '../ui/KineticCard';
+
+const BLUE = LAUNCH_MODULE_THEMES.kelab.primary; // #3B82F6
+const BLUE_DARK = LAUNCH_MODULE_THEMES.kelab.dark; // #2563EB
+const BLUE_SOFT = LAUNCH_MODULE_THEMES.kelab.soft; // #EFF6FF
+const BLUE_BORDER = LAUNCH_MODULE_THEMES.kelab.border; // #BFDBFE
+
+const PURPLE = LAUNCH_MODULE_THEMES.meritQr.primary; // #A855F7
+const PURPLE_DARK = LAUNCH_MODULE_THEMES.meritQr.dark; // #9333EA
+const PURPLE_BORDER = LAUNCH_MODULE_THEMES.meritQr.border; // #E9D5FF
+
+const PINK = LAUNCH_MODULE_THEMES.ems.primary; // #EC4899
+const PINK_DARK = LAUNCH_MODULE_THEMES.ems.dark; // #DB2777
+const PINK_SOFT = LAUNCH_MODULE_THEMES.ems.soft; // #FDF2F8
+const PINK_BORDER = LAUNCH_MODULE_THEMES.ems.border; // #FBCFE8
+
+const EMERALD = LAUNCH_MODULE_THEMES.polymaps.primary; // #10B981
+const EMERALD_DARK = LAUNCH_MODULE_THEMES.polymaps.dark; // #059669
+const EMERALD_SOFT = LAUNCH_MODULE_THEMES.polymaps.soft; // #ECFDF5
+const AMBER = LAUNCH_MODULE_THEMES.polymart.primary; // #F59E0B
 
 export type ClubsEmsProps = {
   readonly clubsCount: number;
@@ -89,14 +108,14 @@ const LASER_EASE = Easing.bezier(0.45, 0, 0.55, 1);
 const SHEEN_EASE = Easing.bezier(0.25, 0.1, 0.25, 1);
 
 // 3-Column Horizontal Student Co-Curricular Journey geometry inside 1920x1080 safe bounds
-const PIPELINE_LEFT = 64;
+const PIPELINE_LEFT = 84;
 const PIPELINE_TOP = 228;
 const PIPELINE_HEIGHT = 738;
-const COL1_WIDTH = 550;
-const CONN_WIDTH = 66;
-const COL2_WIDTH = 550;
-const COL3_WIDTH = 560;
-const TOTAL_PIPELINE_WIDTH = COL1_WIDTH + CONN_WIDTH + COL2_WIDTH + CONN_WIDTH + COL3_WIDTH; // 1792
+const COL1_WIDTH = 540;
+const CONN_WIDTH = 60;
+const COL2_WIDTH = 540;
+const COL3_WIDTH = 552;
+const TOTAL_PIPELINE_WIDTH = COL1_WIDTH + CONN_WIDTH + COL2_WIDTH + CONN_WIDTH + COL3_WIDTH; // 1752
 
 const MEDALLION_SIZE = 104;
 
@@ -104,8 +123,8 @@ const renderClubIcon = (icon: StudentClubSpec['icon'], isJoined: boolean, tone: 
   const color = !isJoined
     ? LAUNCH_PALETTE.PRIMARY
     : tone === 'accent'
-      ? LAUNCH_PALETTE.ACCENT
-      : LAUNCH_PALETTE.SECONDARY;
+      ? BLUE_DARK
+      : EMERALD_DARK;
   switch (icon) {
     case 'gamepad':
       return <Gamepad2 size={20} color={color} strokeWidth={2.3} />;
@@ -351,27 +370,27 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
 
   const liveDotScale = 0.84 + Math.sin(timeSec * 5.8) * 0.2;
   const qrBoxBorderColor = inFlashWindow
-    ? LAUNCH_PALETTE.ACCENT
+    ? '#FFFFFF'
     : isQrVerified
-      ? LAUNCH_PALETTE.SECONDARY
+      ? PURPLE
       : isLaserActive
-        ? LAUNCH_PALETTE.ACCENT
-        : LAUNCH_PALETTE.TERTIARY;
+        ? PURPLE
+        : PURPLE_BORDER;
   const bracketColor = isQrVerified
-    ? LAUNCH_PALETTE.SECONDARY
+    ? EMERALD
     : isLaserActive
-      ? LAUNCH_PALETTE.ACCENT
-      : LAUNCH_PALETTE.TERTIARY;
+      ? PURPLE
+      : PURPLE_BORDER;
 
   return (
     <>
-      <EditorialBackdrop />
+      <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.kelab.tint} />
 
       <CameraStage
         zoomFrom={1}
-        zoomTo={1.032}
-        panXFrom={10}
-        panXTo={-10}
+        zoomTo={1.02}
+        panXFrom={8}
+        panXTo={-8}
         panYFrom={4}
         panYTo={-4}
         tiltXFrom={0.32}
@@ -420,16 +439,16 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     alignSelf: 'flex-start',
                     padding: '6px 17px',
                     borderRadius: 999,
-                    backgroundColor: 'rgba(201, 111, 79, 0.12)',
-                    border: `1.5px solid ${LAUNCH_PALETTE.ACCENT}`,
-                    color: LAUNCH_PALETTE.ACCENT,
+                    backgroundColor: BLUE_SOFT,
+                    border: `1.5px solid ${BLUE}`,
+                    color: BLUE_DARK,
                     fontFamily: LAUNCH_FONTS.MONO,
                     fontSize: 12,
                     fontWeight: 800,
                     letterSpacing: '0.16em',
                   }}
                 >
-                  <Award size={15} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
+                  <Award size={15} color={BLUE_DARK} strokeWidth={2.4} />
                   <span>17:00 PETANG • {safeClubs} KELAB, MERIT &amp; E-SIJIL</span>
                 </div>
               </KineticReveal>
@@ -452,7 +471,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 <span
                   style={{
                     fontFamily: LAUNCH_FONTS.MONO,
-                    color: LAUNCH_PALETTE.ACCENT,
+                    color: BLUE_DARK,
                     fontVariantNumeric: 'tabular-nums',
                     display: 'inline-block',
                     minWidth: `${Math.max(2, String(safeClubs).length)}ch`,
@@ -468,7 +487,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                   staggerFrames={wordStagger}
                   wordDurationFrames={wordDuration}
                   accentWords={['Merit', '&', 'e-Sijil.']}
-                  accentColor={LAUNCH_PALETTE.ACCENT}
+                  accentColor={PURPLE_DARK}
                   style={{
                     fontSize: 45,
                     fontWeight: 900,
@@ -480,7 +499,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
               </h2>
             </div>
 
-            {/* Compact Student KPI Pills */}
+            {/* Compact Student KPI Pills (Blue Kelab + Pink EMS Acara) */}
             <div
               style={{
                 display: 'flex',
@@ -494,9 +513,9 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 style={{
                   padding: '10px 18px',
                   borderRadius: 16,
-                  backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                  border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                  boxShadow: '0 12px 28px rgba(46, 58, 47, 0.08)',
+                  backgroundColor: BLUE_SOFT,
+                  border: `1.5px solid ${BLUE}`,
+                  boxShadow: '0 12px 28px rgba(59, 130, 246, 0.12)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'flex-end',
@@ -509,7 +528,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     fontSize: 28,
                     fontWeight: 900,
                     lineHeight: 1,
-                    color: LAUNCH_PALETTE.PRIMARY,
+                    color: BLUE_DARK,
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
@@ -522,7 +541,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     fontSize: 10.5,
                     fontWeight: 800,
                     letterSpacing: '0.13em',
-                    color: LAUNCH_PALETTE.MUTED_OLIVE,
+                    color: LAUNCH_PALETTE.PRIMARY,
                   }}
                 >
                   KELAB AKTIF
@@ -533,9 +552,9 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 style={{
                   padding: '10px 18px',
                   borderRadius: 16,
-                  backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                  border: '1.5px solid rgba(217, 201, 178, 0.28)',
-                  boxShadow: '0 14px 30px rgba(31, 39, 32, 0.16)',
+                  backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                  border: `1.5px solid ${PINK}`,
+                  boxShadow: '0 14px 30px rgba(236, 72, 153, 0.18)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'flex-end',
@@ -548,7 +567,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     fontSize: 28,
                     fontWeight: 900,
                     lineHeight: 1,
-                    color: LAUNCH_PALETTE.ACCENT,
+                    color: PINK,
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
@@ -561,7 +580,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     fontSize: 10.5,
                     fontWeight: 800,
                     letterSpacing: '0.13em',
-                    color: LAUNCH_PALETTE.TERTIARY,
+                    color: PINK_BORDER,
                   }}
                 >
                   ACARA KAMPUS
@@ -584,7 +603,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
               transform: `scale(${pipelineExitScale.toFixed(4)})`,
             }}
           >
-            {/* COLUMN 1 (550px): Beat 1 — Live Student Club Directory (jpp.polisas.edu.my/kelab) */}
+            {/* COLUMN 1 (550px): Royal Blue Live Student Club Directory */}
             <Interactive.Div
               name="Student Club Directory"
               premountFor={safeFps}
@@ -593,7 +612,8 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 height: PIPELINE_HEIGHT,
                 flexShrink: 0,
                 opacity: col1Opacity,
-                transform: `translate3d(0px, ${(col1TranslateY + col1FloatY).toFixed(2)}px, 0px)`,
+                transformStyle: 'preserve-3d',
+                transform: `translate3d(0px, ${(col1TranslateY + col1FloatY).toFixed(2)}px, 16px) rotateY(1.5deg)`,
               }}
             >
               <KineticWindow
@@ -601,15 +621,18 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 routeLabel="kelab · direktori siswa"
                 statusPill={`${safeClubs} KELAB`}
                 statusAccent
+                accentColor={BLUE_DARK}
+                accentSoftBg={BLUE_SOFT}
+                accentBorderColor={BLUE}
                 width={COL1_WIDTH}
                 height={PIPELINE_HEIGHT}
                 borderRadius={24}
                 sheenStartFrame={Math.round(0.85 * safeFps)}
                 sheenDuration={42}
                 style={{
-                  borderColor: LAUNCH_PALETTE.TERTIARY,
+                  borderColor: BLUE_BORDER,
                   boxShadow:
-                    '0 24px 54px rgba(31, 39, 32, 0.12), 0 6px 16px rgba(31, 39, 32, 0.06)',
+                    '0 24px 54px rgba(59, 130, 246, 0.12), 0 6px 16px rgba(31, 39, 32, 0.06)',
                 }}
               >
                 <div
@@ -631,7 +654,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       justifyContent: 'space-between',
                       gap: 12,
                       paddingBottom: 12,
-                      borderBottom: `1.5px solid ${LAUNCH_PALETTE.SURFACE_MUTED}`,
+                      borderBottom: `1.5px solid ${BLUE_SOFT}`,
                     }}
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
@@ -641,7 +664,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                           fontSize: 10.5,
                           fontWeight: 800,
                           letterSpacing: '0.14em',
-                          color: LAUNCH_PALETTE.SECONDARY,
+                          color: BLUE_DARK,
                         }}
                       >
                         LANGKAH 01 • PILIH KELAB MINAT
@@ -662,12 +685,12 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       style={{
                         padding: '6px 12px',
                         borderRadius: 999,
-                        backgroundColor: 'rgba(107, 127, 91, 0.14)',
-                        border: `1px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                        backgroundColor: BLUE_SOFT,
+                        border: `1px solid ${BLUE}`,
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 11,
                         fontWeight: 900,
-                        color: LAUNCH_PALETTE.PRIMARY,
+                        color: BLUE_DARK,
                         fontVariantNumeric: 'tabular-nums',
                         whiteSpace: 'nowrap',
                       }}
@@ -724,19 +747,19 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
 
                       const rowBg = isJoined
                         ? club.activeTone === 'accent'
-                          ? 'rgba(201, 111, 79, 0.08)'
-                          : 'rgba(107, 127, 91, 0.1)'
-                        : LAUNCH_PALETTE.SURFACE_MUTED;
+                          ? BLUE_SOFT
+                          : EMERALD_SOFT
+                        : LAUNCH_PALETTE.BACKGROUND;
                       const rowBorder = isJoined
                         ? club.activeTone === 'accent'
-                          ? LAUNCH_PALETTE.ACCENT
-                          : LAUNCH_PALETTE.SECONDARY
+                          ? BLUE
+                          : EMERALD
                         : LAUNCH_PALETTE.TERTIARY;
 
                       const pillBg = isJoined
                         ? club.activeTone === 'accent'
-                          ? LAUNCH_PALETTE.ACCENT
-                          : LAUNCH_PALETTE.SECONDARY
+                          ? BLUE_DARK
+                          : EMERALD_DARK
                         : LAUNCH_PALETTE.CARD_BG;
                       const pillBorder = isJoined ? pillBg : LAUNCH_PALETTE.TERTIARY;
                       const pillColor = isJoined
@@ -768,7 +791,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                                 borderRadius: 12,
                                 backgroundColor: LAUNCH_PALETTE.CARD_BG,
                                 border: `1.5px solid ${
-                                  isJoined ? rowBorder : LAUNCH_PALETTE.TERTIARY
+                                  isJoined ? rowBorder : BLUE_BORDER
                                 }`,
                                 display: 'flex',
                                 alignItems: 'center',
@@ -821,7 +844,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                               flexShrink: 0,
                               transform: `scale(${(isJoined ? (0.94 + 0.06 * tapSpring) * pillTapBounce : 1).toFixed(3)})`,
                               boxShadow: isJoined
-                                ? '0 6px 14px rgba(46, 58, 47, 0.14)'
+                                ? '0 6px 14px rgba(37, 99, 235, 0.16)'
                                 : 'none',
                             }}
                           >
@@ -841,8 +864,8 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     style={{
                       padding: '11px 15px',
                       borderRadius: 14,
-                      backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                      border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                      backgroundColor: BLUE_SOFT,
+                      border: `1.5px solid ${BLUE_BORDER}`,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -854,7 +877,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 11,
                         fontWeight: 700,
-                        color: LAUNCH_PALETTE.MUTED_OLIVE,
+                        color: BLUE_DARK,
                       }}
                     >
                       jpp.polisas.edu.my/kelab
@@ -865,7 +888,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         fontSize: 10.5,
                         fontWeight: 800,
                         letterSpacing: '0.08em',
-                        color: LAUNCH_PALETTE.SECONDARY,
+                        color: BLUE_DARK,
                       }}
                     >
                       DAFTAR 1 KLIK • TERBUKA
@@ -875,7 +898,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
               </KineticWindow>
             </Interactive.Div>
 
-            {/* CONNECTOR 1 (66px): Animated EvolvingPath Arrow into Column 2 */}
+            {/* CONNECTOR 1 (66px): Animated Blue -> Purple EvolvingPath */}
             <div
               style={{
                 position: 'relative',
@@ -896,12 +919,12 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                   viewBox="0 0 66 48"
                   startFrame={conn1Start}
                   durationFrames={conn1Duration}
-                  stroke={LAUNCH_PALETTE.ACCENT}
-                  trackStroke={LAUNCH_PALETTE.TERTIARY}
+                  stroke={BLUE}
+                  trackStroke={BLUE_BORDER}
                   strokeWidth={3.5}
                   showHeadDot
                   headDotRadius={4.5}
-                  headDotColor={LAUNCH_PALETTE.ACCENT}
+                  headDotColor={PURPLE}
                   hideDotWhenComplete
                   style={{ display: 'block' }}
                 />
@@ -919,7 +942,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                   <path
                     d="M 49 17 L 57 24 L 49 31"
                     fill="none"
-                    stroke={conn1Done ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.TERTIARY}
+                    stroke={conn1Done ? PURPLE : BLUE_BORDER}
                     strokeWidth={3}
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -929,14 +952,14 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       transform={`translate(${conn1PulseX.toFixed(2)}, 24)`}
                       opacity={conn1PulseOpacity}
                     >
-                      <circle cx={0} cy={0} r={4.5} fill={LAUNCH_PALETTE.SECONDARY} />
+                      <circle cx={0} cy={0} r={4.5} fill={PURPLE} />
                     </g>
                   ) : null}
                 </svg>
               </div>
             </div>
 
-            {/* COLUMN 2 (550px): Beat 2 — Live Student Scan QR Merit Viewfinder (jpp.polisas.edu.my/scan-qr) */}
+            {/* COLUMN 2 (550px): Purple Scan QR Merit Viewfinder */}
             <Interactive.Div
               name="Student Scan QR Merit Viewfinder"
               premountFor={safeFps}
@@ -947,14 +970,18 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 opacity: col2Opacity,
                 visibility: col2Opacity <= 0.001 ? 'hidden' : 'visible',
                 transformOrigin: '50% 50%',
-                transform: `translate3d(${col2TranslateX.toFixed(2)}px, ${col2FloatY.toFixed(2)}px, 0px) scale(${col2Scale.toFixed(4)})`,
+                transformStyle: 'preserve-3d',
+                transform: `translate3d(${col2TranslateX.toFixed(2)}px, ${col2FloatY.toFixed(2)}px, 36px) scale(${col2Scale.toFixed(4)})`,
               }}
             >
               <KineticWindow
                 surface="dark"
                 routeLabel="scan qr · merit siswa"
                 statusPill="KAMERA AKTIF"
-                statusAccent={!isQrVerified}
+                statusAccent
+                accentColor={PURPLE}
+                accentSoftBg="rgba(168, 85, 247, 0.22)"
+                accentBorderColor={PURPLE}
                 width={COL2_WIDTH}
                 height={PIPELINE_HEIGHT}
                 borderRadius={24}
@@ -962,15 +989,11 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 sheenDuration={38}
                 style={{
                   border: `1.5px solid ${
-                    inFlashWindow
-                      ? LAUNCH_PALETTE.ACCENT
-                      : isQrVerified
-                        ? LAUNCH_PALETTE.SECONDARY
-                        : 'rgba(217, 201, 178, 0.24)'
+                    inFlashWindow ? '#FFFFFF' : isQrVerified ? EMERALD : PURPLE
                   }`,
                   boxShadow: inFlashWindow
-                    ? '0 24px 64px rgba(201, 111, 79, 0.34), 0 0 0 5px rgba(201, 111, 79, 0.22)'
-                    : '0 28px 64px rgba(31, 39, 32, 0.24), 0 8px 20px rgba(31, 39, 32, 0.14)',
+                    ? '0 24px 64px rgba(168, 85, 247, 0.38), 0 0 0 5px rgba(168, 85, 247, 0.25)'
+                    : '0 28px 64px rgba(147, 51, 234, 0.22), 0 8px 20px rgba(31, 39, 32, 0.16)',
                   overflow: 'hidden',
                 }}
               >
@@ -1002,7 +1025,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                           fontSize: 10.5,
                           fontWeight: 800,
                           letterSpacing: '0.14em',
-                          color: LAUNCH_PALETTE.TERTIARY,
+                          color: PURPLE_BORDER,
                         }}
                       >
                         LANGKAH 02 • IMBAS QR ACARA
@@ -1026,11 +1049,9 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         padding: '6px 12px',
                         borderRadius: 999,
                         backgroundColor: isQrVerified
-                          ? 'rgba(107, 127, 91, 0.28)'
-                          : 'rgba(201, 111, 79, 0.2)',
-                        border: `1px solid ${
-                          isQrVerified ? LAUNCH_PALETTE.SECONDARY : LAUNCH_PALETTE.ACCENT
-                        }`,
+                          ? 'rgba(16, 185, 129, 0.26)'
+                          : 'rgba(168, 85, 247, 0.24)',
+                        border: `1px solid ${isQrVerified ? EMERALD : PURPLE}`,
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 11.5,
                         fontWeight: 900,
@@ -1039,14 +1060,14 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       }}
                     >
                       {isQrVerified ? (
-                        <Check size={13} color={LAUNCH_PALETTE.TERTIARY} strokeWidth={3} />
+                        <Check size={13} color={EMERALD} strokeWidth={3} />
                       ) : (
                         <span
                           style={{
                             width: 7,
                             height: 7,
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.ACCENT,
+                            backgroundColor: PURPLE,
                             transform: `scale(${liveDotScale.toFixed(3)})`,
                             display: 'inline-block',
                           }}
@@ -1056,7 +1077,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     </div>
                   </div>
 
-                  {/* Crisp Viewfinder Reticle Frame Holding Porcelain QR Card */}
+                  {/* Crisp Purple Viewfinder Reticle Holding Porcelain QR Card */}
                   <div
                     style={{
                       position: 'relative',
@@ -1132,7 +1153,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         padding: 16,
                         borderRadius: 16,
                         backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                        border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                        border: `1.5px solid ${PURPLE_BORDER}`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1146,7 +1167,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       />
                     </div>
 
-                    {/* Sweeping Terracotta Laser Beam (10% -> 90% -> 10%) */}
+                    {/* Sweeping Purple Laser Beam (10% -> 90% -> 10%) */}
                     {isLaserActive ? (
                       <div
                         style={{
@@ -1167,7 +1188,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                             position: 'absolute',
                             inset: 0,
                             background:
-                              'linear-gradient(180deg, rgba(201, 111, 79, 0) 0%, rgba(201, 111, 79, 0.36) 50%, rgba(201, 111, 79, 0) 100%)',
+                              'linear-gradient(180deg, rgba(168, 85, 247, 0) 0%, rgba(168, 85, 247, 0.38) 50%, rgba(168, 85, 247, 0) 100%)',
                           }}
                         />
                         <div
@@ -1175,8 +1196,8 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                             width: '100%',
                             height: 3.5,
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.ACCENT,
-                            boxShadow: '0 0 12px rgba(201, 111, 79, 0.85)',
+                            backgroundColor: PURPLE,
+                            boxShadow: '0 0 12px rgba(168, 85, 247, 0.85)',
                           }}
                         />
                       </div>
@@ -1202,8 +1223,8 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     style={{
                       padding: '14px 16px',
                       borderRadius: 16,
-                      backgroundColor: 'rgba(248, 246, 238, 0.06)',
-                      border: '1px solid rgba(217, 201, 178, 0.2)',
+                      backgroundColor: 'rgba(168, 85, 247, 0.1)',
+                      border: `1px solid rgba(233, 213, 255, 0.28)`,
                       display: 'flex',
                       flexDirection: 'column',
                       gap: 9,
@@ -1232,7 +1253,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       </span>
                       <ScanLine
                         size={17}
-                        color={isQrVerified ? LAUNCH_PALETTE.SECONDARY : LAUNCH_PALETTE.ACCENT}
+                        color={isQrVerified ? EMERALD : PURPLE}
                         strokeWidth={2.4}
                       />
                     </div>
@@ -1245,7 +1266,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 12,
                         fontWeight: 700,
-                        color: LAUNCH_PALETTE.TERTIARY,
+                        color: PURPLE_BORDER,
                       }}
                     >
                       <span>{isQrVerified ? 'Hadir Disahkan • 17:12 PM' : 'Mengimbas Kod Acara • 17:12 PM'}</span>
@@ -1265,9 +1286,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                           width: '100%',
                           height: '100%',
                           borderRadius: 999,
-                          backgroundColor: isQrVerified
-                            ? LAUNCH_PALETTE.SECONDARY
-                            : LAUNCH_PALETTE.ACCENT,
+                          backgroundColor: isQrVerified ? EMERALD : PURPLE,
                           transformOrigin: '0% 50%',
                           transform: `scaleX(${((isQrVerified ? 100 : scanPercent) / 100).toFixed(4)})`,
                         }}
@@ -1275,7 +1294,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     </div>
                   </div>
 
-                  {/* Spring-Popping Merit Toast Banner (#6B7F5B / #F8F6EE) */}
+                  {/* Spring-Popping Purple Merit Toast Banner */}
                   <div
                     style={{
                       position: 'relative',
@@ -1291,7 +1310,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                           padding: '13px 16px',
                           borderRadius: 15,
                           backgroundColor: 'rgba(248, 246, 238, 0.06)',
-                          border: '1px dashed rgba(217, 201, 178, 0.3)',
+                          border: `1px dashed ${PURPLE_BORDER}`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -1299,10 +1318,10 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                           fontFamily: LAUNCH_FONTS.MONO,
                           fontSize: 11.5,
                           fontWeight: 700,
-                          color: LAUNCH_PALETTE.TERTIARY,
+                          color: PURPLE_BORDER,
                         }}
                       >
-                        <QrCode size={15} color={LAUNCH_PALETTE.ACCENT} />
+                        <QrCode size={15} color={PURPLE} />
                         <span>Arahkan kamera ke kod QR acara...</span>
                       </div>
                     ) : null}
@@ -1312,9 +1331,9 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         position: 'absolute',
                         inset: 0,
                         borderRadius: 15,
-                        backgroundColor: LAUNCH_PALETTE.SECONDARY,
-                        border: `1.5px solid ${LAUNCH_PALETTE.BACKGROUND}`,
-                        boxShadow: '0 14px 30px rgba(31, 39, 32, 0.35)',
+                        backgroundColor: PURPLE_DARK,
+                        border: `1.5px solid ${PURPLE_BORDER}`,
+                        boxShadow: '0 14px 30px rgba(147, 51, 234, 0.36)',
                         padding: '0 16px',
                         display: 'flex',
                         alignItems: 'center',
@@ -1344,7 +1363,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
               </KineticWindow>
             </Interactive.Div>
 
-            {/* CONNECTOR 2 (66px): Animated EvolvingPath Arrow into Column 3 */}
+            {/* CONNECTOR 2 (66px): Purple -> Pink EvolvingPath Arrow */}
             <div
               style={{
                 position: 'relative',
@@ -1365,12 +1384,12 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                   viewBox="0 0 66 48"
                   startFrame={conn2Start}
                   durationFrames={conn2Duration}
-                  stroke={LAUNCH_PALETTE.SECONDARY}
-                  trackStroke={LAUNCH_PALETTE.TERTIARY}
+                  stroke={PURPLE}
+                  trackStroke={PURPLE_BORDER}
                   strokeWidth={3.5}
                   showHeadDot
                   headDotRadius={4.5}
-                  headDotColor={LAUNCH_PALETTE.SECONDARY}
+                  headDotColor={PINK}
                   hideDotWhenComplete
                   style={{ display: 'block' }}
                 />
@@ -1388,7 +1407,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                   <path
                     d="M 49 17 L 57 24 L 49 31"
                     fill="none"
-                    stroke={conn2Done ? LAUNCH_PALETTE.SECONDARY : LAUNCH_PALETTE.TERTIARY}
+                    stroke={conn2Done ? PINK : PURPLE_BORDER}
                     strokeWidth={3}
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -1398,14 +1417,14 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       transform={`translate(${conn2PulseX.toFixed(2)}, 24)`}
                       opacity={conn2PulseOpacity}
                     >
-                      <circle cx={0} cy={0} r={4.5} fill={LAUNCH_PALETTE.ACCENT} />
+                      <circle cx={0} cy={0} r={4.5} fill={PINK} />
                     </g>
                   ) : null}
                 </svg>
               </div>
             </div>
 
-            {/* COLUMN 3 (560px): Beat 3 — Official Student Digital e-Certificate (jpp.polisas.edu.my/sijil) */}
+            {/* COLUMN 3 (560px): Pink/Gold Official Student Digital e-Certificate */}
             <Interactive.Div
               name="Official Student Digital e-Certificate"
               premountFor={safeFps}
@@ -1417,7 +1436,8 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
               }}
             >
               <ExplodedLayer
-                zDepth={30}
+                zDepth={76}
+                rotateY={-2.5}
                 enterFrame={certPopStart}
                 enterOffsetY={28}
                 floatAmplitude={2.4}
@@ -1432,9 +1452,9 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     boxSizing: 'border-box',
                     borderRadius: 24,
                     backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                    border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                    border: `1.5px solid ${PINK}`,
                     boxShadow:
-                      '0 32px 72px rgba(31, 39, 32, 0.32), 0 10px 24px rgba(31, 39, 32, 0.16)',
+                      '0 32px 72px rgba(236, 72, 153, 0.22), 0 10px 24px rgba(31, 39, 32, 0.2)',
                     display: 'flex',
                     flexDirection: 'column',
                     overflow: 'visible',
@@ -1456,7 +1476,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         inset: 12,
                         top: 52,
                         borderRadius: 16,
-                        border: '1px solid rgba(217, 201, 178, 0.28)',
+                        border: '1px solid rgba(251, 207, 232, 0.28)',
                       }}
                     />
 
@@ -1487,7 +1507,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       justifyContent: 'space-between',
                       gap: 12,
                       backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                      borderBottom: '1px solid rgba(217, 201, 178, 0.16)',
+                      borderBottom: '1px solid rgba(251, 207, 232, 0.2)',
                       borderTopLeftRadius: 22.5,
                       borderTopRightRadius: 22.5,
                       flexShrink: 0,
@@ -1500,7 +1520,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                             width: 8,
                             height: 8,
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.ACCENT,
+                            backgroundColor: PINK,
                             display: 'inline-block',
                           }}
                         />
@@ -1509,7 +1529,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                             width: 8,
                             height: 8,
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.TERTIARY,
+                            backgroundColor: PURPLE,
                             display: 'inline-block',
                           }}
                         />
@@ -1518,7 +1538,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                             width: 8,
                             height: 8,
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                            backgroundColor: AMBER,
                             display: 'inline-block',
                           }}
                         />
@@ -1528,12 +1548,12 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                           padding: '3px 10px',
                           borderRadius: 999,
                           backgroundColor: 'rgba(248, 246, 238, 0.08)',
-                          border: '1px solid rgba(217, 201, 178, 0.22)',
+                          border: '1px solid rgba(251, 207, 232, 0.28)',
                           fontFamily: LAUNCH_FONTS.MONO,
                           fontSize: 11,
                           fontWeight: 700,
                           letterSpacing: '0.05em',
-                          color: LAUNCH_PALETTE.TERTIARY,
+                          color: PINK_BORDER,
                         }}
                       >
                         jpp.polisas.edu.my/sijil
@@ -1547,8 +1567,8 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         gap: 6,
                         padding: '3px 10px',
                         borderRadius: 999,
-                        backgroundColor: 'rgba(107, 127, 91, 0.28)',
-                        border: `1px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                        backgroundColor: 'rgba(236, 72, 153, 0.22)',
+                        border: `1px solid ${PINK}`,
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 10.5,
                         fontWeight: 800,
@@ -1556,7 +1576,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         color: LAUNCH_PALETTE.BACKGROUND,
                       }}
                     >
-                      <Sparkles size={11} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.6} />
+                      <Sparkles size={11} color={AMBER} strokeWidth={2.6} />
                       <span>E-SIJIL SAH ✓</span>
                     </span>
                   </div>
@@ -1594,10 +1614,10 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                           fontSize: 11,
                           fontWeight: 800,
                           letterSpacing: '0.16em',
-                          color: LAUNCH_PALETTE.TERTIARY,
+                          color: PINK_BORDER,
                         }}
                       >
-                        <ShieldCheck size={15} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
+                        <ShieldCheck size={15} color={PINK} strokeWidth={2.4} />
                         <span>SIJIL DIGITAL RASMI • POLISAS</span>
                       </div>
 
@@ -1615,8 +1635,8 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                             height: MEDALLION_SIZE,
                             borderRadius: 999,
                             backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                            border: `2.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                            boxShadow: 'inset 0 0 0 5px rgba(201, 111, 79, 0.28)',
+                            border: `2.5px solid ${PINK}`,
+                            boxShadow: 'inset 0 0 0 5px rgba(236, 72, 153, 0.26)',
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'center',
@@ -1624,14 +1644,14 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                             gap: 3,
                           }}
                         >
-                          <Award size={32} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.1} />
+                          <Award size={32} color={AMBER} strokeWidth={2.1} />
                           <span
                             style={{
                               fontFamily: LAUNCH_FONTS.MONO,
                               fontSize: 9.5,
                               fontWeight: 900,
                               letterSpacing: '0.15em',
-                              color: LAUNCH_PALETTE.TERTIARY,
+                              color: PINK_SOFT,
                             }}
                           >
                             E-SIJIL
@@ -1642,14 +1662,14 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                               fontSize: 9,
                               fontWeight: 700,
                               letterSpacing: '0.14em',
-                              color: LAUNCH_PALETTE.SECONDARY,
+                              color: EMERALD,
                             }}
                           >
                             2026
                           </span>
                         </div>
 
-                        {/* Restrained Architectural Luxury-Watch-Glint Spark Burst */}
+                        {/* Restrained Multi-Color Luxury-Watch-Glint Spark Burst */}
                         <GeometricSparkBurst
                           triggerFrame={sparkTrigger}
                           x={MEDALLION_SIZE / 2}
@@ -1658,11 +1678,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                           radius={76}
                           count={8}
                           seed="clubs-ems-medallion-glint"
-                          colors={[
-                            LAUNCH_PALETTE.ACCENT,
-                            LAUNCH_PALETTE.TERTIARY,
-                            LAUNCH_PALETTE.SECONDARY,
-                          ]}
+                          colors={[PINK, PURPLE, AMBER]}
                           style={{ zIndex: 12 }}
                         />
                       </div>
@@ -1689,7 +1705,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                           fontSize: 12,
                           fontWeight: 700,
                           letterSpacing: '0.08em',
-                          color: LAUNCH_PALETTE.TERTIARY,
+                          color: PINK_BORDER,
                         }}
                       >
                         MAKMP 2026 • DEWAN JUBLI PERAK
@@ -1703,7 +1719,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         padding: '14px 18px',
                         borderRadius: 16,
                         backgroundColor: 'rgba(248, 246, 238, 0.06)',
-                        border: '1px solid rgba(217, 201, 178, 0.2)',
+                        border: '1px solid rgba(251, 207, 232, 0.24)',
                         display: 'flex',
                         flexDirection: 'column',
                         gap: 4,
@@ -1715,7 +1731,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                           fontSize: 10,
                           fontWeight: 800,
                           letterSpacing: '0.15em',
-                          color: LAUNCH_PALETTE.TERTIARY,
+                          color: PINK_BORDER,
                         }}
                       >
                         DIANUGERAHKAN KEPADA
@@ -1735,14 +1751,14 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                           fontFamily: LAUNCH_FONTS.MONO,
                           fontSize: 12,
                           fontWeight: 700,
-                          color: LAUNCH_PALETTE.SECONDARY,
+                          color: EMERALD,
                         }}
                       >
                         Pelajar Semester 1 • JTMK
                       </span>
                     </div>
 
-                    {/* Serial Chip + +15 MERIT Pill */}
+                    {/* Serial Chip + Purple +15 MERIT Pill */}
                     <div
                       style={{
                         width: '100%',
@@ -1753,11 +1769,11 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         padding: '10px 14px',
                         borderRadius: 14,
                         backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                        border: '1.5px solid rgba(217, 201, 178, 0.35)',
+                        border: '1.5px solid rgba(233, 213, 255, 0.35)',
                       }}
                     >
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
-                        <QrCode size={16} color={LAUNCH_PALETTE.ACCENT} />
+                        <QrCode size={16} color={PURPLE} />
                         <span
                           style={{
                             fontFamily: LAUNCH_FONTS.MONO,
@@ -1776,7 +1792,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         style={{
                           padding: '4px 10px',
                           borderRadius: 999,
-                          backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                          backgroundColor: PURPLE_DARK,
                           fontFamily: LAUNCH_FONTS.MONO,
                           fontSize: 11,
                           fontWeight: 900,
@@ -1790,15 +1806,15 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       </span>
                     </div>
 
-                    {/* Official PDF Download Action Button Pill */}
+                    {/* Official Pink PDF Download Action Button Pill */}
                     <div
                       style={{
                         width: '100%',
                         padding: '13px 20px',
                         borderRadius: 999,
-                        backgroundColor: LAUNCH_PALETTE.ACCENT,
-                        border: '1.5px solid rgba(248, 246, 238, 0.35)',
-                        boxShadow: '0 14px 28px rgba(201, 111, 79, 0.35)',
+                        backgroundColor: PINK_DARK,
+                        border: `1.5px solid ${PINK_BORDER}`,
+                        boxShadow: '0 14px 28px rgba(219, 39, 119, 0.38)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
