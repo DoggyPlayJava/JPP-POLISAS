@@ -4,6 +4,7 @@ import {
   Easing,
   Solid,
   interpolate,
+  interpolateColors,
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
@@ -19,9 +20,36 @@ const clampUnit = (value: number): number => {
   return Math.min(1, Math.max(0, value));
 };
 
-const EXPO_IN_OUT = Easing.inOut(Easing.exp);
 const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
 const CUBIC_IN_OUT = Easing.inOut(Easing.cubic);
+
+/**
+ * After Effects Speed-Graph S-Curve easing: zero boundary slope at t=0 and t=1
+ * with a crisp high-velocity whip peak centered cleanly at t=0.5.
+ */
+export const WHIP_S_CURVE = Easing.bezier(0.83, 0, 0.17, 1);
+
+const WHIP_VELOCITY_EPS = 0.005;
+
+const rawWhipSlope = (p: number): number => {
+  const lo = Math.max(0, p - WHIP_VELOCITY_EPS);
+  const hi = Math.min(1, p + WHIP_VELOCITY_EPS);
+  const span = hi - lo;
+  if (span <= 0) return 0;
+  return (WHIP_S_CURVE(hi) - WHIP_S_CURVE(lo)) / span;
+};
+
+const WHIP_PEAK_SLOPE = Math.max(1e-6, rawWhipSlope(0.5));
+
+/**
+ * Computes exact finite-difference normalized instantaneous speed of `WHIP_S_CURVE`
+ * in `[0, 1]`, peaking at `1` when `p = 0.5` and settling strictly to `0` at boundaries.
+ */
+export const computeWhipVelocity = (p: number): number => {
+  const clamped = clampUnit(p);
+  if (clamped <= 0.001 || clamped >= 0.999) return 0;
+  return clampUnit(rawWhipSlope(clamped) / WHIP_PEAK_SLOPE);
+};
 
 export type KineticCameraPushProps = {
   readonly direction?: 'from-right' | 'from-left';
@@ -40,6 +68,8 @@ const KineticCameraPushPresentation: React.FC<
   },
 }) => {
   const p = clampUnit(presentationProgress);
+  const s = WHIP_S_CURVE(p);
+  const v = computeWhipVelocity(p);
   const sign = direction === 'from-right' ? 1 : -1;
 
   const isEntering = presentationDirection === 'entering';
@@ -52,12 +82,11 @@ const KineticCameraPushPresentation: React.FC<
       if (isSettled) {
         return { width: '100%', height: '100%' };
       }
-      const translateX = interpolate(p, [0, 1], [100 * sign, 0]);
-      const shadowOpacity = interpolate(p, [0, 0.06, 0.88, 1], [0, 0.24, 0.24, 0], {
-        extrapolateLeft: 'clamp',
-        extrapolateRight: 'clamp',
-      });
-      const shadowX = direction === 'from-right' ? -36 : 36;
+      const translateX = interpolate(s, [0, 1], [100 * sign, 0]);
+      const shadowOpacity = clampUnit(v * 0.34);
+      const shadowX = (direction === 'from-right' ? -1 : 1) * (18 + 30 * v);
+      const shadowBlur = 32 + 64 * v;
+      const shadowSpread = 4 + 22 * v;
       return {
         width: '100%',
         height: '100%',
@@ -65,8 +94,8 @@ const KineticCameraPushPresentation: React.FC<
         willChange: 'transform',
         transform: `translate3d(${translateX.toFixed(3)}%, 0px, 0px)`,
         boxShadow:
-          shadowOpacity > 0.005
-            ? `${shadowX}px 0px 72px rgba(46, 58, 47, ${shadowOpacity.toFixed(3)})`
+          shadowOpacity > 0.002
+            ? `${shadowX.toFixed(1)}px 0px ${shadowBlur.toFixed(1)}px ${shadowSpread.toFixed(1)}px rgba(31, 39, 32, ${shadowOpacity.toFixed(3)})`
             : undefined,
       };
     }
@@ -84,14 +113,14 @@ const KineticCameraPushPresentation: React.FC<
       backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
       overflow: 'hidden',
     };
-  }, [direction, isEntering, isSettled, isUntouched, p, sign]);
+  }, [direction, isEntering, isSettled, isUntouched, s, sign, v]);
 
   const innerStyle = useMemo<React.CSSProperties>(() => {
     if (isEntering) {
       if (isSettled) {
         return { width: '100%', height: '100%' };
       }
-      const settleScale = interpolate(p, [0, 1], [1.05, 1]);
+      const settleScale = interpolate(s, [0, 1], [1.07, 1]);
       return {
         width: '100%',
         height: '100%',
@@ -106,9 +135,9 @@ const KineticCameraPushPresentation: React.FC<
       return { width: '100%', height: '100%' };
     }
 
-    const exitX = interpolate(p, [0, 1], [0, -22 * sign]);
-    const exitScale = interpolate(p, [0, 1], [1, 0.91]);
-    const exitRotateY = interpolate(p, [0, 1], [0, -6 * sign]);
+    const exitX = interpolate(s, [0, 1], [0, -26 * sign]);
+    const exitScale = interpolate(s, [0, 1], [1, 0.89]);
+    const exitRotateY = interpolate(s, [0, 1], [0, -7.5 * sign]);
     return {
       width: '100%',
       height: '100%',
@@ -117,17 +146,25 @@ const KineticCameraPushPresentation: React.FC<
       transformOrigin: '50% 50%',
       transform: `translate3d(${exitX.toFixed(3)}%, 0px, 0px) scale(${exitScale.toFixed(5)}) rotateY(${exitRotateY.toFixed(3)}deg)`,
     };
-  }, [isEntering, isSettled, isUntouched, p, sign]);
+  }, [isEntering, isSettled, isUntouched, s, sign]);
 
-  const edgeOpacity = isDecorVisible
-    ? interpolate(p, [0, 0.06, 0.88, 1], [0, 1, 1, 0], {
+  const edgeEnvelope = isDecorVisible
+    ? interpolate(p, [0, 0.06, 0.94, 1], [0, 1, 1, 0], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'clamp',
       })
     : 0;
+  const edgeOpacity = edgeEnvelope * (0.45 + 0.55 * v);
+  const streakVisible = isDecorVisible && v > 0.002;
+  const streakDirection = direction === 'from-right' ? 'to right' : 'to left';
+
+  const bandTerracottaWidth = 16 + 22 * v;
+  const bandSandWidth = 16 + 30 * v;
+  const bandForestWidth = 16 + 38 * v;
+
   const exitDimOpacity =
     !isEntering && !isUntouched
-      ? interpolate(p, [0, 1], [0, 0.28], {
+      ? interpolate(s, [0, 1], [0, 0.3], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
@@ -149,6 +186,51 @@ const KineticCameraPushPresentation: React.FC<
             pointerEvents: 'none',
           }}
         />
+      ) : null}
+
+      {streakVisible ? (
+        <>
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              ...(direction === 'from-right'
+                ? { left: Math.round(24 + 28 * v) }
+                : { right: Math.round(24 + 28 * v) }),
+              width: bandForestWidth,
+              opacity: clampUnit(v * 0.34),
+              background: `linear-gradient(${streakDirection}, rgba(46, 58, 47, 0.55) 0%, rgba(46, 58, 47, 0) 100%)`,
+              pointerEvents: 'none',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              ...(direction === 'from-right'
+                ? { left: Math.round(12 + 16 * v) }
+                : { right: Math.round(12 + 16 * v) }),
+              width: bandSandWidth,
+              opacity: clampUnit(v * 0.48),
+              background: `linear-gradient(${streakDirection}, rgba(217, 201, 178, 0.68) 0%, rgba(217, 201, 178, 0) 100%)`,
+              pointerEvents: 'none',
+            }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              ...(direction === 'from-right' ? { left: 6 } : { right: 6 }),
+              width: bandTerracottaWidth,
+              opacity: clampUnit(v * 0.62),
+              background: `linear-gradient(${streakDirection}, rgba(201, 111, 79, 0.72) 0%, rgba(201, 111, 79, 0) 100%)`,
+              pointerEvents: 'none',
+            }}
+          />
+        </>
       ) : null}
 
       {isDecorVisible && edgeOpacity > 0.005 ? (
@@ -174,9 +256,9 @@ const KineticCameraPushPresentation: React.FC<
 };
 
 /**
- * 3D architectural camera push: outgoing scene recedes in 1800px perspective
- * (`translateX`, `scale`, `rotateY`, subtle dim) while incoming glides across
- * with a crisp vertical terracotta/forest edge accent and elevation shadow.
+ * Speed-graph 3D architectural camera whip: outgoing scene recedes in 1800px perspective
+ * (`translateX`, `scale`, `rotateY`, dim) while incoming sweeps across `WHIP_S_CURVE`
+ * with velocity-coupled directional motion streaks and elevation shadow spread.
  */
 export const kineticCameraPush = (
   props: KineticCameraPushProps = {},
@@ -207,19 +289,24 @@ const EditorialSplitCurtainPresentation: React.FC<
   },
 }) => {
   const p = clampUnit(presentationProgress);
+  const s = WHIP_S_CURVE(p);
+  const v = computeWhipVelocity(p);
+  const sLead = WHIP_S_CURVE(clampUnit(p * 1.12));
+
   const isEntering = presentationDirection === 'entering';
   const isSettled = isEntering && p >= 0.9999;
   const isUntouched = !isEntering && p <= 0.0001;
   const isDecorVisible = isEntering && p > 0.0005 && p < 0.9995;
 
-  const half = interpolate(p, [0, 1], [50, 0]);
+  const half = interpolate(s, [0, 1], [50, 0]);
   const span = 50 - half;
+  const spanLead = 50 * sLead;
 
   const outerStyle = useMemo<React.CSSProperties>(() => {
     if (isEntering) {
       return isSettled
         ? { width: '100%', height: '100%' }
-        : { width: '100%', height: '100%', zIndex: 2 };
+        : { width: '100%', height: '100%', zIndex: 2, overflow: 'hidden' };
     }
     if (isUntouched) {
       return { width: '100%', height: '100%' };
@@ -250,7 +337,7 @@ const EditorialSplitCurtainPresentation: React.FC<
       if (isSettled) {
         return { width: '100%', height: '100%' };
       }
-      const scale = interpolate(p, [0, 1], [1.06, 1]);
+      const scale = interpolate(s, [0, 1], [1.07, 1]);
       return {
         width: '100%',
         height: '100%',
@@ -264,7 +351,7 @@ const EditorialSplitCurtainPresentation: React.FC<
       return { width: '100%', height: '100%' };
     }
 
-    const exitScale = interpolate(p, [0, 1], [1, 0.94]);
+    const exitScale = interpolate(s, [0, 1], [1, 0.93]);
     return {
       width: '100%',
       height: '100%',
@@ -272,17 +359,20 @@ const EditorialSplitCurtainPresentation: React.FC<
       transformOrigin: '50% 50%',
       transform: `scale(${exitScale.toFixed(5)})`,
     };
-  }, [isEntering, isSettled, isUntouched, p]);
+  }, [isEntering, isSettled, isUntouched, s]);
 
   const bladeOpacity = isDecorVisible
-    ? interpolate(p, [0, 0.08, 0.86, 1], [0, 1, 1, 0], {
+    ? interpolate(p, [0, 0.06, 0.9, 1], [0, 1, 1, 0], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'clamp',
       })
     : 0;
+  const echoOpacity = isDecorVisible ? clampUnit(v * 0.9) : 0;
+  const echoRibbonWidth = Math.round(12 + 16 * v);
+
   const exitDimOpacity =
     !isEntering && !isUntouched
-      ? interpolate(p, [0, 1], [0, 0.25], {
+      ? interpolate(s, [0, 1], [0, 0.28], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
@@ -308,6 +398,69 @@ const EditorialSplitCurtainPresentation: React.FC<
         />
       ) : null}
 
+      {isDecorVisible && echoOpacity > 0.005 ? (
+        <>
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: `${(50 - spanLead).toFixed(3)}%`,
+              width: echoRibbonWidth + 2,
+              transform: 'translate3d(-50%, 0px, 0px)',
+              display: 'flex',
+              opacity: echoOpacity,
+              pointerEvents: 'none',
+            }}
+          >
+            <div
+              style={{
+                width: 2,
+                height: '100%',
+                backgroundColor: LAUNCH_PALETTE.SECONDARY,
+              }}
+            />
+            <div
+              style={{
+                width: echoRibbonWidth,
+                height: '100%',
+                backgroundColor: LAUNCH_PALETTE.TERTIARY,
+                opacity: 0.78,
+              }}
+            />
+          </div>
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              left: `${(50 + spanLead).toFixed(3)}%`,
+              width: echoRibbonWidth + 2,
+              transform: 'translate3d(-50%, 0px, 0px)',
+              display: 'flex',
+              opacity: echoOpacity,
+              pointerEvents: 'none',
+            }}
+          >
+            <div
+              style={{
+                width: echoRibbonWidth,
+                height: '100%',
+                backgroundColor: LAUNCH_PALETTE.TERTIARY,
+                opacity: 0.78,
+              }}
+            />
+            <div
+              style={{
+                width: 2,
+                height: '100%',
+                backgroundColor: LAUNCH_PALETTE.SECONDARY,
+              }}
+            />
+          </div>
+        </>
+      ) : null}
+
       {isDecorVisible && bladeOpacity > 0.005 ? (
         <>
           <div
@@ -320,7 +473,7 @@ const EditorialSplitCurtainPresentation: React.FC<
               transform: 'translate3d(-50%, 0px, 0px)',
               display: 'flex',
               opacity: bladeOpacity,
-              boxShadow: '0 0 20px rgba(46, 58, 47, 0.24)',
+              boxShadow: `0 0 ${(16 + 32 * v).toFixed(1)}px rgba(46, 58, 47, ${(0.22 + 0.18 * v).toFixed(3)})`,
               pointerEvents: 'none',
             }}
           >
@@ -337,7 +490,7 @@ const EditorialSplitCurtainPresentation: React.FC<
               transform: 'translate3d(-50%, 0px, 0px)',
               display: 'flex',
               opacity: bladeOpacity,
-              boxShadow: '0 0 20px rgba(46, 58, 47, 0.24)',
+              boxShadow: `0 0 ${(16 + 32 * v).toFixed(1)}px rgba(46, 58, 47, ${(0.22 + 0.18 * v).toFixed(3)})`,
               pointerEvents: 'none',
             }}
           >
@@ -351,8 +504,8 @@ const EditorialSplitCurtainPresentation: React.FC<
 };
 
 /**
- * Center-outward editorial split curtain reveal with twin vertical hairline
- * accent blades tracking the expanding clip seam over a softly receding exit.
+ * Center-outward editorial split curtain reveal with twin primary blades tracking
+ * the expanding clip seam and velocity-coupled Warm Sand / Sage echo matte ribbons.
  */
 export const editorialSplitCurtain = (
   props: EditorialSplitCurtainProps = {},
@@ -362,6 +515,212 @@ export const editorialSplitCurtain = (
     props: {
       accentColor: props.accentColor ?? LAUNCH_PALETTE.ACCENT,
       secondaryColor: props.secondaryColor ?? LAUNCH_PALETTE.PRIMARY,
+    },
+  };
+};
+
+export type SwissLouversWipeProps = {
+  readonly slatCount?: number;
+  readonly angleDeg?: number;
+};
+
+const LOUVER_PALETTE = [
+  LAUNCH_PALETTE.ACCENT,
+  LAUNCH_PALETTE.TERTIARY,
+  LAUNCH_PALETTE.SECONDARY,
+  LAUNCH_PALETTE.PRIMARY,
+  LAUNCH_PALETTE.SURFACE_MUTED,
+] as const;
+
+const SwissLouversWipePresentation: React.FC<
+  TransitionPresentationComponentProps<SwissLouversWipeProps>
+> = ({
+  children,
+  presentationDirection,
+  presentationProgress,
+  passedProps: { slatCount = 5, angleDeg = 14 },
+}) => {
+  const { width, height } = useVideoConfig();
+  const safeWidth = Math.max(1, Number.isFinite(width) ? width : 1920);
+  const safeHeight = Math.max(1, Number.isFinite(height) ? height : 1080);
+  const safeSlatCount = Math.max(1, Math.min(12, Math.round(Number.isFinite(slatCount) ? slatCount : 5)));
+  const safeAngle = Number.isFinite(angleDeg) ? Math.min(45, Math.max(-45, angleDeg)) : 14;
+
+  const p = clampUnit(presentationProgress);
+  const s = WHIP_S_CURVE(p);
+  const v = computeWhipVelocity(p);
+
+  const isEntering = presentationDirection === 'entering';
+  const isSettled = isEntering && p >= 0.9999;
+  const isUntouched = !isEntering && p <= 0.0001;
+  const isDecorVisible = isEntering && p > 0.005 && p < 0.995;
+
+  const halfSkewPct =
+    0.5 * (safeHeight / safeWidth) * Math.tan((safeAngle * Math.PI) / 180) * 100;
+  const sweepMargin = Math.max(18, Math.ceil(Math.abs(halfSkewPct)) + 6);
+  const edgeCenter = interpolate(s, [0, 1], [-sweepMargin, 100 + sweepMargin]);
+  const topX = edgeCenter + halfSkewPct;
+  const bottomX = edgeCenter - halfSkewPct;
+  const leftAnchor = -(sweepMargin + Math.abs(halfSkewPct) + 6);
+
+  const outerStyle = useMemo<React.CSSProperties>(() => {
+    if (isEntering) {
+      return isSettled
+        ? { width: '100%', height: '100%' }
+        : { width: '100%', height: '100%', zIndex: 2, overflow: 'hidden' };
+    }
+    if (isUntouched) {
+      return { width: '100%', height: '100%' };
+    }
+    return {
+      width: '100%',
+      height: '100%',
+      zIndex: 1,
+      overflow: 'hidden',
+      backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+    };
+  }, [isEntering, isSettled, isUntouched]);
+
+  const clipStyle = useMemo<React.CSSProperties>(() => {
+    if (!isEntering || isSettled) {
+      return { width: '100%', height: '100%' };
+    }
+    if (p <= 0.0001) {
+      return {
+        width: '100%',
+        height: '100%',
+        clipPath: 'polygon(0% 0%, 0% 0%, 0% 100%, 0% 100%)',
+      };
+    }
+    return {
+      width: '100%',
+      height: '100%',
+      clipPath: `polygon(${leftAnchor.toFixed(2)}% 0%, ${topX.toFixed(3)}% 0%, ${bottomX.toFixed(3)}% 100%, ${leftAnchor.toFixed(2)}% 100%)`,
+    };
+  }, [bottomX, isEntering, isSettled, leftAnchor, p, topX]);
+
+  const innerStyle = useMemo<React.CSSProperties>(() => {
+    if (isEntering) {
+      if (isSettled) {
+        return { width: '100%', height: '100%' };
+      }
+      const scale = interpolate(s, [0, 1], [1.055, 1]);
+      const translateX = interpolate(s, [0, 1], [-2.5, 0]);
+      return {
+        width: '100%',
+        height: '100%',
+        willChange: 'transform',
+        transformOrigin: '50% 50%',
+        transform: `translate3d(${translateX.toFixed(3)}%, 0px, 0px) scale(${scale.toFixed(5)})`,
+      };
+    }
+
+    if (isUntouched) {
+      return { width: '100%', height: '100%' };
+    }
+
+    const exitX = interpolate(s, [0, 1], [0, 4]);
+    const exitScale = interpolate(s, [0, 1], [1, 0.94]);
+    return {
+      width: '100%',
+      height: '100%',
+      willChange: 'transform',
+      transformOrigin: '50% 50%',
+      transform: `translate3d(${exitX.toFixed(3)}%, 0px, 0px) scale(${exitScale.toFixed(5)})`,
+    };
+  }, [isEntering, isSettled, isUntouched, s]);
+
+  const exitDimOpacity =
+    !isEntering && !isUntouched
+      ? interpolate(s, [0, 1], [0, 0.26], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        })
+      : 0;
+
+  const bladeBoundaryFade = isDecorVisible
+    ? interpolate(p, [0.005, 0.06, 0.94, 0.995], [0, 1, 1, 0], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+      })
+    : 0;
+
+  const staggerStep = safeSlatCount > 1 ? Math.min(0.032, 0.45 / (safeSlatCount - 1)) : 0;
+  const bladeDenom = Math.max(0.1, 1 - (safeSlatCount - 1) * staggerStep);
+  const bladeWidthPx = 22 + 42 * v;
+
+  const blades = isDecorVisible && bladeBoundaryFade > 0.002
+    ? Array.from({ length: safeSlatCount }, (_, i) => {
+        const pBlade = clampUnit((p - i * staggerStep) / bladeDenom);
+        const sBlade = WHIP_S_CURVE(pBlade);
+        const vBlade = computeWhipVelocity(pBlade);
+        const bladeLeftPct = interpolate(sBlade, [0, 1], [-sweepMargin, 100 + sweepMargin]);
+        const bladeOpacity = bladeBoundaryFade * clampUnit(0.32 + 0.64 * Math.max(v, vBlade));
+        const bladeColor = LOUVER_PALETTE[i % LOUVER_PALETTE.length];
+        return {
+          key: i,
+          leftPct: bladeLeftPct,
+          opacity: bladeOpacity,
+          color: bladeColor,
+        };
+      })
+    : [];
+
+  return (
+    <AbsoluteFill showInTimeline={false} style={outerStyle}>
+      <AbsoluteFill showInTimeline={false} style={clipStyle}>
+        <AbsoluteFill showInTimeline={false} style={innerStyle}>
+          {children}
+        </AbsoluteFill>
+      </AbsoluteFill>
+
+      {!isEntering && exitDimOpacity > 0.001 ? (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+            opacity: exitDimOpacity,
+            pointerEvents: 'none',
+          }}
+        />
+      ) : null}
+
+      {blades.map((blade) => (
+        <div
+          key={blade.key}
+          style={{
+            position: 'absolute',
+            top: '-12%',
+            height: '124%',
+            left: `${blade.leftPct.toFixed(3)}%`,
+            width: bladeWidthPx,
+            backgroundColor: blade.color,
+            opacity: blade.opacity,
+            transformOrigin: '50% 50%',
+            willChange: 'transform, opacity',
+            transform: `translate3d(-50%, 0px, 0px) skewX(${(-safeAngle).toFixed(2)}deg)`,
+            boxShadow: '0 0 24px rgba(31, 39, 32, 0.22)',
+            pointerEvents: 'none',
+          }}
+        />
+      ))}
+    </AbsoluteFill>
+  );
+};
+
+/**
+ * Swiss architectural diagonal louver shutter wipe: 5 staggered skewed strips in
+ * Earthy Minimal tones glide across an angled polygon clip seam driven by `WHIP_S_CURVE`.
+ */
+export const swissLouversWipe = (
+  props: SwissLouversWipeProps = {},
+): TransitionPresentation<SwissLouversWipeProps> => {
+  return {
+    component: SwissLouversWipePresentation,
+    props: {
+      slatCount: props.slatCount ?? 5,
+      angleDeg: props.angleDeg ?? 14,
     },
   };
 };
@@ -379,10 +738,13 @@ const DepthLiftMatchPresentation: React.FC<
   presentationProgress,
   passedProps: {
     borderColor = LAUNCH_PALETTE.TERTIARY,
-    maxRadius = 48,
+    maxRadius = 52,
   },
 }) => {
   const p = clampUnit(presentationProgress);
+  const s = WHIP_S_CURVE(p);
+  const v = computeWhipVelocity(p);
+
   const isEntering = presentationDirection === 'entering';
   const isSettled = isEntering && p >= 0.9999;
   const isUntouched = !isEntering && p <= 0.0001;
@@ -392,7 +754,13 @@ const DepthLiftMatchPresentation: React.FC<
     if (isEntering) {
       return isSettled
         ? { width: '100%', height: '100%' }
-        : { width: '100%', height: '100%', zIndex: 2 };
+        : {
+            width: '100%',
+            height: '100%',
+            zIndex: 2,
+            perspective: '1800px',
+            perspectiveOrigin: '50% 50%',
+          };
     }
     if (isUntouched) {
       return { width: '100%', height: '100%' };
@@ -402,6 +770,8 @@ const DepthLiftMatchPresentation: React.FC<
       height: '100%',
       zIndex: 1,
       overflow: 'hidden',
+      perspective: '1800px',
+      perspectiveOrigin: '50% 50%',
       backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
     };
   }, [isEntering, isSettled, isUntouched]);
@@ -411,16 +781,18 @@ const DepthLiftMatchPresentation: React.FC<
       if (isSettled) {
         return { width: '100%', height: '100%' };
       }
-      const translateY = interpolate(p, [0, 1], [100, 0]);
-      const scale = interpolate(p, [0, 1], [0.96, 1]);
-      const radius = interpolate(p, [0, 0.85, 1], [maxRadius, maxRadius * 0.35, 0], {
+      const translateY = interpolate(s, [0, 1], [100, 0]);
+      const scale = interpolate(s, [0, 1], [0.95, 1]);
+      const rotateX = interpolate(s, [0, 1], [7, 0]);
+      const radius = interpolate(s, [0, 0.85, 1], [maxRadius, maxRadius * 0.35, 0], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'clamp',
       });
-      const shadowOpacity = interpolate(p, [0, 0.08, 0.88, 1], [0, 0.28, 0.28, 0], {
+      const shadowEnvelope = interpolate(p, [0, 0.08, 0.88, 1], [0, 0.22, 0.22, 0], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'clamp',
       });
+      const shadowOpacity = clampUnit(shadowEnvelope + v * 0.16);
 
       return {
         width: '100%',
@@ -428,11 +800,11 @@ const DepthLiftMatchPresentation: React.FC<
         overflow: 'hidden',
         transformOrigin: '50% 0%',
         willChange: 'transform',
-        transform: `translate3d(0px, ${translateY.toFixed(3)}%, 0px) scale(${scale.toFixed(5)})`,
+        transform: `translate3d(0px, ${translateY.toFixed(3)}%, 0px) scale(${scale.toFixed(5)}) rotateX(${rotateX.toFixed(3)}deg)`,
         borderRadius: radius > 0.1 ? `${radius.toFixed(2)}px` : undefined,
         boxShadow:
           shadowOpacity > 0.005
-            ? `0px -28px 68px rgba(31, 39, 32, ${shadowOpacity.toFixed(3)})`
+            ? `0px -28px ${(56 + 32 * v).toFixed(1)}px rgba(31, 39, 32, ${shadowOpacity.toFixed(3)})`
             : undefined,
       };
     }
@@ -441,16 +813,17 @@ const DepthLiftMatchPresentation: React.FC<
       return { width: '100%', height: '100%' };
     }
 
-    const exitY = interpolate(p, [0, 1], [0, -16]);
-    const exitScale = interpolate(p, [0, 1], [1, 0.93]);
+    const exitY = interpolate(s, [0, 1], [0, -18]);
+    const exitScale = interpolate(s, [0, 1], [1, 0.91]);
+    const exitRotateX = interpolate(s, [0, 1], [0, -5]);
     return {
       width: '100%',
       height: '100%',
       willChange: 'transform',
       transformOrigin: '50% 50%',
-      transform: `translate3d(0px, ${exitY.toFixed(3)}%, 0px) scale(${exitScale.toFixed(5)})`,
+      transform: `translate3d(0px, ${exitY.toFixed(3)}%, 0px) scale(${exitScale.toFixed(5)}) rotateX(${exitRotateX.toFixed(3)}deg)`,
     };
-  }, [isEntering, isSettled, isUntouched, maxRadius, p]);
+  }, [isEntering, isSettled, isUntouched, maxRadius, p, s, v]);
 
   const topEdgeOpacity = isDecorVisible
     ? interpolate(p, [0, 0.08, 0.86, 1], [0, 0.95, 0.85, 0], {
@@ -458,9 +831,11 @@ const DepthLiftMatchPresentation: React.FC<
         extrapolateRight: 'clamp',
       })
     : 0;
+  const topSheenOpacity = isDecorVisible ? clampUnit(v * 0.85) : 0;
+
   const exitDimOpacity =
     !isEntering && !isUntouched
-      ? interpolate(p, [0, 1], [0, 0.26], {
+      ? interpolate(s, [0, 1], [0, 0.28], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
@@ -471,6 +846,22 @@ const DepthLiftMatchPresentation: React.FC<
       <AbsoluteFill showInTimeline={false} style={cardStyle}>
         {children}
 
+        {topSheenOpacity > 0.002 ? (
+          <div
+            style={{
+              position: 'absolute',
+              top: 4,
+              left: 0,
+              right: 0,
+              height: 112,
+              opacity: topSheenOpacity,
+              background:
+                'linear-gradient(180deg, rgba(248, 246, 238, 0.44) 0%, rgba(217, 201, 178, 0.18) 42%, rgba(248, 246, 238, 0) 100%)',
+              pointerEvents: 'none',
+            }}
+          />
+        ) : null}
+
         {isDecorVisible && topEdgeOpacity > 0.005 ? (
           <div
             style={{
@@ -478,12 +869,16 @@ const DepthLiftMatchPresentation: React.FC<
               top: 0,
               left: 0,
               right: 0,
-              height: 2,
-              backgroundColor: borderColor,
+              height: 4,
+              display: 'flex',
+              flexDirection: 'column',
               opacity: topEdgeOpacity,
               pointerEvents: 'none',
             }}
-          />
+          >
+            <div style={{ height: 2, width: '100%', backgroundColor: LAUNCH_PALETTE.ACCENT }} />
+            <div style={{ height: 2, width: '100%', backgroundColor: borderColor }} />
+          </div>
         ) : null}
       </AbsoluteFill>
 
@@ -503,9 +898,9 @@ const DepthLiftMatchPresentation: React.FC<
 };
 
 /**
- * Physical architectural card rising cleanly from bottom (`translateY 100% -> 0%`,
- * `borderRadius 48px -> 0px`, `scale 0.96 -> 1`, warm sand `#D9C9B2` bevel)
- * while the outgoing frame glides gently upward and recedes.
+ * Physical architectural sheet rising cleanly in 1800px perspective (`translateY 100% -> 0%`,
+ * `scale 0.95 -> 1`, `rotateX 7deg -> 0deg`, `borderRadius 52px -> 0px`, double bevel +
+ * velocity-coupled upward light sheen) while the outgoing scene tilts and glides up.
  */
 export const depthLiftMatch = (
   props: DepthLiftMatchProps = {},
@@ -514,7 +909,7 @@ export const depthLiftMatch = (
     component: DepthLiftMatchPresentation,
     props: {
       borderColor: props.borderColor ?? LAUNCH_PALETTE.TERTIARY,
-      maxRadius: props.maxRadius ?? 48,
+      maxRadius: props.maxRadius ?? 52,
     },
   };
 };
@@ -540,14 +935,18 @@ const OrbitalIrisMatchPresentation: React.FC<
   const safeHeight = Math.max(1, Math.round(Number.isFinite(height) ? height : 1080));
 
   const p = clampUnit(presentationProgress);
+  const s = WHIP_S_CURVE(p);
+  const v = computeWhipVelocity(p);
+
   const isEntering = presentationDirection === 'entering';
   const isSettled = isEntering && p >= 0.9999;
   const isUntouched = !isEntering && p <= 0.0001;
   const isDecorVisible = isEntering && p > 0.0005 && p < 0.9995;
 
-  const radiusPercent = interpolate(p, [0, 1], [0, 82]);
+  const radiusPercent = interpolate(s, [0, 1], [0, 82]);
   const refLength = Math.hypot(safeWidth, safeHeight) / Math.SQRT2;
   const ringRadiusPx = (radiusPercent / 100) * refLength;
+  const ringRotationDeg = interpolate(s, [0, 1], [0, 68]);
 
   const ringOpacity = isDecorVisible
     ? interpolate(radiusPercent, [0, 4, 72, 82], [0, 0.95, 0.9, 0], {
@@ -590,7 +989,7 @@ const OrbitalIrisMatchPresentation: React.FC<
       if (isSettled) {
         return { width: '100%', height: '100%' };
       }
-      const scale = interpolate(p, [0, 1], [1.08, 1]);
+      const scale = interpolate(s, [0, 1], [1.09, 1]);
       return {
         width: '100%',
         height: '100%',
@@ -604,7 +1003,7 @@ const OrbitalIrisMatchPresentation: React.FC<
       return { width: '100%', height: '100%' };
     }
 
-    const exitScale = interpolate(p, [0, 1], [1, 0.96]);
+    const exitScale = interpolate(s, [0, 1], [1, 0.95]);
     return {
       width: '100%',
       height: '100%',
@@ -612,15 +1011,18 @@ const OrbitalIrisMatchPresentation: React.FC<
       transformOrigin: '50% 50%',
       transform: `scale(${exitScale.toFixed(5)})`,
     };
-  }, [isEntering, isSettled, isUntouched, p]);
+  }, [isEntering, isSettled, isUntouched, s]);
 
   const exitDimOpacity =
     !isEntering && !isUntouched
-      ? interpolate(p, [0, 1], [0, 0.22], {
+      ? interpolate(s, [0, 1], [0, 0.24], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
       : 0;
+
+  const cx = safeWidth / 2;
+  const cy = safeHeight / 2;
 
   return (
     <AbsoluteFill showInTimeline={false} style={outerStyle}>
@@ -654,23 +1056,35 @@ const OrbitalIrisMatchPresentation: React.FC<
             overflow: 'visible',
           }}
         >
+          {v > 0.005 ? (
+            <circle
+              cx={cx}
+              cy={cy}
+              r={ringRadiusPx + 28 + v * 16}
+              fill="none"
+              stroke={LAUNCH_PALETTE.SECONDARY}
+              strokeWidth={1.2}
+              opacity={ringOpacity * 0.42 * v}
+            />
+          ) : null}
           <circle
-            cx={safeWidth / 2}
-            cy={safeHeight / 2}
-            r={ringRadiusPx + 12}
+            cx={cx}
+            cy={cy}
+            r={ringRadiusPx + 14}
             fill="none"
             stroke={accentRingColor}
-            strokeWidth={1.2}
-            strokeDasharray="6 8"
-            opacity={ringOpacity * 0.45}
+            strokeWidth={1.4}
+            strokeDasharray="7 9"
+            transform={`rotate(${ringRotationDeg.toFixed(3)} ${cx} ${cy})`}
+            opacity={ringOpacity * 0.65}
           />
           <circle
-            cx={safeWidth / 2}
-            cy={safeHeight / 2}
+            cx={cx}
+            cy={cy}
             r={ringRadiusPx}
             fill="none"
             stroke={ringColor}
-            strokeWidth={2.5}
+            strokeWidth={2.5 + v * 1.5}
             opacity={ringOpacity}
           />
         </svg>
@@ -680,9 +1094,8 @@ const OrbitalIrisMatchPresentation: React.FC<
 };
 
 /**
- * Circular iris reveal (`clipPath: circle(0%..82% at 50% 50%)`) with inner
- * zoom settle (`scale 1.08 -> 1.0`) and a crisp SVG terracotta perimeter ring
- * that dissolves smoothly past 72% radius.
+ * Speed-graph circular iris reveal (`clipPath: circle(0%..82% at 50% 50%)`) with inner
+ * zoom settle (`scale 1.09 -> 1.0`) and triple concentric orbital SVG rings.
  */
 export const orbitalIrisMatch = (
   props: OrbitalIrisMatchProps = {},
@@ -715,7 +1128,7 @@ const SHUTTER_BLADE_BASE_STYLE: React.CSSProperties = {
 /**
  * 48-frame (0.8s @ 60fps) architectural shutter overlay featuring 3 staggered
  * diagonal blades (`#C96F4F`, `#6B7F5B`, `#2E3A2F`) sweeping across 1920x1080
- * with an expo in-out curve and a crisp masked chapter flash at peak cover.
+ * on `WHIP_S_CURVE` with a `3px` warm porcelain leading specular edge and masked chapter reveal.
  */
 export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = ({
   chapterCode = '03',
@@ -733,14 +1146,14 @@ export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = (
       return interpolate(u, [inStart, inEnd], [-100, 0], {
         extrapolateLeft: 'clamp',
         extrapolateRight: 'clamp',
-        easing: EXPO_IN_OUT,
+        easing: WHIP_S_CURVE,
       });
     }
     if (u < outStart) return 0;
     return interpolate(u, [outStart, outEnd], [0, 100], {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
-      easing: EXPO_IN_OUT,
+      easing: WHIP_S_CURVE,
     });
   };
 
@@ -748,6 +1161,17 @@ export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = (
   const terracottaX = bladeProgress(0, 13, 35, 47);
   const sageX = bladeProgress(1.5, 14.5, 33.5, 45.5);
   const forestX = bladeProgress(3, 16, 32, 44);
+
+  const forestSpecularIn = u < 24;
+  const forestSpecularOpacity = interpolate(
+    u,
+    [3, 5.5, 14, 16.5, 31.5, 34, 41.5, 44],
+    [0, 0.94, 0.94, 0, 0, 0.94, 0.94, 0],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    },
+  );
 
   // Typography masked flash strictly inside peak cover (frames 16..32)
   const labelVisible = u >= 15.5 && u <= 32.5;
@@ -802,7 +1226,22 @@ export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = (
           backgroundColor: LAUNCH_PALETTE.PRIMARY,
           transform: `translate3d(${forestX.toFixed(3)}%, 0px, 0px) skewX(-16deg)`,
         }}
-      />
+      >
+        {forestSpecularOpacity > 0.005 ? (
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              bottom: 0,
+              ...(forestSpecularIn ? { right: 0 } : { left: 0 }),
+              width: 3,
+              backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+              opacity: forestSpecularOpacity,
+              pointerEvents: 'none',
+            }}
+          />
+        ) : null}
+      </div>
 
       {labelVisible ? (
         <div
@@ -877,9 +1316,9 @@ export type WarmLightSweepOverlayProps = {
 };
 
 /**
- * 48-frame (0.8s @ 60fps) warm terracotta/porcelain light sweep overlay combining
- * GPU WebGL2 `lightLeak()` on `<Solid premountFor={fps}>` with an angled warm
- * sheen sweeping diagonally across the cut into dark forest scenes.
+ * 48-frame (0.8s @ 60fps) warm optical light-sweep bridge sealing the bright-to-dark
+ * scene cut with a full-bleed `1.0`-opaque chromatic veil across `[0.40, 0.60]`
+ * beneath GPU WebGL2 `lightLeak()` on `<Solid premountFor={fps}>` and a warm diagonal beam.
  */
 export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
   seed = 4,
@@ -900,6 +1339,36 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
     }),
   );
 
+  // Full-bleed optical veil holds solid 1.0 opacity through [0.40, 0.60] to eliminate corner hard-cut cliffs
+  let veilOpacity = 0;
+  if (progress > 0.08 && progress < 0.4) {
+    veilOpacity = interpolate(progress, [0.08, 0.4], [0, 1], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: WHIP_S_CURVE,
+    });
+  } else if (progress >= 0.4 && progress <= 0.6) {
+    veilOpacity = 1;
+  } else if (progress > 0.6 && progress < 0.92) {
+    veilOpacity = interpolate(progress, [0.6, 0.92], [1, 0], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: WHIP_S_CURVE,
+    });
+  }
+
+  const veilColor = interpolateColors(
+    progress,
+    [0.08, 0.23, 0.35, 0.66, 0.8],
+    [
+      LAUNCH_PALETTE.BACKGROUND,
+      LAUNCH_PALETTE.SURFACE_MUTED,
+      LAUNCH_PALETTE.TERTIARY,
+      LAUNCH_PALETTE.MUTED_OLIVE,
+      LAUNCH_PALETTE.PRIMARY,
+    ],
+  );
+
   const leakOpacity = interpolate(progress, [0, 0.14, 0.86, 1], [0, 0.92, 0.92, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -915,7 +1384,7 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  const warmBridgeOpacity = interpolate(progress, [0, 0.42, 0.52, 1], [0, 0.28, 0.28, 0], {
+  const warmBridgeOpacity = interpolate(progress, [0, 0.42, 0.52, 1], [0, 0.26, 0.26, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
@@ -925,10 +1394,24 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
       showInTimeline={false}
       style={{ overflow: 'hidden', pointerEvents: 'none' }}
     >
+      {veilOpacity > 0.001 ? (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            backgroundColor: veilColor,
+            opacity: veilOpacity,
+            pointerEvents: 'none',
+          }}
+        />
+      ) : null}
+
       <div
         style={{
           position: 'absolute',
           inset: 0,
+          zIndex: 1,
           opacity: warmBridgeOpacity,
           background:
             'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(201, 111, 79, 0.55) 0%, rgba(248, 246, 238, 0.28) 45%, rgba(46, 58, 47, 0) 100%)',
@@ -943,6 +1426,7 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
         style={{
           position: 'absolute',
           inset: 0,
+          zIndex: 2,
           width: '100%',
           height: '100%',
           opacity: leakOpacity,
@@ -965,6 +1449,7 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
           bottom: '-15%',
           left: '15%',
           width: '70%',
+          zIndex: 3,
           opacity: beamOpacity,
           willChange: 'transform, opacity',
           transform: `translate3d(${beamX.toFixed(3)}%, 0px, 0px) skewX(-18deg)`,

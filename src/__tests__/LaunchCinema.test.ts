@@ -20,8 +20,11 @@ import {
   probeVideoDimensions,
 } from '../../remotion/launch/lib/mediaProbe';
 import {
+  WHIP_S_CURVE,
+  computeWhipVelocity,
   kineticCameraPush,
   editorialSplitCurtain,
+  swissLouversWipe,
   depthLiftMatch,
   orbitalIrisMatch,
   EditorialShutterOverlay,
@@ -118,11 +121,35 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
 });
 
 describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
-  it('returns valid native TransitionPresentation objects for all 4 bespoke factories', () => {
+  it('verifies WHIP_S_CURVE boundary anchors and computeWhipVelocity bell profile', () => {
+    expect(WHIP_S_CURVE(0)).toBe(0);
+    expect(WHIP_S_CURVE(0.5)).toBeCloseTo(0.5, 4);
+    expect(WHIP_S_CURVE(1)).toBe(1);
+
+    expect(computeWhipVelocity(0)).toBe(0);
+    expect(computeWhipVelocity(0.001)).toBe(0);
+    expect(computeWhipVelocity(0.999)).toBe(0);
+    expect(computeWhipVelocity(1)).toBe(0);
+    expect(computeWhipVelocity(Number.NaN)).toBe(0);
+
+    const peakVelocity = computeWhipVelocity(0.5);
+    const entryBoundaryVelocity = computeWhipVelocity(0.03);
+    const exitBoundaryVelocity = computeWhipVelocity(0.97);
+
+    expect(peakVelocity).toBeCloseTo(1, 4);
+    expect(entryBoundaryVelocity).toBeGreaterThan(0);
+    expect(exitBoundaryVelocity).toBeGreaterThan(0);
+    expect(peakVelocity).toBeGreaterThanOrEqual(4 * entryBoundaryVelocity);
+    expect(peakVelocity).toBeGreaterThanOrEqual(4 * exitBoundaryVelocity);
+  });
+
+  it('returns valid native TransitionPresentation objects for all 5 bespoke factories', () => {
     const pushDefault = kineticCameraPush();
     const pushLeft = kineticCameraPush({ direction: 'from-left', accentColor: LAUNCH_PALETTE.SECONDARY });
     const curtainDefault = editorialSplitCurtain();
     const curtainCustom = editorialSplitCurtain({ accentColor: LAUNCH_PALETTE.ACCENT });
+    const louversDefault = swissLouversWipe();
+    const louversCustom = swissLouversWipe({ slatCount: 7, angleDeg: 18 });
     const liftDefault = depthLiftMatch();
     const irisDefault = orbitalIrisMatch();
     const irisCustom = orbitalIrisMatch({ ringColor: LAUNCH_PALETTE.ACCENT });
@@ -132,6 +159,8 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
       pushLeft,
       curtainDefault,
       curtainCustom,
+      louversDefault,
+      louversCustom,
       liftDefault,
       irisDefault,
       irisCustom,
@@ -148,6 +177,11 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
     expect(pushLeft.props.accentColor).toBe(LAUNCH_PALETTE.SECONDARY);
     expect(curtainDefault.props.accentColor).toBe(LAUNCH_PALETTE.ACCENT);
     expect(curtainCustom.props.accentColor).toBe(LAUNCH_PALETTE.ACCENT);
+    expect(louversDefault.props.slatCount).toBe(5);
+    expect(louversDefault.props.angleDeg).toBe(14);
+    expect(louversCustom.props.slatCount).toBe(7);
+    expect(louversCustom.props.angleDeg).toBe(18);
+    expect(liftDefault.props.maxRadius).toBe(52);
     expect(irisDefault.props.ringColor).toBe(LAUNCH_PALETTE.ACCENT);
     expect(irisCustom.props.ringColor).toBe(LAUNCH_PALETTE.ACCENT);
 
@@ -160,10 +194,14 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
       join(process.cwd(), 'remotion', 'launch', 'motion', 'transitions.tsx'),
       'utf8',
     );
-    expect(source).not.toMatch(/HtmlInCanvas/i);
+    expect(source).not.toMatch(/HtmlInCanvas|Math\.random/i);
     expect(source).not.toMatch(/blur-slide|zoom-in-out|film-burn/);
     expect(source).not.toMatch(/@keyframes|\banimate-|transition\s*:/);
     expect(source).toContain('premountFor={fps}');
+    expect(source).toContain('WHIP_S_CURVE');
+    expect(source).toContain('computeWhipVelocity');
+    expect(source).toContain('interpolateColors');
+    expect(source).toContain('swissLouversWipe');
     expect(source).toContain("from '@remotion/effects/light-leak'");
   });
 
