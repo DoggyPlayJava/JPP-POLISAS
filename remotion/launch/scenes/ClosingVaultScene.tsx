@@ -239,7 +239,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
   const bracketPulseScale = 1 + Math.sin(timeSec * 3.1) * 0.018;
   const bracketPulseOpacity = 0.78 + Math.sin(timeSec * 3.1) * 0.2;
 
-  // Flanking 3D Satellite Cards (+85px Z, tilted +/-17deg Y inward toward QR monolith)
+  // Flanking Symmetrical Upright Satellite Cards (0.00deg resting tilt aligned with QR monolith)
   const satStart = Math.round(1.25 * safeFps); // 75f
   const satSpring =
     frame >= satStart
@@ -256,8 +256,8 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
           extrapolateRight: 'clamp',
         })
       : 0;
-  const leftSatFloatY = Math.sin(timeSec * 1.35) * 4 * satSpring;
-  const rightSatFloatY = Math.cos(timeSec * 1.28 + 0.7) * 4 * satSpring;
+  const satRiseY = (1 - satSpring) * 28;
+  const satScale = 0.94 + 0.06 * satSpring;
 
   const stepBaseStart = satStart + Math.round(0.24 * safeFps);
   const stepStagger = Math.max(4, Math.round(0.18 * safeFps));
@@ -571,7 +571,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
           </Interactive.Div>
         </div>
 
-        {/* 3-Piece LED Spotlight Stage: Left Satellite (+17deg Y) + Center Orthogonal Hero QR (0.00deg, 340px) + Right Satellite (-17deg Y) */}
+        {/* 3-Piece Symmetrical Upright LED Spotlight Triad: Left Upright Card + Center 340px Hero QR (0.00deg) + Right Upright Card */}
         <div
           style={{
             position: 'absolute',
@@ -583,13 +583,11 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             gap: 44,
-            perspective: '1650px',
-            transformStyle: 'preserve-3d',
           }}
         >
-          {/* LEFT 3D SATELLITE CARD: 3 Langkah Mula + Status Pill */}
+          {/* LEFT UPRIGHT COMPANION CARD: 3 Langkah Mula + Status Pill */}
           <Interactive.Div
-            name="Left 3D Onboarding Satellite"
+            name="Left Upright Onboarding Card"
             premountFor={safeFps}
             style={{
               width: 422,
@@ -598,12 +596,12 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               backgroundColor: LAUNCH_PALETTE.CARD_BG,
               border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
               borderBottom: `6px solid ${LAUNCH_PALETTE.SECONDARY}`,
-              boxShadow: '0 32px 66px rgba(46, 58, 47, 0.16)',
+              boxShadow: '0 26px 56px rgba(46, 58, 47, 0.14)',
               display: 'flex',
               flexDirection: 'column',
               gap: 14,
               opacity: satOpacity,
-              transform: `translate3d(${((1 - satSpring) * -42).toFixed(2)}px, ${leftSatFloatY.toFixed(2)}px, ${(85 * satSpring).toFixed(2)}px) rotateY(17deg)`,
+              transform: `translate3d(0px, ${satRiseY.toFixed(2)}px, 0px) scale(${satScale.toFixed(4)})`,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -915,9 +913,9 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             </div>
           </Interactive.Div>
 
-          {/* RIGHT 3D SATELLITE CARD: 8-Module Spectrum Checklist + Live Student Proof */}
+          {/* RIGHT UPRIGHT COMPANION CARD: 8-Module Spectrum Checklist + Live Student Proof */}
           <Interactive.Div
-            name="Right 3D Modules Satellite"
+            name="Right Upright Modules Card"
             premountFor={safeFps}
             style={{
               width: 422,
@@ -926,12 +924,12 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
               border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
               borderBottom: `6px solid ${LAUNCH_PALETTE.ACCENT}`,
-              boxShadow: '0 32px 68px rgba(31, 39, 32, 0.24)',
+              boxShadow: '0 26px 56px rgba(31, 39, 32, 0.2)',
               display: 'flex',
               flexDirection: 'column',
               gap: 14,
               opacity: satOpacity,
-              transform: `translate3d(${((1 - satSpring) * 42).toFixed(2)}px, ${rightSatFloatY.toFixed(2)}px, ${(85 * satSpring).toFixed(2)}px) rotateY(-17deg)`,
+              transform: `translate3d(0px, ${satRiseY.toFixed(2)}px, 0px) scale(${satScale.toFixed(4)})`,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
