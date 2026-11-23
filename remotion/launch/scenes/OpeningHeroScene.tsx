@@ -584,7 +584,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
           >
             <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
               <EvolvingPath
-                d="M 24 23 L 780 23"
+                d="M 410 23 L 520 23"
                 width={1560}
                 height={46}
                 startFrame={0}
@@ -597,7 +597,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                 style={{ position: 'absolute', inset: 0 }}
               />
               <EvolvingPath
-                d="M 1536 23 L 780 23"
+                d="M 1150 23 L 1040 23"
                 width={1560}
                 height={46}
                 startFrame={0}

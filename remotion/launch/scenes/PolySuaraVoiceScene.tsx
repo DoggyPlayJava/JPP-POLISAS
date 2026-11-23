@@ -27,7 +27,6 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import {
-  EvolvingPath,
   GeometricSparkBurst,
   GhostCursor,
   type GhostCursorKeyframe,
@@ -251,12 +250,12 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
     easing: EXPO_OUT,
   });
   const pollCenterX =
-    interpolate(pollEnterProgress, [0, 1], [520, 0]) + interpolate(toShot3T, [0, 1], [0, -245]);
+    interpolate(pollEnterProgress, [0, 1], [520, 0]) + interpolate(toShot3T, [0, 1], [0, -345]);
   const pollCenterY = interpolate(toShot3T, [0, 1], [0, 8]);
   const pollCenterZ =
-    interpolate(pollEnterProgress, [0, 1], [-120, 62]) + interpolate(toShot3T, [0, 1], [0, -76]);
+    interpolate(pollEnterProgress, [0, 1], [-120, 42]) + interpolate(toShot3T, [0, 1], [0, -145]);
   const pollScale =
-    interpolate(pollEnterProgress, [0, 1], [0.84, 1]) * interpolate(toShot3T, [0, 1], [1, 0.85]);
+    interpolate(pollEnterProgress, [0, 1], [0.84, 1]) * interpolate(toShot3T, [0, 1], [1, 0.84]);
   const pollRotY = interpolate(toShot3T, [0, 1], [0, 4.5]);
   const pollOpacity = pollEnterProgress;
 
@@ -491,29 +490,6 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
               zIndex: 8,
             }}
           >
-            {/* Rose Vector Bridge Arc linking Shot 1 -> Shot 2 Poll */}
-            {frame >= O + 258 && toShot3T < 0.7 ? (
-              <EvolvingPath
-                d="M 520 390 Q 760 220 960 360"
-                width={1920}
-                height={764}
-                startFrame={O + 260}
-                durationFrames={44}
-                stroke={ROSE}
-                strokeWidth={4.5}
-                trackStroke="rgba(244, 63, 94, 0.16)"
-                headDotColor="#FFFFFF"
-                headDotRadius={7}
-                hideDotWhenComplete
-                style={{
-                  position: 'absolute',
-                  inset: 0,
-                  opacity: 1 - toShot3T,
-                  pointerEvents: 'none',
-                }}
-              />
-            ) : null}
-
             {/* SHOT 1 HERO (and Shot 2 Recessed Context): Live Typing -> Name-Scramble Anonymizer */}
             {stackGroupOpacity > 0.01 ? (
               <div
@@ -1245,7 +1221,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
               <div
                 style={{
                   position: 'absolute',
-                  right: 132,
+                  right: 96,
                   top: 4,
                   width: 454,
                   height: 672,
@@ -1256,7 +1232,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                   padding: 16,
                   opacity: phoneEnterProgress,
                   transformStyle: 'preserve-3d',
-                  transform: `translate3d(0px, ${phoneRiseY.toFixed(1)}px, 90px) rotateY(${phoneRotY.toFixed(2)}deg) rotateX(4deg)`,
+                  transform: `translate3d(0px, ${phoneRiseY.toFixed(1)}px, 165px) rotateY(${phoneRotY.toFixed(2)}deg) rotateX(4deg)`,
                   display: 'flex',
                   flexDirection: 'column',
                 }}

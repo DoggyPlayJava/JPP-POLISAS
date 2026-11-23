@@ -1,9 +1,11 @@
 import React from 'react';
 import {
+  CanvasImage,
   Easing,
   Interactive,
   interpolate,
   spring,
+  staticFile,
   useCurrentFrame,
   useVideoConfig,
   type InteractivitySchema,
@@ -160,79 +162,52 @@ const PROPERTY_CARDS = [
 
 const FILTER_PILLS = ['SEMUA', 'LELAKI', 'PEREMPUAN'] as const;
 
-const renderPropertyArt = (id: string) => {
-  if (id === 'taman-pertama') {
-    return (
-      <svg
-        width="100%"
-        height="112"
-        viewBox="0 0 280 112"
-        preserveAspectRatio="xMidYMid slice"
-        style={{ display: 'block' }}
-      >
-        <defs>
-          <linearGradient id="skyPertama" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#CCFBF1" />
-            <stop offset="100%" stopColor="#A5F3FC" />
-          </linearGradient>
-          <linearGradient id="roofPertama" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stopColor="#0D9488" />
-            <stop offset="100%" stopColor="#0B2420" />
-          </linearGradient>
-        </defs>
-        <rect width="280" height="112" fill="url(#skyPertama)" />
-        {/* Warm Morning Sun Halo & Distant Clouds */}
-        <circle cx="236" cy="24" r="18" fill="#FEF08A" opacity="0.85" />
-        <ellipse cx="64" cy="24" rx="26" ry="8" fill="#FFFFFF" opacity="0.7" />
-        {/* Emerald Garden Hill & Walkway */}
-        <path d="M 0 88 Q 140 72 280 86 L 280 112 L 0 112 Z" fill="#10B981" opacity="0.32" />
-        <polygon points="122,112 152,112 146,84 128,84" fill="#EBF7F4" />
-        {/* Stylish Two-Tone Terrace House Exterior */}
-        <rect x="66" y="48" width="144" height="44" rx="4" fill="#FFFFFF" stroke="#0B2420" strokeWidth="1.5" />
-        <rect x="148" y="48" width="62" height="44" fill="#EBF7F4" />
-        <polygon points="54,50 138,18 222,50" fill="url(#roofPertama)" />
-        {/* Car Porch Awning */}
-        <polygon points="56,66 112,56 116,66 54,72" fill="#0891B2" />
-        {/* Glowing Windows & Oak Front Door */}
-        <rect x="128" y="64" width="18" height="28" rx="2" fill="#0F766E" />
-        <circle cx="142" cy="79" r="1.8" fill="#FDE68A" />
-        <rect x="78" y="68" width="26" height="16" rx="2" fill="#ECFEFF" stroke="#0891B2" strokeWidth="1.5" />
-        <rect x="164" y="58" width="32" height="18" rx="2" fill="#ECFEFF" stroke="#0D9488" strokeWidth="1.5" />
-        <line x1="180" y1="58" x2="180" y2="76" stroke="#0D9488" strokeWidth="1.2" />
-        {/* Foliage Bushes */}
-        <circle cx="52" cy="88" r="11" fill="#059669" />
-        <circle cx="222" cy="86" r="13" fill="#059669" />
-      </svg>
-    );
-  }
+const POLYRENT_PHOTO_SRC: Record<string, string> = {
+  'taman-pertama': staticFile('launch-photos/polyrent/taman-pertama.jpg'),
+  'semambu-baru': staticFile('launch-photos/polyrent/semambu-baru.jpg'),
+};
+
+const renderPropertyArt = (id: string, frame: number, fps: number) => {
+  const photoSrc = POLYRENT_PHOTO_SRC[id] ?? POLYRENT_PHOTO_SRC['taman-pertama'];
+  const kenBurnsProgress = interpolate(frame, [O, O + 280], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+  const kenBurnsScale = 1.02 + kenBurnsProgress * 0.05;
 
   return (
-    <svg
-      width="100%"
-      height="112"
-      viewBox="0 0 280 112"
-      preserveAspectRatio="xMidYMid slice"
-      style={{ display: 'block' }}
+    <div
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: 112,
+        overflow: 'hidden',
+        backgroundColor: OBSIDIAN,
+      }}
     >
-      <defs>
-        <linearGradient id="skyBaru" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#E0F2FE" />
-          <stop offset="100%" stopColor="#FEF3C7" />
-        </linearGradient>
-      </defs>
-      <rect width="280" height="112" fill="url(#skyBaru)" />
-      <path d="M 0 88 Q 140 74 280 88 L 280 112 L 0 112 Z" fill="#0D9488" opacity="0.22" />
-      {/* Double-Storey Corner Lot Illustration */}
-      <rect x="72" y="34" width="136" height="58" rx="4" fill="#FFFFFF" stroke="#0B2420" strokeWidth="1.4" />
-      <polygon points="62,36 140,14 218,36" fill="#0891B2" />
-      <rect x="86" y="42" width="28" height="18" rx="2" fill="#E0F2FE" stroke="#0891B2" strokeWidth="1.3" />
-      <rect x="126" y="42" width="28" height="18" rx="2" fill="#E0F2FE" stroke="#0891B2" strokeWidth="1.3" />
-      <rect x="166" y="42" width="28" height="18" rx="2" fill="#FEF3C7" stroke="#D97706" strokeWidth="1.3" />
-      <rect x="128" y="68" width="22" height="24" rx="2" fill="#0B2420" />
-      <rect x="86" y="70" width="26" height="14" rx="2" fill="#ECFEFF" stroke="#0891B2" strokeWidth="1.3" />
-      <circle cx="58" cy="86" r="10" fill="#10B981" />
-      <circle cx="224" cy="86" r="11" fill="#059669" />
-    </svg>
+      <CanvasImage
+        name={`polyrent-photo-${id}`}
+        src={photoSrc}
+        premountFor={fps}
+        style={{
+          width: '100%',
+          height: '100%',
+          objectFit: 'cover',
+          display: 'block',
+          transform: `scale(${kenBurnsScale.toFixed(4)})`,
+        }}
+      />
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'linear-gradient(180deg, rgba(6, 23, 20, 0.24) 0%, rgba(6, 23, 20, 0) 48%, rgba(6, 23, 20, 0.34) 100%)',
+          pointerEvents: 'none',
+        }}
+      />
+    </div>
   );
 };
 
@@ -770,7 +745,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                           }}
                         >
                           <div style={{ position: 'relative' }}>
-                            {renderPropertyArt(card.id)}
+                            {renderPropertyArt(card.id, frame, safeFps)}
                             {card.dealBadge ? (
                               <span
                                 style={{
@@ -1156,19 +1131,23 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
 
                   {/* Residential Connecting Access Roads + Laluan Beserah Spur */}
                   <path
-                    d="M 392 268 L 930 268 M 392 126 L 620 126 M 676 126 L 676 410"
+                    d="M 392 268 L 885 268 M 392 126 L 676 126 M 676 126 L 676 410"
                     fill="none"
                     stroke="#061714"
                     strokeWidth={24}
                     strokeLinecap="round"
                   />
                   <path
-                    d="M 392 268 L 930 268 M 392 126 L 620 126"
+                    d="M 392 268 L 885 268 M 392 126 L 676 126"
                     fill="none"
                     stroke="rgba(165, 243, 252, 0.25)"
                     strokeWidth={1.5}
                     strokeDasharray="8 8"
                   />
+
+                  {/* Portal Walking Start & Taman Pertama Arrival Anchor Nodes */}
+                  <circle cx={304} cy={268} r={8.5} fill="rgba(16, 185, 129, 0.28)" stroke="#10B981" strokeWidth={2.5} />
+                  <circle cx={498} cy={268} r={8.5} fill="rgba(16, 185, 129, 0.28)" stroke="#10B981" strokeWidth={2.5} />
 
                   {/* Deterministic Highway Traffic Pulses along Jalan Semambu */}
                   <circle cx={392} cy={40 + trafficDotA * 440} r={4.5} fill="#5EEAD4" opacity={0.85} />
@@ -1249,7 +1228,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
 
                 {/* Animated Emerald Walking Arc across Jalan Semambu -> Taman Pertama Semambu */}
                 <EvolvingPath
-                  d="M 220 298 L 392 268 L 580 268"
+                  d="M 304 268 L 392 268 L 498 268"
                   width={980}
                   height={690}
                   startFrame={routeDrawStart}

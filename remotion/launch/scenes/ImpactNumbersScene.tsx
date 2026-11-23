@@ -15,6 +15,7 @@ import { CameraStage } from '../motion/CameraStage';
 import { KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath } from '../motion/MotionActors';
 import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
+import { SpatialFloorGrid } from '../ui/KineticCard';
 
 type ImpactNumbersProps = {
   readonly clubsCount: number;
@@ -259,6 +260,36 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
     },
   ];
 
+  const amphitheaterByCode: Record<string, { readonly ry: number; readonly z: number }> = {
+    '01 · KOMUNITI': { ry: 11, z: 24 },
+    '02 · KELAB': { ry: 4, z: 56 },
+    '03 · NIAGA': { ry: -4, z: 56 },
+    '04 · ACARA': { ry: -11, z: 24 },
+  };
+
+  const liveActivityPills = [
+    {
+      actor: 'Aiman',
+      detail: '+30 Merit AJK Robosas',
+      dotColor: LAUNCH_MODULE_THEMES.kelab.primary,
+      borderColor: 'rgba(59, 130, 246, 0.42)',
+    },
+    {
+      actor: 'Siti',
+      detail: 'Pesanan #344 JPP Pay Siap',
+      dotColor: LAUNCH_MODULE_THEMES.polymart.primary,
+      borderColor: 'rgba(245, 158, 11, 0.42)',
+    },
+    {
+      actor: '4 Sekawan',
+      detail: 'Sewa Semambu RM170/bln',
+      dotColor: LAUNCH_MODULE_THEMES.polyrent.primary,
+      borderColor: 'rgba(99, 102, 241, 0.42)',
+    },
+  ] as const;
+
+  const activityPulseStart = Math.round(3.35 * safeFps);
+
   return (
     <>
       <EditorialBackdrop dark ambientTint={LAUNCH_MODULE_THEMES.impact.tint} />
@@ -280,11 +311,19 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
         exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
+        <SpatialFloorGrid
+          dark
+          accentColor={LAUNCH_PALETTE.ACCENT}
+          secondaryColor={LAUNCH_MODULE_THEMES.kelab.primary}
+          gridOpacity={0.22}
+          scrollSpeed={14}
+        />
+
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            padding: '74px 88px 72px',
+            padding: '64px 88px 60px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -384,6 +423,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
               gridTemplateColumns: 'repeat(4, 1fr)',
               gap: 24,
               flexShrink: 0,
+              perspective: '1650px',
+              transformStyle: 'preserve-3d',
             }}
           >
             {metrics.map((m, idx) => {
@@ -442,8 +483,9 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                     alignItems: 'center',
                     textAlign: 'center',
                     opacity: cardOpacity,
+                    transformStyle: 'preserve-3d',
                     willChange: 'transform, opacity',
-                    transform: `translate3d(0px, ${cardTranslateY.toFixed(2)}px, 0px) scale(${cardScale.toFixed(4)})`,
+                    transform: `translate3d(0px, ${cardTranslateY.toFixed(2)}px, ${(amphitheaterByCode[m.code]?.z ?? 32)}px) rotateY(${(amphitheaterByCode[m.code]?.ry ?? 0)}deg) scale(${cardScale.toFixed(4)})`,
                   }}
                 >
                   {/* Card Top Meta Row */}
@@ -474,7 +516,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                     </span>
                   </div>
 
-                  {/* Live @remotion/shapes <Pie> Progress Ring around Icon Badge */}
+                  {/* Live @remotion/shapes <Pie> Progress Ring around Icon Badge (Extruded forward in Z) */}
                   <div
                     style={{
                       position: 'relative',
@@ -484,6 +526,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      transformStyle: 'preserve-3d',
+                      transform: 'translateZ(26px)',
                     }}
                   >
                     <Circle
@@ -532,6 +576,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                         alignItems: 'center',
                         justifyContent: 'center',
                         boxShadow: 'inset 0 0 18px rgba(6, 23, 20, 0.45)',
+                        transform: 'translateZ(14px)',
                       }}
                     >
                       {renderMetricIcon(m.iconKind, LAUNCH_PALETTE.BACKGROUND)}
@@ -800,89 +845,187 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
               </div>
             </Interactive.Div>
 
-            {/* Right Half: Beat 3 Signature Teal Student Proof Pill Lifting with Diagonal Sheen Sweep */}
-            <Interactive.Div
-              name="Student Proof Action Pill"
-              premountFor={safeFps}
+            {/* Right Half: 3-Pill Live Student Activity Pulse + Beat 3 Signature Teal Student Proof Pill */}
+            <div
               style={{
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: beat3Opacity,
-                visibility: beat3Opacity <= 0.001 ? 'hidden' : 'visible',
-                willChange: 'transform, opacity',
-                transform: `translate3d(0px, ${beat3TranslateY.toFixed(2)}px, 0px) scale(${beat3Scale.toFixed(4)})`,
+                flexDirection: 'column',
+                gap: 12,
+                width: '100%',
                 flexShrink: 0,
               }}
             >
               <div
                 style={{
-                  position: 'relative',
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: 10,
                   width: '100%',
-                  boxSizing: 'border-box',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 12,
-                  padding: '22px 24px',
-                  borderRadius: 999,
-                  backgroundColor: LAUNCH_PALETTE.SECONDARY,
-                  border: `1.5px solid ${LAUNCH_PALETTE.ACCENT}`,
-                  boxShadow: '0 22px 48px rgba(6, 23, 20, 0.36)',
-                  overflow: 'hidden',
                 }}
               >
-                {sheenActive ? (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '-50%',
-                      left: 0,
-                      width: 170,
-                      height: '200%',
-                      background:
-                        'linear-gradient(90deg, rgba(246, 251, 249, 0) 0%, rgba(246, 251, 249, 0.42) 50%, rgba(246, 251, 249, 0) 100%)',
-                      transform: `translate3d(${sheenX.toFixed(2)}px, 0px, 0px) rotate(22deg)`,
-                      pointerEvents: 'none',
-                      zIndex: 2,
-                    }}
-                  />
-                ) : null}
+                {liveActivityPills.map((pill, pillIdx) => {
+                  const pillStartF = activityPulseStart + pillIdx * Math.max(4, Math.round(0.16 * safeFps));
+                  const pillElapsed = frame - pillStartF;
+                  const pillSpr =
+                    pillElapsed >= 0
+                      ? spring({
+                          frame: pillElapsed,
+                          fps: safeFps,
+                          config: { damping: 22, stiffness: 175, mass: 0.95 },
+                        })
+                      : 0;
+                  const pillOp =
+                    pillElapsed >= 0
+                      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.2 * safeFps))], [0, 1], {
+                          extrapolateLeft: 'clamp',
+                          extrapolateRight: 'clamp',
+                        })
+                      : 0;
+                  const pillPulse = 0.85 + Math.sin(timeSec * 4.4 + pillIdx * 1.4) * 0.15;
 
-                <span
+                  return (
+                    <div
+                      key={pill.actor}
+                      style={{
+                        backgroundColor: 'rgba(11, 36, 32, 0.88)',
+                        border: `1.5px solid ${pill.borderColor}`,
+                        borderRadius: 16,
+                        padding: '10px 12px',
+                        boxShadow: '0 12px 26px rgba(6, 23, 20, 0.3)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 4,
+                        opacity: pillOp,
+                        visibility: pillOp <= 0.001 ? 'hidden' : 'visible',
+                        transform: `translate3d(0px, ${((1 - pillSpr) * 16).toFixed(2)}px, 0px) scale(${(0.94 + 0.06 * pillSpr).toFixed(4)})`,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 10.5,
+                          fontWeight: 900,
+                          letterSpacing: '0.1em',
+                          color: LAUNCH_PALETTE.TERTIARY,
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        <span
+                          style={{
+                            width: 7,
+                            height: 7,
+                            borderRadius: 999,
+                            backgroundColor: pill.dotColor,
+                            transform: `scale(${pillPulse.toFixed(3)})`,
+                            flexShrink: 0,
+                          }}
+                        />
+                        <span>{pill.actor}</span>
+                      </div>
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.DISPLAY,
+                          fontSize: 13,
+                          fontWeight: 800,
+                          color: LAUNCH_PALETTE.BACKGROUND,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {pill.detail}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <Interactive.Div
+                name="Student Proof Action Pill"
+                premountFor={safeFps}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: beat3Opacity,
+                  visibility: beat3Opacity <= 0.001 ? 'hidden' : 'visible',
+                  willChange: 'transform, opacity',
+                  transform: `translate3d(0px, ${beat3TranslateY.toFixed(2)}px, 0px) scale(${beat3Scale.toFixed(4)})`,
+                  flexShrink: 0,
+                }}
+              >
+                <div
                   style={{
                     position: 'relative',
-                    zIndex: 1,
-                    width: 30,
-                    height: 30,
-                    borderRadius: 999,
-                    backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                    width: '100%',
+                    boxSizing: 'border-box',
                     display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    flexShrink: 0,
+                    gap: 12,
+                    padding: '17px 22px',
+                    borderRadius: 999,
+                    backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                    border: `1.5px solid ${LAUNCH_PALETTE.ACCENT}`,
+                    boxShadow: '0 22px 48px rgba(6, 23, 20, 0.36)',
+                    overflow: 'hidden',
                   }}
                 >
-                  <TrendingUp size={16} color={LAUNCH_MODULE_THEMES.polymaps.primary} strokeWidth={2.4} />
-                </span>
+                  {sheenActive ? (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '-50%',
+                        left: 0,
+                        width: 170,
+                        height: '200%',
+                        background:
+                          'linear-gradient(90deg, rgba(246, 251, 249, 0) 0%, rgba(246, 251, 249, 0.42) 50%, rgba(246, 251, 249, 0) 100%)',
+                        transform: `translate3d(${sheenX.toFixed(2)}px, 0px, 0px) rotate(22deg)`,
+                        pointerEvents: 'none',
+                        zIndex: 2,
+                      }}
+                    />
+                  ) : null}
 
-                <span
-                  style={{
-                    position: 'relative',
-                    zIndex: 1,
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 14.5,
-                    fontWeight: 800,
-                    letterSpacing: '0.03em',
-                    color: LAUNCH_PALETTE.CARD_BG,
-                    fontVariantNumeric: 'tabular-nums',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {liveOrders.toLocaleString('en-US')}+ PESANAN &amp; ADUAN PELAJAR DISELESAIKAN • SERTAI SEKARANG
-                </span>
-              </div>
-            </Interactive.Div>
+                  <span
+                    style={{
+                      position: 'relative',
+                      zIndex: 1,
+                      width: 30,
+                      height: 30,
+                      borderRadius: 999,
+                      backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <TrendingUp size={16} color={LAUNCH_MODULE_THEMES.polymaps.primary} strokeWidth={2.4} />
+                  </span>
+
+                  <span
+                    style={{
+                      position: 'relative',
+                      zIndex: 1,
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 14.5,
+                      fontWeight: 800,
+                      letterSpacing: '0.03em',
+                      color: LAUNCH_PALETTE.CARD_BG,
+                      fontVariantNumeric: 'tabular-nums',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {liveOrders.toLocaleString('en-US')}+ PESANAN &amp; ADUAN PELAJAR DISELESAIKAN • SERTAI SEKARANG
+                  </span>
+                </div>
+              </Interactive.Div>
+            </div>
           </div>
 
           {/* Beat 2: Seamless Frame-Driven Infinite Kinetic Ticker Strip */}

@@ -237,9 +237,9 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
   const underlineStart = Math.round(1.3 * safeFps);
   const underlineDuration = Math.max(12, Math.round(0.76 * safeFps));
 
-  // Hero QR Monolith: Dramatic 3D Rise -> STRICT 0.00deg Orthogonal Lock (2.40s..17.00s)
+  // Hero QR Monolith: Dramatic 3D Rise -> STRICT 0.00deg Orthogonal Lock (1.60s..17.00s)
   const qrEntryStart = Math.round(0.75 * safeFps); // 45f
-  const qrLockFrame = Math.round(2.4 * safeFps); // 144f -> 14.6s pure 0.00deg lock (covers f_5550!)
+  const qrLockFrame = Math.round(1.6 * safeFps); // 96f -> 15.4s pure 0.00deg lock (covers f_5550!)
   const qrOpacity = interpolate(
     frame,
     [qrEntryStart, qrEntryStart + Math.max(6, Math.round(0.3 * safeFps))],
@@ -289,9 +289,11 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
     extrapolateRight: 'clamp',
   });
 
-  // 3D Floor Radar Waves
+  // 3D Floor Radar Waves & Dual-Helix Comet Rotation
   const radarStart = Math.round(1.0 * safeFps);
   const radarPeriod = Math.max(36, Math.round(2.8 * safeFps));
+  const shockPeriod = Math.max(48, Math.round(3.6 * safeFps));
+  const cometRotDeg = -(timeSec * 34) % 360;
   const liveDotScale = 0.84 + Math.sin(timeSec * 4.6) * 0.16;
 
   return (
@@ -417,6 +419,44 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                 />
               );
             })}
+
+            {/* 2 Periodic Aurora Floor Shockwave Rings */}
+            {[0, 1].map((shockIdx) => {
+              const shockOffset = shockIdx === 0 ? 0 : Math.round(shockPeriod * 0.5);
+              const shockElapsed = frame - radarStart - shockOffset;
+              if (shockElapsed < 0) return null;
+              const shockT = (shockElapsed % shockPeriod) / shockPeriod;
+              const shockScale = interpolate(shockT, [0, 1], [0.84, 2.45], {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+                easing: RADAR_EASE,
+              });
+              const shockOpacity =
+                interpolate(shockT, [0, 0.12, 0.78, 1], [0, 0.64, 0.18, 0], {
+                  extrapolateLeft: 'clamp',
+                  extrapolateRight: 'clamp',
+                }) * qrOpacity;
+
+              return (
+                <Circle
+                  key={`aurora-shockwave-${shockIdx}`}
+                  radius={220}
+                  fill="none"
+                  stroke={shockIdx === 0 ? '#5EEAD4' : EMERALD}
+                  strokeWidth={4.5}
+                  vectorEffect="non-scaling-stroke"
+                  premountFor={safeFps}
+                  showInTimeline={false}
+                  style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    opacity: shockOpacity,
+                    transform: `translate(-50%, -50%) scale(${shockScale.toFixed(4)})`,
+                  }}
+                />
+              );
+            })}
           </div>
 
           {CORNER_BRACKETS.map((bracket) => (
@@ -461,7 +501,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
         </div>
       </CameraStage>
 
-      {/* LAYER B: Orbiting 8-Module 3D Constellation Halo (zIndex 2 — cleanly behind foreground QR Monolith!) */}
+      {/* LAYER B: Dual-Helix 3D Comet Spiral + Widened 8-Module Constellation Halo (zIndex 2 — cleanly behind QR Monolith) */}
       {orbitOpacity > 0.01 ? (
         <div
           aria-hidden
@@ -475,13 +515,97 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             opacity: orbitOpacity,
           }}
         >
+          {/* Inner Counter-Rotating 4-Ribbon Comet-Tail SVG Ring */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: 605,
+              width: 1520,
+              height: 1520,
+              transform: 'translate(-50%, -50%) translateZ(-40px) rotateX(58deg)',
+              transformStyle: 'preserve-3d',
+              pointerEvents: 'none',
+            }}
+          >
+            <svg width={1520} height={1520} viewBox="0 0 1520 1520" style={{ overflow: 'visible' }}>
+              <g transform={`rotate(${cometRotDeg.toFixed(2)} 760 760)`}>
+                {[
+                  { r: 495, startDeg: 18, spanDeg: 112, color: '#14B8A6' },
+                  { r: 545, startDeg: 108, spanDeg: 118, color: EMERALD },
+                  { r: 598, startDeg: 198, spanDeg: 108, color: ROYAL_BLUE },
+                  { r: 648, startDeg: 288, spanDeg: 115, color: LAUNCH_MODULE_THEMES.polymart.primary },
+                ].map((ribbon, rIdx) => {
+                  const rad0 = (ribbon.startDeg * Math.PI) / 180;
+                  const rad1 = ((ribbon.startDeg + ribbon.spanDeg) * Math.PI) / 180;
+                  const x0 = 760 + Math.cos(rad0) * ribbon.r;
+                  const y0 = 760 + Math.sin(rad0) * ribbon.r;
+                  const x1 = 760 + Math.cos(rad1) * ribbon.r;
+                  const y1 = 760 + Math.sin(rad1) * ribbon.r;
+                  const d = `M ${x0.toFixed(1)} ${y0.toFixed(1)} A ${ribbon.r} ${ribbon.r} 0 0 1 ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+                  return (
+                    <g key={`comet-ribbon-${rIdx}`}>
+                      <path
+                        d={d}
+                        fill="none"
+                        stroke={ribbon.color}
+                        strokeWidth={9}
+                        strokeLinecap="round"
+                        opacity={0.22}
+                      />
+                      <path
+                        d={d}
+                        fill="none"
+                        stroke={ribbon.color}
+                        strokeWidth={3.2}
+                        strokeLinecap="round"
+                        opacity={0.72}
+                      />
+                      <circle cx={x1} cy={y1} r={6.5} fill="#FFFFFF" opacity={0.92} />
+                      <circle cx={x1} cy={y1} r={11} fill={ribbon.color} opacity={0.34} />
+                    </g>
+                  );
+                })}
+              </g>
+            </svg>
+          </div>
+
+          {/* Outer Constellation Curved Wake Arcs SVG */}
+          <svg
+            width={1920}
+            height={1080}
+            viewBox="0 0 1920 1080"
+            style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
+          >
+            {MODULE_SPECTRUM_LIST.map((mod, idx) => {
+              const angle = (idx / MODULE_SPECTRUM_LIST.length) * Math.PI * 2 + timeSec * 0.42;
+              const prevAngle = angle - 0.16;
+              const sx = 960 + Math.cos(prevAngle) * 810;
+              const sy = 605 + Math.sin(prevAngle) * 315;
+              const ex = 960 + Math.cos(angle) * 810;
+              const ey = 605 + Math.sin(angle) * 315;
+              const depthNorm = (Math.sin(angle) + 1) * 0.5;
+              return (
+                <path
+                  key={`wake-arc-${mod.label}`}
+                  d={`M ${sx.toFixed(1)} ${sy.toFixed(1)} A 810 315 0 0 1 ${ex.toFixed(1)} ${ey.toFixed(1)}`}
+                  fill="none"
+                  stroke={mod.color}
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  opacity={0.28 + depthNorm * 0.36}
+                />
+              );
+            })}
+          </svg>
+
           {MODULE_SPECTRUM_LIST.map((mod, idx) => {
             const angle = (idx / MODULE_SPECTRUM_LIST.length) * Math.PI * 2 + timeSec * 0.42;
-            const cx = 960 + Math.cos(angle) * 760;
-            const cy = 605 + Math.sin(angle) * 290;
+            const cx = 960 + Math.cos(angle) * 810;
+            const cy = 605 + Math.sin(angle) * 315;
             const depthNorm = (Math.sin(angle) + 1) * 0.5; // 0 (back) .. 1 (front edge)
             const tileScale = 0.78 + depthNorm * 0.28;
-            const tileZ = -80 + depthNorm * 110;
+            const tileZ = -70 + depthNorm * 125 + Math.sin(timeSec * 2.2 + idx * 0.9) * 18;
             const tileOpacity = 0.62 + depthNorm * 0.36;
 
             return (
@@ -660,19 +784,19 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
           colors={[LAUNCH_PALETTE.ACCENT, EMERALD, LAUNCH_MODULE_THEMES.polymart.primary, '#FFFFFF']}
         />
 
-        {/* 3-Piece Symmetrical Dark-Teal Glass Cockpit Triad around 352px Pure White QR Beacon */}
+        {/* 3-Piece Symmetrical Dark-Teal Glass Cockpit Triad around Giant 440px Pure White QR Beacon */}
         <div
           style={{
             position: 'absolute',
             left: 0,
             right: 0,
-            top: 256,
-            height: 716,
+            top: 232,
+            height: 742,
             zIndex: 4,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: 48,
+            gap: 36,
             perspective: '1650px',
             transformStyle: 'preserve-3d',
           }}
@@ -682,7 +806,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             name="Left Upright Onboarding Card"
             premountFor={safeFps}
             style={{
-              width: 378,
+              width: 356,
               padding: '22px 24px',
               borderRadius: 26,
               backgroundColor: 'rgba(11, 36, 32, 0.94)',
@@ -830,17 +954,17 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             premountFor={safeFps}
             style={{
               position: 'relative',
-              width: 472,
+              width: 540,
               borderRadius: 30,
               backgroundColor: '#FFFFFF',
               border: '2.5px solid rgba(255, 255, 255, 0.92)',
               boxShadow:
                 '0 44px 96px rgba(0, 0, 0, 0.56), 0 0 88px rgba(20, 184, 166, 0.36)',
-              padding: '22px 26px 20px',
+              padding: '16px 24px 14px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              gap: 12,
+              gap: 10,
               opacity: qrOpacity,
               boxSizing: 'border-box',
               overflow: 'hidden',
@@ -892,13 +1016,13 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               <span>IMBAS QR DI SKRIN LED SEKARANG</span>
             </div>
 
-            {/* Pure White 28px Quiet Zone Frame + 352x352px Contrast QR */}
+            {/* Pure White 24px Quiet Zone Frame + 440x440px High-Contrast Auditorium LED QR */}
             <div
               style={{
                 position: 'relative',
-                width: 408,
-                height: 408,
-                padding: 28,
+                width: 492,
+                height: 492,
+                padding: 24,
                 borderRadius: 22,
                 backgroundColor: '#FFFFFF',
                 border: '1.5px solid rgba(11, 36, 32, 0.14)',
@@ -910,7 +1034,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             >
               <QRCode
                 value={safePortalUrl}
-                size={352}
+                size={440}
                 fgColor="#061714"
                 bgColor="#FFFFFF"
                 level="M"
@@ -980,7 +1104,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             <div
               style={{
                 width: '100%',
-                padding: '9px 18px',
+                padding: '8px 18px',
                 borderRadius: 15,
                 backgroundColor: LAUNCH_PALETTE.BACKGROUND,
                 border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
@@ -990,7 +1114,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             >
               <span
                 style={{
-                  fontSize: 30,
+                  fontSize: 28,
                   fontWeight: 900,
                   letterSpacing: '-0.02em',
                   color: '#061714',
@@ -1022,7 +1146,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             name="Right Upright Modules Card"
             premountFor={safeFps}
             style={{
-              width: 378,
+              width: 356,
               padding: '22px 24px',
               borderRadius: 26,
               backgroundColor: 'rgba(11, 36, 32, 0.94)',
