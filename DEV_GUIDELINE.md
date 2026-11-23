@@ -463,6 +463,10 @@ npm run lint:css     # Stylelint sahaja
 | `src/lib/driveUpload.ts` | Routing storan hibrid. Silap = data tersalah simpan |
 | `src/lib/notifications.ts` | Helper notifikasi. Guna ini — jangan `.insert()` terus tanpa ikut polisi RLS |
 | `src/lib/keusahawanan.ts` | Helper pendaftaran automatik perniagaan Siswapreneur EMS & auto-archive |
+| `src/lib/businessCertificate.ts` | Enjin kontrak data, cap jari integriti & penjana QR Sijil Perakuan Pendaftaran Perniagaan (SSM / PUSKEP / EMS) |
+| `src/components/keusahawanan/BusinessRegistrationCertPDF.tsx` | Templat PDF statutori 2 halaman (Borang P-D gaya rasmi SSM + Maklumat Pemilik/Pasukan/Mentor) |
+| `src/components/keusahawanan/BusinessCertificateModal.tsx` | Modal pratonton dwihalaman & muat turun PDF sijil rasmi perniagaan untuk pelajar dan admin |
+| `src/pages/keusahawanan/BusinessCertVerifyPage.tsx` | Halaman pengesahan awam QR sijil perniagaan (`/keusahawanan/sijil/:ref`) patuh privasi PDPA |
 | `src/types/index.ts` | Type contracts. ALL_CLUBS, constants |
 | `src/pages/jpp/jppConfig.ts` | Config semua unit exco JPP. `isActive: false` = unit tersembunyi. `moduleLink` menentukan destinasi klik sidebar |
 | `src/store/useNotificationStore.ts` | Zustand store. Guna atomic selector — jangan destructure keseluruhan store |
@@ -642,6 +646,12 @@ unit       TEXT   -- kod unit, cth: 'KEBAJIKAN'
 | Mana-mana JPP position | Boleh lihat semua program (AWAM + JPP_SAHAJA) |
 | SUPER_ADMIN_JPP | Akses penuh |
 | Pelajar biasa | Hanya nampak program AWAM, boleh daftar minat |
+
+### Sijil Perakuan Pendaftaran Perniagaan (Borang P-D Gaya Rasmi SSM)
+- Pemilik/ahli perniagaan dan pegawai admin boleh mempratonton serta memuat turun PDF 2 halaman dari `UrusPerniagaanPage` (`/keusahawanan/urus-perniagaan`) dan `KeusahawananAdminPanel` (`BusinessDetailModal`).
+- Menyokong tiga skim pendaftaran rasmi (`SSM`, `PUSKEP-POLISAS`, dan `EMS` Sementara) bersama sejarah kod pendaftaran terdahulu, entiti pemilikan, ahli pasukan, dan senarai mentor penasihat.
+- Setiap sijil menyertakan Kod QR Tahap-H ke `/keusahawanan/sijil/:ref` yang mengesahkan status secara langsung melalui RPC `verify_keusahawanan_certificate(TEXT)` (`supabase/migrations/20261123000000_business_certificate_public_verify_rpc.sql`) tanpa mendedahkan maklumat peribadi (PDPA).
+- Perniagaan belum berstatus `ACTIVE` dilindungi tera air draf/tidak aktif secara automatik.
 
 ---
 

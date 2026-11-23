@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,7 @@ import {
   Activity, Building2, ToggleLeft, ToggleRight, UserPlus,
   Tag, Ticket, BadgePercent, Plus, ShieldAlert, HelpCircle,
   CreditCard, Handshake, Phone, Upload, Image, Store, Crown,
+  Award, Copy, FileBadge,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTour } from '@/hooks/useTour';
@@ -18,6 +19,13 @@ import { SystemTour } from '@/components/ui/SystemTour';
 import { sendNotificationToUser } from '@/lib/notifications';
 import { type BusinessPromotion, type PosDiscountType } from '@/types';
 import { BusinessJadual, SesiBusiness } from './BusinessShiftModule';
+import { BusinessCertificateModal } from '@/components/keusahawanan/BusinessCertificateModal';
+import {
+  buildBusinessCertificateData,
+  getRegistrationAuthorityMeta,
+  resolveRegistrationNumber,
+  resolveRegistrationType,
+} from '@/lib/businessCertificate';
 import { useTranslation } from 'react-i18next';
 
 // Dynamic log action labels resolved via getLogLabel with i18n in UrusPerniagaanPage
@@ -56,6 +64,9 @@ export function UrusPerniagaanPage() {
 
   const [businessData, setBusinessData] = useState<any>(null);
   const [members, setMembers]           = useState<any[]>([]);
+  const [approvedAt, setApprovedAt]     = useState<string | null>(null);
+  const [certModalOpen, setCertModalOpen] = useState(false);
+  const [copiedVerify, setCopiedVerify]   = useState(false);
   const [uploading, setUploading]       = useState(false);
   const [saving, setSaving]             = useState(false);
   const [activeTab, setActiveTab]       = useState<'profil' | 'pasukan' | 'kupon_log'>('profil');
@@ -101,11 +112,29 @@ export function UrusPerniagaanPage() {
 
   const fetchData = useCallback(async () => {
     if (!businessId) return;
-    const { data: biz } = await supabase
-      .from('keusahawanan_businesses')
-      .select('*, category:category_id(name)')
-      .eq('id', businessId)
-      .single();
+    const [bizRes, memsRes, approvedLogRes] = await Promise.all([
+      supabase
+        .from('keusahawanan_businesses')
+        .select('*, category:category_id(name), owner:profiles!keusahawanan_businesses_owner_id_fkey(id, full_name, matric_no, department, jabatan, programme_code, email)')
+        .eq('id', businessId)
+        .single(),
+      supabase
+        .from('student_business_memberships')
+        .select('*, user:user_id(id, full_name, avatar_url, matric_no, department, jabatan, programme_code, email)')
+        .eq('business_id', businessId)
+        .order('joined_at'),
+      supabase
+        .from('keusahawanan_logs')
+        .select('created_at')
+        .eq('business_id', businessId)
+        .eq('action_type', 'BUSINESS_APPROVED')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
+      pos.fetchLogs(businessId),
+    ]);
+
+    const biz = bizRes.data;
     setBusinessData(biz);
     setDescription(biz?.description || '');
     // Toggles
@@ -124,15 +153,49 @@ export function UrusPerniagaanPage() {
     setPaymentDeadlineValue(biz?.payment_deadline_value ?? 24);
     setPaymentDeadlineUnit(biz?.payment_deadline_unit ?? 'HOURS');
 
-    const { data: mems } = await supabase
-      .from('student_business_memberships')
-      .select('*, user:user_id(id, full_name, avatar_url)')
-      .eq('business_id', businessId)
-      .order('joined_at');
-    setMembers(mems || []);
-
-    await pos.fetchLogs(businessId);
+    setMembers(memsRes.data || []);
+    setApprovedAt(approvedLogRes.data?.created_at ?? null);
   }, [businessId]);
+
+  const hasUnsavedChanges = useMemo(() => {
+    if (!businessData) return false;
+    const savedDesc = businessData.description || '';
+    const savedRegType =
+      businessData.registration_type === 'SSM'
+        ? 'SSM'
+        : businessData.registration_type === 'EMS'
+        ? 'EMS'
+        : 'PUSKEP';
+    const savedSsm = businessData.ssm_registration_number || '';
+    const normalizeMentors = (list: any[]) =>
+      (list || [])
+        .map((m: any) => ({
+          name: String(m?.name || '').trim(),
+          department: String(m?.department || '').trim(),
+        }))
+        .filter((m) => m.name !== '');
+    return (
+      description !== savedDesc ||
+      regType !== savedRegType ||
+      ssmRegNumber !== savedSsm ||
+      JSON.stringify(normalizeMentors(mentors)) !==
+        JSON.stringify(normalizeMentors(businessData.mentors || []))
+    );
+  }, [businessData, description, regType, ssmRegNumber, mentors]);
+
+  const certificateData = useMemo(() => {
+    if (!businessData) return null;
+    return buildBusinessCertificateData({
+      business: businessData,
+      members,
+      approvedAt,
+      generatedBy:
+        profile?.full_name ||
+        profile?.email ||
+        businessData?.owner?.full_name ||
+        'Pemilik Perniagaan',
+    });
+  }, [businessData, members, approvedAt, profile?.full_name, profile?.email]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -395,7 +458,7 @@ export function UrusPerniagaanPage() {
           <div className="w-1 h-5 rounded-full" style={{ background: color }} />
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground/50">{t('keusahawanan:module_title', 'Modul Keusahawanan Siswa')}</p>
         </div>
-        <div className="flex items-end justify-between">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div className="flex items-center gap-4">
             <div>
               <h1 className="text-3xl font-black tracking-tight text-foreground flex items-center gap-3">
@@ -407,12 +470,24 @@ export function UrusPerniagaanPage() {
               <p className="text-sm text-muted-foreground mt-0.5">{businessData?.name}</p>
             </div>
           </div>
-          {pending.length > 0 && (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20">
-              <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-              <span className="text-xs font-black text-amber-600">{t('keusahawanan:biz_new_applications_count', '{{count}} permohonan baharu', { count: pending.length })}</span>
-            </div>
-          )}
+          <div className="flex flex-wrap items-center gap-2.5">
+            {certificateData && (
+              <button
+                type="button"
+                onClick={() => setCertModalOpen(true)}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-2xl border border-[#831010]/30 bg-[#831010]/10 hover:bg-[#831010]/15 text-[#831010] dark:text-amber-300 dark:border-amber-500/30 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 text-xs font-black tracking-wide transition-all cursor-pointer"
+              >
+                <Award className="w-4 h-4 shrink-0" />
+                <span>{t('keusahawanan:cert_header_btn', 'Sijil Pendaftaran (PDF)')}</span>
+              </button>
+            )}
+            {pending.length > 0 && (
+              <div className="flex items-center gap-2 px-4 py-2 rounded-2xl bg-amber-500/10 border border-amber-500/20">
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+                <span className="text-xs font-black text-amber-600">{t('keusahawanan:biz_new_applications_count', '{{count}} permohonan baharu', { count: pending.length })}</span>
+              </div>
+            )}
+          </div>
         </div>
       </motion.div>
 
@@ -576,6 +651,107 @@ export function UrusPerniagaanPage() {
                 )}
               </div>
             </div>
+
+            {/* Official Certificate Card (Borang P-D Gaya Rasmi SSM) */}
+            {certificateData && (() => {
+              const authMeta = getRegistrationAuthorityMeta(
+                resolveRegistrationType(businessData || {})
+              );
+              const currentRegNo = resolveRegistrationNumber(businessData || {});
+              return (
+                <div className="rounded-[2rem] bg-card border border-[#831010]/25 dark:border-amber-500/25 p-6 shadow-sm">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+                    <div className="space-y-2.5">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#831010]/10 text-[#831010] dark:bg-amber-500/15 dark:text-amber-300 border border-[#831010]/20 dark:border-amber-500/30">
+                          <FileBadge className="w-3.5 h-3.5" />
+                          {t('keusahawanan:cert_card_badge', 'Borang P-D • Gaya Rasmi SSM')}
+                        </span>
+                        <span
+                          className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-white"
+                          style={{ background: authMeta.accentColor }}
+                        >
+                          {authMeta.badgeLabel}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h3 className="text-lg font-black text-foreground tracking-tight">
+                          {t('keusahawanan:cert_card_title', 'Sijil Perakuan Pendaftaran Perniagaan')}
+                        </h3>
+                        <p className="text-xs text-muted-foreground mt-0.5 max-w-2xl leading-relaxed">
+                          {t(
+                            'keusahawanan:cert_card_desc',
+                            'Dokumen rasmi 2 halaman bertaraf pemeriksaan pegawai HEP/PUSKEP lengkap dengan Kod QR pengesahan langsung, maklumat pemilik, ahli pasukan dan mentor.'
+                          )}
+                        </p>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 pt-1 text-xs">
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2">
+                            {t('commerce:registration_number', 'No. Pendaftaran')}:
+                          </span>
+                          <span className="font-mono tabular-nums font-black text-foreground">
+                            {currentRegNo || t('keusahawanan:cert_reg_not_assigned', 'Belum Dinyatakan')}
+                          </span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mr-2">
+                            {t('keusahawanan:cert_doc_ref_label', 'No. Rujukan')}:
+                          </span>
+                          <span className="font-mono tabular-nums font-bold text-muted-foreground">
+                            {certificateData.documentRef}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(certificateData.verificationUrl);
+                            setCopiedVerify(true);
+                            toast.success(
+                              t('keusahawanan:cert_verify_link_copied', 'Pautan pengesahan QR disalin!')
+                            );
+                            setTimeout(() => setCopiedVerify(false), 2000);
+                          } catch {
+                            toast.error(t('common:error', 'Terdapat ralat.'));
+                          }
+                        }}
+                        className="h-11 px-4 rounded-2xl border border-border bg-muted/40 hover:bg-muted text-foreground text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer whitespace-nowrap"
+                      >
+                        {copiedVerify ? (
+                          <Check className="w-4 h-4 text-emerald-500" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                        <span>
+                          {copiedVerify
+                            ? t('common:copied', 'Disalin')
+                            : t('keusahawanan:cert_copy_verify_btn', 'Salin Pautan Verifikasi')}
+                        </span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setCertModalOpen(true)}
+                        className="h-11 px-5 rounded-2xl text-white text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-2 transition-all hover:brightness-110 active:scale-95 cursor-pointer whitespace-nowrap"
+                        style={{ background: '#831010' }}
+                      >
+                        <Award className="w-4 h-4" />
+                        <span>
+                          {t('keusahawanan:cert_preview_download_btn', 'Pratonton & Muat Turun PDF')}
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
 
             {/* PolyMart Payment Settings */}
             <div className="rounded-[2rem] bg-card border border-border p-6 space-y-5">
@@ -1151,6 +1327,26 @@ export function UrusPerniagaanPage() {
       </AnimatePresence>
 
       <SystemTour run={runTour} onClose={closeTour} tourKey="KEUSAHAWANAN_URUS" />
+
+      <BusinessCertificateModal
+        isOpen={certModalOpen}
+        onClose={() => setCertModalOpen(false)}
+        certificateData={certificateData}
+        hasUnsavedChanges={hasUnsavedChanges}
+        themeColor={color}
+        onDownloaded={() => {
+          if (businessId) {
+            pos.writeLog(
+              businessId,
+              'SETTINGS_UPDATED',
+              t(
+                'keusahawanan:cert_log_downloaded',
+                'Sijil Perakuan Pendaftaran Perniagaan (PDF) telah dimuat turun.'
+              )
+            );
+          }
+        }}
+      />
     </div>
   );
 }

@@ -7,13 +7,19 @@ import { toast } from 'react-hot-toast';
 import { sendNotificationToUser } from '@/lib/notifications';
 import {
   Store, CheckCircle, XCircle, Clock, Eye, RefreshCw,
-  Building2, TrendingUp, Filter, Users, ShieldCheck, UserPlus, Trash2, Logs, LayoutGrid
+  Building2, TrendingUp, Filter, Users, ShieldCheck, UserPlus, Trash2, Logs, LayoutGrid,
+  Award, Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { createPortal } from 'react-dom';
 import { useExcoTheme } from '@/contexts/ExcoThemeContext';
 import { hexToRgba } from '@/lib/utils';
+import { BusinessCertificateModal } from '@/components/keusahawanan/BusinessCertificateModal';
+import {
+  buildBusinessCertificateData,
+  type BusinessCertificateData,
+} from '@/lib/businessCertificate';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 // DB enum: PENDING_INTERVIEW | ACTIVE | REJECTED
@@ -25,17 +31,27 @@ interface Business {
   description: string | null;
   logo_url: string | null;
   status: BusinessStatus;
+  is_active?: boolean;
   created_at: string;
   interview_date: string | null;
   owner_id: string;
   owner_name?: string;
   owner_email?: string;
   owner_matric?: string;
+  owner_department?: string | null;
+  owner_jabatan?: string | null;
+  owner_programme_code?: string | null;
+  category_name?: string | null;
   staff_count: number;
   registration_type?: string;
   ssm_registration_number?: string;
+  registration_no?: string | null;
   registration_history?: any[];
   mentors?: { name: string; department: string }[];
+  business_phone?: string | null;
+  polymart_is_active?: boolean;
+  is_ems_siswapreneur?: boolean;
+  puskep_upgrade_status?: string | null;
 }
 
 // ─── Status Meta ──────────────────────────────────────────────────────────────
@@ -59,17 +75,20 @@ const getStatusMeta = (t: any): Record<BusinessStatus, { label: string; dotColor
 
 // ─── Detail Modal ─────────────────────────────────────────────────────────────
 function BusinessDetailModal({
-
   business,
   onClose,
   onApprove,
   onReject,
+  onOpenCertificate,
+  certLoading,
 }: {
   key?: React.Key;
   business: Business;
   onClose: () => void;
   onApprove: (b: Business) => Promise<void>;
   onReject: (b: Business) => Promise<void>;
+  onOpenCertificate: (b: Business) => Promise<void>;
+  certLoading?: boolean;
 }) {
   const { t } = useTranslation(['keusahawanan', 'common']);
   const [acting, setActing] = useState(false);
@@ -192,41 +211,59 @@ function BusinessDetailModal({
         </div>
 
         {/* Actions */}
-        <div className="border-t border-white/10 bg-white/[0.02] px-6 py-4 flex gap-3">
-          {business.status === 'PENDING_INTERVIEW' && (
-            <>
-              <Button disabled={acting} variant="outline"
-                className="flex-1 rounded-xl border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs uppercase bg-transparent"
-                onClick={() => act(() => onReject(business))}>
-                <XCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_reject', 'Tolak')}
-              </Button>
-              <Button disabled={acting}
-                className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase border-none"
-                onClick={() => act(() => onApprove(business))}>
-                <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_approve', 'Luluskan')}
-              </Button>
-            </>
-          )}
-          {business.status === 'ACTIVE' && (
-            <>
-              <Button disabled={acting} variant="outline"
-                className="flex-1 rounded-xl border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs uppercase bg-transparent"
-                onClick={() => act(() => onReject(business))}>
-                <XCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_deactivate', 'Tolak / Buang Aktif')}
-              </Button>
-              <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">{t('common:close', 'Tutup')}</Button>
-            </>
-          )}
-          {business.status === 'REJECTED' && (
-            <>
-              <Button disabled={acting}
-                className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase border-none"
-                onClick={() => act(() => onApprove(business))}>
-                <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_reactivate', 'Aktifkan Semula')}
-              </Button>
-              <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">{t('keusahawanan:close', 'Tutup')}</Button>
-            </>
-          )}
+        <div className="border-t border-white/10 bg-white/[0.02] px-6 py-4 space-y-2.5">
+          <Button
+            type="button"
+            disabled={acting || certLoading}
+            variant="outline"
+            className="w-full rounded-xl border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 font-black text-xs uppercase"
+            onClick={() => onOpenCertificate(business)}
+          >
+            {certLoading ? (
+              <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+            ) : (
+              <Award className="w-3.5 h-3.5 mr-1.5" />
+            )}
+            {certLoading
+              ? t('keusahawanan:cert_preparing_pdf', 'Menyediakan Sijil...')
+              : t('keusahawanan:cert_header_btn', 'Sijil Pendaftaran (PDF)')}
+          </Button>
+          <div className="flex gap-3">
+            {business.status === 'PENDING_INTERVIEW' && (
+              <>
+                <Button disabled={acting} variant="outline"
+                  className="flex-1 rounded-xl border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs uppercase bg-transparent"
+                  onClick={() => act(() => onReject(business))}>
+                  <XCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_reject', 'Tolak')}
+                </Button>
+                <Button disabled={acting}
+                  className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase border-none"
+                  onClick={() => act(() => onApprove(business))}>
+                  <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_approve', 'Luluskan')}
+                </Button>
+              </>
+            )}
+            {business.status === 'ACTIVE' && (
+              <>
+                <Button disabled={acting} variant="outline"
+                  className="flex-1 rounded-xl border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs uppercase bg-transparent"
+                  onClick={() => act(() => onReject(business))}>
+                  <XCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_deactivate', 'Tolak / Buang Aktif')}
+                </Button>
+                <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">{t('common:close', 'Tutup')}</Button>
+              </>
+            )}
+            {business.status === 'REJECTED' && (
+              <>
+                <Button disabled={acting}
+                  className="flex-1 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase border-none"
+                  onClick={() => act(() => onApprove(business))}>
+                  <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_reactivate', 'Aktifkan Semula')}
+                </Button>
+                <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">{t('keusahawanan:close', 'Tutup')}</Button>
+              </>
+            )}
+          </div>
         </div>
       </motion.div>
     </div>,
@@ -247,6 +284,8 @@ export function KeusahawananAdminPanel() {
   const [filter, setFilter] = useState<BusinessStatus | 'ALL'>('ALL');
   const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<Business | null>(null);
+  const [certModalData, setCertModalData] = useState<BusinessCertificateData | null>(null);
+  const [certLoading, setCertLoading] = useState(false);
 
   // Unit admin states
   const [unitAdmins, setUnitAdmins]     = useState<any[]>([]);
@@ -256,59 +295,77 @@ export function KeusahawananAdminPanel() {
   const fetchBusinesses = useCallback(async () => {
     setLoading(true);
     try {
-      // 1. Fetch businesses with owner profile info
-      const { data: bizData, error: bizErr } = await supabase
-        .from('keusahawanan_businesses')
-        .select(`
-          id,
-          name,
-          description,
-          logo_url,
-          status,
-          created_at,
-          interview_date,
-          owner_id,
-          registration_type,
-          ssm_registration_number,
-          registration_history,
-          mentors,
-          profiles:owner_id (
-            full_name,
-            email,
-            matric_no
-          )
-        `)
-        .order('created_at', { ascending: false });
+      // 1. Fetch businesses with owner profile info & staff counts in parallel
+      const [bizRes, staffRes] = await Promise.all([
+        supabase
+          .from('keusahawanan_businesses')
+          .select(`
+            id,
+            name,
+            description,
+            logo_url,
+            status,
+            is_active,
+            created_at,
+            interview_date,
+            owner_id,
+            registration_type,
+            ssm_registration_number,
+            registration_history,
+            mentors,
+            business_phone,
+            polymart_is_active,
+            is_ems_siswapreneur,
+            puskep_upgrade_status,
+            category:category_id (name),
+            profiles:owner_id (
+              full_name,
+              email,
+              matric_no,
+              department,
+              jabatan,
+              programme_code
+            )
+          `)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('student_business_memberships')
+          .select('business_id'),
+      ]);
 
-      if (bizErr) throw bizErr;
-
-      // 2. Count staff per business (from student_business_memberships)
-      const { data: staffData } = await supabase
-        .from('student_business_memberships')
-        .select('business_id');
+      if (bizRes.error) throw bizRes.error;
 
       const staffCount: Record<string, number> = {};
-      staffData?.forEach((s: any) => {
+      staffRes.data?.forEach((s: any) => {
         staffCount[s.business_id] = (staffCount[s.business_id] ?? 0) + 1;
       });
 
-      const mapped: Business[] = (bizData ?? []).map((b: any) => ({
+      const mapped: Business[] = (bizRes.data ?? []).map((b: any) => ({
         id: b.id,
         name: b.name,
         description: b.description ?? null,
         logo_url: b.logo_url ?? null,
         status: b.status as BusinessStatus,
+        is_active: b.is_active ?? true,
         created_at: b.created_at,
         interview_date: b.interview_date ?? null,
         owner_id: b.owner_id,
-        owner_name:   b.profiles?.full_name  ?? undefined,
-        owner_email:  b.profiles?.email      ?? undefined,
-        owner_matric: b.profiles?.matric_no  ?? undefined,
-        staff_count:  staffCount[b.id] ?? 0,
+        owner_name:           b.profiles?.full_name      ?? undefined,
+        owner_email:          b.profiles?.email          ?? undefined,
+        owner_matric:         b.profiles?.matric_no      ?? undefined,
+        owner_department:     b.profiles?.department     ?? null,
+        owner_jabatan:        b.profiles?.jabatan        ?? null,
+        owner_programme_code: b.profiles?.programme_code ?? null,
+        category_name:        b.category?.name           ?? null,
+        staff_count:          staffCount[b.id] ?? 0,
         registration_type: b.registration_type,
         ssm_registration_number: b.ssm_registration_number,
         registration_history: b.registration_history,
         mentors: b.mentors,
+        business_phone: b.business_phone ?? null,
+        polymart_is_active: Boolean(b.polymart_is_active),
+        is_ems_siswapreneur: Boolean(b.is_ems_siswapreneur),
+        puskep_upgrade_status: b.puskep_upgrade_status ?? null,
       }));
 
       setBusinesses(mapped);
@@ -318,6 +375,71 @@ export function KeusahawananAdminPanel() {
       setLoading(false);
     }
   }, []);
+
+  const handleOpenCertificate = useCallback(async (b: Business) => {
+    setCertLoading(true);
+    try {
+      const [memsRes, approvedLogRes] = await Promise.all([
+        supabase
+          .from('student_business_memberships')
+          .select('id, user_id, role, status, joined_at, user:user_id(id, full_name, matric_no, department, jabatan, programme_code, email)')
+          .eq('business_id', b.id)
+          .eq('status', 'ACTIVE')
+          .order('joined_at'),
+        supabase
+          .from('keusahawanan_logs')
+          .select('created_at')
+          .eq('business_id', b.id)
+          .eq('action_type', 'BUSINESS_APPROVED')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      const built = buildBusinessCertificateData({
+        business: {
+          id: b.id,
+          name: b.name,
+          description: b.description,
+          status: b.status,
+          is_active: b.is_active,
+          registration_type: b.registration_type,
+          ssm_registration_number: b.ssm_registration_number,
+          registration_no: b.registration_no,
+          registration_history: b.registration_history,
+          created_at: b.created_at,
+          interview_date: b.interview_date,
+          logo_url: b.logo_url,
+          business_phone: b.business_phone,
+          polymart_is_active: b.polymart_is_active,
+          is_ems_siswapreneur: b.is_ems_siswapreneur,
+          puskep_upgrade_status: b.puskep_upgrade_status,
+          mentors: b.mentors,
+          categoryName: b.category_name,
+          owner_id: b.owner_id,
+          owner: {
+            id: b.owner_id,
+            full_name: b.owner_name,
+            matric_no: b.owner_matric,
+            department: b.owner_department,
+            jabatan: b.owner_jabatan,
+            programme_code: b.owner_programme_code,
+            email: b.owner_email,
+          },
+        },
+        members: (memsRes.data || []) as any[],
+        approvedAt: approvedLogRes.data?.created_at ?? null,
+        generatedBy: profile?.full_name || profile?.email || 'Pegawai Unit Keusahawanan',
+      });
+
+      setSelected(null);
+      setCertModalData(built);
+    } catch (err: any) {
+      toast.error(err?.message || t('common:error', 'Terdapat ralat.'));
+    } finally {
+      setCertLoading(false);
+    }
+  }, [profile?.full_name, profile?.email, t]);
 
   const fetchUnitAdmins = useCallback(async () => {
     const { data } = await supabase
@@ -499,6 +621,8 @@ export function KeusahawananAdminPanel() {
               onClose={() => setSelected(null)}
               onApprove={handleApprove}
               onReject={handleReject}
+              onOpenCertificate={handleOpenCertificate}
+              certLoading={certLoading}
             />
           )}
         </AnimatePresence>
@@ -711,6 +835,13 @@ export function KeusahawananAdminPanel() {
           </div>
         </motion.div>
       )}
+
+      <BusinessCertificateModal
+        isOpen={Boolean(certModalData)}
+        onClose={() => setCertModalData(null)}
+        certificateData={certModalData}
+        themeColor={color}
+      />
 
     </div>
   );

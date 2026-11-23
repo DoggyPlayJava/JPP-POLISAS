@@ -71,6 +71,7 @@ const KeusahawananLaporan = lazy(() => import('./pages/keusahawanan/Keusahawanan
 const KeusahawananOnboarding = lazy(() => import('./pages/keusahawanan/KeusahawananOnboarding').then(m => ({ default: m.KeusahawananOnboarding })));
 const KeusahawananPoster = lazy(() => import('./pages/keusahawanan/KeusahawananPoster').then(m => ({ default: m.KeusahawananPoster })));
 const UrusPerniagaanPage = lazy(() => import('./pages/keusahawanan/UrusPerniagaanPage').then(m => ({ default: m.UrusPerniagaanPage })));
+const BusinessCertVerifyPage = lazy(() => import('./pages/keusahawanan/BusinessCertVerifyPage').then(m => ({ default: m.BusinessCertVerifyPage })));
 const PosOrderPage = lazy(() => import('./pages/keusahawanan/pos/PosOrderPage').then(m => ({ default: m.PosOrderPage })));
 const PosProductPage = lazy(() => import('./pages/keusahawanan/pos/PosProductPage').then(m => ({ default: m.PosProductPage })));
 const PosStatsPage = lazy(() => import('./pages/keusahawanan/pos/PosStatsPage').then(m => ({ default: m.PosStatsPage })));
@@ -310,6 +311,10 @@ function AppRoutes() {
       <Route path="/ems/stage/:eventId" element={<EmsLeaderboardPage isStageMode={true} />} />
       <Route path="/ems/cert/verify" element={<EmsCertVerifyPage />} />
       <Route path="/ems/cert/:certId" element={<EmsCertificatePage />} />
+
+      {/* 🏪 e-Keusahawanan Public Business Certificate Verification */}
+      <Route path="/keusahawanan/sijil" element={<BusinessCertVerifyPage />} />
+      <Route path="/keusahawanan/sijil/:ref" element={<BusinessCertVerifyPage />} />
 
       {/* 🏆 MAKMP - Majlis Anugerah Kecemerlangan POLISAS (Awam & Juri Tanpa Login) */}
       <Route path="/makmp" element={<MakmpPublicFormPage />} />
@@ -640,6 +645,10 @@ function SeoManager() {
     '/ems/cert/verify': {
       title: t('nav:seo_meta_title_ems_verify', 'Pengesahan Sijil EMS — JPP POLISAS'),
       desc: t('nav:seo_meta_desc_ems_verify', 'Sahkan kesahihan sijil penyertaan dan kejohanan EMS POLISAS secara dalam talian.'),
+    },
+    '/keusahawanan/sijil': {
+      title: t('nav:seo_meta_title_biz_cert_verify', 'Pengesahan Sijil Perniagaan PUSKEP/SSM — JPP POLISAS'),
+      desc: t('nav:seo_meta_desc_biz_cert_verify', 'Semak kesahihan Perakuan Pendaftaran Perniagaan Pelajar POLISAS (SSM / PUSKEP / EMS) secara dalam talian.'),
     },
   };
 
