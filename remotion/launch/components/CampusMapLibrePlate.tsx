@@ -3,11 +3,9 @@ import * as maplibregl from 'maplibre-gl';
 import type { GeoJSONSource, Map as MapLibreMap } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import {
-  CanvasImage,
   Easing,
   Interactive,
   interpolate,
-  staticFile,
   useCurrentFrame,
   useDelayRender,
   useVideoConfig,
@@ -19,13 +17,62 @@ import { CAMPUS_LANDMARKS, getWalkerCoordinate, sliceCampusRoute } from '../lib/
 const OPENFREEMAP_STYLE = 'https://tiles.openfreemap.org/styles/positron';
 const ROUTE_EASING = Easing.bezier(0.25, 0.1, 0.25, 1);
 
-const OFFLINE_ROUTE_PATH = 'M 315 535 L 468 435 L 590 347';
+const OFFLINE_ROUTE_PATH = 'M 380 548 L 478 446 L 590 347';
 const OFFLINE_ROUTE_LENGTH = getLength(OFFLINE_ROUTE_PATH);
 
 const OFFLINE_LANDMARKS = [
-  { x: 315, y: 535, label: 'Dataran Siswa', role: 'origin' as const },
-  { x: 468, y: 435, label: 'Laluan Berbumbung', role: 'waypoint' as const },
+  { x: 380, y: 548, label: 'Dataran Siswa', role: 'origin' as const },
+  { x: 478, y: 446, label: 'Laluan Berbumbung', role: 'waypoint' as const },
   { x: 590, y: 347, label: 'Blok JTMK • Makmal 3', role: 'destination' as const },
+] as const;
+
+const GRID_VERTICAL_X = [80, 160, 240, 320, 400, 480, 560, 640, 720, 800, 880, 960] as const;
+const GRID_HORIZONTAL_Y = [80, 160, 240, 320, 400, 480, 560, 640, 720, 800] as const;
+
+const CONTOUR_CURVES = [
+  'M -20 130 C 180 85, 360 155, 560 110 C 740 70, 890 118, 1020 82',
+  'M -20 235 C 210 190, 390 258, 600 206 C 780 164, 910 212, 1020 176',
+  'M -20 385 C 165 340, 360 412, 575 352 C 760 302, 900 348, 1020 310',
+  'M -20 538 C 190 498, 410 558, 625 496 C 795 448, 920 486, 1020 452',
+  'M -20 688 C 225 654, 440 698, 665 628 C 820 580, 935 596, 1020 562',
+] as const;
+
+const CAMPUS_ROADS = [
+  {
+    id: 'jalan-semambu',
+    d: 'M -20 710 Q 340 692 680 638 T 1030 536',
+    casingWidth: 24,
+    deckWidth: 18,
+    major: true,
+  },
+  {
+    id: 'laluan-a',
+    d: 'M 236 694 L 236 556 Q 236 508 286 500 L 520 474 L 748 428',
+    casingWidth: 15,
+    deckWidth: 10,
+    major: false,
+  },
+  {
+    id: 'laluan-b',
+    d: 'M 176 356 L 434 342 L 626 318 L 872 272',
+    casingWidth: 15,
+    deckWidth: 10,
+    major: false,
+  },
+  {
+    id: 'laluan-d',
+    d: 'M 366 678 L 366 552 L 424 342 L 436 146',
+    casingWidth: 14,
+    deckWidth: 9.5,
+    major: false,
+  },
+  {
+    id: 'laluan-f',
+    d: 'M 642 646 L 636 458 L 626 318 L 642 128',
+    casingWidth: 14,
+    deckWidth: 9.5,
+    major: false,
+  },
 ] as const;
 
 let workerUrlConfigured = false;
@@ -373,31 +420,292 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
         </>
       ) : (
         <>
-          <CanvasImage
-            name="POLISAS Static Campus Map Fallback"
-            src={staticFile('GAMBAR/Polymap View Phone.png')}
-            premountFor={fps}
-            style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center 44%' }}
-          />
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              backgroundColor: 'rgba(248, 246, 238, 0.16)',
-              pointerEvents: 'none',
-            }}
-          />
           <Interactive.Svg
             width={width}
             height={height}
             viewBox="0 0 1000 830"
+            preserveAspectRatio="none"
             premountFor={fps}
             style={{ position: 'absolute', inset: 0 }}
           >
+            {/* Warm porcelain/sand architectural drafting backdrop */}
+            <rect x={0} y={0} width={1000} height={830} fill={LAUNCH_PALETTE.SURFACE_MUTED} />
+
+            {/* Subtle #D9C9B2 topographic coordinate grid every 80px */}
+            <g stroke={LAUNCH_PALETTE.TERTIARY} strokeWidth={1} strokeOpacity={0.58}>
+              {GRID_VERTICAL_X.map((gx) => (
+                <line key={`grid-x-${gx}`} x1={gx} y1={0} x2={gx} y2={830} />
+              ))}
+              {GRID_HORIZONTAL_Y.map((gy) => (
+                <line key={`grid-y-${gy}`} x1={0} y1={gy} x2={1000} y2={gy} />
+              ))}
+            </g>
+
+            {/* Organic topographic elevation contour curves */}
+            <g fill="none" stroke="rgba(107, 127, 91, 0.22)" strokeWidth={1.6}>
+              {CONTOUR_CURVES.map((d, idx) => (
+                <path key={`contour-${idx}`} d={d} />
+              ))}
+            </g>
+
+            {/* Campus green belt / lawn quads */}
+            <g fill="rgba(107, 127, 91, 0.14)" stroke={LAUNCH_PALETTE.TERTIARY} strokeWidth={1.1}>
+              <rect x={318} y={506} width={124} height={86} rx={18} />
+              <rect x={442} y={378} width={118} height={74} rx={14} />
+              <rect x={706} y={118} width={222} height={134} rx={16} />
+            </g>
+
+            {/* Architectural road network: layered #FFFFFF road casings over #D9C9B2 strokes */}
+            <g fill="none" strokeLinecap="round" strokeLinejoin="round">
+              {CAMPUS_ROADS.map((road) => (
+                <path
+                  key={`${road.id}-casing`}
+                  d={road.d}
+                  stroke={LAUNCH_PALETTE.TERTIARY}
+                  strokeWidth={road.casingWidth}
+                />
+              ))}
+              {CAMPUS_ROADS.map((road) => (
+                <path
+                  key={`${road.id}-deck`}
+                  d={road.d}
+                  stroke={LAUNCH_PALETTE.CARD_BG}
+                  strokeWidth={road.deckWidth}
+                />
+              ))}
+              <path
+                d={CAMPUS_ROADS[0].d}
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeOpacity={0.65}
+                strokeWidth={1.4}
+                strokeDasharray="10 10"
+              />
+            </g>
+
+            {/* Covered walkway architectural spine (Laluan Berbumbung) */}
+            <path
+              d="M 380 548 L 478 446 L 590 347"
+              fill="none"
+              stroke={LAUNCH_PALETTE.TERTIARY}
+              strokeWidth={26}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeOpacity={0.6}
+            />
+            <path
+              d="M 380 548 L 478 446 L 590 347"
+              fill="none"
+              stroke={LAUNCH_PALETTE.CARD_BG}
+              strokeWidth={21}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeOpacity={0.92}
+            />
+
+            {/* Crisp geometric POLISAS Semambu campus building footprints */}
+            <g>
+              {/* Dataran Siswa courtyard & pavilion */}
+              <rect
+                x={344}
+                y={524}
+                width={72}
+                height={48}
+                rx={10}
+                fill={LAUNCH_PALETTE.CARD_BG}
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.5}
+              />
+
+              {/* Perpustakaan L-wing */}
+              <path
+                d="M 196 376 H 322 V 430 H 256 V 464 H 196 Z"
+                fill={LAUNCH_PALETTE.CARD_BG}
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.6}
+              />
+              <rect
+                x={208}
+                y={386}
+                width={102}
+                height={34}
+                rx={4}
+                fill="rgba(107, 127, 91, 0.14)"
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.1}
+              />
+
+              {/* Dewan Jubli Perak */}
+              <rect
+                x={476}
+                y={554}
+                width={132}
+                height={80}
+                rx={10}
+                fill={LAUNCH_PALETTE.CARD_BG}
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.6}
+              />
+              <rect
+                x={490}
+                y={567}
+                width={104}
+                height={54}
+                rx={5}
+                fill="rgba(107, 127, 91, 0.14)"
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.1}
+              />
+
+              {/* Blok JTMK complex */}
+              <rect
+                x={518}
+                y={288}
+                width={144}
+                height={76}
+                rx={8}
+                fill={LAUNCH_PALETTE.CARD_BG}
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.6}
+              />
+              <rect
+                x={556}
+                y={246}
+                width={94}
+                height={44}
+                rx={6}
+                fill="rgba(107, 127, 91, 0.14)"
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.4}
+              />
+              <rect
+                x={532}
+                y={302}
+                width={52}
+                height={36}
+                rx={4}
+                fill="rgba(107, 127, 91, 0.14)"
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.1}
+              />
+
+              {/* Kamsis residential wings */}
+              <rect
+                x={724}
+                y={132}
+                width={186}
+                height={38}
+                rx={6}
+                fill={LAUNCH_PALETTE.CARD_BG}
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.5}
+              />
+              <rect
+                x={724}
+                y={184}
+                width={186}
+                height={38}
+                rx={6}
+                fill="rgba(107, 127, 91, 0.14)"
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.5}
+              />
+              <rect
+                x={746}
+                y={324}
+                width={154}
+                height={42}
+                rx={6}
+                fill={LAUNCH_PALETTE.CARD_BG}
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.5}
+              />
+              <rect
+                x={746}
+                y={378}
+                width={154}
+                height={42}
+                rx={6}
+                fill="rgba(107, 127, 91, 0.14)"
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.5}
+              />
+            </g>
+
+            {/* Crisp architectural blueprint road & building annotations */}
+            <g
+              fontFamily={LAUNCH_FONTS.MONO}
+              fontWeight={700}
+              letterSpacing="0.1em"
+              fill={LAUNCH_PALETTE.MUTED_OLIVE}
+            >
+              <text x={259} y={407} textAnchor="middle" fontSize={10}>
+                PERPUSTAKAAN
+              </text>
+              <text x={542} y={598} textAnchor="middle" fontSize={10}>
+                DEWAN JUBLI PERAK
+              </text>
+              <text x={603} y={272} textAnchor="middle" fontSize={10}>
+                BLOK JTMK
+              </text>
+              <text x={817} y={155} textAnchor="middle" fontSize={10}>
+                KAMSIS
+              </text>
+              <text x={282} y={491} fontSize={9.5} opacity={0.82}>
+                LALUAN A
+              </text>
+              <text x={734} y={291} fontSize={9.5} opacity={0.82}>
+                LALUAN B
+              </text>
+              <text x={442} y={226} fontSize={9.5} opacity={0.82}>
+                LALUAN D
+              </text>
+              <text x={652} y={492} fontSize={9.5} opacity={0.82}>
+                LALUAN F
+              </text>
+              <text x={772} y={624} fontSize={10.5} opacity={0.88} transform="rotate(-11 772 624)">
+                JALAN SEMAMBU
+              </text>
+            </g>
+
+            {/* Architectural blueprint north compass & coordinate badge */}
+            <g transform="translate(724, 24)">
+              <rect
+                x={0}
+                y={0}
+                width={250}
+                height={38}
+                rx={12}
+                fill="rgba(248, 246, 238, 0.94)"
+                stroke={LAUNCH_PALETTE.TERTIARY}
+                strokeWidth={1.4}
+              />
+              <circle
+                cx={22}
+                cy={19}
+                r={10}
+                fill={LAUNCH_PALETTE.SURFACE_MUTED}
+                stroke={LAUNCH_PALETTE.PRIMARY}
+                strokeWidth={1.3}
+              />
+              <polygon points="22,12 25.5,22 22,20 18.5,22" fill={LAUNCH_PALETTE.ACCENT} />
+              <text
+                x={42}
+                y={23}
+                fill={LAUNCH_PALETTE.PRIMARY}
+                fontFamily={LAUNCH_FONTS.MONO}
+                fontSize={10.5}
+                fontWeight={700}
+                letterSpacing="0.08em"
+              >
+                PELAN KAMPUS SEMAMBU
+              </text>
+            </g>
+
+            {/* Dashed preview route path */}
             <path
               d={OFFLINE_ROUTE_PATH}
               fill="none"
-              stroke="rgba(255, 255, 255, 0.55)"
+              stroke="rgba(46, 58, 47, 0.24)"
               strokeWidth={11}
               strokeDasharray="10 10"
               strokeLinecap="round"
@@ -491,6 +799,23 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
               />
             </g>
           </Interactive.Svg>
+          <div
+            style={{
+              position: 'absolute',
+              right: 16,
+              bottom: 12,
+              padding: '4px 10px',
+              borderRadius: 8,
+              backgroundColor: 'rgba(248, 246, 238, 0.92)',
+              border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+              fontFamily: LAUNCH_FONTS.MONO,
+              fontSize: 11,
+              color: LAUNCH_PALETTE.PRIMARY,
+              pointerEvents: 'none',
+            }}
+          >
+            Pelan Vektor Semambu • {POLISAS_COORDS.LABEL_COORDS}
+          </div>
         </>
       )}
     </div>

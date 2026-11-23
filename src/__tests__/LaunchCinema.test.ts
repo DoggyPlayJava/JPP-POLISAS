@@ -27,6 +27,7 @@ import {
   swissLouversWipe,
   depthLiftMatch,
   orbitalIrisMatch,
+  portalZoomMorph,
   EditorialShutterOverlay,
   WarmLightSweepOverlay,
 } from '../../remotion/launch/motion/transitions';
@@ -37,6 +38,13 @@ import {
   GlobalCinemaGate,
 } from '../../remotion/launch/components/EditorialChrome';
 import { CameraStage } from '../../remotion/launch/motion/CameraStage';
+import {
+  KineticWindow,
+  ExplodedLayer,
+  LiveTypewriterText,
+  PersonaMonogram,
+  DeterministicQrMatrix,
+} from '../../remotion/launch/ui/KineticCard';
 
 describe('Shared Campus Stats Contract', () => {
   it('exposes safe non-zero fallback defaults and stable cache key', () => {
@@ -65,7 +73,7 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
       0, 270, 750, 1110, 1440, 1770, 2160, 2490,
     ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.transitionOut)).toEqual([
-      'kinetic-push',
+      'portal-zoom-morph',
       'editorial-shutter',
       'split-curtain',
       'swiss-louvers',
@@ -73,6 +81,26 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
       'warm-light-sweep',
       'orbital-iris',
       null,
+    ]);
+    expect(LAUNCH_CHAPTERS.map((c) => c.title)).toEqual([
+      'Portal Hub',
+      'PolyMaps',
+      'PolyMart & Rent',
+      'PolySuara',
+      'E-Kebajikan',
+      'Nexus AI & EMS',
+      'Impak',
+      'Penutup',
+    ]);
+    expect(LAUNCH_CHAPTERS.map((c) => c.gateLabel)).toEqual([
+      'PORTAL SUPERAPP HUB',
+      'POLYMAPS & JADUAL KULIAH',
+      'EKONOMI & KEDIAMAN',
+      'POLYSUARA • SUARA MAHASISWA',
+      'E-KEBAJIKAN & FOOD BANK',
+      'NEXUS AI • KELAB & EMS',
+      'TELEMETRI MASA NYATA',
+      'AKSES PORTAL RASMI',
     ]);
     for (const chapter of LAUNCH_CHAPTERS) {
       expect(chapter.gateLabel.length).toBeGreaterThan(0);
@@ -143,7 +171,7 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
     expect(peakVelocity).toBeGreaterThanOrEqual(4 * exitBoundaryVelocity);
   });
 
-  it('returns valid native TransitionPresentation objects for all 5 bespoke factories', () => {
+  it('returns valid native TransitionPresentation objects for all 6 bespoke factories', () => {
     const pushDefault = kineticCameraPush();
     const pushLeft = kineticCameraPush({ direction: 'from-left', accentColor: LAUNCH_PALETTE.SECONDARY });
     const curtainDefault = editorialSplitCurtain();
@@ -153,6 +181,12 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
     const liftDefault = depthLiftMatch();
     const irisDefault = orbitalIrisMatch();
     const irisCustom = orbitalIrisMatch({ ringColor: LAUNCH_PALETTE.ACCENT });
+    const portalDefault = portalZoomMorph();
+    const portalCustom = portalZoomMorph({
+      originXPercent: 42,
+      originYPercent: 64,
+      accentColor: LAUNCH_PALETTE.SECONDARY,
+    });
 
     for (const presentation of [
       pushDefault,
@@ -164,6 +198,8 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
       liftDefault,
       irisDefault,
       irisCustom,
+      portalDefault,
+      portalCustom,
     ]) {
       expect(presentation).toBeDefined();
       expect(typeof presentation.component).toBe('function');
@@ -184,6 +220,12 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
     expect(liftDefault.props.maxRadius).toBe(52);
     expect(irisDefault.props.ringColor).toBe(LAUNCH_PALETTE.ACCENT);
     expect(irisCustom.props.ringColor).toBe(LAUNCH_PALETTE.ACCENT);
+    expect(portalDefault.props.originXPercent).toBe(56);
+    expect(portalDefault.props.originYPercent).toBe(58);
+    expect(portalDefault.props.accentColor).toBe(LAUNCH_PALETTE.ACCENT);
+    expect(portalCustom.props.originXPercent).toBe(42);
+    expect(portalCustom.props.originYPercent).toBe(64);
+    expect(portalCustom.props.accentColor).toBe(LAUNCH_PALETTE.SECONDARY);
 
     expect(typeof EditorialShutterOverlay).toBe('function');
     expect(typeof WarmLightSweepOverlay).toBe('function');
@@ -202,7 +244,33 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
     expect(source).toContain('computeWhipVelocity');
     expect(source).toContain('interpolateColors');
     expect(source).toContain('swissLouversWipe');
+    expect(source).toContain('portalZoomMorph');
     expect(source).toContain("from '@remotion/effects/light-leak'");
+  });
+
+  it('exports KineticCard UI primitives and uses zero experimental or CSS animations', () => {
+    expect(typeof KineticWindow).toBe('function');
+    expect(typeof ExplodedLayer).toBe('function');
+    expect(typeof LiveTypewriterText).toBe('function');
+    expect(typeof PersonaMonogram).toBe('function');
+    expect(typeof DeterministicQrMatrix).toBe('function');
+
+    const kineticSource = readFileSync(
+      join(process.cwd(), 'remotion', 'launch', 'ui', 'KineticCard.tsx'),
+      'utf8',
+    );
+    expect(kineticSource).not.toMatch(/HtmlInCanvas|Math\.random|@keyframes|\banimate-|transition\s*:/i);
+  });
+
+  it('renders CampusMapLibrePlate fallback with 100% procedural SVG blueprint and zero screenshot assets', () => {
+    const mapSource = readFileSync(
+      join(process.cwd(), 'remotion', 'launch', 'components', 'CampusMapLibrePlate.tsx'),
+      'utf8',
+    );
+    expect(mapSource).not.toMatch(/Polymap View Phone\.png|GAMBAR\/|CanvasImage|staticFile/);
+    expect(mapSource).toContain('M 380 548 L 478 446 L 590 347');
+    expect(mapSource).toContain('JALAN SEMAMBU');
+    expect(mapSource).toContain('BLOK JTMK');
   });
 
   it('exports GlobalCinemaGate, CinemaChromeContext, and 3-phase CameraStage with pure frame-driven motion', () => {

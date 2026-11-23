@@ -1109,6 +1109,190 @@ export const orbitalIrisMatch = (
   };
 };
 
+export type PortalZoomMorphProps = {
+  readonly originXPercent?: number;
+  readonly originYPercent?: number;
+  readonly accentColor?: string;
+};
+
+const PortalZoomMorphPresentation: React.FC<
+  TransitionPresentationComponentProps<PortalZoomMorphProps>
+> = ({
+  children,
+  presentationDirection,
+  presentationProgress,
+  passedProps: {
+    originXPercent = 56,
+    originYPercent = 58,
+    accentColor = LAUNCH_PALETTE.ACCENT,
+  },
+}) => {
+  const { width, height } = useVideoConfig();
+  const safeWidth = Math.max(1, Math.round(Number.isFinite(width) ? width : 1920));
+  const safeHeight = Math.max(1, Math.round(Number.isFinite(height) ? height : 1080));
+  const safeOriginX = Number.isFinite(originXPercent)
+    ? Math.min(100, Math.max(0, originXPercent))
+    : 56;
+  const safeOriginY = Number.isFinite(originYPercent)
+    ? Math.min(100, Math.max(0, originYPercent))
+    : 58;
+
+  const p = clampUnit(presentationProgress);
+  const s = WHIP_S_CURVE(p);
+  const v = computeWhipVelocity(p);
+
+  const isEntering = presentationDirection === 'entering';
+  const isSettled = isEntering && p >= 0.9999;
+  const isUntouched = !isEntering && p <= 0.0001;
+  const isDecorVisible = isEntering && p > 0.005 && p < 0.995;
+
+  const originCss = `${safeOriginX}% ${safeOriginY}%`;
+  const radiusPercent = interpolate(s, [0, 1], [0, 125]);
+  const refLength = Math.hypot(safeWidth, safeHeight) / Math.SQRT2;
+  const ringRadiusPx = (radiusPercent / 100) * refLength;
+  const trailingRingRadiusPx = Math.max(
+    0.5,
+    ringRadiusPx - Math.min(ringRadiusPx * 0.42, 12 + v * 18),
+  );
+
+  const ringOpacity = isDecorVisible
+    ? interpolate(p, [0.005, 0.07, 0.88, 0.995], [0, 0.96, 0.9, 0], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+      })
+    : 0;
+
+  const outerStyle = useMemo<React.CSSProperties>(() => {
+    if (isEntering) {
+      return isSettled
+        ? { width: '100%', height: '100%' }
+        : { width: '100%', height: '100%', zIndex: 2 };
+    }
+    if (isUntouched) {
+      return { width: '100%', height: '100%' };
+    }
+    return {
+      width: '100%',
+      height: '100%',
+      zIndex: 1,
+      overflow: 'hidden',
+      backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+    };
+  }, [isEntering, isSettled, isUntouched]);
+
+  const clipStyle = useMemo<React.CSSProperties>(() => {
+    if (!isEntering || isSettled) {
+      return { width: '100%', height: '100%' };
+    }
+    return {
+      width: '100%',
+      height: '100%',
+      clipPath: `circle(${radiusPercent.toFixed(3)}% at ${originCss})`,
+    };
+  }, [isEntering, isSettled, originCss, radiusPercent]);
+
+  const innerStyle = useMemo<React.CSSProperties>(() => {
+    if (isEntering) {
+      if (isSettled) {
+        return { width: '100%', height: '100%' };
+      }
+      const enterScale = interpolate(s, [0, 1], [0.78, 1]);
+      return {
+        width: '100%',
+        height: '100%',
+        willChange: 'transform',
+        transformOrigin: originCss,
+        transform: `scale(${enterScale.toFixed(5)})`,
+      };
+    }
+
+    if (isUntouched) {
+      return { width: '100%', height: '100%' };
+    }
+
+    const exitScale = interpolate(s, [0, 1], [1, 2.35]);
+    const exitOpacity = interpolate(s, [0.35, 0.85], [1, 0], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    });
+    return {
+      width: '100%',
+      height: '100%',
+      willChange: 'transform, opacity',
+      transformOrigin: originCss,
+      opacity: exitOpacity,
+      transform: `scale(${exitScale.toFixed(5)})`,
+    };
+  }, [isEntering, isSettled, isUntouched, originCss, s]);
+
+  const cx = (safeOriginX / 100) * safeWidth;
+  const cy = (safeOriginY / 100) * safeHeight;
+
+  return (
+    <AbsoluteFill showInTimeline={false} style={outerStyle}>
+      <AbsoluteFill showInTimeline={false} style={clipStyle}>
+        <AbsoluteFill showInTimeline={false} style={innerStyle}>
+          {children}
+        </AbsoluteFill>
+      </AbsoluteFill>
+
+      {isDecorVisible && ringOpacity > 0.005 && ringRadiusPx > 1 ? (
+        <svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${safeWidth} ${safeHeight}`}
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            overflow: 'visible',
+          }}
+        >
+          {v > 0.005 && trailingRingRadiusPx > 1 ? (
+            <circle
+              cx={cx}
+              cy={cy}
+              r={trailingRingRadiusPx}
+              fill="none"
+              stroke={LAUNCH_PALETTE.TERTIARY}
+              strokeWidth={1.6 + v * 1.4}
+              strokeDasharray="8 8"
+              opacity={ringOpacity * clampUnit(0.45 + 0.55 * v)}
+            />
+          ) : null}
+          <circle
+            cx={cx}
+            cy={cy}
+            r={ringRadiusPx}
+            fill="none"
+            stroke={accentColor}
+            strokeWidth={2.8 + v * 1.8}
+            opacity={ringOpacity}
+          />
+        </svg>
+      ) : null}
+    </AbsoluteFill>
+  );
+};
+
+/**
+ * Portal zoom-morph cut where the outgoing scene zooms forward directly into the clicked
+ * focal squircle while incoming expands out of the exact same `(originXPercent%, originYPercent%)`
+ * coordinate via concentric SVG aperture rings.
+ */
+export const portalZoomMorph = (
+  props: PortalZoomMorphProps = {},
+): TransitionPresentation<PortalZoomMorphProps> => {
+  return {
+    component: PortalZoomMorphPresentation,
+    props: {
+      originXPercent: props.originXPercent ?? 56,
+      originYPercent: props.originYPercent ?? 58,
+      accentColor: props.accentColor ?? LAUNCH_PALETTE.ACCENT,
+    },
+  };
+};
+
 export type EditorialShutterOverlayProps = {
   readonly chapterCode?: string;
   readonly chapterLabel?: string;

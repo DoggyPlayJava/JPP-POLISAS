@@ -4,6 +4,7 @@ export const LAUNCH_TRANSITION_FRAMES = 36;
 export const LAUNCH_OVERLAY_FRAMES = 48;
 
 export type LaunchTransitionKind =
+  | 'portal-zoom-morph'
   | 'kinetic-push'
   | 'editorial-shutter'
   | 'split-curtain'
@@ -29,12 +30,12 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     id: 'OpeningHero',
     code: '01',
     indexLabel: '01',
-    title: 'Pembukaan',
+    title: 'Portal Hub',
     subtitle: 'Identiti & Portal Rasmi',
-    gateLabel: 'PEMBUKAAN RASMI',
+    gateLabel: 'PORTAL SUPERAPP HUB',
     durationInFrames: 306,
     startFrame: 0,
-    transitionOut: 'kinetic-push',
+    transitionOut: 'portal-zoom-morph',
   },
   {
     id: 'PolyMapsCampus',
@@ -51,9 +52,9 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     id: 'PolyMartCommerce',
     code: '03',
     indexLabel: '03',
-    title: 'PolyMart',
+    title: 'PolyMart & Rent',
     subtitle: 'Keusahawanan Siswa',
-    gateLabel: 'POLYMART • EKONOMI SISWA',
+    gateLabel: 'EKONOMI & KEDIAMAN',
     durationInFrames: 396,
     startFrame: 750,
     transitionOut: 'split-curtain',
@@ -84,9 +85,9 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     id: 'ClubsEms',
     code: '06',
     indexLabel: '06',
-    title: 'Kelab & EMS',
+    title: 'Nexus AI & EMS',
     subtitle: 'Aktiviti & Sijil Digital',
-    gateLabel: 'SISTEM KELAB & EMS',
+    gateLabel: 'NEXUS AI • KELAB & EMS',
     durationInFrames: 390,
     startFrame: 1770,
     transitionOut: 'warm-light-sweep',
