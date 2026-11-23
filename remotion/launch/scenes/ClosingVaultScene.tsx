@@ -13,22 +13,30 @@ import {
 } from 'remotion';
 import { vignette } from '@remotion/effects/vignette';
 import { Circle } from '@remotion/shapes';
+import { CheckCircle2, Smartphone } from 'lucide-react';
 import QRCode from 'react-qr-code';
 import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialChrome';
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath } from '../motion/MotionActors';
 import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
+import { SpatialFloorGrid } from '../ui/KineticCard';
 
 type ClosingVaultProps = {
   readonly headlinePrimary: string;
   readonly headlineItalic: string;
   readonly portalUrl: string;
+  readonly studentsCount?: number;
 };
 
 const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
 const RADAR_EASE = Easing.bezier(0.22, 1, 0.36, 1);
-const SHEEN_EASE = Easing.bezier(0.25, 0.1, 0.25, 1);
+
+const EMERALD = LAUNCH_MODULE_THEMES.polymaps.primary; // #10B981
+const EMERALD_INK = '#047857';
+const EMERALD_SOFT = LAUNCH_MODULE_THEMES.polymaps.soft; // #ECFDF5
+const EMERALD_BORDER = LAUNCH_MODULE_THEMES.polymaps.border; // #A7F3D0
+const ROYAL_BLUE = LAUNCH_MODULE_THEMES.kelab.primary; // #3B82F6
 
 const CLOSING_HEADLINE_DEFAULT = 'Imbas Sekarang. Mulakan Pengalaman Kampus Anda.';
 const CLOSING_ITALIC_DEFAULT = 'Satu Kampus. Satu SuperApp Mahasiswa POLISAS.';
@@ -56,9 +64,20 @@ const resolveClosingItalic = (value: string): string => {
 };
 
 const ONBOARDING_STEPS = [
-  { code: '01', label: 'Buka Kamera Telefon' },
-  { code: '02', label: 'Imbas Kod QR Ini' },
-  { code: '03', label: 'Log Masuk & Teroka' },
+  { code: '01', label: 'Buka Kamera Telefon', sub: 'Halakan terus ke skrin LED' },
+  { code: '02', label: 'Imbas Kod QR Ini', sub: 'Fokus automatik jarak jauh' },
+  { code: '03', label: 'Log Masuk & Teroka', sub: 'Akses semua modul kampus' },
+] as const;
+
+const MODULE_SPECTRUM_LIST = [
+  { label: 'PolyMaps', color: LAUNCH_MODULE_THEMES.polymaps.primary },
+  { label: 'Takwim', color: LAUNCH_MODULE_THEMES.takwim.primary },
+  { label: 'PolyMart', color: LAUNCH_MODULE_THEMES.polymart.primary },
+  { label: 'PolyRent', color: LAUNCH_MODULE_THEMES.polyrent.primary },
+  { label: 'PolySuara', color: LAUNCH_MODULE_THEMES.polysuara.primary },
+  { label: 'E-Kebajikan', color: LAUNCH_MODULE_THEMES.kebajikan.primary },
+  { label: 'Food Bank', color: LAUNCH_MODULE_THEMES.foodbank.primary },
+  { label: 'Kelab & Merit', color: LAUNCH_MODULE_THEMES.meritQr.primary },
 ] as const;
 
 type CornerBracketSpec = {
@@ -74,7 +93,7 @@ const CORNER_BRACKETS: readonly CornerBracketSpec[] = [
   {
     id: 'tl',
     d: 'M 12 84 L 12 12 L 84 12',
-    posStyle: { left: 128, top: 108 },
+    posStyle: { left: 108, top: 96 },
     slideXSign: -1,
     slideYSign: -1,
     dotPosStyle: { left: 9, top: 9 },
@@ -82,7 +101,7 @@ const CORNER_BRACKETS: readonly CornerBracketSpec[] = [
   {
     id: 'tr',
     d: 'M 84 84 L 84 12 L 12 12',
-    posStyle: { right: 128, top: 108 },
+    posStyle: { right: 108, top: 96 },
     slideXSign: 1,
     slideYSign: -1,
     dotPosStyle: { right: 9, top: 9 },
@@ -90,7 +109,7 @@ const CORNER_BRACKETS: readonly CornerBracketSpec[] = [
   {
     id: 'bl',
     d: 'M 12 12 L 12 84 L 84 84',
-    posStyle: { left: 128, bottom: 108 },
+    posStyle: { left: 108, bottom: 96 },
     slideXSign: -1,
     slideYSign: 1,
     dotPosStyle: { left: 9, bottom: 9 },
@@ -98,17 +117,24 @@ const CORNER_BRACKETS: readonly CornerBracketSpec[] = [
   {
     id: 'br',
     d: 'M 84 12 L 84 84 L 12 84',
-    posStyle: { right: 128, bottom: 108 },
+    posStyle: { right: 108, bottom: 96 },
     slideXSign: 1,
     slideYSign: 1,
     dotPosStyle: { right: 9, bottom: 9 },
   },
 ];
 
+const RADAR_RING_SPECS = [
+  { color: LAUNCH_PALETTE.ACCENT, strokeWidth: 2.8, radius: 195 },
+  { color: EMERALD, strokeWidth: 2.4, radius: 195 },
+  { color: ROYAL_BLUE, strokeWidth: 2.2, radius: 195 },
+] as const;
+
 const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
   headlinePrimary,
   headlineItalic,
   portalUrl,
+  studentsCount = 1083,
 }) => {
   const frame = useCurrentFrame();
   const { fps, width, height } = useVideoConfig();
@@ -116,6 +142,10 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
   const safeWidth = Math.max(1, Math.round(Number.isFinite(width) ? width : 1920));
   const safeHeight = Math.max(1, Math.round(Number.isFinite(height) ? height : 1080));
+  const safeStudents =
+    typeof studentsCount === 'number' && Number.isFinite(studentsCount)
+      ? Math.max(1, Math.round(studentsCount))
+      : 1083;
   const safeHeadlinePrimary = resolveClosingPrimary(headlinePrimary);
   const safeHeadlineItalic = resolveClosingItalic(headlineItalic);
   const safePortalUrl = portalUrl.trim() || 'https://jpp.polisas.edu.my';
@@ -123,15 +153,15 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
 
   const timeSec = frame / safeFps;
 
-  // Constant-key Deep Forest (#2E3A2F) vignette without per-frame shader thrashing
+  // Tasteful Deep Forest vignette keeping LED stage focus dead-center without dark muddiness
   const vignetteEffects = useMemo(
-    () => [vignette({ amount: 0.22, color: LAUNCH_PALETTE.PRIMARY })],
+    () => [vignette({ amount: 0.24, color: LAUNCH_PALETTE.PRIMARY_DARK })],
     [],
   );
 
-  // Beat 1 (0..1.6s): 4 symmetrical EvolvingPath corner L-brackets draw cleanly inward + Crest Pill springs open
+  // Beat 1 (0..1.3s): Background L-brackets & Crest Pill
   const bracketStart = Math.round(0.06 * safeFps);
-  const bracketDuration = Math.max(18, Math.round(1.05 * safeFps));
+  const bracketDuration = Math.max(18, Math.round(0.95 * safeFps));
   const bracketEnd = bracketStart + bracketDuration;
   const bracketSlidePx = interpolate(frame, [bracketStart, bracketEnd], [18, 0], {
     extrapolateLeft: 'clamp',
@@ -149,97 +179,92 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
   );
 
   const pillStart = 0;
-  const pillElapsed = frame - pillStart;
-  const pillSpring =
-    pillElapsed >= 0
-      ? spring({
-          frame: pillElapsed,
-          fps: safeFps,
-          config: { damping: 180, stiffness: 220, mass: 0.9 },
-        })
-      : 0;
-  const pillScaleX = 0.84 + 0.16 * pillSpring;
+  const pillSpring = spring({
+    frame,
+    fps: safeFps,
+    config: { damping: 180, stiffness: 220, mass: 0.9 },
+  });
+  const pillScaleX = 0.86 + 0.14 * pillSpring;
   const pillScaleY = 0.94 + 0.06 * pillSpring;
-  const pillOpacity =
-    pillElapsed >= 0
-      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.18 * safeFps))], [0.45, 1], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-        })
-      : 0;
+  const pillOpacity = interpolate(frame - pillStart, [0, Math.max(4, Math.round(0.16 * safeFps))], [0.45, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
 
-  // Beat 2 (0.3..3.0s): KineticWords primary headline -> Masked Instrument Serif italic + terracotta <Underline>
-  const headlineStart = Math.round(0.32 * safeFps);
-  const wordStagger = Math.max(2, Math.round(0.065 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.38 * safeFps));
+  // Beat 2 (0.15..1.5s): KineticWords Primary + Italic Headline with Terracotta Underline
+  const headlineStart = Math.round(0.18 * safeFps);
+  const wordStagger = Math.max(2, Math.round(0.05 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.32 * safeFps));
 
-  const italicStart = Math.round(0.85 * safeFps);
-  const italicEnd = Math.max(italicStart + 12, Math.round(1.65 * safeFps));
+  const italicStart = Math.round(0.55 * safeFps);
+  const italicEnd = Math.max(italicStart + 10, Math.round(1.15 * safeFps));
   const italicProgress = interpolate(frame, [italicStart, italicEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
-  const italicTranslateY = interpolate(italicProgress, [0, 1], [112, 0]);
-  const italicOpacity = interpolate(italicProgress, [0, 0.28, 1], [0, 1, 1], {
+  const italicTranslateY = interpolate(italicProgress, [0, 1], [108, 0]);
+  const italicOpacity = interpolate(italicProgress, [0, 0.25, 1], [0, 1, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  const underlineStart = Math.round(1.65 * safeFps);
-  const underlineDuration = Math.max(12, Math.round(0.78 * safeFps));
+  const underlineStart = Math.round(1.12 * safeFps);
+  const underlineDuration = Math.max(12, Math.round(0.62 * safeFps));
 
-  // Beat 3 (2.1..7.5s): 3D Portal QR card + 3-step student onboarding + 2s deterministic <Circle> radar rings
-  const qrStart = Math.round(2.1 * safeFps);
-  const qrElapsed = frame - qrStart;
-  const qrSpring =
-    qrElapsed >= 0
+  // Center Hero QR Monolith: Dramatic 3D Entry (0.70s..1.80s), then STRICT 0.00deg Orthogonal Lock (1.80s..7.50s)
+  const qrEntryStart = Math.round(0.7 * safeFps); // 42f
+  const qrLockFrame = Math.round(1.8 * safeFps); // 108f -> strictly 0deg from f>=108 through 450 (incl. f=2760 / Local 270)!
+  const qrOpacity = interpolate(
+    frame,
+    [qrEntryStart, qrEntryStart + Math.max(6, Math.round(0.24 * safeFps))],
+    [0, 1],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    },
+  );
+  const qrEntryProgress = interpolate(frame, [qrEntryStart, qrLockFrame], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EXPO_OUT,
+  });
+  const isQrOrthogonalLocked = frame >= qrLockFrame;
+  const qrRotateX = isQrOrthogonalLocked ? 0 : interpolate(qrEntryProgress, [0, 1], [26, 0]);
+  const qrRotateY = isQrOrthogonalLocked ? 0 : interpolate(qrEntryProgress, [0, 1], [-18, 0]);
+  const qrTranslateY = isQrOrthogonalLocked ? 0 : interpolate(qrEntryProgress, [0, 1], [60, 0]);
+  const qrScale = isQrOrthogonalLocked ? 1 : interpolate(qrEntryProgress, [0, 1], [0.8, 1]);
+
+  // Autofocus Corner Brackets breathe subtly OUTSIDE white 28px QR quiet zone
+  const bracketPulseScale = 1 + Math.sin(timeSec * 3.1) * 0.018;
+  const bracketPulseOpacity = 0.78 + Math.sin(timeSec * 3.1) * 0.2;
+
+  // Flanking 3D Satellite Cards (+85px Z, tilted +/-17deg Y inward toward QR monolith)
+  const satStart = Math.round(1.25 * safeFps); // 75f
+  const satSpring =
+    frame >= satStart
       ? spring({
-          frame: qrElapsed,
+          frame: frame - satStart,
           fps: safeFps,
-          config: { damping: 180, stiffness: 180, mass: 1 },
+          config: { damping: 16, stiffness: 205, mass: 0.92 },
         })
       : 0;
-  const qrOpacity =
-    qrElapsed >= 0
-      ? interpolate(qrElapsed, [0, Math.max(5, Math.round(0.28 * safeFps))], [0, 1], {
+  const satOpacity =
+    frame >= satStart
+      ? interpolate(frame, [satStart, satStart + Math.round(0.22 * safeFps)], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
       : 0;
+  const leftSatFloatY = Math.sin(timeSec * 1.35) * 4 * satSpring;
+  const rightSatFloatY = Math.cos(timeSec * 1.28 + 0.7) * 4 * satSpring;
 
-  const qrFloatY = qrOpacity > 0.001 ? Math.sin(timeSec * 1.45) * 4.5 * qrSpring : 0;
-  const qrFloatRotX = qrOpacity > 0.001 ? Math.cos(timeSec * 1.1) * 0.9 * qrSpring : 0;
-  const qrFloatRotY = qrOpacity > 0.001 ? Math.sin(timeSec * 0.9) * 1.15 * qrSpring : 0;
+  const stepBaseStart = satStart + Math.round(0.24 * safeFps);
+  const stepStagger = Math.max(4, Math.round(0.18 * safeFps));
 
-  const qrTranslateY = (1 - qrSpring) * 58 + qrFloatY;
-  const qrRotateX = (1 - qrSpring) * 11 + qrFloatRotX;
-  const qrRotateY = (1 - qrSpring) * -5 + qrFloatRotY;
-  const qrScale = 0.90 + 0.10 * qrSpring;
-
-  const stepBaseStart = qrStart + Math.round(0.42 * safeFps);
-  const stepStagger = Math.max(4, Math.round(0.22 * safeFps));
-
-  const radarStart = qrStart + Math.max(4, Math.round(0.32 * safeFps));
-  const radarPeriod = Math.max(24, Math.round(2 * safeFps));
-  const radarHalfOffset = Math.round(radarPeriod * 0.5);
-
-  const sheenStart = Math.round(3.35 * safeFps);
-  const sheenPeriod = Math.max(36, Math.round(2.15 * safeFps));
-  const sheenElapsed = frame - sheenStart;
-  const sheenPhase = sheenElapsed >= 0 ? (sheenElapsed % sheenPeriod) / sheenPeriod : 0;
-  const sheenX = interpolate(sheenPhase, [0, 0.74, 1], [-280, 1080, 1080], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: SHEEN_EASE,
-  });
-  const sheenOpacity =
-    sheenElapsed >= 0
-      ? interpolate(sheenPhase, [0, 0.16, 0.58, 0.74, 1], [0, 0.65, 0.65, 0, 0], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-        }) * qrOpacity
-      : 0;
+  // 3D Floor Radar Waves (rotating plane tilted at rotateX(62deg) inside CameraStage)
+  const radarStart = Math.round(0.9 * safeFps);
+  const radarPeriod = Math.max(36, Math.round(2.4 * safeFps));
 
   const liveDotScale = 0.84 + Math.sin(timeSec * 5.2) * 0.18;
 
@@ -256,93 +281,196 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
         style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
       />
 
+      {/* Luminous Center Spotlight Halo behind Center QR Monolith */}
+      <div
+        aria-hidden
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'radial-gradient(circle at 50% 60%, rgba(255, 255, 255, 0.92) 0%, rgba(248, 246, 238, 0.45) 34%, rgba(248, 246, 238, 0) 64%)',
+          pointerEvents: 'none',
+        }}
+      />
+
+      {/* LAYER A: Background 3D Spatial Floor Grid, Tilted Radar Dish & L-Brackets inside <CameraStage> */}
       <CameraStage
-        zoomFrom={0.98}
+        zoomFrom={0.99}
         zoomTo={1.03}
         panXFrom={0}
         panXTo={0}
-        panYFrom={6}
+        panYFrom={4}
         panYTo={-4}
-        tiltXFrom={0.3}
-        tiltXTo={-0.2}
-        tiltYFrom={-0.4}
-        tiltYTo={0.4}
-        breathingAmplitude={0.45}
-        entryZoomOffset={0.038}
-        entryFrames={Math.round(0.45 * safeFps)}
+        tiltXFrom={1.5}
+        tiltXTo={-0.5}
+        tiltYFrom={-0.6}
+        tiltYTo={0.6}
+        breathingAmplitude={0.4}
+        entryZoomOffset={0.032}
+        entryFrames={Math.round(0.42 * safeFps)}
         clip
       >
-        {/* Beat 1: Four Symmetrical Architectural Corner L-Brackets Drawing Cleanly Inward */}
-        {CORNER_BRACKETS.map((bracket) => (
-          <div
-            key={bracket.id}
-            style={{
-              position: 'absolute',
-              width: 96,
-              height: 96,
-              pointerEvents: 'none',
-              ...bracket.posStyle,
-              transform: `translate3d(${(bracket.slideXSign * bracketSlidePx).toFixed(2)}px, ${(bracket.slideYSign * bracketSlidePx).toFixed(2)}px, 0px)`,
-            }}
-          >
-            <EvolvingPath
-              d={bracket.d}
-              width={96}
-              height={96}
-              startFrame={bracketStart}
-              durationFrames={bracketDuration}
-              stroke={LAUNCH_PALETTE.SECONDARY}
-              strokeWidth={2.5}
-              strokeLinecap="square"
-              strokeLinejoin="miter"
-              headDotColor={LAUNCH_PALETTE.ACCENT}
-              headDotRadius={4.5}
-              hideDotWhenComplete
-            />
-            <span
-              style={{
-                position: 'absolute',
-                width: 6,
-                height: 6,
-                borderRadius: 999,
-                backgroundColor: LAUNCH_PALETTE.ACCENT,
-                opacity: bracketDotOpacity,
-                ...bracket.dotPosStyle,
-              }}
-            />
-          </div>
-        ))}
-
-        {/* Centered Editorial Vault Stack */}
         <div
           style={{
             position: 'absolute',
             inset: 0,
-            padding: '94px 128px 86px',
+            perspective: '1500px',
+            transformStyle: 'preserve-3d',
+          }}
+        >
+          <SpatialFloorGrid
+            accentColor={LAUNCH_PALETTE.ACCENT}
+            secondaryColor={EMERALD}
+            gridOpacity={0.24}
+            scrollSpeed={12}
+          />
+
+          {/* 3D Tilted Concentric Holographic Radar Dish beneath QR Monolith */}
+          <div
+            aria-hidden
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '68%',
+              width: 920,
+              height: 920,
+              transform: 'translate(-50%, -50%) translateZ(-80px) rotateX(62deg)',
+              transformStyle: 'preserve-3d',
+              pointerEvents: 'none',
+            }}
+          >
+            <Circle
+              radius={360}
+              fill="none"
+              stroke="rgba(201, 111, 79, 0.22)"
+              strokeWidth={1.6}
+              premountFor={safeFps}
+              showInTimeline={false}
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                opacity: qrOpacity,
+              }}
+            />
+
+            {RADAR_RING_SPECS.map((ring, idx) => {
+              const ringOffset = Math.round((radarPeriod / RADAR_RING_SPECS.length) * idx);
+              const ringElapsed = frame - radarStart - ringOffset;
+              if (ringElapsed < 0) return null;
+              const cycleT = (ringElapsed % radarPeriod) / radarPeriod;
+              const ringScale = interpolate(cycleT, [0, 1], [0.75, 2.05], {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+                easing: RADAR_EASE,
+              });
+              const ringOpacity =
+                interpolate(cycleT, [0, 0.14, 0.72, 1], [0, 0.72, 0.26, 0], {
+                  extrapolateLeft: 'clamp',
+                  extrapolateRight: 'clamp',
+                }) * qrOpacity;
+
+              return (
+                <Circle
+                  key={`floor-radar-${idx}`}
+                  radius={ring.radius}
+                  fill="none"
+                  stroke={ring.color}
+                  strokeWidth={ring.strokeWidth}
+                  vectorEffect="non-scaling-stroke"
+                  premountFor={safeFps}
+                  showInTimeline={false}
+                  style={{
+                    position: 'absolute',
+                    left: '50%',
+                    top: '50%',
+                    opacity: ringOpacity,
+                    transform: `translate(-50%, -50%) scale(${ringScale.toFixed(4)})`,
+                  }}
+                />
+              );
+            })}
+          </div>
+
+          {/* 4 Symmetrical Architectural Corner L-Brackets */}
+          {CORNER_BRACKETS.map((bracket) => (
+            <div
+              key={bracket.id}
+              style={{
+                position: 'absolute',
+                width: 96,
+                height: 96,
+                pointerEvents: 'none',
+                ...bracket.posStyle,
+                transform: `translate3d(${(bracket.slideXSign * bracketSlidePx).toFixed(2)}px, ${(bracket.slideYSign * bracketSlidePx).toFixed(2)}px, 0px)`,
+              }}
+            >
+              <EvolvingPath
+                d={bracket.d}
+                width={96}
+                height={96}
+                startFrame={bracketStart}
+                durationFrames={bracketDuration}
+                stroke={LAUNCH_PALETTE.SECONDARY}
+                strokeWidth={2.5}
+                strokeLinecap="square"
+                strokeLinejoin="miter"
+                headDotColor={LAUNCH_PALETTE.ACCENT}
+                headDotRadius={4.5}
+                hideDotWhenComplete
+              />
+              <span
+                style={{
+                  position: 'absolute',
+                  width: 6,
+                  height: 6,
+                  borderRadius: 999,
+                  backgroundColor: LAUNCH_PALETTE.ACCENT,
+                  opacity: bracketDotOpacity,
+                  ...bracket.dotPosStyle,
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </CameraStage>
+
+      {/* LAYER B: Foreground Hero Stage OUTSIDE Tilting CameraStage so QR Monolith Locks Strictly Flat 0.00deg */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          pointerEvents: 'none',
+          fontFamily: LAUNCH_FONTS.DISPLAY,
+        }}
+      >
+        {/* Top Crest Pill & Headline Lockup */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 88,
+            right: 88,
+            top: 56,
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            justifyContent: 'center',
-            gap: 24,
             textAlign: 'center',
-            fontFamily: LAUNCH_FONTS.DISPLAY,
           }}
         >
-          {/* Beat 1: Crest Pill Springs Open */}
           <Interactive.Div
             name="Closing Crest Pill"
             premountFor={safeFps}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 14,
-              padding: '10px 26px',
+              gap: 12,
+              padding: '8px 22px',
               borderRadius: 999,
               backgroundColor: LAUNCH_PALETTE.CARD_BG,
               border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-              boxShadow: '0 14px 32px rgba(46, 58, 47, 0.08)',
+              boxShadow: '0 12px 28px rgba(46, 58, 47, 0.08)',
               opacity: pillOpacity,
-              willChange: 'transform, opacity',
               transform: `scale(${pillScaleX.toFixed(4)}, ${pillScaleY.toFixed(4)})`,
             }}
           >
@@ -350,11 +478,11 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               name="Closing JPP Crest"
               src={staticFile('jpp-logo.png')}
               premountFor={safeFps}
-              style={{ width: 32, height: 32, objectFit: 'contain' }}
+              style={{ width: 28, height: 28, objectFit: 'contain' }}
             />
             <span
               style={{
-                fontSize: 15.5,
+                fontSize: 14.5,
                 fontWeight: 800,
                 letterSpacing: '0.16em',
                 color: LAUNCH_PALETTE.PRIMARY,
@@ -365,11 +493,11 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             </span>
           </Interactive.Div>
 
-          {/* Beat 2: KineticWords Primary Headline + Masked Italic Glide + Terracotta <Underline> */}
           <Interactive.Div
             name="Closing Title Lockup"
             premountFor={safeFps}
             style={{
+              marginTop: 12,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -388,27 +516,26 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               align="center"
               style={{
                 margin: 0,
-                fontSize: 56,
+                fontSize: 48,
                 fontWeight: 900,
                 letterSpacing: '-0.035em',
-                lineHeight: 1.06,
+                lineHeight: 1.05,
                 color: LAUNCH_PALETTE.PRIMARY,
               }}
             />
 
             <div
               style={{
-                marginTop: 10,
+                marginTop: 6,
                 overflow: italicProgress >= 0.999 ? 'visible' : 'hidden',
-                padding: '6px 34px 20px 28px',
-                marginLeft: -28,
-                marginRight: -34,
-                marginBottom: -20,
+                padding: '4px 32px 16px 26px',
+                marginLeft: -26,
+                marginRight: -32,
+                marginBottom: -16,
               }}
             >
               <div
                 style={{
-                  willChange: 'transform, opacity',
                   opacity: italicOpacity,
                   transform: `translate3d(0px, ${italicTranslateY.toFixed(2)}%, 0px)`,
                   overflow: 'visible',
@@ -419,8 +546,8 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                   startFrame={underlineStart}
                   durationFrames={underlineDuration}
                   color={LAUNCH_PALETTE.ACCENT}
-                  strokeWidth={4}
-                  padding={5}
+                  strokeWidth={3.8}
+                  padding={4}
                   iterations={2}
                   seed={31}
                   style={{ display: 'inline-block', overflow: 'visible' }}
@@ -428,11 +555,11 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                   <p
                     style={{
                       margin: 0,
-                      paddingRight: 12,
+                      paddingRight: 10,
                       fontFamily: LAUNCH_FONTS.SERIF_ITALIC,
                       fontStyle: 'italic',
-                      fontSize: 54,
-                      lineHeight: 1.1,
+                      fontSize: 40,
+                      lineHeight: 1.08,
                       color: LAUNCH_PALETTE.ACCENT,
                     }}
                   >
@@ -442,357 +569,454 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               </div>
             </div>
           </Interactive.Div>
+        </div>
 
-          {/* Beat 3: 3D Portal QR Card + 3 Onboarding Steps + Continuous Breathing Radar Rings */}
-          <div
+        {/* 3-Piece LED Spotlight Stage: Left Satellite (+17deg Y) + Center Orthogonal Hero QR (0.00deg, 340px) + Right Satellite (-17deg Y) */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 258,
+            height: 706,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 44,
+            perspective: '1650px',
+            transformStyle: 'preserve-3d',
+          }}
+        >
+          {/* LEFT 3D SATELLITE CARD: 3 Langkah Mula + Status Pill */}
+          <Interactive.Div
+            name="Left 3D Onboarding Satellite"
+            premountFor={safeFps}
             style={{
-              marginTop: 10,
-              perspective: '1600px',
-              transformStyle: 'preserve-3d',
-              overflow: 'visible',
+              width: 422,
+              padding: '24px 26px',
+              borderRadius: 26,
+              backgroundColor: LAUNCH_PALETTE.CARD_BG,
+              border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
+              borderBottom: `6px solid ${LAUNCH_PALETTE.SECONDARY}`,
+              boxShadow: '0 32px 66px rgba(46, 58, 47, 0.16)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14,
+              opacity: satOpacity,
+              transform: `translate3d(${((1 - satSpring) * -42).toFixed(2)}px, ${leftSatFloatY.toFixed(2)}px, ${(85 * satSpring).toFixed(2)}px) rotateY(17deg)`,
             }}
           >
-            <Interactive.Div
-              name="Official Portal QR Card"
-              premountFor={safeFps}
-              style={{
-                position: 'relative',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 40,
-                padding: '30px 44px',
-                borderRadius: 28,
-                backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                boxShadow: '0 28px 64px rgba(46, 58, 47, 0.14)',
-                opacity: qrOpacity,
-                visibility: qrOpacity <= 0.001 ? 'hidden' : 'visible',
-                transformStyle: 'preserve-3d',
-                willChange: 'transform, opacity',
-                transform: `translate3d(0px, ${qrTranslateY.toFixed(2)}px, 0px) rotateX(${qrRotateX.toFixed(2)}deg) rotateY(${qrRotateY.toFixed(2)}deg) scale(${qrScale.toFixed(4)})`,
-              }}
-            >
-              {/* Inner Clipped Layer for 8-Module Top Spectrum Ribbon & Diagonal Sheen Glide */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <div
                 style={{
-                  position: 'absolute',
-                  inset: 0,
-                  borderRadius: 26,
-                  overflow: 'hidden',
-                  pointerEvents: 'none',
-                  zIndex: 4,
-                }}
-              >
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    height: 5,
-                    display: 'flex',
-                  }}
-                >
-                  {[
-                    LAUNCH_MODULE_THEMES.polymaps.primary,
-                    LAUNCH_MODULE_THEMES.takwim.primary,
-                    LAUNCH_MODULE_THEMES.polymart.primary,
-                    LAUNCH_MODULE_THEMES.polyrent.primary,
-                    LAUNCH_MODULE_THEMES.polysuara.primary,
-                    LAUNCH_MODULE_THEMES.kebajikan.primary,
-                    LAUNCH_MODULE_THEMES.kelab.primary,
-                    LAUNCH_MODULE_THEMES.meritQr.primary,
-                  ].map((stripeColor) => (
-                    <span
-                      key={stripeColor}
-                      style={{
-                        flex: 1,
-                        height: '100%',
-                        backgroundColor: stripeColor,
-                      }}
-                    />
-                  ))}
-                </div>
-                {sheenOpacity > 0.005 ? (
-                  <div
-                    style={{
-                      position: 'absolute',
-                      top: '-45%',
-                      left: 0,
-                      width: 210,
-                      height: '190%',
-                      opacity: sheenOpacity,
-                      background:
-                        'linear-gradient(90deg, rgba(217, 201, 178, 0) 0%, rgba(217, 201, 178, 0.34) 48%, rgba(248, 246, 238, 0.52) 55%, rgba(217, 201, 178, 0) 100%)',
-                      transform: `translate3d(${sheenX.toFixed(2)}px, 0px, 0px) rotate(24deg)`,
-                      pointerEvents: 'none',
-                    }}
-                  />
-                ) : null}
-              </div>
-
-              {/* Left: QR Box with Continuous 2-Second Breathing Concentric Radar Rings */}
-              <div
-                style={{
-                  position: 'relative',
-                  width: 204,
-                  height: 204,
-                  flexShrink: 0,
-                  display: 'flex',
+                  display: 'inline-flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  zIndex: 2,
+                  gap: 7,
+                  fontFamily: LAUNCH_FONTS.MONO,
+                  fontSize: 11.5,
+                  fontWeight: 900,
+                  letterSpacing: '0.13em',
+                  color: EMERALD_INK,
                 }}
               >
-                {/* Static subtle orbit hairline */}
-                <Circle
-                  radius={108}
-                  fill="none"
-                  stroke="rgba(201, 111, 79, 0.16)"
-                  strokeWidth={1.25}
-                  premountFor={safeFps}
-                  showInTimeline={false}
-                  style={{
-                    position: 'absolute',
-                    left: '50%',
-                    top: '50%',
-                    opacity: qrOpacity,
-                    transform: 'translate(-50%, -50%)',
-                    pointerEvents: 'none',
-                  }}
-                />
-
-                {/* Two staggered deterministic 2-second breathing radar rings */}
-                {[0, 1].map((ringIdx) => {
-                  const ringElapsed = frame - radarStart - ringIdx * radarHalfOffset;
-                  if (ringElapsed < 0) return null;
-                  const cycleT = (ringElapsed % radarPeriod) / radarPeriod;
-                  const ringScale = interpolate(cycleT, [0, 1], [0.84, 1.26], {
-                    extrapolateLeft: 'clamp',
-                    extrapolateRight: 'clamp',
-                    easing: RADAR_EASE,
-                  });
-                  const ringOpacity =
-                    interpolate(cycleT, [0, 0.16, 0.68, 1], [0, 0.68, 0.22, 0], {
-                      extrapolateLeft: 'clamp',
-                      extrapolateRight: 'clamp',
-                    }) * qrOpacity;
-
-                  return (
-                    <Circle
-                      key={`qr-radar-${ringIdx}`}
-                      radius={104}
-                      fill="none"
-                      stroke={ringIdx === 0 ? LAUNCH_PALETTE.ACCENT : LAUNCH_MODULE_THEMES.polymaps.primary}
-                      strokeWidth={2.2}
-                      vectorEffect="non-scaling-stroke"
-                      premountFor={safeFps}
-                      showInTimeline={false}
-                      style={{
-                        position: 'absolute',
-                        left: '50%',
-                        top: '50%',
-                        opacity: ringOpacity,
-                        transform: `translate(-50%, -50%) scale(${ringScale.toFixed(4)})`,
-                        pointerEvents: 'none',
-                      }}
-                    />
-                  );
-                })}
-
-                <div
-                  style={{
-                    position: 'relative',
-                    zIndex: 2,
-                    padding: 15,
-                    borderRadius: 18,
-                    backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                    border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                    boxShadow: '0 8px 20px rgba(46, 58, 47, 0.08)',
-                  }}
-                >
-                  <QRCode
-                    value={safePortalUrl}
-                    size={172}
-                    fgColor={LAUNCH_PALETTE.PRIMARY}
-                    bgColor={LAUNCH_PALETTE.BACKGROUND}
-                  />
-                </div>
-              </div>
-
-              {/* Right: Student QR Onboarding Copy & 3 Steps */}
-              <div
-                style={{
-                  position: 'relative',
-                  zIndex: 2,
-                  textAlign: 'left',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 10,
-                }}
-              >
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 13,
-                    fontWeight: 800,
-                    letterSpacing: '0.16em',
-                    color: LAUNCH_PALETTE.SECONDARY,
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 8,
-                      height: 8,
-                      borderRadius: 999,
-                      backgroundColor: LAUNCH_MODULE_THEMES.polymaps.primary,
-                      transform: `scale(${liveDotScale.toFixed(3)})`,
-                      display: 'inline-block',
-                    }}
-                  />
-                  <span>IMBAS UNTUK AKSES SERTA-MERTA</span>
-                </div>
-
                 <span
                   style={{
-                    fontSize: 36,
-                    fontWeight: 900,
-                    lineHeight: 1.08,
-                    letterSpacing: '-0.02em',
-                    color: LAUNCH_PALETTE.PRIMARY,
-                  }}
-                >
-                  {displayDomain}
-                </span>
-
-                {/* 3 Clear Student Onboarding Steps with Staggered Spring Reveal */}
-                <div
-                  style={{
-                    marginTop: 2,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 7,
-                  }}
-                >
-                  {ONBOARDING_STEPS.map((step, idx) => {
-                    const stepStart = stepBaseStart + idx * stepStagger;
-                    const stepElapsed = frame - stepStart;
-                    const stepSpring =
-                      stepElapsed >= 0
-                        ? spring({
-                            frame: stepElapsed,
-                            fps: safeFps,
-                            config: { damping: 180, stiffness: 220, mass: 0.9 },
-                          })
-                        : 0;
-                    const stepOpacity =
-                      stepElapsed >= 0
-                        ? interpolate(stepElapsed, [0, Math.max(4, Math.round(0.16 * safeFps))], [0, 1], {
-                            extrapolateLeft: 'clamp',
-                            extrapolateRight: 'clamp',
-                          })
-                        : 0;
-                    const stepTranslateX = (1 - stepSpring) * 18;
-                    const isFinalStep = idx === ONBOARDING_STEPS.length - 1;
-
-                    return (
-                      <div
-                        key={step.code}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 11,
-                          padding: '7px 14px',
-                          borderRadius: 12,
-                          backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                          border: `1px solid ${
-                            isFinalStep ? 'rgba(201, 111, 79, 0.42)' : LAUNCH_PALETTE.TERTIARY
-                          }`,
-                          opacity: stepOpacity,
-                          visibility: stepOpacity <= 0.001 ? 'hidden' : 'visible',
-                          willChange: 'transform, opacity',
-                          transform: `translate3d(${stepTranslateX.toFixed(2)}px, 0px, 0px)`,
-                        }}
-                      >
-                        <span
-                          style={{
-                            minWidth: 28,
-                            height: 22,
-                            padding: '0 7px',
-                            borderRadius: 999,
-                            backgroundColor: isFinalStep
-                              ? LAUNCH_PALETTE.ACCENT
-                              : LAUNCH_PALETTE.PRIMARY,
-                            color: LAUNCH_PALETTE.BACKGROUND,
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 11,
-                            fontWeight: 900,
-                            letterSpacing: '0.06em',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {step.code}
-                        </span>
-                        <span
-                          style={{
-                            fontSize: 15,
-                            fontWeight: 700,
-                            letterSpacing: '-0.01em',
-                            color: LAUNCH_PALETTE.PRIMARY,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {step.label}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Live Pulsing Student Status Pill */}
-                <div
-                  style={{
-                    marginTop: 4,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 9,
-                    alignSelf: 'flex-start',
-                    padding: '7px 15px',
+                    width: 8,
+                    height: 8,
                     borderRadius: 999,
-                    backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                    border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 11.5,
-                    fontWeight: 800,
-                    letterSpacing: '0.12em',
-                    color: LAUNCH_PALETTE.PRIMARY,
-                    whiteSpace: 'nowrap',
+                    backgroundColor: EMERALD,
+                    transform: `scale(${liveDotScale.toFixed(3)})`,
+                  }}
+                />
+                <span>IMBAS UNTUK AKSES SERTA-MERTA</span>
+              </div>
+              <Smartphone size={16} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {ONBOARDING_STEPS.map((step, idx) => {
+                const stepStart = stepBaseStart + idx * stepStagger;
+                const stepElapsed = frame - stepStart;
+                const stepSpring =
+                  stepElapsed >= 0
+                    ? spring({
+                        frame: stepElapsed,
+                        fps: safeFps,
+                        config: { damping: 180, stiffness: 220, mass: 0.9 },
+                      })
+                    : 0;
+                const stepOpacity =
+                  stepElapsed >= 0
+                    ? interpolate(stepElapsed, [0, Math.max(4, Math.round(0.16 * safeFps))], [0, 1], {
+                        extrapolateLeft: 'clamp',
+                        extrapolateRight: 'clamp',
+                      })
+                    : 0;
+                const isFinalStep = idx === ONBOARDING_STEPS.length - 1;
+
+                return (
+                  <div
+                    key={step.code}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      padding: '10px 14px',
+                      borderRadius: 14,
+                      backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                      border: `1.5px solid ${
+                        isFinalStep ? 'rgba(201, 111, 79, 0.5)' : LAUNCH_PALETTE.TERTIARY
+                      }`,
+                      opacity: stepOpacity,
+                      transform: `translate3d(${((1 - stepSpring) * -16).toFixed(2)}px, 0px, 0px)`,
+                    }}
+                  >
+                    <span
+                      style={{
+                        minWidth: 30,
+                        height: 24,
+                        padding: '0 8px',
+                        borderRadius: 999,
+                        backgroundColor: isFinalStep
+                          ? LAUNCH_PALETTE.ACCENT
+                          : LAUNCH_PALETTE.PRIMARY,
+                        color: '#FFFFFF',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 11.5,
+                        fontWeight: 900,
+                      }}
+                    >
+                      {step.code}
+                    </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                      <span style={{ fontSize: 15.5, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
+                        {step.label}
+                      </span>
+                      <span style={{ fontSize: 12, fontWeight: 600, color: LAUNCH_PALETTE.INK_SOFT }}>
+                        {step.sub}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '9px 14px',
+                borderRadius: 999,
+                backgroundColor: EMERALD_SOFT,
+                border: `1.5px solid ${EMERALD_BORDER}`,
+                fontFamily: LAUNCH_FONTS.MONO,
+                fontSize: 11,
+                fontWeight: 900,
+                letterSpacing: '0.09em',
+                color: EMERALD_INK,
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 999,
+                  backgroundColor: EMERALD,
+                  transform: `scale(${liveDotScale.toFixed(3)})`,
+                  flexShrink: 0,
+                }}
+              />
+              <span>PERCUMA UNTUK SEMUA PELAJAR POLISAS • 24/7</span>
+            </div>
+          </Interactive.Div>
+
+          {/* CENTER HERO QR MONOLITH: Enters in 3D, then Locks Flat 0.00deg with 340x340px Pure White/Black Contrast */}
+          <Interactive.Div
+            name="LED Wall Hero QR Monolith"
+            premountFor={safeFps}
+            style={{
+              position: 'relative',
+              width: 472,
+              borderRadius: 30,
+              backgroundColor: '#FFFFFF',
+              border: `2.5px solid ${LAUNCH_PALETTE.PRIMARY}`,
+              boxShadow:
+                '0 44px 96px rgba(31, 39, 32, 0.24), 0 0 68px rgba(255, 255, 255, 0.95)',
+              padding: '24px 28px 22px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: 14,
+              opacity: qrOpacity,
+              boxSizing: 'border-box',
+              overflow: 'hidden',
+              transform: isQrOrthogonalLocked
+                ? 'none'
+                : `translate3d(0px, ${qrTranslateY.toFixed(2)}px, 0px) rotateX(${qrRotateX.toFixed(2)}deg) rotateY(${qrRotateY.toFixed(2)}deg) scale(${qrScale.toFixed(4)})`,
+            }}
+          >
+            {/* Top 6px 8-Module Color Spectrum Accent Ribbon */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 6,
+                display: 'flex',
+              }}
+            >
+              {MODULE_SPECTRUM_LIST.map((mod) => (
+                <span key={mod.label} style={{ flex: 1, height: '100%', backgroundColor: mod.color }} />
+              ))}
+            </div>
+
+            {/* Top LED Scan Prompt Pill */}
+            <div
+              style={{
+                marginTop: 4,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '6px 16px',
+                borderRadius: 999,
+                backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                color: '#FFFFFF',
+                fontFamily: LAUNCH_FONTS.MONO,
+                fontSize: 12,
+                fontWeight: 900,
+                letterSpacing: '0.13em',
+              }}
+            >
+              <span
+                style={{
+                  width: 8,
+                  height: 8,
+                  borderRadius: 999,
+                  backgroundColor: EMERALD,
+                  transform: `scale(${liveDotScale.toFixed(3)})`,
+                }}
+              />
+              <span>IMBAS QR DI SKRIN LED SEKARANG</span>
+            </div>
+
+            {/* Pure White 28px Quiet Zone Target Frame + 340x340px Maximum Contrast QRCode */}
+            <div
+              style={{
+                position: 'relative',
+                width: 396,
+                height: 396,
+                padding: 28,
+                borderRadius: 22,
+                backgroundColor: '#FFFFFF',
+                border: '1.5px solid rgba(46, 58, 47, 0.14)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxSizing: 'border-box',
+              }}
+            >
+              <QRCode
+                value={safePortalUrl}
+                size={340}
+                fgColor="#111812"
+                bgColor="#FFFFFF"
+                level="M"
+              />
+
+              {/* 4 Camera-Autofocus Corner Brackets OUTSIDE Quiet Zone (never cover QR finder patterns) */}
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  inset: -7,
+                  opacity: bracketPulseOpacity,
+                  transform: `scale(${bracketPulseScale.toFixed(4)})`,
+                  pointerEvents: 'none',
+                }}
+              >
+                <span
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    top: 0,
+                    width: 32,
+                    height: 32,
+                    borderTop: `4.5px solid ${EMERALD_INK}`,
+                    borderLeft: `4.5px solid ${EMERALD_INK}`,
+                    borderTopLeftRadius: 12,
+                  }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: 0,
+                    width: 32,
+                    height: 32,
+                    borderTop: `4.5px solid ${LAUNCH_PALETTE.ACCENT}`,
+                    borderRight: `4.5px solid ${LAUNCH_PALETTE.ACCENT}`,
+                    borderTopRightRadius: 12,
+                  }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    left: 0,
+                    bottom: 0,
+                    width: 32,
+                    height: 32,
+                    borderBottom: `4.5px solid ${LAUNCH_PALETTE.ACCENT}`,
+                    borderLeft: `4.5px solid ${LAUNCH_PALETTE.ACCENT}`,
+                    borderBottomLeftRadius: 12,
+                  }}
+                />
+                <span
+                  style={{
+                    position: 'absolute',
+                    right: 0,
+                    bottom: 0,
+                    width: 32,
+                    height: 32,
+                    borderBottom: `4.5px solid ${EMERALD_INK}`,
+                    borderRight: `4.5px solid ${EMERALD_INK}`,
+                    borderBottomRightRadius: 12,
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Bottom High-Contrast Portal URL Display */}
+            <div
+              style={{
+                width: '100%',
+                padding: '10px 18px',
+                borderRadius: 16,
+                backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                textAlign: 'center',
+                boxSizing: 'border-box',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: 32,
+                  fontWeight: 900,
+                  letterSpacing: '-0.02em',
+                  color: '#111812',
+                }}
+              >
+                {displayDomain}
+              </span>
+            </div>
+          </Interactive.Div>
+
+          {/* RIGHT 3D SATELLITE CARD: 8-Module Spectrum Checklist + Live Student Proof */}
+          <Interactive.Div
+            name="Right 3D Modules Satellite"
+            premountFor={safeFps}
+            style={{
+              width: 422,
+              padding: '24px 26px',
+              borderRadius: 26,
+              backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+              border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
+              borderBottom: `6px solid ${LAUNCH_PALETTE.ACCENT}`,
+              boxShadow: '0 32px 68px rgba(31, 39, 32, 0.24)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 14,
+              opacity: satOpacity,
+              transform: `translate3d(${((1 - satSpring) * 42).toFixed(2)}px, ${rightSatFloatY.toFixed(2)}px, ${(85 * satSpring).toFixed(2)}px) rotateY(-17deg)`,
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span
+                style={{
+                  fontFamily: LAUNCH_FONTS.MONO,
+                  fontSize: 11.5,
+                  fontWeight: 900,
+                  letterSpacing: '0.13em',
+                  color: LAUNCH_PALETTE.TERTIARY,
+                }}
+              >
+                8 MODUL DALAM 1 PORTAL
+              </span>
+              <span
+                style={{
+                  padding: '3px 9px',
+                  borderRadius: 999,
+                  backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                  border: `1px solid ${EMERALD}`,
+                  fontFamily: LAUNCH_FONTS.MONO,
+                  fontSize: 10.5,
+                  fontWeight: 800,
+                  color: EMERALD_BORDER,
+                }}
+              >
+                AKTIF
+              </span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 9 }}>
+              {MODULE_SPECTRUM_LIST.map((mod) => (
+                <div
+                  key={mod.label}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    padding: '9px 11px',
+                    borderRadius: 12,
+                    backgroundColor: 'rgba(248, 246, 238, 0.08)',
+                    border: '1px solid rgba(217, 201, 178, 0.2)',
                   }}
                 >
                   <span
                     style={{
-                      width: 8,
-                      height: 8,
+                      width: 9,
+                      height: 9,
                       borderRadius: 999,
-                      backgroundColor: LAUNCH_MODULE_THEMES.polymaps.primary,
-                      transform: `scale(${liveDotScale.toFixed(3)})`,
-                      display: 'inline-block',
+                      backgroundColor: mod.color,
                       flexShrink: 0,
                     }}
                   />
-                  <span>PERCUMA UNTUK SEMUA PELAJAR POLISAS • 24/7</span>
+                  <span style={{ fontSize: 13.5, fontWeight: 800, color: '#FFFFFF', whiteSpace: 'nowrap' }}>
+                    {mod.label}
+                  </span>
                 </div>
-              </div>
-            </Interactive.Div>
-          </div>
+              ))}
+            </div>
+
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 14px',
+                borderRadius: 14,
+                backgroundColor: EMERALD_INK,
+                border: `1px solid ${EMERALD_BORDER}`,
+                color: '#FFFFFF',
+                fontFamily: LAUNCH_FONTS.MONO,
+                fontSize: 12.5,
+                fontWeight: 900,
+                fontVariantNumeric: 'tabular-nums',
+              }}
+            >
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+                <CheckCircle2 size={15} color={EMERALD_BORDER} strokeWidth={2.5} />
+                <span>{safeStudents.toLocaleString('en-US')}+ Pelajar Dah Akses</span>
+              </span>
+              <span>✓</span>
+            </div>
+          </Interactive.Div>
         </div>
-      </CameraStage>
+      </div>
 
       <EditorialFrameMarks
         chapterCode="08"
@@ -806,6 +1030,15 @@ const closingVaultSchema = {
   headlinePrimary: { type: 'string', default: CLOSING_HEADLINE_DEFAULT, description: 'Closing Line 1' },
   headlineItalic: { type: 'string', default: CLOSING_ITALIC_DEFAULT, description: 'Closing Italic Line' },
   portalUrl: { type: 'string', default: 'https://jpp.polisas.edu.my', description: 'Portal QR URL' },
+  studentsCount: {
+    type: 'number',
+    default: 1083,
+    min: 1,
+    max: 50000,
+    integer: true,
+    hiddenFromList: false,
+    description: 'Active Students Count',
+  },
 } as const satisfies InteractivitySchema;
 
 export const ClosingVaultScene = Interactive.withSchema({

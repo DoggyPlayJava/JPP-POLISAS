@@ -51,6 +51,7 @@ import { CameraStage } from '../../remotion/launch/motion/CameraStage';
 import {
   KineticWindow,
   ExplodedLayer,
+  SpatialFloorGrid,
   LiveTypewriterText,
   PersonaMonogram,
   DeterministicQrMatrix,
@@ -287,6 +288,7 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
   it('exports KineticCard UI primitives and uses zero experimental or CSS animations', () => {
     expect(typeof KineticWindow).toBe('function');
     expect(typeof ExplodedLayer).toBe('function');
+    expect(typeof SpatialFloorGrid).toBe('function');
     expect(typeof LiveTypewriterText).toBe('function');
     expect(typeof PersonaMonogram).toBe('function');
     expect(typeof DeterministicQrMatrix).toBe('function');
@@ -518,5 +520,52 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     expect(closingSource).toContain('Log Masuk & Teroka');
     expect(closingSource).toContain('PERCUMA UNTUK SEMUA PELAJAR POLISAS • 24/7');
     expect(closingSource).toContain('AKSES SERTA-MERTA • IMBAS QR SEKARANG');
+  });
+
+  it('enforces v5 3D spatial stages across Chapters 03-06 and LED-wall 340px 0-deg QR lock on Chapter 08', () => {
+    const closingSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'ClosingVaultScene.tsx'),
+      'utf8',
+    );
+    expect(closingSource).toContain('<QRCode');
+    expect(closingSource).toContain('size={340}');
+    expect(closingSource).toContain('bgColor="#FFFFFF"');
+    expect(closingSource).toContain('fgColor="#111812"');
+    expect(closingSource).toMatch(/isQrOrthogonalLocked\s*\?\s*0/);
+    expect(closingSource).toContain('SpatialFloorGrid');
+
+    for (const sceneName of [
+      'PolyMartCommerceScene.tsx',
+      'PolySuaraVoiceScene.tsx',
+      'WelfareCareScene.tsx',
+      'ClubsEmsScene.tsx',
+    ]) {
+      const sceneSource = readFileSync(join(LAUNCH_ROOT_DIR, 'scenes', sceneName), 'utf8');
+      expect(sceneSource, `${sceneName} missing SpatialFloorGrid`).toContain('SpatialFloorGrid');
+      expect(sceneSource, `${sceneName} missing rotateX 3D transform`).toContain('rotateX(');
+      expect(sceneSource, `${sceneName} missing rotateY 3D transform`).toContain('rotateY(');
+      expect(sceneSource, `${sceneName} missing translate3d Z-depth`).toContain('translate3d(');
+    }
+
+    for (const filePath of walkLaunchTsFiles(LAUNCH_ROOT_DIR)) {
+      const content = readFileSync(filePath, 'utf8');
+      const sparkMatches = content.match(/<GeometricSparkBurst\s+[\s\S]*?\/>/g) ?? [];
+      for (const block of sparkMatches) {
+        expect(block, `${relative(LAUNCH_ROOT_DIR, filePath)} missing triggerFrame`).toContain(
+          'triggerFrame=',
+        );
+        expect(block, `${relative(LAUNCH_ROOT_DIR, filePath)} missing x`).toContain('x=');
+        expect(block, `${relative(LAUNCH_ROOT_DIR, filePath)} missing y`).toContain('y=');
+        expect(block, `${relative(LAUNCH_ROOT_DIR, filePath)} invalid spark prop`).not.toMatch(
+          /\b(startFrame|particleCount|maxRadius|secondaryColor)=/,
+        );
+      }
+      const cursorMatches = content.match(/<GhostCursor\s+[\s\S]*?\/>/g) ?? [];
+      for (const block of cursorMatches) {
+        expect(block, `${relative(LAUNCH_ROOT_DIR, filePath)} invalid GhostCursor prop`).not.toContain(
+          'accentColor=',
+        );
+      }
+    }
   });
 });

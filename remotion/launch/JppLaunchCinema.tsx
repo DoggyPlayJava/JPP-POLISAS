@@ -215,6 +215,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
               headlinePrimary="Imbas Sekarang. Mulakan Pengalaman Kampus Anda."
               headlineItalic={headlineItalic}
               portalUrl={portalUrl}
+              studentsCount={stats.studentsCount}
             />
           </TransitionSeries.Sequence>
         </TransitionSeries>
