@@ -114,80 +114,80 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
 
   const timeSec = frame / safeFps;
 
-  // Beat 1 (0..1.4s): Community badge + KineticWords headline + 4 student proof bento cards cascade
-  const pillDuration = Math.max(8, Math.round(0.38 * safeFps));
-  const headlineStart = Math.round(0.10 * safeFps);
-  const wordStagger = Math.max(2, Math.round(0.065 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.38 * safeFps));
-  const ruleStart = Math.round(0.28 * safeFps);
-  const ruleDuration = Math.max(10, Math.round(0.65 * safeFps));
+  // Beat 1 (0..1.7s): Community badge + KineticWords headline + 4 student proof bento cards cascade
+  const pillDuration = Math.max(8, Math.round(0.45 * safeFps));
+  const headlineStart = Math.round(0.14 * safeFps);
+  const wordStagger = Math.max(2, Math.round(0.07 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.42 * safeFps));
+  const ruleStart = Math.round(0.34 * safeFps);
+  const ruleDuration = Math.max(10, Math.round(0.72 * safeFps));
 
-  const cardBaseStart = Math.round(0.34 * safeFps);
-  const cardStagger = Math.max(3, Math.round((6 / 60) * safeFps));
-  const cardFadeFrames = Math.max(4, Math.round(0.22 * safeFps));
+  const cardBaseStart = Math.round(0.42 * safeFps);
+  const cardStagger = Math.max(3, Math.round(0.11 * safeFps));
+  const cardFadeFrames = Math.max(4, Math.round(0.26 * safeFps));
 
-  // Beat 2 (1.2..4.2s): @remotion/shapes <Pie> progress rings + tabular counters + seamless kinetic ticker strip
-  const arcBaseStart = Math.round(1.20 * safeFps);
-  const arcStagger = Math.max(2, Math.round((4 / 60) * safeFps));
-  const arcSpanFrames = Math.max(24, Math.round(2.65 * safeFps));
-  const countSpanFrames = Math.max(24, Math.round(2.75 * safeFps));
+  // Beat 2 (1.3..4.4s): @remotion/shapes <Pie> progress rings + tabular counters + seamless kinetic ticker strip
+  const arcBaseStart = Math.round(1.35 * safeFps);
+  const arcStagger = Math.max(2, Math.round(0.08 * safeFps));
+  const arcSpanFrames = Math.max(24, Math.round(2.75 * safeFps));
+  const countSpanFrames = Math.max(24, Math.round(2.85 * safeFps));
 
-  const tickerFadeStart = Math.round(0.95 * safeFps);
-  const tickerFadeEnd = Math.max(tickerFadeStart + 8, Math.round(1.38 * safeFps));
+  const tickerFadeStart = Math.round(1.05 * safeFps);
+  const tickerFadeEnd = Math.max(tickerFadeStart + 8, Math.round(1.52 * safeFps));
   const tickerOpacity = interpolate(frame, [tickerFadeStart, tickerFadeEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  const tickerCycleSec = 18;
+  const tickerCycleSec = 20;
   const tickerPhase = (timeSec / tickerCycleSec) % 1;
   const tickerShiftPercent = -(tickerPhase * 50);
 
-  // Beat 2b (1.55..3.2s): Live animated 6-month student community participation bar chart
-  const chartStart = Math.round(1.55 * safeFps);
+  // Beat 2b (1.8..4.5s): Live animated 6-month student community participation bar chart (peaks cleanly before f_4860 / local 288f!)
+  const chartStart = Math.round(1.8 * safeFps);
   const chartElapsed = frame - chartStart;
   const chartSpring =
     chartElapsed >= 0
       ? spring({
           frame: chartElapsed,
           fps: safeFps,
-          config: { damping: 180, stiffness: 210, mass: 0.9 },
+          config: { damping: 24, stiffness: 165, mass: 1.0 },
         })
       : 0;
   const chartOpacity =
     chartElapsed >= 0
-      ? interpolate(chartElapsed, [0, Math.max(6, Math.round(0.24 * safeFps))], [0, 1], {
+      ? interpolate(chartElapsed, [0, Math.max(6, Math.round(0.28 * safeFps))], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
       : 0;
   const chartTranslateY = (1 - chartSpring) * 24;
-  const barBaseStart = Math.round(1.85 * safeFps);
-  const barStagger = Math.max(2, Math.round((4 / 60) * safeFps));
+  const barBaseStart = Math.round(2.15 * safeFps);
+  const barStagger = Math.max(2, Math.round(0.08 * safeFps));
 
-  // Beat 3 (4.0..6.0s): Terracotta (#C96F4F) student action pill lifts with sweeping translucent sheen
-  const beat3Start = Math.round(4.00 * safeFps);
+  // Beat 3 (4.0..9.2s): Electric Teal (#0D9488) student action pill lifts cleanly with sweeping specular sheen
+  const beat3Start = Math.round(4.05 * safeFps);
   const pillElapsed = frame - beat3Start;
   const beat3Spring =
     pillElapsed >= 0
       ? spring({
           frame: pillElapsed,
           fps: safeFps,
-          config: { damping: 180, stiffness: 220, mass: 0.9 },
+          config: { damping: 24, stiffness: 165, mass: 1.0 },
         })
       : 0;
   const beat3Opacity =
     pillElapsed >= 0
-      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.18 * safeFps))], [0, 1], {
+      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.22 * safeFps))], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
       : 0;
-  const beat3HoverY = beat3Opacity > 0.001 ? Math.sin(timeSec * 2.2) * 2.5 * beat3Spring : 0;
+  const beat3HoverY = beat3Opacity > 0.001 ? Math.sin(timeSec * 2.0) * 2.5 * beat3Spring : 0;
   const beat3TranslateY = (1 - beat3Spring) * 34 + beat3HoverY;
   const beat3Scale = 0.92 + 0.08 * beat3Spring;
 
   const ordersCountStart = beat3Start;
-  const ordersCountEnd = Math.max(ordersCountStart + 8, Math.round(4.65 * safeFps));
+  const ordersCountEnd = Math.max(ordersCountStart + 8, Math.round(5.45 * safeFps));
   const liveOrders = Math.round(
     interpolate(
       frame,
@@ -201,8 +201,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
     ),
   );
 
-  const sheenStart = beat3Start + Math.max(4, Math.round(0.28 * safeFps));
-  const sheenEnd = Math.max(sheenStart + 10, Math.round(5.38 * safeFps));
+  const sheenStart = beat3Start + Math.max(4, Math.round(0.42 * safeFps));
+  const sheenEnd = Math.max(sheenStart + 10, Math.round(6.95 * safeFps));
   const sheenProgress = interpolate(frame, [sheenStart, sheenEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -210,7 +210,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
   });
   const sheenActive = sheenProgress > 0.001 && sheenProgress < 0.999;
   const sheenX = interpolate(sheenProgress, [0, 1], [-220, 960]);
-  const liveDotScale = 0.84 + Math.sin(timeSec * 5.8) * 0.18;
+  const liveDotScale = 0.84 + Math.sin(timeSec * 4.8) * 0.16;
 
   const metrics: readonly MetricCardSpec[] = [
     {
@@ -314,8 +314,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   gap: 10,
                   padding: '8px 20px',
                   borderRadius: 999,
-                  backgroundColor: 'rgba(217, 201, 178, 0.14)',
-                  border: '1px solid rgba(217, 201, 178, 0.36)',
+                  backgroundColor: 'rgba(184, 228, 220, 0.14)',
+                  border: '1px solid rgba(184, 228, 220, 0.36)',
                   color: LAUNCH_PALETTE.TERTIARY,
                   fontFamily: LAUNCH_FONTS.MONO,
                   fontSize: 13,
@@ -364,7 +364,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                 startFrame={ruleStart}
                 durationFrames={ruleDuration}
                 stroke={LAUNCH_MODULE_THEMES.polymaps.primary}
-                trackStroke="rgba(217, 201, 178, 0.18)"
+                trackStroke="rgba(184, 228, 220, 0.18)"
                 strokeWidth={2.5}
                 headDotColor={LAUNCH_MODULE_THEMES.polymart.primary}
                 headDotRadius={4}
@@ -394,7 +394,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   ? spring({
                       frame: cardElapsed,
                       fps: safeFps,
-                      config: { damping: 180, stiffness: 220, mass: 0.9 },
+                      config: { damping: 24, stiffness: 175, mass: 1.0 },
                     })
                   : 0;
               const cardOpacity =
@@ -404,7 +404,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       extrapolateRight: 'clamp',
                     })
                   : 0;
-              const floatY = Math.sin(timeSec * 1.55 + idx * 1.35) * 3 * cardSpring;
+              const floatY = Math.sin(timeSec * 1.45 + idx * 1.35) * 3 * cardSpring;
               const cardTranslateY = (1 - cardSpring) * 44 + floatY;
               const cardScale = 0.9 + 0.1 * cardSpring;
 
@@ -430,13 +430,13 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                 <div
                   key={m.label}
                   style={{
-                    backgroundColor: 'rgba(31, 39, 32, 0.80)',
+                    backgroundColor: 'rgba(11, 36, 32, 0.84)',
                     border: `1.5px solid ${
-                      ringSettled ? `${m.ringColor}88` : 'rgba(217, 201, 178, 0.26)'
+                      ringSettled ? `${m.ringColor}88` : 'rgba(184, 228, 220, 0.26)'
                     }`,
                     borderRadius: 26,
                     padding: '22px 24px 24px',
-                    boxShadow: '0 24px 52px rgba(31, 39, 32, 0.34)',
+                    boxShadow: '0 24px 52px rgba(6, 23, 20, 0.36)',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -465,7 +465,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       style={{
                         padding: '4px 10px',
                         borderRadius: 999,
-                        backgroundColor: 'rgba(217, 201, 178, 0.12)',
+                        backgroundColor: 'rgba(184, 228, 220, 0.12)',
                         border: `1px solid ${m.ringColor}66`,
                         color: LAUNCH_PALETTE.BACKGROUND,
                       }}
@@ -489,7 +489,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                     <Circle
                       radius={47}
                       fill="none"
-                      stroke="rgba(217, 201, 178, 0.16)"
+                      stroke="rgba(184, 228, 220, 0.16)"
                       strokeWidth={6.5}
                       premountFor={safeFps}
                       showInTimeline={false}
@@ -531,7 +531,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        boxShadow: 'inset 0 0 18px rgba(31, 39, 32, 0.45)',
+                        boxShadow: 'inset 0 0 18px rgba(6, 23, 20, 0.45)',
                       }}
                     >
                       {renderMetricIcon(m.iconKind, LAUNCH_PALETTE.BACKGROUND)}
@@ -568,7 +568,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                     {m.label}
                   </div>
 
-                  {/* High-contrast Warm Sand (#D9C9B2) sublabel for crisp projector readability */}
+                  {/* High-contrast Frosted Teal sublabel for crisp LED projector readability */}
                   <div
                     style={{
                       marginTop: 5,
@@ -584,7 +584,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
             })}
           </Interactive.Div>
 
-          {/* Beat 2b & Beat 3: Live 6-Month Student Participation Bar Chart + Terracotta Student Action Pill */}
+          {/* Beat 2b & Beat 3: Live 6-Month Student Participation Bar Chart + Signature Teal Student Action Pill */}
           <div
             style={{
               marginTop: 22,
@@ -601,8 +601,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
               name="Student Community Trend Chart"
               premountFor={safeFps}
               style={{
-                backgroundColor: 'rgba(31, 39, 32, 0.55)',
-                border: '1px solid rgba(217, 201, 178, 0.16)',
+                backgroundColor: 'rgba(11, 36, 32, 0.72)',
+                border: '1px solid rgba(184, 228, 220, 0.18)',
                 borderRadius: 20,
                 padding: '15px 26px 14px',
                 opacity: chartOpacity,
@@ -730,7 +730,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                               fontFamily: LAUNCH_FONTS.MONO,
                               fontSize: 10.5,
                               fontWeight: 700,
-                              color: 'rgba(217, 201, 178, 0.70)',
+                              color: 'rgba(184, 228, 220, 0.72)',
                               fontVariantNumeric: 'tabular-nums',
                             }}
                           >
@@ -746,7 +746,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                           display: 'flex',
                           alignItems: 'flex-end',
                           justifyContent: 'center',
-                          borderBottom: '1px solid rgba(217, 201, 178, 0.16)',
+                          borderBottom: '1px solid rgba(184, 228, 220, 0.16)',
                           paddingBottom: 2,
                         }}
                       >
@@ -756,7 +756,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                             maxWidth: 66,
                             height: BAR_TRACK_HEIGHT_PX,
                             borderRadius: 8,
-                            backgroundColor: 'rgba(217, 201, 178, 0.06)',
+                            backgroundColor: 'rgba(184, 228, 220, 0.08)',
                             display: 'flex',
                             alignItems: 'flex-end',
                           }}
@@ -768,8 +768,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                               borderRadius: 7,
                               backgroundColor: item.barColor,
                               border: isPeak
-                                ? '1px solid rgba(248, 246, 238, 0.48)'
-                                : '1px solid rgba(248, 246, 238, 0.20)',
+                                ? '1px solid rgba(246, 251, 249, 0.48)'
+                                : '1px solid rgba(246, 251, 249, 0.22)',
                               boxShadow: isPeak
                                 ? '0 0 22px rgba(244, 63, 94, 0.48), 0 4px 12px rgba(244, 63, 94, 0.30)'
                                 : 'none',
@@ -800,7 +800,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
               </div>
             </Interactive.Div>
 
-            {/* Right Half: Beat 3 Terracotta (#C96F4F) Student Proof Pill Lifting with Diagonal Sheen Sweep */}
+            {/* Right Half: Beat 3 Signature Teal Student Proof Pill Lifting with Diagonal Sheen Sweep */}
             <Interactive.Div
               name="Student Proof Action Pill"
               premountFor={safeFps}
@@ -826,9 +826,9 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   gap: 12,
                   padding: '22px 24px',
                   borderRadius: 999,
-                  backgroundColor: LAUNCH_PALETTE.ACCENT,
-                  border: `1.5px solid ${LAUNCH_MODULE_THEMES.polymart.border}`,
-                  boxShadow: '0 22px 48px rgba(31, 39, 32, 0.36)',
+                  backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                  border: `1.5px solid ${LAUNCH_PALETTE.ACCENT}`,
+                  boxShadow: '0 22px 48px rgba(6, 23, 20, 0.36)',
                   overflow: 'hidden',
                 }}
               >
@@ -841,7 +841,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       width: 170,
                       height: '200%',
                       background:
-                        'linear-gradient(90deg, rgba(248, 246, 238, 0) 0%, rgba(248, 246, 238, 0.38) 50%, rgba(248, 246, 238, 0) 100%)',
+                        'linear-gradient(90deg, rgba(246, 251, 249, 0) 0%, rgba(246, 251, 249, 0.42) 50%, rgba(246, 251, 249, 0) 100%)',
                       transform: `translate3d(${sheenX.toFixed(2)}px, 0px, 0px) rotate(22deg)`,
                       pointerEvents: 'none',
                       zIndex: 2,
@@ -893,8 +893,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
               width: '100%',
               height: 54,
               borderRadius: 999,
-              backgroundColor: 'rgba(31, 39, 32, 0.78)',
-              border: '1.5px solid rgba(217, 201, 178, 0.28)',
+              backgroundColor: 'rgba(11, 36, 32, 0.84)',
+              border: '1.5px solid rgba(184, 228, 220, 0.28)',
               overflow: 'hidden',
               display: 'flex',
               alignItems: 'center',
@@ -972,7 +972,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                 top: 0,
                 bottom: 0,
                 width: 72,
-                background: 'linear-gradient(90deg, #1F2720 0%, rgba(31, 39, 32, 0) 100%)',
+                background: 'linear-gradient(90deg, #061714 0%, rgba(6, 23, 20, 0) 100%)',
                 pointerEvents: 'none',
               }}
             />
@@ -983,7 +983,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                 top: 0,
                 bottom: 0,
                 width: 72,
-                background: 'linear-gradient(270deg, #1F2720 0%, rgba(31, 39, 32, 0) 100%)',
+                background: 'linear-gradient(270deg, #061714 0%, rgba(6, 23, 20, 0) 100%)',
                 pointerEvents: 'none',
               }}
             />

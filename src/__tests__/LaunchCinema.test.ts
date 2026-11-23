@@ -68,20 +68,20 @@ describe('Shared Campus Stats Contract', () => {
 });
 
 describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
-  it('computes exact 4440-frame 60fps TransitionSeries timeline and 9-chapter offsets', () => {
+  it('computes exact 6120-frame 60fps TransitionSeries timeline and 9-chapter offsets', () => {
     expect(LAUNCH_FPS).toBe(60);
-    expect(LAUNCH_TRANSITION_FRAMES).toBe(36);
-    expect(LAUNCH_OVERLAY_FRAMES).toBe(48);
-    expect(LAUNCH_TOTAL_FRAMES).toBe(4440);
+    expect(LAUNCH_TRANSITION_FRAMES).toBe(42);
+    expect(LAUNCH_OVERLAY_FRAMES).toBe(54);
+    expect(LAUNCH_TOTAL_FRAMES).toBe(6120);
     expect(LAUNCH_CHAPTERS).toHaveLength(9);
     expect(LAUNCH_CHAPTERS.map((c) => c.code)).toEqual([
       '01', '02', '03', '04', '05', '06', '07', '08', '09',
     ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.durationInFrames)).toEqual([
-      306, 480, 540, 540, 576, 576, 612, 426, 600,
+      420, 660, 720, 720, 750, 750, 762, 570, 1020,
     ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.startFrame)).toEqual([
-      0, 270, 750, 1254, 1758, 2298, 2838, 3450, 3840,
+      0, 378, 1038, 1716, 2394, 3102, 3810, 4572, 5100,
     ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.transitionOut)).toEqual([
       'portal-zoom-morph',
@@ -123,7 +123,7 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
     const rawDurationSum = LAUNCH_CHAPTERS.reduce((acc, c) => acc + c.durationInFrames, 0);
     expect(rawDurationSum - 6 * LAUNCH_TRANSITION_FRAMES).toBe(LAUNCH_TOTAL_FRAMES);
     const last = LAUNCH_CHAPTERS[LAUNCH_CHAPTERS.length - 1];
-    expect(last.startFrame + last.durationInFrames).toBe(4440);
+    expect(last.startFrame + last.durationInFrames).toBe(6120);
   });
 
   it('validates Zod defaults with official POLISAS Student-POV v7 identity', () => {
@@ -532,7 +532,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     expect(closingSource).toContain('<QRCode');
     expect(closingSource).toContain('size={340}');
     expect(closingSource).toContain('bgColor="#FFFFFF"');
-    expect(closingSource).toContain('fgColor="#111812"');
+    expect(closingSource).toContain('fgColor="#061714"');
     expect(closingSource).toMatch(/isQrOrthogonalLocked\s*\?\s*0/);
     expect(closingSource).toMatch(/isQrOrthogonalLocked\s*\?\s*'none'/);
     expect(closingSource).toContain('rotateY(7deg)');
@@ -545,6 +545,77 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     expect(closingSource).toContain('Log Masuk & Teroka');
     expect(closingSource).toContain('PERCUMA UNTUK SEMUA PELAJAR POLISAS • 24/7');
     expect(closingSource).toContain('AKSES SERTA-MERTA • IMBAS QR SEKARANG');
+  });
+
+  it('enforces v8 Teal-White palette, 3D sculpted intro bumpers across all 6 module chapters, and zero earth-tones or raw emojis', async () => {
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const tokens = await import('../../remotion/launch/tokens');
+    const bumper = await import('../../remotion/launch/motion/Module3DIntroBumper');
+
+    expect(bumper.MODULE_BUMPER_DURATION_FRAMES).toBe(168);
+    expect(bumper.MODULE_CONTENT_ENTER_OFFSET).toBe(132);
+    expect(tokens.LUXURY_SPRING).toEqual({
+      damping: 26,
+      stiffness: 110,
+      mass: 1.15,
+    });
+
+    const paletteValues = Object.values(tokens.LAUNCH_PALETTE);
+    for (const hex of [
+      '#0B2420',
+      '#061714',
+      '#0D9488',
+      '#3B635C',
+      '#B8E4DC',
+      '#14B8A6',
+      '#F6FBF9',
+      '#EBF7F4',
+      '#FFFFFF',
+    ]) {
+      expect(paletteValues).toContain(hex);
+    }
+
+    const collectSourceFiles = (dir: string): string[] =>
+      fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) return collectSourceFiles(fullPath);
+        return /\.(ts|tsx)$/.test(entry.name) ? [fullPath] : [];
+      });
+
+    const filesToScan = [
+      ...collectSourceFiles(LAUNCH_ROOT_DIR),
+      path.resolve(process.cwd(), 'src/pages/LaunchVideo.tsx'),
+    ];
+    const earthTonePattern =
+      /F8F6EE|F2EDE4|D9C9B2|C96F4F|2E3A2F|1F2720|6B7F5B|556453|182219|111812|46,\s*58,\s*47|31,\s*39,\s*32|217,\s*201,\s*178|201,\s*111,\s*79|248,\s*246,\s*238|242,\s*237,\s*228|107,\s*127,\s*91|85,\s*100,\s*83/i;
+    const rawEmojiPattern = /[\u{1F300}-\u{1FAFF}]/u;
+
+    for (const filePath of filesToScan) {
+      const content = fs.readFileSync(filePath, 'utf8');
+      expect(content, `Retired earth-tone token leaked in ${filePath}`).not.toMatch(earthTonePattern);
+      if (filePath.startsWith(LAUNCH_ROOT_DIR)) {
+        expect(content, `Raw OS emoji leaked in ${filePath}`).not.toMatch(rawEmojiPattern);
+      }
+    }
+
+    const bumperSceneFiles = [
+      'PolyMapsCampusScene.tsx',
+      'PolyMartCommerceScene.tsx',
+      'PolyRentHousingScene.tsx',
+      'PolySuaraVoiceScene.tsx',
+      'WelfareCareScene.tsx',
+      'ClubsEmsScene.tsx',
+    ];
+    for (const sceneName of bumperSceneFiles) {
+      const sceneSource = readFileSync(join(LAUNCH_ROOT_DIR, 'scenes', sceneName), 'utf8');
+      expect(sceneSource, `${sceneName} must mount Module3DIntroBumper`).toContain(
+        '<Module3DIntroBumper',
+      );
+      expect(sceneSource, `${sceneName} must use MODULE_CONTENT_ENTER_OFFSET`).toContain(
+        'MODULE_CONTENT_ENTER_OFFSET',
+      );
+    }
   });
 
   it('enforces v7 single-hero 3D depth scenes (zero raw emojis, 180-deg flip geometry, and valid motion actor contracts)', () => {
@@ -634,6 +705,15 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
       for (const block of cursorMatches) {
         expect(block, `${relative(LAUNCH_ROOT_DIR, filePath)} invalid GhostCursor prop`).not.toContain(
           'accentColor=',
+        );
+      }
+      const floorGridMatches = content.match(/<SpatialFloorGrid\s+[\s\S]*?\/>/g) ?? [];
+      for (const block of floorGridMatches) {
+        expect(block, `${relative(LAUNCH_ROOT_DIR, filePath)} missing SpatialFloorGrid accentColor`).toContain(
+          'accentColor=',
+        );
+        expect(block, `${relative(LAUNCH_ROOT_DIR, filePath)} invalid SpatialFloorGrid prop`).not.toMatch(
+          /\b(color|height|tiltDeg|opacity)=/,
         );
       }
     }

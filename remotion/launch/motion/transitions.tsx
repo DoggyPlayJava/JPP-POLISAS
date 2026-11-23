@@ -95,7 +95,7 @@ const KineticCameraPushPresentation: React.FC<
         transform: `translate3d(${translateX.toFixed(3)}%, 0px, 0px)`,
         boxShadow:
           shadowOpacity > 0.002
-            ? `${shadowX.toFixed(1)}px 0px ${shadowBlur.toFixed(1)}px ${shadowSpread.toFixed(1)}px rgba(31, 39, 32, ${shadowOpacity.toFixed(3)})`
+            ? `${shadowX.toFixed(1)}px 0px ${shadowBlur.toFixed(1)}px ${shadowSpread.toFixed(1)}px rgba(6, 23, 20, ${shadowOpacity.toFixed(3)})`
             : undefined,
       };
     }
@@ -200,7 +200,7 @@ const KineticCameraPushPresentation: React.FC<
                 : { right: Math.round(24 + 28 * v) }),
               width: bandForestWidth,
               opacity: clampUnit(v * 0.34),
-              background: `linear-gradient(${streakDirection}, rgba(46, 58, 47, 0.55) 0%, rgba(46, 58, 47, 0) 100%)`,
+              background: `linear-gradient(${streakDirection}, rgba(11, 36, 32, 0.52) 0%, rgba(11, 36, 32, 0) 100%)`,
               pointerEvents: 'none',
             }}
           />
@@ -213,8 +213,8 @@ const KineticCameraPushPresentation: React.FC<
                 ? { left: Math.round(12 + 16 * v) }
                 : { right: Math.round(12 + 16 * v) }),
               width: bandSandWidth,
-              opacity: clampUnit(v * 0.48),
-              background: `linear-gradient(${streakDirection}, rgba(217, 201, 178, 0.68) 0%, rgba(217, 201, 178, 0) 100%)`,
+              opacity: clampUnit(v * 0.52),
+              background: `linear-gradient(${streakDirection}, rgba(184, 228, 220, 0.72) 0%, rgba(184, 228, 220, 0) 100%)`,
               pointerEvents: 'none',
             }}
           />
@@ -225,8 +225,8 @@ const KineticCameraPushPresentation: React.FC<
               bottom: 0,
               ...(direction === 'from-right' ? { left: 6 } : { right: 6 }),
               width: bandTerracottaWidth,
-              opacity: clampUnit(v * 0.62),
-              background: `linear-gradient(${streakDirection}, rgba(201, 111, 79, 0.72) 0%, rgba(201, 111, 79, 0) 100%)`,
+              opacity: clampUnit(v * 0.64),
+              background: `linear-gradient(${streakDirection}, rgba(20, 184, 166, 0.76) 0%, rgba(20, 184, 166, 0) 100%)`,
               pointerEvents: 'none',
             }}
           />
@@ -475,7 +475,7 @@ const EditorialSplitCurtainPresentation: React.FC<
               transform: 'translate3d(-50%, 0px, 0px)',
               display: 'flex',
               opacity: bladeOpacity,
-              boxShadow: `0 0 ${(16 + 32 * v).toFixed(1)}px rgba(46, 58, 47, ${(0.22 + 0.18 * v).toFixed(3)})`,
+              boxShadow: `0 0 ${(16 + 32 * v).toFixed(1)}px rgba(11, 36, 32, ${(0.22 + 0.18 * v).toFixed(3)})`,
               pointerEvents: 'none',
             }}
           >
@@ -492,7 +492,7 @@ const EditorialSplitCurtainPresentation: React.FC<
               transform: 'translate3d(-50%, 0px, 0px)',
               display: 'flex',
               opacity: bladeOpacity,
-              boxShadow: `0 0 ${(16 + 32 * v).toFixed(1)}px rgba(46, 58, 47, ${(0.22 + 0.18 * v).toFixed(3)})`,
+              boxShadow: `0 0 ${(16 + 32 * v).toFixed(1)}px rgba(11, 36, 32, ${(0.22 + 0.18 * v).toFixed(3)})`,
               pointerEvents: 'none',
             }}
           >
@@ -705,7 +705,7 @@ const SwissLouversWipePresentation: React.FC<
             transformOrigin: '50% 50%',
             willChange: 'transform, opacity',
             transform: `translate3d(-50%, 0px, 0px) skewX(${(-safeAngle).toFixed(2)}deg)`,
-            boxShadow: '0 0 24px rgba(31, 39, 32, 0.22)',
+            boxShadow: '0 0 24px rgba(6, 23, 20, 0.22)',
             pointerEvents: 'none',
           }}
         />
@@ -716,7 +716,7 @@ const SwissLouversWipePresentation: React.FC<
 
 /**
  * Swiss architectural diagonal louver shutter wipe: 5 staggered skewed strips in
- * Earthy Minimal tones glide across an angled polygon clip seam driven by `WHIP_S_CURVE`.
+ * Teal-White signature tones glide across an angled polygon clip seam driven by `WHIP_S_CURVE`.
  */
 export const swissLouversWipe = (
   props: SwissLouversWipeProps = {},
@@ -812,7 +812,7 @@ const DepthLiftMatchPresentation: React.FC<
         borderRadius: radius > 0.1 ? `${radius.toFixed(2)}px` : undefined,
         boxShadow:
           shadowOpacity > 0.005
-            ? `0px -28px ${(56 + 32 * v).toFixed(1)}px rgba(31, 39, 32, ${shadowOpacity.toFixed(3)})`
+            ? `0px -28px ${(56 + 32 * v).toFixed(1)}px rgba(6, 23, 20, ${shadowOpacity.toFixed(3)})`
             : undefined,
       };
     }
@@ -864,7 +864,7 @@ const DepthLiftMatchPresentation: React.FC<
               height: 112,
               opacity: topSheenOpacity,
               background:
-                'linear-gradient(180deg, rgba(248, 246, 238, 0.44) 0%, rgba(217, 201, 178, 0.18) 42%, rgba(248, 246, 238, 0) 100%)',
+                'linear-gradient(180deg, rgba(246, 251, 249, 0.48) 0%, rgba(184, 228, 220, 0.22) 42%, rgba(246, 251, 249, 0) 100%)',
               pointerEvents: 'none',
             }}
           />
@@ -1522,13 +1522,13 @@ export type WarmLightSweepOverlayProps = {
 };
 
 /**
- * 48-frame (0.8s @ 60fps) warm optical light-sweep bridge sealing the bright-to-dark
+ * 54-frame (0.9s @ 60fps) cool Teal-Emerald aurora optical light-sweep bridge sealing the bright-to-dark
  * scene cut with a full-bleed `1.0`-opaque chromatic veil across `[0.40, 0.60]`
- * beneath GPU WebGL2 `lightLeak()` on `<Solid premountFor={fps}>` and a warm diagonal beam.
+ * beneath GPU WebGL2 `lightLeak()` on `<Solid premountFor={fps}>` and a crisp diagonal beam.
  */
 export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
   seed = 4,
-  hueShift = 18,
+  hueShift = 168,
   accentColor = LAUNCH_PALETTE.ACCENT,
 }) => {
   const frame = useCurrentFrame();
@@ -1537,7 +1537,7 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
   const safeWidth = Math.max(1, Math.round(Number.isFinite(width) ? width : 1920));
   const safeHeight = Math.max(1, Math.round(Number.isFinite(height) ? height : 1080));
   const safeSeed = Number.isFinite(seed) ? seed : 4;
-  const safeHueShift = Number.isFinite(hueShift) ? Math.min(360, Math.max(0, hueShift)) : 18;
+  const safeHueShift = Number.isFinite(hueShift) ? Math.min(360, Math.max(0, hueShift)) : 168;
 
   const progress = clampUnit(
     interpolate(frame, [0, Math.max(1, durationInFrames - 1)], [0, 1], {
@@ -1571,8 +1571,8 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
       LAUNCH_PALETTE.BACKGROUND,
       LAUNCH_PALETTE.SURFACE_MUTED,
       LAUNCH_PALETTE.TERTIARY,
-      LAUNCH_PALETTE.MUTED_OLIVE,
       LAUNCH_PALETTE.PRIMARY,
+      LAUNCH_PALETTE.PRIMARY_DARK,
     ],
   );
 
@@ -1620,7 +1620,7 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
           inset: 0,
           zIndex: 1,
           opacity: warmBridgeOpacity,
-          background: `radial-gradient(ellipse 80% 70% at 50% 50%, ${accentColor} 0%, rgba(248, 246, 238, 0.28) 45%, rgba(46, 58, 47, 0) 100%)`,
+          background: `radial-gradient(ellipse 80% 70% at 50% 50%, ${accentColor} 0%, rgba(246, 251, 249, 0.28) 45%, rgba(11, 36, 32, 0) 100%)`,
           pointerEvents: 'none',
         }}
       />
@@ -1660,7 +1660,7 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
           willChange: 'transform, opacity',
           transform: `translate3d(${beamX.toFixed(3)}%, 0px, 0px) skewX(-18deg)`,
           background:
-            'linear-gradient(90deg, rgba(201, 111, 79, 0) 0%, rgba(201, 111, 79, 0.26) 26%, rgba(217, 201, 178, 0.42) 42%, rgba(248, 246, 238, 0.72) 50%, rgba(217, 201, 178, 0.36) 58%, rgba(201, 111, 79, 0.18) 76%, rgba(201, 111, 79, 0) 100%)',
+            'linear-gradient(90deg, rgba(20, 184, 166, 0) 0%, rgba(20, 184, 166, 0.26) 26%, rgba(184, 228, 220, 0.42) 42%, rgba(246, 251, 249, 0.74) 50%, rgba(184, 228, 220, 0.36) 58%, rgba(20, 184, 166, 0.18) 76%, rgba(20, 184, 166, 0) 100%)',
           borderLeft: `2px solid ${accentColor}`,
           pointerEvents: 'none',
         }}

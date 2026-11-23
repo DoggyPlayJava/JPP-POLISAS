@@ -87,7 +87,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
 
       <CinemaChromeContext.Provider value={CINEMA_CHROME_SUPPRESSED}>
         <TransitionSeries>
-          <TransitionSeries.Sequence name="01 Opening Hero" durationInFrames={306} premountFor={fps}>
+          <TransitionSeries.Sequence name="01 Opening Hero" durationInFrames={420} premountFor={fps}>
             <OpeningHeroScene
               name="Opening Hero"
               institutionName={institutionName}
@@ -105,7 +105,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
-          <TransitionSeries.Sequence name="02 PolyMaps Campus" durationInFrames={480} premountFor={fps}>
+          <TransitionSeries.Sequence name="02 PolyMaps Campus" durationInFrames={660} premountFor={fps}>
             <PolyMapsCampusScene
               name="PolyMaps Campus"
               classCode="DIT3013"
@@ -125,7 +125,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             />
           </TransitionSeries.Overlay>
 
-          <TransitionSeries.Sequence name="03 PolyMart Commerce" durationInFrames={540} premountFor={fps}>
+          <TransitionSeries.Sequence name="03 PolyMart Commerce" durationInFrames={720} premountFor={fps}>
             <PolyMartCommerceScene
               name="PolyMart Commerce"
               productsCount={stats.productsCount}
@@ -142,7 +142,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
-          <TransitionSeries.Sequence name="04 PolyRent Housing" durationInFrames={540} premountFor={fps}>
+          <TransitionSeries.Sequence name="04 PolyRent Housing" durationInFrames={720} premountFor={fps}>
             <PolyRentHousingScene
               name="PolyRent Housing"
               houseRentRm={680}
@@ -158,7 +158,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
-          <TransitionSeries.Sequence name="05 PolySuara Voice" durationInFrames={576} premountFor={fps}>
+          <TransitionSeries.Sequence name="05 PolySuara Voice" durationInFrames={750} premountFor={fps}>
             <PolySuaraVoiceScene
               name="PolySuara Voice"
               pollTitle="Cadangan Kemudahan Siswa Semester Baharu"
@@ -181,7 +181,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
-          <TransitionSeries.Sequence name="06 Welfare & Care" durationInFrames={576} premountFor={fps}>
+          <TransitionSeries.Sequence name="06 Welfare & Care" durationInFrames={750} premountFor={fps}>
             <WelfareCareScene
               name="Welfare & Care"
               ticketNo="KBJ-0842"
@@ -197,7 +197,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
-          <TransitionSeries.Sequence name="07 Clubs & EMS" durationInFrames={612} premountFor={fps}>
+          <TransitionSeries.Sequence name="07 Clubs & EMS" durationInFrames={762} premountFor={fps}>
             <ClubsEmsScene
               name="Clubs & EMS"
               clubsCount={stats.clubsCount}
@@ -207,10 +207,13 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Overlay durationInFrames={LAUNCH_OVERLAY_FRAMES} premountFor={fps}>
-            <WarmLightSweepOverlay accentColor={LAUNCH_MODULE_THEMES.meritQr.primary} />
+            <WarmLightSweepOverlay
+              hueShift={168}
+              accentColor={LAUNCH_MODULE_THEMES.meritQr.primary}
+            />
           </TransitionSeries.Overlay>
 
-          <TransitionSeries.Sequence name="08 Impact Numbers" durationInFrames={426} premountFor={fps}>
+          <TransitionSeries.Sequence name="08 Impact Numbers" durationInFrames={570} premountFor={fps}>
             <ImpactNumbersScene
               name="Impact Numbers"
               clubsCount={stats.clubsCount}
@@ -223,12 +226,12 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
 
           <TransitionSeries.Transition
             presentation={orbitalIrisMatch({
-              outerRingColor: LAUNCH_MODULE_THEMES.polymaps.primary,
+              outerRingColor: LAUNCH_PALETTE.ACCENT,
             })}
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
-          <TransitionSeries.Sequence name="09 Closing Vault" durationInFrames={600} premountFor={fps}>
+          <TransitionSeries.Sequence name="09 Closing Vault" durationInFrames={1020} premountFor={fps}>
             <ClosingVaultScene
               name="Closing Vault"
               headlinePrimary="Imbas Sekarang. Mulakan Pengalaman Kampus Anda."

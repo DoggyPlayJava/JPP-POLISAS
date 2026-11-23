@@ -24,14 +24,18 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath, GeometricSparkBurst } from '../motion/MotionActors';
+import {
+  MODULE_CONTENT_ENTER_OFFSET,
+  Module3DIntroBumper,
+} from '../motion/Module3DIntroBumper';
 import { WHIP_S_CURVE } from '../motion/transitions';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
 import { DeterministicQrMatrix, KineticWindow, SpatialFloorGrid } from '../ui/KineticCard';
 
 const TEAL = LAUNCH_MODULE_THEMES.kebajikan.primary; // #14B8A6
-const TEAL_DARK = LAUNCH_MODULE_THEMES.kebajikan.dark; // #0D9488
+const TEAL_DARK = LAUNCH_MODULE_THEMES.kebajikan.dark; // #0F766E
 const TEAL_INK = '#0F766E'; // WCAG AA+ Teal-700
-const TEAL_SOFT = LAUNCH_MODULE_THEMES.kebajikan.soft; // #F0FDFA
+const TEAL_SOFT = LAUNCH_MODULE_THEMES.kebajikan.soft; // #CCFBF1
 const TEAL_BORDER = LAUNCH_MODULE_THEMES.kebajikan.border; // #99F6E4
 
 const AMBER = LAUNCH_MODULE_THEMES.foodbank.primary; // #F59E0B
@@ -45,7 +49,8 @@ const EMERALD_INK = '#047857';
 const EMERALD_SOFT = LAUNCH_MODULE_THEMES.polymaps.soft; // #ECFDF5
 const EMERALD_BORDER = LAUNCH_MODULE_THEMES.polymaps.border; // #A7F3D0
 
-const VAULT_OBSIDIAN = '#18221D';
+const VAULT_OBSIDIAN = '#061714';
+const O = MODULE_CONTENT_ENTER_OFFSET; // 132f bumper handoff
 
 export type WelfareCareProps = {
   readonly ticketNo: string;
@@ -73,10 +78,10 @@ const resolveStudentHeadline = (headline: string): string => {
 };
 
 const KAMSIS_STAGES: readonly ComplaintStageSpec[] = [
-  { code: '01', title: 'Laporan Dihantar', meta: '09:14 AM · Portal Pelajar', badge: 'DITERIMA', reachFrame: 34 },
-  { code: '02', title: 'Disahkan JPP', meta: '09:42 AM · Semakan Segera', badge: 'AKTIF', reachFrame: 60 },
-  { code: '03', title: 'Juruteknik Tiba', meta: '11:15 AM · Blok B-204 Kamsis', badge: 'TINDAKAN', reachFrame: 88 },
-  { code: '04', title: 'Selesai < 48 Jam', meta: '03:50 PM · Bilik Sedia & Selesa', badge: 'SELESAI ✓', reachFrame: 118 },
+  { code: '01', title: 'Laporan Dihantar', meta: '09:14 AM · Portal Pelajar', badge: 'DITERIMA', reachFrame: O + 34 },
+  { code: '02', title: 'Disahkan JPP', meta: '09:42 AM · Semakan Segera', badge: 'AKTIF', reachFrame: O + 64 },
+  { code: '03', title: 'Juruteknik Tiba', meta: '11:15 AM · Blok B-204 Kamsis', badge: 'TINDAKAN', reachFrame: O + 94 },
+  { code: '04', title: 'Selesai < 48 Jam', meta: '03:50 PM · Bilik Sedia & Selesa', badge: 'SELESAI ✓', reachFrame: O + 126 },
 ];
 
 const FOOD_BANK_STEPS = [
@@ -101,12 +106,19 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
   const resolvedHeadline = resolveStudentHeadline(headline);
   const timeSec = frame / safeFps;
 
-  // Header timing
-  const wordStagger = Math.max(2, Math.round(0.04 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.28 * safeFps));
+  // Seamless zero-flash bumper handoff (132..168f)
+  const contentRevealT = interpolate(frame, [O, O + 36], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EXPO_OUT,
+  });
 
-  // Act 1 -> Act 2 Rack-Focus Spatial Shift (264f .. 320f)
-  const rackT = interpolate(frame, [264, 320], [0, 1], {
+  // Header timing
+  const wordStagger = Math.max(2, Math.round(0.05 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.32 * safeFps));
+
+  // Act 1 -> Act 2 Rack-Focus Spatial Shift (O+270 .. O+330 = 402..462f)
+  const rackT = interpolate(frame, [O + 270, O + 330], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: WHIP_S_CURVE,
@@ -114,12 +126,12 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
 
   // Entrance Spring for Act 1
   const entrySpring = spring({
-    frame: Math.max(0, frame - 6),
+    frame: Math.max(0, frame - (O + 6)),
     fps: safeFps,
-    config: { damping: 18, stiffness: 205, mass: 0.9 },
+    config: LUXURY_SPRING,
   });
 
-  // Card 1: Kamsis Repair Stage (Hero Center-Left in Act 1 -> Optical Depth Left in Act 2)
+  // Card 1: Kamsis Repair Stage
   const kamsisX = interpolate(rackT, [0, 1], [-58, -510]);
   const kamsisY = interpolate(rackT, [0, 1], [0, 20]) + (1 - entrySpring) * 28;
   const kamsisZ = interpolate(rackT, [0, 1], [58, -155]);
@@ -127,7 +139,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
   const kamsisOpacity = entrySpring * interpolate(rackT, [0, 1], [1, 0.38]);
   const kamsisRotY = interpolate(rackT, [0, 1], [3, 5]);
 
-  // Card 2: Confidential Food Bank Vault (Optical Depth Right in Act 1 -> Hero Center-Right in Act 2)
+  // Card 2: Confidential Food Bank Vault
   const vaultX = interpolate(rackT, [0, 1], [510, 48]);
   const vaultY = interpolate(rackT, [0, 1], [22, 0]) + (1 - entrySpring) * 32;
   const vaultZ = interpolate(rackT, [0, 1], [-155, 72]);
@@ -135,35 +147,52 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
   const vaultOpacity = entrySpring * interpolate(rackT, [0, 1], [0.36, 1]);
   const vaultRotY = interpolate(rackT, [0, 1], [-5, -4]);
 
-  // Act 1 SLA Stopwatch Orb pops beside Stage 04 around 120..146f (ready cleanly at f=2460 / Local 162f!)
+  // Act 1 SLA Stopwatch Orb pops beside Stage 04 around O+128f
   const stopwatchSpring = spring({
-    frame: Math.max(0, frame - 122),
+    frame: Math.max(0, frame - (O + 130)),
     fps: safeFps,
-    config: { damping: 15, stiffness: 220, mass: 0.85 },
+    config: LUXURY_SPRING,
   });
-  const slaCompleted = frame >= 118;
+  const slaCompleted = frame >= O + 126;
 
-  // Act 2 Privacy Shield Unlock Visor glides upward (314..366f -> fully unlocked cleanly before f=2720 / Local 422f!)
-  const shieldLiftProgress = interpolate(frame, [314, 366], [0, 1], {
+  // Act 2 Privacy Shield Unlock Visor glides upward (456..510f -> 100% open well before f_3650 / local 548f!)
+  const shieldLiftProgress = interpolate(frame, [O + 324, O + 378], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: WHIP_S_CURVE,
   });
   const shieldTranslateY = interpolate(shieldLiftProgress, [0, 1], [0, -112]);
-  const pickupStepsProgress = interpolate(frame, [340, 388], [0, 1], {
+  const pickupStepsProgress = interpolate(frame, [O + 350, O + 402], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
 
   // Live Amber laser beam over confidential Food Bank QR pass
-  const laserCycle = ((frame - 360) % 72 + 72) % 72;
+  const laserCycle = ((frame - (O + 370)) % 72 + 72) % 72;
   const laserY = interpolate(laserCycle, [0, 36, 72], [12, 156, 12]);
-  const liveDotScale = 0.86 + Math.sin(timeSec * 5.1) * 0.16;
+  const liveDotScale = 0.86 + Math.sin(timeSec * 4.8) * 0.16;
 
   return (
     <>
       <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.kebajikan.tint} />
+
+      <Module3DIntroBumper
+        moduleIndex="MODUL 06"
+        moduleCategory="KEBAJIKAN & FOOD BANK"
+        moduleName="E-Kebajikan"
+        tagline="Aduan Kamsis Pantas & Bantuan Food Bank"
+        accentColor={LAUNCH_MODULE_THEMES.kebajikan.primary}
+        darkColor={LAUNCH_MODULE_THEMES.kebajikan.dark}
+        softColor={LAUNCH_MODULE_THEMES.kebajikan.soft}
+        borderColor={LAUNCH_MODULE_THEMES.kebajikan.border}
+        icon={<Lock size={96} color="#FFFFFF" strokeWidth={2.1} />}
+        features={[
+          { icon: <Wrench size={15} strokeWidth={2.4} />, label: 'SLA < 48 Jam' },
+          { icon: <Lock size={15} strokeWidth={2.4} />, label: '100% Privasi' },
+          { icon: <Package size={15} strokeWidth={2.4} />, label: 'Food Bank QR' },
+        ]}
+      />
 
       <CameraStage
         zoomFrom={0.995}
@@ -184,6 +213,14 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
         exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            opacity: contentRevealT,
+            transform: `translate3d(0px, ${((1 - contentRevealT) * 22).toFixed(2)}px, 0px) scale(${interpolate(contentRevealT, [0, 1], [0.96, 1]).toFixed(4)})`,
+          }}
+        >
         <SpatialFloorGrid
           accentColor={TEAL}
           secondaryColor={AMBER}
@@ -207,7 +244,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1240 }}>
-            <KineticReveal startFrame={4} durationFrames={18}>
+            <KineticReveal startFrame={O + 4} durationFrames={18}>
               <div
                 style={{
                   display: 'inline-flex',
@@ -245,7 +282,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
             <KineticWords
               as="h1"
               text={resolvedHeadline}
-              startFrame={8}
+              startFrame={O + 8}
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
               accentWords={['Food', 'Bank?', 'Kami', 'Ada.']}
@@ -261,7 +298,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
             />
           </div>
 
-          <KineticReveal startFrame={18} durationFrames={22}>
+          <KineticReveal startFrame={O + 18} durationFrames={22}>
             <div
               style={{
                 display: 'inline-flex',
@@ -271,7 +308,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                 borderRadius: 16,
                 backgroundColor: rackT > 0.5 ? VAULT_OBSIDIAN : LAUNCH_PALETTE.CARD_BG,
                 border: `1.5px solid ${rackT > 0.5 ? AMBER : TEAL_BORDER}`,
-                boxShadow: '0 12px 26px rgba(31, 39, 32, 0.1)',
+                boxShadow: '0 12px 26px rgba(6, 23, 20, 0.1)',
               }}
             >
               <ShieldCheck
@@ -333,7 +370,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
               accentBorderColor={slaCompleted ? EMERALD_BORDER : TEAL_BORDER}
               width={980}
               height={572}
-              sheenStartFrame={124}
+              sheenStartFrame={O + 130}
               sheenDuration={36}
               style={{
                 borderBottom: `7px solid ${slaCompleted ? EMERALD : TEAL}`,
@@ -452,7 +489,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                     d="M 60 88 L 860 88"
                     width={924}
                     height={176}
-                    startFrame={26}
+                    startFrame={O + 26}
                     durationFrames={96}
                     stroke={TEAL}
                     strokeWidth={5}
@@ -474,7 +511,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                       ? spring({
                           frame: frame - stage.reachFrame,
                           fps: safeFps,
-                          config: { damping: 16, stiffness: 215, mass: 0.85 },
+                          config: LUXURY_SPRING,
                         })
                       : 0;
                     const zElevate = reached ? 18 + stageSpring * 22 : 0;
@@ -504,7 +541,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                           }`,
                           boxShadow: reached
                             ? '0 22px 42px rgba(15, 118, 110, 0.16)'
-                            : '0 8px 16px rgba(31, 39, 32, 0.06)',
+                            : '0 8px 16px rgba(6, 23, 20, 0.06)',
                           transform: `translateZ(${zElevate.toFixed(1)}px) scale(${scalePop.toFixed(4)})`,
                           display: 'flex',
                           flexDirection: 'column',
@@ -627,7 +664,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
             </KineticWindow>
 
             <GeometricSparkBurst
-              triggerFrame={126}
+              triggerFrame={O + 132}
               x={820}
               y={320}
               durationFrames={34}
@@ -638,7 +675,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
             />
           </div>
 
-          {/* HERO 2: Confidential Food Bank Vault (Optical Depth Right in Act 1 -> Hero Center-Right in Act 2 at f=2720 / Local 422f!) */}
+          {/* HERO 2: Confidential Food Bank Vault */}
           <div
             style={{
               position: 'absolute',
@@ -662,13 +699,13 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
               accentBorderColor={AMBER_BORDER}
               width={980}
               height={572}
-              sheenStartFrame={368}
+              sheenStartFrame={O + 382}
               sheenDuration={38}
               style={{
                 backgroundColor: VAULT_OBSIDIAN,
                 border: `2px solid ${AMBER}`,
                 borderBottom: `7px solid ${AMBER_DARK}`,
-                boxShadow: '0 36px 84px rgba(18, 28, 22, 0.36)',
+                boxShadow: '0 36px 84px rgba(6, 23, 20, 0.36)',
               }}
             >
               <div
@@ -759,9 +796,9 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                             padding: '13px 16px',
                             borderRadius: 16,
                             backgroundColor: active
-                              ? 'rgba(248, 246, 238, 0.1)'
-                              : 'rgba(248, 246, 238, 0.04)',
-                            border: `1.5px solid ${active ? AMBER : 'rgba(217, 201, 178, 0.2)'}`,
+                              ? 'rgba(246, 251, 249, 0.1)'
+                              : 'rgba(246, 251, 249, 0.04)',
+                            border: `1.5px solid ${active ? AMBER : 'rgba(184, 228, 220, 0.22)'}`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
@@ -895,7 +932,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                   </div>
                   <EditorialAnnotation
                     type="highlight"
-                    startFrame={380}
+                    startFrame={O + 390}
                     durationFrames={22}
                     color="rgba(255, 255, 255, 0.25)"
                   >
@@ -911,7 +948,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                   </EditorialAnnotation>
                 </div>
 
-                {/* OPAQUE 3D PRIVACY SHIELD VISOR (lifts smoothly 314..366f; matte solid surface) */}
+                {/* OPAQUE 3D PRIVACY SHIELD VISOR (lifts smoothly 456..510f; matte solid surface) */}
                 {shieldLiftProgress < 0.999 ? (
                   <div
                     style={{
@@ -962,7 +999,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
             </KineticWindow>
 
             <GeometricSparkBurst
-              triggerFrame={374}
+              triggerFrame={O + 384}
               x={680}
               y={280}
               durationFrames={34}
@@ -972,6 +1009,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
               colors={[AMBER, EMERALD, '#FFFBEB']}
             />
           </div>
+        </div>
         </div>
       </CameraStage>
 

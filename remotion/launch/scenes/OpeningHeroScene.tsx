@@ -29,7 +29,7 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath, GhostCursor, type GhostCursorKeyframe } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
 import {
   ExplodedLayer,
   KineticWindow,
@@ -321,7 +321,7 @@ const PolyMapsQuickLaunchToast: React.FC<PolyMapsQuickLaunchToastProps> = ({
           borderRadius: 999,
           backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
           border: `1.5px solid ${LAUNCH_MODULE_THEMES.polymaps.primary}`,
-          boxShadow: '0 16px 36px rgba(5, 150, 105, 0.28), 0 8px 20px rgba(31, 39, 32, 0.24)',
+          boxShadow: '0 16px 36px rgba(5, 150, 105, 0.28), 0 8px 20px rgba(6, 23, 20, 0.24)',
           color: LAUNCH_PALETTE.BACKGROUND,
           fontFamily: LAUNCH_FONTS.DISPLAY,
           fontSize: 13.5,
@@ -359,13 +359,13 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
   const { fps, durationInFrames } = useVideoConfig();
 
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
-  const safeDuration = Math.max(24, Number.isFinite(durationInFrames) ? durationInFrames : 306);
+  const safeDuration = Math.max(24, Number.isFinite(durationInFrames) ? durationInFrames : 420);
   const timeSec = frame / safeFps;
 
-  // Beat 1 (0..1.35s, 0..81f): Twin EvolvingPath hairlines -> Institution Pill -> KineticWords + <Underline>
-  const ruleDuration = Math.max(8, Math.round(0.62 * safeFps));
-  const pillStart = Math.round(0.28 * safeFps);
-  const pillEnd = Math.max(pillStart + 6, Math.round(0.76 * safeFps));
+  // Beat 1 (0..1.55s, 0..93f): Twin EvolvingPath hairlines -> Institution Pill -> KineticWords + <Underline>
+  const ruleDuration = Math.max(8, Math.round(0.75 * safeFps));
+  const pillStart = Math.round(0.32 * safeFps);
+  const pillEnd = Math.max(pillStart + 6, Math.round(0.88 * safeFps));
   const pillReveal = interpolate(frame, [pillStart, pillEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -378,9 +378,9 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
     extrapolateRight: 'clamp',
   });
 
-  const headlineStart = Math.round(0.24 * safeFps);
-  const wordStagger = Math.max(2, Math.round(0.06 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.36 * safeFps));
+  const headlineStart = Math.round(0.28 * safeFps);
+  const wordStagger = Math.max(2, Math.round(0.07 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.42 * safeFps));
 
   const { prefix, underlined, suffix } = splitHeadlineForUnderline(headlinePrimary);
   const prefixWordCount = prefix ? prefix.split(/\s+/).filter(Boolean).length : 0;
@@ -388,14 +388,14 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
   const underlineWordsStart = headlineStart + prefixWordCount * wordStagger;
   const suffixWordsStart = underlineWordsStart + underlinedWordCount * wordStagger;
 
-  const underlineStart = Math.round(0.84 * safeFps);
-  const underlineDuration = Math.max(10, Math.round(0.46 * safeFps));
-  const subtitleStart = Math.round(0.7 * safeFps);
-  const subtitleDuration = Math.max(8, Math.round(0.42 * safeFps));
+  const underlineStart = Math.round(0.98 * safeFps);
+  const underlineDuration = Math.max(10, Math.round(0.54 * safeFps));
+  const subtitleStart = Math.round(0.82 * safeFps);
+  const subtitleDuration = Math.max(8, Math.round(0.48 * safeFps));
 
-  // Beat 2 (0.85..3.2s, 51..192f): Centered 3D SuperApp KineticWindow (rotateX 11deg -> 3deg)
-  const windowEnterFrame = Math.round(0.85 * safeFps);
-  const windowEnterDuration = Math.max(12, Math.round(0.95 * safeFps));
+  // Beat 2 (1.0..4.5s, 60..270f): Centered 3D SuperApp KineticWindow (rotateX 11deg -> 3deg) + 2.5s reading hold
+  const windowEnterFrame = Math.round(1.0 * safeFps);
+  const windowEnterDuration = Math.max(12, Math.round(1.12 * safeFps));
   const windowProgress = interpolate(
     frame,
     [windowEnterFrame, windowEnterFrame + windowEnterDuration],
@@ -408,7 +408,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
   );
   const windowOpacity = interpolate(
     frame,
-    [windowEnterFrame, windowEnterFrame + Math.max(6, Math.round(0.22 * safeFps))],
+    [windowEnterFrame, windowEnterFrame + Math.max(6, Math.round(0.28 * safeFps))],
     [0, 1],
     {
       extrapolateLeft: 'clamp',
@@ -422,29 +422,29 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
     extrapolateRight: 'clamp',
     output: 'perceptual-scale',
   });
-  const sheenStartFrame = Math.round(1.95 * safeFps);
-  const typewriterStartFrame = Math.round(1.25 * safeFps);
-  const nextClassEnterFrame = Math.round(1.12 * safeFps);
+  const sheenStartFrame = Math.round(2.35 * safeFps);
+  const typewriterStartFrame = Math.round(1.45 * safeFps);
+  const nextClassEnterFrame = Math.round(1.32 * safeFps);
 
-  // 8-squircle grid staggered 3f apart @ 60fps
-  const gridBaseEnterFrame = Math.round(1.3 * safeFps);
-  const gridStaggerFrames = Math.max(2, Math.round(0.05 * safeFps));
+  // 8-squircle grid staggered smoothly @ 60fps
+  const gridBaseEnterFrame = Math.round(1.52 * safeFps);
+  const gridStaggerFrames = Math.max(2, Math.round(0.065 * safeFps));
 
   // Active status pulse inside NextClassBentoCard
-  const activeDotScale = 0.88 + Math.sin(timeSec * 5.2) * 0.16;
-  const activeHaloScale = 1 + ((timeSec * 0.9) % 1) * 0.95;
-  const activeHaloOpacity = Math.max(0, 0.45 * (1 - ((timeSec * 0.9) % 1)));
+  const activeDotScale = 0.88 + Math.sin(timeSec * 4.8) * 0.15;
+  const activeHaloScale = 1 + ((timeSec * 0.85) % 1) * 0.95;
+  const activeHaloOpacity = Math.max(0, 0.45 * (1 - ((timeSec * 0.85) % 1)));
 
-  // Beat 3 (3.1..5.1s, 186..306f): GhostCursor clicks PolyMaps squircle -> Terracotta ignition -> morph momentum
-  const cursorAppearFrame = Math.round(3.1 * safeFps);
-  const clickFrame = Math.round(3.75 * safeFps);
+  // Beat 3 (4.8..7.0s, 288..420f): GhostCursor clicks PolyMaps squircle -> Emerald ignition -> morph momentum
+  const cursorAppearFrame = Math.round(4.8 * safeFps);
+  const clickFrame = Math.round(5.65 * safeFps);
   const cursorHoldEnd = clickFrame + Math.max(6, Math.round(0.28 * safeFps));
-  const cursorDisappearFrame = Math.min(safeDuration - 16, clickFrame + Math.max(10, Math.round(0.55 * safeFps)));
+  const cursorDisappearFrame = Math.min(safeDuration - 54, clickFrame + Math.max(10, Math.round(0.45 * safeFps)));
 
   const cursorKeyframes: readonly GhostCursorKeyframe[] = [
     { frame: cursorAppearFrame, x: 1020, y: 840 },
     {
-      frame: Math.max(cursorAppearFrame + 4, clickFrame - Math.max(3, Math.round(0.07 * safeFps))),
+      frame: Math.max(cursorAppearFrame + 4, clickFrame - Math.max(3, Math.round(0.08 * safeFps))),
       x: POLYMAPS_CENTER_X,
       y: POLYMAPS_CENTER_Y,
     },
@@ -464,7 +464,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
   // Ignition color + 3D lift on PolyMaps squircle
   const igniteT = interpolate(
     frame,
-    [clickFrame, clickFrame + Math.max(4, Math.round(0.14 * safeFps))],
+    [clickFrame, clickFrame + Math.max(4, Math.round(0.16 * safeFps))],
     [0, 1],
     {
       extrapolateLeft: 'clamp',
@@ -474,7 +474,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
   );
   const pressDip = interpolate(
     frame,
-    [clickFrame - 2, clickFrame + 2, clickFrame + 8],
+    [clickFrame - 2, clickFrame + 2, clickFrame + 9],
     [1, 0.94, 1],
     {
       extrapolateLeft: 'clamp',
@@ -486,12 +486,12 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
       ? spring({
           frame: frame - clickFrame,
           fps: safeFps,
-          config: { damping: 145, stiffness: 230, mass: 0.85 },
+          config: LUXURY_SPRING,
         })
       : 0;
 
-  // Gentle final-24-frame expansion carrying momentum into portalZoomMorph (270..306f)
-  const finalRampStart = Math.min(safeDuration - 2, Math.max(clickFrame + 8, safeDuration - 24));
+  // Gentle final-30-frame expansion carrying momentum into portalZoomMorph (378..420f)
+  const finalRampStart = Math.min(safeDuration - 2, Math.max(clickFrame + 10, safeDuration - 30));
   const finalRampProgress = interpolate(frame, [finalRampStart, safeDuration - 1], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -624,7 +624,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                 borderRadius: 999,
                 backgroundColor: LAUNCH_PALETTE.CARD_BG,
                 border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                boxShadow: '0 10px 24px rgba(46, 58, 47, 0.06)',
+                boxShadow: '0 10px 24px rgba(11, 36, 32, 0.06)',
                 opacity: pillOpacity,
                 transform: `scale(${pillScaleX.toFixed(4)}, ${pillScaleY.toFixed(4)})`,
               }}
@@ -816,10 +816,10 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
               sheenDuration={46}
               style={{
                 boxShadow:
-                  '0 32px 68px rgba(31, 39, 32, 0.16), 0 8px 20px rgba(31, 39, 32, 0.08)',
+                  '0 32px 68px rgba(6, 23, 20, 0.16), 0 8px 20px rgba(6, 23, 20, 0.08)',
               }}
             >
-              {/* 1. Live SuperAppHeader Band (Deep Forest #2E3A2F rounded arch header) */}
+              {/* 1. Live SuperAppHeader Band (Deep Executive Teal Obsidian rounded arch header) */}
               <div
                 style={{
                   position: 'relative',
@@ -827,11 +827,11 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                   boxSizing: 'border-box',
                   padding: '16px 32px 18px',
                   background:
-                    'linear-gradient(135deg, #2E3A2F 0%, #2E3A2F 45%, #1F2720 100%)',
+                    'linear-gradient(135deg, #0B2420 0%, #0E352E 48%, #061714 100%)',
                   borderBottomLeftRadius: 32,
                   borderBottomRightRadius: 32,
-                  borderBottom: '1px solid rgba(217, 201, 178, 0.24)',
-                  boxShadow: '0 12px 28px rgba(31, 39, 32, 0.16)',
+                  borderBottom: '1px solid rgba(184, 228, 220, 0.24)',
+                  boxShadow: '0 12px 28px rgba(6, 23, 20, 0.16)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -845,7 +845,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                     position: 'absolute',
                     inset: 0,
                     backgroundImage:
-                      'radial-gradient(rgba(248, 246, 238, 0.14) 1px, transparent 1px)',
+                      'radial-gradient(rgba(246, 251, 249, 0.14) 1px, transparent 1px)',
                     backgroundSize: '22px 22px',
                     opacity: 0.45,
                     pointerEvents: 'none',
@@ -871,7 +871,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                           height: 34,
                           borderRadius: 10,
                           backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                          border: '1px solid rgba(217, 201, 178, 0.32)',
+                          border: '1px solid rgba(184, 228, 220, 0.32)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -920,8 +920,8 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                         gap: 6,
                         padding: '4px 12px',
                         borderRadius: 999,
-                        backgroundColor: 'rgba(248, 246, 238, 0.1)',
-                        border: '1px solid rgba(217, 201, 178, 0.24)',
+                        backgroundColor: 'rgba(246, 251, 249, 0.1)',
+                        border: '1px solid rgba(184, 228, 220, 0.24)',
                         color: LAUNCH_PALETTE.BACKGROUND,
                         fontSize: 11.5,
                         fontWeight: 600,
@@ -938,8 +938,8 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                       style={{
                         padding: '5px 12px',
                         borderRadius: 999,
-                        backgroundColor: 'rgba(107, 127, 91, 0.26)',
-                        border: '1px solid rgba(217, 201, 178, 0.28)',
+                        backgroundColor: 'rgba(13, 148, 136, 0.28)',
+                        border: '1px solid rgba(184, 228, 220, 0.28)',
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 10.5,
                         fontWeight: 800,
@@ -996,7 +996,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                       style={{
                         fontSize: 12.5,
                         fontWeight: 500,
-                        color: 'rgba(248, 246, 238, 0.76)',
+                        color: 'rgba(246, 251, 249, 0.78)',
                       }}
                     >
                       Hari pertama di kampus — semua modul sedia membantu.
@@ -1013,8 +1013,8 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                     padding: '0 14px',
                     borderRadius: 999,
                     backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                    border: '1.5px solid rgba(217, 201, 178, 0.72)',
-                    boxShadow: '0 8px 22px rgba(31, 39, 32, 0.16)',
+                    border: '1.5px solid rgba(184, 228, 220, 0.72)',
+                    boxShadow: '0 8px 22px rgba(6, 23, 20, 0.16)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -1028,7 +1028,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                         width: 28,
                         height: 28,
                         borderRadius: 999,
-                        backgroundColor: 'rgba(107, 127, 91, 0.15)',
+                        backgroundColor: 'rgba(13, 148, 136, 0.14)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1101,7 +1101,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                       borderRadius: 20,
                       backgroundColor: LAUNCH_PALETTE.CARD_BG,
                       border: `1.5px solid ${LAUNCH_MODULE_THEMES.takwim.border}`,
-                      boxShadow: '0 12px 28px rgba(99, 102, 241, 0.08), 0 4px 12px rgba(46, 58, 47, 0.06)',
+                      boxShadow: '0 12px 28px rgba(99, 102, 241, 0.08), 0 4px 12px rgba(11, 36, 32, 0.06)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -1326,8 +1326,8 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                           backgroundColor: tileBg,
                           border: `1.5px solid ${tileBorder}`,
                           boxShadow: isPolyMaps && igniteT > 0.05
-                            ? '0 26px 56px rgba(16, 185, 129, 0.38), 0 8px 20px rgba(31, 39, 32, 0.14)'
-                            : `0 10px 24px rgba(46, 58, 47, 0.06)`,
+                            ? '0 26px 56px rgba(16, 185, 129, 0.38), 0 8px 20px rgba(6, 23, 20, 0.14)'
+                            : '0 10px 24px rgba(11, 36, 32, 0.06)',
                           display: 'flex',
                           flexDirection: 'column',
                           alignItems: 'center',

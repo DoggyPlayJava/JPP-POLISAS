@@ -14,6 +14,7 @@ import {
   CheckCircle2,
   Flame,
   Heart,
+  Megaphone,
   MessageSquare,
   Share2,
   ShieldCheck,
@@ -31,8 +32,12 @@ import {
   GhostCursor,
   type GhostCursorKeyframe,
 } from '../motion/MotionActors';
+import {
+  MODULE_CONTENT_ENTER_OFFSET,
+  Module3DIntroBumper,
+} from '../motion/Module3DIntroBumper';
 import { WHIP_S_CURVE } from '../motion/transitions';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
 import { KineticWindow, PersonaMonogram, SpatialFloorGrid } from '../ui/KineticCard';
 
 const ROSE = LAUNCH_MODULE_THEMES.polysuara.primary; // #F43F5E
@@ -133,19 +138,20 @@ const REACTIONS = [
   { id: 'heart', label: 'Prihatin', count: 62, icon: 'heart' as const, color: EMERALD_INK, bg: EMERALD_SOFT, border: EMERALD_BORDER },
 ] as const;
 
-// Cursor keyframes in global 1920x764 3D workspace coords:
-// Shot 1 click occurs 154..184 (after QA still f=1900 / Local 142f!)
+const O = MODULE_CONTENT_ENTER_OFFSET; // 132f bumper handoff
+
+// Cursor keyframes in global 1920x764 3D workspace coords (shifted +132f)
 const SHOT1_CURSOR_KEYFRAMES: readonly GhostCursorKeyframe[] = [
-  { frame: 154, x: 960, y: 420 },
-  { frame: 176, x: 1295, y: 576, click: true, label: 'ANGKAT JADI UNDIAN' },
-  { frame: 186, x: 1295, y: 576 },
+  { frame: O + 136, x: 960, y: 420 },
+  { frame: O + 162, x: 1295, y: 576, click: true, label: 'ANGKAT JADI UNDIAN' },
+  { frame: O + 178, x: 1295, y: 576 },
 ];
 
-// Shot 2 vote click occurs cleanly inside right side of Option A bar and exits promptly before percentage fill finishes
+// Shot 2 vote click occurs cleanly inside right side of Option A bar and exits promptly well before f_2960
 const SHOT2_CURSOR_KEYFRAMES: readonly GhostCursorKeyframe[] = [
-  { frame: 224, x: 1240, y: 430 },
-  { frame: 256, x: 1180, y: 368, click: true, label: 'UNDI PILIHAN A' },
-  { frame: 272, x: 1180, y: 368 },
+  { frame: O + 236, x: 1240, y: 430 },
+  { frame: O + 272, x: 1180, y: 368, click: true, label: 'UNDI PILIHAN A' },
+  { frame: O + 292, x: 1180, y: 368 },
 ];
 
 const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
@@ -167,25 +173,32 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   const resolvedOptionA = resolveStudentText(optionA, LEGACY_OPTION_A, STUDENT_OPTION_A_DEFAULT);
   const resolvedOptionB = resolveStudentText(optionB, LEGACY_OPTION_B, STUDENT_OPTION_B_DEFAULT);
 
+  // Seamless zero-flash bumper handoff (132..168f)
+  const contentRevealT = interpolate(frame, [O, O + 36], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EXPO_OUT,
+  });
+
   // Header timing
-  const wordStagger = Math.max(2, Math.round(0.04 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.28 * safeFps));
+  const wordStagger = Math.max(2, Math.round(0.05 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.32 * safeFps));
 
-  // SHOT 1 -> SHOT 2 camera handoff (184..230f)
-  const toShot2T = interpolate(frame, [184, 230], [0, 1], {
+  // SHOT 1 -> SHOT 2 camera handoff (O+180..O+232 = 312..364f)
+  const toShot2T = interpolate(frame, [O + 180, O + 232], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: WHIP_S_CURVE,
   });
-  // SHOT 2 -> SHOT 3 camera handoff (374..422f)
-  const toShot3T = interpolate(frame, [374, 422], [0, 1], {
+  // SHOT 2 -> SHOT 3 camera handoff (O+354..O+408 = 486..540f -> settled before f_2960 / local 566f!)
+  const toShot3T = interpolate(frame, [O + 354, O + 408], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: WHIP_S_CURVE,
   });
 
-  // Reactions count up smoothly before Local 142f (f=1900)
-  const reactionFillProgress = interpolate(frame, [26, 118], [0, 1], {
+  // Reactions count up smoothly across Shot 1
+  const reactionFillProgress = interpolate(frame, [O + 26, O + 120], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
@@ -203,8 +216,8 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
       extrapolateRight: 'clamp',
     });
 
-  // Poll Monolith sweeps dead center in Shot 2 (196..234), shifts cleanly left in Shot 3 (374..422)
-  const pollEnterProgress = interpolate(frame, [192, 234], [0, 1], {
+  // Poll Monolith sweeps dead center in Shot 2, shifts cleanly left in Shot 3
+  const pollEnterProgress = interpolate(frame, [O + 190, O + 236], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
@@ -219,8 +232,8 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   const pollRotY = interpolate(toShot3T, [0, 1], [0, 4.5]);
   const pollOpacity = pollEnterProgress;
 
-  // Poll vote percentages animate right after cursor click at 256f -> settled by 296f (before Local 322f / f=2080!)
-  const voteGrowthT = interpolate(frame, [254, 294], [0, 1], {
+  // Poll vote percentages animate right after cursor click at O+272f -> settled cleanly by O+316f (448f)
+  const voteGrowthT = interpolate(frame, [O + 272, O + 316], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
@@ -230,38 +243,66 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   const liveTotalVotes = Math.round(
     interpolate(voteGrowthT, [0, 1], [Math.round(safeTotalVotes * 0.56), safeTotalVotes]),
   );
-  const isUsulAccepted = frame >= 282;
+  const isUsulAccepted = frame >= O + 306;
   const stampSpring = isUsulAccepted
     ? spring({
-        frame: frame - 282,
+        frame: frame - (O + 306),
         fps: safeFps,
-        config: { damping: 16, stiffness: 225, mass: 0.85 },
+        config: LUXURY_SPRING,
       })
     : 0;
 
-  // Shot 3: 3D Smartphone IG Story Bezel rises on right (392..438f -> settled razor-sharp at Local 462f / f=2220!)
-  const phoneEnterProgress = interpolate(frame, [388, 434], [0, 1], {
+  // Shot 3: 3D Smartphone IG Story Bezel rises on right (O+370..O+422 = 502..554f -> settled razor-sharp at f_2960 / local 566f!)
+  const phoneEnterProgress = interpolate(frame, [O + 370, O + 422], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
   const phoneRiseY = (1 - phoneEnterProgress) * 140;
   const phoneRotY = interpolate(phoneEnterProgress, [0, 1], [-18, -8]);
-  const phoneSheenLeft = interpolate(frame, [428, 488], [-45, 135], {
+  const phoneSheenLeft = interpolate(frame, [O + 420, O + 486], [-45, 135], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.bezier(0.25, 0.1, 0.25, 1),
   });
-  const phoneSheenOpacity = interpolate(frame, [428, 444, 476, 488], [0, 0.65, 0.65, 0], {
+  const phoneSheenOpacity = interpolate(frame, [O + 420, O + 436, O + 470, O + 486], [0, 0.65, 0.65, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  const liveDotScale = 0.86 + Math.sin(timeSec * 5.1) * 0.16;
+  const liveDotScale = 0.86 + Math.sin(timeSec * 4.8) * 0.16;
 
   return (
     <>
       <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.polysuara.tint} />
+
+      <Module3DIntroBumper
+        moduleIndex="MODUL 05"
+        moduleCategory="KOMUNITI & UNDIAN"
+        moduleName="PolySuara"
+        tagline="Luah Idea & Undi Kemudahan Kampus"
+        accentColor={LAUNCH_MODULE_THEMES.polysuara.primary}
+        darkColor={LAUNCH_MODULE_THEMES.polysuara.dark}
+        softColor={LAUNCH_MODULE_THEMES.polysuara.soft}
+        borderColor={LAUNCH_MODULE_THEMES.polysuara.border}
+        icon={<Megaphone size={96} color="#FFFFFF" strokeWidth={2.1} />}
+        features={[
+          {
+            icon: (
+              <PersonaMonogram
+                species="fox"
+                size={16}
+                accentColor={ROSE}
+                softBgColor={ROSE_SOFT}
+                borderColor={ROSE_BORDER}
+              />
+            ),
+            label: 'Persona Tanpa Nama',
+          },
+          { icon: <Vote size={15} strokeWidth={2.4} />, label: 'Undian Masa Nyata' },
+          { icon: <Share2 size={15} strokeWidth={2.4} />, label: 'Kongsi IG Story' },
+        ]}
+      />
 
       <CameraStage
         zoomFrom={0.995}
@@ -282,6 +323,14 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
         exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            opacity: contentRevealT,
+            transform: `translate3d(0px, ${((1 - contentRevealT) * 22).toFixed(2)}px, 0px) scale(${interpolate(contentRevealT, [0, 1], [0.96, 1]).toFixed(4)})`,
+          }}
+        >
         <SpatialFloorGrid
           accentColor={ROSE}
           secondaryColor={INDIGO}
@@ -305,7 +354,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1360 }}>
-            <KineticReveal startFrame={4} durationFrames={18}>
+            <KineticReveal startFrame={O + 4} durationFrames={18}>
               <div
                 style={{
                   display: 'inline-flex',
@@ -343,7 +392,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             <KineticWords
               as="h1"
               text="Ada Pendapat? Luah Tanpa Nama & Undi Terus Bersama Siswa."
-              startFrame={8}
+              startFrame={O + 8}
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
               accentWords={['Luah', 'Undi']}
@@ -359,7 +408,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             />
           </div>
 
-          <KineticReveal startFrame={18} durationFrames={22}>
+          <KineticReveal startFrame={O + 18} durationFrames={22}>
             <div
               style={{
                 display: 'inline-flex',
@@ -369,7 +418,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                 borderRadius: 16,
                 backgroundColor: isUsulAccepted ? EMERALD_SOFT : LAUNCH_PALETTE.CARD_BG,
                 border: `1.5px solid ${isUsulAccepted ? EMERALD_BORDER : LAUNCH_PALETTE.TERTIARY}`,
-                boxShadow: '0 12px 26px rgba(31, 39, 32, 0.08)',
+                boxShadow: '0 12px 26px rgba(6, 23, 20, 0.08)',
               }}
             >
               <ShieldCheck
@@ -412,12 +461,12 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
           }}
         >
           {/* Rose Vector Bridge Arc linking Shot 1 Confession -> Shot 2 Poll */}
-          {frame >= 186 && toShot3T < 0.7 ? (
+          {frame >= O + 184 && toShot3T < 0.7 ? (
             <EvolvingPath
               d="M 520 390 Q 760 220 960 360"
               width={1920}
               height={764}
-              startFrame={188}
+              startFrame={O + 186}
               durationFrames={44}
               stroke={ROSE}
               strokeWidth={4.5}
@@ -450,9 +499,9 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             >
               {CONFESSION_STACK.map((card, cIdx) => {
                 const enterSpring = spring({
-                  frame: Math.max(0, frame - (10 + cIdx * 7)),
+                  frame: Math.max(0, frame - (O + 10 + cIdx * 8)),
                   fps: safeFps,
-                  config: { damping: 18, stiffness: 200, mass: 0.9 },
+                  config: LUXURY_SPRING,
                 });
                 const isFront = card.id === 'fox';
                 return (
@@ -476,13 +525,13 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                       accentBorderColor={card.border}
                       width={960}
                       height={510}
-                      sheenStartFrame={isFront ? 68 : undefined}
+                      sheenStartFrame={isFront ? O + 68 : undefined}
                       sheenDuration={36}
                       style={{
                         borderBottom: `6px solid ${card.accent}`,
                         boxShadow: isFront
                           ? '0 34px 72px rgba(190, 18, 60, 0.16)'
-                          : '0 20px 44px rgba(31, 39, 32, 0.12)',
+                          : '0 20px 44px rgba(6, 23, 20, 0.12)',
                       }}
                     >
                       <div
@@ -586,9 +635,9 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                             <div style={{ display: 'flex', alignItems: 'center', gap: 12, transformStyle: 'preserve-3d' }}>
                               {REACTIONS.map((rx, rIdx) => {
                                 const popSpring = spring({
-                                  frame: Math.max(0, frame - (36 + rIdx * 8)),
+                                  frame: Math.max(0, frame - (O + 36 + rIdx * 9)),
                                   fps: safeFps,
-                                  config: { damping: 16, stiffness: 215, mass: 0.85 },
+                                  config: LUXURY_SPRING,
                                 });
                                 const rxCount = Math.round(rx.count * reactionFillProgress);
                                 return (
@@ -603,7 +652,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                                       backgroundColor: rx.bg,
                                       border: `1.5px solid ${rx.border}`,
                                       color: rx.color,
-                                      boxShadow: '0 12px 24px rgba(31, 39, 32, 0.1)',
+                                      boxShadow: '0 12px 24px rgba(6, 23, 20, 0.1)',
                                       transform: `translateZ(${(18 + popSpring * 20).toFixed(1)}px) scale(${(0.86 + 0.14 * popSpring).toFixed(4)})`,
                                     }}
                                   >
@@ -683,7 +732,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                 accentBorderColor={isUsulAccepted ? EMERALD_BORDER : ROSE_BORDER}
                 width={980}
                 height={550}
-                sheenStartFrame={284}
+                sheenStartFrame={O + 308}
                 sheenDuration={36}
                 style={{
                   borderBottom: `7px solid ${isUsulAccepted ? EMERALD : ROSE}`,
@@ -876,7 +925,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
 
                         <EditorialAnnotation
                           type="highlight"
-                          startFrame={284}
+                          startFrame={O + 308}
                           durationFrames={24}
                           color="rgba(244, 63, 94, 0.2)"
                           padding={{ top: 2, right: 6, bottom: 2, left: 6 }}
@@ -1025,7 +1074,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                 borderRadius: 46,
                 backgroundColor: '#181820',
                 border: '3px solid #353844',
-                boxShadow: '0 40px 84px rgba(31, 39, 32, 0.34)',
+                boxShadow: '0 40px 84px rgba(6, 23, 20, 0.34)',
                 padding: 16,
                 opacity: phoneEnterProgress,
                 transformStyle: 'preserve-3d',
@@ -1238,7 +1287,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
 
           {/* Spark bursts on Shot 2 Usul Accepted & Shot 3 IG Story Ready */}
           <GeometricSparkBurst
-            triggerFrame={286}
+            triggerFrame={O + 308}
             x={960}
             y={560}
             durationFrames={34}
@@ -1248,7 +1297,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             colors={[ROSE, EMERALD, '#FFFFFF']}
           />
           <GeometricSparkBurst
-            triggerFrame={438}
+            triggerFrame={O + 424}
             x={1575}
             y={380}
             durationFrames={30}
@@ -1261,18 +1310,19 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
           {/* Ghost Cursors strictly scoped outside still target frames */}
           <GhostCursor
             keyframes={SHOT1_CURSOR_KEYFRAMES}
-            appearFrame={154}
-            disappearFrame={184}
+            appearFrame={O + 136}
+            disappearFrame={O + 178}
             color={LAUNCH_PALETTE.PRIMARY_DARK}
             rippleColor={ROSE}
           />
           <GhostCursor
             keyframes={SHOT2_CURSOR_KEYFRAMES}
-            appearFrame={224}
-            disappearFrame={272}
+            appearFrame={O + 236}
+            disappearFrame={O + 292}
             color={LAUNCH_PALETTE.PRIMARY_DARK}
             rippleColor={ROSE}
           />
+        </div>
         </div>
       </CameraStage>
 

@@ -181,7 +181,7 @@ export function LaunchVideo() {
   return (
     <div
       ref={stageRef}
-      className="h-screen w-screen overflow-hidden bg-[#F8F6EE] text-[#2E3A2F] relative flex items-center justify-center select-none"
+      className="h-screen w-screen overflow-hidden bg-[#F6FBF9] text-[#0B2420] relative flex items-center justify-center select-none"
     >
       {/* Pure 16:9 Stage Cinema Container */}
       <div
@@ -205,7 +205,7 @@ export function LaunchVideo() {
 
       {/* Minimal Auto-Hide Stage HUD (Opaque surfaces — 100% GPU Baseline Compliant) */}
       <div
-        className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[min(98vw,1420px)] rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2] shadow-lg px-3 py-2.5 transition-opacity duration-300 ${
+        className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[min(98vw,1420px)] rounded-2xl bg-[#FFFFFF] border border-[#B8E4DC] shadow-lg px-3 py-2.5 transition-opacity duration-300 ${
           hudVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
@@ -225,9 +225,9 @@ export function LaunchVideo() {
             playerRef.current?.seekTo(target);
             setCurrentFrame(target);
           }}
-          className="h-1.5 w-full rounded-full bg-[#F2EDE4] cursor-pointer mb-2.5 overflow-hidden"
+          className="h-1.5 w-full rounded-full bg-[#EBF7F4] cursor-pointer mb-2.5 overflow-hidden"
         >
-          <div className="h-full bg-[#C96F4F] rounded-full" style={{ width: `${progressPct}%` }} />
+          <div className="h-full bg-[#0D9488] rounded-full" style={{ width: `${progressPct}%` }} />
         </div>
 
         <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-2">
@@ -237,7 +237,7 @@ export function LaunchVideo() {
               type="button"
               onClick={togglePlay}
               aria-label={isPlaying ? 'Jeda tayangan' : 'Main tayangan'}
-              className="h-8 w-8 rounded-xl bg-[#2E3A2F] text-[#F8F6EE] flex items-center justify-center hover:bg-[#232C24]"
+              className="h-8 w-8 rounded-xl bg-[#0B2420] text-[#FFFFFF] flex items-center justify-center hover:bg-[#061714]"
             >
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </button>
@@ -245,7 +245,7 @@ export function LaunchVideo() {
               type="button"
               onClick={replayFromStart}
               aria-label="Ulang dari mula"
-              className="h-8 w-8 rounded-xl bg-[#F2EDE4] text-[#2E3A2F] border border-[#D9C9B2] flex items-center justify-center hover:bg-[#D9C9B2]"
+              className="h-8 w-8 rounded-xl bg-[#EBF7F4] text-[#0B2420] border border-[#B8E4DC] flex items-center justify-center hover:bg-[#B8E4DC]"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -253,7 +253,7 @@ export function LaunchVideo() {
               type="button"
               onClick={() => void toggleFullscreen()}
               aria-label={isFullscreen ? 'Keluar skrin penuh' : 'Skrin penuh'}
-              className="h-8 w-8 rounded-xl bg-[#F2EDE4] text-[#2E3A2F] border border-[#D9C9B2] flex items-center justify-center hover:bg-[#D9C9B2]"
+              className="h-8 w-8 rounded-xl bg-[#EBF7F4] text-[#0B2420] border border-[#B8E4DC] flex items-center justify-center hover:bg-[#B8E4DC]"
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
@@ -270,8 +270,8 @@ export function LaunchVideo() {
                   onClick={() => jumpToChapter(idx)}
                   className={`px-1.5 py-1 rounded-lg text-[10px] font-bold tracking-tight whitespace-nowrap border ${
                     active
-                      ? 'bg-[#2E3A2F] text-[#F8F6EE] border-[#2E3A2F]'
-                      : 'bg-[#FFFFFF] text-[#556453] border-[#D9C9B2] hover:text-[#2E3A2F]'
+                      ? 'bg-[#0D9488] text-[#FFFFFF] border-[#0D9488]'
+                      : 'bg-[#FFFFFF] text-[#3B635C] border-[#B8E4DC] hover:text-[#0B2420]'
                   }`}
                 >
                   {ch.indexLabel} {ch.title}
@@ -284,7 +284,7 @@ export function LaunchVideo() {
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C96F4F] text-[#F8F6EE] text-[11px] font-extrabold uppercase tracking-wider hover:bg-[#2E3A2F]"
+            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0D9488] text-[#FFFFFF] text-[11px] font-extrabold uppercase tracking-wider hover:bg-[#0B2420]"
           >
             <span>Masuk Portal</span>
             <ArrowRight className="w-3.5 h-3.5" />

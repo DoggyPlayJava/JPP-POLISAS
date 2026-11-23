@@ -95,7 +95,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="OpeningHeroScene"
           component={OpeningHeroScene}
-          durationInFrames={306}
+          durationInFrames={420}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -108,7 +108,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="PolyMapsCampusScene"
           component={PolyMapsCampusScene}
-          durationInFrames={480}
+          durationInFrames={660}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -122,7 +122,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="PolyMartCommerceScene"
           component={PolyMartCommerceScene}
-          durationInFrames={540}
+          durationInFrames={720}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -135,7 +135,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="PolyRentHousingScene"
           component={PolyRentHousingScene}
-          durationInFrames={540}
+          durationInFrames={720}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -148,7 +148,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="PolySuaraVoiceScene"
           component={PolySuaraVoiceScene}
-          durationInFrames={576}
+          durationInFrames={750}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -163,7 +163,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="WelfareCareScene"
           component={WelfareCareScene}
-          durationInFrames={576}
+          durationInFrames={750}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -176,7 +176,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="ClubsEmsScene"
           component={ClubsEmsScene}
-          durationInFrames={612}
+          durationInFrames={762}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -189,7 +189,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="ImpactNumbersScene"
           component={ImpactNumbersScene}
-          durationInFrames={426}
+          durationInFrames={570}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -204,7 +204,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="ClosingVaultScene"
           component={ClosingVaultScene}
-          durationInFrames={600}
+          durationInFrames={1020}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}

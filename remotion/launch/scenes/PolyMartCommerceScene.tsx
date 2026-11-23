@@ -21,13 +21,18 @@ import {
   Sparkles,
   Tag,
   UtensilsCrossed,
+  Zap,
 } from 'lucide-react';
 import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialChrome';
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { GeometricSparkBurst, GhostCursor, type GhostCursorKeyframe } from '../motion/MotionActors';
+import {
+  MODULE_CONTENT_ENTER_OFFSET,
+  Module3DIntroBumper,
+} from '../motion/Module3DIntroBumper';
 import { WHIP_S_CURVE } from '../motion/transitions';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
 import { DeterministicQrMatrix, KineticWindow, SpatialFloorGrid } from '../ui/KineticCard';
 
 const AMBER = LAUNCH_MODULE_THEMES.polymart.primary; // #F59E0B
@@ -78,6 +83,8 @@ const resolveStudentHeadline = (headline: string): string => {
   return trimmed;
 };
 
+const O = MODULE_CONTENT_ENTER_OFFSET; // 132f bumper handoff
+
 const MENU_PRODUCTS: readonly MenuProductSpec[] = [
   {
     id: 'chicken-popcorn',
@@ -88,8 +95,8 @@ const MENU_PRODUCTS: readonly MenuProductSpec[] = [
     vendor: 'Quadra H Bistro',
     prepMins: 5,
     icon: 'food',
-    clickFrame: 48,
-    flyStartFrame: 50,
+    clickFrame: O + 56,
+    flyStartFrame: O + 58,
     baseX: 16,
     baseY: 78,
     baseZ: 72,
@@ -107,8 +114,8 @@ const MENU_PRODUCTS: readonly MenuProductSpec[] = [
     vendor: 'Kafeteria Blok D',
     prepMins: 4,
     icon: 'bag',
-    clickFrame: 80,
-    flyStartFrame: 82,
+    clickFrame: O + 92,
+    flyStartFrame: O + 94,
     baseX: 462,
     baseY: 102,
     baseZ: -45,
@@ -126,8 +133,8 @@ const MENU_PRODUCTS: readonly MenuProductSpec[] = [
     vendor: 'Kiosk Kelab EKPP',
     prepMins: 2,
     icon: 'tag',
-    clickFrame: 112,
-    flyStartFrame: 114,
+    clickFrame: O + 128,
+    flyStartFrame: O + 130,
     baseX: 826,
     baseY: 128,
     baseZ: -100,
@@ -147,13 +154,13 @@ const PREP_STAGES = [
 const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
 
 // Cursor moves across the Right 3D Stage (relative to right-stage container 0..1188 x 0..736)
-// Targets the bottom-right "+ MASUK BAKUL" CTA buttons and exits cleanly before Local 150f (f=900).
+// Shifted cleanly after the 132f 3D Module Bumper handoff and exits well before Shot 2 flip.
 const MENU_CURSOR_KEYFRAMES: readonly GhostCursorKeyframe[] = [
-  { frame: 18, x: 180, y: 260, label: 'PILIH MENU' },
-  { frame: 48, x: 342, y: 572, click: true, label: '+ BAKUL (RM 9)' },
-  { frame: 80, x: 738, y: 550, click: true, label: '+ BAKUL (RM 6)' },
-  { frame: 112, x: 1080, y: 536, click: true, label: '+ BAKUL (RM 12)' },
-  { frame: 126, x: 1080, y: 536 },
+  { frame: O + 22, x: 180, y: 260, label: 'PILIH MENU' },
+  { frame: O + 56, x: 342, y: 572, click: true, label: '+ BAKUL (RM 9)' },
+  { frame: O + 92, x: 738, y: 550, click: true, label: '+ BAKUL (RM 6)' },
+  { frame: O + 128, x: 1080, y: 536, click: true, label: '+ BAKUL (RM 12)' },
+  { frame: O + 146, x: 1080, y: 536 },
 ];
 
 const renderProductIcon = (icon: MenuProductSpec['icon'], size: number, color: string) => {
@@ -185,23 +192,30 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   const resolvedHeadline = resolveStudentHeadline(headline);
   const timeSec = frame / safeFps;
 
-  // Header timing
-  const wordStagger = Math.max(2, Math.round(0.04 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.28 * safeFps));
+  // Seamless zero-flash bumper handoff (132..168f)
+  const contentRevealT = interpolate(frame, [O, O + 36], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EXPO_OUT,
+  });
+
+  // Header timing (shifted +132f for slow-paced luxury rhythm)
+  const wordStagger = Math.max(2, Math.round(0.05 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.32 * safeFps));
 
   // Left Cart HUD entrance
   const cartHudSpring = spring({
-    frame: Math.max(0, frame - 6),
+    frame: Math.max(0, frame - (O + 6)),
     fps: safeFps,
-    config: { damping: 18, stiffness: 210, mass: 0.92 },
+    config: LUXURY_SPRING,
   });
-  const cartHudOpacity = interpolate(frame, [4, 20], [0, 1], {
+  const cartHudOpacity = interpolate(frame, [O + 4, O + 22], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
   const cartHudX = (1 - cartHudSpring) * -32;
 
-  // Shot 1 cart state (items click at 48f, 80f, 112f -> all 3 added cleanly by 112f, before Local 150f / f=900)
+  // Shot 1 cart state (items click at +56f, +92f, +128f -> settled by O+146 / local 278f)
   const addedStates = MENU_PRODUCTS.map((item) => frame >= item.clickFrame);
   const cartCount = addedStates.filter(Boolean).length;
   const cartTotalRm = MENU_PRODUCTS.reduce(
@@ -210,49 +224,66 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   );
   const allAdded = cartCount === MENU_PRODUCTS.length;
 
-  // Shot 1 -> Shot 2 Convergence & 180-deg Y-Axis Card Flip (248f .. 310f)
-  const carouselConvergeT = interpolate(frame, [246, 272], [0, 1], {
+  // Shot 1 -> Shot 2 Convergence & 180-deg Y-Axis Card Flip (O+236f .. O+308f = 368f .. 440f)
+  const carouselConvergeT = interpolate(frame, [O + 236, O + 266], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: WHIP_S_CURVE,
   });
-  const flipEntryT = interpolate(frame, [252, 270], [0, 1], {
+  const flipEntryT = interpolate(frame, [O + 244, O + 264], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
-  const flipPhaseT = interpolate(frame, [264, 308], [0, 1], {
+  const flipPhaseT = interpolate(frame, [O + 258, O + 308], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: WHIP_S_CURVE,
   });
   const flipDeg = interpolate(flipPhaseT, [0, 1], [0, 180]);
-  const showFlipAssembly = frame >= 252;
-  const showCarousel = frame < 274;
+  const showFlipAssembly = frame >= O + 244;
+  const showCarousel = frame < O + 268;
 
-  // Live Kitchen Prep Progress Pie inside JPP PAY #344 Express Pass (302f .. 346f -> 100% locked before f=1120 / Local 370f!)
-  const kitchenProgress = interpolate(frame, [302, 346], [0, 1], {
+  // Live Kitchen Prep Progress Pie inside JPP PAY #344 Express Pass (432f .. 486f -> locked cleanly before f_1560 / local 522f!)
+  const kitchenProgress = interpolate(frame, [O + 300, O + 354], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
-  const isPassReady = frame >= 344;
+  const isPassReady = frame >= O + 352;
   const readyStampSpring = isPassReady
     ? spring({
-        frame: frame - 344,
+        frame: frame - (O + 352),
         fps: safeFps,
-        config: { damping: 16, stiffness: 220, mass: 0.85 },
+        config: LUXURY_SPRING,
       })
     : 0;
 
   // Live vertical QR laser sweep inside Express Pass
-  const laserCycle = ((frame - 306) % 72 + 72) % 72;
+  const laserCycle = ((frame - (O + 306)) % 72 + 72) % 72;
   const laserY = interpolate(laserCycle, [0, 36, 72], [12, 160, 12]);
-  const liveDotScale = 0.86 + Math.sin(timeSec * 5.2) * 0.16;
+  const liveDotScale = 0.86 + Math.sin(timeSec * 4.8) * 0.16;
 
   return (
     <>
       <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.polymart.tint} />
+
+      <Module3DIntroBumper
+        moduleIndex="MODUL 03"
+        moduleCategory="KAFETERIA & JPP PAY"
+        moduleName="PolyMart"
+        tagline="Pesan Makanan Kafeteria Tanpa Beratur"
+        accentColor={LAUNCH_MODULE_THEMES.polymart.primary}
+        darkColor={LAUNCH_MODULE_THEMES.polymart.dark}
+        softColor={LAUNCH_MODULE_THEMES.polymart.soft}
+        borderColor={LAUNCH_MODULE_THEMES.polymart.border}
+        icon={<ShoppingBag size={96} color="#FFFFFF" strokeWidth={2.1} />}
+        features={[
+          { icon: <UtensilsCrossed size={15} strokeWidth={2.4} />, label: '277+ Menu Siswa' },
+          { icon: <Zap size={15} strokeWidth={2.4} />, label: 'Pesan Ekspres' },
+          { icon: <CreditCard size={15} strokeWidth={2.4} />, label: 'JPP Pay QR' },
+        ]}
+      />
 
       <CameraStage
         zoomFrom={0.995}
@@ -273,6 +304,14 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
         exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            opacity: contentRevealT,
+            transform: `translate3d(0px, ${((1 - contentRevealT) * 22).toFixed(2)}px, 0px) scale(${interpolate(contentRevealT, [0, 1], [0.96, 1]).toFixed(4)})`,
+          }}
+        >
         {/* 3D Amber/Emerald Horizon Perspective Floor Grid */}
         <SpatialFloorGrid
           accentColor={AMBER}
@@ -297,7 +336,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1240 }}>
-            <KineticReveal startFrame={4} durationFrames={18}>
+            <KineticReveal startFrame={O + 4} durationFrames={18}>
               <div
                 style={{
                   display: 'inline-flex',
@@ -335,7 +374,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
             <KineticWords
               as="h1"
               text={resolvedHeadline}
-              startFrame={8}
+              startFrame={O + 8}
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
               accentWords={['Pesan', 'Terus']}
@@ -351,7 +390,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
             />
           </div>
 
-          <KineticReveal startFrame={18} durationFrames={22}>
+          <KineticReveal startFrame={O + 18} durationFrames={22}>
             <div
               style={{
                 display: 'inline-flex',
@@ -361,7 +400,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                 borderRadius: 16,
                 backgroundColor: isPassReady ? EMERALD_SOFT : LAUNCH_PALETTE.CARD_BG,
                 border: `1.5px solid ${isPassReady ? EMERALD_BORDER : LAUNCH_PALETTE.TERTIARY}`,
-                boxShadow: '0 12px 26px rgba(31, 39, 32, 0.08)',
+                boxShadow: '0 12px 26px rgba(6, 23, 20, 0.08)',
               }}
             >
               <CreditCard
@@ -423,7 +462,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               accentBorderColor={isPassReady ? EMERALD_BORDER : AMBER_BORDER}
               width={520}
               height={736}
-              sheenStartFrame={isPassReady ? 344 : 114}
+              sheenStartFrame={isPassReady ? O + 352 : O + 130}
               sheenDuration={36}
               style={{
                 borderBottom: `6px solid ${isPassReady ? EMERALD : AMBER}`,
@@ -646,7 +685,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
 
                   <EditorialAnnotation
                     type="highlight"
-                    startFrame={116}
+                    startFrame={O + 132}
                     durationFrames={24}
                     color="rgba(245, 158, 11, 0.28)"
                     padding={{ top: 2, right: 6, bottom: 2, left: 6 }}
@@ -681,7 +720,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     justifyContent: 'space-between',
                     boxShadow: isPassReady
                       ? '0 14px 30px rgba(4, 120, 87, 0.28)'
-                      : '0 10px 22px rgba(31, 39, 32, 0.14)',
+                      : '0 10px 22px rgba(6, 23, 20, 0.14)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
@@ -752,7 +791,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               <circle cx={590} cy={170} r={340} fill="none" stroke={AMBER} strokeOpacity={0.14} strokeWidth={1.5} />
             </svg>
 
-            {/* SHOT 1: 3D Z-DEPTH MENU CAROUSEL (0 .. 272f, settled cleanly at f=900 / Local 150f) */}
+            {/* SHOT 1: 3D Z-DEPTH MENU CAROUSEL */}
             {showCarousel ? (
               <div
                 style={{
@@ -764,9 +803,9 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               >
                 {MENU_PRODUCTS.map((item, idx) => {
                   const enterSpring = spring({
-                    frame: Math.max(0, frame - (12 + idx * 8)),
+                    frame: Math.max(0, frame - (O + 12 + idx * 9)),
                     fps: safeFps,
-                    config: { damping: 18, stiffness: 205, mass: 0.9 },
+                    config: LUXURY_SPRING,
                   });
                   const isAdded = addedStates[idx];
                   const isHero = idx === 0;
@@ -800,7 +839,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                   // Parabolic flying +1 orb toward Cart HUD right after tap
                   const flyT = interpolate(
                     frame,
-                    [item.flyStartFrame, item.flyStartFrame + 22],
+                    [item.flyStartFrame, item.flyStartFrame + 24],
                     [0, 1],
                     {
                       extrapolateLeft: 'clamp',
@@ -824,7 +863,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                           width: item.width,
                           height: item.height,
                           borderRadius: 28,
-                          backgroundColor: isHero ? '#FFFFFF' : '#FCFBF7',
+                          backgroundColor: isHero ? '#FFFFFF' : LAUNCH_PALETTE.BACKGROUND,
                           border: `2px solid ${
                             isAdded
                               ? EMERALD
@@ -836,8 +875,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             isAdded ? EMERALD_INK : isHero ? AMBER_DARK : LAUNCH_PALETTE.SECONDARY
                           }`,
                           boxShadow: isHero
-                            ? '0 34px 72px rgba(31, 39, 32, 0.18), 0 0 0 1px rgba(245, 158, 11, 0.2)'
-                            : '0 22px 48px rgba(31, 39, 32, 0.14)',
+                            ? '0 34px 72px rgba(6, 23, 20, 0.18), 0 0 0 1px rgba(245, 158, 11, 0.2)'
+                            : '0 22px 48px rgba(6, 23, 20, 0.14)',
                           opacity: currOpacity,
                           transformOrigin: '50% 50%',
                           transform: `translate3d(0px, 0px, ${currZ.toFixed(1)}px) rotateY(${rotY}deg) rotateX(${rotX}deg) scale(${currScale.toFixed(4)})`,
@@ -1026,7 +1065,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
 
                 {/* Spark burst when 3rd item drops in */}
                 <GeometricSparkBurst
-                  triggerFrame={114}
+                  triggerFrame={O + 130}
                   x={1080}
                   y={536}
                   durationFrames={30}
@@ -1036,18 +1075,18 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                   colors={[AMBER, EMERALD, '#FFFFFF']}
                 />
 
-                {/* Animated Cursor confined to Shot 1 (exits cleanly before Local 150f / f=900) */}
+                {/* Animated Cursor confined to Shot 1 (exits cleanly before Shot 2 flip) */}
                 <GhostCursor
                   keyframes={MENU_CURSOR_KEYFRAMES}
-                  appearFrame={18}
-                  disappearFrame={126}
+                  appearFrame={O + 22}
+                  disappearFrame={O + 146}
                   color={LAUNCH_PALETTE.PRIMARY_DARK}
                   rippleColor={AMBER}
                 />
               </div>
             ) : null}
 
-            {/* SHOT 2: TRUE 2-FACE 180° 3D Y-AXIS FLIP -> GIANT HERO JPP PAY #344 EXPRESS PASS (f=1120 / Local 370f) */}
+            {/* SHOT 2: TRUE 2-FACE 180° 3D Y-AXIS FLIP -> GIANT HERO JPP PAY #344 EXPRESS PASS */}
             {showFlipAssembly ? (
               <div
                 style={{
@@ -1069,7 +1108,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     borderRadius: 30,
                     backgroundColor: '#FFFFFF',
                     border: `2.5px solid ${AMBER}`,
-                    boxShadow: '0 34px 76px rgba(31, 39, 32, 0.2)',
+                    boxShadow: '0 34px 76px rgba(6, 23, 20, 0.2)',
                     backfaceVisibility: 'hidden',
                     transform: `rotateY(${flipDeg.toFixed(2)}deg)`,
                     display: 'flex',
@@ -1429,7 +1468,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
 
             {/* Celebratory Burst when Express Pass completes prep */}
             <GeometricSparkBurst
-              triggerFrame={346}
+              triggerFrame={O + 354}
               x={594}
               y={260}
               durationFrames={34}
@@ -1439,6 +1478,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               colors={[EMERALD, AMBER, '#FFFFFF']}
             />
           </div>
+        </div>
         </div>
       </CameraStage>
 

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-export const LAUNCH_TRANSITION_FRAMES = 36;
-export const LAUNCH_OVERLAY_FRAMES = 48;
+export const LAUNCH_TRANSITION_FRAMES = 42;
+export const LAUNCH_OVERLAY_FRAMES = 54;
 
 export type LaunchTransitionKind =
   | 'portal-zoom-morph'
@@ -33,7 +33,7 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     title: 'SuperApp Siswa',
     subtitle: 'Portal Harian Mahasiswa POLISAS',
     gateLabel: 'SELAMAT DATANG MAHASISWA BAHARU',
-    durationInFrames: 306,
+    durationInFrames: 420,
     startFrame: 0,
     transitionOut: 'portal-zoom-morph',
   },
@@ -44,8 +44,8 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     title: 'PolyMaps & Jadual',
     subtitle: 'Navigasi Kampus & Jadual',
     gateLabel: '08:00 PAGI • TAK SESAT CARI KELAS',
-    durationInFrames: 480,
-    startFrame: 270,
+    durationInFrames: 660,
+    startFrame: 378,
     transitionOut: 'editorial-shutter',
   },
   {
@@ -55,8 +55,8 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     title: 'PolyMart & JPP Pay',
     subtitle: 'Kafeteria & Pesanan Ekspres',
     gateLabel: '12:30 TGH HARI • KAFETERIA & JPP PAY',
-    durationInFrames: 540,
-    startFrame: 750,
+    durationInFrames: 720,
+    startFrame: 1038,
     transitionOut: 'kinetic-push',
   },
   {
@@ -66,8 +66,8 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     title: 'PolyRent Kediaman',
     subtitle: 'Bilik Sewa & Kongsi Rakan',
     gateLabel: '14:00 PETANG • BILIK SEWA & KONGSI SEWA',
-    durationInFrames: 540,
-    startFrame: 1254,
+    durationInFrames: 720,
+    startFrame: 1716,
     transitionOut: 'split-curtain',
   },
   {
@@ -77,8 +77,8 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     title: 'PolySuara Komuniti',
     subtitle: 'Suara & Undian Kampus',
     gateLabel: 'KOMUNITI SISWA • LUAH & UNDI TANPA NAMA',
-    durationInFrames: 576,
-    startFrame: 1758,
+    durationInFrames: 750,
+    startFrame: 2394,
     transitionOut: 'swiss-louvers',
   },
   {
@@ -88,8 +88,8 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     title: 'E-Kebajikan',
     subtitle: 'Aduan Kamsis & Food Bank',
     gateLabel: 'PRIHATIN SISWA • ADUAN KAMSIS & FOOD BANK',
-    durationInFrames: 576,
-    startFrame: 2298,
+    durationInFrames: 750,
+    startFrame: 3102,
     transitionOut: 'depth-lift',
   },
   {
@@ -99,8 +99,8 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     title: 'Kelab & Merit QR',
     subtitle: '21 Kelab, Merit QR & e-Sijil',
     gateLabel: '17:00 PETANG • 21 KELAB, MERIT & E-SIJIL',
-    durationInFrames: 612,
-    startFrame: 2838,
+    durationInFrames: 762,
+    startFrame: 3810,
     transitionOut: 'warm-light-sweep',
   },
   {
@@ -110,8 +110,8 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     title: 'Komuniti Siswa',
     subtitle: 'Komuniti Aktif POLISAS',
     gateLabel: 'KOMUNITI HIDUP • 1,083+ SISWA AKTIF',
-    durationInFrames: 426,
-    startFrame: 3450,
+    durationInFrames: 570,
+    startFrame: 4572,
     transitionOut: 'orbital-iris',
   },
   {
@@ -121,13 +121,13 @@ export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
     title: 'Imbas & Masuk',
     subtitle: 'Akses Serta-Merta Portal',
     gateLabel: 'AKSES SERTA-MERTA • IMBAS QR SEKARANG',
-    durationInFrames: 600,
-    startFrame: 3840,
+    durationInFrames: 1020,
+    startFrame: 5100,
     transitionOut: null,
   },
 ];
 
-export const LAUNCH_TOTAL_FRAMES = 4440;
+export const LAUNCH_TOTAL_FRAMES = 6120;
 
 export const LaunchShowcaseSchema = z.object({
   institutionName: z.string().default('POLITEKNIK SULTAN HAJI AHMAD SHAH'),
