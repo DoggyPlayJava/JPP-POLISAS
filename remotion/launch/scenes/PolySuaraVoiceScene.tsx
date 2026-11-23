@@ -8,15 +8,16 @@ import {
   useVideoConfig,
   type InteractivitySchema,
 } from 'remotion';
+import { Circle, Pie } from '@remotion/shapes';
 import {
   ArrowRight,
-  Check,
   CheckCircle2,
   Flame,
   Heart,
   MessageSquare,
   Share2,
   ShieldCheck,
+  Sparkles,
   ThumbsUp,
   Users,
   Vote,
@@ -24,9 +25,15 @@ import {
 import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialChrome';
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
-import { EvolvingPath, GhostCursor, type GhostCursorKeyframe } from '../motion/MotionActors';
+import {
+  EvolvingPath,
+  GeometricSparkBurst,
+  GhostCursor,
+  type GhostCursorKeyframe,
+} from '../motion/MotionActors';
+import { WHIP_S_CURVE } from '../motion/transitions';
 import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
-import { KineticWindow, PersonaMonogram } from '../ui/KineticCard';
+import { KineticWindow, PersonaMonogram, SpatialFloorGrid } from '../ui/KineticCard';
 
 const ROSE = LAUNCH_MODULE_THEMES.polysuara.primary; // #F43F5E
 const ROSE_DARK = LAUNCH_MODULE_THEMES.polysuara.dark; // #E11D48
@@ -34,16 +41,17 @@ const ROSE_INK = '#BE123C'; // WCAG AA+ Rose-700
 const ROSE_SOFT = LAUNCH_MODULE_THEMES.polysuara.soft; // #FFF1F2
 const ROSE_BORDER = LAUNCH_MODULE_THEMES.polysuara.border; // #FECDD3
 
-const EMERALD = LAUNCH_MODULE_THEMES.polymaps.primary; // #10B981
-const EMERALD_INK = '#047857';
-const EMERALD_SOFT = LAUNCH_MODULE_THEMES.polymaps.soft;
-
-const AMBER = LAUNCH_MODULE_THEMES.polymart.primary; // #F59E0B
-const AMBER_INK = '#B45309';
 const INDIGO = LAUNCH_MODULE_THEMES.takwim.primary; // #6366F1
 const INDIGO_INK = '#4338CA';
-const INDIGO_SOFT = LAUNCH_MODULE_THEMES.takwim.soft;
-const INDIGO_BORDER = LAUNCH_MODULE_THEMES.takwim.border;
+const INDIGO_SOFT = LAUNCH_MODULE_THEMES.takwim.soft; // #EEF2FF
+const INDIGO_BORDER = LAUNCH_MODULE_THEMES.takwim.border; // #C7D2FE
+
+const EMERALD = LAUNCH_MODULE_THEMES.polymaps.primary; // #10B981
+const EMERALD_INK = '#047857';
+const EMERALD_SOFT = LAUNCH_MODULE_THEMES.polymaps.soft; // #ECFDF5
+const EMERALD_BORDER = LAUNCH_MODULE_THEMES.polymaps.border; // #A7F3D0
+
+const AMBER_INK = '#B45309';
 
 export type PolySuaraProps = {
   readonly pollTitle: string;
@@ -69,51 +77,76 @@ const resolveStudentText = (value: string, legacyLower: string, studentDefault: 
   return trimmed;
 };
 
-// Upright Poll Workbench Dimensions (GhostCursor coordinates live directly in this 2D plane)
-const POLL_W = 652;
-const POLL_H = 706;
-
 const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
-const RACE_EASE = Easing.bezier(0.25, 1, 0.5, 1);
-const VOTES_SETTLE_EASE = Easing.bezier(0.22, 1, 0.36, 1);
 
-const REACTION_SPECS = [
+const CONFESSION_STACK = [
   {
-    id: 'flame',
-    target: 128,
-    icon: 'flame' as const,
-    color: ROSE_INK,
-    softBg: ROSE_SOFT,
-    border: ROSE_BORDER,
+    id: 'cat',
+    alias: 'Kucing Kamsis #389',
+    species: 'cat' as const,
+    time: '45 min lalu',
+    text: 'Lampu laluan blok asrama dah cerah lepas lapor dalam app. Terima kasih!',
+    dx: 190,
+    dy: 54,
+    dz: -140,
+    scale: 0.86,
+    opacity: 0.56,
+    accent: INDIGO,
+    softBg: INDIGO_SOFT,
+    border: INDIGO_BORDER,
   },
   {
-    id: 'thumbsup',
-    target: 84,
-    icon: 'thumbsup' as const,
-    color: AMBER_INK,
+    id: 'owl',
+    alias: 'Burung Hantu Semambu #405',
+    species: 'owl' as const,
+    time: '18 min lalu',
+    text: 'Harap kafe blok tengah buka kaunter ekspres sampai jam 10 malam waktu exam.',
+    dx: -180,
+    dy: -46,
+    dz: -75,
+    scale: 0.91,
+    opacity: 0.72,
+    accent: AMBER_INK,
     softBg: LAUNCH_MODULE_THEMES.polymart.soft,
     border: LAUNCH_MODULE_THEMES.polymart.border,
   },
   {
-    id: 'heart',
-    target: 62,
-    icon: 'heart' as const,
-    color: ROSE_DARK,
+    id: 'fox',
+    alias: 'Rubah Semambu #412',
+    species: 'fox' as const,
+    time: '2 min lalu • Trending #1',
+    text: 'Boleh tambah meja belajar & plug point di Dataran Siswa tak? Ramai study waktu petang!',
+    dx: 0,
+    dy: 0,
+    dz: 68,
+    scale: 1,
+    opacity: 1,
+    accent: ROSE,
     softBg: ROSE_SOFT,
     border: ROSE_BORDER,
   },
 ] as const;
 
-const renderReactionIcon = (kind: (typeof REACTION_SPECS)[number]['icon'], color: string) => {
-  switch (kind) {
-    case 'flame':
-      return <Flame size={16} color={color} strokeWidth={2.5} />;
-    case 'thumbsup':
-      return <ThumbsUp size={16} color={color} strokeWidth={2.5} />;
-    case 'heart':
-      return <Heart size={16} color={color} strokeWidth={2.5} />;
-  }
-};
+const REACTIONS = [
+  { id: 'flame', label: 'Trending', count: 128, icon: 'flame' as const, color: ROSE_INK, bg: ROSE_SOFT, border: ROSE_BORDER },
+  { id: 'thumbs', label: 'Sokong', count: 84, icon: 'thumbs' as const, color: INDIGO_INK, bg: INDIGO_SOFT, border: INDIGO_BORDER },
+  { id: 'heart', label: 'Prihatin', count: 62, icon: 'heart' as const, color: EMERALD_INK, bg: EMERALD_SOFT, border: EMERALD_BORDER },
+] as const;
+
+// Cursor keyframes in global 1920x764 3D workspace coords:
+// Shot 1 click occurs 154..184 (after QA still f=1900 / Local 142f!)
+const SHOT1_CURSOR_KEYFRAMES: readonly GhostCursorKeyframe[] = [
+  { frame: 154, x: 960, y: 420 },
+  { frame: 176, x: 1295, y: 576, click: true, label: 'ANGKAT JADI UNDIAN' },
+  { frame: 186, x: 1295, y: 576 },
+];
+
+// Shot 2 vote click occurs cleanly inside right side of Option A bar and exits promptly before percentage fill finishes
+const SHOT2_CURSOR_KEYFRAMES: readonly GhostCursorKeyframe[] = [
+  { frame: 224, x: 1240, y: 430 },
+  { frame: 256, x: 1180, y: 368, click: true, label: 'UNDI PILIHAN A' },
+  { frame: 272, x: 1180, y: 368 },
+];
 
 const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   pollTitle,
@@ -126,1118 +159,1125 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   const { fps } = useVideoConfig();
 
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
-  const s = (secs: number) => Math.round(secs * safeFps);
-  const f60 = (f: number) => Math.round((f / 60) * safeFps);
+  const safePctA = Math.min(95, Math.max(5, Math.round(Number.isFinite(percentageA) ? percentageA : 68)));
+  const safeTotalVotes = Math.max(10, Math.round(Number.isFinite(totalVotes) ? totalVotes : 412));
+  const timeSec = frame / safeFps;
 
-  const resolvedPollTitle = resolveStudentText(
-    pollTitle,
-    LEGACY_POLL_TITLE,
-    STUDENT_POLL_TITLE_DEFAULT,
-  );
+  const resolvedTitle = resolveStudentText(pollTitle, LEGACY_POLL_TITLE, STUDENT_POLL_TITLE_DEFAULT);
   const resolvedOptionA = resolveStudentText(optionA, LEGACY_OPTION_A, STUDENT_OPTION_A_DEFAULT);
   const resolvedOptionB = resolveStudentText(optionB, LEGACY_OPTION_B, STUDENT_OPTION_B_DEFAULT);
 
-  const clampedA = Number.isFinite(percentageA) ? Math.min(100, Math.max(0, percentageA)) : 68;
-  const clampedB = 100 - clampedA;
-  const safeTotalVotes = Number.isFinite(totalVotes) ? Math.max(1, Math.round(totalVotes)) : 412;
+  // Header timing
+  const wordStagger = Math.max(2, Math.round(0.04 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.28 * safeFps));
 
-  // Beat timings
-  const pillStart = 0;
-  const pillDuration = Math.max(8, s(0.35));
-  const headlineStart = s(0.08);
-  const wordStagger = Math.max(2, s(0.05));
-  const wordDuration = Math.max(8, s(0.32));
-  const ruleStart = s(0.2);
-  const ruleDuration = Math.max(10, s(0.5));
+  // SHOT 1 -> SHOT 2 camera handoff (184..230f)
+  const toShot2T = interpolate(frame, [184, 230], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: WHIP_S_CURVE,
+  });
+  // SHOT 2 -> SHOT 3 camera handoff (374..422f)
+  const toShot3T = interpolate(frame, [374, 422], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: WHIP_S_CURVE,
+  });
 
-  // BEAT 1 (Left Upright Column): Anonymous Confession + Reaction Pop
-  const leftEnter = interpolate(frame, [f60(10), f60(34)], [0, 1], {
+  // Reactions count up smoothly before Local 142f (f=1900)
+  const reactionFillProgress = interpolate(frame, [26, 118], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
-  const quoteReveal = interpolate(frame, [f60(20), f60(40)], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: EXPO_OUT,
-  });
-  const reactionBase = f60(38);
-  const reactionStagger = Math.max(3, f60(6));
-  const pollConvertTrigger = f60(54);
-  const convertPillLit = frame >= pollConvertTrigger;
 
-  // Connector 1: Confession -> Poll (58..78f)
-  const conn1Start = f60(58);
-  const conn1Duration = Math.max(10, f60(20));
-
-  // BEAT 2 (Center Upright Poll Column): Wakes smoothly as Connector 1 arrives
-  const pollWake = interpolate(frame, [f60(68), f60(88)], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: EXPO_OUT,
-  });
-  const pollOpacity = 0.5 + 0.5 * pollWake;
-  const pollScale = 0.985 + 0.015 * pollWake;
-
-  const clickOptionAFrame = f60(104);
-  const exportClickFrame = f60(138);
-  const pollVoted = frame >= clickOptionAFrame;
-  const storyExportTriggered = frame >= exportClickFrame;
-
-  const cursorKeyframes: readonly GhostCursorKeyframe[] = [
-    { frame: f60(78), x: 520, y: 120 },
-    { frame: clickOptionAFrame, x: 320, y: 278, click: true, label: 'Undi Pilihan A' },
-    { frame: exportClickFrame, x: 530, y: 649, click: true, label: 'Eksport IG Story' },
-    { frame: f60(162), x: 560, y: 580 },
-  ];
-
-  const barProgress = interpolate(
-    frame,
-    [clickOptionAFrame + 2, clickOptionAFrame + f60(32)],
-    [0, 1],
-    {
+  // Confession stack dollies back-left into deep Z in Shot 2, fades away in Shot 3
+  const stackGroupX = interpolate(toShot2T, [0, 1], [0, -475]);
+  const stackGroupY = interpolate(toShot2T, [0, 1], [0, -14]);
+  const stackGroupZ = interpolate(toShot2T, [0, 1], [0, -165]);
+  const stackGroupScale = interpolate(toShot2T, [0, 1], [1, 0.7]);
+  const stackGroupOpacity =
+    interpolate(toShot2T, [0, 1], [1, 0.34]) *
+    interpolate(toShot3T, [0, 0.45], [1, 0], {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
-      easing: RACE_EASE,
-    },
-  );
-  const currentPctA = Math.round(clampedA * barProgress);
-  const currentPctB = Math.round(clampedB * barProgress);
-  const headerVotes = Math.round(
-    interpolate(frame, [clickOptionAFrame, clickOptionAFrame + f60(34)], [0, safeTotalVotes], {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: VOTES_SETTLE_EASE,
-    }),
-  );
-  const votesA = Math.round((currentPctA / 100) * headerVotes);
-  const votesB = Math.max(0, headerVotes - votesA);
+    });
 
-  const resolutionBannerFrame = f60(124);
-  const resolutionSpring =
-    frame >= resolutionBannerFrame
-      ? spring({
-          frame: frame - resolutionBannerFrame,
-          fps: safeFps,
-          config: { damping: 16, stiffness: 225, mass: 0.85 },
-        })
-      : 0;
-
-  // Connector 2: Poll Export -> IG Story Phone (140..160f)
-  const conn2Start = f60(140);
-  const conn2Duration = Math.max(10, f60(20));
-
-  // BEAT 3 (Right Upright Column): Smartphone IGStoryExportCard wakes on export click
-  const phoneWake = interpolate(frame, [f60(144), f60(174)], [0, 1], {
+  // Poll Monolith sweeps dead center in Shot 2 (196..234), shifts cleanly left in Shot 3 (374..422)
+  const pollEnterProgress = interpolate(frame, [192, 234], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
-  const phoneOpacity = 0.48 + 0.52 * phoneWake;
-  const phoneRiseY = (1 - phoneWake) * 20;
-  const phoneScale = 0.985 + 0.015 * phoneWake;
+  const pollCenterX =
+    interpolate(pollEnterProgress, [0, 1], [520, 0]) + interpolate(toShot3T, [0, 1], [0, -245]);
+  const pollCenterY = interpolate(toShot3T, [0, 1], [0, 8]);
+  const pollCenterZ =
+    interpolate(pollEnterProgress, [0, 1], [-120, 62]) + interpolate(toShot3T, [0, 1], [0, -76]);
+  const pollScale =
+    interpolate(pollEnterProgress, [0, 1], [0.84, 1]) * interpolate(toShot3T, [0, 1], [1, 0.85]);
+  const pollRotY = interpolate(toShot3T, [0, 1], [0, 4.5]);
+  const pollOpacity = pollEnterProgress;
 
-  const phoneGlintLeft = interpolate(frame, [f60(168), f60(214)], [-40, 130], {
+  // Poll vote percentages animate right after cursor click at 256f -> settled by 296f (before Local 322f / f=2080!)
+  const voteGrowthT = interpolate(frame, [254, 294], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EXPO_OUT,
+  });
+  const livePctA = Math.round(interpolate(voteGrowthT, [0, 1], [38, safePctA]));
+  const livePctB = 100 - livePctA;
+  const liveTotalVotes = Math.round(
+    interpolate(voteGrowthT, [0, 1], [Math.round(safeTotalVotes * 0.56), safeTotalVotes]),
+  );
+  const isUsulAccepted = frame >= 282;
+  const stampSpring = isUsulAccepted
+    ? spring({
+        frame: frame - 282,
+        fps: safeFps,
+        config: { damping: 16, stiffness: 225, mass: 0.85 },
+      })
+    : 0;
+
+  // Shot 3: 3D Smartphone IG Story Bezel rises on right (392..438f -> settled razor-sharp at Local 462f / f=2220!)
+  const phoneEnterProgress = interpolate(frame, [388, 434], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EXPO_OUT,
+  });
+  const phoneRiseY = (1 - phoneEnterProgress) * 140;
+  const phoneRotY = interpolate(phoneEnterProgress, [0, 1], [-18, -8]);
+  const phoneSheenLeft = interpolate(frame, [428, 488], [-45, 135], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.bezier(0.25, 0.1, 0.25, 1),
   });
-  const phoneGlintOpacity = interpolate(
-    frame,
-    [f60(168), f60(180), f60(202), f60(214)],
-    [0, 0.45, 0.45, 0],
-    { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
-  );
+  const phoneSheenOpacity = interpolate(frame, [428, 444, 476, 488], [0, 0.65, 0.65, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
 
-  const liveDotScale = 0.85 + Math.sin((frame / safeFps) * 5.2) * 0.16;
+  const liveDotScale = 0.86 + Math.sin(timeSec * 5.1) * 0.16;
 
   return (
     <>
       <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.polysuara.tint} />
 
       <CameraStage
-        zoomFrom={1}
+        zoomFrom={0.995}
         zoomTo={1.016}
-        panXFrom={3}
-        panXTo={-3}
-        panYFrom={2}
-        panYTo={-2}
+        panXFrom={0}
+        panXTo={0}
+        panYFrom={3}
+        panYTo={-3}
         tiltXFrom={0}
         tiltXTo={0}
-        tiltYFrom={0}
-        tiltYTo={0}
-        breathingAmplitude={0.22}
-        entryPanXOffset={20}
-        entryZoomOffset={-0.018}
-        exitPanXDelta={-18}
-        exitZoomDelta={0.024}
-        exitFrames={Math.round(0.32 * safeFps)}
+        tiltYFrom={-0.35}
+        tiltYTo={0.35}
+        breathingAmplitude={0.35}
+        entryZoomOffset={0.024}
+        entryPanXOffset={24}
+        entryFrames={Math.round(0.45 * safeFps)}
+        exitZoomDelta={0.015}
+        exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
+        <SpatialFloorGrid
+          accentColor={ROSE}
+          secondaryColor={INDIGO}
+          gridOpacity={0.2}
+          scrollSpeed={14}
+        />
+
+        {/* Top Editorial Header Lockup */}
         <div
           style={{
             position: 'absolute',
-            inset: 0,
+            left: 88,
+            right: 88,
+            top: 74,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            gap: 28,
             fontFamily: LAUNCH_FONTS.DISPLAY,
+            zIndex: 12,
           }}
         >
-          {/* Editorial Top Row */}
-          <div
-            style={{
-              position: 'absolute',
-              left: 72,
-              right: 72,
-              top: 64,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-end',
-              gap: 24,
-              zIndex: 8,
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <KineticReveal startFrame={pillStart} durationFrames={pillDuration}>
-                <div
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1360 }}>
+            <KineticReveal startFrame={4} durationFrames={18}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '6px 14px',
+                  borderRadius: 999,
+                  backgroundColor: ROSE_SOFT,
+                  border: `1.5px solid ${ROSE_BORDER}`,
+                }}
+              >
+                <span
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    alignSelf: 'flex-start',
-                    padding: '6px 16px',
+                    width: 8,
+                    height: 8,
                     borderRadius: 999,
-                    backgroundColor: ROSE_SOFT,
-                    border: `1.5px solid ${ROSE}`,
-                    color: ROSE_INK,
+                    backgroundColor: ROSE,
+                    transform: `scale(${liveDotScale.toFixed(3)})`,
+                  }}
+                />
+                <span
+                  style={{
                     fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 12.5,
-                    fontWeight: 800,
-                    letterSpacing: '0.16em',
+                    fontSize: 12,
+                    fontWeight: 900,
+                    letterSpacing: '0.14em',
+                    color: ROSE_INK,
                   }}
                 >
-                  <MessageSquare size={14} color={ROSE_INK} strokeWidth={2.5} />
-                  <span>KOMUNITI SISWA • LUAH &amp; UNDI TANPA NAMA</span>
-                </div>
-              </KineticReveal>
+                  BAB 05 • POLYSUARA KOMUNITI • LUAH &amp; UNDI TANPA NAMA
+                </span>
+              </div>
+            </KineticReveal>
 
-              <KineticWords
-                as="h2"
-                text="Suara Siswa. Undi & Luah Tanpa Nama."
-                startFrame={headlineStart}
-                staggerFrames={wordStagger}
-                wordDurationFrames={wordDuration}
-                accentWords={['Luah', 'Tanpa', 'Nama.']}
-                accentColor={ROSE_DARK}
-                style={{
-                  margin: 0,
-                  fontSize: 48,
-                  fontWeight: 900,
-                  letterSpacing: '-0.035em',
-                  lineHeight: 1.07,
-                  color: LAUNCH_PALETTE.PRIMARY,
-                }}
-              />
-            </div>
+            <KineticWords
+              as="h1"
+              text="Ada Pendapat? Luah Tanpa Nama & Undi Terus Bersama Siswa."
+              startFrame={8}
+              staggerFrames={wordStagger}
+              wordDurationFrames={wordDuration}
+              accentWords={['Luah', 'Undi']}
+              accentColor={ROSE_INK}
+              style={{
+                margin: 0,
+                fontSize: 40,
+                fontWeight: 900,
+                letterSpacing: '-0.032em',
+                lineHeight: 1.07,
+                color: LAUNCH_PALETTE.PRIMARY,
+              }}
+            />
+          </div>
 
+          <KineticReveal startFrame={18} durationFrames={22}>
             <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 8,
-                padding: '9px 18px',
-                borderRadius: 999,
-                backgroundColor: '#FFFFFF',
-                border: `1.5px solid ${ROSE_BORDER}`,
-                boxShadow: '0 8px 20px rgba(244, 63, 94, 0.1)',
-                fontFamily: LAUNCH_FONTS.MONO,
-                fontSize: 13.5,
-                fontWeight: 900,
-                color: ROSE_INK,
-                fontVariantNumeric: 'tabular-nums',
-                flexShrink: 0,
+                gap: 10,
+                padding: '10px 18px',
+                borderRadius: 16,
+                backgroundColor: isUsulAccepted ? EMERALD_SOFT : LAUNCH_PALETTE.CARD_BG,
+                border: `1.5px solid ${isUsulAccepted ? EMERALD_BORDER : LAUNCH_PALETTE.TERTIARY}`,
+                boxShadow: '0 12px 26px rgba(31, 39, 32, 0.08)',
               }}
             >
-              <Users size={15} color={ROSE_INK} strokeWidth={2.4} />
-              <span>{headerVotes} UNDI PELAJAR</span>
+              <ShieldCheck
+                size={18}
+                color={isUsulAccepted ? EMERALD_INK : ROSE_INK}
+                strokeWidth={2.5}
+              />
+              <span
+                style={{
+                  fontFamily: LAUNCH_FONTS.MONO,
+                  fontSize: 13,
+                  fontWeight: 900,
+                  letterSpacing: '0.07em',
+                  color: isUsulAccepted ? EMERALD_INK : LAUNCH_PALETTE.PRIMARY,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {phoneEnterProgress > 0.35
+                  ? 'IG STORY • 1-KLIK KONGSI SIAP'
+                  : isUsulAccepted
+                    ? 'USUL DITERIMA JPP ✓'
+                    : 'IDENTITI PELAJAR 100% DILINDUNGI'}
+              </span>
             </div>
-          </div>
+          </KineticReveal>
+        </div>
 
-          {/* Crisp Header Divider Hairline */}
-          <div style={{ position: 'absolute', left: 72, top: 204, width: 1776, height: 10 }}>
+        {/* 3D Camera Stage Workspace (x=0..1920, y=204..968) */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 204,
+            height: 764,
+            perspective: '1700px',
+            transformStyle: 'preserve-3d',
+            fontFamily: LAUNCH_FONTS.DISPLAY,
+            zIndex: 8,
+          }}
+        >
+          {/* Rose Vector Bridge Arc linking Shot 1 Confession -> Shot 2 Poll */}
+          {frame >= 186 && toShot3T < 0.7 ? (
             <EvolvingPath
-              d="M 0 5 L 1776 5"
-              width={1776}
-              height={10}
-              startFrame={ruleStart}
-              durationFrames={ruleDuration}
+              d="M 520 390 Q 760 220 960 360"
+              width={1920}
+              height={764}
+              startFrame={188}
+              durationFrames={44}
               stroke={ROSE}
-              trackStroke="rgba(254, 205, 211, 0.55)"
-              strokeWidth={2}
-              headDotColor={ROSE_INK}
-              headDotRadius={3.5}
+              strokeWidth={4.5}
+              trackStroke="rgba(244, 63, 94, 0.16)"
+              headDotColor="#FFFFFF"
+              headDotRadius={7}
               hideDotWhenComplete
-            />
-          </div>
-
-          {/* UPRIGHT 3-STEP CAUSAL CHAIN (left: 72, width: 1776, height: 706 — ZERO crooked tilts!) */}
-          <div
-            style={{
-              position: 'absolute',
-              left: 72,
-              top: 230,
-              width: 1776,
-              height: 706,
-            }}
-          >
-            {/* BEAT 1 — LEFT COLUMN: Anonymous Persona Confession -> Reaction Burst -> Trigger Undian */}
-            <Interactive.Div
-              name="PolySuara Anonymous Confession"
-              premountFor={safeFps}
               style={{
                 position: 'absolute',
-                left: 0,
-                top: 0,
-                width: 556,
-                height: 706,
-                opacity: leftEnter,
-                transform: `translate3d(0px, ${((1 - leftEnter) * 20).toFixed(2)}px, 0px)`,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                gap: 14,
+                inset: 0,
+                opacity: 1 - toShot3T,
+                pointerEvents: 'none',
               }}
-            >
-              {/* Main Upright Fox Confession Card */}
-              <div
-                style={{
-                  borderRadius: 24,
-                  padding: '20px 22px',
-                  backgroundColor: '#FFFFFF',
-                  border: `2px solid ${ROSE}`,
-                  borderBottom: `5px solid ${ROSE_INK}`,
-                  boxShadow: '0 22px 46px rgba(244, 63, 94, 0.14), 0 8px 20px rgba(31, 39, 32, 0.08)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 14,
-                  boxSizing: 'border-box',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                    <PersonaMonogram
-                      species="fox"
-                      size={46}
-                      accentColor={ROSE}
-                      softBgColor={ROSE_SOFT}
-                      borderColor={ROSE_BORDER}
-                    />
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 17.5, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
-                        Rubah Semambu (#409)
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          color: LAUNCH_PALETTE.INK_SOFT,
-                        }}
-                      >
-                        100% Anonim • Identiti Rahsia
-                      </div>
-                    </div>
-                  </div>
+            />
+          ) : null}
 
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      padding: '5px 10px',
-                      borderRadius: 999,
-                      backgroundColor: ROSE_SOFT,
-                      border: `1px solid ${ROSE_BORDER}`,
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 10.5,
-                      fontWeight: 800,
-                      color: ROSE_INK,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <ShieldCheck size={12} color={ROSE_INK} strokeWidth={2.5} />
-                    <span>#FASILITI</span>
-                  </span>
-                </div>
-
-                <div
-                  style={{
-                    padding: '14px 16px',
-                    borderRadius: 16,
-                    backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                    border: `1px solid ${ROSE_BORDER}`,
-                    fontSize: 15.5,
-                    fontWeight: 700,
-                    lineHeight: 1.42,
-                    color: LAUNCH_PALETTE.PRIMARY,
-                    opacity: quoteReveal,
-                    transform: `translate3d(0px, ${((1 - quoteReveal) * 8).toFixed(2)}px, 0px)`,
-                  }}
-                >
-                  “Harap dapat tambah meja belajar &amp; plug point di Dataran Siswa — senang nak siapkan tugasan berkumpulan!”
-                </div>
-
-                {/* Tactile Lucide Reaction Cluster */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    {REACTION_SPECS.map((rx, idx) => {
-                      const rxStart = reactionBase + idx * reactionStagger;
-                      const rxSpring =
-                        frame >= rxStart
-                          ? spring({
-                              frame: frame - rxStart,
-                              fps: safeFps,
-                              config: { damping: 14, stiffness: 250, mass: 0.75 },
-                            })
-                          : 0;
-                      const countVal = Math.round(rx.target * rxSpring);
-
-                      return (
-                        <div
-                          key={rx.id}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 5,
-                            padding: '6px 11px',
-                            borderRadius: 999,
-                            backgroundColor: rx.softBg,
-                            border: `1.5px solid ${rx.border}`,
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 12.5,
-                            fontWeight: 900,
-                            color: rx.color,
-                            fontVariantNumeric: 'tabular-nums',
-                            transform: `scale(${(0.88 + 0.12 * rxSpring).toFixed(4)})`,
-                          }}
-                        >
-                          {renderReactionIcon(rx.icon, rx.color)}
-                          <span>{countVal}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      padding: '7px 12px',
-                      borderRadius: 999,
-                      backgroundColor: convertPillLit ? ROSE_INK : LAUNCH_PALETTE.SURFACE_MUTED,
-                      color: convertPillLit ? '#FFFFFF' : LAUNCH_PALETTE.MUTED_OLIVE,
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 11,
-                      fontWeight: 800,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    <span>Jadi Undian Rasmi</span>
-                    <ArrowRight size={12} strokeWidth={2.5} />
-                  </span>
-                </div>
-              </div>
-
-              {/* 2 Aligned Upright Mini-Confession Cards */}
-              <div
-                style={{
-                  borderRadius: 20,
-                  padding: '14px 18px',
-                  backgroundColor: INDIGO_SOFT,
-                  border: `1.5px solid ${INDIGO_BORDER}`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 6,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <PersonaMonogram
-                      species="owl"
-                      size={36}
-                      accentColor={INDIGO}
-                      softBgColor="#FFFFFF"
-                      borderColor={INDIGO_BORDER}
-                    />
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
-                        Burung Hantu Semambu (Anon #118)
-                      </div>
-                      <div style={{ fontFamily: LAUNCH_FONTS.MONO, fontSize: 10, fontWeight: 700, color: INDIGO_INK }}>
-                        #AKADEMIK • Nota Kuliah
-                      </div>
-                    </div>
-                  </div>
-                  <span
-                    style={{
-                      padding: '3px 9px',
-                      borderRadius: 999,
-                      backgroundColor: '#FFFFFF',
-                      border: `1px solid ${INDIGO_BORDER}`,
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color: INDIGO_INK,
-                    }}
-                  >
-                    8m lalu
-                  </span>
-                </div>
-                <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: LAUNCH_PALETTE.INK_SOFT }}>
-                  “Bilik bacaan blok kejuruteraan sangat selesa lepas waktu petang, plug point pun cukup.”
-                </p>
-              </div>
-
-              <div
-                style={{
-                  borderRadius: 20,
-                  padding: '14px 18px',
-                  backgroundColor: LAUNCH_MODULE_THEMES.polymart.soft,
-                  border: `1.5px solid ${LAUNCH_MODULE_THEMES.polymart.border}`,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: 6,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <PersonaMonogram
-                      species="cat"
-                      size={36}
-                      accentColor={AMBER}
-                      softBgColor="#FFFFFF"
-                      borderColor={LAUNCH_MODULE_THEMES.polymart.border}
-                    />
-                    <div>
-                      <div style={{ fontSize: 14, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
-                        Kucing Kamsis (Anon #274)
-                      </div>
-                      <div style={{ fontFamily: LAUNCH_FONTS.MONO, fontSize: 10, fontWeight: 700, color: AMBER_INK }}>
-                        #KAMSIS • Sokongan Siswa
-                      </div>
-                    </div>
-                  </div>
-                  <span
-                    style={{
-                      padding: '3px 9px',
-                      borderRadius: 999,
-                      backgroundColor: '#FFFFFF',
-                      border: `1px solid ${LAUNCH_MODULE_THEMES.polymart.border}`,
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color: AMBER_INK,
-                    }}
-                  >
-                    19m lalu
-                  </span>
-                </div>
-                <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: LAUNCH_PALETTE.INK_SOFT }}>
-                  “Terima kasih JPP bantu sampaikan isu mesin air kamsis, terus dibaiki dalam sehari!”
-                </p>
-              </div>
-            </Interactive.Div>
-
-            {/* Swiss Architectural Connector 1: Confession -> Live Poll */}
+          {/* SHOT 1 HERO (and Shot 2 Recessed Context): 3D Z-Depth Confession Stack */}
+          {stackGroupOpacity > 0.01 ? (
             <div
               style={{
                 position: 'absolute',
-                left: 556,
-                top: 204,
-                width: 56,
-                height: 48,
-                pointerEvents: 'none',
+                left: '50%',
+                top: '50%',
+                width: 960,
+                height: 530,
+                transformStyle: 'preserve-3d',
+                opacity: stackGroupOpacity,
+                transform: `translate(-50%, -50%) translate3d(${stackGroupX.toFixed(1)}px, ${stackGroupY.toFixed(1)}px, ${stackGroupZ.toFixed(1)}px) scale(${stackGroupScale.toFixed(4)})`,
               }}
             >
-              <EvolvingPath
-                d="M 4 24 L 48 24 M 38 15 L 48 24 L 38 33"
-                width={56}
-                height={48}
-                startFrame={conn1Start}
-                durationFrames={conn1Duration}
-                stroke={ROSE_DARK}
-                trackStroke="rgba(254, 205, 211, 0.72)"
-                strokeWidth={2.5}
-                headDotColor={ROSE_INK}
-                headDotRadius={4}
-                hideDotWhenComplete
-              />
-            </div>
+              {CONFESSION_STACK.map((card, cIdx) => {
+                const enterSpring = spring({
+                  frame: Math.max(0, frame - (10 + cIdx * 7)),
+                  fps: safeFps,
+                  config: { damping: 18, stiffness: 200, mass: 0.9 },
+                });
+                const isFront = card.id === 'fox';
+                return (
+                  <div
+                    key={card.id}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      opacity: card.opacity * enterSpring,
+                      transformStyle: 'preserve-3d',
+                      transform: `translate3d(${card.dx}px, ${(card.dy + (1 - enterSpring) * 28).toFixed(1)}px, ${card.dz}px) rotateX(3deg) scale(${card.scale})`,
+                    }}
+                  >
+                    <KineticWindow
+                      surface={isFront ? 'light' : 'sand'}
+                      routeLabel={isFront ? '/portal/polysuara • #412' : `/portal/polysuara`}
+                      statusPill={isFront ? 'TRENDING #1' : 'TANPA NAMA'}
+                      statusAccent={isFront}
+                      accentColor={card.accent}
+                      accentSoftBg={card.softBg}
+                      accentBorderColor={card.border}
+                      width={960}
+                      height={510}
+                      sheenStartFrame={isFront ? 68 : undefined}
+                      sheenDuration={36}
+                      style={{
+                        borderBottom: `6px solid ${card.accent}`,
+                        boxShadow: isFront
+                          ? '0 34px 72px rgba(190, 18, 60, 0.16)'
+                          : '0 20px 44px rgba(31, 39, 32, 0.12)',
+                      }}
+                    >
+                      <div
+                        style={{
+                          flex: 1,
+                          padding: '26px 32px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: 18,
+                          transformStyle: 'preserve-3d',
+                        }}
+                      >
+                        {/* Author Persona Header */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                            <PersonaMonogram
+                              species={card.species}
+                              size={58}
+                              accentColor={card.accent}
+                              softBgColor={card.softBg}
+                              borderColor={card.border}
+                            />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                              <span
+                                style={{
+                                  fontSize: 22,
+                                  fontWeight: 900,
+                                  color: LAUNCH_PALETTE.PRIMARY,
+                                }}
+                              >
+                                {card.alias}
+                              </span>
+                              <span
+                                style={{
+                                  fontFamily: LAUNCH_FONTS.MONO,
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  color: LAUNCH_PALETTE.INK_SOFT,
+                                }}
+                              >
+                                {card.time} • IDENTITI TANPA NAMA
+                              </span>
+                            </div>
+                          </div>
 
-            {/* BEAT 2 — CENTER COLUMN: Upright Community Poll & Instant JPP Resolution */}
-            <Interactive.Div
-              name="PolySuara Upright Poll Workbench"
-              premountFor={safeFps}
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              padding: '7px 14px',
+                              borderRadius: 999,
+                              backgroundColor: INDIGO_SOFT,
+                              border: `1.5px solid ${INDIGO_BORDER}`,
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 11.5,
+                              fontWeight: 900,
+                              color: INDIGO_INK,
+                            }}
+                          >
+                            <MessageSquare size={13} color={INDIGO_INK} strokeWidth={2.5} />
+                            SUARA SISWA POLISAS
+                          </span>
+                        </div>
+
+                        {/* Confession Copy */}
+                        <div
+                          style={{
+                            padding: '22px 26px',
+                            borderRadius: 20,
+                            backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                            border: `1.5px solid ${card.border}`,
+                          }}
+                        >
+                          <p
+                            style={{
+                              margin: 0,
+                              fontSize: 29,
+                              fontWeight: 800,
+                              lineHeight: 1.32,
+                              color: LAUNCH_PALETTE.PRIMARY,
+                            }}
+                          >
+                            &ldquo;{card.text}&rdquo;
+                          </p>
+                        </div>
+
+                        {/* Front Hero Reactions & Escalate CTA */}
+                        {isFront ? (
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              gap: 16,
+                              transformStyle: 'preserve-3d',
+                            }}
+                          >
+                            {/* Z-Parallax Lucide Reaction Pills */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 12, transformStyle: 'preserve-3d' }}>
+                              {REACTIONS.map((rx, rIdx) => {
+                                const popSpring = spring({
+                                  frame: Math.max(0, frame - (36 + rIdx * 8)),
+                                  fps: safeFps,
+                                  config: { damping: 16, stiffness: 215, mass: 0.85 },
+                                });
+                                const rxCount = Math.round(rx.count * reactionFillProgress);
+                                return (
+                                  <div
+                                    key={rx.id}
+                                    style={{
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 8,
+                                      padding: '10px 16px',
+                                      borderRadius: 999,
+                                      backgroundColor: rx.bg,
+                                      border: `1.5px solid ${rx.border}`,
+                                      color: rx.color,
+                                      boxShadow: '0 12px 24px rgba(31, 39, 32, 0.1)',
+                                      transform: `translateZ(${(18 + popSpring * 20).toFixed(1)}px) scale(${(0.86 + 0.14 * popSpring).toFixed(4)})`,
+                                    }}
+                                  >
+                                    {rx.icon === 'flame' ? (
+                                      <Flame size={16} color={rx.color} strokeWidth={2.5} />
+                                    ) : rx.icon === 'thumbs' ? (
+                                      <ThumbsUp size={16} color={rx.color} strokeWidth={2.5} />
+                                    ) : (
+                                      <Heart size={16} color={rx.color} strokeWidth={2.5} />
+                                    )}
+                                    <span
+                                      style={{
+                                        fontFamily: LAUNCH_FONTS.MONO,
+                                        fontSize: 14.5,
+                                        fontWeight: 900,
+                                        fontVariantNumeric: 'tabular-nums',
+                                      }}
+                                    >
+                                      {rxCount}
+                                    </span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* Escalate Button */}
+                            <div
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                padding: '12px 20px',
+                                borderRadius: 14,
+                                backgroundColor: ROSE_DARK,
+                                color: '#FFFFFF',
+                                fontFamily: LAUNCH_FONTS.MONO,
+                                fontSize: 12.5,
+                                fontWeight: 900,
+                                letterSpacing: '0.07em',
+                                boxShadow: '0 14px 28px rgba(225, 29, 72, 0.28)',
+                              }}
+                            >
+                              <span>Angkat Jadi Undian Rasmi</span>
+                              <ArrowRight size={15} strokeWidth={2.8} />
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </KineticWindow>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
+
+          {/* SHOT 2 HERO (and Shot 3 Left Context): Center Live Poll Monolith */}
+          {pollOpacity > 0.01 ? (
+            <div
               style={{
                 position: 'absolute',
-                left: 612,
-                top: 0,
-                width: POLL_W,
-                height: POLL_H,
+                left: '50%',
+                top: '50%',
+                width: 980,
+                height: 550,
+                transformStyle: 'preserve-3d',
                 opacity: pollOpacity,
-                transform: `scale(${pollScale.toFixed(4)})`,
+                transform: `translate(-50%, -50%) translate3d(${pollCenterX.toFixed(1)}px, ${pollCenterY.toFixed(1)}px, ${pollCenterZ.toFixed(1)}px) rotateX(3deg) rotateY(${pollRotY.toFixed(2)}deg) scale(${pollScale.toFixed(4)})`,
               }}
             >
               <KineticWindow
                 surface="light"
-                routeLabel="jpp.polisas.edu.my/undian"
-                statusPill={pollVoted ? 'UNDIAN DIREKOD ✓' : 'UNDIAN LANGSUNG'}
+                routeLabel="/portal/polysuara/undian"
+                statusPill={isUsulAccepted ? 'USUL DILULUSKAN ✓' : 'UNDIAN DIBUKA'}
                 statusAccent
-                accentColor={ROSE_INK}
-                accentSoftBg={ROSE_SOFT}
-                accentBorderColor={ROSE}
-                width="100%"
-                height="100%"
-                borderRadius={26}
-                sheenStartFrame={f60(132)}
-                sheenDuration={38}
+                accentColor={isUsulAccepted ? EMERALD : ROSE}
+                accentSoftBg={isUsulAccepted ? EMERALD_SOFT : ROSE_SOFT}
+                accentBorderColor={isUsulAccepted ? EMERALD_BORDER : ROSE_BORDER}
+                width={980}
+                height={550}
+                sheenStartFrame={284}
+                sheenDuration={36}
                 style={{
-                  borderColor: pollWake >= 0.9 ? ROSE : ROSE_BORDER,
-                  boxShadow: '0 24px 52px rgba(31, 39, 32, 0.1)',
+                  borderBottom: `7px solid ${isUsulAccepted ? EMERALD : ROSE}`,
+                  boxShadow: '0 34px 76px rgba(190, 18, 60, 0.16)',
                 }}
               >
                 <div
                   style={{
                     flex: 1,
-                    padding: '22px 26px',
+                    padding: '24px 30px',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    gap: 14,
-                    boxSizing: 'border-box',
+                    gap: 16,
                   }}
                 >
-                  <div>
-                    <div
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 7,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11.5,
-                        fontWeight: 800,
-                        letterSpacing: '0.14em',
-                        color: ROSE_INK,
-                      }}
-                    >
-                      <Vote size={14} color={ROSE_INK} strokeWidth={2.4} />
-                      <span>UNDIAN KOMUNITI SISWA</span>
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 6,
-                        fontSize: 27,
-                        fontWeight: 900,
-                        letterSpacing: '-0.025em',
-                        lineHeight: 1.15,
-                        color: LAUNCH_PALETTE.PRIMARY,
-                      }}
-                    >
-                      {resolvedPollTitle}
-                    </div>
-                  </div>
-
-                  {/* Option A */}
-                  <div
-                    style={{
-                      position: 'relative',
-                      padding: '18px 20px',
-                      borderRadius: 20,
-                      backgroundColor: pollVoted ? '#FFFFFF' : LAUNCH_PALETTE.BACKGROUND,
-                      border: `2px solid ${pollVoted ? ROSE : ROSE_BORDER}`,
-                      boxShadow: pollVoted ? '0 18px 36px rgba(244, 63, 94, 0.14)' : 'none',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 12,
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 14 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span
-                          style={{
-                            width: 24,
-                            height: 24,
-                            borderRadius: 999,
-                            backgroundColor: pollVoted ? ROSE_INK : '#FFFFFF',
-                            border: `2px solid ${pollVoted ? ROSE_INK : ROSE_BORDER}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            flexShrink: 0,
-                          }}
-                        >
-                          {pollVoted ? <Check size={13} color="#FFFFFF" strokeWidth={3} /> : null}
-                        </span>
-                        <span style={{ fontSize: 17.5, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
-                          {resolvedOptionA}
-                        </span>
-                      </div>
-
-                      <EditorialAnnotation
-                        type="circle"
-                        startFrame={f60(120)}
-                        durationFrames={20}
-                        color={ROSE_DARK}
-                        strokeWidth={2.8}
-                        padding={5}
-                        iterations={1}
-                        seed={55}
-                      >
+                  {/* Poll Title Header + Live Participation Pie Ring */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <Vote size={17} color={ROSE_INK} strokeWidth={2.5} />
                         <span
                           style={{
                             fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 27,
+                            fontSize: 12,
                             fontWeight: 900,
+                            letterSpacing: '0.12em',
                             color: ROSE_INK,
-                            fontVariantNumeric: 'tabular-nums',
                           }}
                         >
-                          {currentPctA}%
+                          UNDIAN RASMI KAMPUS • 1 PELAJAR 1 UNDI
                         </span>
-                      </EditorialAnnotation>
-                    </div>
-
-                    <div
-                      style={{
-                        width: '100%',
-                        height: 12,
-                        borderRadius: 999,
-                        backgroundColor: ROSE_SOFT,
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${currentPctA}%`,
-                          height: '100%',
-                          borderRadius: 999,
-                          backgroundColor: ROSE_DARK,
-                        }}
-                      />
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      </div>
                       <span
                         style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11.5,
-                          fontWeight: 700,
-                          color: LAUNCH_PALETTE.INK_SOFT,
-                          fontVariantNumeric: 'tabular-nums',
+                          fontSize: 28,
+                          fontWeight: 900,
+                          letterSpacing: '-0.02em',
+                          color: LAUNCH_PALETTE.PRIMARY,
                         }}
                       >
-                        {votesA} undi pelajar
-                      </span>
-                      <span
-                        style={{
-                          padding: '4px 10px',
-                          borderRadius: 999,
-                          backgroundColor: ROSE_INK,
-                          color: '#FFFFFF',
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 10.5,
-                          fontWeight: 800,
-                        }}
-                      >
-                        PILIHAN ANDA ✓
+                        {resolvedTitle}
                       </span>
                     </div>
-                  </div>
 
-                  {/* Option B */}
-                  <div
-                    style={{
-                      padding: '15px 18px',
-                      borderRadius: 18,
-                      backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                      border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 10,
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-                      <span style={{ fontSize: 15.5, fontWeight: 700, color: LAUNCH_PALETTE.INK_SOFT }}>
-                        {resolvedOptionB}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 21,
-                          fontWeight: 800,
-                          color: LAUNCH_PALETTE.MUTED_OLIVE,
-                          fontVariantNumeric: 'tabular-nums',
-                        }}
-                      >
-                        {currentPctB}%
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        width: '100%',
-                        height: 9,
-                        borderRadius: 999,
-                        backgroundColor: 'rgba(217, 201, 178, 0.5)',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: `${currentPctB}%`,
-                          height: '100%',
-                          borderRadius: 999,
-                          backgroundColor: LAUNCH_PALETTE.MUTED_OLIVE,
-                        }}
-                      />
-                    </div>
+                    {/* @remotion/shapes <Circle> + <Pie> Participation Indicator */}
                     <div
                       style={{
                         display: 'flex',
-                        justifyContent: 'space-between',
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: LAUNCH_PALETTE.MUTED_OLIVE,
+                        alignItems: 'center',
+                        gap: 12,
+                        padding: '10px 16px',
+                        borderRadius: 18,
+                        backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                        border: `1.5px solid ${ROSE_BORDER}`,
+                        flexShrink: 0,
                       }}
                     >
-                      <span>{votesB} undi pelajar</span>
-                      <span>Sokongan Ruang Belajar Kamsis</span>
+                      <div
+                        style={{
+                          position: 'relative',
+                          width: 56,
+                          height: 56,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Circle
+                          radius={23}
+                          fill="none"
+                          stroke="rgba(244, 63, 94, 0.18)"
+                          strokeWidth={5}
+                          premountFor={safeFps}
+                          showInTimeline={false}
+                          style={{
+                            position: 'absolute',
+                            left: '50%',
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                        />
+                        <Pie
+                          radius={23}
+                          progress={livePctA / 100}
+                          closePath={false}
+                          fill="none"
+                          stroke={ROSE}
+                          strokeWidth={5}
+                          strokeLinecap="round"
+                          premountFor={safeFps}
+                          showInTimeline={false}
+                          style={{
+                            position: 'absolute',
+                            left: '50%',
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                          }}
+                        />
+                        <Users size={15} color={ROSE_INK} strokeWidth={2.5} />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span
+                          style={{
+                            fontSize: 24,
+                            fontWeight: 900,
+                            color: LAUNCH_PALETTE.PRIMARY,
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {liveTotalVotes} Undi
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 10.5,
+                            fontWeight: 800,
+                            color: LAUNCH_PALETTE.INK_SOFT,
+                          }}
+                        >
+                          KUORUM DICAPAI ✓
+                        </span>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Causal Resolution Banner -> Triggers Right IG Story Export */}
+                  {/* Option A & Option B Animated Horizontal Vote Bars */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                    {/* Option A (Winning) */}
+                    <div
+                      style={{
+                        position: 'relative',
+                        padding: '18px 22px',
+                        borderRadius: 20,
+                        backgroundColor: '#FFFFFF',
+                        border: `2px solid ${ROSE}`,
+                        boxShadow: '0 14px 32px rgba(244, 63, 94, 0.14)',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: `${livePctA}%`,
+                          backgroundColor: ROSE_SOFT,
+                          borderRight: `3px solid ${ROSE}`,
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 16,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <span
+                            style={{
+                              width: 30,
+                              height: 30,
+                              borderRadius: 999,
+                              backgroundColor: ROSE_DARK,
+                              color: '#FFFFFF',
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 13,
+                              fontWeight: 900,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            A
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 20,
+                              fontWeight: 900,
+                              color: LAUNCH_PALETTE.PRIMARY,
+                            }}
+                          >
+                            {resolvedOptionA}
+                          </span>
+                        </div>
+
+                        <EditorialAnnotation
+                          type="highlight"
+                          startFrame={284}
+                          durationFrames={24}
+                          color="rgba(244, 63, 94, 0.2)"
+                          padding={{ top: 2, right: 6, bottom: 2, left: 6 }}
+                        >
+                          <span
+                            style={{
+                              fontSize: 34,
+                              fontWeight: 900,
+                              color: ROSE_INK,
+                              fontVariantNumeric: 'tabular-nums',
+                            }}
+                          >
+                            {livePctA}%
+                          </span>
+                        </EditorialAnnotation>
+                      </div>
+                    </div>
+
+                    {/* Option B */}
+                    <div
+                      style={{
+                        position: 'relative',
+                        padding: '16px 22px',
+                        borderRadius: 18,
+                        backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                        border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: `${livePctB}%`,
+                          backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
+                        }}
+                      />
+                      <div
+                        style={{
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 16,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                          <span
+                            style={{
+                              width: 28,
+                              height: 28,
+                              borderRadius: 999,
+                              backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                              color: '#FFFFFF',
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 12.5,
+                              fontWeight: 900,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            B
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 18,
+                              fontWeight: 800,
+                              color: LAUNCH_PALETTE.MUTED_OLIVE,
+                            }}
+                          >
+                            {resolvedOptionB}
+                          </span>
+                        </div>
+
+                        <span
+                          style={{
+                            fontSize: 26,
+                            fontWeight: 900,
+                            color: LAUNCH_PALETTE.MUTED_OLIVE,
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {livePctB}%
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stamp Footer Banner */}
                   <div
                     style={{
-                      padding: '13px 16px',
+                      padding: '14px 20px',
                       borderRadius: 16,
-                      backgroundColor: frame >= resolutionBannerFrame ? EMERALD_SOFT : LAUNCH_PALETTE.BACKGROUND,
-                      border: `1.5px solid ${
-                        frame >= resolutionBannerFrame ? EMERALD : LAUNCH_PALETTE.TERTIARY
-                      }`,
+                      backgroundColor: isUsulAccepted ? EMERALD_INK : LAUNCH_PALETTE.PRIMARY_DARK,
+                      color: '#FFFFFF',
                       display: 'flex',
-                      justifyContent: 'space-between',
                       alignItems: 'center',
-                      gap: 10,
-                      transform: `scale(${(0.97 + 0.03 * resolutionSpring).toFixed(4)})`,
+                      justifyContent: 'space-between',
+                      transform: `scale(${(0.97 + 0.03 * stampSpring).toFixed(4)})`,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                      <CheckCircle2
-                        size={17}
-                        color={frame >= resolutionBannerFrame ? EMERALD_INK : LAUNCH_PALETTE.MUTED_OLIVE}
-                        strokeWidth={2.5}
-                      />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <CheckCircle2 size={18} color={EMERALD_BORDER} strokeWidth={2.5} />
                       <span
                         style={{
                           fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11.5,
+                          fontSize: 13,
                           fontWeight: 900,
-                          color:
-                            frame >= resolutionBannerFrame
-                              ? EMERALD_INK
-                              : LAUNCH_PALETTE.MUTED_OLIVE,
+                          letterSpacing: '0.09em',
                         }}
                       >
-                        USUL DITERIMA JPP: NAIK TARAF RUANG SISWA SEMESTER INI
+                        USUL DITERIMA JPP: NAIK TARAF SEMESTER INI
                       </span>
                     </div>
-
                     <span
                       style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 5,
-                        padding: '6px 12px',
+                        padding: '4px 10px',
                         borderRadius: 999,
-                        backgroundColor: storyExportTriggered ? ROSE_INK : LAUNCH_PALETTE.PRIMARY_DARK,
-                        color: '#FFFFFF',
+                        backgroundColor: 'rgba(255, 255, 255, 0.16)',
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 11,
                         fontWeight: 900,
-                        flexShrink: 0,
-                        whiteSpace: 'nowrap',
                       }}
                     >
-                      <Share2 size={12} strokeWidth={2.5} />
-                      <span>Eksport IG Story</span>
+                      TINDAKAN RASMI
                     </span>
                   </div>
                 </div>
               </KineticWindow>
+            </div>
+          ) : null}
 
-              <GhostCursor
-                keyframes={cursorKeyframes}
-                appearFrame={f60(78)}
-                disappearFrame={f60(162)}
-                color={LAUNCH_PALETTE.PRIMARY}
-                rippleColor={ROSE}
-              />
-            </Interactive.Div>
-
-            {/* Swiss Architectural Connector 2: Poll Export -> IG Story Phone */}
+          {/* SHOT 3 HERO: 3D Smartphone Bezel Showcasing 1-Klik IG Story Export Card (settled crisp at f=2220 / Local 462f!) */}
+          {phoneEnterProgress > 0.01 ? (
             <div
               style={{
                 position: 'absolute',
-                left: 1264,
-                top: 344,
-                width: 56,
-                height: 48,
-                pointerEvents: 'none',
-              }}
-            >
-              <EvolvingPath
-                d="M 4 24 L 48 24 M 38 15 L 48 24 L 38 33"
-                width={56}
-                height={48}
-                startFrame={conn2Start}
-                durationFrames={conn2Duration}
-                stroke={ROSE_DARK}
-                trackStroke="rgba(254, 205, 211, 0.72)"
-                strokeWidth={2.5}
-                headDotColor={ROSE_INK}
-                headDotRadius={4}
-                hideDotWhenComplete
-              />
-            </div>
-
-            {/* BEAT 3 — RIGHT COLUMN: Upright Vertical Smartphone IGStoryExportCard (0 deg) */}
-            <Interactive.Div
-              name="IGStory Upright Smartphone Frame"
-              premountFor={safeFps}
-              style={{
-                position: 'absolute',
-                left: 1320,
-                top: 0,
-                width: 456,
-                height: 706,
+                right: 132,
+                top: 4,
+                width: 454,
+                height: 672,
+                borderRadius: 46,
+                backgroundColor: '#181820',
+                border: '3px solid #353844',
+                boxShadow: '0 40px 84px rgba(31, 39, 32, 0.34)',
+                padding: 16,
+                opacity: phoneEnterProgress,
+                transformStyle: 'preserve-3d',
+                transform: `translate3d(0px, ${phoneRiseY.toFixed(1)}px, 90px) rotateY(${phoneRotY.toFixed(2)}deg) rotateX(4deg)`,
                 display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                opacity: phoneOpacity,
-                transform: `translate3d(0px, ${phoneRiseY.toFixed(2)}px, 0px) scale(${phoneScale.toFixed(4)})`,
+                flexDirection: 'column',
               }}
             >
+              {/* Dynamic Island Notch */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 24,
+                  left: '50%',
+                  width: 116,
+                  height: 24,
+                  borderRadius: 999,
+                  backgroundColor: '#0E0F14',
+                  transform: 'translateX(-50%)',
+                  zIndex: 6,
+                }}
+              />
+
+              {/* IG STORY SCREEN CONTENT */}
               <div
                 style={{
                   position: 'relative',
-                  width: 424,
-                  height: 706,
-                  borderRadius: 40,
-                  padding: '18px 20px 22px',
-                  backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                  border: `2.5px solid ${ROSE}`,
-                  boxShadow: '0 26px 56px rgba(31, 39, 32, 0.24)',
+                  flex: 1,
+                  borderRadius: 34,
+                  backgroundColor: '#251724',
+                  border: `1.5px solid ${ROSE_BORDER}`,
+                  overflow: 'hidden',
+                  padding: '54px 24px 24px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  boxSizing: 'border-box',
-                  overflow: 'hidden',
+                  gap: 14,
                 }}
               >
-                {/* Sweeping Diagonal Foil Glint inside Phone */}
-                {phoneGlintOpacity > 0.004 ? (
-                  <div
-                    aria-hidden
-                    style={{
-                      position: 'absolute',
-                      top: '-45%',
-                      left: `${phoneGlintLeft.toFixed(2)}%`,
-                      width: '36%',
-                      height: '190%',
-                      opacity: phoneGlintOpacity,
-                      background:
-                        'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(254, 205, 211, 0.55) 50%, rgba(255,255,255,0) 100%)',
-                      transform: 'rotate(24deg)',
-                      pointerEvents: 'none',
-                      zIndex: 6,
-                    }}
-                  />
-                ) : null}
-
-                {/* Top Smartphone Notch + Story Bars */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-                  <div
-                    style={{
-                      width: 124,
-                      height: 24,
-                      borderRadius: 999,
-                      backgroundColor: '#111612',
-                      border: '1px solid rgba(254, 205, 211, 0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 7,
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 7,
-                        height: 7,
-                        borderRadius: 999,
-                        backgroundColor: ROSE,
-                        transform: `scale(${liveDotScale.toFixed(3)})`,
-                      }}
-                    />
-                    <span
-                      style={{
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 9.5,
-                        fontWeight: 800,
-                        color: ROSE_BORDER,
-                        letterSpacing: '0.12em',
-                      }}
-                    >
-                      IG STORY
-                    </span>
-                  </div>
-
-                  <div style={{ width: '100%', display: 'flex', gap: 6 }}>
-                    <div style={{ flex: 1, height: 4, borderRadius: 999, backgroundColor: ROSE }} />
-                    <div style={{ flex: 1, height: 4, borderRadius: 999, backgroundColor: 'rgba(254, 205, 211, 0.32)' }} />
-                    <div style={{ flex: 1, height: 4, borderRadius: 999, backgroundColor: 'rgba(254, 205, 211, 0.32)' }} />
-                  </div>
+                {/* Top Story Progress Bar Segments */}
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <span style={{ flex: 1, height: 3.5, borderRadius: 999, backgroundColor: ROSE }} />
+                  <span style={{ flex: 1, height: 3.5, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.28)' }} />
+                  <span style={{ flex: 1, height: 3.5, borderRadius: 999, backgroundColor: 'rgba(255,255,255,0.28)' }} />
                 </div>
 
-                {/* Brand Pill */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '12px 14px',
-                    borderRadius: 18,
-                    backgroundColor: 'rgba(255, 241, 242, 0.08)',
-                    border: '1px solid rgba(254, 205, 211, 0.24)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <PersonaMonogram
-                      species="fox"
-                      size={40}
-                      accentColor={ROSE}
-                      softBgColor={ROSE_SOFT}
-                      borderColor={ROSE_BORDER}
-                    />
-                    <div>
-                      <div style={{ fontSize: 17, fontWeight: 900, color: '#FFFFFF' }}>
-                        Poly<span style={{ color: ROSE }}>Suara</span>
-                      </div>
-                      <div style={{ fontFamily: LAUNCH_FONTS.MONO, fontSize: 10, fontWeight: 800, color: ROSE_BORDER }}>
-                        RUBAH SEMAMBU • #409
-                      </div>
-                    </div>
-                  </div>
-
+                {/* IG Story Pill Tag */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <span
-                    style={{
-                      padding: '4px 10px',
-                      borderRadius: 999,
-                      backgroundColor: 'rgba(244, 63, 94, 0.25)',
-                      border: `1px solid ${ROSE}`,
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color: ROSE_BORDER,
-                    }}
-                  >
-                    1 KLIK
-                  </span>
-                </div>
-
-                {/* Featured Quote Card */}
-                <div
-                  style={{
-                    padding: '18px 18px',
-                    borderRadius: 20,
-                    backgroundColor: '#FFFFFF',
-                    border: `1.5px solid ${ROSE_BORDER}`,
-                    boxShadow: '0 14px 28px rgba(0, 0, 0, 0.2)',
-                  }}
-                >
-                  <div style={{ fontFamily: LAUNCH_FONTS.MONO, fontSize: 10.5, fontWeight: 800, color: ROSE_INK, letterSpacing: '0.1em' }}>
-                    LUAHAN PILIHAN MINGGU INI • {clampedA}% SOKONGAN
-                  </div>
-                  <p
-                    style={{
-                      margin: '8px 0 0',
-                      fontSize: 16,
-                      fontWeight: 800,
-                      lineHeight: 1.4,
-                      color: LAUNCH_PALETTE.PRIMARY,
-                    }}
-                  >
-                    “Harap dapat tambah meja belajar &amp; plug point di Dataran Siswa!”
-                  </p>
-                </div>
-
-                {/* Official Action Card */}
-                <div
-                  style={{
-                    padding: '16px 18px',
-                    borderRadius: 20,
-                    backgroundColor: 'rgba(244, 63, 94, 0.16)',
-                    border: `1.5px solid ${ROSE}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 6,
-                  }}
-                >
-                  <div
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 6,
+                      padding: '5px 12px',
+                      borderRadius: 999,
+                      backgroundColor: 'rgba(244, 63, 94, 0.26)',
+                      border: `1px solid ${ROSE}`,
                       fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 10.5,
-                      fontWeight: 800,
-                      color: ROSE_BORDER,
+                      fontSize: 11,
+                      fontWeight: 900,
+                      letterSpacing: '0.1em',
+                      color: '#FFE4E6',
                     }}
                   >
-                    <CheckCircle2 size={14} color={ROSE} strokeWidth={2.5} />
-                    <span>TINDAKAN PANTAS JPP ✓</span>
-                  </div>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: '#FFFFFF', lineHeight: 1.4 }}>
-                    “Cadangan dimasukkan ke senarai naik taraf ruang siswa semester ini.”
+                    <Sparkles size={12} color={ROSE_BORDER} strokeWidth={2.5} />
+                    IG STORY KAD RASMI
+                  </span>
+                  <span
+                    style={{
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: 'rgba(255, 255, 255, 0.72)',
+                    }}
+                  >
+                    #POLYSUARA
                   </span>
                 </div>
 
-                {/* Bottom Share CTA */}
+                {/* Inner Elevated Result Poster Card */}
                 <div
                   style={{
-                    padding: '13px 16px',
-                    borderRadius: 999,
-                    backgroundColor: ROSE_INK,
+                    flex: 1,
+                    borderRadius: 24,
+                    backgroundColor: '#FFFFFF',
+                    padding: '22px 20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxShadow: '0 22px 44px rgba(0, 0, 0, 0.35)',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                    <PersonaMonogram
+                      species="fox"
+                      size={44}
+                      accentColor={ROSE}
+                      softBgColor={ROSE_SOFT}
+                      borderColor={ROSE_BORDER}
+                    />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 10.5,
+                          fontWeight: 900,
+                          color: ROSE_INK,
+                        }}
+                      >
+                        SUARA KITA MENANG
+                      </span>
+                      <span style={{ fontSize: 15, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
+                        JPP POLISAS · 2026
+                      </span>
+                    </div>
+                  </div>
+
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 22,
+                      fontWeight: 900,
+                      lineHeight: 1.24,
+                      color: LAUNCH_PALETTE.PRIMARY,
+                    }}
+                  >
+                    {resolvedOptionA}
+                  </p>
+
+                  <div
+                    style={{
+                      padding: '14px 16px',
+                      borderRadius: 16,
+                      backgroundColor: ROSE_SOFT,
+                      border: `1.5px solid ${ROSE_BORDER}`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span
+                        style={{
+                          fontSize: 34,
+                          fontWeight: 900,
+                          color: ROSE_INK,
+                          fontVariantNumeric: 'tabular-nums',
+                          lineHeight: 1,
+                        }}
+                      >
+                        {safePctA}% SETUJU
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 11,
+                          fontWeight: 800,
+                          color: LAUNCH_PALETTE.MUTED_OLIVE,
+                        }}
+                      >
+                        {safeTotalVotes} Mahasiswa Mengundi
+                      </span>
+                    </div>
+                    <CheckCircle2 size={28} color={EMERALD_INK} strokeWidth={2.6} />
+                  </div>
+                </div>
+
+                {/* Bottom Share CTA Pill */}
+                <div
+                  style={{
+                    padding: '13px 18px',
+                    borderRadius: 16,
+                    backgroundColor: ROSE_DARK,
                     color: '#FFFFFF',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: 8,
+                    gap: 9,
                     fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 12,
+                    fontSize: 12.5,
                     fontWeight: 900,
                     letterSpacing: '0.08em',
                   }}
                 >
-                  <Share2 size={14} strokeWidth={2.5} />
-                  <span>KONGSI KE IG STORY • 1 KLIK ✓</span>
+                  <Share2 size={16} strokeWidth={2.6} />
+                  <span>1-KLIK KONGSI KE IG STORY ✓</span>
                 </div>
+
+                {/* Diagonal Light Sheen Sweep */}
+                {phoneSheenOpacity > 0.01 ? (
+                  <div
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      top: '-40%',
+                      left: `${phoneSheenLeft.toFixed(1)}%`,
+                      width: '34%',
+                      height: '180%',
+                      background:
+                        'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 100%)',
+                      transform: 'rotate(22deg)',
+                      opacity: phoneSheenOpacity,
+                      pointerEvents: 'none',
+                    }}
+                  />
+                ) : null}
               </div>
-            </Interactive.Div>
-          </div>
+            </div>
+          ) : null}
+
+          {/* Spark bursts on Shot 2 Usul Accepted & Shot 3 IG Story Ready */}
+          <GeometricSparkBurst
+            triggerFrame={286}
+            x={960}
+            y={560}
+            durationFrames={34}
+            radius={108}
+            count={12}
+            seed="polysuara-poll-win"
+            colors={[ROSE, EMERALD, '#FFFFFF']}
+          />
+          <GeometricSparkBurst
+            triggerFrame={438}
+            x={1575}
+            y={380}
+            durationFrames={30}
+            radius={94}
+            count={10}
+            seed="polysuara-ig-story"
+            colors={[ROSE, INDIGO, '#FFFFFF']}
+          />
+
+          {/* Ghost Cursors strictly scoped outside still target frames */}
+          <GhostCursor
+            keyframes={SHOT1_CURSOR_KEYFRAMES}
+            appearFrame={154}
+            disappearFrame={184}
+            color={LAUNCH_PALETTE.PRIMARY_DARK}
+            rippleColor={ROSE}
+          />
+          <GhostCursor
+            keyframes={SHOT2_CURSOR_KEYFRAMES}
+            appearFrame={224}
+            disappearFrame={272}
+            color={LAUNCH_PALETTE.PRIMARY_DARK}
+            rippleColor={ROSE}
+          />
         </div>
       </CameraStage>
 
       <EditorialFrameMarks
-        chapterCode="04"
+        chapterCode="05"
         chapterLabel="KOMUNITI SISWA • LUAH & UNDI TANPA NAMA"
       />
     </>
@@ -1245,38 +1285,26 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
 };
 
 const polySuaraSchema = {
-  pollTitle: {
-    type: 'string',
-    default: STUDENT_POLL_TITLE_DEFAULT,
-    description: 'Poll Title',
-  },
-  optionA: {
-    type: 'string',
-    default: STUDENT_OPTION_A_DEFAULT,
-    description: 'Option A',
-  },
-  optionB: {
-    type: 'string',
-    default: STUDENT_OPTION_B_DEFAULT,
-    description: 'Option B',
-  },
+  pollTitle: { type: 'string', default: STUDENT_POLL_TITLE_DEFAULT, description: 'Live Poll Title' },
+  optionA: { type: 'string', default: STUDENT_OPTION_A_DEFAULT, description: 'Option A' },
+  optionB: { type: 'string', default: STUDENT_OPTION_B_DEFAULT, description: 'Option B' },
   percentageA: {
     type: 'number',
     default: 68,
-    min: 0,
-    max: 100,
+    min: 5,
+    max: 95,
     integer: true,
     hiddenFromList: false,
-    description: 'Option A Share %',
+    description: 'Option A Percentage',
   },
   totalVotes: {
     type: 'number',
     default: 412,
-    min: 0,
-    max: 99999,
+    min: 10,
+    max: 9999,
     integer: true,
     hiddenFromList: false,
-    description: 'Total Votes',
+    description: 'Total Student Votes',
   },
 } as const satisfies InteractivitySchema;
 

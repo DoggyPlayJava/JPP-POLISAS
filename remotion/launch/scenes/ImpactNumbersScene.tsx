@@ -991,7 +991,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
         </div>
       </CameraStage>
 
-      <EditorialFrameMarks chapterCode="07" chapterLabel="KOMUNITI HIDUP • 1,083+ SISWA AKTIF" dark />
+      <EditorialFrameMarks chapterCode="08" chapterLabel="KOMUNITI HIDUP • 1,083+ SISWA AKTIF" dark />
     </>
   );
 };
