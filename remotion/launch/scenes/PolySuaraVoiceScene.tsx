@@ -3,18 +3,31 @@ import {
   Easing,
   Interactive,
   interpolate,
+  spring,
   useCurrentFrame,
   useVideoConfig,
   type InteractivitySchema,
 } from 'remotion';
-import { Check, MessageSquare, Users, Vote } from 'lucide-react';
+import {
+  Check,
+  CheckCircle2,
+  Flame,
+  Heart,
+  MessageSquare,
+  Share2,
+  ShieldCheck,
+  Sparkles,
+  Users,
+  Vote,
+} from 'lucide-react';
 import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialChrome';
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath, GhostCursor, type GhostCursorKeyframe } from '../motion/MotionActors';
 import { LAUNCH_FONTS, LAUNCH_PALETTE } from '../tokens';
+import { ExplodedLayer, KineticWindow, PersonaMonogram } from '../ui/KineticCard';
 
-type PolySuaraProps = {
+export type PolySuaraProps = {
   readonly pollTitle: string;
   readonly optionA: string;
   readonly optionB: string;
@@ -22,24 +35,63 @@ type PolySuaraProps = {
   readonly totalVotes: number;
 };
 
+// Exact 1920x1080 Twin-Column Workbench geometry for pixel-locked GhostCursor alignment
+const HEADER_RULE_LEFT = 64;
+const HEADER_RULE_WIDTH = 1792;
+const LEFT_COL_LEFT = 64;
+const LEFT_COL_WIDTH = 840;
+const CONFESSION_TOP = 236;
+const CONFESSION_HEIGHT = 368;
+const SHARE_CARD_LEFT = 96;
+const SHARE_CARD_TOP = 590;
+const SHARE_CARD_WIDTH = 776;
+const SHARE_CARD_HEIGHT = 318;
+
+const POLL_LEFT = 976;
+const POLL_TOP = 236;
+const POLL_WIDTH = 880;
+const POLL_HEIGHT = 676;
+const POLL_BORDER = 1.5;
+const POLL_TOPBAR_H = 40;
+const POLL_BODY_PAD_TOP = 26;
+const POLL_BODY_PAD_X = 32;
+const POLL_HEADER_H = 76;
+const OPT_A_MARGIN_TOP = 22;
+const OPT_A_HEIGHT = 186;
+
+const OPT_A_INNER_W = POLL_WIDTH - POLL_BORDER * 2 - POLL_BODY_PAD_X * 2; // 813
+const OPT_A_TOP =
+  POLL_TOP +
+  POLL_BORDER +
+  POLL_TOPBAR_H +
+  POLL_BODY_PAD_TOP +
+  POLL_HEADER_H +
+  OPT_A_MARGIN_TOP; // 401.5
+const OPT_A_CENTER_X = Number(
+  (POLL_LEFT + POLL_BORDER + POLL_BODY_PAD_X + OPT_A_INNER_W / 2).toFixed(1),
+); // 1416
+const OPT_A_CENTER_Y = Number((OPT_A_TOP + OPT_A_HEIGHT / 2).toFixed(1)); // 494.5
+
 const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
 const RACE_EASE = Easing.bezier(0.25, 1, 0.5, 1);
 const VOTES_SETTLE_EASE = Easing.bezier(0.22, 1, 0.36, 1);
 
-type ReactionPillSpec = {
-  readonly id: string;
-  readonly text: string;
-  readonly left: number;
-  readonly baseTop: number;
-  readonly phase: number;
-  readonly accent: string;
-};
+const REACTION_SPECS = [
+  { id: 'flame', target: 128, icon: 'flame' as const, color: LAUNCH_PALETTE.ACCENT },
+  { id: 'heart', target: 84, icon: 'heart' as const, color: LAUNCH_PALETTE.ACCENT },
+  { id: 'spark', target: 62, icon: 'spark' as const, color: LAUNCH_PALETTE.SECONDARY },
+] as const;
 
-const REACTION_PILLS: readonly ReactionPillSpec[] = [
-  { id: 'fire', text: '🔥 +128', left: 1140, baseTop: 912, phase: 0.2, accent: LAUNCH_PALETTE.ACCENT },
-  { id: 'clap', text: '👏 +84', left: 1352, baseTop: 922, phase: 1.7, accent: LAUNCH_PALETTE.SECONDARY },
-  { id: 'spark', text: '✨ +62', left: 1564, baseTop: 910, phase: 3.1, accent: LAUNCH_PALETTE.PRIMARY },
-];
+const renderReactionIcon = (kind: (typeof REACTION_SPECS)[number]['icon'], color: string) => {
+  switch (kind) {
+    case 'flame':
+      return <Flame size={16} color={color} strokeWidth={2.4} />;
+    case 'heart':
+      return <Heart size={16} color={color} strokeWidth={2.4} />;
+    case 'spark':
+      return <Sparkles size={16} color={color} strokeWidth={2.4} />;
+  }
+};
 
 const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   pollTitle,
@@ -51,49 +103,78 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
+  const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
+  const safeDuration = Math.max(30, Number.isFinite(durationInFrames) ? durationInFrames : 366);
+  const timeSec = frame / safeFps;
+
   const clampedA = Number.isFinite(percentageA) ? Math.min(100, Math.max(0, percentageA)) : 68;
   const clampedB = 100 - clampedA;
   const safeTotalVotes = Number.isFinite(totalVotes) ? Math.max(0, Math.round(totalVotes)) : 412;
 
-  // Beat 1 (0..1.5s): EvolvingPath top divider + KineticWords headline + Poll Card expansion
-  const dividerDuration = Math.max(10, Math.round(0.75 * fps));
-  const pillStart = Math.round(0.06 * fps);
-  const pillDuration = Math.max(8, Math.round(0.38 * fps));
-  const headlineStart = Math.round(0.14 * fps);
-  const wordStagger = Math.max(2, Math.round(0.065 * fps));
-  const wordDuration = Math.max(8, Math.round(0.38 * fps));
+  // Beat 1 (0..1.4s): EvolvingPath rule + Editorial Header + Left Confession & Right Poll Windows
+  const dividerDuration = Math.max(10, Math.round(0.72 * safeFps));
+  const pillStart = Math.round(0.05 * safeFps);
+  const pillDuration = Math.max(8, Math.round(0.36 * safeFps));
+  const headlineStart = Math.round(0.12 * safeFps);
+  const wordStagger = Math.max(2, Math.round(0.06 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.35 * safeFps));
 
-  const cardEnterStart = Math.round(0.30 * fps);
-  const cardEnterEnd = Math.max(cardEnterStart + 10, Math.round(1.05 * fps));
-  const cardEnterProgress = interpolate(frame, [cardEnterStart, cardEnterEnd], [0, 1], {
+  const headerOpacity = interpolate(frame, [0, Math.max(8, Math.round(0.3 * safeFps))], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: EXPO_OUT,
   });
-  const cardScale = interpolate(cardEnterProgress, [0, 1], [0.94, 1], {
+
+  const leftCardEnter = interpolate(
+    frame,
+    [Math.round(0.26 * safeFps), Math.round(0.88 * safeFps)],
+    [0, 1],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: EXPO_OUT,
+    },
+  );
+  const leftCardOpacity = interpolate(leftCardEnter, [0, 0.35, 1], [0, 1, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+  const leftCardY = interpolate(leftCardEnter, [0, 1], [28, 0]);
+  const leftCardFloat = Math.sin(timeSec * 1.35) * 2.6 * leftCardEnter;
+
+  const pollEnterProgress = interpolate(
+    frame,
+    [Math.round(0.34 * safeFps), Math.round(1.0 * safeFps)],
+    [0, 1],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: EXPO_OUT,
+    },
+  );
+  const pollScale = interpolate(pollEnterProgress, [0, 1], [0.94, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     output: 'perceptual-scale',
   });
-  const cardTranslateY = interpolate(cardEnterProgress, [0, 1], [24, 0]);
-  const cardOpacity = interpolate(cardEnterProgress, [0, 0.35, 1], [0, 1, 1], {
+  const pollTranslateY = interpolate(pollEnterProgress, [0, 1], [24, 0]);
+  const pollOpacity = interpolate(pollEnterProgress, [0, 0.35, 1], [0, 1, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
+  const pollFloatY = Math.cos(timeSec * 1.2 + 0.8) * 2.4 * pollEnterProgress;
 
-  // Beat 2 (1.4..4.2s): Live Voting Race + GhostCursor click on Option A + Floating reaction pills
-  const racePhase1Start = Math.round(1.40 * fps);
-  const cursorAppearFrame = Math.round(1.72 * fps);
-  const clickFrame = Math.round(2.30 * fps);
-  const cursorHoldEnd = clickFrame + Math.max(4, Math.round(0.24 * fps));
-  const cursorLeaveFrame = Math.round(2.78 * fps);
-  const cursorDisappearFrame = Math.round(2.96 * fps);
+  // Beat 2 (1.15..3.7s): Live Voting Race + GhostCursor click on Option A + Reaction Counter Pops
+  const racePhase1Start = Math.round(1.15 * safeFps); // 69f
+  const cursorAppearFrame = Math.round(1.65 * safeFps); // 99f
+  const clickFrame = Math.round(2.25 * safeFps); // 135f
+  const cursorHoldEnd = clickFrame + Math.max(4, Math.round(0.24 * safeFps)); // 149f
+  const cursorLeaveFrame = Math.round(2.72 * safeFps); // 163f
+  const cursorDisappearFrame = Math.round(2.92 * safeFps); // 175f
 
-  const racePhase2Start = clickFrame + Math.max(2, Math.round(0.05 * fps));
-  const racePhase2End = Math.round(4.05 * fps);
-  const votesEndFrame = Math.round(4.65 * fps);
+  const racePhase2Start = clickFrame + Math.max(2, Math.round(0.05 * safeFps)); // 138f
+  const racePhase2End = Math.round(3.65 * safeFps); // 219f
+  const votesEndFrame = Math.round(4.1 * safeFps); // 246f
 
-  // At default percentageA=68: Option B leads 0% -> 44% while Option A rises 0% -> 38%.
   // Guard preClickA <= clampedA so low percentageA (< 12) never dips backward post-click.
   const preClickA = Math.min(clampedA, Math.min(38, Math.max(12, Math.round(clampedA * 0.56))));
   const preClickB = Math.min(48, Math.max(44, Math.round(clampedB * 0.9)));
@@ -134,22 +215,31 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
       ? Math.round(votesPhase1)
       : Math.round(midVotes + (safeTotalVotes - midVotes) * votesPhase2Progress);
 
-  // Exact Option A container bounds inside CameraStage (1920x1080):
-  // Poll Card: left=104, top=306, width=1712, height=580, border=2, padding=44px 56px
-  // Option A Row: x=162..1758 (w=1596), y=440..590 (h=150, vertical center=515)
-  // GhostCursor clicks at (860, 525) cleanly centered inside Option A interactive row
+  const optionAVotes = Math.round(liveVotes * (Math.round(barA) / 100));
+  const optionBVotes = Math.max(0, liveVotes - optionAVotes);
+
+  // Exact Option A center inside CameraStage coordinate space (1416, 494.5)
   const cursorKeyframes: readonly GhostCursorKeyframe[] = [
-    { frame: cursorAppearFrame, x: 1260, y: 740 },
-    { frame: Math.max(cursorAppearFrame + 2, clickFrame - Math.round(0.08 * fps)), x: 860, y: 525, label: 'Pilihan A' },
-    { frame: clickFrame, x: 860, y: 525, click: true, label: 'Undi A!' },
-    { frame: cursorHoldEnd, x: 860, y: 525, label: 'Disahkan ✓' },
-    { frame: cursorLeaveFrame, x: 1120, y: 660 },
+    { frame: cursorAppearFrame, x: 1640, y: 740 },
+    {
+      frame: Math.max(cursorAppearFrame + 2, clickFrame - Math.round(0.08 * safeFps)),
+      x: OPT_A_CENTER_X,
+      y: OPT_A_CENTER_Y,
+      label: 'Pilihan A',
+    },
+    { frame: clickFrame, x: OPT_A_CENTER_X, y: OPT_A_CENTER_Y, click: true, label: 'Undi A!' },
+    { frame: cursorHoldEnd, x: OPT_A_CENTER_X, y: OPT_A_CENTER_Y, label: 'Disahkan ✓' },
+    { frame: cursorLeaveFrame, x: 1580, y: 650 },
   ];
 
   const isOptionASelected = frame >= clickFrame;
   const optionAClickScale = interpolate(
     frame,
-    [clickFrame - 2, clickFrame + Math.max(2, Math.round(0.05 * fps)), clickFrame + Math.max(6, Math.round(0.24 * fps))],
+    [
+      clickFrame - 2,
+      clickFrame + Math.max(2, Math.round(0.05 * safeFps)),
+      clickFrame + Math.max(6, Math.round(0.24 * safeFps)),
+    ],
     [1, 0.986, 1],
     {
       extrapolateLeft: 'clamp',
@@ -158,7 +248,11 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   );
   const optionARingFlash = interpolate(
     frame,
-    [clickFrame, clickFrame + Math.max(2, Math.round(0.08 * fps)), clickFrame + Math.max(8, Math.round(0.55 * fps))],
+    [
+      clickFrame,
+      clickFrame + Math.max(2, Math.round(0.08 * safeFps)),
+      clickFrame + Math.max(8, Math.round(0.55 * safeFps)),
+    ],
     [0, 1, 0.35],
     {
       extrapolateLeft: 'clamp',
@@ -167,7 +261,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   );
   const selectedBadgeProgress = interpolate(
     frame,
-    [clickFrame, clickFrame + Math.max(8, Math.round(0.3 * fps))],
+    [clickFrame, clickFrame + Math.max(8, Math.round(0.3 * safeFps))],
     [0, 1],
     {
       extrapolateLeft: 'clamp',
@@ -176,39 +270,32 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
     },
   );
 
-  // Beat 2B: Floating campus reaction pills
-  const reactionBaseStart = Math.round(2.48 * fps);
-  const reactionStagger = Math.max(4, Math.round(0.22 * fps));
-  const reactionRiseDuration = Math.max(12, Math.round(0.65 * fps));
-  const timeSec = frame / Math.max(1, fps);
+  // Beat 2–3 (2.4..6.1s): Elevated Editorial Kad Perkongsian Rasmi (Share Card)
+  const shareCardEnterFrame = Math.round(2.4 * safeFps); // 144f
+  const shareBadgeActive = frame >= shareCardEnterFrame - Math.round(0.15 * safeFps);
 
-  const exitWindowFrames = Math.max(2, Math.round(0.35 * fps));
-  const sceneEnd = Math.max(1, durationInFrames - 1);
-  const exitLeadStart = Math.max(0, Math.min(sceneEnd - 1, durationInFrames - exitWindowFrames));
+  // Beat 3 (3.75..6.1s): Terracotta Rough-Notation <Circle> around winning percentageA
+  const circleStart = Math.round(3.75 * safeFps); // 225f
+  const circleDuration = Math.max(12, Math.round(0.5 * safeFps)); // 30f -> settles by 255f
+
+  // Subtle exit lead on outer header
+  const exitWindowFrames = Math.max(2, Math.round(0.35 * safeFps));
+  const sceneEnd = Math.max(1, safeDuration - 1);
+  const exitLeadStart = Math.max(0, Math.min(sceneEnd - 1, safeDuration - exitWindowFrames));
   const exitLeadFactor = interpolate(frame, [exitLeadStart, sceneEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.bezier(0.55, 0, 1, 0.45),
   });
-  const pillExitX = -10 * exitLeadFactor;
-  const pillExitY = -5 * exitLeadFactor;
-
-  // Beat 3 (4.0..6.0s): Terracotta rough-notation <Circle> around winning percentageA
-  const circleStart = Math.round(4.05 * fps);
-  const circleDuration = Math.max(12, Math.round(0.68 * fps));
-
-  const headerOpacity = interpolate(frame, [0, Math.max(8, Math.round(0.32 * fps))], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
+  const headerExitX = -8 * exitLeadFactor;
 
   return (
     <>
       <EditorialBackdrop />
 
       <CameraStage
-        zoomFrom={0.98}
-        zoomTo={1.04}
+        zoomFrom={0.99}
+        zoomTo={1.03}
         panXFrom={6}
         panXTo={-6}
         panYFrom={4}
@@ -222,7 +309,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
         exitPanXDelta={-30}
         exitPanYDelta={-16}
         exitZoomDelta={0.022}
-        exitFrames={Math.round(0.35 * fps)}
+        exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
         <div
@@ -230,71 +317,49 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             position: 'absolute',
             inset: 0,
             fontFamily: LAUNCH_FONTS.DISPLAY,
+            perspective: '1800px',
+            transformStyle: 'preserve-3d',
           }}
         >
-          {/* Beat 1A: EvolvingPath architectural top divider */}
-          <div
-            style={{
-              position: 'absolute',
-              left: 104,
-              top: 96,
-              width: 1712,
-              height: 10,
-              pointerEvents: 'none',
-            }}
-          >
-            <EvolvingPath
-              d="M 0 5 L 1712 5"
-              width={1712}
-              height={10}
-              startFrame={0}
-              durationFrames={dividerDuration}
-              stroke={LAUNCH_PALETTE.TERTIARY}
-              strokeWidth={2}
-              headDotColor={LAUNCH_PALETTE.ACCENT}
-              headDotRadius={4.5}
-              hideDotWhenComplete
-              style={{ position: 'absolute', inset: 0 }}
-            />
-          </div>
-
-          {/* Beat 1B: Header + Verified Votes Counter */}
+          {/* Beat 1A: Top Header + Live Verified Votes Counter */}
           <Interactive.Div
             name="PolySuara Header"
-            premountFor={fps}
+            premountFor={safeFps}
             style={{
               position: 'absolute',
-              left: 104,
-              top: 122,
-              width: 1712,
-              height: 152,
+              left: HEADER_RULE_LEFT,
+              top: 86,
+              width: HEADER_RULE_WIDTH,
+              height: 112,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-end',
               opacity: headerOpacity,
+              transform: `translate3d(${headerExitX.toFixed(2)}px, 0px, 0px)`,
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <KineticReveal startFrame={pillStart} durationFrames={pillDuration}>
                 <div
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 10,
+                    gap: 9,
                     alignSelf: 'flex-start',
-                    padding: '8px 18px',
+                    padding: '6px 16px',
                     borderRadius: 999,
                     backgroundColor: 'rgba(107, 127, 91, 0.14)',
                     border: `1px solid ${LAUNCH_PALETTE.SECONDARY}`,
                     color: LAUNCH_PALETTE.PRIMARY,
-                    fontSize: 13,
+                    fontFamily: LAUNCH_FONTS.MONO,
+                    fontSize: 12,
                     fontWeight: 800,
-                    letterSpacing: '0.16em',
+                    letterSpacing: '0.15em',
                     textTransform: 'uppercase',
                   }}
                 >
-                  <MessageSquare size={16} color={LAUNCH_PALETTE.SECONDARY} />
-                  POLYSUARA • KOMUNITI &amp; UNDIAN
+                  <MessageSquare size={15} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.4} />
+                  <span>POLYSUARA • SUARA &amp; UNDIAN MAHASISWA</span>
                 </div>
               </KineticReveal>
 
@@ -308,7 +373,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                 accentColor={LAUNCH_PALETTE.ACCENT}
                 style={{
                   margin: 0,
-                  fontSize: 58,
+                  fontSize: 50,
                   fontWeight: 900,
                   lineHeight: 1.06,
                   letterSpacing: '-0.03em',
@@ -321,392 +386,810 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: 12,
-                padding: '15px 26px',
+                gap: 11,
+                padding: '13px 22px',
                 borderRadius: 18,
                 backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                border: `1.5px solid ${isOptionASelected ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.TERTIARY}`,
+                border: `1.5px solid ${
+                  isOptionASelected ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.TERTIARY
+                }`,
                 boxShadow: '0 14px 32px rgba(46, 58, 47, 0.08)',
                 fontFamily: LAUNCH_FONTS.MONO,
-                fontSize: 18,
+                fontSize: 17,
                 fontWeight: 800,
                 color: LAUNCH_PALETTE.PRIMARY,
                 fontVariantNumeric: 'tabular-nums',
+                flexShrink: 0,
               }}
             >
-              <Users size={20} color={LAUNCH_PALETTE.ACCENT} />
+              <Users size={19} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
               <span>{liveVotes} UNDI DISAHKAN</span>
             </div>
           </Interactive.Div>
 
-          {/* Main Campus Poll Card: x=104..1816, y=306..886 (height=580) */}
-          <Interactive.Div
-            name="Live Campus Poll Card"
-            premountFor={fps}
-            style={{
-              position: 'absolute',
-              left: 104,
-              top: 306,
-              width: 1712,
-              height: 580,
-              boxSizing: 'border-box',
-              backgroundColor: LAUNCH_PALETTE.CARD_BG,
-              borderRadius: 32,
-              border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
-              padding: '44px 56px',
-              boxShadow: '0 28px 64px rgba(46, 58, 47, 0.11)',
-              display: 'flex',
-              flexDirection: 'column',
-              opacity: cardOpacity,
-              transformOrigin: '50% 50%',
-              transform: `translate3d(0px, ${cardTranslateY.toFixed(2)}px, 0px) scale(${cardScale.toFixed(4)})`,
-            }}
-          >
-            {/* Row 1: Poll Header (height: 56px) */}
-            <div
-              style={{
-                height: 56,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexShrink: 0,
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
-                <Vote size={28} color={LAUNCH_PALETTE.ACCENT} />
-                <span
-                  style={{
-                    fontSize: 32,
-                    fontWeight: 800,
-                    color: LAUNCH_PALETTE.PRIMARY,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {pollTitle}
-                </span>
-              </div>
-              <span
-                style={{
-                  padding: '8px 18px',
-                  borderRadius: 999,
-                  backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                  color: LAUNCH_PALETTE.BACKGROUND,
-                  fontFamily: LAUNCH_FONTS.MONO,
-                  fontSize: 13,
-                  fontWeight: 800,
-                  letterSpacing: '0.14em',
-                  flexShrink: 0,
-                }}
-              >
-                UNDIAN AKTIF • 5 JABATAN
-              </span>
-            </div>
-
-            {/* Row 2: Option A Interactive Card (x=162..1758, y=440..590, height=150px) */}
-            <div
-              style={{
-                marginTop: 32,
-                height: 150,
-                boxSizing: 'border-box',
-                borderRadius: 22,
-                padding: '22px 28px',
-                backgroundColor: isOptionASelected ? 'rgba(201, 111, 79, 0.055)' : LAUNCH_PALETTE.BACKGROUND,
-                border: `2px solid ${isOptionASelected ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.TERTIARY}`,
-                boxShadow: isOptionASelected
-                  ? `0 0 0 5px rgba(201, 111, 79, ${(0.18 * optionARingFlash).toFixed(3)}), 0 14px 30px rgba(201, 111, 79, ${(0.14 * optionARingFlash).toFixed(3)})`
-                  : 'none',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                flexShrink: 0,
-                overflow: 'visible',
-                transformOrigin: '50% 50%',
-                transform: `scale(${optionAClickScale.toFixed(4)})`,
-              }}
-            >
-              <div
-                style={{
-                  height: 44,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
-                  <span
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: 999,
-                      border: `2px solid ${isOptionASelected ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.SECONDARY}`,
-                      backgroundColor: isOptionASelected ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.CARD_BG,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flexShrink: 0,
-                    }}
-                  >
-                    {isOptionASelected ? (
-                      <Check size={14} color={LAUNCH_PALETTE.CARD_BG} strokeWidth={3} />
-                    ) : null}
-                  </span>
-
-                  <span
-                    style={{
-                      fontSize: 24,
-                      fontWeight: 800,
-                      color: LAUNCH_PALETTE.PRIMARY,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {optionA}
-                  </span>
-
-                  {isOptionASelected ? (
-                    <span
-                      style={{
-                        padding: '4px 12px',
-                        borderRadius: 999,
-                        backgroundColor: LAUNCH_PALETTE.ACCENT,
-                        color: LAUNCH_PALETTE.CARD_BG,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11.5,
-                        fontWeight: 800,
-                        letterSpacing: '0.1em',
-                        whiteSpace: 'nowrap',
-                        opacity: selectedBadgeProgress,
-                        transform: `scale(${(0.85 + 0.15 * selectedBadgeProgress).toFixed(3)})`,
-                      }}
-                    >
-                      UNDI DIPILIH ✓
-                    </span>
-                  ) : null}
-                </div>
-
-                <div style={{ marginRight: 6, flexShrink: 0 }}>
-                  <EditorialAnnotation
-                    type="circle"
-                    startFrame={circleStart}
-                    durationFrames={circleDuration}
-                    color={LAUNCH_PALETTE.ACCENT}
-                    strokeWidth={3.5}
-                    padding={{ top: 6, right: 14, bottom: 6, left: 14 }}
-                    iterations={2}
-                    seed={19}
-                  >
-                    <span
-                      style={{
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 28,
-                        fontWeight: 900,
-                        color: LAUNCH_PALETTE.ACCENT,
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      {Math.round(barA)}%
-                    </span>
-                  </EditorialAnnotation>
-                </div>
-              </div>
-
-              <div
-                style={{
-                  height: 36,
-                  borderRadius: 999,
-                  backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    width: `${Math.min(100, Math.max(0, barA)).toFixed(2)}%`,
-                    height: '100%',
-                    borderRadius: 999,
-                    backgroundColor: LAUNCH_PALETTE.ACCENT,
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Row 3: Option B Card (height=150px) */}
-            <div
-              style={{
-                marginTop: 24,
-                height: 150,
-                boxSizing: 'border-box',
-                borderRadius: 22,
-                padding: '22px 28px',
-                backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                flexShrink: 0,
-              }}
-            >
-              <div
-                style={{
-                  height: 44,
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
-                  <span
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: 999,
-                      border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                      backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                      flexShrink: 0,
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontSize: 24,
-                      fontWeight: 700,
-                      color: LAUNCH_PALETTE.PRIMARY,
-                      whiteSpace: 'nowrap',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                    }}
-                  >
-                    {optionB}
-                  </span>
-                </div>
-
-                <span
-                  style={{
-                    marginRight: 6,
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 26,
-                    fontWeight: 800,
-                    color: LAUNCH_PALETTE.SECONDARY,
-                    fontVariantNumeric: 'tabular-nums',
-                    flexShrink: 0,
-                  }}
-                >
-                  {Math.round(barB)}%
-                </span>
-              </div>
-
-              <div
-                style={{
-                  height: 36,
-                  borderRadius: 999,
-                  backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    width: `${Math.min(100, Math.max(0, barB)).toFixed(2)}%`,
-                    height: '100%',
-                    borderRadius: 999,
-                    backgroundColor: LAUNCH_PALETTE.SECONDARY,
-                  }}
-                />
-              </div>
-            </div>
-
-            {/* Row 4: Footer Meta (height=48px) */}
-            <div
-              style={{
-                marginTop: 28,
-                height: 48,
-                boxSizing: 'border-box',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 24,
-                paddingTop: 14,
-                borderTop: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                fontSize: 17,
-                fontWeight: 600,
-                color: LAUNCH_PALETTE.MUTED_OLIVE,
-                flexShrink: 0,
-              }}
-            >
-              <span>• Identiti Persona Kampus Selamat</span>
-              <span>• Moderasi Beretika JPP</span>
-              <span>• Eksport Kad Perkongsian Rasmi</span>
-            </div>
-          </Interactive.Div>
-
-          {/* Beat 2B: Lower Editorial Reaction Bar + Floating Campus Reaction Pills */}
+          {/* Beat 1B: EvolvingPath architectural divider between header and twin workbench */}
           <div
             style={{
               position: 'absolute',
-              left: 104,
-              top: 924,
-              fontFamily: LAUNCH_FONTS.MONO,
-              fontSize: 13,
-              fontWeight: 700,
-              letterSpacing: '0.14em',
-              color: LAUNCH_PALETTE.MUTED_OLIVE,
-              opacity: interpolate(frame, [racePhase1Start, racePhase1Start + Math.max(8, Math.round(0.3 * fps))], [0, 1], {
-                extrapolateLeft: 'clamp',
-                extrapolateRight: 'clamp',
-              }),
+              left: HEADER_RULE_LEFT,
+              top: 212,
+              width: HEADER_RULE_WIDTH,
+              height: 10,
+              pointerEvents: 'none',
             }}
           >
-            REAKSI MAHASISWA LANGSUNG • POLISAS SEMAMBU
+            <EvolvingPath
+              d={`M 0 5 L ${HEADER_RULE_WIDTH} 5`}
+              width={HEADER_RULE_WIDTH}
+              height={10}
+              startFrame={0}
+              durationFrames={dividerDuration}
+              stroke={LAUNCH_PALETTE.TERTIARY}
+              strokeWidth={2}
+              headDotColor={LAUNCH_PALETTE.ACCENT}
+              headDotRadius={4.5}
+              hideDotWhenComplete
+              style={{ position: 'absolute', inset: 0 }}
+            />
           </div>
 
-          {REACTION_PILLS.map((pill, idx) => {
-            const pillEnter = reactionBaseStart + idx * reactionStagger;
-            const progress = interpolate(frame, [pillEnter, pillEnter + reactionRiseDuration], [0, 1], {
-              extrapolateLeft: 'clamp',
-              extrapolateRight: 'clamp',
-              easing: EXPO_OUT,
-            });
-            const opacity = interpolate(progress, [0, 0.25, 1], [0, 1, 1], {
-              extrapolateLeft: 'clamp',
-              extrapolateRight: 'clamp',
-            });
-            if (opacity <= 0.001) return null;
-
-            const driftX = Math.sin(timeSec * 2.1 + pill.phase) * 11 * progress + pillExitX;
-            const driftY = Math.cos(timeSec * 1.85 + pill.phase) * 6 * progress + pillExitY;
-            const riseY = interpolate(progress, [0, 1], [62, 0]) + driftY;
-            const pillScale = interpolate(progress, [0, 0.72, 1], [0.76, 1.05, 1], {
-              extrapolateLeft: 'clamp',
-              extrapolateRight: 'clamp',
-            });
-
-            return (
+          {/* LEFT COLUMN (width=840px): Live Anonymous Confession Card + Elevated Deep Forest Share Card */}
+          <Interactive.Div
+            name="PolySuara Confession Card"
+            premountFor={safeFps}
+            style={{
+              position: 'absolute',
+              left: LEFT_COL_LEFT,
+              top: CONFESSION_TOP,
+              width: LEFT_COL_WIDTH,
+              height: CONFESSION_HEIGHT,
+              zIndex: 10,
+              opacity: leftCardOpacity,
+              transform: `translate3d(0px, ${(leftCardY + leftCardFloat).toFixed(2)}px, 0px)`,
+              transformStyle: 'preserve-3d',
+            }}
+          >
+            <KineticWindow
+              surface="light"
+              routeLabel="jpp.polisas.edu.my/polysuara"
+              statusPill="#FASILITI"
+              statusAccent
+              width={LEFT_COL_WIDTH}
+              height={CONFESSION_HEIGHT}
+              borderRadius={26}
+              sheenStartFrame={Math.round(0.8 * safeFps)}
+              sheenDuration={42}
+              style={{
+                boxShadow:
+                  '0 24px 54px rgba(31, 39, 32, 0.11), 0 6px 16px rgba(31, 39, 32, 0.05)',
+              }}
+            >
               <div
-                key={pill.id}
                 style={{
-                  position: 'absolute',
-                  left: pill.left,
-                  top: pill.baseTop,
-                  padding: '10px 22px',
-                  borderRadius: 999,
-                  backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                  border: `1.5px solid ${pill.accent}`,
-                  boxShadow: '0 14px 30px rgba(46, 58, 47, 0.14)',
-                  fontFamily: LAUNCH_FONTS.MONO,
-                  fontSize: 16,
-                  fontWeight: 800,
-                  letterSpacing: '0.06em',
-                  color: LAUNCH_PALETTE.PRIMARY_DARK,
-                  whiteSpace: 'nowrap',
-                  pointerEvents: 'none',
-                  opacity,
-                  willChange: 'transform, opacity',
-                  transform: `translate3d(${driftX.toFixed(2)}px, ${riseY.toFixed(2)}px, 0px) scale(${pillScale.toFixed(4)})`,
+                  flex: 1,
+                  padding: '22px 26px 24px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: 14,
+                  boxSizing: 'border-box',
                 }}
               >
-                {pill.text}
+                {/* Persona Header with Origami Fox Monogram */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
+                    <PersonaMonogram size={46} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                      <span
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 900,
+                          letterSpacing: '-0.015em',
+                          color: LAUNCH_PALETTE.PRIMARY,
+                        }}
+                      >
+                        Rubah Semambu
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 11,
+                          fontWeight: 700,
+                          letterSpacing: '0.04em',
+                          color: LAUNCH_PALETTE.MUTED_OLIVE,
+                        }}
+                      >
+                        Identiti Anonim Terlindung · 2 min lalu
+                      </span>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      padding: '6px 13px',
+                      borderRadius: 999,
+                      backgroundColor: 'rgba(107, 127, 91, 0.14)',
+                      border: '1px solid rgba(107, 127, 91, 0.36)',
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 11,
+                      fontWeight: 800,
+                      color: LAUNCH_PALETTE.PRIMARY,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <ShieldCheck size={14} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.5} />
+                    <span>#FASILITI</span>
+                  </div>
+                </div>
+
+                {/* Confession Quote Block */}
+                <div
+                  style={{
+                    padding: '15px 18px',
+                    borderRadius: 18,
+                    backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                    border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                  }}
+                >
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 19,
+                      fontWeight: 600,
+                      lineHeight: 1.44,
+                      color: LAUNCH_PALETTE.PRIMARY,
+                      letterSpacing: '-0.01em',
+                    }}
+                  >
+                    &ldquo;Cadangan tambah kerusi santai &amp; soket pengecasan di ruang menunggu Blok JTMK sangat membantu antara waktu kuliah.&rdquo;
+                  </p>
+                </div>
+
+                {/* Tactile Lucide Reaction Footer Bar (ZERO OS emojis) */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 12,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    {REACTION_SPECS.map((spec, idx) => {
+                      const popStart = Math.round((1.55 + idx * 0.22) * safeFps);
+                      const popEnd = popStart + Math.round(0.85 * safeFps);
+                      const popSpring =
+                        frame >= popStart
+                          ? spring({
+                              frame: frame - popStart,
+                              fps: safeFps,
+                              config: { damping: 14, stiffness: 220, mass: 0.85 },
+                            })
+                          : 0;
+                      const countValue = Math.round(
+                        interpolate(frame, [popStart, popEnd], [0, spec.target], {
+                          extrapolateLeft: 'clamp',
+                          extrapolateRight: 'clamp',
+                          easing: VOTES_SETTLE_EASE,
+                        }),
+                      );
+                      const pillScale = 0.88 + 0.12 * popSpring;
+
+                      return (
+                        <div
+                          key={spec.id}
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            padding: '8px 15px',
+                            borderRadius: 999,
+                            backgroundColor:
+                              idx === 0 ? LAUNCH_PALETTE.SURFACE_MUTED : LAUNCH_PALETTE.CARD_BG,
+                            border: `1.5px solid ${
+                              idx === 0 ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.TERTIARY
+                            }`,
+                            boxShadow: '0 6px 16px rgba(46, 58, 47, 0.06)',
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 13.5,
+                            fontWeight: 900,
+                            color: LAUNCH_PALETTE.PRIMARY_DARK,
+                            fontVariantNumeric: 'tabular-nums',
+                            transform: `scale(${pillScale.toFixed(4)})`,
+                          }}
+                        >
+                          {renderReactionIcon(spec.icon, spec.color)}
+                          <span>+{countValue}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      padding: '8px 14px',
+                      borderRadius: 999,
+                      backgroundColor: shareBadgeActive
+                        ? LAUNCH_PALETTE.PRIMARY
+                        : LAUNCH_PALETTE.SURFACE_MUTED,
+                      border: `1.5px solid ${
+                        shareBadgeActive ? LAUNCH_PALETTE.PRIMARY : LAUNCH_PALETTE.TERTIARY
+                      }`,
+                      color: shareBadgeActive ? LAUNCH_PALETTE.BACKGROUND : LAUNCH_PALETTE.PRIMARY,
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 11.5,
+                      fontWeight: 800,
+                      letterSpacing: '0.06em',
+                    }}
+                  >
+                    <Share2 size={13} strokeWidth={2.5} />
+                    <span>Eksport Kad</span>
+                  </div>
+                </div>
               </div>
-            );
-          })}
+            </KineticWindow>
+          </Interactive.Div>
+
+          {/* Beat 2–3 (2.4..6.1s): Elevated Editorial Kad Perkongsian Rasmi (Deep Forest + Terracotta + Warm Sand) */}
+          <Interactive.Div
+            name="PolySuara Share Card"
+            premountFor={safeFps}
+            style={{
+              position: 'absolute',
+              left: SHARE_CARD_LEFT,
+              top: SHARE_CARD_TOP,
+              width: SHARE_CARD_WIDTH,
+              height: SHARE_CARD_HEIGHT,
+              zIndex: 18,
+              transformStyle: 'preserve-3d',
+            }}
+          >
+            <ExplodedLayer
+              zDepth={34}
+              enterFrame={shareCardEnterFrame}
+              enterOffsetY={28}
+              enterOffsetX={-12}
+              floatAmplitude={2.2}
+              floatPhase={0.9}
+            >
+              <div
+                style={{
+                  transform: 'rotate(-2.2deg)',
+                  transformOrigin: '50% 50%',
+                  transformStyle: 'preserve-3d',
+                }}
+              >
+                <KineticWindow
+                  surface="dark"
+                  width={SHARE_CARD_WIDTH}
+                  height={SHARE_CARD_HEIGHT}
+                  borderRadius={24}
+                  sheenStartFrame={Math.round(3.0 * safeFps)}
+                  sheenDuration={46}
+                  style={{
+                    boxShadow:
+                      '0 32px 68px rgba(31, 39, 32, 0.34), 0 10px 24px rgba(31, 39, 32, 0.18)',
+                    border: '1.5px solid rgba(217, 201, 178, 0.35)',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Subtle Earthy Minimal corner ambient accent */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      right: -60,
+                      top: -60,
+                      width: 240,
+                      height: 240,
+                      borderRadius: 999,
+                      background:
+                        'radial-gradient(circle, rgba(201, 111, 79, 0.18) 0%, rgba(201, 111, 79, 0) 70%)',
+                      pointerEvents: 'none',
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      position: 'relative',
+                      zIndex: 2,
+                      flex: 1,
+                      padding: '20px 24px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: 12,
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    {/* Header matching IGStoryExportCard structure in 05 Earthy Minimal */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                        <span
+                          style={{
+                            fontSize: 24,
+                            fontWeight: 900,
+                            letterSpacing: '-0.03em',
+                            color: LAUNCH_PALETTE.BACKGROUND,
+                          }}
+                        >
+                          Poly<span style={{ color: LAUNCH_PALETTE.ACCENT }}>Suara</span>
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 10.5,
+                            fontWeight: 800,
+                            letterSpacing: '0.14em',
+                            color: LAUNCH_PALETTE.TERTIARY,
+                          }}
+                        >
+                          • KAD PERKONGSIAN RASMI
+                        </span>
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span
+                          style={{
+                            padding: '4px 11px',
+                            borderRadius: 999,
+                            backgroundColor: 'rgba(201, 111, 79, 0.22)',
+                            border: '1px solid rgba(201, 111, 79, 0.5)',
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 10.5,
+                            fontWeight: 800,
+                            letterSpacing: '0.1em',
+                            color: LAUNCH_PALETTE.BACKGROUND,
+                          }}
+                        >
+                          #FASILITI
+                        </span>
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: 999,
+                            backgroundColor: 'rgba(248, 246, 238, 0.08)',
+                            border: '1px solid rgba(217, 201, 178, 0.28)',
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 10.5,
+                            fontWeight: 700,
+                            color: LAUNCH_PALETTE.TERTIARY,
+                          }}
+                        >
+                          Rubah Semambu
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Quote preview strip */}
+                    <div
+                      style={{
+                        padding: '11px 15px',
+                        borderRadius: 14,
+                        backgroundColor: 'rgba(248, 246, 238, 0.06)',
+                        border: '1px solid rgba(217, 201, 178, 0.2)',
+                        fontSize: 15,
+                        fontWeight: 500,
+                        lineHeight: 1.42,
+                        color: 'rgba(248, 246, 238, 0.92)',
+                      }}
+                    >
+                      &ldquo;Cadangan tambah kerusi santai &amp; soket pengecasan di ruang menunggu Blok JTMK sangat membantu antara waktu kuliah.&rdquo;
+                    </div>
+
+                    {/* Official JPP Reply Block */}
+                    <div
+                      style={{
+                        padding: '13px 16px',
+                        borderRadius: 16,
+                        backgroundColor: 'rgba(107, 127, 91, 0.24)',
+                        border: '1.5px solid rgba(217, 201, 178, 0.38)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: 5,
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 7,
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 11,
+                          fontWeight: 900,
+                          letterSpacing: '0.14em',
+                          color: LAUNCH_PALETTE.TERTIARY,
+                        }}
+                      >
+                        <CheckCircle2 size={14} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.8} />
+                        <span>MAKLUM BALAS JPP ✓</span>
+                      </div>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: 15.5,
+                          fontWeight: 700,
+                          lineHeight: 1.38,
+                          color: LAUNCH_PALETTE.BACKGROUND,
+                        }}
+                      >
+                        Diambil maklum EXCO Fasiliti — semakan tapak dijadualkan minggu ini.
+                      </p>
+                    </div>
+                  </div>
+                </KineticWindow>
+              </div>
+            </ExplodedLayer>
+          </Interactive.Div>
+
+          {/* RIGHT COLUMN (width=880px): Live Voting Race Poll Workbench */}
+          <Interactive.Div
+            name="Live Campus Poll Workbench"
+            premountFor={safeFps}
+            style={{
+              position: 'absolute',
+              left: POLL_LEFT,
+              top: POLL_TOP,
+              width: POLL_WIDTH,
+              height: POLL_HEIGHT,
+              zIndex: 14,
+              opacity: pollOpacity,
+              transformOrigin: '50% 50%',
+              transform: `translate3d(0px, ${(pollTranslateY + pollFloatY).toFixed(2)}px, 0px) scale(${pollScale.toFixed(4)})`,
+            }}
+          >
+            <KineticWindow
+              surface="light"
+              routeLabel="jpp.polisas.edu.my/undian"
+              statusPill="UNDIAN AKTIF • 5 JABATAN"
+              width={POLL_WIDTH}
+              height={POLL_HEIGHT}
+              borderRadius={26}
+              sheenStartFrame={Math.round(4.45 * safeFps)}
+              sheenDuration={44}
+              style={{
+                boxShadow: '0 28px 64px rgba(46, 58, 47, 0.12)',
+              }}
+            >
+              <div
+                style={{
+                  flex: 1,
+                  padding: `${POLL_BODY_PAD_TOP}px ${POLL_BODY_PAD_X}px 24px`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  boxSizing: 'border-box',
+                  overflow: 'visible',
+                }}
+              >
+                {/* Poll Header (height = 76px) */}
+                <div
+                  style={{
+                    height: POLL_HEADER_H,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    gap: 6,
+                    flexShrink: 0,
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Vote size={17} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
+                    <span
+                      style={{
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 11,
+                        fontWeight: 800,
+                        letterSpacing: '0.13em',
+                        color: LAUNCH_PALETTE.ACCENT,
+                      }}
+                    >
+                      UNDIAN RASMI KAMPUS
+                    </span>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 24,
+                      fontWeight: 900,
+                      lineHeight: 1.2,
+                      letterSpacing: '-0.02em',
+                      color: LAUNCH_PALETTE.PRIMARY,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {pollTitle}
+                  </div>
+                </div>
+
+                {/* Option A Interactive Card (center @ 1416, 494.5) */}
+                <div
+                  style={{
+                    marginTop: OPT_A_MARGIN_TOP,
+                    height: OPT_A_HEIGHT,
+                    boxSizing: 'border-box',
+                    borderRadius: 22,
+                    padding: '20px 24px',
+                    backgroundColor: isOptionASelected
+                      ? 'rgba(201, 111, 79, 0.06)'
+                      : LAUNCH_PALETTE.BACKGROUND,
+                    border: `2px solid ${
+                      isOptionASelected ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.TERTIARY
+                    }`,
+                    boxShadow: isOptionASelected
+                      ? `0 0 0 5px rgba(201, 111, 79, ${(0.18 * optionARingFlash).toFixed(3)}), 0 14px 30px rgba(201, 111, 79, ${(0.14 * optionARingFlash).toFixed(3)})`
+                      : 'none',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    flexShrink: 0,
+                    overflow: 'visible',
+                    transformOrigin: '50% 50%',
+                    transform: `scale(${optionAClickScale.toFixed(4)})`,
+                  }}
+                >
+                  <div
+                    style={{
+                      height: 44,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 12,
+                      overflow: 'visible',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                      <span
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 999,
+                          border: `2px solid ${
+                            isOptionASelected ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.SECONDARY
+                          }`,
+                          backgroundColor: isOptionASelected
+                            ? LAUNCH_PALETTE.ACCENT
+                            : LAUNCH_PALETTE.CARD_BG,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0,
+                        }}
+                      >
+                        {isOptionASelected ? (
+                          <Check size={14} color={LAUNCH_PALETTE.CARD_BG} strokeWidth={3} />
+                        ) : null}
+                      </span>
+
+                      <span
+                        style={{
+                          fontSize: 21,
+                          fontWeight: 800,
+                          color: LAUNCH_PALETTE.PRIMARY,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {optionA}
+                      </span>
+
+                      {isOptionASelected ? (
+                        <span
+                          style={{
+                            padding: '4px 11px',
+                            borderRadius: 999,
+                            backgroundColor: LAUNCH_PALETTE.ACCENT,
+                            color: LAUNCH_PALETTE.CARD_BG,
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 11,
+                            fontWeight: 800,
+                            letterSpacing: '0.09em',
+                            whiteSpace: 'nowrap',
+                            opacity: selectedBadgeProgress,
+                            transform: `scale(${(0.85 + 0.15 * selectedBadgeProgress).toFixed(3)})`,
+                            flexShrink: 0,
+                          }}
+                        >
+                          UNDI DIPILIH ✓
+                        </span>
+                      ) : null}
+                    </div>
+
+                    <div style={{ marginRight: 6, flexShrink: 0, overflow: 'visible' }}>
+                      <EditorialAnnotation
+                        type="circle"
+                        startFrame={circleStart}
+                        durationFrames={circleDuration}
+                        color={LAUNCH_PALETTE.ACCENT}
+                        strokeWidth={3.5}
+                        padding={{ top: 6, right: 14, bottom: 6, left: 14 }}
+                        iterations={2}
+                        seed={19}
+                        style={{ display: 'inline-block', overflow: 'visible' }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 28,
+                            fontWeight: 900,
+                            color: LAUNCH_PALETTE.ACCENT,
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          {Math.round(barA)}%
+                        </span>
+                      </EditorialAnnotation>
+                    </div>
+                  </div>
+
+                  {/* Progress Track */}
+                  <div
+                    style={{
+                      height: 32,
+                      borderRadius: 999,
+                      backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${Math.min(100, Math.max(0, barA)).toFixed(2)}%`,
+                        height: '100%',
+                        borderRadius: 999,
+                        backgroundColor: LAUNCH_PALETTE.ACCENT,
+                      }}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      color: LAUNCH_PALETTE.MUTED_OLIVE,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    <span>{optionAVotes} undi disahkan</span>
+                    <span>{isOptionASelected ? 'Pilihan Utama Siswa' : 'Mendahului Sementara'}</span>
+                  </div>
+                </div>
+
+                {/* Option B Card */}
+                <div
+                  style={{
+                    marginTop: 18,
+                    height: 168,
+                    boxSizing: 'border-box',
+                    borderRadius: 22,
+                    padding: '18px 24px',
+                    backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                    border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    flexShrink: 0,
+                  }}
+                >
+                  <div
+                    style={{
+                      height: 40,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                      <span
+                        style={{
+                          width: 24,
+                          height: 24,
+                          borderRadius: 999,
+                          border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                          backgroundColor: LAUNCH_PALETTE.CARD_BG,
+                          flexShrink: 0,
+                        }}
+                      />
+                      <span
+                        style={{
+                          fontSize: 20,
+                          fontWeight: 700,
+                          color: LAUNCH_PALETTE.PRIMARY,
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                        }}
+                      >
+                        {optionB}
+                      </span>
+                    </div>
+
+                    <span
+                      style={{
+                        marginRight: 6,
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 26,
+                        fontWeight: 800,
+                        color: LAUNCH_PALETTE.SECONDARY,
+                        fontVariantNumeric: 'tabular-nums',
+                        flexShrink: 0,
+                      }}
+                    >
+                      {Math.round(barB)}%
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      height: 30,
+                      borderRadius: 999,
+                      backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: `${Math.min(100, Math.max(0, barB)).toFixed(2)}%`,
+                        height: '100%',
+                        borderRadius: 999,
+                        backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                      }}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      color: LAUNCH_PALETTE.MUTED_OLIVE,
+                      fontVariantNumeric: 'tabular-nums',
+                    }}
+                  >
+                    <span>{optionBVotes} undi disahkan</span>
+                    <span>Alternatif Kafeteria</span>
+                  </div>
+                </div>
+
+                {/* Footer Meta Strip */}
+                <div
+                  style={{
+                    marginTop: 'auto',
+                    height: 44,
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: 16,
+                    paddingTop: 12,
+                    borderTop: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: LAUNCH_PALETTE.MUTED_OLIVE,
+                    flexShrink: 0,
+                  }}
+                >
+                  <span>• Identiti Persona Selamat</span>
+                  <span>• Moderasi Beretika JPP</span>
+                  <span>• Audit Undi Masa Nyata</span>
+                </div>
+              </div>
+            </KineticWindow>
+          </Interactive.Div>
         </div>
 
         {/* GhostCursor inside CameraStage coordinate space */}
@@ -717,7 +1200,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
           color={LAUNCH_PALETTE.PRIMARY}
           rippleColor={LAUNCH_PALETTE.ACCENT}
           scale={1.08}
-          style={{ zIndex: 25 }}
+          style={{ zIndex: 28 }}
         />
       </CameraStage>
 
@@ -727,11 +1210,39 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
 };
 
 const polySuaraSchema = {
-  pollTitle: { type: 'string', default: 'Cadangan Menu Sihat Kafeteria Siswa 2026/2027', description: 'Poll Title' },
-  optionA: { type: 'string', default: 'Set Ayam Percik & Salad Segar', description: 'Option A' },
-  optionB: { type: 'string', default: 'Sandwic Telur Herba & Buah', description: 'Option B' },
-  percentageA: { type: 'number', default: 68, min: 0, max: 100, integer: true, hiddenFromList: false, description: 'Option A Share %' },
-  totalVotes: { type: 'number', default: 412, min: 0, max: 99999, integer: true, hiddenFromList: false, description: 'Total Votes' },
+  pollTitle: {
+    type: 'string',
+    default: 'Cadangan Menu Sihat Kafeteria Siswa 2026/2027',
+    description: 'Poll Title',
+  },
+  optionA: {
+    type: 'string',
+    default: 'Set Ayam Percik & Salad Segar',
+    description: 'Option A',
+  },
+  optionB: {
+    type: 'string',
+    default: 'Sandwic Telur Herba & Buah',
+    description: 'Option B',
+  },
+  percentageA: {
+    type: 'number',
+    default: 68,
+    min: 0,
+    max: 100,
+    integer: true,
+    hiddenFromList: false,
+    description: 'Option A Share %',
+  },
+  totalVotes: {
+    type: 'number',
+    default: 412,
+    min: 0,
+    max: 99999,
+    integer: true,
+    hiddenFromList: false,
+    description: 'Total Votes',
+  },
 } as const satisfies InteractivitySchema;
 
 export const PolySuaraVoiceScene = Interactive.withSchema({
