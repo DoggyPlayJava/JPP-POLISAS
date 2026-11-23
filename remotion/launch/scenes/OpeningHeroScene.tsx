@@ -11,6 +11,7 @@ import {
   useVideoConfig,
   type InteractivitySchema,
 } from 'remotion';
+import { Trail } from '@remotion/motion-blur';
 import {
   CalendarDays,
   HeartHandshake,
@@ -19,6 +20,7 @@ import {
   Map as MapIcon,
   MapPin,
   Megaphone,
+  Navigation,
   QrCode,
   Search,
   UtensilsCrossed,
@@ -113,13 +115,13 @@ type ServiceTileSpec = {
 
 const CAMPUS_SERVICE_TILES: readonly ServiceTileSpec[] = [
   { id: 'polysuara', label: 'PolySuara', sublabel: 'Suara Siswa', iconKind: 'polysuara' },
-  { id: 'polymart', label: 'PolyMart', sublabel: 'Pasaran Siswa', iconKind: 'polymart' },
-  { id: 'takwim', label: 'Takwim', sublabel: 'Kalendar Rasmi', iconKind: 'takwim' },
+  { id: 'polymart', label: 'PolyMart', sublabel: 'Makanan & Niaga', iconKind: 'polymart' },
+  { id: 'takwim', label: 'Takwim', sublabel: 'Jadual & Acara', iconKind: 'takwim' },
   { id: 'polymaps', label: 'PolyMaps', sublabel: 'Peta Kampus', iconKind: 'polymaps' },
-  { id: 'polyrent', label: 'PolyRent', sublabel: 'Sewa Rumah', iconKind: 'polyrent' },
-  { id: 'kebajikan', label: 'E-Kebajikan', sublabel: 'Aduan & Bantuan', iconKind: 'kebajikan' },
-  { id: 'scan_qr', label: 'Scan QR', sublabel: 'Kumpul Merit', badge: 'MERIT', iconKind: 'scan_qr' },
-  { id: 'ekpp', label: 'Kelab EKPP', sublabel: 'Persatuan Siswa', badge: 'KELAB', iconKind: 'ekpp' },
+  { id: 'polyrent', label: 'PolyRent', sublabel: 'Bilik & Rumah Sewa', iconKind: 'polyrent' },
+  { id: 'kebajikan', label: 'E-Kebajikan', sublabel: 'Aduan & Food Bank', iconKind: 'kebajikan' },
+  { id: 'scan_qr', label: 'Scan QR Merit', sublabel: 'Kumpul Merit & Sijil', badge: 'MERIT', iconKind: 'scan_qr' },
+  { id: 'ekpp', label: 'Kelab EKPP', sublabel: '21 Persatuan Siswa', badge: 'KELAB', iconKind: 'ekpp' },
 ];
 
 const renderServiceIcon = (kind: ServiceTileSpec['iconKind'], color: string) => {
@@ -144,19 +146,32 @@ const renderServiceIcon = (kind: ServiceTileSpec['iconKind'], color: string) => 
   }
 };
 
+const STUDENT_HOOK_DEFAULT = 'Baru Masuk POLISAS? Satu App Untuk Semua.';
+const PLUS_JAKARTA_DISPLAY =
+  '"Plus Jakarta Sans", "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+
 const splitHeadlineForUnderline = (
   headline: string,
 ): { readonly prefix: string; readonly underlined: string; readonly suffix: string } => {
-  const marker = 'Ekosistem Pintar.';
-  const idx = headline.toLowerCase().indexOf('ekosistem pintar.');
-  if (idx !== -1) {
-    return {
-      prefix: headline.slice(0, idx).trim(),
-      underlined: headline.slice(idx, idx + marker.length),
-      suffix: headline.slice(idx + marker.length).trim(),
-    };
+  const trimmed = headline.trim();
+  const normalized =
+    !trimmed || trimmed.toLowerCase() === 'satu kampus. satu ekosistem pintar.'
+      ? STUDENT_HOOK_DEFAULT
+      : trimmed;
+
+  const markers = ['Ekosistem Kampus Anda.', 'Untuk Semua.'];
+  for (const marker of markers) {
+    const idx = normalized.toLowerCase().indexOf(marker.toLowerCase());
+    if (idx !== -1) {
+      return {
+        prefix: normalized.slice(0, idx).trim(),
+        underlined: normalized.slice(idx, idx + marker.length),
+        suffix: normalized.slice(idx + marker.length).trim(),
+      };
+    }
   }
-  const words = headline.trim().split(/\s+/).filter(Boolean);
+
+  const words = normalized.split(/\s+/).filter(Boolean);
   if (words.length <= 2) {
     return { prefix: '', underlined: words.join(' '), suffix: '' };
   }
@@ -165,6 +180,93 @@ const splitHeadlineForUnderline = (
     underlined: words.slice(-2).join(' '),
     suffix: '',
   };
+};
+
+type PolyMapsQuickLaunchToastProps = {
+  readonly clickFrame: number;
+  readonly safeFps: number;
+};
+
+const PolyMapsQuickLaunchToast: React.FC<PolyMapsQuickLaunchToastProps> = ({
+  clickFrame,
+  safeFps,
+}) => {
+  const frame = useCurrentFrame();
+  const localFrame = frame - clickFrame;
+  if (!Number.isFinite(localFrame) || localFrame < 0) {
+    return null;
+  }
+
+  const sweepDuration = Math.max(10, Math.round(0.32 * safeFps));
+  const sweepProgress = interpolate(localFrame, [0, sweepDuration], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EXPO_OUT,
+  });
+
+  const opacity = interpolate(localFrame, [0, 4], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+  if (opacity <= 0.001) {
+    return null;
+  }
+
+  const translateX = interpolate(sweepProgress, [0, 1], [-18, 52]);
+  const scale = interpolate(sweepProgress, [0, 0.72, 1], [0.85, 1.03, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  return (
+    <div
+      style={{
+        position: 'absolute',
+        left: 1500,
+        top: 638,
+        opacity,
+        willChange: 'transform, opacity',
+        transform: `translate3d(${translateX.toFixed(2)}px, 0px, 0px) scale(${scale.toFixed(4)})`,
+        transformOrigin: '0% 50%',
+        pointerEvents: 'none',
+      }}
+    >
+      <div
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 10,
+          padding: '10px 18px 10px 12px',
+          borderRadius: 999,
+          backgroundColor: LAUNCH_PALETTE.PRIMARY,
+          border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+          boxShadow: '0 16px 36px rgba(31, 39, 32, 0.28)',
+          color: LAUNCH_PALETTE.BACKGROUND,
+          fontFamily: LAUNCH_FONTS.DISPLAY,
+          fontSize: 13.5,
+          fontWeight: 800,
+          letterSpacing: '-0.01em',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        <span
+          style={{
+            width: 24,
+            height: 24,
+            borderRadius: 999,
+            backgroundColor: LAUNCH_PALETTE.ACCENT,
+            display: 'inline-flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0,
+          }}
+        >
+          <Navigation size={12.5} color={LAUNCH_PALETTE.CARD_BG} strokeWidth={2.5} />
+        </span>
+        <span>Buka Pandu Arah PolyMaps →</span>
+      </div>
+    </div>
+  );
 };
 
 const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
@@ -495,13 +597,13 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
             <h1
               style={{
                 margin: 0,
-                fontSize: 54,
+                fontSize: 52,
                 display: 'flex',
-                flexWrap: 'wrap',
+                flexWrap: 'nowrap',
                 justifyContent: 'center',
                 alignItems: 'baseline',
-                columnGap: '0.26em',
-                rowGap: '0.06em',
+                columnGap: '0.24em',
+                whiteSpace: 'nowrap',
                 overflow: 'visible',
               }}
             >
@@ -514,9 +616,10 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                   wordDurationFrames={wordDuration}
                   align="center"
                   style={{
-                    fontSize: 54,
-                    fontWeight: 900,
-                    letterSpacing: '-0.035em',
+                    fontFamily: PLUS_JAKARTA_DISPLAY,
+                    fontSize: 52,
+                    fontWeight: 800,
+                    letterSpacing: '-0.032em',
                     lineHeight: 1.06,
                     color: LAUNCH_PALETTE.PRIMARY,
                   }}
@@ -544,7 +647,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                       style={{
                         fontFamily: LAUNCH_FONTS.SERIF_ITALIC,
                         fontStyle: 'italic',
-                        fontSize: 60,
+                        fontSize: 58,
                         fontWeight: 400,
                         letterSpacing: '-0.02em',
                         lineHeight: 1.04,
@@ -564,9 +667,10 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                   wordDurationFrames={wordDuration}
                   align="center"
                   style={{
-                    fontSize: 54,
-                    fontWeight: 900,
-                    letterSpacing: '-0.035em',
+                    fontFamily: PLUS_JAKARTA_DISPLAY,
+                    fontSize: 52,
+                    fontWeight: 800,
+                    letterSpacing: '-0.032em',
                     lineHeight: 1.06,
                     color: LAUNCH_PALETTE.PRIMARY,
                   }}
@@ -582,13 +686,14 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
               <p
                 style={{
                   margin: 0,
-                  fontSize: 18.5,
+                  fontSize: 18,
                   fontWeight: 500,
                   letterSpacing: '-0.01em',
                   color: LAUNCH_PALETTE.MUTED_OLIVE,
+                  whiteSpace: 'nowrap',
                 }}
               >
-                Platform rasmi Jawatankuasa Perwakilan Pelajar — menghubungkan mobiliti kampus, ekonomi siswa &amp; kebajikan.
+                Semua keperluan harian pelajar baharu — peta kelas, makanan, rumah sewa, kebajikan &amp; merit dalam satu portal.
               </p>
             </KineticReveal>
           </Interactive.Div>
@@ -746,7 +851,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                     </div>
                   </div>
 
-                  {/* Discrete status & student initial pill */}
+                  {/* Discrete student status & initial pill */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div
                       style={{
@@ -761,7 +866,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                         color: LAUNCH_PALETTE.BACKGROUND,
                       }}
                     >
-                      PENTADBIR / MAHASISWA
+                      PELAJAR BAHARU JTMK • SEM 1
                     </div>
                     <div
                       style={{
@@ -778,7 +883,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                         fontWeight: 900,
                       }}
                     >
-                      H
+                      A
                     </div>
                   </div>
                 </div>
@@ -804,7 +909,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                         lineHeight: 1.15,
                       }}
                     >
-                      Selamat Petang, Haziq
+                      Selamat Pagi, Aiman
                     </span>
                     <span
                       style={{
@@ -813,7 +918,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                         color: 'rgba(248, 246, 238, 0.76)',
                       }}
                     >
-                      Pusat sehenti digital kampus POLISAS.
+                      Hari pertama di kampus — semua modul sedia membantu.
                     </span>
                   </div>
                 </div>
@@ -852,9 +957,9 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                       <Search size={14} color={LAUNCH_PALETTE.PRIMARY} strokeWidth={2.4} />
                     </div>
                     <LiveTypewriterText
-                      text="Cari PolyMaps, PolyMart, jadual..."
+                      text="Cari bilik kuliah, makanan, rumah sewa..."
                       startFrame={typewriterStartFrame}
-                      charsPerSecond={24}
+                      charsPerSecond={28}
                       cursorColor={LAUNCH_PALETTE.ACCENT}
                       style={{
                         fontFamily: LAUNCH_FONTS.DISPLAY,
@@ -929,8 +1034,8 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                           width: 40,
                           height: 40,
                           borderRadius: 12,
-                          backgroundColor: 'rgba(107, 127, 91, 0.14)',
-                          border: '1px solid rgba(107, 127, 91, 0.3)',
+                          backgroundColor: 'rgba(201, 111, 79, 0.14)',
+                          border: '1px solid rgba(201, 111, 79, 0.34)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -943,7 +1048,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                             width: 12,
                             height: 12,
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                            backgroundColor: LAUNCH_PALETTE.ACCENT,
                             opacity: activeHaloOpacity,
                             transform: `scale(${activeHaloScale.toFixed(3)})`,
                           }}
@@ -953,7 +1058,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                             width: 10,
                             height: 10,
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                            backgroundColor: LAUNCH_PALETTE.ACCENT,
                             transform: `scale(${activeDotScale.toFixed(3)})`,
                           }}
                         />
@@ -966,11 +1071,11 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                               fontFamily: LAUNCH_FONTS.MONO,
                               fontSize: 11,
                               fontWeight: 800,
-                              letterSpacing: '0.1em',
+                              letterSpacing: '0.09em',
                               color: LAUNCH_PALETTE.ACCENT,
                             }}
                           >
-                            KELAS SETERUSNYA · 14 MIN LAGI
+                            KELAS PERTAMA BERMULA DALAM 15 MINIT • DIT3013
                           </span>
                           <span
                             style={{
@@ -988,7 +1093,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                         </div>
                         <div
                           style={{
-                            fontSize: 17.5,
+                            fontSize: 17,
                             fontWeight: 800,
                             letterSpacing: '-0.015em',
                             color: LAUNCH_PALETTE.PRIMARY,
@@ -997,7 +1102,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                             textOverflow: 'ellipsis',
                           }}
                         >
-                          DIT3013 · Pembangunan Aplikasi Web
+                          Pembangunan Aplikasi Web · MK3 · JTMK · 10:00 AM
                         </div>
                       </div>
                     </div>
@@ -1019,7 +1124,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                         }}
                       >
                         <MapPin size={13} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
-                        <span>MK3 · JTMK</span>
+                        <span>ARAS 2 · JTMK</span>
                       </div>
                       <div
                         style={{
@@ -1252,6 +1357,20 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
           </div>
         </Interactive.Div>
 
+        {/* Beat 3: Subtle <Trail> Quick-Launch Toast Pill sweeping from ignited PolyMaps squircle */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            pointerEvents: 'none',
+            zIndex: 28,
+          }}
+        >
+          <Trail layers={4} lagInFrames={2} trailOpacity={0.28}>
+            <PolyMapsQuickLaunchToast clickFrame={clickFrame} safeFps={safeFps} />
+          </Trail>
+        </div>
+
         {/* Beat 3: GhostCursor glides onto PolyMaps squircle center and clicks */}
         <GhostCursor
           keyframes={cursorKeyframes}
@@ -1264,7 +1383,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
         />
       </CameraStage>
 
-      <EditorialFrameMarks chapterCode="01" chapterLabel="Pembukaan Rasmi" />
+      <EditorialFrameMarks chapterCode="01" chapterLabel="SELAMAT DATANG MAHASISWA BAHARU" />
     </>
   );
 };
@@ -1282,7 +1401,7 @@ export const openingHeroSchema = {
   },
   headlinePrimary: {
     type: 'string',
-    default: 'Satu Kampus. Satu Ekosistem Pintar.',
+    default: 'Baru Masuk POLISAS? Satu App Untuk Semua.',
     description: 'Hero Headline',
   },
 } as const satisfies InteractivitySchema;

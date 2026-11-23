@@ -13,7 +13,6 @@ import { Circle } from '@remotion/shapes';
 import {
   ArrowRight,
   Check,
-  CheckCircle2,
   Clock,
   Compass,
   MapPin,
@@ -46,50 +45,55 @@ const STAGE_CONTENT_H = 1080 - STAGE_PAD_TOP - STAGE_PAD_BOTTOM; // 924
 const LEFT_COL_W = 680;
 const RIGHT_MAP_W = 1092;
 const RIGHT_MAP_H = 916;
-const LOWER_STACK_H = 670;
-const CARD_H = 588;
+const LOWER_STACK_H = 676;
+const CARD_H = 596;
 const ARRIVAL_CHIP_H = 66;
 const WINDOW_BORDER = 1.5;
 const WINDOW_TOPBAR_H = 40;
-const CARD_BODY_PAD_TOP = 20;
+const CARD_BODY_PAD_TOP = 16;
 const CARD_BODY_PAD_X = 24;
-const ROW1_H = 32;
-const ROW2_GAP = 14;
-const ROW2_H = 46;
-const ROW3_GAP = 8;
-const ROW3_H = 32;
-const ROW4_GAP = 14;
-const ROW4_H = 54;
+const TABS_H = 34;
+const ROW1_GAP = 12;
+const ROW1_H = 30;
+const ROW2_GAP = 10;
+const ROW2_H = 42;
+const ROW3_GAP = 6;
+const ROW3_H = 30;
+const ROW4_GAP = 10;
+const ROW4_H = 52;
 const CTA_WIDTH = 214;
 
-const LOWER_STACK_TOP = STAGE_PAD_TOP + (STAGE_CONTENT_H - LOWER_STACK_H); // 336
+const LOWER_STACK_TOP = STAGE_PAD_TOP + (STAGE_CONTENT_H - LOWER_STACK_H); // 330
 const ROW4_TOP =
   LOWER_STACK_TOP +
   WINDOW_BORDER +
   WINDOW_TOPBAR_H +
   CARD_BODY_PAD_TOP +
+  TABS_H +
+  ROW1_GAP +
   ROW1_H +
   ROW2_GAP +
   ROW2_H +
   ROW3_GAP +
   ROW3_H +
-  ROW4_GAP; // 543.5
+  ROW4_GAP; // 561.5
 const CTA_CENTER_X = STAGE_PAD_X + LEFT_COL_W - WINDOW_BORDER - CARD_BODY_PAD_X - CTA_WIDTH / 2; // 605.5
-const CTA_CENTER_Y = ROW4_TOP + ROW4_H / 2; // 570.5
+const CTA_CENTER_Y = ROW4_TOP + ROW4_H / 2; // 587.5
 
 const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
 
-const formatArrivalLabel = (roomName: string): string => {
-  const primaryRoom = roomName.split('•')[0]?.trim();
-  const label = primaryRoom ? primaryRoom.toUpperCase() : 'MAKMAL KOMPUTER 3';
-  return `TIBA • ${label} ✓`;
-};
+const WEEKLY_DAY_TABS = ['ISNIN', 'SELASA', 'RABU', 'KHAMIS'] as const;
 
-const formatCountdownMMSS = (totalSeconds: number): string => {
-  const clamped = Math.max(0, Math.round(totalSeconds));
-  const mins = Math.floor(clamped / 60);
-  const secs = clamped % 60;
-  return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+const extractPrimaryRoom = (roomName: string): string =>
+  roomName.split('•')[0]?.trim() || 'Makmal Komputer 3';
+
+const formatArrivalLabel = (roomName: string): string => {
+  const upperRoom = roomName.toUpperCase();
+  if (upperRoom.includes('MAKMAL KOMPUTER 3') || upperRoom.includes('MAKMAL 3')) {
+    return 'TIBA DI MAKMAL 3 • TEPAT MASA ✓';
+  }
+  const primaryRoom = extractPrimaryRoom(roomName).toUpperCase();
+  return `TIBA DI ${primaryRoom} • TEPAT MASA ✓`;
 };
 
 const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
@@ -162,13 +166,35 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
       y: CTA_CENTER_Y,
       label: classCode,
     },
-    { frame: clickFrame, x: CTA_CENTER_X, y: CTA_CENTER_Y, click: true, label: 'Mula Laluan' },
-    { frame: cursorHoldEnd, x: CTA_CENTER_X, y: CTA_CENTER_Y, label: 'Laluan Aktif' },
+    { frame: clickFrame, x: CTA_CENTER_X, y: CTA_CENTER_Y, click: true, label: 'Pandu Arah' },
+    { frame: cursorHoldEnd, x: CTA_CENTER_X, y: CTA_CENTER_Y, label: 'Navigasi Aktif' },
     { frame: cursorLeaveFrame, x: 785, y: 690 },
   ];
 
   const isNavigating = frame >= clickFrame;
   const hasArrived = frame >= arrivalFrame;
+
+  // Beat 1 active ISNIN weekly tab illumination (lights up #2E3A2F smoothly on Beat 1)
+  const isninActiveT = interpolate(
+    frame,
+    [Math.round(0.12 * safeFps), Math.round(0.48 * safeFps)],
+    [0, 1],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: EXPO_OUT,
+    },
+  );
+  const isninTabBg = interpolateColors(
+    isninActiveT,
+    [0, 1],
+    [LAUNCH_PALETTE.SURFACE_MUTED, LAUNCH_PALETTE.PRIMARY],
+  );
+  const isninTabColor = interpolateColors(
+    isninActiveT,
+    [0, 1],
+    [LAUNCH_PALETTE.PRIMARY, LAUNCH_PALETTE.CARD_BG],
+  );
 
   const cardClickScale = interpolate(
     frame,
@@ -210,9 +236,13 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
     },
   );
 
-  // Live ticking countdown chip (14:02 -> 13:58) in tabular-nums
-  const countdownStep = Math.min(4, Math.floor(frame / Math.round(1.45 * safeFps)));
-  const countdownLabel = formatCountdownMMSS(14 * 60 + 2 - countdownStep);
+  // Live ticking countdown chip (14m -> 4m Berjalan synchronized smoothly across Beat 1-2)
+  const routeProgress = computeCampusRouteProgress(frame, clickFrame, arrivalFrame);
+  const walkingCountdownMins = Math.max(
+    4,
+    Math.round(interpolate(routeProgress, [0, 1], [14, 4])),
+  );
+  const countdownLabel = isNavigating ? `${walkingCountdownMins}m Berjalan` : '14m';
 
   // Smooth CTA state color transitions
   const navTransition = interpolate(frame, [clickFrame, clickFrame + 4], [0, 1], {
@@ -233,7 +263,6 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
       ? interpolateColors(arrivalTransition, [0, 1], [LAUNCH_PALETTE.ACCENT, LAUNCH_PALETTE.SECONDARY])
       : interpolateColors(navTransition, [0, 1], [LAUNCH_PALETTE.PRIMARY, LAUNCH_PALETTE.ACCENT]);
 
-  const routeProgress = computeCampusRouteProgress(frame, clickFrame, arrivalFrame);
   const remainingMeters = hasArrived ? 0 : Math.max(1, Math.round(310 * (1 - routeProgress)));
   const etaMinutes = Math.max(1, Math.ceil(4 * (1 - routeProgress)));
   const etaDisplay = hasArrived ? 'Tiba!' : `${etaMinutes} Min`;
@@ -306,30 +335,32 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
 
   const scheduleRows = [
     {
-      id: 'iot',
+      id: 'dfc2012',
       time: '08:00',
-      code: 'IoT Devices',
-      location: 'Makmal IoT',
+      code: 'DFC2012 · Asas Pengaturcaraan',
+      location: 'BK2',
       status: 'Selesai ✓',
       state: 'done' as const,
     },
     {
       id: 'dit3013',
       time: '10:00',
-      code: `${classCode} · MK3 · JTMK`,
-      location: classTitle,
+      code: `${classCode} · ${classTitle}`,
+      location: 'MK3 · JTMK',
       status: hasArrived ? 'TIBA ✓' : 'AKTIF',
       state: 'active' as const,
     },
     {
-      id: 'cyber',
+      id: 'mpu21032',
       time: '14:00',
-      code: 'Keselamatan Siber',
-      location: 'BK4 • JTMK',
+      code: 'MPU21032 · Penghayatan Etika',
+      location: 'DK1',
       status: 'Akan Datang',
       state: 'upcoming' as const,
     },
   ] as const;
+
+  const primaryRoom = extractPrimaryRoom(roomName);
 
   return (
     <>
@@ -401,21 +432,21 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                   }}
                 >
                   <Compass size={15} color={LAUNCH_PALETTE.SECONDARY} />
-                  POLYMAPS • NAVIGASI SEMAMBU
+                  08:00 PAGI • POLYMAPS &amp; JADUAL
                 </div>
               </KineticReveal>
 
               <KineticWords
                 as="h2"
-                text="Dari Jadual Terus Ke Pintu Kelas."
+                text="Hari Pertama? Tak Sesat Cari Makmal."
                 startFrame={headlineStart}
                 staggerFrames={wordStagger}
                 wordDurationFrames={wordDuration}
-                accentWords={['Ke', 'Pintu', 'Kelas.']}
-                accentColor={LAUNCH_PALETTE.PRIMARY_DARK}
+                accentWords={['Tak', 'Sesat']}
+                accentColor={LAUNCH_PALETTE.ACCENT}
                 style={{
-                  margin: '12px 0 8px',
-                  fontSize: 47,
+                  margin: '10px 0 8px',
+                  fontSize: 44,
                   fontWeight: 900,
                   lineHeight: 1.07,
                   letterSpacing: '-0.03em',
@@ -427,13 +458,13 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                 <p
                   style={{
                     margin: 0,
-                    fontSize: 17.5,
-                    lineHeight: 1.4,
+                    fontSize: 17,
+                    lineHeight: 1.38,
                     color: LAUNCH_PALETTE.MUTED_OLIVE,
                     fontWeight: 500,
                   }}
                 >
-                  Laluan berjalan kaki masa nyata merentasi kampus POLISAS Semambu disepadukan terus dengan jadual e-Akademik.
+                  Jadual mingguan e-Akademik terus bersambung dengan laluan berjalan kaki masa nyata di kampus POLISAS Semambu.
                 </p>
               </KineticReveal>
             </div>
@@ -474,7 +505,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                 >
                   <KineticWindow
                     surface="light"
-                    routeLabel="e-akademik · jadual hari ini"
+                    routeLabel="e-akademik · jadual siswa"
                     statusPill={
                       hasArrived ? 'TIBA • SELESAI' : isNavigating ? 'NAVIGASI AKTIF' : 'KELAS HARI INI'
                     }
@@ -505,9 +536,65 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                         overflow: 'visible',
                       }}
                     >
-                      {/* Row 1 (height=32): KELAS SETERUSNYA + Live Ticking Countdown + Coords */}
+                      {/* Row 0 (height=34): Weekly Student Day Tabs (ISNIN active #2E3A2F on Beat 1) */}
                       <div
                         style={{
+                          height: TABS_H,
+                          boxSizing: 'border-box',
+                          padding: 3,
+                          borderRadius: 999,
+                          backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
+                          border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 4,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {WEEKLY_DAY_TABS.map((day) => {
+                          const isIsnin = day === 'ISNIN';
+                          return (
+                            <div
+                              key={day}
+                              style={{
+                                flex: 1,
+                                height: '100%',
+                                borderRadius: 999,
+                                backgroundColor: isIsnin ? isninTabBg : 'transparent',
+                                color: isIsnin ? isninTabColor : LAUNCH_PALETTE.MUTED_OLIVE,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: 6,
+                                fontFamily: LAUNCH_FONTS.MONO,
+                                fontSize: 11,
+                                fontWeight: 800,
+                                letterSpacing: '0.1em',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              {isIsnin ? (
+                                <span
+                                  style={{
+                                    width: 6,
+                                    height: 6,
+                                    borderRadius: 999,
+                                    backgroundColor: LAUNCH_PALETTE.ACCENT,
+                                    opacity: isninActiveT,
+                                    display: 'inline-block',
+                                  }}
+                                />
+                              ) : null}
+                              <span>{day}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Row 1 (height=30): KELAS SETERUSNYA + Live Ticking Countdown + Coords */}
+                      <div
+                        style={{
+                          marginTop: ROW1_GAP,
                           height: ROW1_H,
                           display: 'flex',
                           alignItems: 'center',
@@ -717,7 +804,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                           {hasArrived ? (
                             <>
                               <Check size={15} strokeWidth={2.8} />
-                              <span>TIBA DI KELAS</span>
+                              <span>TIBA TEPAT MASA</span>
                             </>
                           ) : isNavigating ? (
                             <>
@@ -726,7 +813,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                             </>
                           ) : (
                             <>
-                              <span>Buka di PolyMaps</span>
+                              <span>PANDU ARAH</span>
                               <ArrowRight size={14} strokeWidth={2.5} />
                             </>
                           )}
@@ -736,15 +823,16 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                       {/* Row 5: Live Code-Driven Mini Timetable Strip (3 sleek timeline rows) */}
                       <div
                         style={{
-                          marginTop: 18,
+                          marginTop: 14,
                           flex: 1,
-                          padding: '14px 16px',
+                          padding: '13px 15px',
                           borderRadius: 18,
                           backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
                           border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
                           display: 'flex',
                           flexDirection: 'column',
-                          justifyContent: 'space-between',
+                          justifyContent: 'flex-start',
+                          gap: 10,
                           boxSizing: 'border-box',
                         }}
                       >
@@ -758,9 +846,10 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                             fontWeight: 800,
                             letterSpacing: '0.12em',
                             color: LAUNCH_PALETTE.MUTED_OLIVE,
+                            flexShrink: 0,
                           }}
                         >
-                          <span>GARIS MASA KULIAH • HARI INI</span>
+                          <span>GARIS MASA KULIAH • ISNIN</span>
                           <span
                             style={{
                               padding: '2px 8px',
@@ -774,7 +863,15 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                           </span>
                         </div>
 
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginTop: 8 }}>
+                        <div
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            justifyContent: 'space-between',
+                            gap: 8,
+                          }}
+                        >
                           {scheduleRows.map((row) => {
                             const isActive = row.state === 'active';
                             const isDone = row.state === 'done';
@@ -785,7 +882,8 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                 style={{
                                   position: 'relative',
                                   overflow: 'hidden',
-                                  padding: isActive ? '11px 14px 13px' : '9px 14px',
+                                  flex: 1,
+                                  padding: isActive ? '10px 14px 12px' : '9px 14px',
                                   borderRadius: 13,
                                   backgroundColor: isActive
                                     ? LAUNCH_PALETTE.CARD_BG
@@ -894,7 +992,6 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                     flexShrink: 0,
                                   }}
                                 >
-                                  {isDone ? <CheckCircle2 size={11} strokeWidth={2.5} /> : null}
                                   <span>{row.status}</span>
                                 </span>
 
@@ -1007,7 +1104,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                             color: LAUNCH_PALETTE.TERTIARY,
                           }}
                         >
-                          Sahkan kehadiran terus di {roomName}
+                          Sahkan kehadiran terus di {primaryRoom}
                         </span>
                       </div>
                     </div>
@@ -1318,7 +1415,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
         />
       </CameraStage>
 
-      <EditorialFrameMarks chapterCode="02" chapterLabel="PolyMaps & Jadual Kuliah" />
+      <EditorialFrameMarks chapterCode="02" chapterLabel="08:00 PAGI • TAK SESAT CARI KELAS" />
     </>
   );
 };
