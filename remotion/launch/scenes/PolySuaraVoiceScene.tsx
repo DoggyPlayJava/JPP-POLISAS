@@ -16,7 +16,7 @@ import {
   MessageSquare,
   Share2,
   ShieldCheck,
-  Sparkles,
+  ThumbsUp,
   Users,
   Vote,
 } from 'lucide-react';
@@ -35,17 +35,33 @@ export type PolySuaraProps = {
   readonly totalVotes: number;
 };
 
+const STUDENT_POLL_TITLE_DEFAULT = 'Cadangan Kemudahan Siswa Semester Baharu';
+const STUDENT_OPTION_A_DEFAULT = 'Tambah Meja Belajar & Plug Point Di Dataran Siswa';
+const STUDENT_OPTION_B_DEFAULT = 'Lanjutkan Waktu Operasi Bilik Bacaan Kamsis';
+
+const LEGACY_POLL_TITLE = 'cadangan menu sihat kafeteria siswa 2026/2027';
+const LEGACY_OPTION_A = 'set ayam percik & salad segar';
+const LEGACY_OPTION_B = 'sandwic telur herba & buah';
+
+const resolveStudentText = (value: string, legacyLower: string, studentDefault: string): string => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.toLowerCase() === legacyLower) {
+    return studentDefault;
+  }
+  return trimmed;
+};
+
 // Exact 1920x1080 Twin-Column Workbench geometry for pixel-locked GhostCursor alignment
 const HEADER_RULE_LEFT = 64;
 const HEADER_RULE_WIDTH = 1792;
 const LEFT_COL_LEFT = 64;
 const LEFT_COL_WIDTH = 840;
 const CONFESSION_TOP = 236;
-const CONFESSION_HEIGHT = 368;
+const CONFESSION_HEIGHT = 348;
 const SHARE_CARD_LEFT = 96;
-const SHARE_CARD_TOP = 590;
+const SHARE_CARD_TOP = 604;
 const SHARE_CARD_WIDTH = 776;
-const SHARE_CARD_HEIGHT = 318;
+const SHARE_CARD_HEIGHT = 312;
 
 const POLL_LEFT = 976;
 const POLL_TOP = 236;
@@ -53,11 +69,11 @@ const POLL_WIDTH = 880;
 const POLL_HEIGHT = 676;
 const POLL_BORDER = 1.5;
 const POLL_TOPBAR_H = 40;
-const POLL_BODY_PAD_TOP = 26;
+const POLL_BODY_PAD_TOP = 24;
 const POLL_BODY_PAD_X = 32;
-const POLL_HEADER_H = 76;
-const OPT_A_MARGIN_TOP = 22;
-const OPT_A_HEIGHT = 186;
+const POLL_HEADER_H = 82;
+const OPT_A_MARGIN_TOP = 18;
+const OPT_A_HEIGHT = 196;
 
 const OPT_A_INNER_W = POLL_WIDTH - POLL_BORDER * 2 - POLL_BODY_PAD_X * 2; // 813
 const OPT_A_TOP =
@@ -70,7 +86,7 @@ const OPT_A_TOP =
 const OPT_A_CENTER_X = Number(
   (POLL_LEFT + POLL_BORDER + POLL_BODY_PAD_X + OPT_A_INNER_W / 2).toFixed(1),
 ); // 1416
-const OPT_A_CENTER_Y = Number((OPT_A_TOP + OPT_A_HEIGHT / 2).toFixed(1)); // 494.5
+const OPT_A_CENTER_Y = Number((OPT_A_TOP + OPT_A_HEIGHT / 2).toFixed(1)); // 499.5
 
 const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
 const RACE_EASE = Easing.bezier(0.25, 1, 0.5, 1);
@@ -78,18 +94,18 @@ const VOTES_SETTLE_EASE = Easing.bezier(0.22, 1, 0.36, 1);
 
 const REACTION_SPECS = [
   { id: 'flame', target: 128, icon: 'flame' as const, color: LAUNCH_PALETTE.ACCENT },
-  { id: 'heart', target: 84, icon: 'heart' as const, color: LAUNCH_PALETTE.ACCENT },
-  { id: 'spark', target: 62, icon: 'spark' as const, color: LAUNCH_PALETTE.SECONDARY },
+  { id: 'thumbsup', target: 84, icon: 'thumbsup' as const, color: LAUNCH_PALETTE.SECONDARY },
+  { id: 'heart', target: 62, icon: 'heart' as const, color: LAUNCH_PALETTE.ACCENT },
 ] as const;
 
 const renderReactionIcon = (kind: (typeof REACTION_SPECS)[number]['icon'], color: string) => {
   switch (kind) {
     case 'flame':
       return <Flame size={16} color={color} strokeWidth={2.4} />;
+    case 'thumbsup':
+      return <ThumbsUp size={16} color={color} strokeWidth={2.4} />;
     case 'heart':
       return <Heart size={16} color={color} strokeWidth={2.4} />;
-    case 'spark':
-      return <Sparkles size={16} color={color} strokeWidth={2.4} />;
   }
 };
 
@@ -107,11 +123,19 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   const safeDuration = Math.max(30, Number.isFinite(durationInFrames) ? durationInFrames : 366);
   const timeSec = frame / safeFps;
 
+  const resolvedPollTitle = resolveStudentText(
+    pollTitle,
+    LEGACY_POLL_TITLE,
+    STUDENT_POLL_TITLE_DEFAULT,
+  );
+  const resolvedOptionA = resolveStudentText(optionA, LEGACY_OPTION_A, STUDENT_OPTION_A_DEFAULT);
+  const resolvedOptionB = resolveStudentText(optionB, LEGACY_OPTION_B, STUDENT_OPTION_B_DEFAULT);
+
   const clampedA = Number.isFinite(percentageA) ? Math.min(100, Math.max(0, percentageA)) : 68;
   const clampedB = 100 - clampedA;
   const safeTotalVotes = Number.isFinite(totalVotes) ? Math.max(0, Math.round(totalVotes)) : 412;
 
-  // Beat 1 (0..1.4s): EvolvingPath rule + Editorial Header + Left Confession & Right Poll Windows
+  // Beat 1 (0..1.4s): EvolvingPath rule + Student Header + Left Confession & Right Poll Windows
   const dividerDuration = Math.max(10, Math.round(0.72 * safeFps));
   const pillStart = Math.round(0.05 * safeFps);
   const pillDuration = Math.max(8, Math.round(0.36 * safeFps));
@@ -139,7 +163,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
     extrapolateRight: 'clamp',
   });
   const leftCardY = interpolate(leftCardEnter, [0, 1], [28, 0]);
-  const leftCardFloat = Math.sin(timeSec * 1.35) * 2.6 * leftCardEnter;
+  const leftCardFloat = Math.sin(timeSec * 1.35) * 2.4 * leftCardEnter;
 
   const pollEnterProgress = interpolate(
     frame,
@@ -161,7 +185,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  const pollFloatY = Math.cos(timeSec * 1.2 + 0.8) * 2.4 * pollEnterProgress;
+  const pollFloatY = Math.cos(timeSec * 1.2 + 0.8) * 2.2 * pollEnterProgress;
 
   // Beat 2 (1.15..3.7s): Live Voting Race + GhostCursor click on Option A + Reaction Counter Pops
   const racePhase1Start = Math.round(1.15 * safeFps); // 69f
@@ -173,7 +197,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
 
   const racePhase2Start = clickFrame + Math.max(2, Math.round(0.05 * safeFps)); // 138f
   const racePhase2End = Math.round(3.65 * safeFps); // 219f
-  const votesEndFrame = Math.round(4.1 * safeFps); // 246f
+  const votesEndFrame = Math.round(4.05 * safeFps); // 243f
 
   // Guard preClickA <= clampedA so low percentageA (< 12) never dips backward post-click.
   const preClickA = Math.min(clampedA, Math.min(38, Math.max(12, Math.round(clampedA * 0.56))));
@@ -218,7 +242,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   const optionAVotes = Math.round(liveVotes * (Math.round(barA) / 100));
   const optionBVotes = Math.max(0, liveVotes - optionAVotes);
 
-  // Exact Option A center inside CameraStage coordinate space (1416, 494.5)
+  // Exact Option A center inside CameraStage coordinate space (1416, 499.5)
   const cursorKeyframes: readonly GhostCursorKeyframe[] = [
     { frame: cursorAppearFrame, x: 1640, y: 740 },
     {
@@ -228,7 +252,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
       label: 'Pilihan A',
     },
     { frame: clickFrame, x: OPT_A_CENTER_X, y: OPT_A_CENTER_Y, click: true, label: 'Undi A!' },
-    { frame: cursorHoldEnd, x: OPT_A_CENTER_X, y: OPT_A_CENTER_Y, label: 'Disahkan ✓' },
+    { frame: cursorHoldEnd, x: OPT_A_CENTER_X, y: OPT_A_CENTER_Y, label: 'Diundi ✓' },
     { frame: cursorLeaveFrame, x: 1580, y: 650 },
   ];
 
@@ -270,13 +294,13 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
     },
   );
 
-  // Beat 2–3 (2.4..6.1s): Elevated Editorial Kad Perkongsian Rasmi (Share Card)
+  // Beat 2–3 (2.4..6.1s): Elevated 3D Pop-Out IGStoryExportCard Preview
   const shareCardEnterFrame = Math.round(2.4 * safeFps); // 144f
   const shareBadgeActive = frame >= shareCardEnterFrame - Math.round(0.15 * safeFps);
 
-  // Beat 3 (3.75..6.1s): Terracotta Rough-Notation <Circle> around winning percentageA
-  const circleStart = Math.round(3.75 * safeFps); // 225f
-  const circleDuration = Math.max(12, Math.round(0.5 * safeFps)); // 30f -> settles by 255f
+  // Beat 3 (3.5..6.1s): Terracotta Rough-Notation <Circle> around winning percentageA
+  const circleStart = Math.round(3.5 * safeFps); // 210f
+  const circleDuration = Math.max(12, Math.round(0.5 * safeFps)); // 30f -> settles by 240f
 
   // Subtle exit lead on outer header
   const exitWindowFrames = Math.max(2, Math.round(0.35 * safeFps));
@@ -295,7 +319,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
 
       <CameraStage
         zoomFrom={0.99}
-        zoomTo={1.03}
+        zoomTo={1.028}
         panXFrom={6}
         panXTo={-6}
         panYFrom={4}
@@ -321,7 +345,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             transformStyle: 'preserve-3d',
           }}
         >
-          {/* Beat 1A: Top Header + Live Verified Votes Counter */}
+          {/* Beat 1A: Student Header + Live Student Votes Counter */}
           <Interactive.Div
             name="PolySuara Header"
             premountFor={safeFps}
@@ -354,26 +378,26 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                     fontFamily: LAUNCH_FONTS.MONO,
                     fontSize: 12,
                     fontWeight: 800,
-                    letterSpacing: '0.15em',
+                    letterSpacing: '0.14em',
                     textTransform: 'uppercase',
                   }}
                 >
                   <MessageSquare size={15} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.4} />
-                  <span>POLYSUARA • SUARA &amp; UNDIAN MAHASISWA</span>
+                  <span>KOMUNITI SISWA • LUAH &amp; UNDI TANPA NAMA</span>
                 </div>
               </KineticReveal>
 
               <KineticWords
                 as="h2"
-                text="Suara Pelajar, Telus & Berimpak."
+                text="Suara Siswa. Undi & Luah Tanpa Nama."
                 startFrame={headlineStart}
                 staggerFrames={wordStagger}
                 wordDurationFrames={wordDuration}
-                accentWords={['Telus', '&', 'Berimpak.']}
+                accentWords={['Luah', 'Tanpa', 'Nama.']}
                 accentColor={LAUNCH_PALETTE.ACCENT}
                 style={{
                   margin: 0,
-                  fontSize: 50,
+                  fontSize: 49,
                   fontWeight: 900,
                   lineHeight: 1.06,
                   letterSpacing: '-0.03em',
@@ -403,7 +427,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
               }}
             >
               <Users size={19} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
-              <span>{liveVotes} UNDI DISAHKAN</span>
+              <span>{liveVotes} UNDI PELAJAR</span>
             </div>
           </Interactive.Div>
 
@@ -433,7 +457,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             />
           </div>
 
-          {/* LEFT COLUMN (width=840px): Live Anonymous Confession Card + Elevated Deep Forest Share Card */}
+          {/* LEFT COLUMN (width=840px): Live Anonymous Confession Card + 3D Pop-Out IGStoryExportCard */}
           <Interactive.Div
             name="PolySuara Confession Card"
             premountFor={safeFps}
@@ -452,7 +476,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             <KineticWindow
               surface="light"
               routeLabel="jpp.polisas.edu.my/polysuara"
-              statusPill="#FASILITI"
+              statusPill="ANONIM AKTIF"
               statusAccent
               width={LEFT_COL_WIDTH}
               height={CONFESSION_HEIGHT}
@@ -467,15 +491,15 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
               <div
                 style={{
                   flex: 1,
-                  padding: '22px 26px 24px',
+                  padding: '18px 24px 20px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  gap: 14,
+                  gap: 12,
                   boxSizing: 'border-box',
                 }}
               >
-                {/* Persona Header with Origami Fox Monogram */}
+                {/* Anonymous Persona Header with Origami Fox Monogram */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 13 }}>
                     <PersonaMonogram size={46} />
@@ -488,7 +512,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                           color: LAUNCH_PALETTE.PRIMARY,
                         }}
                       >
-                        Rubah Semambu
+                        Rubah Semambu (Anon #409)
                       </span>
                       <span
                         style={{
@@ -499,7 +523,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                           color: LAUNCH_PALETTE.MUTED_OLIVE,
                         }}
                       >
-                        Identiti Anonim Terlindung · 2 min lalu
+                        Identiti 100% Anonim · 2 min lalu
                       </span>
                     </div>
                   </div>
@@ -521,14 +545,14 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                     }}
                   >
                     <ShieldCheck size={14} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.5} />
-                    <span>#FASILITI</span>
+                    <span>#FASILITI · #KAMSIS</span>
                   </div>
                 </div>
 
-                {/* Confession Quote Block */}
+                {/* Student Confession Quote Block */}
                 <div
                   style={{
-                    padding: '15px 18px',
+                    padding: '14px 18px',
                     borderRadius: 18,
                     backgroundColor: LAUNCH_PALETTE.BACKGROUND,
                     border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
@@ -537,14 +561,14 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                   <p
                     style={{
                       margin: 0,
-                      fontSize: 19,
+                      fontSize: 18,
                       fontWeight: 600,
-                      lineHeight: 1.44,
+                      lineHeight: 1.42,
                       color: LAUNCH_PALETTE.PRIMARY,
                       letterSpacing: '-0.01em',
                     }}
                   >
-                    &ldquo;Cadangan tambah kerusi santai &amp; soket pengecasan di ruang menunggu Blok JTMK sangat membantu antara waktu kuliah.&rdquo;
+                    &ldquo;Harap dapat tambah meja belajar &amp; plug point di Dataran Siswa — senang nak siapkan tugasan berkumpulan antara waktu kuliah.&rdquo;
                   </p>
                 </div>
 
@@ -585,7 +609,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 8,
-                            padding: '8px 15px',
+                            padding: '7px 15px',
                             borderRadius: 999,
                             backgroundColor:
                               idx === 0 ? LAUNCH_PALETTE.SURFACE_MUTED : LAUNCH_PALETTE.CARD_BG,
@@ -602,7 +626,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                           }}
                         >
                           {renderReactionIcon(spec.icon, spec.color)}
-                          <span>+{countValue}</span>
+                          <span>{countValue}</span>
                         </div>
                       );
                     })}
@@ -613,7 +637,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 7,
-                      padding: '8px 14px',
+                      padding: '7px 14px',
                       borderRadius: 999,
                       backgroundColor: shareBadgeActive
                         ? LAUNCH_PALETTE.PRIMARY
@@ -623,22 +647,23 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                       }`,
                       color: shareBadgeActive ? LAUNCH_PALETTE.BACKGROUND : LAUNCH_PALETTE.PRIMARY,
                       fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 11.5,
+                      fontSize: 11,
                       fontWeight: 800,
-                      letterSpacing: '0.06em',
+                      letterSpacing: '0.05em',
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     <Share2 size={13} strokeWidth={2.5} />
-                    <span>Eksport Kad</span>
+                    <span>Kongsi Ke IG Story • 1 Klik</span>
                   </div>
                 </div>
               </div>
             </KineticWindow>
           </Interactive.Div>
 
-          {/* Beat 2–3 (2.4..6.1s): Elevated Editorial Kad Perkongsian Rasmi (Deep Forest + Terracotta + Warm Sand) */}
+          {/* Beat 2–3 (2.4..6.1s): Elevated 3D Pop-Out IGStoryExportCard (Deep Forest + Terracotta + Warm Sand) */}
           <Interactive.Div
-            name="PolySuara Share Card"
+            name="PolySuara IG Story Export Card"
             premountFor={safeFps}
             style={{
               position: 'absolute',
@@ -655,12 +680,12 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
               enterFrame={shareCardEnterFrame}
               enterOffsetY={28}
               enterOffsetX={-12}
-              floatAmplitude={2.2}
+              floatAmplitude={2.0}
               floatPhase={0.9}
             >
               <div
                 style={{
-                  transform: 'rotate(-2.2deg)',
+                  transform: 'rotate(-2.0deg)',
                   transformOrigin: '50% 50%',
                   transformStyle: 'preserve-3d',
                 }}
@@ -699,20 +724,27 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                       position: 'relative',
                       zIndex: 2,
                       flex: 1,
-                      padding: '20px 24px',
+                      padding: '18px 24px',
                       display: 'flex',
                       flexDirection: 'column',
                       justifyContent: 'space-between',
-                      gap: 12,
+                      gap: 10,
                       boxSizing: 'border-box',
                     }}
                   >
-                    {/* Header matching IGStoryExportCard structure in 05 Earthy Minimal */}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 10 }}>
+                    {/* Header: PolySuara · KONGSI KE IG STORY • 1 KLIK + #FASILITI */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 9 }}>
                         <span
                           style={{
-                            fontSize: 24,
+                            fontSize: 22,
                             fontWeight: 900,
                             letterSpacing: '-0.03em',
                             color: LAUNCH_PALETTE.BACKGROUND,
@@ -725,15 +757,16 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 10.5,
                             fontWeight: 800,
-                            letterSpacing: '0.14em',
+                            letterSpacing: '0.11em',
                             color: LAUNCH_PALETTE.TERTIARY,
+                            whiteSpace: 'nowrap',
                           }}
                         >
-                          • KAD PERKONGSIAN RASMI
+                          · KONGSI KE IG STORY • 1 KLIK
                         </span>
                       </div>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                         <span
                           style={{
                             padding: '4px 11px',
@@ -761,7 +794,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                             color: LAUNCH_PALETTE.TERTIARY,
                           }}
                         >
-                          Rubah Semambu
+                          Anon #409
                         </span>
                       </div>
                     </div>
@@ -773,19 +806,19 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                         borderRadius: 14,
                         backgroundColor: 'rgba(248, 246, 238, 0.06)',
                         border: '1px solid rgba(217, 201, 178, 0.2)',
-                        fontSize: 15,
+                        fontSize: 14.5,
                         fontWeight: 500,
-                        lineHeight: 1.42,
+                        lineHeight: 1.4,
                         color: 'rgba(248, 246, 238, 0.92)',
                       }}
                     >
-                      &ldquo;Cadangan tambah kerusi santai &amp; soket pengecasan di ruang menunggu Blok JTMK sangat membantu antara waktu kuliah.&rdquo;
+                      &ldquo;Harap dapat tambah meja belajar &amp; plug point di Dataran Siswa — senang nak siapkan tugasan berkumpulan antara waktu kuliah.&rdquo;
                     </div>
 
-                    {/* Official JPP Reply Block */}
+                    {/* Quick Action Block: TINDAKAN PANTAS JPP ✓ */}
                     <div
                       style={{
-                        padding: '13px 16px',
+                        padding: '12px 16px',
                         borderRadius: 16,
                         backgroundColor: 'rgba(107, 127, 91, 0.24)',
                         border: '1.5px solid rgba(217, 201, 178, 0.38)',
@@ -802,23 +835,23 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                           fontFamily: LAUNCH_FONTS.MONO,
                           fontSize: 11,
                           fontWeight: 900,
-                          letterSpacing: '0.14em',
+                          letterSpacing: '0.13em',
                           color: LAUNCH_PALETTE.TERTIARY,
                         }}
                       >
                         <CheckCircle2 size={14} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.8} />
-                        <span>MAKLUM BALAS JPP ✓</span>
+                        <span>TINDAKAN PANTAS JPP ✓</span>
                       </div>
                       <p
                         style={{
                           margin: 0,
-                          fontSize: 15.5,
+                          fontSize: 15,
                           fontWeight: 700,
                           lineHeight: 1.38,
                           color: LAUNCH_PALETTE.BACKGROUND,
                         }}
                       >
-                        Diambil maklum EXCO Fasiliti — semakan tapak dijadualkan minggu ini.
+                        &ldquo;Cadangan dimasukkan ke senarai naik taraf ruang siswa semester ini.&rdquo;
                       </p>
                     </div>
                   </div>
@@ -827,7 +860,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             </ExplodedLayer>
           </Interactive.Div>
 
-          {/* RIGHT COLUMN (width=880px): Live Voting Race Poll Workbench */}
+          {/* RIGHT COLUMN (width=880px): Live Interactive Campus Poll Workbench */}
           <Interactive.Div
             name="Live Campus Poll Workbench"
             premountFor={safeFps}
@@ -846,7 +879,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             <KineticWindow
               surface="light"
               routeLabel="jpp.polisas.edu.my/undian"
-              statusPill="UNDIAN AKTIF • 5 JABATAN"
+              statusPill="UNDIAN SISWA AKTIF"
               width={POLL_WIDTH}
               height={POLL_HEIGHT}
               borderRadius={26}
@@ -859,14 +892,14 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
               <div
                 style={{
                   flex: 1,
-                  padding: `${POLL_BODY_PAD_TOP}px ${POLL_BODY_PAD_X}px 24px`,
+                  padding: `${POLL_BODY_PAD_TOP}px ${POLL_BODY_PAD_X}px 22px`,
                   display: 'flex',
                   flexDirection: 'column',
                   boxSizing: 'border-box',
                   overflow: 'visible',
                 }}
               >
-                {/* Poll Header (height = 76px) */}
+                {/* Poll Header (height = 82px) */}
                 <div
                   style={{
                     height: POLL_HEADER_H,
@@ -888,34 +921,30 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                         color: LAUNCH_PALETTE.ACCENT,
                       }}
                     >
-                      UNDIAN RASMI KAMPUS
+                      UNDIAN KOMUNITI SISWA
                     </span>
                   </div>
                   <div
                     style={{
-                      fontSize: 24,
+                      fontSize: 23,
                       fontWeight: 900,
                       lineHeight: 1.2,
                       letterSpacing: '-0.02em',
                       color: LAUNCH_PALETTE.PRIMARY,
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                      overflow: 'hidden',
                     }}
                   >
-                    {pollTitle}
+                    {resolvedPollTitle}
                   </div>
                 </div>
 
-                {/* Option A Interactive Card (center @ 1416, 494.5) */}
+                {/* Option A Interactive Card (center @ 1416, 499.5) */}
                 <div
                   style={{
                     marginTop: OPT_A_MARGIN_TOP,
                     height: OPT_A_HEIGHT,
                     boxSizing: 'border-box',
                     borderRadius: 22,
-                    padding: '20px 24px',
+                    padding: '18px 24px',
                     backgroundColor: isOptionASelected
                       ? 'rgba(201, 111, 79, 0.06)'
                       : LAUNCH_PALETTE.BACKGROUND,
@@ -936,15 +965,23 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                 >
                   <div
                     style={{
-                      height: 44,
+                      minHeight: 52,
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      gap: 12,
+                      gap: 18,
                       overflow: 'visible',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 13,
+                        flex: 1,
+                        minWidth: 0,
+                      }}
+                    >
                       <span
                         style={{
                           width: 24,
@@ -969,40 +1006,18 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
 
                       <span
                         style={{
-                          fontSize: 21,
+                          fontSize: 19.5,
                           fontWeight: 800,
+                          lineHeight: 1.24,
+                          letterSpacing: '-0.015em',
                           color: LAUNCH_PALETTE.PRIMARY,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
                         }}
                       >
-                        {optionA}
+                        {resolvedOptionA}
                       </span>
-
-                      {isOptionASelected ? (
-                        <span
-                          style={{
-                            padding: '4px 11px',
-                            borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.ACCENT,
-                            color: LAUNCH_PALETTE.CARD_BG,
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 11,
-                            fontWeight: 800,
-                            letterSpacing: '0.09em',
-                            whiteSpace: 'nowrap',
-                            opacity: selectedBadgeProgress,
-                            transform: `scale(${(0.85 + 0.15 * selectedBadgeProgress).toFixed(3)})`,
-                            flexShrink: 0,
-                          }}
-                        >
-                          UNDI DIPILIH ✓
-                        </span>
-                      ) : null}
                     </div>
 
-                    <div style={{ marginRight: 6, flexShrink: 0, overflow: 'visible' }}>
+                    <div style={{ marginRight: 8, flexShrink: 0, overflow: 'visible' }}>
                       <EditorialAnnotation
                         type="circle"
                         startFrame={circleStart}
@@ -1032,7 +1047,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                   {/* Progress Track */}
                   <div
                     style={{
-                      height: 32,
+                      height: 28,
                       borderRadius: 999,
                       backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
                       overflow: 'hidden',
@@ -1050,6 +1065,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
 
                   <div
                     style={{
+                      height: 28,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -1060,19 +1076,40 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
-                    <span>{optionAVotes} undi disahkan</span>
-                    <span>{isOptionASelected ? 'Pilihan Utama Siswa' : 'Mendahului Sementara'}</span>
+                    <span>{optionAVotes} undi pelajar</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      {isOptionASelected ? (
+                        <span
+                          style={{
+                            padding: '4px 11px',
+                            borderRadius: 999,
+                            backgroundColor: LAUNCH_PALETTE.ACCENT,
+                            color: LAUNCH_PALETTE.CARD_BG,
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 10.5,
+                            fontWeight: 800,
+                            letterSpacing: '0.08em',
+                            whiteSpace: 'nowrap',
+                            opacity: selectedBadgeProgress,
+                            transform: `scale(${(0.85 + 0.15 * selectedBadgeProgress).toFixed(3)})`,
+                          }}
+                        >
+                          PILIHAN ANDA ✓
+                        </span>
+                      ) : null}
+                      <span>{isOptionASelected ? 'Pilihan Utama Siswa' : 'Mendahului Sementara'}</span>
+                    </div>
                   </div>
                 </div>
 
                 {/* Option B Card */}
                 <div
                   style={{
-                    marginTop: 18,
-                    height: 168,
+                    marginTop: 16,
+                    height: 174,
                     boxSizing: 'border-box',
                     borderRadius: 22,
-                    padding: '18px 24px',
+                    padding: '16px 24px',
                     backgroundColor: LAUNCH_PALETTE.BACKGROUND,
                     border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
                     display: 'flex',
@@ -1083,14 +1120,22 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                 >
                   <div
                     style={{
-                      height: 40,
+                      minHeight: 48,
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
-                      gap: 12,
+                      gap: 18,
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 13,
+                        flex: 1,
+                        minWidth: 0,
+                      }}
+                    >
                       <span
                         style={{
                           width: 24,
@@ -1103,21 +1148,20 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                       />
                       <span
                         style={{
-                          fontSize: 20,
+                          fontSize: 19,
                           fontWeight: 700,
+                          lineHeight: 1.24,
+                          letterSpacing: '-0.01em',
                           color: LAUNCH_PALETTE.PRIMARY,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
                         }}
                       >
-                        {optionB}
+                        {resolvedOptionB}
                       </span>
                     </div>
 
                     <span
                       style={{
-                        marginRight: 6,
+                        marginRight: 8,
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 26,
                         fontWeight: 800,
@@ -1132,7 +1176,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
 
                   <div
                     style={{
-                      height: 30,
+                      height: 26,
                       borderRadius: 999,
                       backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
                       overflow: 'hidden',
@@ -1160,8 +1204,8 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                       fontVariantNumeric: 'tabular-nums',
                     }}
                   >
-                    <span>{optionBVotes} undi disahkan</span>
-                    <span>Alternatif Kafeteria</span>
+                    <span>{optionBVotes} undi pelajar</span>
+                    <span>Sokongan Ruang Belajar Kamsis</span>
                   </div>
                 </div>
 
@@ -1177,15 +1221,15 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                     gap: 16,
                     paddingTop: 12,
                     borderTop: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                    fontSize: 14,
+                    fontSize: 13.5,
                     fontWeight: 700,
                     color: LAUNCH_PALETTE.MUTED_OLIVE,
                     flexShrink: 0,
                   }}
                 >
-                  <span>• Identiti Persona Selamat</span>
-                  <span>• Moderasi Beretika JPP</span>
-                  <span>• Audit Undi Masa Nyata</span>
+                  <span>• Identiti 100% Tanpa Nama</span>
+                  <span>• Suara Terus Ke JPP</span>
+                  <span>• Kiraan Undi Langsung</span>
                 </div>
               </div>
             </KineticWindow>
@@ -1204,7 +1248,10 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
         />
       </CameraStage>
 
-      <EditorialFrameMarks chapterCode="04" chapterLabel="PolySuara • Suara Mahasiswa" />
+      <EditorialFrameMarks
+        chapterCode="04"
+        chapterLabel="KOMUNITI SISWA • LUAH & UNDI TANPA NAMA"
+      />
     </>
   );
 };
@@ -1212,17 +1259,17 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
 const polySuaraSchema = {
   pollTitle: {
     type: 'string',
-    default: 'Cadangan Menu Sihat Kafeteria Siswa 2026/2027',
+    default: STUDENT_POLL_TITLE_DEFAULT,
     description: 'Poll Title',
   },
   optionA: {
     type: 'string',
-    default: 'Set Ayam Percik & Salad Segar',
+    default: STUDENT_OPTION_A_DEFAULT,
     description: 'Option A',
   },
   optionB: {
     type: 'string',
-    default: 'Sandwic Telur Herba & Buah',
+    default: STUDENT_OPTION_B_DEFAULT,
     description: 'Option B',
   },
   percentageA: {
