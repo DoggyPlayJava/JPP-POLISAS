@@ -522,7 +522,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     expect(closingSource).toContain('AKSES SERTA-MERTA • IMBAS QR SEKARANG');
   });
 
-  it('enforces v5 3D spatial stages across Chapters 03-06 and LED-wall 340px 0-deg QR lock on Chapter 08', () => {
+  it('enforces v6 upright orthogonality (0-deg UI cards), motivated choreography across Chapters 03-06, and symmetrical LED-wall 340px QR lock on Chapter 08', () => {
     const closingSource = readFileSync(
       join(LAUNCH_ROOT_DIR, 'scenes', 'ClosingVaultScene.tsx'),
       'utf8',
@@ -533,6 +533,8 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     expect(closingSource).toContain('fgColor="#111812"');
     expect(closingSource).toMatch(/isQrOrthogonalLocked\s*\?\s*0/);
     expect(closingSource).toContain('SpatialFloorGrid');
+    expect(closingSource).not.toContain('rotateY(17deg)');
+    expect(closingSource).not.toContain('rotateY(-17deg)');
 
     for (const sceneName of [
       'PolyMartCommerceScene.tsx',
@@ -541,11 +543,56 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
       'ClubsEmsScene.tsx',
     ]) {
       const sceneSource = readFileSync(join(LAUNCH_ROOT_DIR, 'scenes', sceneName), 'utf8');
-      expect(sceneSource, `${sceneName} missing SpatialFloorGrid`).toContain('SpatialFloorGrid');
-      expect(sceneSource, `${sceneName} missing rotateX 3D transform`).toContain('rotateX(');
-      expect(sceneSource, `${sceneName} missing rotateY 3D transform`).toContain('rotateY(');
-      expect(sceneSource, `${sceneName} missing translate3d Z-depth`).toContain('translate3d(');
+      expect(sceneSource, `${sceneName} must keep UI cards upright without rotateX`).not.toContain(
+        'rotateX(',
+      );
+      expect(sceneSource, `${sceneName} must keep UI cards upright without rotateY`).not.toContain(
+        'rotateY(',
+      );
+      expect(sceneSource, `${sceneName} should not use SpatialFloorGrid on upright stage`).not.toContain(
+        'SpatialFloorGrid',
+      );
+      expect(sceneSource, `${sceneName} must not contain raw OS emojis`).not.toMatch(
+        /[\u{1F300}-\u{1FAFF}]/u,
+      );
     }
+
+    const polymartSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'PolyMartCommerceScene.tsx'),
+      'utf8',
+    );
+    expect(polymartSource).toContain('WHIP_S_CURVE');
+    expect(polymartSource).toContain('12:30 POLYMART');
+    expect(polymartSource).toContain('18:00 POLYRENT');
+    expect(polymartSource).toContain('RM {totalHouseRent}');
+    expect(polymartSource).toContain('GeometricSparkBurst');
+    expect(polymartSource).toContain('GhostCursor');
+
+    const polysuaraSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'PolySuaraVoiceScene.tsx'),
+      'utf8',
+    );
+    expect(polysuaraSource).toContain('EvolvingPath');
+    expect(polysuaraSource).toContain('PersonaMonogram');
+    expect(polysuaraSource).toContain('USUL DITERIMA JPP');
+    expect(polysuaraSource).toContain('IG STORY');
+    expect(polysuaraSource).toContain('GhostCursor');
+
+    const welfareSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'WelfareCareScene.tsx'),
+      'utf8',
+    );
+    expect(welfareSource).toContain('EvolvingPath');
+    expect(welfareSource).toContain('MOD PRIVASI SISWA AKTIF');
+    expect(welfareSource).toContain('100% SELESAI & DISANTUNI');
+    expect(welfareSource).toContain('DeterministicQrMatrix');
+
+    const clubsSource = readFileSync(join(LAUNCH_ROOT_DIR, 'scenes', 'ClubsEmsScene.tsx'), 'utf8');
+    expect(clubsSource).toContain('GhostCursor');
+    expect(clubsSource).toContain('EvolvingPath');
+    expect(clubsSource).toContain('MATA MERIT');
+    expect(clubsSource).toContain('GeometricSparkBurst');
+    expect(clubsSource).toContain('Muat Turun PDF Rasmi Serta-Merta');
 
     for (const filePath of walkLaunchTsFiles(LAUNCH_ROOT_DIR)) {
       const content = readFileSync(filePath, 'utf8');

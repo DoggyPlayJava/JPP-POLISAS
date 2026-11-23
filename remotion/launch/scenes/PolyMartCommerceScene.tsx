@@ -13,6 +13,7 @@ import {
   Calculator,
   Check,
   CheckCircle2,
+  Clock,
   Flame,
   Home,
   MapPin,
@@ -21,19 +22,23 @@ import {
   Receipt,
   ShieldCheck,
   ShoppingBag,
+  Sparkles,
   Tag,
+  Users,
   UtensilsCrossed,
+  Wifi,
 } from 'lucide-react';
 import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialChrome';
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
-import { GeometricSparkBurst } from '../motion/MotionActors';
+import { GeometricSparkBurst, GhostCursor, type GhostCursorKeyframe } from '../motion/MotionActors';
+import { WHIP_S_CURVE } from '../motion/transitions';
 import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
-import { KineticWindow, SpatialFloorGrid } from '../ui/KineticCard';
+import { DeterministicQrMatrix, KineticWindow } from '../ui/KineticCard';
 
 const AMBER = LAUNCH_MODULE_THEMES.polymart.primary; // #F59E0B
 const AMBER_DARK = LAUNCH_MODULE_THEMES.polymart.dark; // #D97706
-const AMBER_INK = '#B45309'; // WCAG AA+ Amber-700 for crisp legibility on #FFFBEB / #FFFFFF
+const AMBER_INK = '#B45309'; // WCAG AA+ Amber-700
 const AMBER_SOFT = LAUNCH_MODULE_THEMES.polymart.soft; // #FFFBEB
 const AMBER_BORDER = LAUNCH_MODULE_THEMES.polymart.border; // #FDE68A
 
@@ -54,6 +59,16 @@ export type PolyMartProps = {
   readonly headline: string;
 };
 
+type MenuProductSpec = {
+  readonly id: string;
+  readonly title: string;
+  readonly desc: string;
+  readonly priceRm: number;
+  readonly tag: string;
+  readonly icon: 'food' | 'bag' | 'tag';
+  readonly clickFrame: number;
+};
+
 const STUDENT_HEADLINE_DEFAULT = 'Lapar Lepas Kelas? Cari Bilik Sewa? Semua Di Sini.';
 const LEGACY_HEADLINE = 'niaga & kediaman dalam genggaman.';
 
@@ -72,9 +87,71 @@ const CATEGORY_PILLS = [
   { id: 'merch', label: 'Merch Kelab' },
 ] as const;
 
+const MENU_PRODUCTS: readonly MenuProductSpec[] = [
+  {
+    id: 'chicken-popcorn',
+    title: 'Chicken Popcorn',
+    desc: 'Sos Keju & Lada Hitam · Panas',
+    priceRm: 9,
+    tag: 'Makanan',
+    icon: 'food',
+    clickFrame: 46,
+  },
+  {
+    id: 'loaded-fries',
+    title: 'Loaded Fries',
+    desc: 'Kentang Rangup Istimewa',
+    priceRm: 6,
+    tag: 'Terhangat',
+    icon: 'bag',
+    clickFrame: 72,
+  },
+  {
+    id: 'lanyard-jpp',
+    title: 'Lanyard Rasmi JPP',
+    desc: 'Edisi Mahasiswa 2026',
+    priceRm: 12,
+    tag: 'Merch Kelab',
+    icon: 'tag',
+    clickFrame: 96,
+  },
+];
+
+const RENT_AMENITIES = [
+  { label: 'WiFi Unifi 300Mbps', icon: 'wifi' as const },
+  { label: 'Mesin Basuh & Peti Sejuk', icon: 'home' as const },
+  { label: 'Katil & Meja Belajar Lengkap', icon: 'users' as const },
+  { label: '3 Min Jalan Kaki Ke Kampus', icon: 'map' as const },
+] as const;
+
+const ROOMMATE_OPTIONS = [2, 3, 4] as const;
+
 const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
-const COUNTER_EASE = Easing.bezier(0.22, 1, 0.36, 1);
-const STAGE_MANAGER_EASE = Easing.bezier(0.22, 1, 0.36, 1);
+
+const renderProductIcon = (icon: MenuProductSpec['icon'], isAdded: boolean) => {
+  const color = isAdded ? AMBER_INK : LAUNCH_PALETTE.PRIMARY;
+  switch (icon) {
+    case 'food':
+      return <UtensilsCrossed size={22} color={color} strokeWidth={2.2} />;
+    case 'bag':
+      return <ShoppingBag size={22} color={color} strokeWidth={2.2} />;
+    case 'tag':
+      return <Tag size={22} color={EMERALD_INK} strokeWidth={2.2} />;
+  }
+};
+
+const renderAmenityIcon = (icon: (typeof RENT_AMENITIES)[number]['icon']) => {
+  switch (icon) {
+    case 'wifi':
+      return <Wifi size={15} color={CYAN} strokeWidth={2.3} />;
+    case 'home':
+      return <Home size={15} color={CYAN} strokeWidth={2.3} />;
+    case 'users':
+      return <Users size={15} color={CYAN} strokeWidth={2.3} />;
+    case 'map':
+      return <MapPin size={15} color={EMERALD} strokeWidth={2.3} />;
+  }
+};
 
 const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   productsCount,
@@ -85,7 +162,6 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   const { fps } = useVideoConfig();
 
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
-  const timeSec = frame / safeFps;
 
   const safeProductsCount = Number.isFinite(productsCount)
     ? Math.max(0, Math.round(productsCount))
@@ -93,345 +169,134 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   const safeOrdersCount = Number.isFinite(ordersCount)
     ? Math.max(0, Math.round(ordersCount))
     : 344;
-
   const resolvedHeadline = resolveStudentHeadline(headline);
 
-  // Beat 1 (0..1.4s): Top Editorial Header + KPIs
+  // Beat timings scaled proportionally to fps
+  const s = (secs: number) => Math.round(secs * safeFps);
+
   const pillStart = 0;
-  const pillDuration = Math.max(8, Math.round(0.35 * safeFps));
-  const headlineStart = Math.round(0.08 * safeFps);
-  const wordStagger = Math.max(2, Math.round(0.05 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.34 * safeFps));
-  const subtitleStart = Math.round(0.35 * safeFps);
-  const subtitleDuration = Math.max(8, Math.round(0.35 * safeFps));
-  const kpiStart = Math.round(0.45 * safeFps);
+  const pillDuration = Math.max(8, s(0.35));
+  const headlineStart = s(0.08);
+  const wordStagger = Math.max(2, s(0.05));
+  const wordDuration = Math.max(8, s(0.32));
+  const subtitleStart = s(0.32);
+  const subtitleDuration = Math.max(8, s(0.34));
 
-  const productsEnd = Math.round(2.1 * safeFps);
-  const ordersEnd = Math.round(2.3 * safeFps);
-  const animatedProducts = Math.round(
-    interpolate(frame, [kpiStart, productsEnd], [0, safeProductsCount], {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: COUNTER_EASE,
-    }),
-  );
-  const animatedOrders = Math.round(
-    interpolate(frame, [kpiStart + 4, ordersEnd], [0, safeOrdersCount], {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: COUNTER_EASE,
-    }),
-  );
-
-  // Act 1 (0..3.1s / frame 0..186): Amber PolyMart 3D Isometric Deck Front & Center
-  const martEnterFrame = Math.round(0.28 * safeFps);
-  const martEnterDuration = Math.max(10, Math.round(0.55 * safeFps));
-  const martEnterProgress = interpolate(
-    frame,
-    [martEnterFrame, martEnterFrame + martEnterDuration],
-    [0, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: EXPO_OUT,
-    },
-  );
-  const martOpacityEnter = interpolate(
-    frame,
-    [martEnterFrame, martEnterFrame + Math.max(6, Math.round(0.2 * safeFps))],
-    [0, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-    },
-  );
-
-  const categoryHighlightT = interpolate(
-    frame,
-    [Math.round(0.45 * safeFps), Math.round(0.8 * safeFps)],
-    [0, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: EXPO_OUT,
-    },
-  );
-  const activeCategoryBg = interpolateColors(
-    categoryHighlightT,
-    [0, 1],
-    [AMBER_SOFT, AMBER_INK],
-  );
-  const activeCategoryBorder = interpolateColors(
-    categoryHighlightT,
-    [0, 1],
-    [AMBER_BORDER, AMBER_DARK],
-  );
-  const activeCategoryInk = interpolateColors(
-    categoryHighlightT,
-    [0, 1],
-    [AMBER_INK, LAUNCH_PALETTE.CARD_BG],
-  );
-
-  // Staggered physical 3D product lifts cleanly completed by Global f=920 (Local f=170)
-  const item1AddFrame = Math.round(0.68 * safeFps); // 41f
-  const item2AddFrame = Math.round(1.06 * safeFps); // 64f
-  const item3AddFrame = Math.round(1.44 * safeFps); // 86f
-  const item1Added = frame >= item1AddFrame;
-  const item2Added = frame >= item2AddFrame;
-  const item3Added = frame >= item3AddFrame;
-  const cartCount = (item1Added ? 1 : 0) + (item2Added ? 1 : 0) + (item3Added ? 1 : 0);
-  const cartTotalRm = (item1Added ? 9 : 0) + (item2Added ? 6 : 0) + (item3Added ? 12 : 0);
-
-  const makeLiftSpring = (start: number) =>
-    frame >= start
-      ? spring({
-          frame: frame - start,
-          fps: safeFps,
-          config: { damping: 14, stiffness: 250, mass: 0.78 },
-        })
-      : 0;
-
-  const item1LiftSpring = makeLiftSpring(item1AddFrame);
-  const item2LiftSpring = makeLiftSpring(item2AddFrame);
-  const item3LiftSpring = makeLiftSpring(item3AddFrame);
-
-  // Cart Badge floats above deck at +60px relative Z
-  const cartBadgePop =
-    frame >= item1AddFrame
-      ? spring({
-          frame: frame - item1AddFrame,
-          fps: safeFps,
-          config: { damping: 14, stiffness: 230, mass: 0.85 },
-        })
-      : 0;
-
-  // JPP PAY Holographic Pickup Pass stamps strictly in front at +112px Z (f=108..148)
-  const payStampStart = Math.round(1.8 * safeFps); // 108f
-  const payStampSpring =
-    frame >= payStampStart
-      ? spring({
-          frame: frame - payStampStart,
-          fps: safeFps,
-          config: { damping: 15, stiffness: 220, mass: 0.88 },
-        })
-      : 0;
-  const payStampOpacity =
-    frame >= payStampStart
-      ? interpolate(frame, [payStampStart, payStampStart + Math.round(0.2 * safeFps)], [0, 1], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-        })
-      : 0;
-
-  // Act 2 (3.10s..6.60s / frame 186..396): 3D Revolving Turntable Orbit to Cyan PolyRent
-  const orbitStart = Math.round(3.1 * safeFps); // 186f
-  const orbitEnd = Math.round(4.15 * safeFps); // 249f
-  const orbitProgress = interpolate(frame, [orbitStart, orbitEnd], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: STAGE_MANAGER_EASE,
-  });
-
-  // PolyMart deck orbits smoothly back-left in Z-space while tilting inward +18deg Y
-  const martX =
-    interpolate(martEnterProgress, [0, 1], [-85, -18]) +
-    interpolate(orbitProgress, [0, 1], [0, -296]);
-  const martY =
-    interpolate(martEnterProgress, [0, 1], [44, 24]) +
-    interpolate(orbitProgress, [0, 1], [0, 62]) +
-    Math.sin(timeSec * 1.3) * 3;
-  const martZ = interpolate(orbitProgress, [0, 1], [28, -72]);
-  const martRotX =
-    interpolate(martEnterProgress, [0, 1], [16, 10]) +
-    interpolate(orbitProgress, [0, 1], [0, -2]);
-  const martRotY =
-    interpolate(martEnterProgress, [0, 1], [-22, -13]) +
-    interpolate(orbitProgress, [0, 1], [0, 31]); // -13deg -> +18deg
-  const martScale =
-    interpolate(martEnterProgress, [0, 1], [0.92, 0.96]) *
-    interpolate(orbitProgress, [0, 1], [1, 0.78]);
-
-  // JPP Pay stamp sits safely below HUD chips & strictly in front of Deck A in Act 1, then tucks above PolyMart in Act 2
-  const passX = interpolate(orbitProgress, [0, 1], [890, 148]);
-  const passY =
-    interpolate(orbitProgress, [0, 1], [72, 22]) +
-    (1 - payStampSpring) * -20 +
-    Math.sin(timeSec * 1.65 + 0.8) * 2.5;
-  const passZ = interpolate(orbitProgress, [0, 1], [112, 22]);
-  const passRotY = interpolate(orbitProgress, [0, 1], [-8, 14]);
-  const passRotX = interpolate(orbitProgress, [0, 1], [6, 7]);
-  const passScale =
-    (0.84 + 0.16 * payStampSpring) * interpolate(orbitProgress, [0, 1], [0.96, 0.78]);
-
-  // Cyan PolyRent 3D Housing Diorama enters back-right and orbits inside safe [700..1760px] right bounds
-  const rentEnterStart = Math.round(2.65 * safeFps); // 159f
-  const rentEnterT = interpolate(
-    frame,
-    [rentEnterStart, rentEnterStart + Math.round(0.45 * safeFps)],
-    [0, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: EXPO_OUT,
-    },
-  );
-  const rentOpacity = Math.max(rentEnterT, orbitProgress > 0.02 ? 1 : 0);
-  const rentX = interpolate(orbitProgress, [0, 1], [410, 212]);
-  const rentY =
-    interpolate(orbitProgress, [0, 1], [48, 34]) +
-    Math.cos(timeSec * 1.25 + 1.1) * 3;
-  const rentZ = interpolate(orbitProgress, [0, 1], [-125, 42]);
-  const rentRotX = interpolate(orbitProgress, [0, 1], [7, 9]);
-  const rentRotY = interpolate(orbitProgress, [0, 1], [-30, -14]);
-  const rentScale = interpolate(orbitProgress, [0, 1], [0.76, 0.91]);
-
-  // Inside PolyRent: staggered 3D Z-elevation of Room Card (+42px), Calculator (+78px), Verified Badge (+128px)
-  const roomZProgress = interpolate(frame, [Math.round(3.6 * safeFps), Math.round(4.3 * safeFps)], [0, 1], {
+  // Act 1 (0..3.1s): Upright PolyMart Tap-to-Pickup Workbench
+  const workbenchEnter = interpolate(frame, [s(0.18), s(0.68)], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
-  const calcZProgress = interpolate(frame, [Math.round(3.85 * safeFps), Math.round(4.5 * safeFps)], [0, 1], {
+
+  const c1 = Math.round((46 / 60) * safeFps);
+  const c2 = Math.round((72 / 60) * safeFps);
+  const c3 = Math.round((96 / 60) * safeFps);
+  const passReadyFrame = Math.round((104 / 60) * safeFps);
+  const sparkFrame = Math.round((106 / 60) * safeFps);
+
+  const clickFrames = [c1, c2, c3] as const;
+  const addedStates = clickFrames.map((cf) => frame >= cf);
+  const cartCount = addedStates.filter(Boolean).length;
+  const cartTotalRm = MENU_PRODUCTS.reduce(
+    (sum, item, i) => sum + (addedStates[i] ? item.priceRm : 0),
+    0,
+  );
+  const allOrdered = frame >= passReadyFrame;
+
+  const passLockSpring = allOrdered
+    ? spring({
+        frame: frame - passReadyFrame,
+        fps: safeFps,
+        config: { damping: 16, stiffness: 225, mass: 0.82 },
+      })
+    : 0;
+
+  const act1CursorKeyframes: readonly GhostCursorKeyframe[] = [
+    { frame: Math.round((20 / 60) * safeFps), x: 180, y: 240 },
+    { frame: c1, x: 308, y: 584, click: true, label: 'Tambah' },
+    { frame: c2, x: 690, y: 584, click: true, label: 'Tambah' },
+    { frame: c3, x: 1072, y: 584, click: true, label: 'Di Bakul ✓' },
+    { frame: Math.round((112 / 60) * safeFps), x: 1185, y: 615 },
+  ];
+
+  // Motivated Time-Shift Morph (2.85s..3.45s): WHIP_S_CURVE horizontal slide (zero overlap)
+  const morphStart = Math.round((171 / 60) * safeFps); // 2.85s
+  const morphEnd = Math.round((207 / 60) * safeFps); // 3.45s
+  const morphT = interpolate(frame, [morphStart, morphEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: EXPO_OUT,
+    easing: WHIP_S_CURVE,
   });
-  const verifiedPillSpring =
-    frame >= Math.round(4.45 * safeFps)
+  const isRentAct = morphT >= 0.5;
+
+  // Act 2 (3.25s..6.6s): Upright PolyRent Verified Housing & Live Roommate Split Calculator
+  const rent2Frame = Math.round((200 / 60) * safeFps);
+  const rent3Frame = Math.round((240 / 60) * safeFps);
+  const rent4Frame = Math.round((272 / 60) * safeFps);
+  const activeRoommates = frame >= rent4Frame ? 4 : frame >= rent3Frame ? 3 : 2;
+  const totalHouseRent = 680;
+  const perPersonRent = Math.round(totalHouseRent / activeRoommates);
+  const monthlySavings = totalHouseRent - perPersonRent;
+
+  const calcSplitProgress = interpolate(
+    frame,
+    [rent2Frame, rent4Frame + Math.round((14 / 60) * safeFps)],
+    [0.5, 1],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: EXPO_OUT,
+    },
+  );
+
+  const rent4LockSpring =
+    frame >= rent4Frame
       ? spring({
-          frame: frame - Math.round(4.45 * safeFps),
+          frame: frame - rent4Frame,
           fps: safeFps,
-          config: { damping: 14, stiffness: 230, mass: 0.8 },
+          config: { damping: 16, stiffness: 220, mass: 0.85 },
         })
       : 0;
 
-  // Live Kalkulator Sewa: RM 680 / bln divided by 2 -> 3 -> 4 Pelajar (RM 170) ready cleanly before Global f=1060 (Local 310)
-  const step3Frame = Math.round(4.15 * safeFps); // 249f
-  const step4Frame = Math.round(4.65 * safeFps); // 279f
-  const roommates = frame >= step4Frame ? 4 : frame >= step3Frame ? 3 : 2;
-  const monthlyRent = 680;
-  const perPersonRent = Math.round(monthlyRent / roommates);
+  const act2CursorKeyframes: readonly GhostCursorKeyframe[] = [
+    { frame: Math.round((212 / 60) * safeFps), x: 1090, y: 210 },
+    { frame: rent3Frame, x: 1300, y: 242, click: true, label: '3 Pelajar' },
+    { frame: rent4Frame, x: 1580, y: 242, click: true, label: '4 Pelajar ✓' },
+    { frame: Math.round((300 / 60) * safeFps), x: 1460, y: 585 },
+  ];
 
-  const smoothShareRatio =
-    frame < step3Frame
-      ? 0.5
-      : frame < step4Frame
-        ? interpolate(frame, [step3Frame, step3Frame + 16], [0.5, 1 / 3], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
-            easing: EXPO_OUT,
-          })
-        : interpolate(frame, [step4Frame, step4Frame + 16], [1 / 3, 0.25], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
-            easing: EXPO_OUT,
-          });
-
-  const calcResultPop =
-    frame >= step4Frame
-      ? interpolate(frame, [step4Frame, step4Frame + 6, step4Frame + 18], [0.94, 1.06, 1], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-        })
-      : frame >= step3Frame
-        ? interpolate(frame, [step3Frame, step3Frame + 6, step3Frame + 18], [0.94, 1.05, 1], {
-            extrapolateLeft: 'clamp',
-            extrapolateRight: 'clamp',
-          })
-        : 1;
-
-  const bilikModeActiveT = interpolate(frame, [orbitStart + 10, orbitEnd], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-  const bilikPillBg = interpolateColors(
-    bilikModeActiveT,
-    [0, 1],
-    ['rgba(6, 182, 212, 0.14)', CYAN_INK],
-  );
-  const bilikPillBorder = interpolateColors(
-    bilikModeActiveT,
-    [0, 1],
-    ['rgba(165, 243, 252, 0.3)', CYAN],
-  );
-  const bilikPillInk = interpolateColors(
-    bilikModeActiveT,
-    [0, 1],
-    [CYAN_SOFT, LAUNCH_PALETTE.CARD_BG],
-  );
-
-  const payButtonBg = item3Added
-    ? AMBER_INK
-    : interpolateColors(item1LiftSpring, [0, 1], [LAUNCH_PALETTE.PRIMARY, EMERALD_INK]);
-
-  const studentItems = [
-    {
-      id: 'chicken-popcorn',
-      title: 'Chicken Popcorn',
-      subtitle: 'Sos Keju & Lada Hitam',
-      priceLabel: 'RM 9.00',
-      badge: 'Makanan',
-      tierZ: 52,
-      added: item1Added,
-      liftSpring: item1LiftSpring,
-      iconKind: 'food' as const,
-    },
-    {
-      id: 'loaded-fries',
-      title: 'Loaded Fries',
-      subtitle: 'Kentang Rangup Istimewa',
-      priceLabel: 'RM 6.00',
-      badge: 'Terhangat',
-      tierZ: 88,
-      added: item2Added,
-      liftSpring: item2LiftSpring,
-      iconKind: 'hot' as const,
-    },
-    {
-      id: 'lanyard-jpp',
-      title: 'Lanyard Rasmi JPP',
-      subtitle: 'Edisi Mahasiswa 2026',
-      priceLabel: 'RM 12.00',
-      badge: 'Merch Kelab',
-      tierZ: 124,
-      added: item3Added,
-      liftSpring: item3LiftSpring,
-      iconKind: 'merch' as const,
-    },
-  ] as const;
-
-  const renderItemIcon = (kind: (typeof studentItems)[number]['iconKind']) => {
-    switch (kind) {
-      case 'food':
-        return <UtensilsCrossed size={20} color={AMBER_INK} strokeWidth={2.2} />;
-      case 'hot':
-        return <ShoppingBag size={20} color={AMBER_INK} strokeWidth={2.2} />;
-      case 'merch':
-        return <Tag size={20} color={LAUNCH_PALETTE.PRIMARY} strokeWidth={2.2} />;
-    }
-  };
+  // Top Header Reactive Color Shift (Amber -> Cyan)
+  const pillBg = interpolateColors(morphT, [0, 1], [AMBER_SOFT, CYAN_SOFT]);
+  const pillBorder = interpolateColors(morphT, [0, 1], [AMBER, CYAN]);
+  const pillColor = interpolateColors(morphT, [0, 1], [AMBER_INK, CYAN_INK]);
+  const headlineAccent = interpolateColors(morphT, [0, 1], [AMBER_DARK, CYAN_DARK]);
+  const thumbBg = interpolateColors(morphT, [0, 1], [AMBER_INK, CYAN_DARK]);
 
   return (
     <>
-      <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.polymart.tint} />
+      <EditorialBackdrop
+        ambientTint={
+          isRentAct ? LAUNCH_MODULE_THEMES.polyrent.tint : LAUNCH_MODULE_THEMES.polymart.tint
+        }
+      />
 
       <CameraStage
-        perspective={1500}
-        zoomFrom={0.99}
-        zoomTo={1.03}
-        panXFrom={-10}
-        panXTo={10}
-        panYFrom={4}
-        panYTo={-4}
-        tiltXFrom={5.5}
-        tiltXTo={2.5}
-        tiltYFrom={-6.5}
-        tiltYTo={6.5}
-        breathingAmplitude={0.45}
-        entryPanXOffset={-36}
-        entryZoomOffset={-0.024}
-        exitPanXDelta={24}
-        exitZoomDelta={0.032}
+        zoomFrom={1}
+        zoomTo={1.016}
+        panXFrom={3}
+        panXTo={-3}
+        panYFrom={2}
+        panYTo={-2}
+        tiltXFrom={0}
+        tiltXTo={0}
+        tiltYFrom={0}
+        tiltYTo={0}
+        breathingAmplitude={0.22}
+        entryPanXOffset={20}
+        entryZoomOffset={-0.018}
+        exitPanXDelta={-18}
+        exitZoomDelta={0.024}
         exitFrames={Math.round(0.32 * safeFps)}
         clip
       >
@@ -440,28 +305,23 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
             position: 'absolute',
             inset: 0,
             fontFamily: LAUNCH_FONTS.DISPLAY,
-            perspective: '1500px',
-            transformStyle: 'preserve-3d',
           }}
         >
-          {/* 3D Perspective Architectural Floor Grid with Amber & Cyan Radial Glows */}
-          <SpatialFloorGrid accentColor={AMBER} secondaryColor={CYAN} gridOpacity={0.22} scrollSpeed={16} />
-
-          {/* Beat 1: Compact Student Header Row + Right Tabular KPI Pills */}
+          {/* Editorial Top Row: Left Headline + Right Segmented Time-Shift Switcher */}
           <div
             style={{
               position: 'absolute',
-              left: 72,
-              right: 72,
-              top: 66,
+              left: 76,
+              right: 76,
+              top: 56,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-end',
-              gap: 28,
+              gap: 32,
               zIndex: 8,
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', maxWidth: 1020 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1040 }}>
               <KineticReveal startFrame={pillStart} durationFrames={pillDuration}>
                 <div
                   style={{
@@ -471,17 +331,17 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     alignSelf: 'flex-start',
                     padding: '6px 16px',
                     borderRadius: 999,
-                    backgroundColor: AMBER_SOFT,
-                    border: `1.5px solid ${AMBER_DARK}`,
-                    color: AMBER_INK,
+                    backgroundColor: pillBg,
+                    border: `1.5px solid ${pillBorder}`,
+                    color: pillColor,
                     fontFamily: LAUNCH_FONTS.MONO,
                     fontSize: 12.5,
                     fontWeight: 800,
-                    letterSpacing: '0.16em',
+                    letterSpacing: '0.15em',
                   }}
                 >
-                  <ShoppingBag size={14} color={AMBER_INK} strokeWidth={2.4} />
-                  <span>12:30 TGH HARI • MAKAN &amp; BILIK SEWA</span>
+                  <Clock size={14} color={pillColor} strokeWidth={2.5} />
+                  <span>12:30 – 18:00 • EKONOMI &amp; KEDIAMAN SISWA</span>
                 </div>
               </KineticReveal>
 
@@ -492,10 +352,10 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                 staggerFrames={wordStagger}
                 wordDurationFrames={wordDuration}
                 accentWords={['Semua', 'Di', 'Sini.']}
-                accentColor={AMBER_INK}
+                accentColor={headlineAccent}
                 style={{
-                  margin: '10px 0 0',
-                  fontSize: 46,
+                  margin: 0,
+                  fontSize: 45,
                   fontWeight: 900,
                   letterSpacing: '-0.03em',
                   lineHeight: 1.07,
@@ -506,975 +366,1121 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               <KineticReveal startFrame={subtitleStart} durationFrames={subtitleDuration}>
                 <p
                   style={{
-                    margin: '7px 0 0',
+                    margin: 0,
                     fontSize: 16.5,
                     fontWeight: 500,
                     lineHeight: 1.4,
                     color: LAUNCH_PALETTE.INK_SOFT,
                   }}
                 >
-                  Pesan makanan tanpa beratur di PolyMart &amp; bandingkan bilik sewa disahkan sekitar POLISAS di PolyRent.
+                  {isRentAct
+                    ? 'Bandingkan bilik sewa disahkan JPP & bahagi sewa roommate secara automatik di PolyRent.'
+                    : 'Pesan makanan terus antara kuliah tanpa beratur di PolyMart, imbas pas JPP Pay dalam 5 minit.'}
                 </p>
               </KineticReveal>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0, paddingBottom: 6 }}>
+            {/* Segmented Time-Shift Switcher (Embeds completed 12:30 order pill inside header cleanly) */}
+            <div
+              style={{
+                position: 'relative',
+                width: 604,
+                height: 62,
+                padding: 6,
+                borderRadius: 999,
+                backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
+                border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                boxShadow: '0 14px 32px rgba(31, 39, 32, 0.08)',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                boxSizing: 'border-box',
+                flexShrink: 0,
+              }}
+            >
+              {/* Sliding Physical Thumb */}
+              <div
+                aria-hidden
+                style={{
+                  position: 'absolute',
+                  left: 6,
+                  top: 6,
+                  bottom: 6,
+                  width: 'calc(50% - 6px)',
+                  borderRadius: 999,
+                  backgroundColor: thumbBg,
+                  boxShadow: isRentAct
+                    ? '0 8px 20px rgba(8, 145, 178, 0.28)'
+                    : '0 8px 20px rgba(180, 83, 9, 0.28)',
+                  transform: `translate3d(${(morphT * 100).toFixed(2)}%, 0px, 0px)`,
+                }}
+              />
+
+              {/* Segment 1: 12:30 POLYMART */}
               <div
                 style={{
-                  display: 'inline-flex',
+                  position: 'relative',
+                  zIndex: 2,
+                  display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: 8,
-                  padding: '8px 15px',
-                  borderRadius: 999,
-                  backgroundColor: AMBER_SOFT,
-                  border: `1.5px solid ${AMBER}`,
                   fontFamily: LAUNCH_FONTS.MONO,
-                  fontSize: 13,
-                  fontWeight: 800,
-                  color: AMBER_INK,
-                  fontVariantNumeric: 'tabular-nums',
-                  boxShadow: '0 8px 20px rgba(217, 119, 6, 0.1)',
+                  fontSize: 12.5,
+                  fontWeight: 900,
+                  letterSpacing: '0.06em',
+                  color: morphT < 0.5 ? '#FFFFFF' : LAUNCH_PALETTE.PRIMARY,
                 }}
               >
-                <UtensilsCrossed size={14} color={AMBER_INK} strokeWidth={2.4} />
-                <span>{animatedProducts}+ Menu &amp; Merch</span>
+                {allOrdered ? (
+                  <CheckCircle2
+                    size={15}
+                    color={morphT < 0.5 ? EMERALD_BORDER : EMERALD_INK}
+                    strokeWidth={2.6}
+                  />
+                ) : (
+                  <ShoppingBag
+                    size={15}
+                    color={morphT < 0.5 ? '#FFFFFF' : AMBER_INK}
+                    strokeWidth={2.4}
+                  />
+                )}
+                <span>
+                  {allOrdered ? `12:30 POLYMART (#${safeOrdersCount} ✓)` : '12:30 POLYMART'}
+                </span>
               </div>
 
+              {/* Segment 2: 18:00 POLYRENT */}
               <div
                 style={{
-                  display: 'inline-flex',
+                  position: 'relative',
+                  zIndex: 2,
+                  display: 'flex',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   gap: 8,
-                  padding: '8px 15px',
-                  borderRadius: 999,
-                  backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                  border: `1.5px solid ${AMBER}`,
                   fontFamily: LAUNCH_FONTS.MONO,
-                  fontSize: 13,
-                  fontWeight: 800,
-                  color: LAUNCH_PALETTE.CARD_BG,
-                  fontVariantNumeric: 'tabular-nums',
-                  boxShadow: '0 8px 20px rgba(31, 39, 32, 0.14)',
+                  fontSize: 12.5,
+                  fontWeight: 900,
+                  letterSpacing: '0.06em',
+                  color: morphT >= 0.5 ? '#FFFFFF' : LAUNCH_PALETTE.MUTED_OLIVE,
                 }}
               >
-                <Receipt size={14} color={AMBER} strokeWidth={2.4} />
-                <span>{animatedOrders}+ Pesanan Siswa</span>
-              </div>
-
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  padding: '8px 15px',
-                  borderRadius: 999,
-                  backgroundColor: EMERALD_SOFT,
-                  border: `1.5px solid ${EMERALD_BORDER}`,
-                  fontFamily: LAUNCH_FONTS.MONO,
-                  fontSize: 13,
-                  fontWeight: 800,
-                  color: EMERALD_INK,
-                }}
-              >
-                <ShieldCheck size={14} color={EMERALD_INK} strokeWidth={2.5} />
-                <span>Tanpa Beratur</span>
+                <Home
+                  size={15}
+                  color={morphT >= 0.5 ? '#FFFFFF' : CYAN_INK}
+                  strokeWidth={2.4}
+                />
+                <span>18:00 POLYRENT</span>
               </div>
             </div>
           </div>
 
-          {/* 3D Revolving Dual-Stage Turntable (y: 274..986, safely below editorial header & HUD pills) */}
+          {/* SINGLE UPRIGHT SWISS CENTER WORKBENCH (0 deg resting angle, left: 76, width: 1768, height: 700) */}
           <div
             style={{
               position: 'absolute',
-              left: 0,
-              right: 0,
-              top: 274,
-              height: 712,
-              perspective: '1450px',
-              transformStyle: 'preserve-3d',
+              left: 76,
+              top: 244,
+              width: 1768,
+              height: 700,
+              borderRadius: 28,
+              overflow: 'hidden',
+              opacity: workbenchEnter,
+              transform: `translate3d(0px, ${((1 - workbenchEnter) * 26).toFixed(2)}px, 0px)`,
             }}
           >
-            {/* DECK A: Amber PolyMart 3D Isometric Deck (Center-Front in Act 1 -> Back-Left in Act 2) */}
-            <Interactive.Div
-              name="PolyMart 3D Isometric Turntable Deck"
-              premountFor={safeFps}
-              style={{
-                position: 'absolute',
-                left: 520,
-                top: 78,
-                width: 860,
-                height: 516,
-                opacity: martOpacityEnter,
-                transformOrigin: '50% 50%',
-                transformStyle: 'preserve-3d',
-                willChange: 'transform, opacity',
-                transform: `translate3d(${martX.toFixed(2)}px, ${martY.toFixed(2)}px, ${martZ.toFixed(2)}px) rotateX(${martRotX.toFixed(2)}deg) rotateY(${martRotY.toFixed(2)}deg) scale(${martScale.toFixed(4)})`,
-              }}
-            >
-              <KineticWindow
-                surface="light"
-                routeLabel="jpp.polisas.edu.my/polymart"
-                statusPill={item3Added ? 'JPP PAY AKTIF' : 'PESAN SEKARANG'}
-                statusAccent
-                accentColor={item3Added ? AMBER_INK : LAUNCH_PALETTE.PRIMARY}
-                accentSoftBg={AMBER_SOFT}
-                accentBorderColor={AMBER}
-                width="100%"
-                height="100%"
-                borderRadius={26}
-                sheenStartFrame={Math.round(0.95 * safeFps)}
-                sheenDuration={42}
+            {/* ACT 1 WORKBENCH: Upright Amber PolyMart Tap-to-Pickup */}
+            {morphT < 0.995 ? (
+              <Interactive.Div
+                name="PolyMart Upright Workbench"
+                premountFor={safeFps}
                 style={{
-                  borderColor: AMBER_BORDER,
-                  boxShadow:
-                    '0 42px 92px rgba(217, 119, 6, 0.18), 0 18px 36px rgba(31, 39, 32, 0.14)',
+                  position: 'absolute',
+                  inset: 0,
+                  opacity: 1 - morphT,
+                  transform: `translate3d(${(-morphT * 104).toFixed(2)}%, 0px, 0px)`,
                 }}
               >
-                <div
+                <KineticWindow
+                  surface="light"
+                  routeLabel="jpp.polisas.edu.my/polymart"
+                  statusPill={
+                    allOrdered ? `PESANAN #${safeOrdersCount} SIAP ✓` : 'PESAN ANTARA KULIAH'
+                  }
+                  statusAccent
+                  accentColor={allOrdered ? EMERALD_INK : AMBER_INK}
+                  accentSoftBg={allOrdered ? EMERALD_SOFT : AMBER_SOFT}
+                  accentBorderColor={allOrdered ? EMERALD_BORDER : AMBER}
+                  width="100%"
+                  height="100%"
+                  borderRadius={28}
+                  sheenStartFrame={Math.round(0.65 * safeFps)}
+                  sheenDuration={38}
                   style={{
-                    flex: 1,
-                    padding: '22px 28px 24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: 16,
-                    boxSizing: 'border-box',
-                    transformStyle: 'preserve-3d',
+                    borderColor: AMBER_BORDER,
+                    boxShadow: '0 24px 56px rgba(31, 39, 32, 0.1)',
                   }}
                 >
-                  {/* Deck Top Storefront Header + Elevated 3D Cart Badge (+148px Z) */}
                   <div
                     style={{
+                      flex: 1,
+                      padding: '22px 28px',
                       display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 16,
-                      transformStyle: 'preserve-3d',
+                      gap: 28,
+                      boxSizing: 'border-box',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    {/* Left Side: Upright Storefront Catalog & 3 Product Cards */}
+                    <div
+                      style={{
+                        flex: 1.55,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        gap: 16,
+                      }}
+                    >
+                      {/* Storefront Identity Row */}
                       <div
                         style={{
-                          width: 48,
-                          height: 48,
-                          borderRadius: 15,
-                          backgroundColor: AMBER_INK,
                           display: 'flex',
+                          justifyContent: 'space-between',
                           alignItems: 'center',
-                          justifyContent: 'center',
-                          boxShadow: '0 10px 22px rgba(180, 83, 9, 0.28)',
+                          padding: '14px 18px',
+                          borderRadius: 18,
+                          backgroundColor: AMBER_SOFT,
+                          border: `1.5px solid ${AMBER_BORDER}`,
                         }}
                       >
-                        <UtensilsCrossed size={22} color="#FFFFFF" strokeWidth={2.2} />
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                          <div
                             style={{
-                              fontSize: 20,
-                              fontWeight: 900,
-                              letterSpacing: '-0.02em',
-                              color: LAUNCH_PALETTE.PRIMARY,
+                              width: 48,
+                              height: 48,
+                              borderRadius: 14,
+                              backgroundColor: AMBER_INK,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
                             }}
                           >
-                            QUADRA H • KAFE &amp; MERCH SISWA
-                          </span>
-                          <CheckCircle2 size={16} color={EMERALD_INK} strokeWidth={2.6} />
+                            <UtensilsCrossed size={24} color="#FFFFFF" strokeWidth={2.2} />
+                          </div>
+                          <div>
+                            <div
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                fontSize: 20,
+                                fontWeight: 900,
+                                color: LAUNCH_PALETTE.PRIMARY,
+                              }}
+                            >
+                              <span>QUADRA H • KAFE &amp; MERCH SISWA</span>
+                              <CheckCircle2 size={17} color={EMERALD_INK} strokeWidth={2.5} />
+                            </div>
+                            <div
+                              style={{
+                                marginTop: 2,
+                                fontFamily: LAUNCH_FONTS.MONO,
+                                fontSize: 11.5,
+                                fontWeight: 800,
+                                color: AMBER_INK,
+                                letterSpacing: '0.06em',
+                              }}
+                            >
+                              DATARAN SISWA • {safeProductsCount}+ MENU &amp; KEPERLUAN MAHASISWA
+                            </div>
+                          </div>
                         </div>
+
+                        <div
+                          style={{
+                            padding: '8px 14px',
+                            borderRadius: 999,
+                            backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                            color: '#FFFFFF',
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 12,
+                            fontWeight: 900,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          SIAP 5–8 MIN
+                        </div>
+                      </div>
+
+                      {/* Category Strip */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                          {CATEGORY_PILLS.map((cat) => {
+                            const isActive = cat.id === 'terhangat';
+                            return (
+                              <span
+                                key={cat.id}
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 6,
+                                  padding: '6px 14px',
+                                  borderRadius: 999,
+                                  backgroundColor: isActive ? AMBER_INK : LAUNCH_PALETTE.SURFACE_MUTED,
+                                  border: `1px solid ${isActive ? AMBER_INK : AMBER_BORDER}`,
+                                  fontSize: 12.5,
+                                  fontWeight: 800,
+                                  color: isActive ? '#FFFFFF' : LAUNCH_PALETTE.PRIMARY,
+                                }}
+                              >
+                                {isActive ? <Flame size={13} color="#FFFFFF" strokeWidth={2.4} /> : null}
+                                {cat.label}
+                              </span>
+                            );
+                          })}
+                        </div>
+
                         <span
                           style={{
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 11.5,
-                            fontWeight: 700,
-                            letterSpacing: '0.1em',
+                            fontWeight: 800,
                             color: LAUNCH_PALETTE.INK_SOFT,
                           }}
                         >
-                          DATARAN SISWA • PESAN ANTARA KULIAH &amp; TERUS AMBIL
+                          KLIK ITEM UNTUK MASUK BAKUL JPP PAY
                         </span>
+                      </div>
+
+                      {/* 3 Upright Tactile Product Cards */}
+                      <div
+                        style={{
+                          display: 'grid',
+                          gridTemplateColumns: 'repeat(3, 1fr)',
+                          gap: 18,
+                          flex: 1,
+                        }}
+                      >
+                        {MENU_PRODUCTS.map((item, idx) => {
+                          const cf = clickFrames[idx] ?? c1;
+                          const isAdded = frame >= cf;
+                          const itemSpring = isAdded
+                            ? spring({
+                                frame: frame - cf,
+                                fps: safeFps,
+                                config: { damping: 16, stiffness: 250, mass: 0.78 },
+                              })
+                            : 0;
+                          const tapPressScale = interpolate(
+                            frame,
+                            [cf - 2, cf + 3, cf + 11],
+                            [1, 0.94, 1],
+                            {
+                              extrapolateLeft: 'clamp',
+                              extrapolateRight: 'clamp',
+                            },
+                          );
+
+                          return (
+                            <div
+                              key={item.id}
+                              style={{
+                                borderRadius: 22,
+                                padding: '20px 20px 18px',
+                                backgroundColor: isAdded ? '#FFFFFF' : LAUNCH_PALETTE.BACKGROUND,
+                                border: `2px solid ${isAdded ? AMBER_DARK : LAUNCH_PALETTE.TERTIARY}`,
+                                borderBottom: `5px solid ${isAdded ? AMBER_INK : LAUNCH_PALETTE.TERTIARY}`,
+                                boxShadow: isAdded
+                                  ? '0 20px 38px rgba(180, 83, 9, 0.14), 0 6px 14px rgba(31, 39, 32, 0.06)'
+                                  : '0 6px 14px rgba(31, 39, 32, 0.04)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                                boxSizing: 'border-box',
+                                transform: `translate3d(0px, ${(-4 * itemSpring).toFixed(2)}px, 0px)`,
+                              }}
+                            >
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div
+                                  style={{
+                                    width: 48,
+                                    height: 48,
+                                    borderRadius: 15,
+                                    backgroundColor: isAdded ? AMBER_SOFT : '#FFFFFF',
+                                    border: `1.5px solid ${isAdded ? AMBER : LAUNCH_PALETTE.TERTIARY}`,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  {renderProductIcon(item.icon, isAdded)}
+                                </div>
+                                <span
+                                  style={{
+                                    padding: '4px 11px',
+                                    borderRadius: 999,
+                                    backgroundColor:
+                                      item.id === 'lanyard-jpp' ? EMERALD_SOFT : AMBER_SOFT,
+                                    border: `1px solid ${
+                                      item.id === 'lanyard-jpp' ? EMERALD_BORDER : AMBER_BORDER
+                                    }`,
+                                    fontFamily: LAUNCH_FONTS.MONO,
+                                    fontSize: 10.5,
+                                    fontWeight: 800,
+                                    color: item.id === 'lanyard-jpp' ? EMERALD_INK : AMBER_INK,
+                                  }}
+                                >
+                                  {item.tag}
+                                </span>
+                              </div>
+
+                              <div style={{ marginTop: 14 }}>
+                                <div
+                                  style={{
+                                    fontSize: 22,
+                                    fontWeight: 900,
+                                    letterSpacing: '-0.02em',
+                                    color: LAUNCH_PALETTE.PRIMARY,
+                                  }}
+                                >
+                                  {item.title}
+                                </div>
+                                <div
+                                  style={{
+                                    marginTop: 5,
+                                    fontSize: 13.5,
+                                    fontWeight: 600,
+                                    color: LAUNCH_PALETTE.INK_SOFT,
+                                  }}
+                                >
+                                  {item.desc}
+                                </div>
+                              </div>
+
+                              <div
+                                style={{
+                                  marginTop: 18,
+                                  paddingTop: 14,
+                                  borderTop: `1px solid ${LAUNCH_PALETTE.SURFACE_MUTED}`,
+                                  display: 'flex',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                  gap: 8,
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontFamily: LAUNCH_FONTS.MONO,
+                                    fontSize: 19,
+                                    fontWeight: 900,
+                                    color: AMBER_INK,
+                                    fontVariantNumeric: 'tabular-nums',
+                                  }}
+                                >
+                                  RM {item.priceRm}.00
+                                </span>
+
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 5,
+                                    padding: '8px 14px',
+                                    borderRadius: 999,
+                                    backgroundColor: isAdded
+                                      ? EMERALD_INK
+                                      : LAUNCH_PALETTE.PRIMARY_DARK,
+                                    color: '#FFFFFF',
+                                    fontFamily: LAUNCH_FONTS.MONO,
+                                    fontSize: 11.5,
+                                    fontWeight: 900,
+                                    whiteSpace: 'nowrap',
+                                    transform: `scale(${tapPressScale.toFixed(4)})`,
+                                  }}
+                                >
+                                  {isAdded ? (
+                                    <>
+                                      <Check size={13} strokeWidth={3} />
+                                      <span>Di Bakul</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Plus size={13} strokeWidth={2.8} />
+                                      <span>Bakul</span>
+                                    </>
+                                  )}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Bottom Reassurance Line */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '10px 16px',
+                          borderRadius: 14,
+                          backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 12,
+                          fontWeight: 800,
+                          color: LAUNCH_PALETTE.PRIMARY,
+                        }}
+                      >
+                        <span>TANPA BERATUR DI KAFETERIA • BAYAR &amp; TERUS AMBIL</span>
+                        <span style={{ color: EMERALD_INK }}>TERSEDIA UNTUK SEMUA SISWA POLISAS</span>
                       </div>
                     </div>
 
-                    {/* Floating 3D Cart Pill (+60px relative Z above storefront deck) */}
+                    {/* Right Side: Live Digital Order Pass (JPP PAY • PESANAN #344) */}
                     <div
                       style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 9,
-                        padding: '11px 18px',
-                        borderRadius: 999,
-                        backgroundColor: item3Added ? AMBER_INK : LAUNCH_PALETTE.PRIMARY_DARK,
-                        border: `1.5px solid ${AMBER}`,
-                        color: '#FFFFFF',
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 12.5,
-                        fontWeight: 800,
-                        letterSpacing: '0.08em',
-                        boxShadow:
-                          '0 22px 44px rgba(180, 83, 9, 0.34), 0 8px 18px rgba(31, 39, 32, 0.24)',
-                        transform: `translate3d(0px, ${(-6 * cartBadgePop).toFixed(2)}px, ${(26 + 34 * cartBadgePop).toFixed(2)}px) scale(${(0.95 + 0.05 * cartBadgePop).toFixed(4)})`,
+                        position: 'relative',
+                        width: 556,
+                        borderRadius: 24,
+                        padding: '22px 24px',
+                        backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                        border: `2px solid ${allOrdered ? EMERALD : AMBER_BORDER}`,
+                        boxShadow: allOrdered
+                          ? '0 22px 46px rgba(16, 185, 129, 0.16)'
+                          : '0 10px 24px rgba(31, 39, 32, 0.06)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        boxSizing: 'border-box',
                       }}
                     >
-                      <ShoppingBag size={15} strokeWidth={2.4} />
-                      <span>+ BAKUL • {cartCount} ITEM</span>
-                    </div>
-                  </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                          <div
+                            style={{
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 11,
+                              fontWeight: 800,
+                              letterSpacing: '0.12em',
+                              color: AMBER_INK,
+                            }}
+                          >
+                            PAS DIGITAL EKSPRES
+                          </div>
+                          <div
+                            style={{
+                              marginTop: 2,
+                              fontSize: 23,
+                              fontWeight: 900,
+                              color: LAUNCH_PALETTE.PRIMARY,
+                              letterSpacing: '-0.02em',
+                            }}
+                          >
+                            JPP PAY • #{safeOrdersCount}
+                          </div>
+                        </div>
 
-                  {/* Category Filter Pills Strip */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 10,
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                      {CATEGORY_PILLS.map((cat) => {
-                        const isActive = cat.id === 'terhangat';
-                        return (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '6px 13px',
+                            borderRadius: 999,
+                            backgroundColor: allOrdered ? EMERALD_INK : AMBER_INK,
+                            color: '#FFFFFF',
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 11.5,
+                            fontWeight: 900,
+                          }}
+                        >
+                          <Receipt size={13} strokeWidth={2.5} />
+                          <span>{cartCount} ITEM</span>
+                        </span>
+                      </div>
+
+                      {/* Itemized Receipt Rows */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginTop: 8 }}>
+                        {MENU_PRODUCTS.map((item, idx) => {
+                          const cf = clickFrames[idx] ?? c1;
+                          const rowVisible = frame >= cf;
+                          const rowSpring = rowVisible
+                            ? spring({
+                                frame: frame - cf,
+                                fps: safeFps,
+                                config: { damping: 17, stiffness: 240, mass: 0.8 },
+                              })
+                            : 0;
+
+                          return (
+                            <div
+                              key={item.id}
+                              style={{
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                padding: '10px 14px',
+                                borderRadius: 14,
+                                backgroundColor: rowVisible ? '#FFFFFF' : 'rgba(242, 237, 228, 0.5)',
+                                border: `1.5px solid ${rowVisible ? AMBER_BORDER : 'transparent'}`,
+                                opacity: rowVisible ? 0.35 + 0.65 * rowSpring : 0.45,
+                                transform: `translate3d(${((1 - rowSpring) * 14).toFixed(2)}px, 0px, 0px)`,
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                <span
+                                  style={{
+                                    width: 22,
+                                    height: 22,
+                                    borderRadius: 999,
+                                    backgroundColor: rowVisible
+                                      ? EMERALD_INK
+                                      : LAUNCH_PALETTE.TERTIARY,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  {rowVisible ? <Check size={12} color="#FFFFFF" strokeWidth={3} /> : null}
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: 15,
+                                    fontWeight: 800,
+                                    color: LAUNCH_PALETTE.PRIMARY,
+                                  }}
+                                >
+                                  {item.title}
+                                </span>
+                              </div>
+                              <span
+                                style={{
+                                  fontFamily: LAUNCH_FONTS.MONO,
+                                  fontSize: 14,
+                                  fontWeight: 900,
+                                  color: rowVisible ? AMBER_INK : LAUNCH_PALETTE.MUTED_OLIVE,
+                                  fontVariantNumeric: 'tabular-nums',
+                                }}
+                              >
+                                RM {item.priceRm}.00
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Rolling Total Row */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'baseline',
+                          padding: '12px 4px',
+                          borderTop: `1.5px dashed ${LAUNCH_PALETTE.TERTIARY}`,
+                          borderBottom: `1.5px dashed ${LAUNCH_PALETTE.TERTIARY}`,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 12.5,
+                            fontWeight: 800,
+                            color: LAUNCH_PALETTE.INK_SOFT,
+                          }}
+                        >
+                          JUMLAH PESANAN JPP PAY
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 28,
+                            fontWeight: 900,
+                            color: LAUNCH_PALETTE.PRIMARY_DARK,
+                            fontVariantNumeric: 'tabular-nums',
+                          }}
+                        >
+                          RM {cartTotalRm}.00
+                        </span>
+                      </div>
+
+                      {/* Express Pickup QR & Verified Stamp */}
+                      <div
+                        style={{
+                          padding: '14px 16px',
+                          borderRadius: 18,
+                          backgroundColor: allOrdered ? EMERALD_SOFT : '#FFFFFF',
+                          border: `2px solid ${allOrdered ? EMERALD : LAUNCH_PALETTE.TERTIARY}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 16,
+                          transform: `scale(${(0.97 + 0.03 * passLockSpring).toFixed(4)})`,
+                        }}
+                      >
+                        <div
+                          style={{
+                            padding: 8,
+                            borderRadius: 12,
+                            backgroundColor: '#FFFFFF',
+                            border: `1.5px solid ${allOrdered ? EMERALD_BORDER : LAUNCH_PALETTE.TERTIARY}`,
+                            flexShrink: 0,
+                          }}
+                        >
+                          <DeterministicQrMatrix
+                            seed={20260344}
+                            size={104}
+                            fgColor={LAUNCH_PALETTE.PRIMARY_DARK}
+                            bgColor="#FFFFFF"
+                          />
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flex: 1 }}>
                           <span
-                            key={cat.id}
                             style={{
                               display: 'inline-flex',
                               alignItems: 'center',
                               gap: 6,
-                              padding: '6px 14px',
+                              alignSelf: 'flex-start',
+                              padding: '4px 10px',
                               borderRadius: 999,
-                              backgroundColor: isActive ? activeCategoryBg : AMBER_SOFT,
-                              border: `1px solid ${isActive ? activeCategoryBorder : AMBER_BORDER}`,
-                              fontSize: 12.5,
-                              fontWeight: 800,
-                              color: isActive ? activeCategoryInk : LAUNCH_PALETTE.PRIMARY,
+                              backgroundColor: allOrdered
+                                ? EMERALD_INK
+                                : LAUNCH_PALETTE.SURFACE_MUTED,
+                              color: allOrdered ? '#FFFFFF' : LAUNCH_PALETTE.MUTED_OLIVE,
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 10.5,
+                              fontWeight: 900,
                             }}
                           >
-                            {isActive ? <Flame size={13} color={activeCategoryInk} strokeWidth={2.4} /> : null}
-                            {cat.label}
+                            <Sparkles size={11} strokeWidth={2.5} />
+                            <span>{allOrdered ? 'KAUNTER EKSPRES • 5 MIN' : 'MENUNGGU ITEM'}</span>
                           </span>
-                        );
-                      })}
-                    </div>
 
-                    <span
-                      style={{
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11.5,
-                        fontWeight: 800,
-                        letterSpacing: '0.09em',
-                        color: AMBER_INK,
-                      }}
-                    >
-                      SIAP 5–8 MIN
-                    </span>
-                  </div>
-
-                  {/* 3 Stepped Z-Tier Product Cards physically lifting off the 3D deck (+52px / +88px / +124px) */}
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gap: 18,
-                      flex: 1,
-                      transformStyle: 'preserve-3d',
-                    }}
-                  >
-                    {studentItems.map((item, idx) => {
-                      const zLift = item.tierZ * item.liftSpring;
-                      const tiltPitch = -3 * item.liftSpring;
-                      const shadowBlur = 14 + 28 * item.liftSpring;
-
-                      return (
-                        <div
-                          key={item.id}
-                          style={{
-                            position: 'relative',
-                            transformStyle: 'preserve-3d',
-                          }}
-                        >
-                          {/* Dynamic Ground-Plane Shadow Slab anchored on Deck (z=-2px) */}
-                          <div
-                            aria-hidden
-                            style={{
-                              position: 'absolute',
-                              inset: 8,
-                              borderRadius: 20,
-                              backgroundColor: `rgba(180, 83, 9, ${(0.08 + 0.2 * item.liftSpring).toFixed(3)})`,
-                              transform: `translate3d(6px, ${(8 + idx * 4).toFixed(1)}px, -2px) scale(${(0.96 - 0.04 * item.liftSpring).toFixed(3)})`,
-                              pointerEvents: 'none',
-                            }}
-                          />
-
-                          {/* Stepped Elevated Product Card */}
                           <div
                             style={{
-                              position: 'relative',
-                              height: '100%',
-                              borderRadius: 20,
-                              padding: '16px 18px',
-                              backgroundColor: item.added ? '#FFFFFF' : AMBER_SOFT,
-                              border: `1.8px solid ${item.added ? AMBER_DARK : AMBER_BORDER}`,
-                              boxShadow: item.added
-                                ? `0 ${shadowBlur.toFixed(0)}px 46px rgba(180, 83, 9, 0.24), 0 10px 22px rgba(31, 39, 32, 0.14)`
-                                : '0 8px 18px rgba(31, 39, 32, 0.06)',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              justifyContent: 'space-between',
-                              boxSizing: 'border-box',
-                              transformStyle: 'preserve-3d',
-                              transform: `translate3d(0px, ${(-8 * item.liftSpring).toFixed(2)}px, ${zLift.toFixed(2)}px) rotateX(${tiltPitch.toFixed(2)}deg)`,
+                              fontSize: 16,
+                              fontWeight: 900,
+                              lineHeight: 1.25,
+                              color: LAUNCH_PALETTE.PRIMARY_DARK,
                             }}
                           >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <span
-                                style={{
-                                  width: 40,
-                                  height: 40,
-                                  borderRadius: 12,
-                                  backgroundColor: item.added ? AMBER_SOFT : LAUNCH_PALETTE.CARD_BG,
-                                  border: `1.5px solid ${item.added ? AMBER : AMBER_BORDER}`,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                {renderItemIcon(item.iconKind)}
-                              </span>
+                            {allOrdered
+                              ? 'SIAP DIAMBIL DI DATARAN SISWA ✓'
+                              : 'Pilih 3 item untuk jana pas ekspres'}
+                          </div>
 
-                              <span
-                                style={{
-                                  padding: '4px 10px',
-                                  borderRadius: 999,
-                                  backgroundColor: item.iconKind === 'merch' ? EMERALD_SOFT : AMBER_SOFT,
-                                  border: `1px solid ${item.iconKind === 'merch' ? EMERALD_BORDER : AMBER_BORDER}`,
-                                  fontFamily: LAUNCH_FONTS.MONO,
-                                  fontSize: 10.5,
-                                  fontWeight: 800,
-                                  color: item.iconKind === 'merch' ? EMERALD_INK : AMBER_INK,
-                                }}
-                              >
-                                {item.badge}
-                              </span>
-                            </div>
-
-                            <div style={{ marginTop: 10 }}>
-                              <div
-                                style={{
-                                  fontSize: 17.5,
-                                  fontWeight: 900,
-                                  letterSpacing: '-0.02em',
-                                  color: LAUNCH_PALETTE.PRIMARY,
-                                  lineHeight: 1.15,
-                                }}
-                              >
-                                {item.title}
-                              </div>
-                              <div
-                                style={{
-                                  marginTop: 4,
-                                  fontSize: 13,
-                                  fontWeight: 600,
-                                  color: LAUNCH_PALETTE.INK_SOFT,
-                                }}
-                              >
-                                {item.subtitle}
-                              </div>
-                            </div>
-
-                            <div
-                              style={{
-                                marginTop: 14,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                gap: 8,
-                              }}
+                          <div style={{ fontSize: 13, fontWeight: 600, color: LAUNCH_PALETTE.INK_SOFT }}>
+                            Imbas pantas melalui{' '}
+                            <EditorialAnnotation
+                              type="highlight"
+                              startFrame={passReadyFrame + 4}
+                              durationFrames={16}
+                              color="rgba(245, 158, 11, 0.34)"
+                              strokeWidth={10}
+                              padding={3}
+                              iterations={1}
+                              seed={44}
                             >
-                              <span
-                                style={{
-                                  fontFamily: LAUNCH_FONTS.MONO,
-                                  fontSize: 15,
-                                  fontWeight: 900,
-                                  color: AMBER_INK,
-                                  fontVariantNumeric: 'tabular-nums',
-                                }}
-                              >
-                                {item.priceLabel}
+                              <span style={{ fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY_DARK }}>
+                                JPP Pay
                               </span>
-
-                              <span
-                                style={{
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: 5,
-                                  padding: '6px 11px',
-                                  borderRadius: 999,
-                                  backgroundColor: item.added ? EMERALD_INK : LAUNCH_PALETTE.PRIMARY_DARK,
-                                  color: '#FFFFFF',
-                                  fontFamily: LAUNCH_FONTS.MONO,
-                                  fontSize: 11,
-                                  fontWeight: 800,
-                                }}
-                              >
-                                {item.added ? (
-                                  <>
-                                    <Check size={12} strokeWidth={3} />
-                                    <span>Di Bakul</span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <Plus size={12} strokeWidth={2.8} />
-                                    <span>Tambah</span>
-                                  </>
-                                )}
-                              </span>
-                            </div>
+                            </EditorialAnnotation>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
 
-                  {/* Bottom Deck Bar */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      paddingTop: 12,
-                      borderTop: `1.5px solid ${AMBER_BORDER}`,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 13,
-                        fontWeight: 800,
-                        color: LAUNCH_PALETTE.PRIMARY,
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      JUMLAH BAKUL ({cartCount} ITEM) : RM {cartTotalRm.toFixed(2)}
-                    </span>
-                    <span
-                      style={{
-                        padding: '8px 18px',
-                        borderRadius: 999,
-                        backgroundColor: payButtonBg,
-                        color: '#FFFFFF',
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 12,
-                        fontWeight: 800,
-                        letterSpacing: '0.08em',
-                      }}
-                    >
-                      {item3Added ? `PESANAN #${safeOrdersCount} SIAP DIAMBIL ✓` : 'JPP PAY • SEGERA'}
-                    </span>
-                  </div>
-                </div>
-              </KineticWindow>
-            </Interactive.Div>
-
-            {/* Floating Foreground 3D Pickup Stamp: JPP PAY • PESANAN #344 SIAP DIAMBIL (+112px Z) */}
-            {payStampOpacity > 0.005 ? (
-              <Interactive.Div
-                name="JPP Pay 3D Pickup Stamp"
-                premountFor={safeFps}
-                style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  width: 476,
-                  opacity: payStampOpacity,
-                  transformOrigin: '50% 50%',
-                  transformStyle: 'preserve-3d',
-                  willChange: 'transform, opacity',
-                  transform: `translate3d(${passX.toFixed(2)}px, ${passY.toFixed(2)}px, ${passZ.toFixed(2)}px) rotateX(${passRotX.toFixed(2)}deg) rotateY(${passRotY.toFixed(2)}deg) scale(${passScale.toFixed(4)})`,
-                  zIndex: 12,
-                }}
-              >
-                <div
-                  style={{
-                    position: 'relative',
-                    padding: '14px 18px',
-                    borderRadius: 20,
-                    backgroundColor: '#FFFFFF',
-                    border: `2px solid ${AMBER_DARK}`,
-                    boxShadow:
-                      '0 34px 72px rgba(180, 83, 9, 0.28), 0 12px 26px rgba(31, 39, 32, 0.18)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: 8,
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span
-                        style={{
-                          width: 24,
-                          height: 24,
-                          borderRadius: 999,
-                          backgroundColor: EMERALD_INK,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          flexShrink: 0,
-                        }}
-                      >
-                        <Check size={13} color="#FFFFFF" strokeWidth={3} />
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11.5,
-                          fontWeight: 900,
-                          letterSpacing: '0.05em',
-                          color: LAUNCH_PALETTE.PRIMARY,
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        JPP PAY • PESANAN #{safeOrdersCount} SIAP DIAMBIL ✓
-                      </span>
+                      <GeometricSparkBurst
+                        triggerFrame={sparkFrame}
+                        x={522}
+                        y={28}
+                        durationFrames={36}
+                        radius={46}
+                        count={8}
+                        seed="polymart-v6-pass-burst"
+                        colors={[AMBER_DARK, EMERALD, AMBER]}
+                      />
                     </div>
-
-                    <span
-                      style={{
-                        padding: '3px 8px',
-                        borderRadius: 999,
-                        backgroundColor: AMBER_SOFT,
-                        border: `1px solid ${AMBER}`,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 9.5,
-                        fontWeight: 800,
-                        color: AMBER_INK,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      KAUNTER EKSPRES
-                    </span>
                   </div>
+                </KineticWindow>
 
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '8px 12px',
-                      borderRadius: 12,
-                      backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 12,
-                      fontWeight: 800,
-                      color: LAUNCH_PALETTE.PRIMARY,
-                    }}
-                  >
-                    <span>3 ITEM • RM 27.00</span>
-                    <span style={{ color: EMERALD_INK }}>DATARAN SISWA</span>
-                  </div>
-
-                  <div style={{ fontSize: 13.5, fontWeight: 700, color: LAUNCH_PALETTE.INK_SOFT }}>
-                    Imbas terus pas digital melalui{' '}
-                    <EditorialAnnotation
-                      type="highlight"
-                      startFrame={payStampStart + 10}
-                      durationFrames={18}
-                      color="rgba(245, 158, 11, 0.34)"
-                      strokeWidth={10}
-                      padding={3}
-                      iterations={1}
-                      seed={44}
-                    >
-                      <span style={{ fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY_DARK }}>JPP Pay</span>
-                    </EditorialAnnotation>
-                  </div>
-
-                  <div
-                    style={{
-                      position: 'absolute',
-                      right: 18,
-                      top: 6,
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    <GeometricSparkBurst
-                      triggerFrame={payStampStart + 26}
-                      x={0}
-                      y={0}
-                      durationFrames={44}
-                      radius={48}
-                      count={8}
-                      seed="polymart-jpp-pay-burst"
-                      colors={[AMBER_DARK, EMERALD, AMBER]}
-                    />
-                  </div>
-                </div>
+                <GhostCursor
+                  keyframes={act1CursorKeyframes}
+                  appearFrame={Math.round((20 / 60) * safeFps)}
+                  disappearFrame={Math.round((102 / 60) * safeFps)}
+                  color={LAUNCH_PALETTE.PRIMARY}
+                  rippleColor={AMBER_DARK}
+                />
               </Interactive.Div>
             ) : null}
 
-            {/* DECK B: Cyan PolyRent 3D Housing Diorama (Swings from Back-Right -> Center-Right Hero Focus in Act 2) */}
-            {rentOpacity > 0.005 ? (
+            {/* ACT 2 WORKBENCH: Upright Cyan PolyRent Verified Housing & Split Calculator */}
+            {morphT > 0.005 ? (
               <Interactive.Div
-                name="PolyRent 3D Isometric Housing Diorama"
+                name="PolyRent Upright Workbench"
                 premountFor={safeFps}
                 style={{
                   position: 'absolute',
-                  left: 520,
-                  top: 72,
-                  width: 860,
-                  height: 516,
-                  opacity: rentOpacity,
-                  transformOrigin: '50% 50%',
-                  transformStyle: 'preserve-3d',
-                  willChange: 'transform, opacity',
-                  transform: `translate3d(${rentX.toFixed(2)}px, ${rentY.toFixed(2)}px, ${rentZ.toFixed(2)}px) rotateX(${rentRotX.toFixed(2)}deg) rotateY(${rentRotY.toFixed(2)}deg) scale(${rentScale.toFixed(4)})`,
-                  zIndex: orbitProgress >= 0.42 ? 14 : 4,
+                  inset: 0,
+                  opacity: morphT,
+                  transform: `translate3d(${((1 - morphT) * 104).toFixed(2)}%, 0px, 0px)`,
                 }}
               >
                 <KineticWindow
                   surface="dark"
                   routeLabel="jpp.polisas.edu.my/polyrent"
-                  statusPill="VERIFIED SISWA ✓"
+                  statusPill="VERIFIED JPP ✓"
                   statusAccent
                   accentColor={CYAN}
-                  accentSoftBg="rgba(6, 182, 212, 0.24)"
+                  accentSoftBg="rgba(6, 182, 212, 0.22)"
                   accentBorderColor={CYAN}
                   width="100%"
                   height="100%"
-                  borderRadius={26}
-                  sheenStartFrame={Math.round(3.9 * safeFps)}
-                  sheenDuration={44}
+                  borderRadius={28}
+                  sheenStartFrame={Math.round(3.65 * safeFps)}
+                  sheenDuration={38}
                   style={{
                     borderColor: CYAN,
-                    boxShadow:
-                      '0 46px 96px rgba(8, 145, 178, 0.26), 0 18px 42px rgba(31, 39, 32, 0.34)',
+                    boxShadow: '0 26px 60px rgba(8, 145, 178, 0.2)',
                   }}
                 >
                   <div
                     style={{
                       flex: 1,
-                      padding: '22px 28px 24px',
+                      padding: '24px 28px',
                       display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      gap: 16,
+                      gap: 28,
                       boxSizing: 'border-box',
-                      transformStyle: 'preserve-3d',
                     }}
                   >
-                    {/* Top Row + Verified Siswa 3D Floating Pill (+128px Z) */}
+                    {/* Left Side: Verified Student Housing Card */}
                     <div
                       style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 12,
-                        transformStyle: 'preserve-3d',
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 7,
-                            padding: '8px 16px',
-                            borderRadius: 999,
-                            backgroundColor: bilikPillBg,
-                            border: `1.5px solid ${bilikPillBorder}`,
-                            fontSize: 13,
-                            fontWeight: 800,
-                            color: bilikPillInk,
-                          }}
-                        >
-                          <Home size={14} strokeWidth={2.5} />
-                          <span>Cari Bilik Sewa</span>
-                        </span>
-
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 7,
-                            padding: '8px 15px',
-                            borderRadius: 999,
-                            backgroundColor: 'rgba(248, 246, 238, 0.08)',
-                            border: '1px solid rgba(217, 201, 178, 0.24)',
-                            fontSize: 12.5,
-                            fontWeight: 700,
-                            color: LAUNCH_PALETTE.TERTIARY,
-                          }}
-                        >
-                          <span>Cari Roommate</span>
-                        </span>
-                      </div>
-
-                      <div
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          padding: '9px 16px',
-                          borderRadius: 999,
-                          backgroundColor: CYAN_INK,
-                          border: `1.5px solid ${CYAN_BORDER}`,
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11.5,
-                          fontWeight: 800,
-                          color: '#FFFFFF',
-                          boxShadow: '0 20px 42px rgba(6, 182, 212, 0.34)',
-                          transform: `translate3d(0px, ${(-4 * verifiedPillSpring).toFixed(2)}px, ${(30 + 98 * verifiedPillSpring).toFixed(2)}px) scale(${(0.92 + 0.08 * verifiedPillSpring).toFixed(4)})`,
-                        }}
-                      >
-                        <ShieldCheck size={14} color={CYAN_BORDER} strokeWidth={2.6} />
-                        <span>VERIFIED SISWA • WHATSAPP TUAN RUMAH ✓</span>
-                      </div>
-                    </div>
-
-                    {/* Floating 3D Isometric Room Card (+42px Z) */}
-                    <div
-                      style={{
-                        borderRadius: 20,
-                        padding: '16px 20px',
-                        backgroundColor: 'rgba(6, 182, 212, 0.14)',
-                        border: '1.5px solid rgba(165, 243, 252, 0.42)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 16,
-                        boxShadow: '0 22px 44px rgba(15, 23, 20, 0.3)',
-                        transform: `translate3d(0px, 0px, ${(42 * roomZProgress).toFixed(2)}px)`,
-                      }}
-                    >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-                        <div
-                          style={{
-                            width: 48,
-                            height: 48,
-                            borderRadius: 14,
-                            backgroundColor: CYAN_INK,
-                            border: `1.5px solid ${CYAN_BORDER}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <MapPin size={22} color="#FFFFFF" strokeWidth={2.4} />
-                        </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                          <span style={{ fontSize: 19, fontWeight: 900, color: LAUNCH_PALETTE.BACKGROUND }}>
-                            Taman Pertama Semambu • 3 Min dari POLISAS
-                          </span>
-                          <span style={{ fontSize: 13.5, fontWeight: 700, color: CYAN_BORDER }}>
-                            Bilik Master • Lengkap WiFi, Mesin Basuh &amp; Katil • Lelaki / Perempuan
-                          </span>
-                        </div>
-                      </div>
-
-                      <div
-                        style={{
-                          padding: '8px 14px',
-                          borderRadius: 999,
-                          backgroundColor: EMERALD_INK,
-                          border: `1px solid ${EMERALD_BORDER}`,
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 12,
-                          fontWeight: 900,
-                          color: '#FFFFFF',
-                          flexShrink: 0,
-                        }}
-                      >
-                        RM 170 / BLN
-                      </div>
-                    </div>
-
-                    {/* Floating 3D Split-Rent Calculator (+78px Z) */}
-                    <div
-                      style={{
-                        flex: 1,
-                        borderRadius: 22,
-                        padding: '18px 22px',
-                        backgroundColor: 'rgba(18, 25, 21, 0.94)',
-                        border: `1.5px solid ${CYAN}`,
+                        width: 790,
+                        borderRadius: 24,
+                        padding: '24px 26px',
+                        backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                        border: `1.5px solid rgba(165, 243, 252, 0.36)`,
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
-                        gap: 14,
-                        boxShadow: '0 28px 56px rgba(6, 182, 212, 0.24)',
-                        transform: `translate3d(0px, ${(-6 * calcZProgress).toFixed(2)}px, ${(78 * calcZProgress).toFixed(2)}px)`,
+                        boxSizing: 'border-box',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 7,
+                            padding: '6px 14px',
+                            borderRadius: 999,
+                            backgroundColor: CYAN_INK,
+                            border: `1px solid ${CYAN_BORDER}`,
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 11.5,
+                            fontWeight: 900,
+                            color: '#FFFFFF',
+                          }}
+                        >
+                          <ShieldCheck size={14} color={CYAN_BORDER} strokeWidth={2.5} />
+                          <span>DISAHKAN JPP • BEBAS SCAM</span>
+                        </span>
+
+                        <span
+                          style={{
+                            padding: '7px 14px',
+                            borderRadius: 999,
+                            backgroundColor: EMERALD_INK,
+                            border: `1px solid ${EMERALD_BORDER}`,
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 12.5,
+                            fontWeight: 900,
+                            color: '#FFFFFF',
+                          }}
+                        >
+                          RM {totalHouseRent} / BLN RUMAH
+                        </span>
+                      </div>
+
+                      <div>
+                        <div
+                          style={{
+                            fontSize: 31,
+                            fontWeight: 900,
+                            letterSpacing: '-0.025em',
+                            lineHeight: 1.15,
+                            color: '#FFFFFF',
+                          }}
+                        >
+                          Taman Pertama Semambu • 3 Min dari POLISAS
+                        </div>
+                        <p
+                          style={{
+                            margin: '10px 0 0',
+                            fontSize: 16,
+                            fontWeight: 600,
+                            lineHeight: 1.45,
+                            color: CYAN_BORDER,
+                          }}
+                        >
+                          Bilik Master &amp; Ruang Tamu Lengkap · Kuota Siswa Semester 1–6 (Lelaki / Perempuan)
+                        </p>
+                      </div>
+
+                      {/* 2x2 Amenity Grid */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+                        {RENT_AMENITIES.map((item) => (
+                          <div
+                            key={item.label}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 10,
+                              padding: '12px 14px',
+                              borderRadius: 14,
+                              backgroundColor: 'rgba(18, 25, 21, 0.72)',
+                              border: '1px solid rgba(165, 243, 252, 0.24)',
+                              fontSize: 14,
+                              fontWeight: 700,
+                              color: LAUNCH_PALETTE.BACKGROUND,
+                            }}
+                          >
+                            {renderAmenityIcon(item.icon)}
+                            <span>{item.label}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Walking Distance Meter to POLISAS */}
+                      <div
+                        style={{
+                          padding: '14px 18px',
+                          borderRadius: 16,
+                          backgroundColor: 'rgba(18, 25, 21, 0.85)',
+                          border: '1px solid rgba(165, 243, 252, 0.26)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: 8,
+                        }}
+                      >
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 11.5,
+                            fontWeight: 800,
+                            color: CYAN_BORDER,
+                          }}
+                        >
+                          <span>TAMAN PERTAMA SEMAMBU</span>
+                          <span style={{ color: EMERALD }}>3 MIN KE PINTU UTAMA POLISAS ✓</span>
+                        </div>
+                        <div
+                          style={{
+                            width: '100%',
+                            height: 8,
+                            borderRadius: 999,
+                            backgroundColor: 'rgba(248, 246, 238, 0.14)',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: '88%',
+                              height: '100%',
+                              borderRadius: 999,
+                              backgroundColor: CYAN,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 12,
+                          fontWeight: 800,
+                          color: EMERALD_BORDER,
+                        }}
+                      >
+                        <span>✓ DEPOSIT TELUS &amp; PERJANJIAN SEWA RASMI</span>
+                        <span>WHATSAPP TUAN RUMAH TERUS</span>
+                      </div>
+                    </div>
+
+                    {/* Right Side: Interactive Roommate Rent-Split Calculator */}
+                    <div
+                      style={{
+                        flex: 1,
+                        borderRadius: 24,
+                        padding: '24px 26px',
+                        backgroundColor: 'rgba(18, 25, 21, 0.94)',
+                        border: `2px solid ${CYAN}`,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'space-between',
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                           <span
                             style={{
-                              width: 34,
-                              height: 34,
-                              borderRadius: 10,
+                              width: 40,
+                              height: 40,
+                              borderRadius: 12,
                               backgroundColor: 'rgba(6, 182, 212, 0.22)',
+                              border: `1.5px solid ${CYAN}`,
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                             }}
                           >
-                            <Calculator size={17} color={CYAN_BORDER} strokeWidth={2.3} />
+                            <Calculator size={20} color={CYAN} strokeWidth={2.4} />
                           </span>
                           <div>
-                            <div style={{ fontSize: 16, fontWeight: 900, color: LAUNCH_PALETTE.BACKGROUND }}>
-                              Kalkulator Sewa &amp; Deposit Siswa
+                            <div style={{ fontSize: 20, fontWeight: 900, color: '#FFFFFF' }}>
+                              Kalkulator Bahagi Sewa Roommate
                             </div>
                             <div
                               style={{
                                 fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 10.5,
-                                fontWeight: 700,
+                                fontSize: 11.5,
+                                fontWeight: 800,
                                 color: CYAN_BORDER,
-                                letterSpacing: '0.1em',
                               }}
                             >
-                              BAHAGI BIL &amp; SEWA BULANAN ROOMMATE
+                              PILIH BILANGAN PENGHUNI UNTUK KONGSI SEWA RM {totalHouseRent}
                             </div>
                           </div>
                         </div>
-
-                        <span
-                          style={{
-                            padding: '6px 12px',
-                            borderRadius: 999,
-                            backgroundColor: 'rgba(248, 246, 238, 0.08)',
-                            border: '1px solid rgba(217, 201, 178, 0.24)',
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 12,
-                            fontWeight: 800,
-                            color: LAUNCH_PALETTE.BACKGROUND,
-                          }}
-                        >
-                          Sewa Rumah: RM {monthlyRent} / bln
-                        </span>
                       </div>
 
-                      <div
-                        style={{
-                          display: 'grid',
-                          gridTemplateColumns: '1.15fr 0.85fr',
-                          gap: 16,
-                          alignItems: 'stretch',
-                        }}
-                      >
+                      {/* Roommate Selector Pills (2 Pelajar -> 3 Pelajar -> 4 Pelajar) */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                        {ROOMMATE_OPTIONS.map((count) => {
+                          const isSelected = count === activeRoommates;
+                          const unitRent = Math.round(totalHouseRent / count);
+                          const pillScale =
+                            isSelected && count === 4 ? 1 + (1 - rent4LockSpring) * -0.04 : 1;
+
+                          return (
+                            <div
+                              key={count}
+                              style={{
+                                padding: '14px 16px',
+                                borderRadius: 18,
+                                backgroundColor: isSelected
+                                  ? CYAN_DARK
+                                  : 'rgba(248, 246, 238, 0.08)',
+                                border: `2px solid ${isSelected ? CYAN_BORDER : 'rgba(165, 243, 252, 0.24)'}`,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: 4,
+                                alignItems: 'center',
+                                transform: `scale(${pillScale.toFixed(4)})`,
+                              }}
+                            >
+                              <span
+                                style={{
+                                  fontFamily: LAUNCH_FONTS.MONO,
+                                  fontSize: 14,
+                                  fontWeight: 900,
+                                  color: '#FFFFFF',
+                                }}
+                              >
+                                {count} Pelajar {isSelected ? '✓' : ''}
+                              </span>
+                              <span
+                                style={{
+                                  fontFamily: LAUNCH_FONTS.MONO,
+                                  fontSize: 12,
+                                  fontWeight: 800,
+                                  color: isSelected ? CYAN_SOFT : CYAN_BORDER,
+                                }}
+                              >
+                                RM {unitRent} / org
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* 4-Segment Dynamic Roommate Split Bar */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <div
                           style={{
-                            borderRadius: 16,
-                            padding: '14px 16px',
-                            backgroundColor: 'rgba(248, 246, 238, 0.05)',
-                            border: '1px solid rgba(217, 201, 178, 0.18)',
                             display: 'flex',
-                            flexDirection: 'column',
                             justifyContent: 'space-between',
-                            gap: 10,
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 11.5,
+                            fontWeight: 800,
+                            color: CYAN_BORDER,
                           }}
                         >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span
-                              style={{
-                                fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 11,
-                                fontWeight: 800,
-                                color: LAUNCH_PALETTE.TERTIARY,
-                              }}
-                            >
-                              BILANGAN ROOMMATE
-                            </span>
-                            <span
-                              style={{
-                                fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 13,
-                                fontWeight: 900,
-                                color: CYAN_BORDER,
-                              }}
-                            >
-                              {roommates} Pelajar
-                            </span>
-                          </div>
-
-                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
-                            {[2, 3, 4].map((n) => {
-                              const isSelected = roommates === n;
-                              return (
-                                <span
-                                  key={n}
-                                  style={{
-                                    padding: '9px 0',
-                                    borderRadius: 12,
-                                    textAlign: 'center',
-                                    backgroundColor: isSelected ? CYAN_INK : 'rgba(248, 246, 238, 0.07)',
-                                    border: `1.5px solid ${isSelected ? CYAN_BORDER : 'rgba(217, 201, 178, 0.22)'}`,
-                                    fontFamily: LAUNCH_FONTS.MONO,
-                                    fontSize: 13,
-                                    fontWeight: 900,
-                                    color: '#FFFFFF',
-                                  }}
-                                >
-                                  {n} Pelajar
-                                </span>
-                              );
-                            })}
-                          </div>
-
-                          <div style={{ display: 'flex', gap: 6 }}>
-                            {Array.from({ length: roommates }).map((_, segIdx) => (
+                          <span>PEMBAHAGIAN BIL &amp; SEWA BULANAN</span>
+                          <span>
+                            {activeRoommates} ORANG SERUMAH • RM {totalHouseRent} ÷ {activeRoommates}
+                          </span>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
+                          {[1, 2, 3, 4].map((slot) => {
+                            const isActiveSlot = slot <= activeRoommates;
+                            return (
                               <div
-                                key={segIdx}
+                                key={slot}
                                 style={{
-                                  flex: 1,
-                                  height: 6,
+                                  height: 12,
                                   borderRadius: 999,
-                                  backgroundColor: segIdx === 0 ? CYAN : EMERALD,
+                                  backgroundColor: isActiveSlot
+                                    ? slot % 2 === 0
+                                      ? EMERALD
+                                      : CYAN
+                                    : 'rgba(248, 246, 238, 0.12)',
+                                  opacity: isActiveSlot ? 0.5 + 0.5 * calcSplitProgress : 0.45,
                                 }}
                               />
-                            ))}
-                          </div>
+                            );
+                          })}
                         </div>
+                      </div>
 
-                        <div
-                          style={{
-                            borderRadius: 16,
-                            padding: '14px 18px',
-                            backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                            border: `2px solid ${CYAN}`,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            justifyContent: 'space-between',
-                            transform: `scale(${calcResultPop.toFixed(4)})`,
-                          }}
-                        >
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span
-                              style={{
-                                fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 10.5,
-                                fontWeight: 800,
-                                color: LAUNCH_PALETTE.INK_SOFT,
-                              }}
-                            >
-                              SEORANG PERLU BAYAR
-                            </span>
-                            <span
-                              style={{
-                                fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 11,
-                                fontWeight: 900,
-                                color: CYAN_INK,
-                              }}
-                            >
-                              RM {monthlyRent} ÷ {roommates}
-                            </span>
+                      {/* High-Contrast Upright Per-Student Cost Readout */}
+                      <div
+                        style={{
+                          padding: '20px 24px',
+                          borderRadius: 20,
+                          backgroundColor: '#FFFFFF',
+                          border: `2px solid ${CYAN}`,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: 16,
+                        }}
+                      >
+                        <div>
+                          <div
+                            style={{
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 11.5,
+                              fontWeight: 900,
+                              letterSpacing: '0.1em',
+                              color: CYAN_INK,
+                            }}
+                          >
+                            SEORANG PERLU BAYAR SEBULAN
                           </div>
-
-                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 4 }}>
                             <span
                               style={{
-                                fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 38,
+                                fontSize: 52,
                                 fontWeight: 900,
-                                color: LAUNCH_PALETTE.PRIMARY,
+                                letterSpacing: '-0.03em',
+                                lineHeight: 1,
+                                color: LAUNCH_PALETTE.PRIMARY_DARK,
                                 fontVariantNumeric: 'tabular-nums',
                               }}
                             >
@@ -1483,76 +1489,62 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             <span
                               style={{
                                 fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 12.5,
+                                fontSize: 16,
                                 fontWeight: 800,
-                                color: CYAN_INK,
+                                color: LAUNCH_PALETTE.INK_SOFT,
                               }}
                             >
                               / bln seorang
                             </span>
                           </div>
-
                           <div
                             style={{
-                              height: 7,
-                              width: '100%',
-                              borderRadius: 999,
-                              backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                              overflow: 'hidden',
+                              marginTop: 6,
+                              fontSize: 13.5,
+                              fontWeight: 800,
+                              color: EMERALD_INK,
                             }}
                           >
-                            <div
-                              style={{
-                                width: '100%',
-                                height: '100%',
-                                backgroundColor: CYAN_INK,
-                                transformOrigin: 'left center',
-                                transform: `scaleX(${smoothShareRatio.toFixed(4)})`,
-                              }}
-                            />
+                            Jimat RM {monthlySavings}/bln seorang • Termasuk WiFi &amp; bil kongsi
                           </div>
+                        </div>
+
+                        <div
+                          style={{
+                            padding: '12px 18px',
+                            borderRadius: 16,
+                            backgroundColor: CYAN_INK,
+                            color: '#FFFFFF',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 8,
+                            fontSize: 14,
+                            fontWeight: 900,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <MessageCircle size={17} strokeWidth={2.5} />
+                          <span>WhatsApp Tuan Rumah ✓</span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Footer Action Strip */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11.5,
-                        fontWeight: 700,
-                        color: CYAN_BORDER,
-                      }}
-                    >
-                      <span>Termasuk WiFi &amp; bil kongsi — terus WhatsApp tuan rumah</span>
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          padding: '5px 12px',
-                          borderRadius: 999,
-                          backgroundColor: CYAN_INK,
-                          border: `1px solid ${CYAN_BORDER}`,
-                          color: '#FFFFFF',
-                        }}
-                      >
-                        <MessageCircle size={12} strokeWidth={2.5} />
-                        <span>Hubungi Sekarang</span>
-                      </span>
-                    </div>
                   </div>
                 </KineticWindow>
+
+                <GhostCursor
+                  keyframes={act2CursorKeyframes}
+                  appearFrame={Math.round((212 / 60) * safeFps)}
+                  disappearFrame={Math.round((288 / 60) * safeFps)}
+                  color={LAUNCH_PALETTE.PRIMARY}
+                  rippleColor={CYAN}
+                />
               </Interactive.Div>
             ) : null}
           </div>
         </div>
       </CameraStage>
 
-      <EditorialFrameMarks chapterCode="03" chapterLabel="12:30 TGH HARI • MAKAN & BILIK SEWA" />
+      <EditorialFrameMarks chapterCode="03" chapterLabel="12:30 – 18:00 • POLYMART & POLYRENT" />
     </>
   );
 };
