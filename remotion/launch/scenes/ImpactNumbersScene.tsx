@@ -31,10 +31,12 @@ const SHEEN_EASE = Easing.bezier(0.25, 0.1, 0.25, 1);
 const TICKER_MODULES: readonly string[] = [
   'POLYMAPS',
   'POLYMART',
+  'POLYRENT',
   'POLYSUARA',
   'E-KEBAJIKAN',
-  'EMS',
-  'KELAB POLISAS',
+  'FOOD BANK',
+  'SCAN QR MERIT',
+  '21 KELAB POLISAS',
 ];
 
 const TICKER_REPEATED_HALF: readonly string[] = [...TICKER_MODULES, ...TICKER_MODULES];
@@ -45,7 +47,7 @@ type MonthlyTrendSpec = {
   readonly isPeak?: boolean;
 };
 
-const EKEUSAHAWANAN_6M_TREND: readonly MonthlyTrendSpec[] = [
+const COMMUNITY_GROWTH_6M_TREND: readonly MonthlyTrendSpec[] = [
   { month: 'OKT', pct: 34 },
   { month: 'NOV', pct: 48 },
   { month: 'DIS', pct: 62 },
@@ -91,34 +93,35 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
 
+  const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
   const safeClubs = Number.isFinite(clubsCount) ? Math.max(0, Math.round(clubsCount)) : 21;
   const safeStudents = Number.isFinite(studentsCount) ? Math.max(0, Math.round(studentsCount)) : 1083;
   const safeActivities = Number.isFinite(activitiesCount) ? Math.max(0, Math.round(activitiesCount)) : 41;
   const safeProducts = Number.isFinite(productsCount) ? Math.max(0, Math.round(productsCount)) : 277;
   const safeOrders = Number.isFinite(ordersCount) ? Math.max(0, Math.round(ordersCount)) : 344;
 
-  const timeSec = frame / Math.max(1, fps);
+  const timeSec = frame / safeFps;
 
-  // Beat 1 (0..1.4s): Pill + KineticWords headline + 4 bento metric cards cascade (staggered 6 frames @ 60fps)
-  const pillDuration = Math.max(8, Math.round(0.38 * fps));
-  const headlineStart = Math.round(0.10 * fps);
-  const wordStagger = Math.max(2, Math.round(0.065 * fps));
-  const wordDuration = Math.max(8, Math.round(0.38 * fps));
-  const ruleStart = Math.round(0.28 * fps);
-  const ruleDuration = Math.max(10, Math.round(0.65 * fps));
+  // Beat 1 (0..1.4s): Community badge + KineticWords headline + 4 student proof bento cards cascade
+  const pillDuration = Math.max(8, Math.round(0.38 * safeFps));
+  const headlineStart = Math.round(0.10 * safeFps);
+  const wordStagger = Math.max(2, Math.round(0.065 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.38 * safeFps));
+  const ruleStart = Math.round(0.28 * safeFps);
+  const ruleDuration = Math.max(10, Math.round(0.65 * safeFps));
 
-  const cardBaseStart = Math.round(0.34 * fps);
-  const cardStagger = Math.max(3, Math.round((6 / 60) * fps));
-  const cardFadeFrames = Math.max(4, Math.round(0.22 * fps));
+  const cardBaseStart = Math.round(0.34 * safeFps);
+  const cardStagger = Math.max(3, Math.round((6 / 60) * safeFps));
+  const cardFadeFrames = Math.max(4, Math.round(0.22 * safeFps));
 
   // Beat 2 (1.2..4.2s): @remotion/shapes <Pie> progress rings + tabular counters + seamless kinetic ticker strip
-  const arcBaseStart = Math.round(1.20 * fps);
-  const arcStagger = Math.max(2, Math.round((4 / 60) * fps));
-  const arcSpanFrames = Math.max(24, Math.round(2.65 * fps));
-  const countSpanFrames = Math.max(24, Math.round(2.75 * fps));
+  const arcBaseStart = Math.round(1.20 * safeFps);
+  const arcStagger = Math.max(2, Math.round((4 / 60) * safeFps));
+  const arcSpanFrames = Math.max(24, Math.round(2.65 * safeFps));
+  const countSpanFrames = Math.max(24, Math.round(2.75 * safeFps));
 
-  const tickerFadeStart = Math.round(0.95 * fps);
-  const tickerFadeEnd = Math.max(tickerFadeStart + 8, Math.round(1.38 * fps));
+  const tickerFadeStart = Math.round(0.95 * safeFps);
+  const tickerFadeEnd = Math.max(tickerFadeStart + 8, Math.round(1.38 * safeFps));
   const tickerOpacity = interpolate(frame, [tickerFadeStart, tickerFadeEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -127,42 +130,42 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
   const tickerPhase = (timeSec / tickerCycleSec) % 1;
   const tickerShiftPercent = -(tickerPhase * 50);
 
-  // Beat 2b (1.55..3.2s): Live animated e-Keusahawanan 6-month bar chart telemetry strip
-  const chartStart = Math.round(1.55 * fps);
+  // Beat 2b (1.55..3.2s): Live animated 6-month student community participation bar chart
+  const chartStart = Math.round(1.55 * safeFps);
   const chartElapsed = frame - chartStart;
   const chartSpring =
     chartElapsed >= 0
       ? spring({
           frame: chartElapsed,
-          fps,
+          fps: safeFps,
           config: { damping: 180, stiffness: 210, mass: 0.9 },
         })
       : 0;
   const chartOpacity =
     chartElapsed >= 0
-      ? interpolate(chartElapsed, [0, Math.max(6, Math.round(0.24 * fps))], [0, 1], {
+      ? interpolate(chartElapsed, [0, Math.max(6, Math.round(0.24 * safeFps))], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
       : 0;
   const chartTranslateY = (1 - chartSpring) * 24;
-  const barBaseStart = Math.round(1.85 * fps);
-  const barStagger = Math.max(2, Math.round((4 / 60) * fps));
+  const barBaseStart = Math.round(1.85 * safeFps);
+  const barStagger = Math.max(2, Math.round((4 / 60) * safeFps));
 
-  // Beat 3 (4.0..6.0s): Terracotta (#C96F4F) transaction pill lifts with sweeping translucent sheen highlight
-  const beat3Start = Math.round(4.00 * fps);
+  // Beat 3 (4.0..6.0s): Terracotta (#C96F4F) student action pill lifts with sweeping translucent sheen
+  const beat3Start = Math.round(4.00 * safeFps);
   const pillElapsed = frame - beat3Start;
   const beat3Spring =
     pillElapsed >= 0
       ? spring({
           frame: pillElapsed,
-          fps,
+          fps: safeFps,
           config: { damping: 180, stiffness: 220, mass: 0.9 },
         })
       : 0;
   const beat3Opacity =
     pillElapsed >= 0
-      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.18 * fps))], [0, 1], {
+      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.18 * safeFps))], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
@@ -172,7 +175,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
   const beat3Scale = 0.92 + 0.08 * beat3Spring;
 
   const ordersCountStart = beat3Start;
-  const ordersCountEnd = Math.max(ordersCountStart + 8, Math.round(4.65 * fps));
+  const ordersCountEnd = Math.max(ordersCountStart + 8, Math.round(4.65 * safeFps));
   const liveOrders = Math.round(
     interpolate(
       frame,
@@ -186,8 +189,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
     ),
   );
 
-  const sheenStart = beat3Start + Math.max(4, Math.round(0.28 * fps));
-  const sheenEnd = Math.max(sheenStart + 10, Math.round(5.38 * fps));
+  const sheenStart = beat3Start + Math.max(4, Math.round(0.28 * safeFps));
+  const sheenEnd = Math.max(sheenStart + 10, Math.round(5.38 * safeFps));
   const sheenProgress = interpolate(frame, [sheenStart, sheenEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -199,48 +202,48 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
 
   const metrics: readonly MetricCardSpec[] = [
     {
-      code: '01',
-      tag: 'KELAB',
-      label: 'Kelab Berdaftar',
-      sub: 'Entiti Sah POLISAS',
-      target: safeClubs,
-      suffix: '',
-      targetArc: 0.88,
-      ringColor: LAUNCH_PALETTE.ACCENT,
-      iconKind: 'clubs',
-    },
-    {
-      code: '02',
-      tag: 'KAMPUS',
-      label: 'Mahasiswa Aktif',
-      sub: '5 Jabatan Akademik',
+      code: '01 · KOMUNITI',
+      tag: '5 JABATAN',
+      label: 'MAHASISWA DAH AKSES',
+      sub: 'Komuniti Aktif 5 Jabatan',
       target: safeStudents,
       suffix: '+',
       targetArc: 0.95,
-      ringColor: LAUNCH_PALETTE.TERTIARY,
+      ringColor: LAUNCH_PALETTE.ACCENT,
       iconKind: 'students',
     },
     {
-      code: '03',
-      tag: 'EMS',
-      label: 'Aktiviti Dipantau',
-      sub: 'Automasi Kertas Kerja',
-      target: safeActivities,
+      code: '02 · KELAB',
+      tag: 'TERBUKA',
+      label: 'KELAB & PERSATUAN',
+      sub: 'Sedia Untuk Anda Sertai',
+      target: safeClubs,
       suffix: '',
-      targetArc: 0.86,
+      targetArc: 0.88,
       ringColor: LAUNCH_PALETTE.SECONDARY,
-      iconKind: 'activities',
+      iconKind: 'clubs',
     },
     {
-      code: '04',
-      tag: 'NIAGA',
-      label: 'Produk PolyMart',
-      sub: 'Usahawan Pelajar',
+      code: '03 · NIAGA',
+      tag: 'POLYMART',
+      label: 'MENU & BARANG SISWA',
+      sub: 'Pesanan Tanpa Beratur',
       target: safeProducts,
       suffix: '+',
       targetArc: 0.92,
-      ringColor: LAUNCH_PALETTE.ACCENT,
+      ringColor: LAUNCH_PALETTE.TERTIARY,
       iconKind: 'products',
+    },
+    {
+      code: '04 · ACARA',
+      tag: 'MERIT QR',
+      label: 'ACARA & PROGRAM KAMPUS',
+      sub: 'Imbas QR & Kumpul Merit',
+      target: safeActivities,
+      suffix: '',
+      targetArc: 0.86,
+      ringColor: LAUNCH_PALETTE.ACCENT,
+      iconKind: 'activities',
     },
   ];
 
@@ -262,7 +265,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
         breathingAmplitude={0.45}
         entryZoomOffset={0.036}
         exitZoomDelta={0.042}
-        exitFrames={Math.round(0.35 * fps)}
+        exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
         <div
@@ -278,10 +281,10 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
             color: LAUNCH_PALETTE.BACKGROUND,
           }}
         >
-          {/* Beat 1: Telemetry Pill + KineticWords Headline + Architectural Rule */}
+          {/* Beat 1: Student Community Proof Pill + KineticWords Headline + Architectural Rule */}
           <Interactive.Div
             name="Impact Headline"
-            premountFor={fps}
+            premountFor={safeFps}
             style={{
               width: '100%',
               display: 'flex',
@@ -318,22 +321,22 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                     display: 'inline-block',
                   }}
                 />
-                <span>DATA SEBENAR • SUPABASE LANGSUNG</span>
+                <span>KOMUNITI HIDUP • 5 JABATAN POLISAS</span>
               </div>
             </KineticReveal>
 
             <KineticWords
               as="h2"
-              text="Angka Sebenar Menggerakkan POLISAS."
+              text={`${safeStudents.toLocaleString('en-US')}+ Siswa POLISAS Sudah Aktif. Giliran Anda.`}
               startFrame={headlineStart}
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
-              accentWords={['POLISAS.']}
+              accentWords={['Giliran', 'Anda.']}
               accentColor={LAUNCH_PALETTE.TERTIARY}
               align="center"
               style={{
                 margin: '14px 0 0',
-                fontSize: 60,
+                fontSize: 54,
                 fontWeight: 900,
                 letterSpacing: '-0.03em',
                 lineHeight: 1.06,
@@ -358,10 +361,10 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
             </div>
           </Interactive.Div>
 
-          {/* Beat 1 & Beat 2: 4 Bento Metric Cards with @remotion/shapes <Pie> Rings & High-Contrast Sublabels */}
+          {/* Beat 1 & Beat 2: 4 Student Community Proof Bento Cards with @remotion/shapes <Pie> Rings */}
           <Interactive.Div
             name="Metrics Grid"
-            premountFor={fps}
+            premountFor={safeFps}
             style={{
               marginTop: 22,
               width: '100%',
@@ -378,7 +381,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                 cardElapsed >= 0
                   ? spring({
                       frame: cardElapsed,
-                      fps,
+                      fps: safeFps,
                       config: { damping: 180, stiffness: 220, mass: 0.9 },
                     })
                   : 0;
@@ -476,7 +479,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       fill="none"
                       stroke="rgba(217, 201, 178, 0.16)"
                       strokeWidth={6.5}
-                      premountFor={fps}
+                      premountFor={safeFps}
                       showInTimeline={false}
                       style={{
                         position: 'absolute',
@@ -495,7 +498,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                         stroke={m.ringColor}
                         strokeWidth={6.5}
                         strokeLinecap="round"
-                        premountFor={fps}
+                        premountFor={safeFps}
                         showInTimeline={false}
                         style={{
                           position: 'absolute',
@@ -541,11 +544,13 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   <div
                     style={{
                       marginTop: 10,
-                      fontSize: 17,
+                      fontSize: 15.5,
                       fontWeight: 800,
-                      letterSpacing: '0.08em',
+                      letterSpacing: '0.06em',
+                      lineHeight: 1.2,
                       textTransform: 'uppercase',
                       color: LAUNCH_PALETTE.CARD_BG,
+                      whiteSpace: 'nowrap',
                     }}
                   >
                     {m.label}
@@ -567,22 +572,22 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
             })}
           </Interactive.Div>
 
-          {/* Beat 2b & Beat 3: Live e-Keusahawanan 6-Month Bar Chart Strip + Terracotta Transaction Pill */}
+          {/* Beat 2b & Beat 3: Live 6-Month Student Participation Bar Chart + Terracotta Student Action Pill */}
           <div
             style={{
               marginTop: 22,
               width: '100%',
               display: 'grid',
-              gridTemplateColumns: '1.05fr 0.95fr',
+              gridTemplateColumns: '0.96fr 1.04fr',
               gap: 24,
               alignItems: 'center',
               flexShrink: 0,
             }}
           >
-            {/* Left Half: Dark-Surface e-Keusahawanan 6-Month Telemetry Strip */}
+            {/* Left Half: Dark-Surface 6-Month Student Community Participation Strip */}
             <Interactive.Div
-              name="e-Keusahawanan Trend Chart"
-              premountFor={fps}
+              name="Student Community Trend Chart"
+              premountFor={safeFps}
               style={{
                 backgroundColor: 'rgba(31, 39, 32, 0.55)',
                 border: '1px solid rgba(217, 201, 178, 0.16)',
@@ -623,7 +628,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       display: 'inline-block',
                     }}
                   />
-                  <span>TREND E-KEUSAHAWANAN · 6 BULAN</span>
+                  <span>PENYERTAAN SISWA • 6 BULAN</span>
                 </div>
 
                 <span
@@ -636,7 +641,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  MOMENTUM JUALAN SISWA
+                  MOMENTUM KOMUNITI KAMPUS
                 </span>
               </div>
 
@@ -649,14 +654,14 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   alignItems: 'end',
                 }}
               >
-                {EKEUSAHAWANAN_6M_TREND.map((item, idx) => {
+                {COMMUNITY_GROWTH_6M_TREND.map((item, idx) => {
                   const barStart = barBaseStart + idx * barStagger;
                   const barElapsed = frame - barStart;
                   const barSpring =
                     barElapsed >= 0
                       ? spring({
                           frame: barElapsed,
-                          fps,
+                          fps: safeFps,
                           config: { damping: 165, stiffness: 215, mass: 0.85 },
                         })
                       : 0;
@@ -785,10 +790,10 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
               </div>
             </Interactive.Div>
 
-            {/* Right Half: Beat 3 Terracotta (#C96F4F) Transaction Pill Lifting with Diagonal Sheen Sweep */}
+            {/* Right Half: Beat 3 Terracotta (#C96F4F) Student Proof Pill Lifting with Diagonal Sheen Sweep */}
             <Interactive.Div
-              name="PolyMart Transaction Pill"
-              premountFor={fps}
+              name="Student Proof Action Pill"
+              premountFor={safeFps}
               style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -809,7 +814,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: 12,
-                  padding: '22px 26px',
+                  padding: '22px 24px',
                   borderRadius: 999,
                   backgroundColor: LAUNCH_PALETTE.ACCENT,
                   border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
@@ -856,15 +861,15 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                     position: 'relative',
                     zIndex: 1,
                     fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 17,
+                    fontSize: 14.5,
                     fontWeight: 800,
-                    letterSpacing: '0.045em',
+                    letterSpacing: '0.03em',
                     color: LAUNCH_PALETTE.CARD_BG,
                     fontVariantNumeric: 'tabular-nums',
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  {liveOrders.toLocaleString('en-US')}+ TRANSAKSI POLYMART DISELESAIKAN SECARA DIGITAL
+                  {liveOrders.toLocaleString('en-US')}+ PESANAN &amp; ADUAN PELAJAR DISELESAIKAN • SERTAI SEKARANG
                 </span>
               </div>
             </Interactive.Div>
@@ -976,7 +981,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
         </div>
       </CameraStage>
 
-      <EditorialFrameMarks chapterCode="07" chapterLabel="Telemetri Masa Nyata" dark />
+      <EditorialFrameMarks chapterCode="07" chapterLabel="KOMUNITI HIDUP • 1,083+ SISWA AKTIF" dark />
     </>
   );
 };

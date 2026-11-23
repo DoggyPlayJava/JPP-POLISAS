@@ -74,8 +74,8 @@ export const RemotionRoot: React.FC = () => {
             institutionName: 'POLITEKNIK SULTAN HAJI AHMAD SHAH',
             councilName: 'JAWATANKUASA PERWAKILAN PELAJAR',
             sessionLabel: 'SESI AKADEMIK 2026/2027',
-            headlinePrimary: 'Satu Kampus. Satu Ekosistem Pintar.',
-            headlineItalic: 'Mendepani Digitalisasi Mahasiswa POLISAS.',
+            headlinePrimary: 'Baru Masuk POLISAS? Satu App Untuk Semua.',
+            headlineItalic: 'Satu Kampus. Satu SuperApp Mahasiswa POLISAS.',
             portalUrl: 'https://jpp.polisas.edu.my',
             bgmSrc: '',
             bgmVolume: 0.35,
@@ -101,7 +101,7 @@ export const RemotionRoot: React.FC = () => {
           defaultProps={{
             institutionName: 'POLITEKNIK SULTAN HAJI AHMAD SHAH',
             sessionLabel: 'SESI AKADEMIK 2026/2027',
-            headlinePrimary: 'Satu Kampus. Satu Ekosistem Pintar.',
+            headlinePrimary: 'Baru Masuk POLISAS? Satu App Untuk Semua.',
           }}
         />
         <Composition
@@ -128,7 +128,7 @@ export const RemotionRoot: React.FC = () => {
           defaultProps={{
             productsCount: 277,
             ordersCount: 344,
-            headline: 'Niaga & Kediaman Dalam Genggaman.',
+            headline: 'Lapar Lepas Kelas? Cari Bilik Sewa? Semua Di Sini.',
           }}
         />
         <Composition
@@ -139,9 +139,9 @@ export const RemotionRoot: React.FC = () => {
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
           defaultProps={{
-            pollTitle: 'Cadangan Menu Sihat Kafeteria Siswa 2026/2027',
-            optionA: 'Set Ayam Percik & Salad Segar',
-            optionB: 'Sandwic Telur Herba & Buah',
+            pollTitle: 'Cadangan Kemudahan Siswa Semester Baharu',
+            optionA: 'Tambah Meja Belajar & Plug Point Di Dataran Siswa',
+            optionB: 'Lanjutkan Waktu Operasi Bilik Bacaan Kamsis',
             percentageA: 68,
             totalVotes: 412,
           }}
@@ -154,9 +154,9 @@ export const RemotionRoot: React.FC = () => {
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
           defaultProps={{
-            ticketNo: 'KBJ-2026-0842',
+            ticketNo: 'KBJ-0842',
             slaLabel: '< 48 JAM',
-            headline: 'Kebajikan Disantuni Dengan Telus.',
+            headline: 'Kamsis Bermasalah? Perlukan Food Bank? Kami Ada.',
           }}
         />
         <Composition
@@ -195,8 +195,8 @@ export const RemotionRoot: React.FC = () => {
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
           defaultProps={{
-            headlinePrimary: 'Satu Kampus. Satu Ekosistem Pintar.',
-            headlineItalic: 'Mendepani Digitalisasi Mahasiswa POLISAS.',
+            headlinePrimary: 'Imbas Sekarang. Mulakan Pengalaman Kampus Anda.',
+            headlineItalic: 'Satu Kampus. Satu SuperApp Mahasiswa POLISAS.',
             portalUrl: 'https://jpp.polisas.edu.my',
           }}
         />

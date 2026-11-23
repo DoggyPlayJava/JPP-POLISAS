@@ -113,7 +113,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Overlay durationInFrames={LAUNCH_OVERLAY_FRAMES} premountFor={fps}>
-            <EditorialShutterOverlay chapterCode="03" chapterLabel="EKONOMI & KEDIAMAN" />
+            <EditorialShutterOverlay chapterCode="03" chapterLabel="MAKAN & BILIK SEWA SISWA" />
           </TransitionSeries.Overlay>
 
           <TransitionSeries.Sequence name="03 PolyMart Commerce" durationInFrames={396} premountFor={fps}>
@@ -121,7 +121,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
               name="PolyMart Commerce"
               productsCount={stats.productsCount}
               ordersCount={stats.ordersCount}
-              headline="Niaga & Kediaman Dalam Genggaman."
+              headline="Lapar Lepas Kelas? Cari Bilik Sewa? Semua Di Sini."
             />
           </TransitionSeries.Sequence>
 
@@ -133,9 +133,9 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           <TransitionSeries.Sequence name="04 PolySuara Voice" durationInFrames={366} premountFor={fps}>
             <PolySuaraVoiceScene
               name="PolySuara Voice"
-              pollTitle="Cadangan Menu Sihat Kafeteria Siswa 2026/2027"
-              optionA="Set Ayam Percik & Salad Segar"
-              optionB="Sandwic Telur Herba & Buah"
+              pollTitle="Cadangan Kemudahan Siswa Semester Baharu"
+              optionA="Tambah Meja Belajar & Plug Point Di Dataran Siswa"
+              optionB="Lanjutkan Waktu Operasi Bilik Bacaan Kamsis"
               percentageA={68}
               totalVotes={412}
             />
@@ -149,9 +149,9 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           <TransitionSeries.Sequence name="05 Welfare & Care" durationInFrames={366} premountFor={fps}>
             <WelfareCareScene
               name="Welfare & Care"
-              ticketNo="KBJ-2026-0842"
+              ticketNo="KBJ-0842"
               slaLabel="< 48 JAM"
-              headline="Kebajikan Disantuni Dengan Telus."
+              headline="Kamsis Bermasalah? Perlukan Food Bank? Kami Ada."
             />
           </TransitionSeries.Sequence>
 
@@ -192,7 +192,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           <TransitionSeries.Sequence name="08 Closing Vault" durationInFrames={450} premountFor={fps}>
             <ClosingVaultScene
               name="Closing Vault"
-              headlinePrimary={headlinePrimary}
+              headlinePrimary="Imbas Sekarang. Mulakan Pengalaman Kampus Anda."
               headlineItalic={headlineItalic}
               portalUrl={portalUrl}
             />

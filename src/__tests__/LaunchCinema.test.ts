@@ -83,24 +83,24 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
       null,
     ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.title)).toEqual([
-      'Portal Hub',
-      'PolyMaps',
-      'PolyMart & Rent',
-      'PolySuara',
+      'SuperApp Siswa',
+      'PolyMaps & Jadual',
+      'PolyMart & PolyRent',
+      'PolySuara Komuniti',
       'E-Kebajikan',
-      'Nexus AI & EMS',
-      'Impak',
-      'Penutup',
+      'Kelab & Merit QR',
+      'Komuniti Siswa',
+      'Imbas & Masuk',
     ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.gateLabel)).toEqual([
-      'PORTAL SUPERAPP HUB',
-      'POLYMAPS & JADUAL KULIAH',
-      'EKONOMI & KEDIAMAN',
-      'POLYSUARA • SUARA MAHASISWA',
-      'E-KEBAJIKAN & FOOD BANK',
-      'NEXUS AI • KELAB & EMS',
-      'TELEMETRI MASA NYATA',
-      'AKSES PORTAL RASMI',
+      'SELAMAT DATANG MAHASISWA BAHARU',
+      '08:00 PAGI • TAK SESAT CARI KELAS',
+      '12:30 TGH HARI • MAKAN & BILIK SEWA',
+      'KOMUNITI SISWA • LUAH & UNDI TANPA NAMA',
+      'PRIHATIN SISWA • ADUAN KAMSIS & FOOD BANK',
+      '17:00 PETANG • 21 KELAB, MERIT & E-SIJIL',
+      'KOMUNITI HIDUP • 1,083+ SISWA AKTIF',
+      'AKSES SERTA-MERTA • IMBAS QR SEKARANG',
     ]);
     for (const chapter of LAUNCH_CHAPTERS) {
       expect(chapter.gateLabel.length).toBeGreaterThan(0);
@@ -112,10 +112,11 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
     expect(last.startFrame + last.durationInFrames).toBe(2940);
   });
 
-  it('validates Zod defaults with official POLISAS identity', () => {
+  it('validates Zod defaults with official POLISAS Student-POV v4 identity', () => {
     const parsed = LaunchShowcaseSchema.parse({});
     expect(parsed.portalUrl).toBe('https://jpp.polisas.edu.my');
-    expect(parsed.headlinePrimary).toContain('Satu Kampus');
+    expect(parsed.headlinePrimary).toBe('Baru Masuk POLISAS? Satu App Untuk Semua.');
+    expect(parsed.headlineItalic).toBe('Satu Kampus. Satu SuperApp Mahasiswa POLISAS.');
     expect(parsed.stats.clubsCount).toBe(21);
   });
 
@@ -344,7 +345,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     }
   });
 
-  it('contains ZERO HtmlInCanvas, deprecated transition strings, or Math.random( across remotion/launch/', () => {
+  it('contains ZERO HtmlInCanvas, deprecated transition strings, CSS animations, or Math.random( across remotion/launch/', () => {
     const forbiddenRuntimePatterns: readonly RegExp[] = [
       /<HtmlInCanvas/,
       /HtmlInCanvasMotionBlur/,
@@ -352,6 +353,9 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
       /zoom-in-out/,
       /film-burn/,
       /Math\.random\(/,
+      /@keyframes/i,
+      /\banimate-/i,
+      /transition\s*:/i,
     ];
 
     for (const filePath of launchFiles) {
@@ -359,6 +363,34 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
       const content = readFileSync(filePath, 'utf8');
       for (const pattern of forbiddenRuntimePatterns) {
         expect(content, `${relPath} matched forbidden pattern ${pattern}`).not.toMatch(pattern);
+      }
+    }
+  });
+
+  it('contains ZERO Admin/Officer jargon across every file under remotion/launch/ (100% Student-POV Guard)', () => {
+    const forbiddenAdminPatterns: readonly RegExp[] = [
+      /PENTADBIR UTAMA/i,
+      /PENTADBIR/i,
+      /SUPER ADMIN/i,
+      /Command Center/i,
+      /Semakan Kelulusan Acara HQ/i,
+      /Tadbir Urus/i,
+      /Telemetri Masa Nyata/i,
+      /Automasi Kertas Kerja/i,
+      /Disemak EXCO/i,
+      /DISAHKAN EXCO/i,
+      /Audit Kertas Kerja/i,
+      /Nexus AI Copilot/i,
+    ];
+
+    for (const filePath of launchFiles) {
+      const relPath = relative(LAUNCH_ROOT_DIR, filePath).replace(/\\/g, '/');
+      const content = readFileSync(filePath, 'utf8');
+      for (const pattern of forbiddenAdminPatterns) {
+        expect(
+          content,
+          `${relPath} matched forbidden admin/officer jargon ${pattern}`,
+        ).not.toMatch(pattern);
       }
     }
   });
@@ -390,7 +422,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     }
   });
 
-  it('wires portalZoomMorph, chapter 03 alignment, Scene 2 checkmark polish, and Scene 7 6-month bar chart', () => {
+  it('wires portalZoomMorph, Student-POV v4 copy, Scene 2 checkmark polish, Scene 7 6-month trend, and Scene 8 QR onboarding steps', () => {
     const cinemaSource = readFileSync(join(LAUNCH_ROOT_DIR, 'JppLaunchCinema.tsx'), 'utf8');
     const rootSource = readFileSync(join(process.cwd(), 'remotion', 'Root.tsx'), 'utf8');
     const polymapsSource = readFileSync(
@@ -401,21 +433,51 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
       join(LAUNCH_ROOT_DIR, 'scenes', 'ImpactNumbersScene.tsx'),
       'utf8',
     );
+    const closingSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'ClosingVaultScene.tsx'),
+      'utf8',
+    );
 
     expect(cinemaSource).toContain('portalZoomMorph({');
     expect(cinemaSource).toContain('PORTAL_POLYMAPS_ORIGIN.xPercent');
     expect(cinemaSource).toContain('PORTAL_POLYMAPS_ORIGIN.yPercent');
-    expect(cinemaSource).toContain('chapterLabel="EKONOMI & KEDIAMAN"');
-    expect(cinemaSource).toContain('headline="Niaga & Kediaman Dalam Genggaman."');
+    expect(cinemaSource).toContain('chapterLabel="MAKAN & BILIK SEWA SISWA"');
+    expect(cinemaSource).toContain('headline="Lapar Lepas Kelas? Cari Bilik Sewa? Semua Di Sini."');
+    expect(cinemaSource).toContain('pollTitle="Cadangan Kemudahan Siswa Semester Baharu"');
+    expect(cinemaSource).toContain('ticketNo="KBJ-0842"');
+    expect(cinemaSource).toContain('headline="Kamsis Bermasalah? Perlukan Food Bank? Kami Ada."');
+    expect(cinemaSource).toContain('headlinePrimary="Imbas Sekarang. Mulakan Pengalaman Kampus Anda."');
 
-    expect(rootSource).toContain("headline: 'Niaga & Kediaman Dalam Genggaman.'");
+    expect(rootSource).toContain("headlinePrimary: 'Baru Masuk POLISAS? Satu App Untuk Semua.'");
+    expect(rootSource).toContain("headline: 'Lapar Lepas Kelas? Cari Bilik Sewa? Semua Di Sini.'");
+    expect(rootSource).toContain("ticketNo: 'KBJ-0842'");
+    expect(rootSource).toContain("headlinePrimary: 'Imbas Sekarang. Mulakan Pengalaman Kampus Anda.'");
+    expect(rootSource).toContain("headlineItalic: 'Satu Kampus. Satu SuperApp Mahasiswa POLISAS.'");
 
-    expect(polymapsSource).toContain('<span>TIBA DI KELAS</span>');
+    expect(polymapsSource).toContain('<span>TIBA TEPAT MASA</span>');
+    expect(polymapsSource).not.toContain('TIBA TEPAT MASA ✓');
     expect(polymapsSource).not.toContain('TIBA DI KELAS ✓');
 
-    expect(impactSource).toContain('TREND E-KEUSAHAWANAN · 6 BULAN');
+    expect(impactSource).toContain('KOMUNITI HIDUP • 5 JABATAN POLISAS');
+    expect(impactSource).toContain('MAHASISWA DAH AKSES');
+    expect(impactSource).toContain('KELAB & PERSATUAN');
+    expect(impactSource).toContain('MENU & BARANG SISWA');
+    expect(impactSource).toContain('ACARA & PROGRAM KAMPUS');
+    expect(impactSource).toContain('PENYERTAAN SISWA • 6 BULAN');
+    expect(impactSource).toContain('MOMENTUM KOMUNITI KAMPUS');
+    expect(impactSource).toContain('PESANAN &amp; ADUAN PELAJAR DISELESAIKAN • SERTAI SEKARANG');
+    expect(impactSource).toContain('SCAN QR MERIT');
+    expect(impactSource).toContain('21 KELAB POLISAS');
     for (const month of ['OKT', 'NOV', 'DIS', 'JAN', 'FEB', 'MAC']) {
       expect(impactSource).toContain(`'${month}'`);
     }
+
+    expect(closingSource).toContain('Imbas Sekarang. Mulakan Pengalaman Kampus Anda.');
+    expect(closingSource).toContain('Satu Kampus. Satu SuperApp Mahasiswa POLISAS.');
+    expect(closingSource).toContain('Buka Kamera Telefon');
+    expect(closingSource).toContain('Imbas Kod QR Ini');
+    expect(closingSource).toContain('Log Masuk & Teroka');
+    expect(closingSource).toContain('PERCUMA UNTUK SEMUA PELAJAR POLISAS • 24/7');
+    expect(closingSource).toContain('AKSES SERTA-MERTA • IMBAS QR SEKARANG');
   });
 });
