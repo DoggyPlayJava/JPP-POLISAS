@@ -153,15 +153,15 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
 
   const timeSec = frame / safeFps;
 
-  // Tasteful Deep Forest vignette keeping LED stage focus dead-center without dark muddiness
+  // Tasteful Midnight Teal vignette keeping LED stage focus dead-center without dark muddiness
   const vignetteEffects = useMemo(
-    () => [vignette({ amount: 0.24, color: LAUNCH_PALETTE.PRIMARY_DARK })],
+    () => [vignette({ amount: 0.22, color: LAUNCH_PALETTE.PRIMARY_DARK })],
     [],
   );
 
-  // Beat 1 (0..1.3s): Background L-brackets & Crest Pill
-  const bracketStart = Math.round(0.06 * safeFps);
-  const bracketDuration = Math.max(18, Math.round(0.95 * safeFps));
+  // Beat 1 (0..1.6s): Background L-brackets & Crest Pill
+  const bracketStart = Math.round(0.08 * safeFps);
+  const bracketDuration = Math.max(18, Math.round(1.15 * safeFps));
   const bracketEnd = bracketStart + bracketDuration;
   const bracketSlidePx = interpolate(frame, [bracketStart, bracketEnd], [18, 0], {
     extrapolateLeft: 'clamp',
@@ -182,22 +182,22 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
   const pillSpring = spring({
     frame,
     fps: safeFps,
-    config: { damping: 180, stiffness: 220, mass: 0.9 },
+    config: { damping: 24, stiffness: 150, mass: 1.05 },
   });
   const pillScaleX = 0.86 + 0.14 * pillSpring;
   const pillScaleY = 0.94 + 0.06 * pillSpring;
-  const pillOpacity = interpolate(frame - pillStart, [0, Math.max(4, Math.round(0.16 * safeFps))], [0.45, 1], {
+  const pillOpacity = interpolate(frame - pillStart, [0, Math.max(4, Math.round(0.22 * safeFps))], [0.45, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  // Beat 2 (0.15..1.5s): KineticWords Primary + Italic Headline with Terracotta Underline
-  const headlineStart = Math.round(0.18 * safeFps);
-  const wordStagger = Math.max(2, Math.round(0.05 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.32 * safeFps));
+  // Beat 2 (0.20..2.1s): KineticWords Primary + Italic Headline with Electric Teal Underline
+  const headlineStart = Math.round(0.22 * safeFps);
+  const wordStagger = Math.max(2, Math.round(0.065 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.38 * safeFps));
 
-  const italicStart = Math.round(0.55 * safeFps);
-  const italicEnd = Math.max(italicStart + 10, Math.round(1.15 * safeFps));
+  const italicStart = Math.round(0.72 * safeFps);
+  const italicEnd = Math.max(italicStart + 10, Math.round(1.42 * safeFps));
   const italicProgress = interpolate(frame, [italicStart, italicEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -209,15 +209,15 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
     extrapolateRight: 'clamp',
   });
 
-  const underlineStart = Math.round(1.12 * safeFps);
-  const underlineDuration = Math.max(12, Math.round(0.62 * safeFps));
+  const underlineStart = Math.round(1.38 * safeFps);
+  const underlineDuration = Math.max(12, Math.round(0.76 * safeFps));
 
-  // Center Hero QR Monolith: Dramatic 3D Entry (0.70s..1.80s), then STRICT 0.00deg Orthogonal Lock (1.80s..7.50s)
-  const qrEntryStart = Math.round(0.7 * safeFps); // 42f
-  const qrLockFrame = Math.round(1.8 * safeFps); // 108f -> strictly 0deg from f>=108 through 450 (incl. f=2760 / Local 270)!
+  // Center Hero QR Monolith: Majestic 3D Entry (0.85s..2.75s), then STRICT 0.00deg Orthogonal Lock (2.80s..17.00s)
+  const qrEntryStart = Math.round(0.85 * safeFps); // 51f
+  const qrLockFrame = Math.round(2.8 * safeFps); // 168f -> 14.2s flat 0.00deg scan hold (covers f_5550!)
   const qrOpacity = interpolate(
     frame,
-    [qrEntryStart, qrEntryStart + Math.max(6, Math.round(0.24 * safeFps))],
+    [qrEntryStart, qrEntryStart + Math.max(6, Math.round(0.3 * safeFps))],
     [0, 1],
     {
       extrapolateLeft: 'clamp',
@@ -235,23 +235,23 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
   const qrTranslateY = isQrOrthogonalLocked ? 0 : interpolate(qrEntryProgress, [0, 1], [60, 0]);
   const qrScale = isQrOrthogonalLocked ? 1 : interpolate(qrEntryProgress, [0, 1], [0.8, 1]);
 
-  // Autofocus Corner Brackets breathe subtly OUTSIDE white 28px QR quiet zone
-  const bracketPulseScale = 1 + Math.sin(timeSec * 3.1) * 0.018;
-  const bracketPulseOpacity = 0.78 + Math.sin(timeSec * 3.1) * 0.2;
+  // Autofocus Corner Brackets breathe subtly OUTSIDE white 28px QR quiet zone throughout 14.2s hold
+  const bracketPulseScale = 1 + Math.sin(timeSec * 2.6) * 0.018;
+  const bracketPulseOpacity = 0.78 + Math.sin(timeSec * 2.6) * 0.2;
 
   // Flanking Symmetrical Cockpit Satellite Cards (+7deg / -7deg inward 3D angle facing center 0.00deg QR monolith)
-  const satStart = Math.round(1.25 * safeFps); // 75f
+  const satStart = Math.round(1.55 * safeFps);
   const satSpring =
     frame >= satStart
       ? spring({
           frame: frame - satStart,
           fps: safeFps,
-          config: { damping: 16, stiffness: 205, mass: 0.92 },
+          config: { damping: 24, stiffness: 155, mass: 1.05 },
         })
       : 0;
   const satOpacity =
     frame >= satStart
-      ? interpolate(frame, [satStart, satStart + Math.round(0.22 * safeFps)], [0, 1], {
+      ? interpolate(frame, [satStart, satStart + Math.round(0.28 * safeFps)], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
@@ -259,14 +259,14 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
   const satRiseY = (1 - satSpring) * 28;
   const satScale = 0.94 + 0.06 * satSpring;
 
-  const stepBaseStart = satStart + Math.round(0.24 * safeFps);
-  const stepStagger = Math.max(4, Math.round(0.18 * safeFps));
+  const stepBaseStart = satStart + Math.round(0.32 * safeFps);
+  const stepStagger = Math.max(4, Math.round(0.24 * safeFps));
 
   // 3D Floor Radar Waves (rotating plane tilted at rotateX(62deg) inside CameraStage)
-  const radarStart = Math.round(0.9 * safeFps);
-  const radarPeriod = Math.max(36, Math.round(2.4 * safeFps));
+  const radarStart = Math.round(1.05 * safeFps);
+  const radarPeriod = Math.max(36, Math.round(2.8 * safeFps));
 
-  const liveDotScale = 0.84 + Math.sin(timeSec * 5.2) * 0.18;
+  const liveDotScale = 0.84 + Math.sin(timeSec * 4.6) * 0.16;
 
   return (
     <>
@@ -275,7 +275,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
       <Solid
         width={safeWidth}
         height={safeHeight}
-        color="rgba(46, 58, 47, 0)"
+        color="rgba(11, 36, 32, 0)"
         premountFor={safeFps}
         effects={vignetteEffects}
         style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}
@@ -288,7 +288,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
           position: 'absolute',
           inset: 0,
           background:
-            'radial-gradient(circle at 50% 60%, rgba(255, 255, 255, 0.92) 0%, rgba(248, 246, 238, 0.45) 34%, rgba(248, 246, 238, 0) 64%)',
+            'radial-gradient(circle at 50% 60%, rgba(255, 255, 255, 0.95) 0%, rgba(246, 251, 249, 0.48) 34%, rgba(246, 251, 249, 0) 64%)',
           pointerEvents: 'none',
         }}
       />
@@ -342,7 +342,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             <Circle
               radius={360}
               fill="none"
-              stroke="rgba(201, 111, 79, 0.22)"
+              stroke="rgba(20, 184, 166, 0.24)"
               strokeWidth={1.6}
               premountFor={safeFps}
               showInTimeline={false}
@@ -469,7 +469,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               borderRadius: 999,
               backgroundColor: LAUNCH_PALETTE.CARD_BG,
               border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-              boxShadow: '0 12px 28px rgba(46, 58, 47, 0.08)',
+              boxShadow: '0 12px 28px rgba(11, 36, 32, 0.08)',
               opacity: pillOpacity,
               transform: `scale(${pillScaleX.toFixed(4)}, ${pillScaleY.toFixed(4)})`,
             }}
@@ -598,7 +598,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               backgroundColor: LAUNCH_PALETTE.CARD_BG,
               border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
               borderBottom: `6px solid ${LAUNCH_PALETTE.SECONDARY}`,
-              boxShadow: '0 26px 56px rgba(46, 58, 47, 0.14)',
+              boxShadow: '0 26px 56px rgba(11, 36, 32, 0.14)',
               display: 'flex',
               flexDirection: 'column',
               gap: 14,
@@ -642,12 +642,12 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                     ? spring({
                         frame: stepElapsed,
                         fps: safeFps,
-                        config: { damping: 180, stiffness: 220, mass: 0.9 },
+                        config: { damping: 24, stiffness: 165, mass: 1.0 },
                       })
                     : 0;
                 const stepOpacity =
                   stepElapsed >= 0
-                    ? interpolate(stepElapsed, [0, Math.max(4, Math.round(0.16 * safeFps))], [0, 1], {
+                    ? interpolate(stepElapsed, [0, Math.max(4, Math.round(0.22 * safeFps))], [0, 1], {
                         extrapolateLeft: 'clamp',
                         extrapolateRight: 'clamp',
                       })
@@ -665,7 +665,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                       borderRadius: 14,
                       backgroundColor: LAUNCH_PALETTE.BACKGROUND,
                       border: `1.5px solid ${
-                        isFinalStep ? 'rgba(201, 111, 79, 0.5)' : LAUNCH_PALETTE.TERTIARY
+                        isFinalStep ? 'rgba(20, 184, 166, 0.55)' : LAUNCH_PALETTE.TERTIARY
                       }`,
                       opacity: stepOpacity,
                       transform: `translate3d(${((1 - stepSpring) * -16).toFixed(2)}px, 0px, 0px)`,
@@ -734,7 +734,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             </div>
           </Interactive.Div>
 
-          {/* CENTER HERO QR MONOLITH: Enters in 3D, then Locks Flat 0.00deg with 340x340px Pure White/Black Contrast */}
+          {/* CENTER HERO QR MONOLITH: Enters in 3D, then Locks Flat 0.00deg with 340x340px Pure White/Midnight Teal Contrast */}
           <Interactive.Div
             name="LED Wall Hero QR Monolith"
             premountFor={safeFps}
@@ -745,7 +745,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               backgroundColor: '#FFFFFF',
               border: `2.5px solid ${LAUNCH_PALETTE.PRIMARY}`,
               boxShadow:
-                '0 44px 96px rgba(31, 39, 32, 0.24), 0 0 68px rgba(255, 255, 255, 0.95)',
+                '0 44px 96px rgba(6, 23, 20, 0.24), 0 0 68px rgba(255, 255, 255, 0.95)',
               padding: '24px 28px 22px',
               display: 'flex',
               flexDirection: 'column',
@@ -813,7 +813,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                 padding: 28,
                 borderRadius: 22,
                 backgroundColor: '#FFFFFF',
-                border: '1.5px solid rgba(46, 58, 47, 0.14)',
+                border: '1.5px solid rgba(11, 36, 32, 0.14)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -823,7 +823,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               <QRCode
                 value={safePortalUrl}
                 size={340}
-                fgColor="#111812"
+                fgColor="#061714"
                 bgColor="#FFFFFF"
                 level="M"
               />
@@ -907,7 +907,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                   fontSize: 32,
                   fontWeight: 900,
                   letterSpacing: '-0.02em',
-                  color: '#111812',
+                  color: '#061714',
                 }}
               >
                 {displayDomain}
@@ -926,7 +926,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
               border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
               borderBottom: `6px solid ${LAUNCH_PALETTE.ACCENT}`,
-              boxShadow: '0 26px 56px rgba(31, 39, 32, 0.2)',
+              boxShadow: '0 26px 56px rgba(6, 23, 20, 0.22)',
               display: 'flex',
               flexDirection: 'column',
               gap: 14,
@@ -972,8 +972,8 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                     gap: 8,
                     padding: '9px 11px',
                     borderRadius: 12,
-                    backgroundColor: 'rgba(248, 246, 238, 0.08)',
-                    border: '1px solid rgba(217, 201, 178, 0.2)',
+                    backgroundColor: 'rgba(246, 251, 249, 0.08)',
+                    border: '1px solid rgba(184, 228, 220, 0.22)',
                   }}
                 >
                   <span

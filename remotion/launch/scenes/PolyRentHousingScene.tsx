@@ -31,8 +31,12 @@ import {
   GhostCursor,
   type GhostCursorKeyframe,
 } from '../motion/MotionActors';
+import {
+  MODULE_CONTENT_ENTER_OFFSET,
+  Module3DIntroBumper,
+} from '../motion/Module3DIntroBumper';
 import { WHIP_S_CURVE } from '../motion/transitions';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
 import { KineticWindow, SpatialFloorGrid } from '../ui/KineticCard';
 
 const CYAN = LAUNCH_MODULE_THEMES.polyrent.primary; // #06B6D4
@@ -47,7 +51,7 @@ const EMERALD_SOFT = LAUNCH_MODULE_THEMES.polymaps.soft; // #ECFDF5
 const EMERALD_BORDER = LAUNCH_MODULE_THEMES.polymaps.border; // #A7F3D0
 
 const INDIGO = LAUNCH_MODULE_THEMES.takwim.primary; // #6366F1
-const OBSIDIAN = '#142329';
+const OBSIDIAN = '#061714';
 
 export type PolyRentHousingProps = {
   readonly houseRentRm: number;
@@ -78,6 +82,8 @@ type MapListingPin = {
   readonly delayFrames: number;
 };
 
+const O = MODULE_CONTENT_ENTER_OFFSET; // 132f bumper handoff
+
 const MAP_LISTINGS: readonly MapListingPin[] = [
   {
     id: 'taman-pertama',
@@ -88,7 +94,7 @@ const MAP_LISTINGS: readonly MapListingPin[] = [
     x: 616,
     y: 266,
     isHero: true,
-    delayFrames: 42,
+    delayFrames: O + 42,
   },
   {
     id: 'semambu-baru',
@@ -98,7 +104,7 @@ const MAP_LISTINGS: readonly MapListingPin[] = [
     walkLabel: '520m • 6 Min',
     x: 356,
     y: 128,
-    delayFrames: 54,
+    delayFrames: O + 56,
   },
   {
     id: 'lorong-12',
@@ -108,7 +114,7 @@ const MAP_LISTINGS: readonly MapListingPin[] = [
     walkLabel: '650m • 7 Min',
     x: 868,
     y: 196,
-    delayFrames: 64,
+    delayFrames: O + 68,
   },
 ];
 
@@ -118,17 +124,17 @@ const LEFT_CARD_W = 632;
 const LEFT_CARD_H = 740;
 
 const RENT_SPLIT_CURSOR_KEYFRAMES: readonly GhostCursorKeyframe[] = [
-  { frame: 214, x: 132, y: 400, label: 'SEMAK SEWA' },
-  { frame: 244, x: 316, y: 400, click: true, label: '2 PELAJAR' },
-  { frame: 276, x: 498, y: 400, click: true, label: '4 PELAJAR • JIMAT' },
-  { frame: 292, x: 498, y: 400 },
+  { frame: O + 206, x: 132, y: 400, label: 'SEMAK SEWA' },
+  { frame: O + 238, x: 316, y: 400, click: true, label: '2 PELAJAR' },
+  { frame: O + 272, x: 498, y: 400, click: true, label: '4 PELAJAR • JIMAT' },
+  { frame: O + 290, x: 498, y: 400 },
 ];
 
 const EXTRUDED_ESTATE_BLOCKS = [
   { id: 'block-polisas', x: 76, y: 240, w: 224, h: 152, roof: '#059669', wall: '#064E3B', label: 'PINTU UTAMA POLISAS' },
   { id: 'block-pertama', x: 510, y: 190, w: 212, h: 146, roof: CYAN, wall: CYAN_INK, label: 'TAMAN PERTAMA' },
-  { id: 'block-baru', x: 266, y: 58, w: 184, h: 118, roof: '#475569', wall: '#1E293B', label: 'SEMAMBU BARU' },
-  { id: 'block-lorong', x: 768, y: 112, w: 196, h: 130, roof: '#556453', wall: '#2E3A2F', label: 'LORONG 12' },
+  { id: 'block-baru', x: 266, y: 58, w: 184, h: 118, roof: '#0D9488', wall: '#0B2420', label: 'SEMAMBU BARU' },
+  { id: 'block-lorong', x: 768, y: 112, w: 196, h: 130, roof: '#14B8A6', wall: '#0F766E', label: 'LORONG 12' },
 ] as const;
 
 const ROOM_AMENITIES = [
@@ -152,55 +158,62 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
   const safeHeadline = headline.trim() || POLYRENT_HEADLINE_DEFAULT;
   const timeSec = frame / safeFps;
 
-  // Header timing (0.0s .. 1.0s)
-  const wordStagger = Math.max(2, Math.round(0.04 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.28 * safeFps));
-
-  // Left card entrance (0.12s)
-  const leftCardSpring = spring({
-    frame: Math.max(0, frame - 6),
-    fps: safeFps,
-    config: { damping: 18, stiffness: 210, mass: 0.92 },
+  // Seamless zero-flash bumper handoff (132..168f)
+  const contentRevealT = interpolate(frame, [O, O + 36], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EXPO_OUT,
   });
-  const leftCardOpacity = interpolate(frame, [4, 20], [0, 1], {
+
+  // Header timing (shifted +132f for slow-paced luxury rhythm)
+  const wordStagger = Math.max(2, Math.round(0.05 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.32 * safeFps));
+
+  // Left card entrance (0.12s after handoff)
+  const leftCardSpring = spring({
+    frame: Math.max(0, frame - (O + 6)),
+    fps: safeFps,
+    config: LUXURY_SPRING,
+  });
+  const leftCardOpacity = interpolate(frame, [O + 4, O + 22], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
   const leftCardX = (1 - leftCardSpring) * -36;
 
-  // Map 3D Stage entrance (0.18s)
+  // Map 3D Stage entrance
   const mapStageSpring = spring({
-    frame: Math.max(0, frame - 10),
+    frame: Math.max(0, frame - (O + 10)),
     fps: safeFps,
-    config: { damping: 18, stiffness: 190, mass: 0.96 },
+    config: LUXURY_SPRING,
   });
-  const mapStageOpacity = interpolate(frame, [8, 24], [0, 1], {
+  const mapStageOpacity = interpolate(frame, [O + 8, O + 26], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
   // Semambu 3D pitched map camera bearing sweeps gently from -14deg -> +12deg
-  const mapBearingDeg = interpolate(frame, [0, 540], [-14, 12], {
+  const mapBearingDeg = interpolate(frame, [O, 720], [-14, 12], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.sin),
   });
-  const mapPitchDeg = interpolate(frame, [0, 260, 540], [50, 54, 49], {
+  const mapPitchDeg = interpolate(frame, [O, 420, 720], [50, 54, 49], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  // Walking arc from Pintu Utama POLISAS to Taman Pertama completes by frame 86 (well before f=1400 / Local 146!)
-  const routeDrawStart = 32;
-  const routeDrawDuration = 48;
+  // Walking arc from Pintu Utama POLISAS to Taman Pertama completes cleanly in Shot 1
+  const routeDrawStart = O + 34;
+  const routeDrawDuration = 54;
 
-  // Beat 1 Room Cutaway Floating Spec Card (peaks 70..268, prominently visible at Local 146f -> f=1400)
+  // Beat 1 Room Cutaway Floating Spec Card
   const cutawayEnterSpring = spring({
-    frame: Math.max(0, frame - 66),
+    frame: Math.max(0, frame - (O + 66)),
     fps: safeFps,
-    config: { damping: 17, stiffness: 205, mass: 0.9 },
+    config: LUXURY_SPRING,
   });
-  const cutawayBeat2Fade = interpolate(frame, [264, 304], [1, 0], {
+  const cutawayBeat2Fade = interpolate(frame, [O + 258, O + 300], [1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: WHIP_S_CURVE,
@@ -209,13 +222,13 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
   const cutawayY = (1 - cutawayEnterSpring) * 28 + (1 - cutawayBeat2Fade) * -32;
   const cutawayZ = 48 + (1 - cutawayBeat2Fade) * -90;
 
-  // Beat 2: Rent Split Morph (1 -> 2 -> 4 Roommates across 244f .. 316f, locked crisp by 320f — before Local 366f / f=1620!)
-  const split2Progress = interpolate(frame, [242, 262], [0, 1], {
+  // Beat 2: Rent Split Morph (1 -> 2 -> 4 Roommates across O+238 .. O+312, locked cleanly before f_2200 / local 484f!)
+  const split2Progress = interpolate(frame, [O + 236, O + 258], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: WHIP_S_CURVE,
   });
-  const split4Progress = interpolate(frame, [274, 308], [0, 1], {
+  const split4Progress = interpolate(frame, [O + 270, O + 310], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: WHIP_S_CURVE,
@@ -227,26 +240,43 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
   const fullFourRent = Math.round(safeHouseRent / 4);
   const monthlySavedPerStudent = Math.max(0, safeHouseRent - liveRentPerPerson);
 
-  // Beat 2 Volumetric 3D Split Pillars on Right 3D Stage (rises 284..332 -> locked crisp at Local 366f!)
-  const pillarsProgress = interpolate(frame, [282, 332], [0, 1], {
+  // Beat 2 Volumetric 3D Split Pillars on Right 3D Stage (rises O+280..O+334 -> locked by 466f)
+  const pillarsProgress = interpolate(frame, [O + 280, O + 334], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
   const pillarsRiseY = (1 - pillarsProgress) * 34;
 
-  // WhatsApp Zero-Scam confirmation lock on Left Card (292..326)
-  const verifiedLockProgress = interpolate(frame, [292, 324], [0, 1], {
+  // WhatsApp Zero-Scam confirmation lock on Left Card (O+290..O+326)
+  const verifiedLockProgress = interpolate(frame, [O + 290, O + 326], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
 
-  const livePulseScale = 0.86 + Math.sin(timeSec * 5.0) * 0.16;
+  const livePulseScale = 0.86 + Math.sin(timeSec * 4.8) * 0.16;
 
   return (
     <>
       <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.polyrent.tint} />
+
+      <Module3DIntroBumper
+        moduleIndex="MODUL 04"
+        moduleCategory="KEDIAMAN PELAJAR"
+        moduleName="PolyRent"
+        tagline="Cari Rumah Sewa Sah & Kongsi Bilik Jimat"
+        accentColor={LAUNCH_MODULE_THEMES.polyrent.primary}
+        darkColor={LAUNCH_MODULE_THEMES.polyrent.dark}
+        softColor={LAUNCH_MODULE_THEMES.polyrent.soft}
+        borderColor={LAUNCH_MODULE_THEMES.polyrent.border}
+        icon={<Home size={96} color="#FFFFFF" strokeWidth={2.1} />}
+        features={[
+          { icon: <Home size={15} strokeWidth={2.4} />, label: 'Taman Pertama' },
+          { icon: <Calculator size={15} strokeWidth={2.4} />, label: 'Kongsi RM170' },
+          { icon: <ShieldCheck size={15} strokeWidth={2.4} />, label: 'Bebas Scam' },
+        ]}
+      />
 
       <CameraStage
         zoomFrom={0.995}
@@ -267,6 +297,14 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
         exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            opacity: contentRevealT,
+            transform: `translate3d(0px, ${((1 - contentRevealT) * 22).toFixed(2)}px, 0px) scale(${interpolate(contentRevealT, [0, 1], [0.96, 1]).toFixed(4)})`,
+          }}
+        >
         {/* Subtle 3D Architectural Horizon Grid grounded beneath Semambu Map */}
         <SpatialFloorGrid
           accentColor={CYAN}
@@ -291,7 +329,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1340 }}>
-            <KineticReveal startFrame={4} durationFrames={18}>
+            <KineticReveal startFrame={O + 4} durationFrames={18}>
               <div
                 style={{
                   display: 'inline-flex',
@@ -329,7 +367,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
             <KineticWords
               as="h1"
               text={safeHeadline}
-              startFrame={8}
+              startFrame={O + 8}
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
               accentWords={['Semambu?', 'Jimat']}
@@ -345,7 +383,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
             />
           </div>
 
-          <KineticReveal startFrame={18} durationFrames={22}>
+          <KineticReveal startFrame={O + 18} durationFrames={22}>
             <div
               style={{
                 display: 'inline-flex',
@@ -355,7 +393,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                 borderRadius: 16,
                 backgroundColor: activePillIndex === 2 ? EMERALD_SOFT : LAUNCH_PALETTE.CARD_BG,
                 border: `1.5px solid ${activePillIndex === 2 ? EMERALD_BORDER : LAUNCH_PALETTE.TERTIARY}`,
-                boxShadow: '0 12px 26px rgba(31, 39, 32, 0.08)',
+                boxShadow: '0 12px 26px rgba(6, 23, 20, 0.08)',
               }}
             >
               <ShieldCheck
@@ -417,7 +455,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
               accentBorderColor={activePillIndex === 2 ? EMERALD_BORDER : CYAN_BORDER}
               width={LEFT_CARD_W}
               height={LEFT_CARD_H}
-              sheenStartFrame={294}
+              sheenStartFrame={O + 292}
               sheenDuration={38}
               style={{
                 borderBottom: `6px solid ${activePillIndex === 2 ? EMERALD : CYAN}`,
@@ -548,8 +586,8 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
                       <EditorialAnnotation
                         type="highlight"
-                        startFrame={296}
-                        durationFrames={26}
+                        startFrame={O + 294}
+                        durationFrames={28}
                         color="rgba(16, 185, 129, 0.28)"
                         padding={{ top: 2, right: 6, bottom: 2, left: 6 }}
                       >
@@ -786,7 +824,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                     boxShadow:
                       verifiedLockProgress > 0.5
                         ? '0 14px 28px rgba(4, 120, 87, 0.28)'
-                        : '0 10px 22px rgba(31, 39, 32, 0.16)',
+                        : '0 10px 22px rgba(6, 23, 20, 0.16)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -821,21 +859,21 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
 
             {/* Spark burst when 4 Pelajar split clicks */}
             <GeometricSparkBurst
-              triggerFrame={278}
+              triggerFrame={O + 274}
               x={498}
               y={400}
-              durationFrames={32}
+              durationFrames={34}
               radius={84}
               count={12}
               seed="polyrent-split-spark"
               colors={[CYAN, EMERALD, LAUNCH_PALETTE.CARD_BG]}
             />
 
-            {/* Crisp GhostCursor confined inside Left Upright Card (exits well before Local 366f!) */}
+            {/* Crisp GhostCursor confined inside Left Upright Card (exits well before f_2200) */}
             <GhostCursor
               keyframes={RENT_SPLIT_CURSOR_KEYFRAMES}
-              appearFrame={214}
-              disappearFrame={292}
+              appearFrame={O + 206}
+              disappearFrame={O + 290}
               color={LAUNCH_PALETTE.PRIMARY_DARK}
               rippleColor={EMERALD}
             />
@@ -965,7 +1003,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                 <text
                   x={435}
                   y={392}
-                  fill="rgba(248, 246, 238, 0.56)"
+                  fill="rgba(246, 251, 249, 0.56)"
                   fontFamily={LAUNCH_FONTS.MONO}
                   fontSize={13}
                   fontWeight={800}
@@ -1048,7 +1086,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                 const pinSpring = spring({
                   frame: Math.max(0, frame - pin.delayFrames),
                   fps: safeFps,
-                  config: { damping: 16, stiffness: 215, mass: 0.85 },
+                  config: LUXURY_SPRING,
                 });
                 const liftZ = 38 + pinSpring * 46;
                 const displayPinPrice =
@@ -1070,7 +1108,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                       style={{
                         padding: pin.isHero ? '9px 14px' : '7px 11px',
                         borderRadius: 14,
-                        backgroundColor: pin.isHero ? '#FFFFFF' : 'rgba(20, 35, 41, 0.95)',
+                        backgroundColor: pin.isHero ? '#FFFFFF' : 'rgba(6, 23, 20, 0.95)',
                         border: `2px solid ${pin.isHero ? EMERALD : CYAN_BORDER}`,
                         boxShadow: '0 16px 32px rgba(0, 0, 0, 0.4)',
                         display: 'flex',
@@ -1107,7 +1145,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
               })}
             </div>
 
-            {/* BEAT 1 FLOATING UPRIGHT 3D ROOM CUTAWAY SPEC CARD (Peak visibility at Local 146f / f=1400) */}
+            {/* BEAT 1 FLOATING UPRIGHT 3D ROOM CUTAWAY SPEC CARD */}
             {cutawayOpacity > 0.01 ? (
               <div
                 style={{
@@ -1117,7 +1155,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                   width: 472,
                   padding: '18px 20px',
                   borderRadius: 22,
-                  backgroundColor: 'rgba(248, 246, 238, 0.98)',
+                  backgroundColor: 'rgba(246, 251, 249, 0.98)',
                   border: `2px solid ${CYAN}`,
                   boxShadow: '0 26px 56px rgba(0, 0, 0, 0.45)',
                   opacity: cutawayOpacity,
@@ -1251,7 +1289,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                       style={{
                         fontSize: 14,
                         fontWeight: 700,
-                        color: 'rgba(248, 246, 238, 0.72)',
+                        color: 'rgba(246, 251, 249, 0.72)',
                       }}
                     >
                       RM {safeHouseRent} ÷ 4 Rakan Serumah
@@ -1294,7 +1332,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                   {ROOMMATES.map((mate, idx) => {
                     const barEnter = interpolate(
                       frame,
-                      [292 + idx * 7, 326 + idx * 7],
+                      [O + 290 + idx * 7, O + 326 + idx * 7],
                       [0, 1],
                       {
                         extrapolateLeft: 'clamp',
@@ -1407,6 +1445,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
               </div>
             ) : null}
           </div>
+        </div>
         </div>
       </CameraStage>
 

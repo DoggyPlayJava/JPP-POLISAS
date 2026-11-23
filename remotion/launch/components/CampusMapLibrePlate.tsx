@@ -327,7 +327,7 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
                   type: 'fill-extrusion',
                   minzoom: 15,
                   paint: {
-                    'fill-extrusion-color': '#E3DDD0',
+                    'fill-extrusion-color': '#D8EEE9',
                     'fill-extrusion-height': [
                       'min',
                       22,
@@ -467,7 +467,7 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
                 },
                 paint: {
                   'text-color': LAUNCH_PALETTE.PRIMARY_DARK,
-                  'text-halo-color': '#F8F6EE',
+                  'text-halo-color': LAUNCH_PALETTE.BACKGROUND,
                   'text-halo-width': 3,
                 },
               });
@@ -677,7 +677,7 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
         overflow: 'hidden',
         border: `2px solid ${hasArrived ? EMERALD : EMERALD_BORDER}`,
         backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-        boxShadow: '0 26px 56px rgba(5, 150, 105, 0.14), 0 12px 28px rgba(31, 39, 32, 0.12)',
+        boxShadow: '0 26px 56px rgba(5, 150, 105, 0.14), 0 12px 28px rgba(6, 23, 20, 0.12)',
       }}
     >
       {!fallbackMode ? (
@@ -690,7 +690,7 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
               bottom: 12,
               padding: '4px 10px',
               borderRadius: 8,
-              backgroundColor: 'rgba(248, 246, 238, 0.94)',
+              backgroundColor: 'rgba(246, 251, 249, 0.94)',
               border: `1px solid ${EMERALD_BORDER}`,
               fontFamily: LAUNCH_FONTS.MONO,
               fontSize: 10.5,
@@ -712,7 +712,7 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
             premountFor={safeFps}
             style={{ position: 'absolute', inset: 0 }}
           >
-            {/* Warm porcelain/sand architectural drafting backdrop */}
+            {/* Ice-Teal crisp architectural drafting backdrop */}
             <rect x={0} y={0} width={1000} height={830} fill={LAUNCH_PALETTE.SURFACE_MUTED} />
 
             {/* Subtle coordinate grid every 80px */}
@@ -739,7 +739,7 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
               <rect x={706} y={118} width={222} height={134} rx={16} />
             </g>
 
-            {/* Architectural road network: #FFFFFF road casings over #D9C9B2 strokes */}
+            {/* Architectural road network: #FFFFFF road casings over TERTIARY strokes */}
             <g fill="none" strokeLinecap="round" strokeLinejoin="round">
               {CAMPUS_ROADS.map((road) => (
                 <path
@@ -928,7 +928,7 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
                       width={pillWidth}
                       height={30}
                       rx={15}
-                      fill={isDest ? EMERALD_DARK : 'rgba(248, 246, 238, 0.96)'}
+                      fill={isDest ? EMERALD_DARK : 'rgba(246, 251, 249, 0.96)'}
                       stroke={isDest ? EMERALD_BORDER : EMERALD}
                       strokeWidth={1.5}
                     />
@@ -967,7 +967,7 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
               bottom: 12,
               padding: '4px 10px',
               borderRadius: 8,
-              backgroundColor: 'rgba(248, 246, 238, 0.94)',
+              backgroundColor: 'rgba(246, 251, 249, 0.94)',
               border: `1px solid ${EMERALD_BORDER}`,
               fontFamily: LAUNCH_FONTS.MONO,
               fontSize: 10.5,
@@ -994,7 +994,7 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
             borderRadius: 18,
             backgroundColor: 'rgba(255, 255, 255, 0.96)',
             border: `1.5px solid ${hasArrived ? EMERALD_DARK : EMERALD}`,
-            boxShadow: '0 16px 36px rgba(5, 150, 105, 0.18), 0 4px 12px rgba(31, 39, 32, 0.1)',
+            boxShadow: '0 16px 36px rgba(5, 150, 105, 0.18), 0 4px 12px rgba(6, 23, 20, 0.1)',
             display: 'flex',
             alignItems: 'center',
             gap: 12,
@@ -1109,14 +1109,14 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
           </div>
 
           {!fallbackMode ? (
-            <div
+              <div
               style={{
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: 6,
                 padding: '4px 10px',
                 borderRadius: 999,
-                backgroundColor: 'rgba(248, 246, 238, 0.92)',
+                backgroundColor: 'rgba(246, 251, 249, 0.92)',
                 border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
                 fontFamily: LAUNCH_FONTS.MONO,
                 fontSize: 10,
@@ -1218,7 +1218,7 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
               borderRadius: 999,
               backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
               border: `2px solid ${EMERALD}`,
-              boxShadow: '0 22px 48px rgba(5, 150, 105, 0.28), 0 8px 20px rgba(31, 39, 32, 0.28)',
+              boxShadow: '0 22px 48px rgba(5, 150, 105, 0.28), 0 8px 20px rgba(6, 23, 20, 0.28)',
               color: '#FFFFFF',
               fontFamily: LAUNCH_FONTS.MONO,
               fontSize: 14.5,

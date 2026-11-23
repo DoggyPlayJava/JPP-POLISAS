@@ -260,7 +260,7 @@ export const EditorialAnnotation: React.FC<EditorialAnnotationProps> = ({
   const disabled = progress <= 0.001;
 
   const resolvedColor =
-    color ?? (type === 'highlight' ? 'rgba(217, 201, 178, 0.55)' : LAUNCH_PALETTE.ACCENT);
+    color ?? (type === 'highlight' ? 'rgba(184, 228, 220, 0.55)' : LAUNCH_PALETTE.ACCENT);
 
   if (type === 'highlight') {
     return (

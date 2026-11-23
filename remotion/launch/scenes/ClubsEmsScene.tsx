@@ -15,7 +15,10 @@ import {
   CheckCircle2,
   Cpu,
   Download,
+  FileCheck2,
   Gamepad2,
+  Landmark,
+  QrCode,
   ScanLine,
   ShieldCheck,
   Users,
@@ -29,8 +32,12 @@ import {
   GhostCursor,
   type GhostCursorKeyframe,
 } from '../motion/MotionActors';
+import {
+  MODULE_CONTENT_ENTER_OFFSET,
+  Module3DIntroBumper,
+} from '../motion/Module3DIntroBumper';
 import { WHIP_S_CURVE } from '../motion/transitions';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
 import { DeterministicQrMatrix, KineticWindow, SpatialFloorGrid } from '../ui/KineticCard';
 
 const BLUE = LAUNCH_MODULE_THEMES.kelab.primary; // #3B82F6
@@ -62,7 +69,8 @@ const AMBER_INK = '#B45309';
 const AMBER_SOFT = LAUNCH_MODULE_THEMES.polymart.soft; // #FFFBEB
 const AMBER_BORDER = LAUNCH_MODULE_THEMES.polymart.border; // #FDE68A
 
-const DARK_GLASS_BG = 'rgba(22, 20, 34, 0.95)';
+const DARK_GLASS_BG = 'rgba(10, 26, 23, 0.96)';
+const O = MODULE_CONTENT_ENTER_OFFSET; // 132f bumper handoff
 
 export type ClubsEmsProps = {
   readonly clubsCount: number;
@@ -138,11 +146,11 @@ const CLUB_DECK: readonly StackedClubSpec[] = [
 
 const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
 
-// Shot 1 GhostCursor clicks "Sertai Kelab" at 82f and exits completely before Local 122f (f=2960)!
+// Shot 1 GhostCursor clicks "Sertai Kelab" at O+88f (220f) and exits promptly by 240f
 const CLUB_JOIN_CURSOR_KEYFRAMES: readonly GhostCursorKeyframe[] = [
-  { frame: 40, x: 740, y: 420 },
-  { frame: 82, x: 1280, y: 556, click: true, label: 'SERTAI KELAB' },
-  { frame: 102, x: 1280, y: 556 },
+  { frame: O + 42, x: 740, y: 420 },
+  { frame: O + 88, x: 1280, y: 556, click: true, label: 'SERTAI KELAB' },
+  { frame: O + 108, x: 1280, y: 556 },
 ];
 
 const renderClubIcon = (icon: StackedClubSpec['icon'], size: number, color: string) => {
@@ -172,24 +180,31 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
   const safeSerial = certSerial.trim() || 'EMS-CERT-2026-9041';
   const timeSec = frame / safeFps;
 
-  // Header timing
-  const wordStagger = Math.max(2, Math.round(0.04 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.28 * safeFps));
+  // Seamless zero-flash bumper handoff (132..168f)
+  const contentRevealT = interpolate(frame, [O, O + 36], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EXPO_OUT,
+  });
 
-  // SHOT 1 -> SHOT 2 Z-Fly-Through (180..230f)
-  const toShot2T = interpolate(frame, [180, 230], [0, 1], {
+  // Header timing
+  const wordStagger = Math.max(2, Math.round(0.05 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.32 * safeFps));
+
+  // SHOT 1 -> SHOT 2 Z-Fly-Through (O+186..O+240 = 318..372f)
+  const toShot2T = interpolate(frame, [O + 186, O + 240], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: WHIP_S_CURVE,
   });
 
-  // Club Joined State (clicked at 82f -> ready cleanly before Local 122f / f=2960!)
-  const clubJoined = frame >= 82;
+  // Club Joined State (clicked at O+88f = 220f)
+  const clubJoined = frame >= O + 88;
   const joinStampSpring = clubJoined
     ? spring({
-        frame: frame - 82,
+        frame: frame - (O + 88),
         fps: safeFps,
-        config: { damping: 16, stiffness: 225, mass: 0.85 },
+        config: LUXURY_SPRING,
       })
     : 0;
 
@@ -201,69 +216,85 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
     }) *
-    interpolate(frame, [368, 400], [1, 0], {
+    interpolate(frame, [O + 378, O + 410], [1, 0], {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
     });
 
-  // SHOT 2: Holographic QR Scanner Gate flies forward (192..236f)
-  const qrGateEnter = interpolate(frame, [192, 236], [0, 1], {
+  // SHOT 2: Holographic QR Scanner Gate flies forward (O+198..O+246 = 330..378f)
+  const qrGateEnter = interpolate(frame, [O + 198, O + 246], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
 
-  // Volumetric Purple laser sweep + 6-frame exposure flash (232..282f -> locked +15 MERIT well before Local 302f / f=3140!)
-  const qrLaserY = interpolate(frame, [232, 276], [12, 168], {
+  // Volumetric Purple laser sweep + 6-frame exposure flash (372..424f)
+  const qrLaserY = interpolate(frame, [O + 240, O + 286], [12, 168], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.inOut(Easing.sin),
   });
-  const flashOpacity = interpolate(frame, [272, 276, 282], [0, 0.48, 0], {
+  const flashOpacity = interpolate(frame, [O + 282, O + 286, O + 292], [0, 0.48, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
-  const meritAwarded = frame >= 274;
+  const meritAwarded = frame >= O + 284;
   const meritSpring = meritAwarded
     ? spring({
-        frame: frame - 274,
+        frame: frame - (O + 284),
         fps: safeFps,
-        config: { damping: 15, stiffness: 220, mass: 0.86 },
+        config: LUXURY_SPRING,
       })
     : 0;
   const liveMeritTotal = Math.round(120 + 15 * meritSpring);
 
-  // SHOT 2 -> SHOT 3 True 2-Face 180-deg Y-Axis Card Flip (384..434f -> settled razor-sharp well before Local 502f / f=3340!)
-  const flipPhaseT = interpolate(frame, [384, 434], [0, 1], {
+  // SHOT 2 -> SHOT 3 True 2-Face 180-deg Y-Axis Card Flip (O+394..O+448 = 526..580f -> settled cleanly before f_4420 / local 610f!)
+  const flipPhaseT = interpolate(frame, [O + 394, O + 448], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: WHIP_S_CURVE,
   });
   const flipDeg = interpolate(flipPhaseT, [0, 1], [0, 180]);
 
-  // Card stage angle smoothly shifts from Shot 2 QR Scanner (4deg X, 0deg Y) to Shot 3 e-Certificate (3deg X, -5deg Y)
   const stageRotX = interpolate(flipPhaseT, [0, 1], [4, 3]);
   const stageRotY = interpolate(flipPhaseT, [0, 1], [0, -5]);
   const stageWidth = interpolate(flipPhaseT, [0, 1], [840, 1000]);
   const stageHeight = interpolate(flipPhaseT, [0, 1], [568, 578]);
 
-  // Diagonal foil sheen across e-Certificate (448..516f)
-  const foilLeftPct = interpolate(frame, [448, 516], [-45, 135], {
+  // Diagonal foil sheen across e-Certificate (O+458..O+528 = 590..660f)
+  const foilLeftPct = interpolate(frame, [O + 458, O + 528], [-45, 135], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.bezier(0.25, 0.1, 0.25, 1),
   });
-  const foilOpacity = interpolate(frame, [448, 464, 500, 516], [0, 0.52, 0.52, 0], {
+  const foilOpacity = interpolate(frame, [O + 458, O + 474, O + 510, O + 528], [0, 0.52, 0.52, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
   const isCertActive = flipPhaseT >= 0.5;
-  const liveDotScale = 0.86 + Math.sin(timeSec * 5.2) * 0.16;
+  const liveDotScale = 0.86 + Math.sin(timeSec * 4.8) * 0.16;
 
   return (
     <>
       <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.kelab.tint} />
+
+      <Module3DIntroBumper
+        moduleIndex="MODUL 07"
+        moduleCategory="KELAB, MERIT & E-SIJIL"
+        moduleName="e-Kelab & Merit"
+        tagline="Sertai 21 Kelab, Imbas QR & Jana e-Sijil"
+        accentColor={LAUNCH_MODULE_THEMES.kelab.primary}
+        darkColor={LAUNCH_MODULE_THEMES.kelab.dark}
+        softColor={LAUNCH_MODULE_THEMES.kelab.soft}
+        borderColor={LAUNCH_MODULE_THEMES.kelab.border}
+        icon={<Award size={96} color="#FFFFFF" strokeWidth={2.1} />}
+        features={[
+          { icon: <Landmark size={15} strokeWidth={2.4} />, label: '21 Kelab Aktif' },
+          { icon: <QrCode size={15} strokeWidth={2.4} />, label: 'Imbas QR Merit' },
+          { icon: <FileCheck2 size={15} strokeWidth={2.4} />, label: 'e-Sijil Rasmi PDF' },
+        ]}
+      />
 
       <CameraStage
         zoomFrom={0.995}
@@ -284,6 +315,14 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
         exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            opacity: contentRevealT,
+            transform: `translate3d(0px, ${((1 - contentRevealT) * 22).toFixed(2)}px, 0px) scale(${interpolate(contentRevealT, [0, 1], [0.96, 1]).toFixed(4)})`,
+          }}
+        >
         <SpatialFloorGrid
           accentColor={isCertActive ? PINK : meritAwarded ? PURPLE : BLUE}
           secondaryColor={PURPLE}
@@ -307,7 +346,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
           }}
         >
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1240 }}>
-            <KineticReveal startFrame={4} durationFrames={18}>
+            <KineticReveal startFrame={O + 4} durationFrames={18}>
               <div
                 style={{
                   display: 'inline-flex',
@@ -345,7 +384,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
             <KineticWords
               as="h1"
               text="Aktif Kelab? Imbas Merit QR & Terus Muat Turun e-Sijil."
-              startFrame={8}
+              startFrame={O + 8}
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
               accentWords={['Merit', 'e-Sijil.']}
@@ -361,7 +400,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
             />
           </div>
 
-          <KineticReveal startFrame={18} durationFrames={22}>
+          <KineticReveal startFrame={O + 18} durationFrames={22}>
             <div
               style={{
                 display: 'inline-flex',
@@ -371,7 +410,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 borderRadius: 16,
                 backgroundColor: isCertActive ? PINK_SOFT : LAUNCH_PALETTE.CARD_BG,
                 border: `1.5px solid ${isCertActive ? PINK_BORDER : PURPLE_BORDER}`,
-                boxShadow: '0 12px 26px rgba(31, 39, 32, 0.08)',
+                boxShadow: '0 12px 26px rgba(6, 23, 20, 0.08)',
               }}
             >
               <Award
@@ -414,13 +453,13 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
             zIndex: 8,
           }}
         >
-          {/* Decorative Blue->Purple Vector Energy Ribbon tying Shot 1 Club Join -> Shot 2 Merit Scan (fades out cleanly before Shot 2 hero still!) */}
-          {frame >= 176 && frame < 270 ? (
+          {/* Decorative Blue->Purple Vector Energy Ribbon tying Shot 1 Club Join -> Shot 2 Merit Scan */}
+          {frame >= O + 182 && frame < O + 280 ? (
             <EvolvingPath
               d="M 300 410 Q 640 200 960 360"
               width={1920}
               height={764}
-              startFrame={178}
+              startFrame={O + 184}
               durationFrames={44}
               stroke={PURPLE}
               strokeWidth={4.5}
@@ -431,7 +470,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
               style={{
                 position: 'absolute',
                 inset: 0,
-                opacity: interpolate(frame, [238, 266], [1, 0], {
+                opacity: interpolate(frame, [O + 246, O + 276], [1, 0], {
                   extrapolateLeft: 'clamp',
                   extrapolateRight: 'clamp',
                 }),
@@ -456,9 +495,9 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
             >
               {CLUB_DECK.map((club, idx) => {
                 const enterSpring = spring({
-                  frame: Math.max(0, frame - (8 + idx * 6)),
+                  frame: Math.max(0, frame - (O + 8 + idx * 7)),
                   fps: safeFps,
-                  config: { damping: 18, stiffness: 205, mass: 0.9 },
+                  config: LUXURY_SPRING,
                 });
                 const isHero = Boolean(club.isHero);
                 return (
@@ -482,13 +521,13 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       accentBorderColor={isHero && clubJoined ? EMERALD_BORDER : BLUE_BORDER}
                       width={960}
                       height={510}
-                      sheenStartFrame={isHero ? 88 : undefined}
+                      sheenStartFrame={isHero ? O + 94 : undefined}
                       sheenDuration={34}
                       style={{
                         borderBottom: `6px solid ${isHero && clubJoined ? EMERALD : BLUE}`,
                         boxShadow: isHero
                           ? '0 34px 74px rgba(37, 99, 235, 0.16)'
-                          : '0 18px 42px rgba(31, 39, 32, 0.12)',
+                          : '0 18px 42px rgba(6, 23, 20, 0.12)',
                       }}
                     >
                       <div
@@ -673,7 +712,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                   backgroundColor: DARK_GLASS_BG,
                   border: `2.5px solid ${PURPLE}`,
                   borderBottom: `8px solid ${PURPLE_DARK}`,
-                  boxShadow: '0 38px 90px rgba(22, 20, 34, 0.42)',
+                  boxShadow: '0 38px 90px rgba(6, 23, 20, 0.42)',
                   backfaceVisibility: 'hidden',
                   transform: `rotateY(${flipDeg.toFixed(2)}deg)`,
                   overflow: 'hidden',
@@ -685,7 +724,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 <div
                   style={{
                     padding: '16px 28px',
-                    backgroundColor: '#12101D',
+                    backgroundColor: '#061714',
                     borderBottom: `1px solid rgba(233, 213, 255, 0.22)`,
                     color: '#FFFFFF',
                     display: 'flex',
@@ -758,7 +797,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       <DeterministicQrMatrix
                         seed={2026}
                         size={182}
-                        fgColor="#161422"
+                        fgColor="#061714"
                         bgColor="#FFFFFF"
                       />
                       <div
@@ -810,7 +849,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     >
                       Malam Anugerah Kecemerlangan Mahasiswa (MAKMP 2026)
                     </span>
-                    <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(248, 246, 238, 0.78)' }}>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(246, 251, 249, 0.80)' }}>
                       Sekali imbas QR di pintu masuk, rekod kehadiran &amp; mata merit terus dikemas kini.
                     </span>
 
@@ -1146,7 +1185,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
 
           {/* Celebratory Sparks across all 3 Shots */}
           <GeometricSparkBurst
-            triggerFrame={86}
+            triggerFrame={O + 92}
             x={1280}
             y={556}
             durationFrames={30}
@@ -1156,7 +1195,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
             colors={[BLUE, EMERALD, '#FFFFFF']}
           />
           <GeometricSparkBurst
-            triggerFrame={278}
+            triggerFrame={O + 288}
             x={1160}
             y={420}
             durationFrames={32}
@@ -1166,7 +1205,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
             colors={[PURPLE, PINK, EMERALD]}
           />
           <GeometricSparkBurst
-            triggerFrame={462}
+            triggerFrame={O + 472}
             x={1240}
             y={380}
             durationFrames={34}
@@ -1178,11 +1217,12 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
 
           <GhostCursor
             keyframes={CLUB_JOIN_CURSOR_KEYFRAMES}
-            appearFrame={40}
-            disappearFrame={104}
+            appearFrame={O + 42}
+            disappearFrame={O + 108}
             color={LAUNCH_PALETTE.PRIMARY_DARK}
             rippleColor={BLUE}
           />
+        </div>
         </div>
       </CameraStage>
 

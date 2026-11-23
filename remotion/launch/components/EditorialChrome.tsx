@@ -71,7 +71,7 @@ const ContourSolidOverlay: React.FC<{
     <Solid
       width={safeWidth}
       height={safeHeight}
-      color="rgba(46, 58, 47, 0)"
+      color="rgba(11, 36, 32, 0)"
       premountFor={fps}
       style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none' }}
       effects={contourEffects}
@@ -96,36 +96,36 @@ export const EditorialBackdrop: React.FC<EditorialBackdropProps> = ({
   const safeHeight = Math.max(1, Math.round(Number.isFinite(height) ? height : 1080));
   const safeSeed = Math.min(1000, Math.max(0, Number.isFinite(seed) ? seed : 12));
 
-  const baseColor = isDark ? LAUNCH_PALETTE.PRIMARY : LAUNCH_PALETTE.BACKGROUND;
-  const defaultPaperAmount = isDark ? 0.16 : 0.22;
+  const baseColor = isDark ? LAUNCH_PALETTE.PRIMARY_DARK : LAUNCH_PALETTE.BACKGROUND;
+  const defaultPaperAmount = isDark ? 0.045 : 0.035;
   const resolvedPaperAmount = clampUnit(
     paperAmount !== undefined && Number.isFinite(paperAmount) ? paperAmount : defaultPaperAmount,
   );
 
-  const strokeColor = isDark ? 'rgba(217, 201, 178, 0.08)' : 'rgba(46, 58, 47, 0.045)';
-  const dotColor = isDark ? 'rgba(217, 201, 178, 0.15)' : 'rgba(46, 58, 47, 0.095)';
+  const strokeColor = isDark ? 'rgba(184, 228, 220, 0.08)' : 'rgba(11, 36, 32, 0.04)';
+  const dotColor = isDark ? 'rgba(184, 228, 220, 0.15)' : 'rgba(11, 36, 32, 0.085)';
   const patternId = `editorial-grid-${isDark ? 'dark' : 'light'}-${uid.replace(/:/g, '')}`;
 
   const backdropEffects = useMemo(
     () => [
       paper({
         amount: resolvedPaperAmount,
-        colorFront: isDark ? LAUNCH_PALETTE.MUTED_OLIVE : LAUNCH_PALETTE.CARD_BG,
+        colorFront: isDark ? LAUNCH_PALETTE.PRIMARY : LAUNCH_PALETTE.CARD_BG,
         colorBack: isDark ? LAUNCH_PALETTE.PRIMARY_DARK : LAUNCH_PALETTE.SURFACE_MUTED,
-        contrast: isDark ? 0.16 : 0.2,
-        roughness: isDark ? 0.06 : 0.24,
-        fiber: 0.28,
-        fiberSize: isDark ? 0.32 : 0.26,
+        contrast: isDark ? 0.12 : 0.14,
+        roughness: isDark ? 0.05 : 0.14,
+        fiber: 0.22,
+        fiberSize: isDark ? 0.28 : 0.22,
         crumples: 0,
         crumpleSize: 0.45,
         folds: 0,
         foldCount: 0,
-        drops: 0.04,
+        drops: 0.02,
         scale: isDark ? 1.15 : 0.9,
         seed: safeSeed,
       }),
       noise({
-        amount: isDark ? 0.038 : 0.024,
+        amount: isDark ? 0.025 : 0.015,
         seed: safeSeed,
         premultiply: false,
       }),
@@ -193,8 +193,8 @@ export const EditorialFrameMarks: React.FC<{
     return null;
   }
 
-  const ink = dark ? 'rgba(248, 246, 238, 0.58)' : 'rgba(46, 58, 47, 0.54)';
-  const rule = dark ? 'rgba(217, 201, 178, 0.2)' : 'rgba(46, 58, 47, 0.14)';
+  const ink = dark ? 'rgba(246, 251, 249, 0.62)' : 'rgba(11, 36, 32, 0.54)';
+  const rule = dark ? 'rgba(184, 228, 220, 0.22)' : 'rgba(11, 36, 32, 0.14)';
 
   return (
     <div
@@ -261,15 +261,22 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
 
+  const polymartChapter = LAUNCH_CHAPTERS.find((chapter) => chapter.id === 'PolyMartCommerce');
+  const shutterCenter = polymartChapter?.startFrame ?? 1038;
   const impactChapter = LAUNCH_CHAPTERS.find((chapter) => chapter.id === 'ImpactNumbers');
-  const impactStart = impactChapter?.startFrame ?? 3450;
-  const impactEnd = impactStart + (impactChapter?.durationInFrames ?? 426);
+  const impactStart = impactChapter?.startFrame ?? 4572;
+  const impactEnd = impactStart + (impactChapter?.durationInFrames ?? 570);
 
-  const shutterDarkMix = interpolate(frame, [734, 744, 756, 766], [0, 1, 1, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: DARK_MIX_EASING,
-  });
+  const shutterDarkMix = interpolate(
+    frame,
+    [shutterCenter - 20, shutterCenter - 10, shutterCenter + 10, shutterCenter + 20],
+    [0, 1, 1, 0],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: DARK_MIX_EASING,
+    },
+  );
   const impactDarkMix = interpolate(
     frame,
     [impactStart - 8, impactStart + 4, impactEnd - 30, impactEnd - 14],
@@ -295,12 +302,12 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
   const hairlineColor = interpolateColors(
     darkMix,
     [0, 1],
-    ['rgba(46, 58, 47, 0.14)', 'rgba(217, 201, 178, 0.20)'],
+    ['rgba(11, 36, 32, 0.14)', 'rgba(184, 228, 220, 0.22)'],
   );
   const tickInactiveColor = interpolateColors(
     darkMix,
     [0, 1],
-    ['rgba(46, 58, 47, 0.24)', 'rgba(217, 201, 178, 0.34)'],
+    ['rgba(11, 36, 32, 0.24)', 'rgba(184, 228, 220, 0.34)'],
   );
 
   // Slot-machine odometer index & active chapter signature color across [chapter.startFrame + 6 .. chapter.startFrame + 24]

@@ -47,7 +47,7 @@ const SURFACE_THEMES: Record<KineticWindowSurface, SurfaceTheme> = {
     backgroundColor: LAUNCH_PALETTE.CARD_BG,
     border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
     topBarBackground: LAUNCH_PALETTE.BACKGROUND,
-    topBarBorder: 'rgba(217, 201, 178, 0.72)',
+    topBarBorder: 'rgba(184, 228, 220, 0.72)',
     routeBackground: LAUNCH_PALETTE.SURFACE_MUTED,
     routeBorder: LAUNCH_PALETTE.TERTIARY,
     routeColor: LAUNCH_PALETTE.MUTED_OLIVE,
@@ -56,13 +56,13 @@ const SURFACE_THEMES: Record<KineticWindowSurface, SurfaceTheme> = {
     statusColor: LAUNCH_PALETTE.PRIMARY,
     inkColor: LAUNCH_PALETTE.PRIMARY,
     sheenGradient:
-      'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(248, 246, 238, 0.56) 46%, rgba(255, 255, 255, 0.74) 52%, rgba(248, 246, 238, 0) 100%)',
+      'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(246, 251, 249, 0.58) 46%, rgba(255, 255, 255, 0.76) 52%, rgba(246, 251, 249, 0) 100%)',
   },
   sand: {
     backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
     border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
     topBarBackground: LAUNCH_PALETTE.BACKGROUND,
-    topBarBorder: 'rgba(217, 201, 178, 0.85)',
+    topBarBorder: 'rgba(184, 228, 220, 0.85)',
     routeBackground: LAUNCH_PALETTE.CARD_BG,
     routeBorder: LAUNCH_PALETTE.TERTIARY,
     routeColor: LAUNCH_PALETTE.PRIMARY,
@@ -71,22 +71,22 @@ const SURFACE_THEMES: Record<KineticWindowSurface, SurfaceTheme> = {
     statusColor: LAUNCH_PALETTE.PRIMARY,
     inkColor: LAUNCH_PALETTE.PRIMARY,
     sheenGradient:
-      'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.48) 46%, rgba(248, 246, 238, 0.66) 52%, rgba(255, 255, 255, 0) 100%)',
+      'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 46%, rgba(246, 251, 249, 0.68) 52%, rgba(255, 255, 255, 0) 100%)',
   },
   dark: {
     backgroundColor: LAUNCH_PALETTE.PRIMARY,
-    border: '1.5px solid rgba(217, 201, 178, 0.22)',
+    border: '1.5px solid rgba(184, 228, 220, 0.24)',
     topBarBackground: LAUNCH_PALETTE.PRIMARY_DARK,
-    topBarBorder: 'rgba(217, 201, 178, 0.14)',
-    routeBackground: 'rgba(248, 246, 238, 0.08)',
-    routeBorder: 'rgba(217, 201, 178, 0.22)',
+    topBarBorder: 'rgba(184, 228, 220, 0.16)',
+    routeBackground: 'rgba(246, 251, 249, 0.08)',
+    routeBorder: 'rgba(184, 228, 220, 0.24)',
     routeColor: LAUNCH_PALETTE.TERTIARY,
-    statusBackground: 'rgba(248, 246, 238, 0.08)',
-    statusBorder: 'rgba(217, 201, 178, 0.24)',
+    statusBackground: 'rgba(246, 251, 249, 0.08)',
+    statusBorder: 'rgba(184, 228, 220, 0.26)',
     statusColor: LAUNCH_PALETTE.BACKGROUND,
     inkColor: LAUNCH_PALETTE.BACKGROUND,
     sheenGradient:
-      'linear-gradient(90deg, rgba(217, 201, 178, 0) 0%, rgba(217, 201, 178, 0.16) 46%, rgba(248, 246, 238, 0.22) 52%, rgba(217, 201, 178, 0) 100%)',
+      'linear-gradient(90deg, rgba(184, 228, 220, 0) 0%, rgba(184, 228, 220, 0.18) 46%, rgba(246, 251, 249, 0.24) 52%, rgba(184, 228, 220, 0) 100%)',
   },
 };
 
@@ -140,7 +140,7 @@ export const KineticWindow: React.FC<KineticWindowProps> = ({
   const innerRadius = Math.max(0, borderRadius - 1.5);
   const statusPillBg = statusAccent
     ? accentSoftBg ??
-      (surface === 'dark' ? 'rgba(201, 111, 79, 0.24)' : 'rgba(201, 111, 79, 0.12)')
+      (surface === 'dark' ? 'rgba(20, 184, 166, 0.24)' : 'rgba(20, 184, 166, 0.12)')
     : theme.statusBackground;
   const statusPillBorder = statusAccent
     ? accentBorderColor ?? accentColor
@@ -166,7 +166,7 @@ export const KineticWindow: React.FC<KineticWindowProps> = ({
         color: theme.inkColor,
         fontFamily: LAUNCH_FONTS.DISPLAY,
         boxShadow:
-          '0 24px 56px rgba(31, 39, 32, 0.12), 0 4px 14px rgba(31, 39, 32, 0.06)',
+          '0 24px 56px rgba(6, 23, 20, 0.12), 0 4px 14px rgba(6, 23, 20, 0.06)',
         transformStyle: 'preserve-3d',
         ...style,
       }}

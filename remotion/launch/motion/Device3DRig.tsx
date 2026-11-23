@@ -259,9 +259,9 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
               borderRadius: 22,
               overflow: 'hidden',
               backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-              border: '1.5px solid rgba(217, 201, 178, 0.45)',
+              border: '1.5px solid rgba(184, 228, 220, 0.45)',
               boxShadow:
-                '0 38px 80px -18px rgba(31, 39, 32, 0.34), 0 12px 28px -8px rgba(46, 58, 47, 0.16)',
+                '0 38px 80px -18px rgba(6, 23, 20, 0.34), 0 12px 28px -8px rgba(11, 36, 32, 0.16)',
             }}
           >
             <div
@@ -272,7 +272,7 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                borderBottom: '1px solid rgba(217, 201, 178, 0.14)',
+                borderBottom: '1px solid rgba(184, 228, 220, 0.16)',
                 flexShrink: 0,
               }}
             >
@@ -286,7 +286,7 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
                   fontFamily: LAUNCH_FONTS.MONO,
                   fontSize: 11,
                   letterSpacing: '0.1em',
-                  color: 'rgba(248, 246, 238, 0.72)',
+                  color: 'rgba(246, 251, 249, 0.72)',
                 }}
               >
                 {addressLabel}
@@ -314,7 +314,7 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
               style={{
                 height: 11,
                 backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                borderTop: '1px solid rgba(217, 201, 178, 0.14)',
+                borderTop: '1px solid rgba(184, 228, 220, 0.16)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -326,7 +326,7 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
                   width: 84,
                   height: 3,
                   borderRadius: 999,
-                  backgroundColor: 'rgba(217, 201, 178, 0.32)',
+                  backgroundColor: 'rgba(184, 228, 220, 0.34)',
                 }}
               />
             </div>
@@ -341,9 +341,9 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
               borderRadius: 44,
               padding: 9,
               backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-              border: '1.5px solid rgba(217, 201, 178, 0.42)',
+              border: '1.5px solid rgba(184, 228, 220, 0.42)',
               boxShadow:
-                '0 34px 70px -16px rgba(31, 39, 32, 0.36), 0 10px 24px -6px rgba(46, 58, 47, 0.18)',
+                '0 34px 70px -16px rgba(6, 23, 20, 0.36), 0 10px 24px -6px rgba(11, 36, 32, 0.18)',
               boxSizing: 'border-box',
             }}
           >
@@ -367,7 +367,7 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
                   height: 20,
                   borderRadius: 999,
                   backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                  border: '1px solid rgba(217, 201, 178, 0.16)',
+                  border: '1px solid rgba(184, 228, 220, 0.18)',
                   zIndex: 4,
                   display: 'flex',
                   alignItems: 'center',
@@ -406,9 +406,9 @@ export const Device3DRig: React.FC<Device3DRigProps> = ({
               borderRadius: 26,
               padding: 10,
               backgroundColor: LAUNCH_PALETTE.CARD_BG,
-              border: '1.5px solid rgba(217, 201, 178, 0.85)',
+              border: '1.5px solid rgba(184, 228, 220, 0.85)',
               boxShadow:
-                '0 28px 60px -14px rgba(46, 58, 47, 0.22), 0 6px 18px rgba(46, 58, 47, 0.08)',
+                '0 28px 60px -14px rgba(11, 36, 32, 0.22), 0 6px 18px rgba(11, 36, 32, 0.08)',
               boxSizing: 'border-box',
             }}
           >

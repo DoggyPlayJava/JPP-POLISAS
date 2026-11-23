@@ -12,12 +12,14 @@ import {
 import { Circle } from '@remotion/shapes';
 import {
   ArrowRight,
+  CalendarDays,
   Check,
   Clock,
   Compass,
   MapPin,
   Navigation,
   QrCode,
+  Umbrella,
 } from 'lucide-react';
 import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialChrome';
 import {
@@ -27,6 +29,10 @@ import {
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { GhostCursor, type GhostCursorKeyframe } from '../motion/MotionActors';
+import {
+  MODULE_CONTENT_ENTER_OFFSET,
+  Module3DIntroBumper,
+} from '../motion/Module3DIntroBumper';
 import { CAMPUS_ROUTE_KM } from '../lib/campusRoute';
 import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, POLISAS_COORDS } from '../tokens';
 import { ExplodedLayer, KineticWindow } from '../ui/KineticCard';
@@ -118,11 +124,21 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
   const { fps } = useVideoConfig();
 
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
-  const timeSec = frame / safeFps;
+  const O = MODULE_CONTENT_ENTER_OFFSET; // 132f 3D Module Bumper handoff
 
-  // Beat 1 (0..1.8s): Editorial entrance + KineticWords + Rough-Notation Circle around DIT3013
-  const sidebarEnterDuration = Math.max(10, Math.round(0.55 * safeFps));
-  const sidebarProgress = interpolate(frame, [0, sidebarEnterDuration], [0, 1], {
+  // Seamless zero-flash handoff: content stage unfolds across 132..168f as 3D monolith docks
+  const contentRevealT = interpolate(frame, [O, O + 36], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: EXPO_OUT,
+  });
+  const contentStageOpacity = contentRevealT;
+  const contentStageScale = interpolate(contentRevealT, [0, 1], [0.96, 1]);
+  const contentStageTranslateY = interpolate(contentRevealT, [0, 1], [22, 0]);
+
+  // Beat 1 (132..246f): Editorial entrance + KineticWords + Circle around DIT3013
+  const sidebarEnterDuration = Math.max(12, Math.round(0.65 * safeFps));
+  const sidebarProgress = interpolate(frame, [O + 2, O + 2 + sidebarEnterDuration], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
@@ -133,8 +149,8 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
     extrapolateRight: 'clamp',
   });
 
-  const mapEnterStart = Math.round(0.08 * safeFps);
-  const mapEnterEnd = Math.max(mapEnterStart + 10, Math.round(0.68 * safeFps));
+  const mapEnterStart = O + Math.round(0.08 * safeFps);
+  const mapEnterEnd = Math.max(mapEnterStart + 10, O + Math.round(0.75 * safeFps));
   const mapScale = interpolate(frame, [mapEnterStart, mapEnterEnd], [0.955, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -143,7 +159,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
   });
   const mapOpacity = interpolate(
     frame,
-    [mapEnterStart, mapEnterStart + Math.max(6, Math.round(0.32 * safeFps))],
+    [mapEnterStart, mapEnterStart + Math.max(6, Math.round(0.35 * safeFps))],
     [0, 1],
     {
       extrapolateLeft: 'clamp',
@@ -151,24 +167,24 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
     },
   );
 
-  const pillStart = Math.round(0.05 * safeFps);
-  const pillDuration = Math.max(8, Math.round(0.36 * safeFps));
-  const headlineStart = Math.round(0.16 * safeFps);
+  const pillStart = O + Math.round(0.06 * safeFps);
+  const pillDuration = Math.max(8, Math.round(0.4 * safeFps));
+  const headlineStart = O + Math.round(0.18 * safeFps);
   const wordStagger = Math.max(2, Math.round(0.06 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.36 * safeFps));
-  const subtitleStart = Math.round(0.52 * safeFps);
-  const subtitleDuration = Math.max(8, Math.round(0.42 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.4 * safeFps));
+  const subtitleStart = O + Math.round(0.55 * safeFps);
+  const subtitleDuration = Math.max(8, Math.round(0.46 * safeFps));
 
-  const circleStart = Math.round(0.9 * safeFps);
-  const circleDuration = Math.max(12, Math.round(0.64 * safeFps));
+  const circleStart = O + Math.round(0.95 * safeFps);
+  const circleDuration = Math.max(12, Math.round(0.68 * safeFps));
 
-  // Beat 2 (1.5..5.8s): GhostCursor glides onto 'Buka di PolyMaps ->', clicks, and drives route + ETA
-  const cursorAppearFrame = Math.round(1.5 * safeFps);
-  const clickFrame = Math.round(2.1 * safeFps); // 126f
+  // Beat 2 (204..540f / 3.4..9.0s): GhostCursor glides onto 'PANDU ARAH', clicks, and runs 5.07s 3D chase-cam
+  const cursorAppearFrame = O + Math.round(1.2 * safeFps); // 204f
+  const clickFrame = O + Math.round(1.75 * safeFps); // 237f
   const cursorHoldEnd = clickFrame + Math.round(0.28 * safeFps);
-  const cursorLeaveFrame = Math.round(2.65 * safeFps);
-  const cursorDisappearFrame = Math.round(2.95 * safeFps);
-  const arrivalFrame = Math.round(5.8 * safeFps); // 348f
+  const cursorLeaveFrame = clickFrame + Math.round(0.56 * safeFps);
+  const cursorDisappearFrame = clickFrame + Math.round(0.84 * safeFps); // exits at 287f cleanly before f_820 (local 442)
+  const arrivalFrame = Math.round(9.0 * safeFps); // 540f (2.0s hold until 660f)
 
   const cursorKeyframes: readonly GhostCursorKeyframe[] = [
     { frame: cursorAppearFrame, x: 960, y: 780 },
@@ -186,10 +202,10 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
   const isNavigating = frame >= clickFrame;
   const hasArrived = frame >= arrivalFrame;
 
-  // Beat 1 active ISNIN weekly tab illumination (lights up Indigo #4F46E5 smoothly on Beat 1)
+  // Beat 1 active ISNIN weekly tab illumination (lights up Indigo #4F46E5 smoothly)
   const isninActiveT = interpolate(
     frame,
-    [Math.round(0.12 * safeFps), Math.round(0.48 * safeFps)],
+    [O + Math.round(0.14 * safeFps), O + Math.round(0.52 * safeFps)],
     [0, 1],
     {
       extrapolateLeft: 'clamp',
@@ -283,7 +299,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
   // Animated progress bar inside active DIT3013 timetable row
   const timetableBarProgress = interpolate(
     frame,
-    [Math.round(0.5 * safeFps), arrivalFrame],
+    [O + Math.round(0.55 * safeFps), arrivalFrame],
     [0.24, 1],
     {
       extrapolateLeft: 'clamp',
@@ -291,13 +307,13 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
     },
   );
 
-  // Beat 3 (5.8..8.0s): Left-column QR chip spring + pulse ring
+  // Beat 3 (9.0..11.0s): Left-column QR chip spring + pulse ring
   const arrivalSpring =
     frame >= arrivalFrame
       ? spring({
           frame: frame - arrivalFrame,
           fps: safeFps,
-          config: { damping: 145, stiffness: 225, mass: 0.85 },
+          config: { damping: 24, stiffness: 160, mass: 1.0 },
         })
       : 0;
 
@@ -365,6 +381,23 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
         ambientTint={LAUNCH_MODULE_THEMES.polymaps.tint}
       />
 
+      <Module3DIntroBumper
+        moduleIndex="MODUL 02"
+        moduleCategory="NAVIGASI & AKADEMIK"
+        moduleName="PolyMaps"
+        tagline="Navigasi 3D & Jadual Kuliah Masa Nyata"
+        accentColor={LAUNCH_MODULE_THEMES.polymaps.primary}
+        darkColor={LAUNCH_MODULE_THEMES.polymaps.dark}
+        softColor={LAUNCH_MODULE_THEMES.polymaps.soft}
+        borderColor={LAUNCH_MODULE_THEMES.polymaps.border}
+        icon={<Compass size={96} color="#FFFFFF" strokeWidth={2.1} />}
+        features={[
+          { icon: <Compass size={15} strokeWidth={2.4} />, label: 'Navigasi 3D' },
+          { icon: <CalendarDays size={15} strokeWidth={2.4} />, label: 'Jadual e-Akademik' },
+          { icon: <Umbrella size={15} strokeWidth={2.4} />, label: 'Laluan Berbumbung' },
+        ]}
+      />
+
       <CameraStage
         zoomFrom={1}
         zoomTo={1.035}
@@ -394,6 +427,8 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
             gap: 32,
             alignItems: 'stretch',
             fontFamily: LAUNCH_FONTS.DISPLAY,
+            opacity: contentStageOpacity,
+            transform: `translate3d(0px, ${contentStageTranslateY.toFixed(2)}px, 0px) scale(${contentStageScale.toFixed(4)})`,
           }}
         >
           {/* Left Column (width=680px): Exploded 3D Indigo Takwim Schedule + Live Day Timeline */}
@@ -485,7 +520,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
               <ExplodedLayer
                 zDepth={36}
                 rotateY={1.5}
-                enterFrame={Math.round(0.16 * safeFps)}
+                enterFrame={O + Math.round(0.16 * safeFps)}
                 enterOffsetY={24}
                 floatAmplitude={0}
                 style={{
@@ -516,7 +551,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                     width={LEFT_COL_W}
                     height={CARD_H}
                     borderRadius={24}
-                    sheenStartFrame={Math.round(0.95 * safeFps)}
+                    sheenStartFrame={O + Math.round(0.95 * safeFps)}
                     sheenDuration={44}
                     style={{
                       borderColor:
@@ -526,7 +561,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                       boxShadow:
                         clickFlash > 0.05
                           ? '0 26px 56px rgba(16, 185, 129, 0.24)'
-                          : '0 24px 52px rgba(99, 102, 241, 0.10), 0 8px 20px rgba(31, 39, 32, 0.08)',
+                          : '0 24px 52px rgba(99, 102, 241, 0.10), 0 8px 20px rgba(6, 23, 20, 0.08)',
                     }}
                   >
                     <div
@@ -1042,7 +1077,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                       borderRadius: 18,
                       backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
                       border: `1.5px solid ${MERIT_PURPLE}`,
-                      boxShadow: '0 18px 40px rgba(168, 85, 247, 0.22), 0 8px 20px rgba(31, 39, 32, 0.22)',
+                      boxShadow: '0 18px 40px rgba(168, 85, 247, 0.22), 0 8px 20px rgba(6, 23, 20, 0.22)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -1172,7 +1207,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                       ? EMERALD
                       : EMERALD_BORDER
                 }`,
-                boxShadow: '0 18px 40px rgba(5, 150, 105, 0.16), 0 8px 20px rgba(31, 39, 32, 0.12)',
+                boxShadow: '0 18px 40px rgba(5, 150, 105, 0.16), 0 8px 20px rgba(6, 23, 20, 0.12)',
                 zIndex: 6,
                 pointerEvents: 'none',
               }}

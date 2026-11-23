@@ -2,17 +2,24 @@ export const LAUNCH_FPS = 60;
 export const LAUNCH_WIDTH = 1920;
 export const LAUNCH_HEIGHT = 1080;
 
+/** Shared v8 slow-paced luxury spring physics calibrated for weighty Apple/Fluent depth motion. */
+export const LUXURY_SPRING = {
+  damping: 26,
+  stiffness: 110,
+  mass: 1.15,
+} as const;
+
 export const LAUNCH_PALETTE = {
-  PRIMARY: '#2E3A2F',
-  PRIMARY_DARK: '#1F2720',
-  SECONDARY: '#6B7F5B',
-  MUTED_OLIVE: '#556453',
-  TERTIARY: '#D9C9B2',
-  ACCENT: '#C96F4F',
-  BACKGROUND: '#F8F6EE',
-  SURFACE_MUTED: '#F2EDE4',
+  PRIMARY: '#0B2420',
+  PRIMARY_DARK: '#061714',
+  SECONDARY: '#0D9488',
+  MUTED_OLIVE: '#3B635C',
+  TERTIARY: '#B8E4DC',
+  ACCENT: '#14B8A6',
+  BACKGROUND: '#F6FBF9',
+  SURFACE_MUTED: '#EBF7F4',
   CARD_BG: '#FFFFFF',
-  INK_SOFT: '#556453',
+  INK_SOFT: '#3B635C',
 } as const;
 
 export const LAUNCH_FONTS = {
@@ -44,17 +51,17 @@ export type ModuleTheme = {
 /**
  * Exact signature color scripting per module aligned directly with
  * `src/components/portal/CampusServicesGrid.tsx` & `src/config/excoModules.ts`,
- * anchored on clean `#F8F6EE` / `#1F2720` editorial surfaces.
+ * anchored on crisp Next-Gen Teal Green & Crisp White (`#F6FBF9` / `#0B2420`) surfaces.
  */
 export const LAUNCH_MODULE_THEMES = {
   portal: {
     id: 'portal',
-    primary: '#2E3A2F',
-    dark: '#1F2720',
-    accent: '#C96F4F',
-    soft: '#F8F6EE',
-    border: '#D9C9B2',
-    tint: 'rgba(201, 111, 79, 0.08)',
+    primary: '#0D9488',
+    dark: '#0B2420',
+    accent: '#14B8A6',
+    soft: '#CCFBF1',
+    border: '#99F6E4',
+    tint: 'rgba(13, 148, 136, 0.08)',
   },
   polymaps: {
     id: 'polymaps',
@@ -104,9 +111,9 @@ export const LAUNCH_MODULE_THEMES = {
   kebajikan: {
     id: 'kebajikan',
     primary: '#14B8A6',
-    dark: '#0D9488',
+    dark: '#0F766E',
     accent: '#14B8A6',
-    soft: '#F0FDFA',
+    soft: '#CCFBF1',
     border: '#99F6E4',
     tint: 'rgba(20, 184, 166, 0.09)',
   },
@@ -148,21 +155,21 @@ export const LAUNCH_MODULE_THEMES = {
   },
   impact: {
     id: 'impact',
-    primary: '#10B981',
-    dark: '#182219',
-    accent: '#F59E0B',
-    soft: '#1F2720',
-    border: '#D9C9B2',
-    tint: 'rgba(16, 185, 129, 0.12)',
+    primary: '#14B8A6',
+    dark: '#061714',
+    accent: '#2DD4BF',
+    soft: '#0D2E29',
+    border: '#2DD4BF',
+    tint: 'rgba(20, 184, 166, 0.14)',
   },
   closing: {
     id: 'closing',
-    primary: '#2E3A2F',
-    dark: '#1F2720',
-    accent: '#C96F4F',
-    soft: '#F8F6EE',
-    border: '#D9C9B2',
-    tint: 'rgba(16, 185, 129, 0.07)',
+    primary: '#0D9488',
+    dark: '#0B2420',
+    accent: '#14B8A6',
+    soft: '#CCFBF1',
+    border: '#99F6E4',
+    tint: 'rgba(13, 148, 136, 0.09)',
   },
 } as const satisfies Record<string, ModuleTheme>;
 
@@ -175,12 +182,12 @@ export type ChapterModuleThemeSpec = {
 
 /**
  * Chapter-indexed (`0..8`) accent spectrum driving `<GlobalCinemaGate>` progress rail,
- * chapter ticks, and cut overlays across the 74-second film.
+ * chapter ticks, and cut overlays across the 102-second film.
  */
 export const CHAPTER_MODULE_THEMES: readonly ChapterModuleThemeSpec[] = [
   {
     code: '01',
-    accent: LAUNCH_PALETTE.ACCENT,
+    accent: LAUNCH_PALETTE.SECONDARY,
     secondary: LAUNCH_MODULE_THEMES.polymaps.primary,
     badgeBg: LAUNCH_MODULE_THEMES.portal.soft,
   },
@@ -228,7 +235,7 @@ export const CHAPTER_MODULE_THEMES: readonly ChapterModuleThemeSpec[] = [
   },
   {
     code: '09',
-    accent: LAUNCH_PALETTE.ACCENT,
+    accent: LAUNCH_PALETTE.SECONDARY,
     secondary: LAUNCH_MODULE_THEMES.polymaps.primary,
     badgeBg: LAUNCH_MODULE_THEMES.closing.soft,
   },
