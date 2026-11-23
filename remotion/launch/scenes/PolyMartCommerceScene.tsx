@@ -30,8 +30,22 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { GeometricSparkBurst } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
 import { ExplodedLayer, KineticWindow } from '../ui/KineticCard';
+
+const AMBER = LAUNCH_MODULE_THEMES.polymart.primary; // #F59E0B
+const AMBER_DARK = LAUNCH_MODULE_THEMES.polymart.dark; // #D97706
+const AMBER_SOFT = LAUNCH_MODULE_THEMES.polymart.soft; // #FFFBEB
+const AMBER_BORDER = LAUNCH_MODULE_THEMES.polymart.border; // #FDE68A
+
+const CYAN = LAUNCH_MODULE_THEMES.polyrent.primary; // #06B6D4
+const CYAN_DARK = LAUNCH_MODULE_THEMES.polyrent.dark; // #0891B2
+const CYAN_SOFT = LAUNCH_MODULE_THEMES.polyrent.soft; // #ECFEFF
+const CYAN_BORDER = LAUNCH_MODULE_THEMES.polyrent.border; // #A5F3FC
+const EMERALD = LAUNCH_MODULE_THEMES.polymaps.primary; // #10B981
+const EMERALD_DARK = LAUNCH_MODULE_THEMES.polymaps.dark; // #059669
+const EMERALD_SOFT = LAUNCH_MODULE_THEMES.polymaps.soft; // #ECFDF5
+const EMERALD_BORDER = LAUNCH_MODULE_THEMES.polymaps.border; // #A7F3D0
 
 export type PolyMartProps = {
   readonly productsCount: number;
@@ -133,7 +147,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
     },
   );
 
-  // Animated Category Pills Strip: Terhangat lights cleanly into #C96F4F
+  // Animated Category Pills Strip: Terhangat lights cleanly into Amber #D97706
   const categoryHighlightT = interpolate(
     frame,
     [Math.round(0.5 * safeFps), Math.round(0.85 * safeFps)],
@@ -147,17 +161,17 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   const activeCategoryBg = interpolateColors(
     categoryHighlightT,
     [0, 1],
-    [LAUNCH_PALETTE.SURFACE_MUTED, LAUNCH_PALETTE.ACCENT],
+    [AMBER_SOFT, AMBER_DARK],
   );
   const activeCategoryBorder = interpolateColors(
     categoryHighlightT,
     [0, 1],
-    [LAUNCH_PALETTE.TERTIARY, LAUNCH_PALETTE.ACCENT],
+    [AMBER_BORDER, AMBER],
   );
   const activeCategoryInk = interpolateColors(
     categoryHighlightT,
     [0, 1],
-    [LAUNCH_PALETTE.PRIMARY, LAUNCH_PALETTE.CARD_BG],
+    [AMBER_DARK, LAUNCH_PALETTE.CARD_BG],
   );
 
   // Live interactive product additions inside PolyMart (0 -> 1 -> 2 -> 3 ITEM, RM 27.00)
@@ -268,7 +282,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
     easing: STAGE_MANAGER_EASE,
   });
 
-  // PolyMart smoothly glides upper-left into secondary Stage Manager plane
+  // PolyMart smoothly glides upper-left into secondary Stage Manager Z-plane
   const martFloatY = Math.sin(timeSec * 1.35) * 3.0 * martEnterProgress;
   const martTx =
     interpolate(rackFocus, [0, 1], [0, -34]) +
@@ -277,17 +291,18 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
     interpolate(rackFocus, [0, 1], [0, -14]) +
     interpolate(martEnterProgress, [0, 1], [34, 0]) +
     martFloatY;
+  const martZ = interpolate(rackFocus, [0, 1], [16, -28]);
   const martScale =
     interpolate(martEnterProgress, [0, 1], [0.94, 1]) *
     interpolate(rackFocus, [0, 1], [1, 0.9]);
-  const martRotateY = interpolate(rackFocus, [0, 1], [2.5, 5.5]);
+  const martRotateY = interpolate(rackFocus, [0, 1], [2.5, 6.0]);
   const martOpacity = martOpacityEnter * interpolate(rackFocus, [0, 1], [1, 0.88]);
 
   // Pickup pass softly steps back slightly during Beat 3 while remaining crisp
   const receiptRackOpacity = interpolate(rackFocus, [0, 1], [1, 0.94]);
   const receiptRackScale = interpolate(rackFocus, [0, 1], [1, 0.96]);
 
-  // PolyRent surges forward into hero plane (scale: 0.88 -> 1.02)
+  // PolyRent surges forward in 3D Z-space into hero plane (scale: 0.88 -> 1.02)
   const rentFloatY = Math.cos(timeSec * 1.25 + 1.1) * 3.0 * rentDockEnter;
   const rentDockOpacity = interpolate(rentDockEnter, [0, 0.35, 1], [0, 0.68, 0.68], {
     extrapolateLeft: 'clamp',
@@ -297,7 +312,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   const rentScale =
     interpolate(rentDockEnter, [0, 1], [0.83, 0.88]) +
     interpolate(rackFocus, [0, 1], [0, 0.14]); // settles at 1.02
-  const rentRotateY = interpolate(rackFocus, [0, 1], [-6.5, -1.8]);
+  const rentRotateY = interpolate(rackFocus, [0, 1], [-7.5, -1.8]);
   const rentTx =
     interpolate(rentDockEnter, [0, 1], [34, 0]) +
     interpolate(rackFocus, [0, 1], [0, -10]);
@@ -305,8 +320,9 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
     interpolate(rentDockEnter, [0, 1], [30, 0]) +
     interpolate(rackFocus, [0, 1], [0, -10]) +
     rentFloatY;
+  const rentZ = interpolate(rackFocus, [0, 1], [-18, 68]);
 
-  // Student Mode Toggle inside PolyRent: switches & lights cleanly into "Cari Bilik Sewa" (#C96F4F) on Beat 2
+  // Student Mode Toggle inside PolyRent: lights cleanly into Cyan #06B6D4
   const rentModeSwitchStart = Math.round(2.75 * safeFps); // 165f
   const rentModeSwitchEnd = Math.round(3.3 * safeFps); // 198f
   const bilikModeActiveT = interpolate(frame, [rentModeSwitchStart, rentModeSwitchEnd], [0, 1], {
@@ -317,27 +333,27 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   const bilikPillBg = interpolateColors(
     bilikModeActiveT,
     [0, 1],
-    ['rgba(248, 246, 238, 0.08)', LAUNCH_PALETTE.ACCENT],
+    ['rgba(248, 246, 238, 0.08)', CYAN_DARK],
   );
   const bilikPillBorder = interpolateColors(
     bilikModeActiveT,
     [0, 1],
-    ['rgba(217, 201, 178, 0.25)', LAUNCH_PALETTE.ACCENT],
+    ['rgba(165, 243, 252, 0.25)', CYAN],
   );
   const bilikPillInk = interpolateColors(
     bilikModeActiveT,
     [0, 1],
-    [LAUNCH_PALETTE.TERTIARY, LAUNCH_PALETTE.CARD_BG],
+    [CYAN_SOFT, LAUNCH_PALETTE.CARD_BG],
   );
   const roommatePillBg = interpolateColors(
     bilikModeActiveT,
     [0, 1],
-    ['rgba(107, 127, 91, 0.34)', 'rgba(248, 246, 238, 0.08)'],
+    ['rgba(6, 182, 212, 0.28)', 'rgba(248, 246, 238, 0.08)'],
   );
   const roommatePillBorder = interpolateColors(
     bilikModeActiveT,
     [0, 1],
-    ['rgba(217, 201, 178, 0.48)', 'rgba(217, 201, 178, 0.24)'],
+    ['rgba(165, 243, 252, 0.48)', 'rgba(217, 201, 178, 0.24)'],
   );
   const roommatePillInk = interpolateColors(
     bilikModeActiveT,
@@ -400,8 +416,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   const headerExitX = -10 * exitLead;
 
   const payButtonBg = item3Added
-    ? LAUNCH_PALETTE.ACCENT
-    : interpolateColors(item1BtnSpring, [0, 1], [LAUNCH_PALETTE.PRIMARY, LAUNCH_PALETTE.SECONDARY]);
+    ? AMBER_DARK
+    : interpolateColors(item1BtnSpring, [0, 1], [LAUNCH_PALETTE.PRIMARY, EMERALD_DARK]);
 
   const studentItems = [
     {
@@ -410,7 +426,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
       subtitle: 'Sos Keju & Lada Hitam',
       priceLabel: 'RM 9.00',
       badge: 'Makanan',
-      badgeAccent: false,
+      badgeAccent: true,
       added: item1Added,
       btnSpring: item1BtnSpring,
       btnScale: item1Scale,
@@ -444,7 +460,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
 
   return (
     <>
-      <EditorialBackdrop />
+      <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.polymart.tint} />
 
       <CameraStage
         zoomFrom={1}
@@ -498,9 +514,9 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                   alignSelf: 'flex-start',
                   padding: '5px 14px',
                   borderRadius: 999,
-                  backgroundColor: 'rgba(201, 111, 79, 0.12)',
-                  border: `1px solid ${LAUNCH_PALETTE.ACCENT}`,
-                  color: LAUNCH_PALETTE.ACCENT,
+                  backgroundColor: AMBER_SOFT,
+                  border: `1.5px solid ${AMBER}`,
+                  color: AMBER_DARK,
                   fontFamily: LAUNCH_FONTS.MONO,
                   fontSize: 11.5,
                   fontWeight: 800,
@@ -520,7 +536,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
               accentWords={['Semua', 'Di', 'Sini.']}
-              accentColor={LAUNCH_PALETTE.ACCENT}
+              accentColor={AMBER_DARK}
               style={{
                 margin: 0,
                 fontSize: 48,
@@ -547,7 +563,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               </p>
             </KineticReveal>
 
-            {/* Compact Live Tabular KPI Strip */}
+            {/* Compact Dual-Module Tabular KPI Strip (Amber + Cyan + Emerald) */}
             <KineticReveal startFrame={kpiStart} durationFrames={kpiDuration}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 2 }}>
                 <div
@@ -557,9 +573,9 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     gap: 7,
                     padding: '6px 13px',
                     borderRadius: 999,
-                    backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                    border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                    boxShadow: '0 8px 18px rgba(46, 58, 47, 0.06)',
+                    backgroundColor: AMBER_SOFT,
+                    border: `1.5px solid ${AMBER}`,
+                    boxShadow: '0 8px 18px rgba(245, 158, 11, 0.12)',
                     fontFamily: LAUNCH_FONTS.MONO,
                     fontSize: 12.5,
                     fontWeight: 800,
@@ -567,7 +583,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
-                  <ShoppingBag size={13.5} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
+                  <ShoppingBag size={13.5} color={AMBER_DARK} strokeWidth={2.4} />
                   <span>{animatedProducts}+ Menu &amp; Merch</span>
                 </div>
 
@@ -578,9 +594,9 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     gap: 7,
                     padding: '6px 13px',
                     borderRadius: 999,
-                    backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                    border: '1.5px solid rgba(217, 201, 178, 0.28)',
-                    boxShadow: '0 10px 22px rgba(31, 39, 32, 0.14)',
+                    backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                    border: `1.5px solid ${CYAN}`,
+                    boxShadow: '0 10px 22px rgba(6, 182, 212, 0.16)',
                     fontFamily: LAUNCH_FONTS.MONO,
                     fontSize: 12.5,
                     fontWeight: 800,
@@ -588,7 +604,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
-                  <Receipt size={13.5} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
+                  <Receipt size={13.5} color={CYAN} strokeWidth={2.4} />
                   <span>{animatedOrders}+ Pesanan Siswa</span>
                 </div>
 
@@ -599,22 +615,22 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     gap: 6,
                     padding: '6px 13px',
                     borderRadius: 999,
-                    backgroundColor: 'rgba(107, 127, 91, 0.14)',
-                    border: '1.5px solid rgba(107, 127, 91, 0.42)',
+                    backgroundColor: EMERALD_SOFT,
+                    border: `1.5px solid ${EMERALD_BORDER}`,
                     fontFamily: LAUNCH_FONTS.MONO,
                     fontSize: 12,
                     fontWeight: 800,
-                    color: LAUNCH_PALETTE.PRIMARY,
+                    color: EMERALD_DARK,
                   }}
                 >
-                  <ShieldCheck size={13.5} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.5} />
+                  <ShieldCheck size={13.5} color={EMERALD_DARK} strokeWidth={2.5} />
                   <span>Tanpa Beratur</span>
                 </div>
               </div>
             </KineticReveal>
           </Interactive.Div>
 
-          {/* Beat 1–2 Upper-Left/Center Foreground Plane: Live Student PolyMart Storefront Deck */}
+          {/* Beat 1–2 Upper-Left/Center Plane: Amber Student PolyMart Storefront Deck */}
           <Interactive.Div
             name="PolyMart Storefront Deck"
             premountFor={safeFps}
@@ -629,7 +645,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               transformOrigin: '50% 50%',
               transformStyle: 'preserve-3d',
               willChange: 'transform, opacity',
-              transform: `translate3d(${martTx.toFixed(2)}px, ${martTy.toFixed(2)}px, 0px) scale(${martScale.toFixed(4)}) rotateY(${martRotateY.toFixed(2)}deg)`,
+              transform: `translate3d(${martTx.toFixed(2)}px, ${martTy.toFixed(2)}px, ${martZ.toFixed(2)}px) scale(${martScale.toFixed(4)}) rotateY(${martRotateY.toFixed(2)}deg)`,
             }}
           >
             <KineticWindow
@@ -637,16 +653,20 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               routeLabel="jpp.polisas.edu.my/polymart"
               statusPill="JPP PAY AKTIF"
               statusAccent
+              accentColor={AMBER_DARK}
+              accentSoftBg={AMBER_SOFT}
+              accentBorderColor={AMBER}
               width={888}
               height={468}
               borderRadius={26}
               sheenStartFrame={Math.round(0.9 * safeFps)}
               sheenDuration={44}
               style={{
+                borderColor: AMBER_BORDER,
                 boxShadow:
                   rackFocus > 0.5
                     ? '0 20px 44px rgba(31, 39, 32, 0.12)'
-                    : '0 32px 68px rgba(31, 39, 32, 0.16), 0 8px 20px rgba(31, 39, 32, 0.08)',
+                    : '0 32px 68px rgba(245, 158, 11, 0.16), 0 8px 20px rgba(31, 39, 32, 0.08)',
               }}
             >
               <div
@@ -660,7 +680,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                   boxSizing: 'border-box',
                 }}
               >
-                {/* Live Vendor Header + Animated Cart Pill */}
+                {/* Live Vendor Header + Animated Amber Cart Pill */}
                 <div
                   style={{
                     display: 'flex',
@@ -668,7 +688,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     justifyContent: 'space-between',
                     gap: 14,
                     paddingBottom: 11,
-                    borderBottom: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                    borderBottom: `1px solid ${AMBER_BORDER}`,
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -677,15 +697,15 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                         width: 42,
                         height: 42,
                         borderRadius: 13,
-                        backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                        border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                        backgroundColor: AMBER_DARK,
+                        border: `1.5px solid ${AMBER_BORDER}`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
                       }}
                     >
-                      <UtensilsCrossed size={19} color={LAUNCH_PALETTE.BACKGROUND} strokeWidth={2.2} />
+                      <UtensilsCrossed size={19} color={LAUNCH_PALETTE.CARD_BG} strokeWidth={2.2} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
@@ -699,7 +719,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                         >
                           QUADRA H · KAFE &amp; MERCH SISWA
                         </span>
-                        <CheckCircle2 size={15} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.6} />
+                        <CheckCircle2 size={15} color={EMERALD_DARK} strokeWidth={2.6} />
                       </div>
                       <span
                         style={{
@@ -715,7 +735,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     </div>
                   </div>
 
-                  {/* Animated + Bakul Counter Pill (0 -> 1 -> 2 -> 3 ITEM) */}
+                  {/* Animated Amber + Bakul Counter Pill (0 -> 1 -> 2 -> 3 ITEM) */}
                   <div
                     style={{
                       display: 'inline-flex',
@@ -723,12 +743,9 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       gap: 8,
                       padding: '7px 14px',
                       borderRadius: 999,
-                      backgroundColor:
-                        cartCount > 0 ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.SURFACE_MUTED,
-                      border: `1.5px solid ${
-                        cartCount > 0 ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.TERTIARY
-                      }`,
-                      color: cartCount > 0 ? LAUNCH_PALETTE.CARD_BG : LAUNCH_PALETTE.PRIMARY,
+                      backgroundColor: cartCount > 0 ? AMBER_DARK : AMBER_SOFT,
+                      border: `1.5px solid ${cartCount > 0 ? AMBER : AMBER_BORDER}`,
+                      color: cartCount > 0 ? LAUNCH_PALETTE.CARD_BG : AMBER_DARK,
                       fontFamily: LAUNCH_FONTS.MONO,
                       fontSize: 12,
                       fontWeight: 800,
@@ -764,13 +781,9 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             gap: 5,
                             padding: '5px 13px',
                             borderRadius: 999,
-                            backgroundColor: isActive
-                              ? activeCategoryBg
-                              : LAUNCH_PALETTE.SURFACE_MUTED,
-                            border: `1px solid ${
-                              isActive ? activeCategoryBorder : LAUNCH_PALETTE.TERTIARY
-                            }`,
-                            color: isActive ? activeCategoryInk : LAUNCH_PALETTE.PRIMARY,
+                            backgroundColor: isActive ? activeCategoryBg : AMBER_SOFT,
+                            border: `1px solid ${isActive ? activeCategoryBorder : AMBER_BORDER}`,
+                            color: isActive ? activeCategoryInk : AMBER_DARK,
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 11,
                             fontWeight: 800,
@@ -789,14 +802,14 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       fontFamily: LAUNCH_FONTS.MONO,
                       fontSize: 10.5,
                       fontWeight: 700,
-                      color: LAUNCH_PALETTE.MUTED_OLIVE,
+                      color: AMBER_DARK,
                     }}
                   >
                     SIAP 5–8 MIN
                   </span>
                 </div>
 
-                {/* 3 Sleek Compact Student Product Cards Side-by-Side */}
+                {/* 3 Sleek Compact Student Product Cards Side-by-Side (Amber) */}
                 <div
                   style={{
                     display: 'grid',
@@ -813,10 +826,10 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                         padding: '13px 14px',
                         backgroundColor: LAUNCH_PALETTE.BACKGROUND,
                         border: `1.5px solid ${
-                          item.added ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.TERTIARY
+                          item.added ? AMBER : AMBER_BORDER
                         }`,
                         boxShadow: item.added
-                          ? '0 10px 22px rgba(201, 111, 79, 0.14)'
+                          ? '0 10px 22px rgba(245, 158, 11, 0.16)'
                           : '0 6px 14px rgba(46, 58, 47, 0.04)',
                         display: 'flex',
                         flexDirection: 'column',
@@ -838,8 +851,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             width: 42,
                             height: 42,
                             borderRadius: 12,
-                            backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                            border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                            backgroundColor: AMBER_SOFT,
+                            border: `1.5px solid ${AMBER_BORDER}`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -847,11 +860,11 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                           }}
                         >
                           {item.iconKind === 'food' ? (
-                            <UtensilsCrossed size={19} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.2} />
+                            <UtensilsCrossed size={19} color={AMBER_DARK} strokeWidth={2.2} />
                           ) : item.iconKind === 'bag' ? (
-                            <ShoppingBag size={19} color={LAUNCH_PALETTE.PRIMARY} strokeWidth={2.2} />
+                            <ShoppingBag size={19} color={AMBER_DARK} strokeWidth={2.2} />
                           ) : (
-                            <Tag size={19} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.2} />
+                            <Tag size={19} color={LAUNCH_PALETTE.PRIMARY} strokeWidth={2.2} />
                           )}
                         </div>
 
@@ -862,18 +875,12 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             gap: 4,
                             padding: '3px 9px',
                             borderRadius: 999,
-                            backgroundColor: item.badgeAccent
-                              ? 'rgba(201, 111, 79, 0.14)'
-                              : 'rgba(107, 127, 91, 0.14)',
-                            border: `1px solid ${
-                              item.badgeAccent
-                                ? 'rgba(201, 111, 79, 0.36)'
-                                : 'rgba(107, 127, 91, 0.34)'
-                            }`,
+                            backgroundColor: item.badgeAccent ? AMBER_SOFT : EMERALD_SOFT,
+                            border: `1px solid ${item.badgeAccent ? AMBER_BORDER : EMERALD_BORDER}`,
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 10,
                             fontWeight: 800,
-                            color: item.badgeAccent ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.PRIMARY,
+                            color: item.badgeAccent ? AMBER_DARK : EMERALD_DARK,
                             whiteSpace: 'nowrap',
                           }}
                         >
@@ -919,12 +926,12 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                           style={{
                             padding: '5px 10px',
                             borderRadius: 999,
-                            backgroundColor: 'rgba(201, 111, 79, 0.12)',
-                            border: '1px solid rgba(201, 111, 79, 0.34)',
+                            backgroundColor: AMBER_SOFT,
+                            border: `1px solid ${AMBER_BORDER}`,
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 12.5,
                             fontWeight: 900,
-                            color: LAUNCH_PALETTE.ACCENT,
+                            color: AMBER_DARK,
                             fontVariantNumeric: 'tabular-nums',
                             whiteSpace: 'nowrap',
                           }}
@@ -939,9 +946,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             gap: 4,
                             padding: '6px 11px',
                             borderRadius: 999,
-                            backgroundColor: item.added
-                              ? LAUNCH_PALETTE.PRIMARY
-                              : LAUNCH_PALETTE.ACCENT,
+                            backgroundColor: item.added ? EMERALD_DARK : AMBER_DARK,
                             color: LAUNCH_PALETTE.CARD_BG,
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 10.5,
@@ -974,8 +979,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     height: 48,
                     padding: '0 16px',
                     borderRadius: 15,
-                    backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                    border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                    backgroundColor: AMBER_SOFT,
+                    border: `1px solid ${AMBER_BORDER}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
@@ -984,7 +989,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
-                    <ShieldCheck size={16} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.5} />
+                    <ShieldCheck size={16} color={EMERALD_DARK} strokeWidth={2.5} />
                     <span
                       style={{
                         fontFamily: LAUNCH_FONTS.MONO,
@@ -1020,7 +1025,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
             </KineticWindow>
           </Interactive.Div>
 
-          {/* Floating ExplodedLayer zDepth={28}: JPP PAY • PESANAN #${safeOrdersCount} SIAP DIAMBIL ✓ */}
+          {/* Floating ExplodedLayer zDepth={72}: Amber JPP PAY Digital Pickup Pass */}
           <GeometricSparkBurst
             triggerFrame={receiptSlamFrame + 2}
             x={1750}
@@ -1028,6 +1033,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
             durationFrames={Math.max(16, Math.round(0.6 * safeFps))}
             radius={82}
             count={10}
+            colors={[AMBER, AMBER_DARK, EMERALD]}
             seed="polymart-jpp-pay-receipt"
             style={{ zIndex: 20 }}
           />
@@ -1048,7 +1054,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
             }}
           >
             <ExplodedLayer
-              zDepth={28}
+              zDepth={72}
               enterFrame={receiptSlamFrame}
               enterOffsetY={20}
               enterOffsetX={16}
@@ -1060,9 +1066,9 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                   borderRadius: 22,
                   padding: '16px 20px',
                   backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                  border: `2px solid ${LAUNCH_PALETTE.ACCENT}`,
+                  border: `2px solid ${AMBER}`,
                   boxShadow:
-                    '0 24px 52px rgba(31, 39, 32, 0.2), inset 0 0 0 1.5px rgba(217, 201, 178, 0.5)',
+                    '0 24px 52px rgba(245, 158, 11, 0.22), inset 0 0 0 1.5px rgba(253, 230, 138, 0.7)',
                   transform: `scale(${receiptScale.toFixed(4)})`,
                   transformOrigin: '50% 50%',
                   display: 'flex',
@@ -1084,7 +1090,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                         width: 28,
                         height: 28,
                         borderRadius: 999,
-                        backgroundColor: LAUNCH_PALETTE.ACCENT,
+                        backgroundColor: EMERALD_DARK,
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1111,12 +1117,12 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     style={{
                       padding: '4px 10px',
                       borderRadius: 999,
-                      backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                      border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                      backgroundColor: AMBER_SOFT,
+                      border: `1px solid ${AMBER_BORDER}`,
                       fontFamily: LAUNCH_FONTS.MONO,
                       fontSize: 10,
                       fontWeight: 800,
-                      color: LAUNCH_PALETTE.SECONDARY,
+                      color: AMBER_DARK,
                       whiteSpace: 'nowrap',
                       flexShrink: 0,
                     }}
@@ -1129,8 +1135,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                   style={{
                     padding: '9px 14px',
                     borderRadius: 13,
-                    backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                    border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                    backgroundColor: AMBER_SOFT,
+                    border: `1px solid ${AMBER_BORDER}`,
                     fontFamily: LAUNCH_FONTS.MONO,
                     fontSize: 12,
                     fontWeight: 800,
@@ -1154,14 +1160,14 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     overflow: 'visible',
                   }}
                 >
-                  <ShieldCheck size={15} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.5} />
+                  <ShieldCheck size={15} color={EMERALD_DARK} strokeWidth={2.5} />
                   <span>Terus tunjuk pas digital di kaunter melalui</span>
                   <span style={{ display: 'inline-block', marginLeft: 3, overflow: 'visible' }}>
                     <EditorialAnnotation
                       type="highlight"
                       startFrame={receiptHighlightStart}
                       durationFrames={receiptHighlightDur}
-                      color="rgba(217, 201, 178, 0.85)"
+                      color="rgba(245, 158, 11, 0.35)"
                       padding={{ top: 2, right: 8, bottom: 2, left: 8 }}
                       iterations={1}
                       seed={14}
@@ -1182,7 +1188,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
             </ExplodedLayer>
           </Interactive.Div>
 
-          {/* Beat 2–3 Lower-Right Hero Plane: Live Student PolyRent Housing Deck */}
+          {/* Beat 2–3 Lower-Right Hero Plane: Signature Cyan Student PolyRent Housing Deck */}
           <Interactive.Div
             name="PolyRent Housing Deck"
             premountFor={safeFps}
@@ -1197,7 +1203,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               transformOrigin: '50% 50%',
               transformStyle: 'preserve-3d',
               willChange: 'transform, opacity',
-              transform: `translate3d(${rentTx.toFixed(2)}px, ${rentTy.toFixed(2)}px, 0px) scale(${rentScale.toFixed(4)}) rotateY(${rentRotateY.toFixed(2)}deg)`,
+              transform: `translate3d(${rentTx.toFixed(2)}px, ${rentTy.toFixed(2)}px, ${rentZ.toFixed(2)}px) scale(${rentScale.toFixed(4)}) rotateY(${rentRotateY.toFixed(2)}deg)`,
             }}
           >
             <KineticWindow
@@ -1205,15 +1211,19 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               routeLabel="jpp.polisas.edu.my/polyrent"
               statusPill="VERIFIED SISWA ✓"
               statusAccent
+              accentColor={CYAN}
+              accentSoftBg="rgba(6, 182, 212, 0.22)"
+              accentBorderColor={CYAN}
               width={874}
               height={498}
               borderRadius={26}
               sheenStartFrame={Math.round(3.25 * safeFps)}
               sheenDuration={46}
               style={{
+                borderColor: CYAN,
                 boxShadow:
                   rackFocus > 0.35
-                    ? '0 36px 76px rgba(31, 39, 32, 0.34), 0 10px 24px rgba(31, 39, 32, 0.18)'
+                    ? '0 36px 76px rgba(6, 182, 212, 0.24), 0 10px 24px rgba(31, 39, 32, 0.24)'
                     : '0 20px 44px rgba(31, 39, 32, 0.2)',
               }}
             >
@@ -1228,7 +1238,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                   boxSizing: 'border-box',
                 }}
               >
-                {/* Animated Student Mode Toggle: Cari Bilik Sewa / Cari Roommate */}
+                {/* Animated Cyan Student Mode Toggle: Cari Bilik Sewa / Cari Roommate */}
                 <div
                   style={{
                     display: 'flex',
@@ -1245,7 +1255,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       padding: 4,
                       borderRadius: 999,
                       backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                      border: '1px solid rgba(217, 201, 178, 0.22)',
+                      border: '1px solid rgba(165, 243, 252, 0.28)',
                     }}
                   >
                     <div
@@ -1297,8 +1307,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       gap: 7,
                       padding: '6px 13px',
                       borderRadius: 999,
-                      backgroundColor: 'rgba(107, 127, 91, 0.3)',
-                      border: '1px solid rgba(217, 201, 178, 0.42)',
+                      backgroundColor: 'rgba(6, 182, 212, 0.22)',
+                      border: `1px solid ${CYAN}`,
                       fontFamily: LAUNCH_FONTS.MONO,
                       fontSize: 11,
                       fontWeight: 800,
@@ -1308,7 +1318,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       flexShrink: 0,
                     }}
                   >
-                    <MessageCircle size={13.5} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.5} />
+                    <MessageCircle size={13.5} color={CYAN} strokeWidth={2.5} />
                     <span>Verified Siswa • WhatsApp Terus ✓</span>
                   </div>
                 </div>
@@ -1322,8 +1332,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     gap: 14,
                     padding: '13px 16px',
                     borderRadius: 18,
-                    backgroundColor: 'rgba(248, 246, 238, 0.06)',
-                    border: '1px solid rgba(217, 201, 178, 0.24)',
+                    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+                    border: '1px solid rgba(165, 243, 252, 0.28)',
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 13, minWidth: 0 }}>
@@ -1332,15 +1342,15 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                         width: 46,
                         height: 46,
                         borderRadius: 14,
-                        backgroundColor: 'rgba(201, 111, 79, 0.22)',
-                        border: '1.5px solid rgba(201, 111, 79, 0.55)',
+                        backgroundColor: 'rgba(6, 182, 212, 0.22)',
+                        border: `1.5px solid ${CYAN}`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0,
                       }}
                     >
-                      <MapPin size={21} color={LAUNCH_PALETTE.BACKGROUND} strokeWidth={2.2} />
+                      <MapPin size={21} color={CYAN_SOFT} strokeWidth={2.2} />
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
                       <div
@@ -1359,7 +1369,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                           style={{
                             fontSize: 13,
                             fontWeight: 700,
-                            color: LAUNCH_PALETTE.TERTIARY,
+                            color: CYAN_BORDER,
                           }}
                         >
                           Bilik Master · Lengkap WiFi &amp; Katil
@@ -1369,7 +1379,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             padding: '2px 9px',
                             borderRadius: 999,
                             backgroundColor: 'rgba(248, 246, 238, 0.09)',
-                            border: '1px solid rgba(217, 201, 178, 0.28)',
+                            border: '1px solid rgba(165, 243, 252, 0.3)',
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 10,
                             fontWeight: 700,
@@ -1389,8 +1399,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       gap: 5,
                       padding: '5px 11px',
                       borderRadius: 999,
-                      backgroundColor: 'rgba(201, 111, 79, 0.2)',
-                      border: '1px solid rgba(201, 111, 79, 0.45)',
+                      backgroundColor: 'rgba(16, 185, 129, 0.22)',
+                      border: `1px solid ${EMERALD}`,
                       fontFamily: LAUNCH_FONTS.MONO,
                       fontSize: 10.5,
                       fontWeight: 800,
@@ -1399,19 +1409,19 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       flexShrink: 0,
                     }}
                   >
-                    <ShieldCheck size={13} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.5} />
+                    <ShieldCheck size={13} color={EMERALD} strokeWidth={2.5} />
                     <span>PILIHAN JIMAT</span>
                   </div>
                 </div>
 
-                {/* Live Code-Driven Kalkulator Sewa Panel */}
+                {/* Live Code-Driven Cyan Kalkulator Sewa Panel */}
                 <div
                   style={{
                     flex: 1,
                     borderRadius: 20,
                     padding: '16px 18px',
                     backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                    border: '1.5px solid rgba(217, 201, 178, 0.2)',
+                    border: '1.5px solid rgba(165, 243, 252, 0.22)',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
@@ -1426,14 +1436,14 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                           width: 34,
                           height: 34,
                           borderRadius: 10,
-                          backgroundColor: 'rgba(201, 111, 79, 0.2)',
-                          border: '1px solid rgba(201, 111, 79, 0.48)',
+                          backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                          border: `1px solid ${CYAN}`,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
                         }}
                       >
-                        <Calculator size={17} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.3} />
+                        <Calculator size={17} color={CYAN} strokeWidth={2.3} />
                       </div>
                       <div>
                         <div
@@ -1452,7 +1462,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             fontSize: 10.5,
                             fontWeight: 700,
                             letterSpacing: '0.09em',
-                            color: LAUNCH_PALETTE.TERTIARY,
+                            color: CYAN_BORDER,
                             marginTop: 2,
                           }}
                         >
@@ -1465,12 +1475,12 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       style={{
                         padding: '6px 12px',
                         borderRadius: 999,
-                        backgroundColor: 'rgba(248, 246, 238, 0.08)',
-                        border: '1px solid rgba(217, 201, 178, 0.24)',
+                        backgroundColor: 'rgba(6, 182, 212, 0.14)',
+                        border: '1px solid rgba(165, 243, 252, 0.28)',
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 12,
                         fontWeight: 800,
-                        color: LAUNCH_PALETTE.TERTIARY,
+                        color: CYAN_SOFT,
                         fontVariantNumeric: 'tabular-nums',
                       }}
                     >
@@ -1487,13 +1497,13 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       alignItems: 'stretch',
                     }}
                   >
-                    {/* Left: Animated Roommate Selector (2 -> 3 -> 4 Pelajar) */}
+                    {/* Left: Animated Cyan Roommate Selector */}
                     <div
                       style={{
                         borderRadius: 15,
                         padding: '12px 14px',
                         backgroundColor: 'rgba(248, 246, 238, 0.05)',
-                        border: '1px solid rgba(217, 201, 178, 0.16)',
+                        border: '1px solid rgba(165, 243, 252, 0.18)',
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
@@ -1516,10 +1526,10 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             fontSize: 10.5,
                             fontWeight: 800,
                             letterSpacing: '0.08em',
-                            color: LAUNCH_PALETTE.TERTIARY,
+                            color: CYAN_BORDER,
                           }}
                         >
-                          <Users size={13} color={LAUNCH_PALETTE.ACCENT} />
+                          <Users size={13} color={CYAN} />
                           <span>BILANGAN ROOMMATE</span>
                         </span>
                         <span
@@ -1547,12 +1557,12 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                                 height: 42,
                                 borderRadius: 12,
                                 backgroundColor: isSelected
-                                  ? LAUNCH_PALETTE.ACCENT
+                                  ? CYAN_DARK
                                   : 'rgba(248, 246, 238, 0.06)',
                                 border: `1.5px solid ${
                                   isSelected
-                                    ? LAUNCH_PALETTE.ACCENT
-                                    : 'rgba(217, 201, 178, 0.22)'
+                                    ? CYAN
+                                    : 'rgba(165, 243, 252, 0.22)'
                                 }`,
                                 display: 'flex',
                                 alignItems: 'center',
@@ -1562,7 +1572,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                                 fontWeight: 900,
                                 color: isSelected
                                   ? LAUNCH_PALETTE.CARD_BG
-                                  : LAUNCH_PALETTE.TERTIARY,
+                                  : CYAN_BORDER,
                                 fontVariantNumeric: 'tabular-nums',
                                 transform: `scale(${pop.toFixed(4)})`,
                               }}
@@ -1586,9 +1596,9 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                                 borderRadius: 999,
                                 backgroundColor: active
                                   ? slot === roommates
-                                    ? LAUNCH_PALETTE.ACCENT
-                                    : LAUNCH_PALETTE.SECONDARY
-                                  : 'rgba(217, 201, 178, 0.16)',
+                                    ? CYAN
+                                    : EMERALD
+                                  : 'rgba(165, 243, 252, 0.16)',
                               }}
                             />
                           );
@@ -1601,8 +1611,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       style={{
                         borderRadius: 15,
                         padding: '12px 16px',
-                        backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                        border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                        backgroundColor: CYAN_SOFT,
+                        border: `1.5px solid ${CYAN}`,
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
@@ -1623,7 +1633,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             fontSize: 10.5,
                             fontWeight: 800,
                             letterSpacing: '0.09em',
-                            color: LAUNCH_PALETTE.MUTED_OLIVE,
+                            color: CYAN_DARK,
                           }}
                         >
                           SEORANG PERLU BAYAR
@@ -1633,7 +1643,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 11,
                             fontWeight: 800,
-                            color: LAUNCH_PALETTE.ACCENT,
+                            color: CYAN_DARK,
                             fontVariantNumeric: 'tabular-nums',
                           }}
                         >
@@ -1656,7 +1666,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             fontSize: 38,
                             fontWeight: 900,
                             letterSpacing: '-0.03em',
-                            color: LAUNCH_PALETTE.PRIMARY,
+                            color: LAUNCH_PALETTE.PRIMARY_DARK,
                             fontVariantNumeric: 'tabular-nums',
                             lineHeight: 1,
                           }}
@@ -1668,7 +1678,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 14,
                             fontWeight: 800,
-                            color: LAUNCH_PALETTE.ACCENT,
+                            color: CYAN_DARK,
                           }}
                         >
                           / bln seorang
@@ -1680,9 +1690,9 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                         style={{
                           height: 10,
                           borderRadius: 999,
-                          backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
+                          backgroundColor: LAUNCH_PALETTE.CARD_BG,
                           overflow: 'hidden',
-                          border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                          border: `1px solid ${CYAN_BORDER}`,
                         }}
                       >
                         <div
@@ -1690,7 +1700,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             width: `${(smoothShareRatio * 100).toFixed(2)}%`,
                             height: '100%',
                             borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.ACCENT,
+                            backgroundColor: CYAN_DARK,
                           }}
                         />
                       </div>
@@ -1712,7 +1722,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       fontFamily: LAUNCH_FONTS.MONO,
                       fontSize: 11,
                       fontWeight: 700,
-                      color: LAUNCH_PALETTE.TERTIARY,
+                      color: CYAN_BORDER,
                     }}
                   >
                     Termasuk WiFi &amp; bil kongsi — terus WhatsApp tuan rumah atau cari roommate
@@ -1724,8 +1734,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       gap: 7,
                       padding: '7px 14px',
                       borderRadius: 999,
-                      backgroundColor: 'rgba(248, 246, 238, 0.1)',
-                      border: '1px solid rgba(217, 201, 178, 0.28)',
+                      backgroundColor: 'rgba(6, 182, 212, 0.2)',
+                      border: `1px solid ${CYAN}`,
                       fontFamily: LAUNCH_FONTS.MONO,
                       fontSize: 11,
                       fontWeight: 800,
@@ -1733,7 +1743,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       whiteSpace: 'nowrap',
                     }}
                   >
-                    <Share2 size={13} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.4} />
+                    <Share2 size={13} color={CYAN} strokeWidth={2.4} />
                     <span>Kongsi Pecahan</span>
                   </div>
                 </div>

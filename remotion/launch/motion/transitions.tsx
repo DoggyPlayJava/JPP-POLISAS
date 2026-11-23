@@ -275,6 +275,7 @@ export const kineticCameraPush = (
 export type EditorialSplitCurtainProps = {
   readonly accentColor?: string;
   readonly secondaryColor?: string;
+  readonly echoColor?: string;
 };
 
 const EditorialSplitCurtainPresentation: React.FC<
@@ -286,6 +287,7 @@ const EditorialSplitCurtainPresentation: React.FC<
   passedProps: {
     accentColor = LAUNCH_PALETTE.ACCENT,
     secondaryColor = LAUNCH_PALETTE.PRIMARY,
+    echoColor = LAUNCH_PALETTE.TERTIARY,
   },
 }) => {
   const p = clampUnit(presentationProgress);
@@ -417,14 +419,14 @@ const EditorialSplitCurtainPresentation: React.FC<
               style={{
                 width: 2,
                 height: '100%',
-                backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                backgroundColor: secondaryColor,
               }}
             />
             <div
               style={{
                 width: echoRibbonWidth,
                 height: '100%',
-                backgroundColor: LAUNCH_PALETTE.TERTIARY,
+                backgroundColor: echoColor,
                 opacity: 0.78,
               }}
             />
@@ -446,7 +448,7 @@ const EditorialSplitCurtainPresentation: React.FC<
               style={{
                 width: echoRibbonWidth,
                 height: '100%',
-                backgroundColor: LAUNCH_PALETTE.TERTIARY,
+                backgroundColor: echoColor,
                 opacity: 0.78,
               }}
             />
@@ -454,7 +456,7 @@ const EditorialSplitCurtainPresentation: React.FC<
               style={{
                 width: 2,
                 height: '100%',
-                backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                backgroundColor: secondaryColor,
               }}
             />
           </div>
@@ -505,7 +507,7 @@ const EditorialSplitCurtainPresentation: React.FC<
 
 /**
  * Center-outward editorial split curtain reveal with twin primary blades tracking
- * the expanding clip seam and velocity-coupled Warm Sand / Sage echo matte ribbons.
+ * the expanding clip seam and velocity-coupled echo matte ribbons.
  */
 export const editorialSplitCurtain = (
   props: EditorialSplitCurtainProps = {},
@@ -515,6 +517,7 @@ export const editorialSplitCurtain = (
     props: {
       accentColor: props.accentColor ?? LAUNCH_PALETTE.ACCENT,
       secondaryColor: props.secondaryColor ?? LAUNCH_PALETTE.PRIMARY,
+      echoColor: props.echoColor ?? LAUNCH_PALETTE.TERTIARY,
     },
   };
 };
@@ -522,6 +525,7 @@ export const editorialSplitCurtain = (
 export type SwissLouversWipeProps = {
   readonly slatCount?: number;
   readonly angleDeg?: number;
+  readonly palette?: readonly string[];
 };
 
 const LOUVER_PALETTE = [
@@ -538,7 +542,7 @@ const SwissLouversWipePresentation: React.FC<
   children,
   presentationDirection,
   presentationProgress,
-  passedProps: { slatCount = 5, angleDeg = 14 },
+  passedProps: { slatCount = 5, angleDeg = 14, palette = LOUVER_PALETTE },
 }) => {
   const { width, height } = useVideoConfig();
   const safeWidth = Math.max(1, Number.isFinite(width) ? width : 1920);
@@ -649,6 +653,7 @@ const SwissLouversWipePresentation: React.FC<
   const bladeDenom = Math.max(0.1, 1 - (safeSlatCount - 1) * staggerStep);
   const bladeWidthPx = 22 + 42 * v;
 
+  const activePalette = palette && palette.length > 0 ? palette : LOUVER_PALETTE;
   const blades = isDecorVisible && bladeBoundaryFade > 0.002
     ? Array.from({ length: safeSlatCount }, (_, i) => {
         const pBlade = clampUnit((p - i * staggerStep) / bladeDenom);
@@ -656,7 +661,7 @@ const SwissLouversWipePresentation: React.FC<
         const vBlade = computeWhipVelocity(pBlade);
         const bladeLeftPct = interpolate(sBlade, [0, 1], [-sweepMargin, 100 + sweepMargin]);
         const bladeOpacity = bladeBoundaryFade * clampUnit(0.32 + 0.64 * Math.max(v, vBlade));
-        const bladeColor = LOUVER_PALETTE[i % LOUVER_PALETTE.length];
+        const bladeColor = activePalette[i % activePalette.length];
         return {
           key: i,
           leftPct: bladeLeftPct,
@@ -721,11 +726,13 @@ export const swissLouversWipe = (
     props: {
       slatCount: props.slatCount ?? 5,
       angleDeg: props.angleDeg ?? 14,
+      palette: props.palette ?? LOUVER_PALETTE,
     },
   };
 };
 
 export type DepthLiftMatchProps = {
+  readonly accentColor?: string;
   readonly borderColor?: string;
   readonly maxRadius?: number;
 };
@@ -737,6 +744,7 @@ const DepthLiftMatchPresentation: React.FC<
   presentationDirection,
   presentationProgress,
   passedProps: {
+    accentColor = LAUNCH_PALETTE.ACCENT,
     borderColor = LAUNCH_PALETTE.TERTIARY,
     maxRadius = 52,
   },
@@ -876,7 +884,7 @@ const DepthLiftMatchPresentation: React.FC<
               pointerEvents: 'none',
             }}
           >
-            <div style={{ height: 2, width: '100%', backgroundColor: LAUNCH_PALETTE.ACCENT }} />
+            <div style={{ height: 2, width: '100%', backgroundColor: accentColor }} />
             <div style={{ height: 2, width: '100%', backgroundColor: borderColor }} />
           </div>
         ) : null}
@@ -908,6 +916,7 @@ export const depthLiftMatch = (
   return {
     component: DepthLiftMatchPresentation,
     props: {
+      accentColor: props.accentColor ?? LAUNCH_PALETTE.ACCENT,
       borderColor: props.borderColor ?? LAUNCH_PALETTE.TERTIARY,
       maxRadius: props.maxRadius ?? 52,
     },
@@ -917,6 +926,7 @@ export const depthLiftMatch = (
 export type OrbitalIrisMatchProps = {
   readonly ringColor?: string;
   readonly accentRingColor?: string;
+  readonly outerRingColor?: string;
 };
 
 const OrbitalIrisMatchPresentation: React.FC<
@@ -928,6 +938,7 @@ const OrbitalIrisMatchPresentation: React.FC<
   passedProps: {
     ringColor = LAUNCH_PALETTE.ACCENT,
     accentRingColor = LAUNCH_PALETTE.TERTIARY,
+    outerRingColor = LAUNCH_PALETTE.SECONDARY,
   },
 }) => {
   const { width, height } = useVideoConfig();
@@ -1062,7 +1073,7 @@ const OrbitalIrisMatchPresentation: React.FC<
               cy={cy}
               r={ringRadiusPx + 28 + v * 16}
               fill="none"
-              stroke={LAUNCH_PALETTE.SECONDARY}
+              stroke={outerRingColor}
               strokeWidth={1.2}
               opacity={ringOpacity * 0.42 * v}
             />
@@ -1105,6 +1116,7 @@ export const orbitalIrisMatch = (
     props: {
       ringColor: props.ringColor ?? LAUNCH_PALETTE.ACCENT,
       accentRingColor: props.accentRingColor ?? LAUNCH_PALETTE.TERTIARY,
+      outerRingColor: props.outerRingColor ?? LAUNCH_PALETTE.SECONDARY,
     },
   };
 };
@@ -1113,6 +1125,7 @@ export type PortalZoomMorphProps = {
   readonly originXPercent?: number;
   readonly originYPercent?: number;
   readonly accentColor?: string;
+  readonly secondaryRingColor?: string;
 };
 
 const PortalZoomMorphPresentation: React.FC<
@@ -1125,6 +1138,7 @@ const PortalZoomMorphPresentation: React.FC<
     originXPercent = 56,
     originYPercent = 58,
     accentColor = LAUNCH_PALETTE.ACCENT,
+    secondaryRingColor = LAUNCH_PALETTE.TERTIARY,
   },
 }) => {
   const { width, height } = useVideoConfig();
@@ -1254,7 +1268,7 @@ const PortalZoomMorphPresentation: React.FC<
               cy={cy}
               r={trailingRingRadiusPx}
               fill="none"
-              stroke={LAUNCH_PALETTE.TERTIARY}
+              stroke={secondaryRingColor}
               strokeWidth={1.6 + v * 1.4}
               strokeDasharray="8 8"
               opacity={ringOpacity * clampUnit(0.45 + 0.55 * v)}
@@ -1289,6 +1303,7 @@ export const portalZoomMorph = (
       originXPercent: props.originXPercent ?? 56,
       originYPercent: props.originYPercent ?? 58,
       accentColor: props.accentColor ?? LAUNCH_PALETTE.ACCENT,
+      secondaryRingColor: props.secondaryRingColor ?? LAUNCH_PALETTE.TERTIARY,
     },
   };
 };
@@ -1296,6 +1311,9 @@ export const portalZoomMorph = (
 export type EditorialShutterOverlayProps = {
   readonly chapterCode?: string;
   readonly chapterLabel?: string;
+  readonly leadBladeColor?: string;
+  readonly midBladeColor?: string;
+  readonly accentColor?: string;
 };
 
 const SHUTTER_BLADE_BASE_STYLE: React.CSSProperties = {
@@ -1311,12 +1329,15 @@ const SHUTTER_BLADE_BASE_STYLE: React.CSSProperties = {
 
 /**
  * 48-frame (0.8s @ 60fps) architectural shutter overlay featuring 3 staggered
- * diagonal blades (`#C96F4F`, `#6B7F5B`, `#2E3A2F`) sweeping across 1920x1080
- * on `WHIP_S_CURVE` with a `3px` warm porcelain leading specular edge and masked chapter reveal.
+ * diagonal blades sweeping across 1920x1080 on `WHIP_S_CURVE` with a `3px`
+ * warm porcelain leading specular edge and masked chapter reveal.
  */
 export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = ({
   chapterCode = '03',
   chapterLabel = 'POLYMART',
+  leadBladeColor = LAUNCH_PALETTE.ACCENT,
+  midBladeColor = LAUNCH_PALETTE.SECONDARY,
+  accentColor = LAUNCH_PALETTE.ACCENT,
 }) => {
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
@@ -1391,7 +1412,7 @@ export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = (
       <div
         style={{
           ...SHUTTER_BLADE_BASE_STYLE,
-          backgroundColor: LAUNCH_PALETTE.ACCENT,
+          backgroundColor: leadBladeColor,
           transform: `translate3d(${terracottaX.toFixed(3)}%, 0px, 0px) skewX(-16deg)`,
         }}
       />
@@ -1399,7 +1420,7 @@ export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = (
       <div
         style={{
           ...SHUTTER_BLADE_BASE_STYLE,
-          backgroundColor: LAUNCH_PALETTE.SECONDARY,
+          backgroundColor: midBladeColor,
           transform: `translate3d(${sageX.toFixed(3)}%, 0px, 0px) skewX(-16deg)`,
         }}
       />
@@ -1444,7 +1465,7 @@ export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = (
               width: 72,
               height: 3,
               marginBottom: 20,
-              backgroundColor: LAUNCH_PALETTE.ACCENT,
+              backgroundColor: accentColor,
               transform: `scaleX(${accentRuleScaleX.toFixed(4)})`,
               opacity: textOpacity,
             }}
@@ -1467,7 +1488,7 @@ export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = (
                 color: LAUNCH_PALETTE.BACKGROUND,
               }}
             >
-              <span style={{ color: LAUNCH_PALETTE.ACCENT }}>BAB {chapterCode}</span>
+              <span style={{ color: accentColor }}>BAB {chapterCode}</span>
               <span style={{ color: LAUNCH_PALETTE.TERTIARY, fontWeight: 400 }}>—</span>
               <span>{chapterLabel}</span>
             </div>
@@ -1497,6 +1518,7 @@ export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = (
 export type WarmLightSweepOverlayProps = {
   readonly seed?: number;
   readonly hueShift?: number;
+  readonly accentColor?: string;
 };
 
 /**
@@ -1507,6 +1529,7 @@ export type WarmLightSweepOverlayProps = {
 export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
   seed = 4,
   hueShift = 18,
+  accentColor = LAUNCH_PALETTE.ACCENT,
 }) => {
   const frame = useCurrentFrame();
   const { durationInFrames, fps, width, height } = useVideoConfig();
@@ -1597,8 +1620,7 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
           inset: 0,
           zIndex: 1,
           opacity: warmBridgeOpacity,
-          background:
-            'radial-gradient(ellipse 80% 70% at 50% 50%, rgba(201, 111, 79, 0.55) 0%, rgba(248, 246, 238, 0.28) 45%, rgba(46, 58, 47, 0) 100%)',
+          background: `radial-gradient(ellipse 80% 70% at 50% 50%, ${accentColor} 0%, rgba(248, 246, 238, 0.28) 45%, rgba(46, 58, 47, 0) 100%)`,
           pointerEvents: 'none',
         }}
       />
@@ -1639,6 +1661,7 @@ export const WarmLightSweepOverlay: React.FC<WarmLightSweepOverlayProps> = ({
           transform: `translate3d(${beamX.toFixed(3)}%, 0px, 0px) skewX(-18deg)`,
           background:
             'linear-gradient(90deg, rgba(201, 111, 79, 0) 0%, rgba(201, 111, 79, 0.26) 26%, rgba(217, 201, 178, 0.42) 42%, rgba(248, 246, 238, 0.72) 50%, rgba(217, 201, 178, 0.36) 58%, rgba(201, 111, 79, 0.18) 76%, rgba(201, 111, 79, 0) 100%)',
+          borderLeft: `2px solid ${accentColor}`,
           pointerEvents: 'none',
         }}
       />

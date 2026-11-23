@@ -27,8 +27,20 @@ import {
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { GhostCursor, type GhostCursorKeyframe } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_PALETTE, POLISAS_COORDS } from '../tokens';
+import { CAMPUS_ROUTE_KM } from '../lib/campusRoute';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, POLISAS_COORDS } from '../tokens';
 import { ExplodedLayer, KineticWindow } from '../ui/KineticCard';
+
+const EMERALD = LAUNCH_MODULE_THEMES.polymaps.primary; // #10B981
+const EMERALD_DARK = LAUNCH_MODULE_THEMES.polymaps.dark; // #059669
+const EMERALD_INK = '#047857'; // WCAG AA+ Emerald-700 for crisp text on white/porcelain & white-on-emerald CTA
+const EMERALD_SOFT = LAUNCH_MODULE_THEMES.polymaps.soft; // #ECFDF5
+const EMERALD_BORDER = LAUNCH_MODULE_THEMES.polymaps.border; // #A7F3D0
+const INDIGO = LAUNCH_MODULE_THEMES.takwim.primary; // #6366F1
+const INDIGO_DARK = LAUNCH_MODULE_THEMES.takwim.dark; // #4F46E5
+const INDIGO_SOFT = LAUNCH_MODULE_THEMES.takwim.soft; // #EEF2FF
+const INDIGO_BORDER = LAUNCH_MODULE_THEMES.takwim.border; // #C7D2FE
+const MERIT_PURPLE = LAUNCH_MODULE_THEMES.meritQr.primary; // #A855F7
 
 export type PolyMapsProps = {
   readonly classCode: string;
@@ -174,7 +186,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
   const isNavigating = frame >= clickFrame;
   const hasArrived = frame >= arrivalFrame;
 
-  // Beat 1 active ISNIN weekly tab illumination (lights up #2E3A2F smoothly on Beat 1)
+  // Beat 1 active ISNIN weekly tab illumination (lights up Indigo #4F46E5 smoothly on Beat 1)
   const isninActiveT = interpolate(
     frame,
     [Math.round(0.12 * safeFps), Math.round(0.48 * safeFps)],
@@ -188,12 +200,12 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
   const isninTabBg = interpolateColors(
     isninActiveT,
     [0, 1],
-    [LAUNCH_PALETTE.SURFACE_MUTED, LAUNCH_PALETTE.PRIMARY],
+    [INDIGO_SOFT, INDIGO_DARK],
   );
   const isninTabColor = interpolateColors(
     isninActiveT,
     [0, 1],
-    [LAUNCH_PALETTE.PRIMARY, LAUNCH_PALETTE.CARD_BG],
+    [INDIGO_DARK, LAUNCH_PALETTE.CARD_BG],
   );
 
   const cardClickScale = interpolate(
@@ -244,7 +256,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
   );
   const countdownLabel = isNavigating ? `${walkingCountdownMins}m Berjalan` : '14m';
 
-  // Smooth CTA state color transitions
+  // Smooth CTA state color transitions: Indigo -> Emerald #10B981 (Walking) -> Deep Emerald #059669 (Arrived)
   const navTransition = interpolate(frame, [clickFrame, clickFrame + 4], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -256,14 +268,15 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
 
   const ctaBackground =
     frame >= arrivalFrame
-      ? interpolateColors(arrivalTransition, [0, 1], [LAUNCH_PALETTE.ACCENT, LAUNCH_PALETTE.SECONDARY])
-      : interpolateColors(navTransition, [0, 1], [LAUNCH_PALETTE.PRIMARY, LAUNCH_PALETTE.ACCENT]);
+      ? interpolateColors(arrivalTransition, [0, 1], [EMERALD_INK, EMERALD_INK])
+      : interpolateColors(navTransition, [0, 1], [INDIGO_DARK, EMERALD_INK]);
   const ctaBorderColor =
     frame >= arrivalFrame
-      ? interpolateColors(arrivalTransition, [0, 1], [LAUNCH_PALETTE.ACCENT, LAUNCH_PALETTE.SECONDARY])
-      : interpolateColors(navTransition, [0, 1], [LAUNCH_PALETTE.PRIMARY, LAUNCH_PALETTE.ACCENT]);
+      ? interpolateColors(arrivalTransition, [0, 1], [EMERALD, EMERALD_DARK])
+      : interpolateColors(navTransition, [0, 1], [INDIGO_DARK, EMERALD_INK]);
 
-  const remainingMeters = hasArrived ? 0 : Math.max(1, Math.round(310 * (1 - routeProgress)));
+  const totalMeters = Math.max(100, Math.round(CAMPUS_ROUTE_KM * 1000));
+  const remainingMeters = hasArrived ? 0 : Math.max(1, Math.round(totalMeters * (1 - routeProgress)));
   const etaMinutes = Math.max(1, Math.ceil(4 * (1 - routeProgress)));
   const etaDisplay = hasArrived ? 'Tiba!' : `${etaMinutes} Min`;
 
@@ -278,7 +291,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
     },
   );
 
-  // Beat 3 (5.8..8.0s): Destination arrival pill + radar rings + QR arrival chip
+  // Beat 3 (5.8..8.0s): Left-column QR chip spring + pulse ring
   const arrivalSpring =
     frame >= arrivalFrame
       ? spring({
@@ -287,22 +300,6 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
           config: { damping: 145, stiffness: 225, mass: 0.85 },
         })
       : 0;
-  const arrivalPillEnter = interpolate(
-    frame,
-    [arrivalFrame, arrivalFrame + Math.max(10, Math.round(0.42 * safeFps))],
-    [0, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: EXPO_OUT,
-    },
-  );
-  const arrivalFloatY = Math.sin(timeSec * 2.4) * 4 * arrivalPillEnter;
-  const arrivalPillY = interpolate(arrivalPillEnter, [0, 1], [18, 0]) + arrivalFloatY;
-  const arrivalPillScale = interpolate(arrivalPillEnter, [0, 0.72, 1], [0.84, 1.04, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
 
   // Left-column QR chip spring + pulse ring
   const qrChipTranslateY = (1 - arrivalSpring) * 20;
@@ -323,15 +320,12 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
     extrapolateRight: 'clamp',
   });
 
-  const radarCycleFrames = Math.max(24, Math.round(1.25 * safeFps));
-  const radarStaggerFrames = Math.max(8, Math.round(0.36 * safeFps));
-
   const statusText = hasArrived ? 'SELESAI' : isNavigating ? 'BERJALAN' : 'SIAP SEDIA';
   const statusDotColor = hasArrived
-    ? LAUNCH_PALETTE.SECONDARY
+    ? EMERALD_DARK
     : isNavigating
-      ? LAUNCH_PALETTE.ACCENT
-      : LAUNCH_PALETTE.TERTIARY;
+      ? EMERALD
+      : INDIGO;
 
   const scheduleRows = [
     {
@@ -364,7 +358,12 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
 
   return (
     <>
-      <EditorialBackdrop showContours contourSpeed={1.25} seed={24} />
+      <EditorialBackdrop
+        showContours
+        contourSpeed={1.25}
+        seed={24}
+        ambientTint={LAUNCH_MODULE_THEMES.polymaps.tint}
+      />
 
       <CameraStage
         zoomFrom={1}
@@ -397,7 +396,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
             fontFamily: LAUNCH_FONTS.DISPLAY,
           }}
         >
-          {/* Left Column (width=680px): Exploded 3D NextClassBentoCard + Live Day Schedule */}
+          {/* Left Column (width=680px): Exploded 3D Indigo Takwim Schedule + Live Day Timeline */}
           <Interactive.Div
             name="PolyMaps Editorial Sidebar"
             premountFor={safeFps}
@@ -421,9 +420,9 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                     gap: 10,
                     padding: '7px 16px',
                     borderRadius: 999,
-                    backgroundColor: 'rgba(107, 127, 91, 0.14)',
-                    border: `1px solid ${LAUNCH_PALETTE.SECONDARY}`,
-                    color: LAUNCH_PALETTE.PRIMARY,
+                    backgroundColor: EMERALD_SOFT,
+                    border: `1.5px solid ${EMERALD}`,
+                    color: EMERALD_DARK,
                     fontFamily: LAUNCH_FONTS.MONO,
                     fontSize: 12.5,
                     fontWeight: 800,
@@ -431,7 +430,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                     textTransform: 'uppercase',
                   }}
                 >
-                  <Compass size={15} color={LAUNCH_PALETTE.SECONDARY} />
+                  <Compass size={15} color={EMERALD_DARK} />
                   08:00 PAGI • POLYMAPS &amp; JADUAL
                 </div>
               </KineticReveal>
@@ -443,7 +442,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                 staggerFrames={wordStagger}
                 wordDurationFrames={wordDuration}
                 accentWords={['Tak', 'Sesat']}
-                accentColor={LAUNCH_PALETTE.ACCENT}
+                accentColor={EMERALD_DARK}
                 style={{
                   margin: '10px 0 8px',
                   fontSize: 44,
@@ -484,7 +483,8 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
               }}
             >
               <ExplodedLayer
-                zDepth={22}
+                zDepth={36}
+                rotateY={1.5}
                 enterFrame={Math.round(0.16 * safeFps)}
                 enterOffsetY={24}
                 floatAmplitude={0}
@@ -505,11 +505,14 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                 >
                   <KineticWindow
                     surface="light"
-                    routeLabel="e-akademik · jadual siswa"
+                    routeLabel="takwim · jadual siswa"
                     statusPill={
                       hasArrived ? 'TIBA • SELESAI' : isNavigating ? 'NAVIGASI AKTIF' : 'KELAS HARI INI'
                     }
                     statusAccent={isNavigating && !hasArrived}
+                    accentColor={hasArrived ? EMERALD_INK : isNavigating ? EMERALD_INK : INDIGO_DARK}
+                    accentSoftBg={isNavigating ? EMERALD_SOFT : INDIGO_SOFT}
+                    accentBorderColor={isNavigating ? EMERALD : INDIGO}
                     width={LEFT_COL_W}
                     height={CARD_H}
                     borderRadius={24}
@@ -518,12 +521,12 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                     style={{
                       borderColor:
                         clickFlash > 0.05 || hasArrived
-                          ? LAUNCH_PALETTE.ACCENT
-                          : LAUNCH_PALETTE.TERTIARY,
+                          ? EMERALD
+                          : INDIGO_BORDER,
                       boxShadow:
                         clickFlash > 0.05
-                          ? '0 26px 56px rgba(201, 111, 79, 0.22)'
-                          : '0 22px 48px rgba(31, 39, 32, 0.12)',
+                          ? '0 26px 56px rgba(16, 185, 129, 0.24)'
+                          : '0 24px 52px rgba(99, 102, 241, 0.10), 0 8px 20px rgba(31, 39, 32, 0.08)',
                     }}
                   >
                     <div
@@ -536,15 +539,15 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                         overflow: 'visible',
                       }}
                     >
-                      {/* Row 0 (height=34): Weekly Student Day Tabs (ISNIN active #2E3A2F on Beat 1) */}
+                      {/* Row 0 (height=34): Indigo Weekly Student Day Tabs */}
                       <div
                         style={{
                           height: TABS_H,
                           boxSizing: 'border-box',
                           padding: 3,
                           borderRadius: 999,
-                          backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                          border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                          backgroundColor: INDIGO_SOFT,
+                          border: `1px solid ${INDIGO_BORDER}`,
                           display: 'flex',
                           alignItems: 'center',
                           gap: 4,
@@ -579,7 +582,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                     width: 6,
                                     height: 6,
                                     borderRadius: 999,
-                                    backgroundColor: LAUNCH_PALETTE.ACCENT,
+                                    backgroundColor: EMERALD,
                                     opacity: isninActiveT,
                                     display: 'inline-block',
                                   }}
@@ -611,13 +614,13 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                               gap: 6,
                               padding: '5px 11px',
                               borderRadius: 999,
-                              backgroundColor: 'rgba(201, 111, 79, 0.12)',
-                              border: '1px solid rgba(201, 111, 79, 0.36)',
+                              backgroundColor: INDIGO_SOFT,
+                              border: `1px solid ${INDIGO_BORDER}`,
                               fontFamily: LAUNCH_FONTS.MONO,
                               fontSize: 10.5,
                               fontWeight: 800,
                               letterSpacing: '0.09em',
-                              color: LAUNCH_PALETTE.ACCENT,
+                              color: INDIGO_DARK,
                               whiteSpace: 'nowrap',
                             }}
                           >
@@ -626,7 +629,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                 width: 6,
                                 height: 6,
                                 borderRadius: 999,
-                                backgroundColor: LAUNCH_PALETTE.ACCENT,
+                                backgroundColor: INDIGO_DARK,
                               }}
                             />
                             KELAS SETERUSNYA
@@ -639,17 +642,17 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                               gap: 5,
                               padding: '5px 10px',
                               borderRadius: 999,
-                              backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                              border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                              backgroundColor: EMERALD_SOFT,
+                              border: `1px solid ${EMERALD_BORDER}`,
                               fontFamily: LAUNCH_FONTS.MONO,
                               fontSize: 11.5,
                               fontWeight: 800,
-                              color: LAUNCH_PALETTE.PRIMARY,
+                              color: EMERALD_DARK,
                               fontVariantNumeric: 'tabular-nums',
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            <Clock size={12} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.5} />
+                            <Clock size={12} color={EMERALD_DARK} strokeWidth={2.5} />
                             <span>{countdownLabel}</span>
                           </span>
                         </div>
@@ -659,7 +662,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 11.5,
                             fontWeight: 700,
-                            color: LAUNCH_PALETTE.SECONDARY,
+                            color: EMERALD_DARK,
                             whiteSpace: 'nowrap',
                           }}
                         >
@@ -667,7 +670,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                         </span>
                       </div>
 
-                      {/* Row 2 (height=46): DIT3013 with Terracotta Rough-Notation Circle */}
+                      {/* Row 2 (height=46): DIT3013 with Indigo Rough-Notation Circle */}
                       <div
                         style={{
                           marginTop: ROW2_GAP,
@@ -684,7 +687,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                             type="circle"
                             startFrame={circleStart}
                             durationFrames={circleDuration}
-                            color={LAUNCH_PALETTE.ACCENT}
+                            color={INDIGO}
                             strokeWidth={3}
                             padding={{ top: 4, right: 12, bottom: 4, left: 12 }}
                             style={{ display: 'inline-block', overflow: 'visible' }}
@@ -695,7 +698,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                 fontSize: 30,
                                 fontWeight: 900,
                                 lineHeight: 1,
-                                color: LAUNCH_PALETTE.ACCENT,
+                                color: INDIGO_DARK,
                               }}
                             >
                               {classCode}
@@ -707,13 +710,13 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                           style={{
                             padding: '5px 12px',
                             borderRadius: 999,
-                            backgroundColor: 'rgba(107, 127, 91, 0.12)',
-                            border: '1px solid rgba(107, 127, 91, 0.34)',
+                            backgroundColor: INDIGO_SOFT,
+                            border: `1px solid ${INDIGO_BORDER}`,
                             fontFamily: LAUNCH_FONTS.MONO,
                             fontSize: 11,
                             fontWeight: 800,
                             letterSpacing: '0.08em',
-                            color: LAUNCH_PALETTE.PRIMARY,
+                            color: INDIGO_DARK,
                           }}
                         >
                           AMALI • MAKMAL 3
@@ -763,13 +766,13 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap' }}>
-                            <Clock size={15} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.3} />
+                            <Clock size={15} color={INDIGO_DARK} strokeWidth={2.3} />
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {scheduleTime}
                             </span>
                           </div>
                           <div style={{ display: 'flex', alignItems: 'center', gap: 7, whiteSpace: 'nowrap' }}>
-                            <MapPin size={15} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.3} />
+                            <MapPin size={15} color={EMERALD_DARK} strokeWidth={2.3} />
                             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
                               {roomName}
                             </span>
@@ -786,8 +789,8 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                             border: `1.5px solid ${ctaBorderColor}`,
                             color: LAUNCH_PALETTE.CARD_BG,
                             boxShadow: isNavigating
-                              ? '0 10px 24px rgba(201, 111, 79, 0.28)'
-                              : '0 8px 20px rgba(46, 58, 47, 0.16)',
+                              ? '0 10px 24px rgba(16, 185, 129, 0.28)'
+                              : '0 8px 20px rgba(79, 70, 229, 0.2)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -827,8 +830,8 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                           flex: 1,
                           padding: '13px 15px',
                           borderRadius: 18,
-                          backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                          border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                          backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                          border: `1px solid ${INDIGO_BORDER}`,
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'flex-start',
@@ -845,7 +848,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                             fontSize: 10.5,
                             fontWeight: 800,
                             letterSpacing: '0.12em',
-                            color: LAUNCH_PALETTE.MUTED_OLIVE,
+                            color: INDIGO_DARK,
                             flexShrink: 0,
                           }}
                         >
@@ -854,9 +857,9 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                             style={{
                               padding: '2px 8px',
                               borderRadius: 999,
-                              backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                              border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                              color: LAUNCH_PALETTE.PRIMARY,
+                              backgroundColor: INDIGO_SOFT,
+                              border: `1px solid ${INDIGO_BORDER}`,
+                              color: INDIGO_DARK,
                             }}
                           >
                             3 SESI AKTIF
@@ -887,12 +890,12 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                   borderRadius: 13,
                                   backgroundColor: isActive
                                     ? LAUNCH_PALETTE.CARD_BG
-                                    : 'rgba(255, 255, 255, 0.62)',
+                                    : 'rgba(255, 255, 255, 0.72)',
                                   border: isActive
-                                    ? `1.5px solid ${hasArrived ? LAUNCH_PALETTE.SECONDARY : LAUNCH_PALETTE.ACCENT}`
+                                    ? `1.5px solid ${hasArrived ? EMERALD : INDIGO}`
                                     : `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
                                   boxShadow: isActive
-                                    ? '0 8px 18px rgba(46, 58, 47, 0.08)'
+                                    ? '0 8px 18px rgba(79, 70, 229, 0.1)'
                                     : 'none',
                                   display: 'flex',
                                   alignItems: 'center',
@@ -908,7 +911,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                       fontWeight: 800,
                                       fontVariantNumeric: 'tabular-nums',
                                       color: isActive
-                                        ? LAUNCH_PALETTE.ACCENT
+                                        ? INDIGO_DARK
                                         : LAUNCH_PALETTE.MUTED_OLIVE,
                                       flexShrink: 0,
                                     }}
@@ -923,8 +926,8 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                       borderRadius: 999,
                                       backgroundColor: isActive
                                         ? hasArrived
-                                          ? LAUNCH_PALETTE.SECONDARY
-                                          : LAUNCH_PALETTE.ACCENT
+                                          ? EMERALD
+                                          : INDIGO
                                         : LAUNCH_PALETTE.TERTIARY,
                                       flexShrink: 0,
                                     }}
@@ -969,15 +972,15 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                     borderRadius: 999,
                                     backgroundColor: isActive
                                       ? hasArrived
-                                        ? LAUNCH_PALETTE.SECONDARY
-                                        : LAUNCH_PALETTE.ACCENT
+                                        ? EMERALD_DARK
+                                        : INDIGO_DARK
                                       : isDone
-                                        ? 'rgba(107, 127, 91, 0.14)'
+                                        ? EMERALD_SOFT
                                         : LAUNCH_PALETTE.BACKGROUND,
                                     border: isActive
                                       ? 'none'
                                       : `1px solid ${
-                                          isDone ? 'rgba(107, 127, 91, 0.3)' : LAUNCH_PALETTE.TERTIARY
+                                          isDone ? EMERALD_BORDER : LAUNCH_PALETTE.TERTIARY
                                         }`,
                                     fontFamily: LAUNCH_FONTS.MONO,
                                     fontSize: 10,
@@ -986,7 +989,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                     color: isActive
                                       ? LAUNCH_PALETTE.CARD_BG
                                       : isDone
-                                        ? LAUNCH_PALETTE.SECONDARY
+                                        ? EMERALD_DARK
                                         : LAUNCH_PALETTE.MUTED_OLIVE,
                                     whiteSpace: 'nowrap',
                                     flexShrink: 0,
@@ -1004,16 +1007,14 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                       right: 0,
                                       bottom: 0,
                                       height: 3,
-                                      backgroundColor: 'rgba(217, 201, 178, 0.45)',
+                                      backgroundColor: INDIGO_SOFT,
                                     }}
                                   >
                                     <div
                                       style={{
                                         width: '100%',
                                         height: '100%',
-                                        backgroundColor: hasArrived
-                                          ? LAUNCH_PALETTE.SECONDARY
-                                          : LAUNCH_PALETTE.ACCENT,
+                                        backgroundColor: hasArrived ? EMERALD : INDIGO,
                                         transformOrigin: 'left center',
                                         transform: `scaleX(${timetableBarProgress.toFixed(4)})`,
                                       }}
@@ -1030,8 +1031,8 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                 </div>
               </ExplodedLayer>
 
-              {/* Beat 3 Arrival Chip (frame >= arrivalFrame): IMBAS KEHADIRAN QR • SEDIA */}
-              <div style={{ height: ARRIVAL_CHIP_H, flexShrink: 0 }}>
+              {/* Beat 3 Arrival Chip (frame >= arrivalFrame): Purple QR Merit Scan Ready */}
+              <div style={{ height: ARRIVAL_CHIP_H, flexShrink: 0, transformStyle: 'preserve-3d' }}>
                 {frame >= arrivalFrame && qrChipOpacity > 0.001 ? (
                   <div
                     style={{
@@ -1039,16 +1040,16 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                       boxSizing: 'border-box',
                       padding: '0 20px',
                       borderRadius: 18,
-                      backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                      border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                      boxShadow: '0 18px 40px rgba(31, 39, 32, 0.24)',
+                      backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                      border: `1.5px solid ${MERIT_PURPLE}`,
+                      boxShadow: '0 18px 40px rgba(168, 85, 247, 0.22), 0 8px 20px rgba(31, 39, 32, 0.22)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
                       gap: 14,
                       opacity: qrChipOpacity,
                       willChange: 'transform, opacity',
-                      transform: `translate3d(0px, ${qrChipTranslateY.toFixed(2)}px, 16px) scale(${qrChipScale.toFixed(4)})`,
+                      transform: `translate3d(0px, ${qrChipTranslateY.toFixed(2)}px, 48px) scale(${qrChipScale.toFixed(4)})`,
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
@@ -1058,7 +1059,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                           width: 40,
                           height: 40,
                           borderRadius: 12,
-                          backgroundColor: LAUNCH_PALETTE.ACCENT,
+                          backgroundColor: MERIT_PURPLE,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
@@ -1068,7 +1069,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                         <Circle
                           radius={24}
                           fill="none"
-                          stroke={LAUNCH_PALETTE.ACCENT}
+                          stroke={MERIT_PURPLE}
                           strokeWidth={2}
                           premountFor={safeFps}
                           showInTimeline={false}
@@ -1101,7 +1102,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                           style={{
                             fontSize: 11.5,
                             fontWeight: 600,
-                            color: LAUNCH_PALETTE.TERTIARY,
+                            color: LAUNCH_MODULE_THEMES.meritQr.border,
                           }}
                         >
                           Sahkan kehadiran terus di {primaryRoom}
@@ -1113,7 +1114,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                       style={{
                         padding: '5px 12px',
                         borderRadius: 999,
-                        backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                        backgroundColor: EMERALD_DARK,
                         color: LAUNCH_PALETTE.CARD_BG,
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 11,
@@ -1130,7 +1131,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
             </div>
           </Interactive.Div>
 
-          {/* Right Column (1092 x 916): Live CampusMapLibrePlate Vector Map */}
+          {/* Right Column (1092 x 916): Live 3D Chase-Cam CampusMapLibrePlate Vector Map */}
           <Interactive.Div
             name="POLISAS MapLibre Container"
             premountFor={safeFps}
@@ -1141,7 +1142,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               opacity: mapOpacity,
-              scale: mapScale,
+              transform: `scale(${mapScale.toFixed(4)})`,
             }}
           >
             <CampusMapLibrePlate
@@ -1149,9 +1150,12 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
               height={RIGHT_MAP_H}
               routeStartFrame={clickFrame}
               routeEndFrame={arrivalFrame}
+              arrivalLabel={formatArrivalLabel(roomName)}
+              showTurnByTurn
+              showStreetViewBadge
             />
 
-            {/* Beat 2 Live Ticking Distance / ETA Readout HUD (310m -> 0m • 4 Min -> Tiba!) */}
+            {/* Beat 2 Live Ticking Distance / ETA Readout HUD */}
             <div
               style={{
                 position: 'absolute',
@@ -1160,15 +1164,15 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                 width: 420,
                 padding: '18px 22px',
                 borderRadius: 20,
-                backgroundColor: 'rgba(248, 246, 238, 0.96)',
+                backgroundColor: LAUNCH_PALETTE.BACKGROUND,
                 border: `1.5px solid ${
                   hasArrived
-                    ? LAUNCH_PALETTE.SECONDARY
+                    ? EMERALD_DARK
                     : isNavigating
-                      ? LAUNCH_PALETTE.ACCENT
-                      : LAUNCH_PALETTE.TERTIARY
+                      ? EMERALD
+                      : EMERALD_BORDER
                 }`,
-                boxShadow: '0 18px 40px rgba(31, 39, 32, 0.16)',
+                boxShadow: '0 18px 40px rgba(5, 150, 105, 0.16), 0 8px 20px rgba(31, 39, 32, 0.12)',
                 zIndex: 6,
                 pointerEvents: 'none',
               }}
@@ -1193,9 +1197,9 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                     gap: 6,
                     padding: '3px 10px',
                     borderRadius: 999,
-                    backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                    border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                    color: LAUNCH_PALETTE.PRIMARY,
+                    backgroundColor: EMERALD_SOFT,
+                    border: `1px solid ${EMERALD_BORDER}`,
+                    color: EMERALD_DARK,
                   }}
                 >
                   <span
@@ -1238,14 +1242,14 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                   >
                     {remainingMeters}m
                   </span>
-                  <span style={{ fontSize: 22, fontWeight: 700, color: LAUNCH_PALETTE.TERTIARY }}>
+                  <span style={{ fontSize: 22, fontWeight: 700, color: EMERALD_BORDER }}>
                     •
                   </span>
                   <span
                     style={{
                       fontSize: 24,
                       fontWeight: 800,
-                      color: hasArrived ? LAUNCH_PALETTE.SECONDARY : LAUNCH_PALETTE.ACCENT,
+                      color: EMERALD_INK,
                     }}
                   >
                     {etaDisplay}
@@ -1257,7 +1261,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                     fontFamily: LAUNCH_FONTS.MONO,
                     fontSize: 12,
                     fontWeight: 700,
-                    color: LAUNCH_PALETTE.MUTED_OLIVE,
+                    color: EMERALD_DARK,
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
@@ -1270,7 +1274,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                   marginTop: 12,
                   height: 6,
                   borderRadius: 999,
-                  backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
+                  backgroundColor: EMERALD_SOFT,
                   overflow: 'hidden',
                 }}
               >
@@ -1279,127 +1283,13 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                     width: '100%',
                     height: '100%',
                     borderRadius: 999,
-                    backgroundColor: hasArrived ? LAUNCH_PALETTE.SECONDARY : LAUNCH_PALETTE.ACCENT,
+                    backgroundColor: hasArrived ? EMERALD_DARK : EMERALD,
                     transformOrigin: 'left center',
                     transform: `scaleX(${Math.max(0.02, routeProgress).toFixed(4)})`,
                   }}
                 />
               </div>
             </div>
-
-            {/* Beat 3: Expanding Radar Rings (@remotion/shapes <Circle>) at Blok JTMK Destination Pin */}
-            {frame >= arrivalFrame ? (
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '59%',
-                  top: '41.8%',
-                  width: 0,
-                  height: 0,
-                  pointerEvents: 'none',
-                  zIndex: 7,
-                }}
-              >
-                {[0, 1, 2].map((ringIdx) => {
-                  const localElapsed = frame - arrivalFrame - ringIdx * radarStaggerFrames;
-                  if (localElapsed < 0) return null;
-                  const cycleT = (localElapsed % radarCycleFrames) / radarCycleFrames;
-                  const ringScale = interpolate(cycleT, [0, 1], [0.16, 1], {
-                    extrapolateLeft: 'clamp',
-                    extrapolateRight: 'clamp',
-                  });
-                  const ringOpacity = interpolate(cycleT, [0, 0.14, 0.72, 1], [0, 0.85, 0.28, 0], {
-                    extrapolateLeft: 'clamp',
-                    extrapolateRight: 'clamp',
-                  });
-
-                  return (
-                    <Circle
-                      key={`radar-ring-${ringIdx}`}
-                      radius={115}
-                      fill="none"
-                      stroke={ringIdx % 2 === 0 ? LAUNCH_PALETTE.ACCENT : LAUNCH_PALETTE.SECONDARY}
-                      strokeWidth={2.5}
-                      vectorEffect="non-scaling-stroke"
-                      premountFor={safeFps}
-                      showInTimeline={false}
-                      style={{
-                        position: 'absolute',
-                        left: 0,
-                        top: 0,
-                        opacity: ringOpacity,
-                        transform: `translate(-50%, -50%) scale(${ringScale.toFixed(4)})`,
-                      }}
-                    />
-                  );
-                })}
-
-                <Circle
-                  radius={12}
-                  fill={LAUNCH_PALETTE.ACCENT}
-                  stroke={LAUNCH_PALETTE.CARD_BG}
-                  strokeWidth={3.5}
-                  premountFor={safeFps}
-                  showInTimeline={false}
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    top: 0,
-                    opacity: arrivalPillEnter,
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                />
-              </div>
-            ) : null}
-
-            {/* Beat 3: Destination Arrival Pill ("TIBA • MAKMAL KOMPUTER 3 ✓") */}
-            {arrivalPillEnter > 0.001 ? (
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '59%',
-                  top: '23%',
-                  zIndex: 8,
-                  pointerEvents: 'none',
-                  opacity: arrivalPillEnter,
-                  transform: `translate3d(-50%, ${arrivalPillY.toFixed(2)}px, 0px) scale(${arrivalPillScale.toFixed(4)})`,
-                }}
-              >
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    padding: '12px 22px',
-                    borderRadius: 999,
-                    backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                    border: `2px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                    boxShadow: '0 22px 48px rgba(31, 39, 32, 0.28)',
-                    color: LAUNCH_PALETTE.BACKGROUND,
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 15,
-                    fontWeight: 800,
-                    letterSpacing: '0.1em',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 24,
-                      height: 24,
-                      borderRadius: 999,
-                      backgroundColor: LAUNCH_PALETTE.ACCENT,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    <Check size={14} color={LAUNCH_PALETTE.CARD_BG} strokeWidth={3} />
-                  </span>
-                  <span>{formatArrivalLabel(roomName)}</span>
-                </div>
-              </div>
-            ) : null}
           </Interactive.Div>
         </div>
 
@@ -1409,7 +1299,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
           appearFrame={cursorAppearFrame}
           disappearFrame={cursorDisappearFrame}
           color={LAUNCH_PALETTE.PRIMARY}
-          rippleColor={LAUNCH_PALETTE.ACCENT}
+          rippleColor={EMERALD}
           scale={1.08}
           style={{ zIndex: 20 }}
         />

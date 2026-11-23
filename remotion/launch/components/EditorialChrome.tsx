@@ -13,7 +13,12 @@ import { lightLeak } from '@remotion/effects/light-leak';
 import { noise } from '@remotion/effects/noise';
 import { paper } from '@remotion/effects/paper';
 import { LAUNCH_CHAPTERS, LAUNCH_TOTAL_FRAMES } from '../schema';
-import { LAUNCH_FONTS, LAUNCH_PALETTE, POLISAS_COORDS } from '../tokens';
+import {
+  CHAPTER_MODULE_THEMES,
+  LAUNCH_FONTS,
+  LAUNCH_PALETTE,
+  POLISAS_COORDS,
+} from '../tokens';
 
 export const CinemaChromeContext = React.createContext<{
   readonly suppressLocalFrameMarks: boolean;
@@ -26,6 +31,7 @@ export type EditorialBackdropProps = {
   readonly showGrid?: boolean;
   readonly paperAmount?: number;
   readonly seed?: number;
+  readonly ambientTint?: string;
 };
 
 const clampUnit = (value: number): number => Math.min(1, Math.max(0, value));
@@ -80,6 +86,7 @@ export const EditorialBackdrop: React.FC<EditorialBackdropProps> = ({
   showGrid = true,
   paperAmount,
   seed = 12,
+  ambientTint,
 }) => {
   const uid = useId();
   const { fps, width, height } = useVideoConfig();
@@ -147,6 +154,17 @@ export const EditorialBackdrop: React.FC<EditorialBackdropProps> = ({
 
       {showContours ? (
         <ContourSolidOverlay dark={isDark} contourSpeed={contourSpeed} seed={safeSeed} />
+      ) : null}
+
+      {ambientTint ? (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            background: `radial-gradient(circle at 86% 14%, ${ambientTint} 0%, transparent 48%), radial-gradient(circle at 12% 88%, ${ambientTint} 0%, transparent 44%)`,
+            pointerEvents: 'none',
+          }}
+        />
       ) : null}
 
       {showGrid ? (
@@ -276,13 +294,17 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
     ['rgba(46, 58, 47, 0.24)', 'rgba(217, 201, 178, 0.34)'],
   );
 
-  // Slot-machine odometer index across [chapter.startFrame + 6 .. chapter.startFrame + 24]
+  // Slot-machine odometer index & active chapter signature color across [chapter.startFrame + 6 .. chapter.startFrame + 24]
   let slotIndex = 0;
+  let activeThemeColor: string = CHAPTER_MODULE_THEMES[0]?.accent ?? LAUNCH_PALETTE.ACCENT;
   for (let i = 1; i < LAUNCH_CHAPTERS.length; i++) {
     const windowStart = LAUNCH_CHAPTERS[i].startFrame + 6;
     const windowEnd = LAUNCH_CHAPTERS[i].startFrame + 24;
+    const prevAccent = CHAPTER_MODULE_THEMES[i - 1]?.accent ?? LAUNCH_PALETTE.ACCENT;
+    const currAccent = CHAPTER_MODULE_THEMES[i]?.accent ?? LAUNCH_PALETTE.ACCENT;
     if (frame >= windowEnd) {
       slotIndex = i;
+      activeThemeColor = currAccent;
     } else if (frame > windowStart) {
       const t = interpolate(frame, [windowStart, windowEnd], [0, 1], {
         extrapolateLeft: 'clamp',
@@ -290,6 +312,7 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
         easing: ODOMETER_EASING,
       });
       slotIndex = i - 1 + t;
+      activeThemeColor = interpolateColors(t, [0, 1], [prevAccent, currAccent]);
       break;
     } else {
       break;
@@ -338,7 +361,7 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
         + POLISAS SEMAMBU • {POLISAS_COORDS.LABEL_COORDS}
       </div>
 
-      {/* Top-Right HUD: vertical slot-machine odometer for chapter code & gateLabel */}
+      {/* Top-Right HUD: color-reactive chapter dot + vertical slot-machine odometer */}
       <div
         style={{
           position: 'absolute',
@@ -351,6 +374,16 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
           whiteSpace: 'nowrap',
         }}
       >
+        <span
+          style={{
+            width: 7,
+            height: 7,
+            borderRadius: 999,
+            backgroundColor: activeThemeColor,
+            display: 'inline-block',
+            flexShrink: 0,
+          }}
+        />
         <span style={{ color: mutedInk }}>BAB</span>
         <div
           style={{
@@ -431,7 +464,7 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
         }}
       />
 
-      {/* Bottom Hairline + 2px Live Terracotta Cinema Progress Rail + 8 Chapter Ticks */}
+      {/* Bottom Hairline + 2px Color-Reactive Cinema Progress Rail + 8 Module-Colored Chapter Ticks */}
       <div
         style={{
           position: 'absolute',
@@ -449,15 +482,16 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
             right: 0,
             top: -0.5,
             height: 2,
-            backgroundColor: LAUNCH_PALETTE.ACCENT,
+            backgroundColor: activeThemeColor,
             transformOrigin: '0% 50%',
             transform: `scaleX(${railProgress.toFixed(5)})`,
             willChange: 'transform',
           }}
         />
-        {LAUNCH_CHAPTERS.map((ch) => {
+        {LAUNCH_CHAPTERS.map((ch, idx) => {
           const pct = (ch.startFrame / LAUNCH_TOTAL_FRAMES) * 100;
           const reached = frame >= ch.startFrame;
+          const tickAccent = CHAPTER_MODULE_THEMES[idx]?.accent ?? LAUNCH_PALETTE.ACCENT;
           return (
             <div
               key={`gate-tick-${ch.id}`}
@@ -465,9 +499,9 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
                 position: 'absolute',
                 left: `${pct.toFixed(4)}%`,
                 top: '50%',
-                width: 2,
-                height: 6,
-                backgroundColor: reached ? LAUNCH_PALETTE.ACCENT : tickInactiveColor,
+                width: reached ? 2.5 : 2,
+                height: reached ? 7 : 6,
+                backgroundColor: reached ? tickAccent : tickInactiveColor,
                 transform: 'translate3d(-50%, -50%, 0px)',
               }}
             />

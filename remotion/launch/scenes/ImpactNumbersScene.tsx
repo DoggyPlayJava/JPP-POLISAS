@@ -14,7 +14,7 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
 
 type ImpactNumbersProps = {
   readonly clubsCount: number;
@@ -39,21 +39,33 @@ const TICKER_MODULES: readonly string[] = [
   '21 KELAB POLISAS',
 ];
 
+const TICKER_DOT_COLORS: Record<string, string> = {
+  POLYMAPS: LAUNCH_MODULE_THEMES.polymaps.primary,
+  POLYMART: LAUNCH_MODULE_THEMES.polymart.primary,
+  POLYRENT: LAUNCH_MODULE_THEMES.polyrent.primary,
+  POLYSUARA: LAUNCH_MODULE_THEMES.polysuara.primary,
+  'E-KEBAJIKAN': LAUNCH_MODULE_THEMES.kebajikan.primary,
+  'FOOD BANK': LAUNCH_MODULE_THEMES.foodbank.primary,
+  'SCAN QR MERIT': LAUNCH_MODULE_THEMES.meritQr.primary,
+  '21 KELAB POLISAS': LAUNCH_MODULE_THEMES.kelab.primary,
+};
+
 const TICKER_REPEATED_HALF: readonly string[] = [...TICKER_MODULES, ...TICKER_MODULES];
 
 type MonthlyTrendSpec = {
   readonly month: string;
   readonly pct: number;
+  readonly barColor: string;
   readonly isPeak?: boolean;
 };
 
 const COMMUNITY_GROWTH_6M_TREND: readonly MonthlyTrendSpec[] = [
-  { month: 'OKT', pct: 34 },
-  { month: 'NOV', pct: 48 },
-  { month: 'DIS', pct: 62 },
-  { month: 'JAN', pct: 74 },
-  { month: 'FEB', pct: 88 },
-  { month: 'MAC', pct: 100, isPeak: true },
+  { month: 'OKT', pct: 34, barColor: LAUNCH_MODULE_THEMES.kelab.primary },
+  { month: 'NOV', pct: 48, barColor: LAUNCH_MODULE_THEMES.polyrent.primary },
+  { month: 'DIS', pct: 62, barColor: LAUNCH_MODULE_THEMES.kebajikan.primary },
+  { month: 'JAN', pct: 74, barColor: LAUNCH_MODULE_THEMES.polymaps.primary },
+  { month: 'FEB', pct: 88, barColor: LAUNCH_MODULE_THEMES.polymart.primary },
+  { month: 'MAC', pct: 100, barColor: LAUNCH_MODULE_THEMES.polysuara.primary, isPeak: true },
 ];
 
 const BAR_TRACK_HEIGHT_PX = 72;
@@ -209,7 +221,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
       target: safeStudents,
       suffix: '+',
       targetArc: 0.95,
-      ringColor: LAUNCH_PALETTE.ACCENT,
+      ringColor: LAUNCH_MODULE_THEMES.polymaps.primary,
       iconKind: 'students',
     },
     {
@@ -220,7 +232,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
       target: safeClubs,
       suffix: '',
       targetArc: 0.88,
-      ringColor: LAUNCH_PALETTE.SECONDARY,
+      ringColor: LAUNCH_MODULE_THEMES.kelab.primary,
       iconKind: 'clubs',
     },
     {
@@ -231,7 +243,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
       target: safeProducts,
       suffix: '+',
       targetArc: 0.92,
-      ringColor: LAUNCH_PALETTE.TERTIARY,
+      ringColor: LAUNCH_MODULE_THEMES.polymart.primary,
       iconKind: 'products',
     },
     {
@@ -242,14 +254,14 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
       target: safeActivities,
       suffix: '',
       targetArc: 0.86,
-      ringColor: LAUNCH_PALETTE.ACCENT,
+      ringColor: LAUNCH_MODULE_THEMES.meritQr.primary,
       iconKind: 'activities',
     },
   ];
 
   return (
     <>
-      <EditorialBackdrop dark />
+      <EditorialBackdrop dark ambientTint={LAUNCH_MODULE_THEMES.impact.tint} />
 
       <CameraStage
         zoomFrom={0.98}
@@ -316,7 +328,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                     width: 8,
                     height: 8,
                     borderRadius: 999,
-                    backgroundColor: LAUNCH_PALETTE.ACCENT,
+                    backgroundColor: LAUNCH_MODULE_THEMES.polymaps.primary,
                     transform: `scale(${liveDotScale.toFixed(3)})`,
                     display: 'inline-block',
                   }}
@@ -332,7 +344,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
               accentWords={['Giliran', 'Anda.']}
-              accentColor={LAUNCH_PALETTE.TERTIARY}
+              accentColor={LAUNCH_MODULE_THEMES.polymaps.primary}
               align="center"
               style={{
                 margin: '14px 0 0',
@@ -351,10 +363,10 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                 height={10}
                 startFrame={ruleStart}
                 durationFrames={ruleDuration}
-                stroke={LAUNCH_PALETTE.ACCENT}
+                stroke={LAUNCH_MODULE_THEMES.polymaps.primary}
                 trackStroke="rgba(217, 201, 178, 0.18)"
                 strokeWidth={2.5}
-                headDotColor={LAUNCH_PALETTE.TERTIARY}
+                headDotColor={LAUNCH_MODULE_THEMES.polymart.primary}
                 headDotRadius={4}
                 hideDotWhenComplete
               />
@@ -420,7 +432,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   style={{
                     backgroundColor: 'rgba(31, 39, 32, 0.80)',
                     border: `1.5px solid ${
-                      ringSettled ? 'rgba(217, 201, 178, 0.42)' : 'rgba(217, 201, 178, 0.26)'
+                      ringSettled ? `${m.ringColor}88` : 'rgba(217, 201, 178, 0.26)'
                     }`,
                     borderRadius: 26,
                     padding: '22px 24px 24px',
@@ -454,8 +466,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                         padding: '4px 10px',
                         borderRadius: 999,
                         backgroundColor: 'rgba(217, 201, 178, 0.12)',
-                        border: '1px solid rgba(217, 201, 178, 0.28)',
-                        color: LAUNCH_PALETTE.TERTIARY,
+                        border: `1px solid ${m.ringColor}66`,
+                        color: LAUNCH_PALETTE.BACKGROUND,
                       }}
                     >
                       {m.tag}
@@ -515,7 +527,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                         height: 60,
                         borderRadius: 999,
                         backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                        border: '1.5px solid rgba(217, 201, 178, 0.36)',
+                        border: `2px solid ${m.ringColor}`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -624,7 +636,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       width: 7,
                       height: 7,
                       borderRadius: 2,
-                      backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                      backgroundColor: LAUNCH_MODULE_THEMES.polymaps.primary,
                       display: 'inline-block',
                     }}
                   />
@@ -637,7 +649,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                     fontSize: 10.5,
                     fontWeight: 800,
                     letterSpacing: '0.12em',
-                    color: LAUNCH_PALETTE.ACCENT,
+                    color: LAUNCH_MODULE_THEMES.polymaps.primary,
                     whiteSpace: 'nowrap',
                   }}
                 >
@@ -700,8 +712,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                             style={{
                               padding: '2px 8px',
                               borderRadius: 999,
-                              backgroundColor: 'rgba(201, 111, 79, 0.24)',
-                              border: '1px solid rgba(201, 111, 79, 0.65)',
+                              backgroundColor: 'rgba(244, 63, 94, 0.24)',
+                              border: '1px solid rgba(244, 63, 94, 0.72)',
                               fontFamily: LAUNCH_FONTS.MONO,
                               fontSize: 11,
                               fontWeight: 900,
@@ -718,7 +730,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                               fontFamily: LAUNCH_FONTS.MONO,
                               fontSize: 10.5,
                               fontWeight: 700,
-                              color: 'rgba(217, 201, 178, 0.58)',
+                              color: 'rgba(217, 201, 178, 0.70)',
                               fontVariantNumeric: 'tabular-nums',
                             }}
                           >
@@ -754,14 +766,12 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                               width: '100%',
                               height: barTargetPx,
                               borderRadius: 7,
-                              backgroundColor: isPeak
-                                ? LAUNCH_PALETTE.ACCENT
-                                : LAUNCH_PALETTE.SECONDARY,
+                              backgroundColor: item.barColor,
                               border: isPeak
-                                ? '1px solid rgba(248, 246, 238, 0.4)'
-                                : '1px solid rgba(217, 201, 178, 0.2)',
+                                ? '1px solid rgba(248, 246, 238, 0.48)'
+                                : '1px solid rgba(248, 246, 238, 0.20)',
                               boxShadow: isPeak
-                                ? '0 0 22px rgba(201, 111, 79, 0.52), 0 4px 12px rgba(201, 111, 79, 0.32)'
+                                ? '0 0 22px rgba(244, 63, 94, 0.48), 0 4px 12px rgba(244, 63, 94, 0.30)'
                                 : 'none',
                               opacity: barOpacity,
                               transformOrigin: '50% 100%',
@@ -817,7 +827,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   padding: '22px 24px',
                   borderRadius: 999,
                   backgroundColor: LAUNCH_PALETTE.ACCENT,
-                  border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                  border: `1.5px solid ${LAUNCH_MODULE_THEMES.polymart.border}`,
                   boxShadow: '0 22px 48px rgba(31, 39, 32, 0.36)',
                   overflow: 'hidden',
                 }}
@@ -853,7 +863,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                     flexShrink: 0,
                   }}
                 >
-                  <TrendingUp size={16} color={LAUNCH_PALETTE.TERTIARY} strokeWidth={2.4} />
+                  <TrendingUp size={16} color={LAUNCH_MODULE_THEMES.polymaps.primary} strokeWidth={2.4} />
                 </span>
 
                 <span
@@ -940,10 +950,10 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       </span>
                       <span
                         style={{
-                          width: 6,
-                          height: 6,
+                          width: 7,
+                          height: 7,
                           borderRadius: 999,
-                          backgroundColor: LAUNCH_PALETTE.ACCENT,
+                          backgroundColor: TICKER_DOT_COLORS[item] ?? LAUNCH_PALETTE.ACCENT,
                           display: 'inline-block',
                           flexShrink: 0,
                         }}
