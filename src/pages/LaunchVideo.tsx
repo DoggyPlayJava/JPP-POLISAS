@@ -147,7 +147,7 @@ export function LaunchVideo() {
     };
   }, []);
 
-  // Keyboard stage shortcuts (Space, F, R, Arrows, 1-8)
+  // Keyboard stage shortcuts (Space, F, R, Arrows, 1-9)
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey) return;
@@ -165,7 +165,7 @@ export function LaunchVideo() {
         jumpToChapter(activeChapterIdxRef.current + 1);
       } else if (e.key === 'ArrowLeft') {
         jumpToChapter(activeChapterIdxRef.current - 1);
-      } else if (e.key >= '1' && e.key <= '8') {
+      } else if (e.key >= '1' && e.key <= '9') {
         jumpToChapter(Number(e.key) - 1);
       }
     };
@@ -205,7 +205,7 @@ export function LaunchVideo() {
 
       {/* Minimal Auto-Hide Stage HUD (Opaque surfaces — 100% GPU Baseline Compliant) */}
       <div
-        className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[min(96vw,1220px)] rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2] shadow-lg px-4 py-3 transition-opacity duration-300 ${
+        className={`fixed bottom-4 left-1/2 -translate-x-1/2 z-40 w-[min(98vw,1420px)] rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2] shadow-lg px-3 py-2.5 transition-opacity duration-300 ${
           hudVisible ? 'opacity-100' : 'opacity-0 pointer-events-none'
         }`}
       >
@@ -225,19 +225,19 @@ export function LaunchVideo() {
             playerRef.current?.seekTo(target);
             setCurrentFrame(target);
           }}
-          className="h-1.5 w-full rounded-full bg-[#F2EDE4] cursor-pointer mb-3 overflow-hidden"
+          className="h-1.5 w-full rounded-full bg-[#F2EDE4] cursor-pointer mb-2.5 overflow-hidden"
         >
           <div className="h-full bg-[#C96F4F] rounded-full" style={{ width: `${progressPct}%` }} />
         </div>
 
-        <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-2.5">
+        <div className="flex flex-wrap lg:flex-nowrap items-center justify-between gap-2">
           {/* Transport Controls */}
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               type="button"
               onClick={togglePlay}
               aria-label={isPlaying ? 'Jeda tayangan' : 'Main tayangan'}
-              className="h-9 w-9 rounded-xl bg-[#2E3A2F] text-[#F8F6EE] flex items-center justify-center hover:bg-[#232C24]"
+              className="h-8 w-8 rounded-xl bg-[#2E3A2F] text-[#F8F6EE] flex items-center justify-center hover:bg-[#232C24]"
             >
               {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
             </button>
@@ -245,7 +245,7 @@ export function LaunchVideo() {
               type="button"
               onClick={replayFromStart}
               aria-label="Ulang dari mula"
-              className="h-9 w-9 rounded-xl bg-[#F2EDE4] text-[#2E3A2F] border border-[#D9C9B2] flex items-center justify-center hover:bg-[#D9C9B2]"
+              className="h-8 w-8 rounded-xl bg-[#F2EDE4] text-[#2E3A2F] border border-[#D9C9B2] flex items-center justify-center hover:bg-[#D9C9B2]"
             >
               <RotateCcw className="w-4 h-4" />
             </button>
@@ -253,13 +253,13 @@ export function LaunchVideo() {
               type="button"
               onClick={() => void toggleFullscreen()}
               aria-label={isFullscreen ? 'Keluar skrin penuh' : 'Skrin penuh'}
-              className="h-9 w-9 rounded-xl bg-[#F2EDE4] text-[#2E3A2F] border border-[#D9C9B2] flex items-center justify-center hover:bg-[#D9C9B2]"
+              className="h-8 w-8 rounded-xl bg-[#F2EDE4] text-[#2E3A2F] border border-[#D9C9B2] flex items-center justify-center hover:bg-[#D9C9B2]"
             >
               {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
             </button>
           </div>
 
-          {/* 8 Chapter Jump Pills */}
+          {/* 9 Chapter Jump Pills */}
           <div className="flex items-center gap-1 overflow-x-auto min-w-0 max-w-full">
             {LAUNCH_CHAPTERS.map((ch, idx) => {
               const active = idx === activeChapterIdx;
@@ -268,7 +268,7 @@ export function LaunchVideo() {
                   key={ch.id}
                   type="button"
                   onClick={() => jumpToChapter(idx)}
-                  className={`px-2 py-1 rounded-lg text-[11px] font-bold tracking-wide whitespace-nowrap border ${
+                  className={`px-1.5 py-1 rounded-lg text-[10px] font-bold tracking-tight whitespace-nowrap border ${
                     active
                       ? 'bg-[#2E3A2F] text-[#F8F6EE] border-[#2E3A2F]'
                       : 'bg-[#FFFFFF] text-[#556453] border-[#D9C9B2] hover:text-[#2E3A2F]'
@@ -284,7 +284,7 @@ export function LaunchVideo() {
           <button
             type="button"
             onClick={() => navigate('/login')}
-            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#C96F4F] text-[#F8F6EE] text-xs font-extrabold uppercase tracking-wider hover:bg-[#2E3A2F]"
+            className="shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#C96F4F] text-[#F8F6EE] text-[11px] font-extrabold uppercase tracking-wider hover:bg-[#2E3A2F]"
           >
             <span>Masuk Portal</span>
             <ArrowRight className="w-3.5 h-3.5" />

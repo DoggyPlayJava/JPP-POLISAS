@@ -239,7 +239,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
   const bracketPulseScale = 1 + Math.sin(timeSec * 3.1) * 0.018;
   const bracketPulseOpacity = 0.78 + Math.sin(timeSec * 3.1) * 0.2;
 
-  // Flanking Symmetrical Upright Satellite Cards (0.00deg resting tilt aligned with QR monolith)
+  // Flanking Symmetrical Cockpit Satellite Cards (+7deg / -7deg inward 3D angle facing center 0.00deg QR monolith)
   const satStart = Math.round(1.25 * safeFps); // 75f
   const satSpring =
     frame >= satStart
@@ -571,7 +571,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
           </Interactive.Div>
         </div>
 
-        {/* 3-Piece Symmetrical Upright LED Spotlight Triad: Left Upright Card + Center 340px Hero QR (0.00deg) + Right Upright Card */}
+        {/* 3-Piece Symmetrical Cockpit LED Spotlight Triad: Left (+7deg) + Center 340px Hero QR (0.00deg) + Right (-7deg) */}
         <div
           style={{
             position: 'absolute',
@@ -583,9 +583,11 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             alignItems: 'center',
             justifyContent: 'center',
             gap: 44,
+            perspective: '1650px',
+            transformStyle: 'preserve-3d',
           }}
         >
-          {/* LEFT UPRIGHT COMPANION CARD: 3 Langkah Mula + Status Pill */}
+          {/* LEFT COCKPIT COMPANION CARD (+7deg inward): 3 Langkah Mula + Status Pill */}
           <Interactive.Div
             name="Left Upright Onboarding Card"
             premountFor={safeFps}
@@ -601,7 +603,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               flexDirection: 'column',
               gap: 14,
               opacity: satOpacity,
-              transform: `translate3d(0px, ${satRiseY.toFixed(2)}px, 0px) scale(${satScale.toFixed(4)})`,
+              transform: `translate3d(0px, ${satRiseY.toFixed(2)}px, 45px) rotateY(7deg) scale(${satScale.toFixed(4)})`,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -913,7 +915,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             </div>
           </Interactive.Div>
 
-          {/* RIGHT UPRIGHT COMPANION CARD: 8-Module Spectrum Checklist + Live Student Proof */}
+          {/* RIGHT COCKPIT COMPANION CARD (-7deg inward): 8-Module Spectrum Checklist + Live Student Proof */}
           <Interactive.Div
             name="Right Upright Modules Card"
             premountFor={safeFps}
@@ -929,7 +931,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               flexDirection: 'column',
               gap: 14,
               opacity: satOpacity,
-              transform: `translate3d(0px, ${satRiseY.toFixed(2)}px, 0px) scale(${satScale.toFixed(4)})`,
+              transform: `translate3d(0px, ${satRiseY.toFixed(2)}px, 45px) rotateY(-7deg) scale(${satScale.toFixed(4)})`,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1017,7 +1019,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
       </div>
 
       <EditorialFrameMarks
-        chapterCode="08"
+        chapterCode="09"
         chapterLabel="AKSES SERTA-MERTA • IMBAS QR SEKARANG"
       />
     </>

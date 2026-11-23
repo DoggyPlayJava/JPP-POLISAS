@@ -9,9 +9,8 @@ import {
   type InteractivitySchema,
 } from 'remotion';
 import {
-  ArrowRight,
-  Calendar,
   Check,
+  CheckCircle2,
   Clock,
   Lock,
   MapPin,
@@ -19,14 +18,15 @@ import {
   QrCode,
   ShieldCheck,
   Sparkles,
+  Wrench,
 } from 'lucide-react';
 import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialChrome';
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
-import { EvolvingPath } from '../motion/MotionActors';
+import { EvolvingPath, GeometricSparkBurst } from '../motion/MotionActors';
 import { WHIP_S_CURVE } from '../motion/transitions';
 import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
-import { DeterministicQrMatrix, KineticWindow } from '../ui/KineticCard';
+import { DeterministicQrMatrix, KineticWindow, SpatialFloorGrid } from '../ui/KineticCard';
 
 const TEAL = LAUNCH_MODULE_THEMES.kebajikan.primary; // #14B8A6
 const TEAL_DARK = LAUNCH_MODULE_THEMES.kebajikan.dark; // #0D9488
@@ -40,6 +40,13 @@ const AMBER_INK = '#B45309';
 const AMBER_SOFT = LAUNCH_MODULE_THEMES.foodbank.soft; // #FFFBEB
 const AMBER_BORDER = LAUNCH_MODULE_THEMES.foodbank.border; // #FDE68A
 
+const EMERALD = LAUNCH_MODULE_THEMES.polymaps.primary; // #10B981
+const EMERALD_INK = '#047857';
+const EMERALD_SOFT = LAUNCH_MODULE_THEMES.polymaps.soft; // #ECFDF5
+const EMERALD_BORDER = LAUNCH_MODULE_THEMES.polymaps.border; // #A7F3D0
+
+const VAULT_OBSIDIAN = '#18221D';
+
 export type WelfareCareProps = {
   readonly ticketNo: string;
   readonly slaLabel: string;
@@ -51,11 +58,7 @@ type ComplaintStageSpec = {
   readonly title: string;
   readonly meta: string;
   readonly badge: string;
-};
-
-type FoodBankStepSpec = {
-  readonly label: string;
-  readonly subLabel: string;
+  readonly reachFrame: number;
 };
 
 const STUDENT_HEADLINE_DEFAULT = 'Kamsis Bermasalah? Perlukan Food Bank? Kami Ada.';
@@ -69,51 +72,20 @@ const resolveStudentHeadline = (headline: string): string => {
   return trimmed;
 };
 
-const STAGES: readonly ComplaintStageSpec[] = [
-  { code: '01', title: 'Laporan Dihantar', meta: '09:14 AM · Portal Pelajar', badge: 'DITERIMA' },
-  { code: '02', title: 'Diterima JPP', meta: '09:42 AM · Semakan Serta-Merta', badge: 'DISAHKAN' },
-  {
-    code: '03',
-    title: 'Juruteknik Dalam Perjalanan',
-    meta: '11:15 AM · Blok B-204 Kamsis',
-    badge: 'TINDAKAN',
-  },
-  {
-    code: '04',
-    title: 'Selesai < 48 Jam ✓',
-    meta: '03:50 PM · Bilik Sedia & Selesa',
-    badge: 'SELESAI ✓',
-  },
+const KAMSIS_STAGES: readonly ComplaintStageSpec[] = [
+  { code: '01', title: 'Laporan Dihantar', meta: '09:14 AM · Portal Pelajar', badge: 'DITERIMA', reachFrame: 34 },
+  { code: '02', title: 'Disahkan JPP', meta: '09:42 AM · Semakan Segera', badge: 'AKTIF', reachFrame: 60 },
+  { code: '03', title: 'Juruteknik Tiba', meta: '11:15 AM · Blok B-204 Kamsis', badge: 'TINDAKAN', reachFrame: 88 },
+  { code: '04', title: 'Selesai < 48 Jam', meta: '03:50 PM · Bilik Sedia & Selesa', badge: 'SELESAI ✓', reachFrame: 118 },
 ];
 
-const FOOD_BANK_STEPS: readonly FoodBankStepSpec[] = [
-  { label: 'Dimohon', subLabel: '08:40 AM' },
-  { label: 'Diluluskan', subLabel: '09:05 AM' },
-  { label: 'Sedia Diambil', subLabel: 'Kaunter Rahsia' },
-];
-
-const PICKUP_SCHEDULE = [
-  { label: 'Tarikh', value: 'Hari Ini', kind: 'date' as const },
-  { label: 'Slot Masa', value: '2:00 PM – 4:00 PM', kind: 'time' as const },
-  { label: 'Lokasi', value: 'Bilik Gerakan JPP', kind: 'location' as const },
-];
-
-const MANIFEST_ITEMS = ['Beras 5kg', 'Minyak Masak', 'Biskut Kering', 'Pek Minuman'] as const;
+const FOOD_BANK_STEPS = [
+  { label: 'Dimohon', subLabel: '08:40 AM', threshold: 0.2 },
+  { label: 'Diluluskan Rahsia', subLabel: '09:05 AM', threshold: 0.55 },
+  { label: 'Sedia Diambil ✓', subLabel: 'Loker Privasi B2', threshold: 0.85 },
+] as const;
 
 const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
-const LINEAR_SPINE = Easing.linear;
-const TIMER_EASING = Easing.bezier(0.22, 1, 0.36, 1);
-
-const renderScheduleIcon = (kind: (typeof PICKUP_SCHEDULE)[number]['kind']) => {
-  switch (kind) {
-    case 'date':
-      return <Calendar size={15} color={AMBER_INK} strokeWidth={2.4} />;
-    case 'time':
-      return <Clock size={15} color={AMBER_INK} strokeWidth={2.4} />;
-    case 'location':
-      return <MapPin size={15} color={TEAL_INK} strokeWidth={2.4} />;
-  }
-};
 
 const WelfareCareInner: React.FC<WelfareCareProps> = ({
   ticketNo,
@@ -124,920 +96,887 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
   const { fps } = useVideoConfig();
 
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
-  const f60 = (f: number) => Math.round((f / 60) * safeFps);
-
   const safeTicketNo = ticketNo.trim() || 'KBJ-0842';
   const safeSlaLabel = slaLabel.trim() || '< 48 JAM';
   const resolvedHeadline = resolveStudentHeadline(headline);
+  const timeSec = frame / safeFps;
 
-  // Beat timings
-  const pillStart = 0;
-  const pillDuration = Math.max(8, f60(22));
-  const headlineStart = f60(5);
-  const wordStagger = Math.max(2, f60(3));
-  const wordDuration = Math.max(8, f60(20));
-  const subStart = f60(20);
-  const subDuration = Math.max(8, f60(20));
+  // Header timing
+  const wordStagger = Math.max(2, Math.round(0.04 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.28 * safeFps));
 
-  const stageEnter = interpolate(frame, [f60(10), f60(34)], [0, 1], {
+  // Act 1 -> Act 2 Rack-Focus Spatial Shift (264f .. 320f)
+  const rackT = interpolate(frame, [264, 320], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: WHIP_S_CURVE,
+  });
+
+  // Entrance Spring for Act 1
+  const entrySpring = spring({
+    frame: Math.max(0, frame - 6),
+    fps: safeFps,
+    config: { damping: 18, stiffness: 205, mass: 0.9 },
+  });
+
+  // Card 1: Kamsis Repair Stage (Hero Center-Left in Act 1 -> Optical Depth Left in Act 2)
+  const kamsisX = interpolate(rackT, [0, 1], [-58, -510]);
+  const kamsisY = interpolate(rackT, [0, 1], [0, 20]) + (1 - entrySpring) * 28;
+  const kamsisZ = interpolate(rackT, [0, 1], [58, -155]);
+  const kamsisScale = interpolate(rackT, [0, 1], [1, 0.72]);
+  const kamsisOpacity = entrySpring * interpolate(rackT, [0, 1], [1, 0.38]);
+  const kamsisRotY = interpolate(rackT, [0, 1], [3, 5]);
+
+  // Card 2: Confidential Food Bank Vault (Optical Depth Right in Act 1 -> Hero Center-Right in Act 2)
+  const vaultX = interpolate(rackT, [0, 1], [510, 48]);
+  const vaultY = interpolate(rackT, [0, 1], [22, 0]) + (1 - entrySpring) * 32;
+  const vaultZ = interpolate(rackT, [0, 1], [-155, 72]);
+  const vaultScale = interpolate(rackT, [0, 1], [0.74, 1]);
+  const vaultOpacity = entrySpring * interpolate(rackT, [0, 1], [0.36, 1]);
+  const vaultRotY = interpolate(rackT, [0, 1], [-5, -4]);
+
+  // Act 1 SLA Stopwatch Orb pops beside Stage 04 around 120..146f (ready cleanly at f=2460 / Local 162f!)
+  const stopwatchSpring = spring({
+    frame: Math.max(0, frame - 122),
+    fps: safeFps,
+    config: { damping: 15, stiffness: 220, mass: 0.85 },
+  });
+  const slaCompleted = frame >= 118;
+
+  // Act 2 Privacy Shield Unlock Visor glides upward (314..366f -> fully unlocked cleanly before f=2720 / Local 422f!)
+  const shieldLiftProgress = interpolate(frame, [314, 366], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: WHIP_S_CURVE,
+  });
+  const shieldTranslateY = interpolate(shieldLiftProgress, [0, 1], [0, -112]);
+  const pickupStepsProgress = interpolate(frame, [340, 388], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
 
-  // Left Panel: Upright Kebajikan SLA Spine & 4-Step Pulse Tracker
-  const stageTriggerFrames = [f60(24), f60(58), f60(96), f60(134)] as const;
-  const spineStart = f60(20);
-  const spineEnd = stageTriggerFrames[STAGES.length - 1];
-  const spineDuration = Math.max(20, spineEnd - spineStart);
-  const allStagesComplete = frame >= spineEnd;
-
-  const elapsedMinutes = Math.round(
-    interpolate(frame, [spineStart, spineEnd], [14, 396], {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: TIMER_EASING,
-    }),
-  );
-  const elapsedHours = Math.floor(elapsedMinutes / 60);
-  const elapsedMins = elapsedMinutes % 60;
-  const elapsedDisplay = `${String(elapsedHours).padStart(2, '0')}j ${String(elapsedMins).padStart(2, '0')}m`;
-
-  const highlightStart = f60(124);
-  const highlightDuration = f60(24);
-  const sealStart = f60(144);
-  const sealSpring =
-    frame >= sealStart
-      ? spring({
-          frame: frame - sealStart,
-          fps: safeFps,
-          config: { damping: 16, stiffness: 225, mass: 0.85 },
-        })
-      : 0;
-
-  // Right Panel: 3-Step Approval + Mechanical Editorial Privacy Veil Lift (mid-open around Global f=1500 / Local 60f)
-  const approvalTriggerFrames = [f60(18), f60(36), f60(68)] as const;
-  const shutterStart = f60(38);
-  const shutterEnd = f60(88);
-  const shutterOpenT = interpolate(frame, [shutterStart, shutterEnd], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: WHIP_S_CURVE,
-  });
-  const privacyProgressPct = Math.round(shutterOpenT * 100);
-
-  // Continuous gentle vertical verification scan beam over uncovered Food Bank QR
-  const scanPeriod = Math.max(36, f60(96));
-  const scanPhase = ((Math.max(0, frame - shutterEnd)) % scanPeriod) / scanPeriod;
-  const scanBeamY = frame >= shutterEnd ? 10 + 148 * Math.sin(scanPhase * Math.PI) : 10;
+  // Live Amber laser beam over confidential Food Bank QR pass
+  const laserCycle = ((frame - 360) % 72 + 72) % 72;
+  const laserY = interpolate(laserCycle, [0, 36, 72], [12, 156, 12]);
+  const liveDotScale = 0.86 + Math.sin(timeSec * 5.1) * 0.16;
 
   return (
     <>
       <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.kebajikan.tint} />
 
       <CameraStage
-        zoomFrom={1}
+        zoomFrom={0.995}
         zoomTo={1.016}
-        panXFrom={-3}
-        panXTo={3}
-        panYFrom={2}
-        panYTo={-2}
+        panXFrom={0}
+        panXTo={0}
+        panYFrom={3}
+        panYTo={-3}
         tiltXFrom={0}
         tiltXTo={0}
-        tiltYFrom={0}
-        tiltYTo={0}
-        breathingAmplitude={0.22}
-        entryPanXOffset={-18}
-        entryZoomOffset={-0.018}
-        exitPanYDelta={-16}
-        exitZoomDelta={0.024}
-        exitFrames={Math.round(0.32 * safeFps)}
+        tiltYFrom={-0.35}
+        tiltYTo={0.35}
+        breathingAmplitude={0.35}
+        entryZoomOffset={0.024}
+        entryPanXOffset={24}
+        entryFrames={Math.round(0.45 * safeFps)}
+        exitZoomDelta={0.015}
+        exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
+        <SpatialFloorGrid
+          accentColor={TEAL}
+          secondaryColor={AMBER}
+          gridOpacity={0.2}
+          scrollSpeed={14}
+        />
+
+        {/* Top Editorial Header Lockup */}
         <div
           style={{
             position: 'absolute',
-            inset: 0,
+            left: 88,
+            right: 88,
+            top: 74,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            gap: 28,
             fontFamily: LAUNCH_FONTS.DISPLAY,
+            zIndex: 12,
           }}
         >
-          {/* Centered Editorial Header */}
-          <div
-            style={{
-              position: 'absolute',
-              left: 76,
-              right: 76,
-              top: 60,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              textAlign: 'center',
-              zIndex: 8,
-            }}
-          >
-            <KineticReveal startFrame={pillStart} durationFrames={pillDuration}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1240 }}>
+            <KineticReveal startFrame={4} durationFrames={18}>
               <div
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 8,
-                  padding: '6px 18px',
+                  gap: 10,
+                  padding: '6px 14px',
                   borderRadius: 999,
-                  backgroundColor: TEAL_SOFT,
-                  border: `1.5px solid ${TEAL}`,
-                  color: TEAL_INK,
-                  fontFamily: LAUNCH_FONTS.MONO,
-                  fontSize: 12.5,
-                  fontWeight: 800,
-                  letterSpacing: '0.16em',
+                  backgroundColor: rackT > 0.5 ? AMBER_SOFT : TEAL_SOFT,
+                  border: `1.5px solid ${rackT > 0.5 ? AMBER_BORDER : TEAL_BORDER}`,
                 }}
               >
-                <ShieldCheck size={14} color={TEAL_INK} strokeWidth={2.5} />
-                <span>PRIHATIN SISWA • ADUAN KAMSIS &amp; FOOD BANK</span>
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: 999,
+                    backgroundColor: rackT > 0.5 ? AMBER : TEAL,
+                    transform: `scale(${liveDotScale.toFixed(3)})`,
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: LAUNCH_FONTS.MONO,
+                    fontSize: 12,
+                    fontWeight: 900,
+                    letterSpacing: '0.14em',
+                    color: rackT > 0.5 ? AMBER_INK : TEAL_INK,
+                  }}
+                >
+                  BAB 06 • E-KEBAJIKAN &amp; FOOD BANK • JAMINAN {safeSlaLabel}
+                </span>
               </div>
             </KineticReveal>
 
             <KineticWords
-              as="h2"
+              as="h1"
               text={resolvedHeadline}
-              startFrame={headlineStart}
+              startFrame={8}
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
-              accentWords={['Kami', 'Ada.']}
-              accentColor={TEAL_DARK}
-              align="center"
+              accentWords={['Food', 'Bank?', 'Kami', 'Ada.']}
+              accentColor={rackT > 0.5 ? AMBER_INK : TEAL_INK}
               style={{
-                margin: '10px 0 0',
-                fontSize: 47,
+                margin: 0,
+                fontSize: 44,
                 fontWeight: 900,
-                letterSpacing: '-0.03em',
+                letterSpacing: '-0.032em',
                 lineHeight: 1.07,
                 color: LAUNCH_PALETTE.PRIMARY,
               }}
             />
-
-            <KineticReveal startFrame={subStart} durationFrames={subDuration}>
-              <p
-                style={{
-                  margin: '6px 0 0',
-                  fontSize: 16.5,
-                  fontWeight: 500,
-                  lineHeight: 1.4,
-                  color: LAUNCH_PALETTE.INK_SOFT,
-                }}
-              >
-                Jejak aduan kerosakan kamsis terus di telefon dan mohon bantuan Food Bank secara rahsia serta bermaruah.
-              </p>
-            </KineticReveal>
           </div>
 
-          {/* UPRIGHT SYMMETRICAL 2-PANEL SWISS CARE WORKBENCH (left: 76, right: 76, top: 234, height: 704) */}
+          <KineticReveal startFrame={18} durationFrames={22}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '10px 18px',
+                borderRadius: 16,
+                backgroundColor: rackT > 0.5 ? VAULT_OBSIDIAN : LAUNCH_PALETTE.CARD_BG,
+                border: `1.5px solid ${rackT > 0.5 ? AMBER : TEAL_BORDER}`,
+                boxShadow: '0 12px 26px rgba(31, 39, 32, 0.1)',
+              }}
+            >
+              <ShieldCheck
+                size={18}
+                color={rackT > 0.5 ? AMBER : TEAL_INK}
+                strokeWidth={2.5}
+              />
+              <span
+                style={{
+                  fontFamily: LAUNCH_FONTS.MONO,
+                  fontSize: 13,
+                  fontWeight: 900,
+                  letterSpacing: '0.07em',
+                  color: rackT > 0.5 ? '#FFFBEB' : LAUNCH_PALETTE.PRIMARY,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {rackT > 0.5 ? 'MOD PRIVASI SISWA AKTIF ✓' : `TIKET #${safeTicketNo} • SLA ${safeSlaLabel}`}
+              </span>
+            </div>
+          </KineticReveal>
+        </div>
+
+        {/* 3D Spatial Rack-Focus Stage */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 204,
+            height: 764,
+            perspective: '1700px',
+            transformStyle: 'preserve-3d',
+            fontFamily: LAUNCH_FONTS.DISPLAY,
+            zIndex: 8,
+          }}
+        >
+          {/* HERO 1: 3D Z-Stepping Kamsis Repair Stage (980x572) */}
           <div
             style={{
               position: 'absolute',
-              left: 76,
-              top: 234,
-              width: 1768,
-              height: 704,
-              display: 'flex',
-              gap: 32,
-              opacity: stageEnter,
-              transform: `translate3d(0px, ${((1 - stageEnter) * 24).toFixed(2)}px, 0px)`,
+              left: '50%',
+              top: '50%',
+              width: 980,
+              height: 572,
+              transformStyle: 'preserve-3d',
+              opacity: kamsisOpacity,
+              zIndex: rackT < 0.5 ? 10 : 4,
+              transform: `translate(-50%, -50%) translate3d(${kamsisX.toFixed(1)}px, ${kamsisY.toFixed(1)}px, ${kamsisZ.toFixed(1)}px) rotateX(2deg) rotateY(${kamsisRotY.toFixed(2)}deg) scale(${kamsisScale.toFixed(4)})`,
             }}
           >
-            {/* LEFT PANEL (width: 868px): Upright KebajikanLiveTrackerCard with Vertical Pulse Spine */}
-            <Interactive.Div
-              name="KebajikanLiveTrackerCard"
-              premountFor={safeFps}
-              style={{ width: 868, height: 704, flexShrink: 0 }}
+            <KineticWindow
+              surface="light"
+              routeLabel="/portal/kebajikan/kamsis"
+              statusPill={slaCompleted ? '100% SELESAI & DISANTUNI' : `SLA ${safeSlaLabel}`}
+              statusAccent
+              accentColor={slaCompleted ? EMERALD : TEAL}
+              accentSoftBg={slaCompleted ? EMERALD_SOFT : TEAL_SOFT}
+              accentBorderColor={slaCompleted ? EMERALD_BORDER : TEAL_BORDER}
+              width={980}
+              height={572}
+              sheenStartFrame={124}
+              sheenDuration={36}
+              style={{
+                borderBottom: `7px solid ${slaCompleted ? EMERALD : TEAL}`,
+                boxShadow: '0 34px 76px rgba(15, 118, 110, 0.16)',
+              }}
             >
-              <KineticWindow
-                surface="light"
-                routeLabel="jpp.polisas.edu.my/kebajikan"
-                statusPill={allStagesComplete ? 'SELESAI < 48 JAM ✓' : 'JEJAK ADUAN LANGSUNG'}
-                statusAccent
-                accentColor={TEAL_INK}
-                accentSoftBg={TEAL_SOFT}
-                accentBorderColor={TEAL_BORDER}
-                width="100%"
-                height="100%"
-                borderRadius={26}
-                sheenStartFrame={f60(138)}
-                sheenDuration={38}
+              <div
                 style={{
-                  borderColor: allStagesComplete ? TEAL : TEAL_BORDER,
-                  boxShadow: '0 22px 48px rgba(15, 118, 110, 0.1)',
+                  position: 'relative',
+                  flex: 1,
+                  padding: '24px 28px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: 16,
+                  transformStyle: 'preserve-3d',
                 }}
               >
-                <div
-                  style={{
-                    flex: 1,
-                    padding: '20px 24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: 14,
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {/* Ticket Header Bar */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '14px 18px',
-                      borderRadius: 18,
-                      backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                      border: `1.5px solid ${TEAL_BORDER}`,
-                      gap: 12,
-                    }}
-                  >
-                    <div>
-                      <div
+                {/* Ticket Header + Floating SLA Stopwatch Orb */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div
+                      style={{
+                        width: 52,
+                        height: 52,
+                        borderRadius: 16,
+                        backgroundColor: TEAL_SOFT,
+                        border: `1.5px solid ${TEAL_BORDER}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Wrench size={24} color={TEAL_INK} strokeWidth={2.4} />
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <span
                         style={{
                           fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11,
-                          fontWeight: 800,
-                          letterSpacing: '0.12em',
+                          fontSize: 12,
+                          fontWeight: 900,
+                          letterSpacing: '0.1em',
                           color: TEAL_INK,
                         }}
                       >
-                        E-KEBAJIKAN • JEJAK ADUAN KAMSIS
-                      </div>
-                      <div
+                        TIKET KAMSIS #{safeTicketNo} • PEMBAIKAN FASILITI
+                      </span>
+                      <span
                         style={{
-                          marginTop: 2,
-                          fontSize: 20,
+                          fontSize: 23,
                           fontWeight: 900,
-                          letterSpacing: '-0.02em',
                           color: LAUNCH_PALETTE.PRIMARY,
                         }}
                       >
-                        TIKET #{safeTicketNo} •{' '}
-                        <span style={{ fontSize: 16, fontWeight: 700, color: LAUNCH_PALETTE.INK_SOFT }}>
-                          Kipas &amp; Lampu Blok B-204
-                        </span>
-                      </div>
-                    </div>
-
-                    <div
-                      style={{
-                        padding: '8px 14px',
-                        borderRadius: 12,
-                        backgroundColor: TEAL_SOFT,
-                        border: `1.5px solid ${TEAL_BORDER}`,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 13,
-                        fontWeight: 900,
-                        color: LAUNCH_PALETTE.PRIMARY_DARK,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      SLA{' '}
-                      <EditorialAnnotation
-                        type="highlight"
-                        startFrame={highlightStart}
-                        durationFrames={highlightDuration}
-                        color="rgba(20, 184, 166, 0.36)"
-                        strokeWidth={11}
-                        padding={3}
-                        iterations={1}
-                        seed={19}
-                      >
-                        <span style={{ fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY_DARK }}>
-                          {safeSlaLabel}
-                        </span>
-                      </EditorialAnnotation>
+                        Paip Sink &amp; Suis Kipas Blok B-204 Kamsis
+                      </span>
                     </div>
                   </div>
 
-                  {/* Upright 4-Step Vertical Timeline Connected by Teal EvolvingPath Spine */}
-                  <div style={{ position: 'relative', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 10 }}>
-                    {/* Vertical Spine Positioned Directly Behind Stage Nodes */}
-                    <div
+                  {/* Floating SLA Stopwatch Orb */}
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      padding: '10px 16px',
+                      borderRadius: 18,
+                      backgroundColor: slaCompleted ? EMERALD_INK : TEAL_SOFT,
+                      border: `2px solid ${slaCompleted ? EMERALD : TEAL_BORDER}`,
+                      color: slaCompleted ? '#FFFFFF' : TEAL_INK,
+                      boxShadow: '0 16px 32px rgba(4, 120, 87, 0.22)',
+                      transform: `translateZ(${(24 * stopwatchSpring).toFixed(1)}px) scale(${(0.92 + 0.08 * stopwatchSpring).toFixed(4)})`,
+                      flexShrink: 0,
+                    }}
+                  >
+                    <Clock size={18} strokeWidth={2.5} />
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                      <span
+                        style={{
+                          fontSize: 18,
+                          fontWeight: 900,
+                          fontVariantNumeric: 'tabular-nums',
+                          lineHeight: 1.05,
+                        }}
+                      >
+                        06j 36m
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 9.5,
+                          fontWeight: 800,
+                          opacity: 0.9,
+                        }}
+                      >
+                        7x LEBIH PANTAS SLA
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* 4 Upright Stepping SLA Timeline Cards + Teal EvolvingPath Spine */}
+                <div
+                  style={{
+                    position: 'relative',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(4, 1fr)',
+                    gap: 14,
+                    paddingTop: 10,
+                    paddingBottom: 8,
+                    transformStyle: 'preserve-3d',
+                  }}
+                >
+                  {/* Animated Teal SVG Spine Running Across the 4 Cards */}
+                  <EvolvingPath
+                    d="M 60 88 L 860 88"
+                    width={924}
+                    height={176}
+                    startFrame={26}
+                    durationFrames={96}
+                    stroke={TEAL}
+                    strokeWidth={5}
+                    trackStroke="rgba(20, 184, 166, 0.2)"
+                    headDotColor="#FFFFFF"
+                    headDotRadius={7}
+                    hideDotWhenComplete
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      pointerEvents: 'none',
+                      zIndex: 1,
+                    }}
+                  />
+
+                  {KAMSIS_STAGES.map((stage, idx) => {
+                    const reached = frame >= stage.reachFrame;
+                    const stageSpring = reached
+                      ? spring({
+                          frame: frame - stage.reachFrame,
+                          fps: safeFps,
+                          config: { damping: 16, stiffness: 215, mass: 0.85 },
+                        })
+                      : 0;
+                    const zElevate = reached ? 18 + stageSpring * 22 : 0;
+                    const scalePop = reached ? 1 + 0.03 * stageSpring : 0.96;
+                    const isFinal = idx === KAMSIS_STAGES.length - 1;
+                    return (
+                      <div
+                        key={stage.code}
+                        style={{
+                          position: 'relative',
+                          padding: '18px 16px',
+                          borderRadius: 20,
+                          backgroundColor: reached ? '#FFFFFF' : LAUNCH_PALETTE.BACKGROUND,
+                          border: `2px solid ${
+                            reached
+                              ? isFinal
+                                ? EMERALD
+                                : TEAL
+                              : LAUNCH_PALETTE.TERTIARY
+                          }`,
+                          borderBottom: `6px solid ${
+                            reached
+                              ? isFinal
+                                ? EMERALD_INK
+                                : TEAL_DARK
+                              : LAUNCH_PALETTE.SECONDARY
+                          }`,
+                          boxShadow: reached
+                            ? '0 22px 42px rgba(15, 118, 110, 0.16)'
+                            : '0 8px 16px rgba(31, 39, 32, 0.06)',
+                          transform: `translateZ(${zElevate.toFixed(1)}px) scale(${scalePop.toFixed(4)})`,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: 12,
+                          minHeight: 196,
+                          zIndex: reached ? 4 : 2,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <span
+                            style={{
+                              width: 30,
+                              height: 30,
+                              borderRadius: 999,
+                              backgroundColor: reached
+                                ? isFinal
+                                  ? EMERALD_INK
+                                  : TEAL_INK
+                                : LAUNCH_PALETTE.TERTIARY,
+                              color: '#FFFFFF',
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 12,
+                              fontWeight: 900,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                          >
+                            {reached ? <Check size={15} strokeWidth={3} /> : stage.code}
+                          </span>
+                          <span
+                            style={{
+                              padding: '3px 8px',
+                              borderRadius: 999,
+                              backgroundColor: reached
+                                ? isFinal
+                                  ? EMERALD_SOFT
+                                  : TEAL_SOFT
+                                : LAUNCH_PALETTE.SURFACE_MUTED,
+                              color: reached
+                                ? isFinal
+                                  ? EMERALD_INK
+                                  : TEAL_INK
+                                : LAUNCH_PALETTE.INK_SOFT,
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 9.5,
+                              fontWeight: 900,
+                            }}
+                          >
+                            {stage.badge}
+                          </span>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                          <span
+                            style={{
+                              fontSize: 18,
+                              fontWeight: 900,
+                              lineHeight: 1.2,
+                              color: LAUNCH_PALETTE.PRIMARY,
+                            }}
+                          >
+                            {stage.title}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: 12.5,
+                              fontWeight: 600,
+                              color: LAUNCH_PALETTE.INK_SOFT,
+                            }}
+                          >
+                            {stage.meta}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Bottom Verified Resolution Ribbon */}
+                <div
+                  style={{
+                    padding: '14px 20px',
+                    borderRadius: 16,
+                    backgroundColor: slaCompleted ? EMERALD_INK : TEAL_INK,
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <CheckCircle2 size={18} color={EMERALD_BORDER} strokeWidth={2.5} />
+                    <span
                       style={{
-                        position: 'absolute',
-                        left: 25,
-                        top: 38,
-                        width: 24,
-                        height: 360,
-                        pointerEvents: 'none',
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 13,
+                        fontWeight: 900,
+                        letterSpacing: '0.09em',
                       }}
                     >
-                      <EvolvingPath
-                        d="M 12 0 L 12 360"
-                        width={24}
-                        height={360}
-                        startFrame={spineStart}
-                        durationFrames={spineDuration}
-                        easing={LINEAR_SPINE}
-                        stroke={TEAL}
-                        trackStroke="rgba(153, 246, 228, 0.72)"
-                        strokeWidth={4}
-                        headDotColor={TEAL_INK}
-                        headDotRadius={5}
-                        hideDotWhenComplete={allStagesComplete}
-                      />
+                      100% SELESAI &amp; DISANTUNI • REKOD ADUAN TELUS
+                    </span>
+                  </div>
+                  <span
+                    style={{
+                      padding: '4px 11px',
+                      borderRadius: 999,
+                      backgroundColor: 'rgba(255, 255, 255, 0.18)',
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 11,
+                      fontWeight: 900,
+                    }}
+                  >
+                    SLA {safeSlaLabel} DIPATUHI
+                  </span>
+                </div>
+              </div>
+            </KineticWindow>
+
+            <GeometricSparkBurst
+              triggerFrame={126}
+              x={820}
+              y={320}
+              durationFrames={34}
+              radius={108}
+              count={12}
+              seed="kebajikan-sla-done"
+              colors={[TEAL, EMERALD, '#FFFFFF']}
+            />
+          </div>
+
+          {/* HERO 2: Confidential Food Bank Vault (Optical Depth Right in Act 1 -> Hero Center-Right in Act 2 at f=2720 / Local 422f!) */}
+          <div
+            style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              width: 980,
+              height: 572,
+              transformStyle: 'preserve-3d',
+              opacity: vaultOpacity,
+              zIndex: rackT >= 0.5 ? 11 : 4,
+              transform: `translate(-50%, -50%) translate3d(${vaultX.toFixed(1)}px, ${vaultY.toFixed(1)}px, ${vaultZ.toFixed(1)}px) rotateX(3deg) rotateY(${vaultRotY.toFixed(2)}deg) scale(${vaultScale.toFixed(4)})`,
+            }}
+          >
+            <KineticWindow
+              surface="dark"
+              routeLabel="/portal/kebajikan/food-bank"
+              statusPill="MOD PRIVASI SISWA AKTIF"
+              statusAccent
+              accentColor={AMBER}
+              accentSoftBg="rgba(245, 158, 11, 0.22)"
+              accentBorderColor={AMBER_BORDER}
+              width={980}
+              height={572}
+              sheenStartFrame={368}
+              sheenDuration={38}
+              style={{
+                backgroundColor: VAULT_OBSIDIAN,
+                border: `2px solid ${AMBER}`,
+                borderBottom: `7px solid ${AMBER_DARK}`,
+                boxShadow: '0 36px 84px rgba(18, 28, 22, 0.36)',
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  flex: 1,
+                  padding: '24px 30px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  gap: 16,
+                  overflow: 'hidden',
+                }}
+              >
+                {/* Top Header inside Food Bank Vault */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div
+                      style={{
+                        width: 50,
+                        height: 50,
+                        borderRadius: 15,
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        border: `1.5px solid ${AMBER}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Package size={24} color={AMBER_BORDER} strokeWidth={2.3} />
                     </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 12,
+                          fontWeight: 900,
+                          letterSpacing: '0.11em',
+                          color: AMBER_BORDER,
+                        }}
+                      >
+                        PAKEJ FOOD BANK #FB-2026-119 • SULIT 100%
+                      </span>
+                      <span style={{ fontSize: 24, fontWeight: 900, color: '#FFFFFF' }}>
+                        Pek Keperluan Asas Mahasiswa · Loker Privasi B2
+                      </span>
+                    </div>
+                  </div>
 
-                    {STAGES.map((stage, idx) => {
-                      const stepTrigger = stageTriggerFrames[idx] ?? spineEnd;
-                      const isDone = frame >= stepTrigger;
-                      const stepSpring = isDone
-                        ? spring({
-                            frame: frame - stepTrigger,
-                            fps: safeFps,
-                            config: { damping: 16, stiffness: 250, mass: 0.78 },
-                          })
-                        : 0;
-                      const focusPulse = isDone
-                        ? interpolate(frame - stepTrigger, [0, 8, 22], [1, 1.018, 1], {
-                            extrapolateLeft: 'clamp',
-                            extrapolateRight: 'clamp',
-                          })
-                        : 1;
-                      const isFinal = idx === STAGES.length - 1;
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 7,
+                      padding: '8px 14px',
+                      borderRadius: 999,
+                      backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                      border: `1.5px solid ${EMERALD}`,
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 11.5,
+                      fontWeight: 900,
+                      color: EMERALD_BORDER,
+                    }}
+                  >
+                    <Lock size={13} color={EMERALD_BORDER} strokeWidth={2.6} />
+                    TANPA NAMA DIPAPAR
+                  </span>
+                </div>
 
+                {/* Inner Unlocked Content Grid: Pickup Steps + Amber QR Pass */}
+                <div
+                  style={{
+                    flex: 1,
+                    display: 'grid',
+                    gridTemplateColumns: '1.2fr 0.8fr',
+                    gap: 24,
+                    alignItems: 'center',
+                  }}
+                >
+                  {/* Left: 3-Step Confidential Pickup Flow */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    {FOOD_BANK_STEPS.map((step) => {
+                      const active = pickupStepsProgress >= step.threshold;
                       return (
                         <div
-                          key={stage.code}
+                          key={step.label}
                           style={{
-                            position: 'relative',
-                            zIndex: 2,
-                            flex: 1,
-                            borderRadius: 18,
-                            padding: '0 18px',
-                            backgroundColor: isDone
-                              ? isFinal
-                                ? TEAL_SOFT
-                                : '#FFFFFF'
-                              : LAUNCH_PALETTE.SURFACE_MUTED,
-                            border: `1.8px solid ${isDone ? TEAL : LAUNCH_PALETTE.TERTIARY}`,
-                            borderBottom: `4px solid ${isDone ? TEAL_INK : LAUNCH_PALETTE.TERTIARY}`,
-                            boxShadow: isDone ? '0 10px 22px rgba(15, 118, 110, 0.1)' : 'none',
+                            padding: '13px 16px',
+                            borderRadius: 16,
+                            backgroundColor: active
+                              ? 'rgba(248, 246, 238, 0.1)'
+                              : 'rgba(248, 246, 238, 0.04)',
+                            border: `1.5px solid ${active ? AMBER : 'rgba(217, 201, 178, 0.2)'}`,
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            gap: 14,
-                            transform: `scale(${focusPulse.toFixed(4)})`,
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 14, minWidth: 0 }}>
-                            <div
-                              style={{
-                                width: 34,
-                                height: 34,
-                                borderRadius: 999,
-                                backgroundColor: isDone ? TEAL_INK : '#FFFFFF',
-                                border: `2px solid ${isDone ? TEAL : TEAL_BORDER}`,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0,
-                                transform: `scale(${(0.9 + 0.1 * stepSpring).toFixed(4)})`,
-                              }}
-                            >
-                              {isDone ? (
-                                <Check size={16} color="#FFFFFF" strokeWidth={3} />
-                              ) : (
-                                <span
-                                  style={{
-                                    fontFamily: LAUNCH_FONTS.MONO,
-                                    fontSize: 12.5,
-                                    fontWeight: 900,
-                                    color: TEAL_INK,
-                                  }}
-                                >
-                                  {stage.code}
-                                </span>
-                              )}
-                            </div>
-
-                            <div style={{ minWidth: 0 }}>
-                              <div
-                                style={{
-                                  fontSize: 18.5,
-                                  fontWeight: 900,
-                                  color: LAUNCH_PALETTE.PRIMARY,
-                                  lineHeight: 1.2,
-                                }}
-                              >
-                                {stage.code}. {stage.title}
-                              </div>
-                              <div
-                                style={{
-                                  marginTop: 2,
-                                  fontFamily: LAUNCH_FONTS.MONO,
-                                  fontSize: 11.5,
-                                  fontWeight: 700,
-                                  color: isDone ? TEAL_INK : LAUNCH_PALETTE.MUTED_OLIVE,
-                                }}
-                              >
-                                {stage.meta}
-                              </div>
-                            </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                            <CheckCircle2
+                              size={18}
+                              color={active ? EMERALD_BORDER : 'rgba(255,255,255,0.38)'}
+                              strokeWidth={2.5}
+                            />
+                            <span style={{ fontSize: 16.5, fontWeight: 900, color: '#FFFFFF' }}>
+                              {step.label}
+                            </span>
                           </div>
-
                           <span
                             style={{
-                              padding: '6px 13px',
-                              borderRadius: 999,
-                              backgroundColor: isDone ? TEAL_INK : '#FFFFFF',
-                              border: `1.5px solid ${isDone ? TEAL_DARK : TEAL_BORDER}`,
-                              color: isDone ? '#FFFFFF' : TEAL_INK,
                               fontFamily: LAUNCH_FONTS.MONO,
-                              fontSize: 11,
-                              fontWeight: 900,
-                              letterSpacing: '0.08em',
-                              flexShrink: 0,
+                              fontSize: 12,
+                              fontWeight: 800,
+                              color: AMBER_BORDER,
                             }}
                           >
-                            {isDone ? stage.badge : 'MENUNGGU'}
+                            {step.subLabel}
                           </span>
                         </div>
                       );
                     })}
+
+                    <div
+                      style={{
+                        padding: '11px 16px',
+                        borderRadius: 14,
+                        backgroundColor: 'rgba(245, 158, 11, 0.14)',
+                        border: `1px solid ${AMBER_BORDER}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 9,
+                      }}
+                    >
+                      <MapPin size={16} color={AMBER_BORDER} strokeWidth={2.4} />
+                      <span style={{ fontSize: 13.5, fontWeight: 700, color: '#FFFBEB' }}>
+                        Ambil Sendiri di Loker Pintar Kafeteria • Tiada Kaunter Beratur
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Bottom Telemetry & 100% Completed Seal */}
+                  {/* Right: High-Contrast Anonymous QR Pickup Pass */}
                   <div
                     style={{
-                      padding: '12px 18px',
-                      borderRadius: 16,
-                      backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                      border: `1.5px solid ${TEAL}`,
+                      padding: '18px 20px',
+                      borderRadius: 22,
+                      backgroundColor: '#FFFBEB',
+                      border: `2px solid ${AMBER}`,
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 12,
+                      gap: 10,
                     }}
+                  >
+                    <div
+                      style={{
+                        position: 'relative',
+                        padding: 12,
+                        borderRadius: 16,
+                        backgroundColor: '#FFFFFF',
+                        border: `1.5px solid ${AMBER_BORDER}`,
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <DeterministicQrMatrix
+                        seed={119}
+                        size={164}
+                        fgColor={VAULT_OBSIDIAN}
+                        bgColor="#FFFFFF"
+                      />
+                      <div
+                        aria-hidden
+                        style={{
+                          position: 'absolute',
+                          left: 8,
+                          right: 8,
+                          top: laserY,
+                          height: 3.5,
+                          borderRadius: 999,
+                          backgroundColor: AMBER,
+                          boxShadow: '0 0 12px rgba(245, 158, 11, 0.85)',
+                        }}
+                      />
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <QrCode size={14} color={AMBER_INK} strokeWidth={2.5} />
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 12,
+                          fontWeight: 900,
+                          color: VAULT_OBSIDIAN,
+                        }}
+                      >
+                        IMBAS LOKER #B2 • SULIT
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Confirmed Badge */}
+                <div
+                  style={{
+                    padding: '13px 20px',
+                    borderRadius: 16,
+                    backgroundColor: AMBER_DARK,
+                    color: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 9 }}>
+                    <Sparkles size={17} color="#FFFBEB" strokeWidth={2.5} />
+                    <span
+                      style={{
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 13,
+                        fontWeight: 900,
+                        letterSpacing: '0.09em',
+                      }}
+                    >
+                      ✓ SEDIA DIAMBIL TANPA NAMA DIPAPAR • MARUAH SISWA TERJAGA
+                    </span>
+                  </div>
+                  <EditorialAnnotation
+                    type="highlight"
+                    startFrame={380}
+                    durationFrames={22}
+                    color="rgba(255, 255, 255, 0.25)"
                   >
                     <span
                       style={{
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 12,
-                        fontWeight: 800,
-                        letterSpacing: '0.08em',
-                        color: TEAL_BORDER,
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      TEMPOH SELESAI : {elapsedDisplay} • 7x LEBIH PANTAS DARI SLA
-                    </span>
-
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        padding: '6px 13px',
-                        borderRadius: 999,
-                        backgroundColor: allStagesComplete ? TEAL_INK : 'rgba(20, 184, 166, 0.22)',
-                        border: `1px solid ${TEAL}`,
-                        color: '#FFFFFF',
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11,
                         fontWeight: 900,
-                        transform: `scale(${(0.95 + 0.05 * sealSpring).toFixed(4)})`,
                       }}
                     >
-                      <Sparkles size={12} color={TEAL_BORDER} strokeWidth={2.5} />
-                      <span>
-                        {allStagesComplete ? '100% SELESAI & DISANTUNI ✓' : 'MEMPROSES SLA...'}
-                      </span>
+                      24/7 AKTIF
                     </span>
-                  </div>
+                  </EditorialAnnotation>
                 </div>
-              </KineticWindow>
-            </Interactive.Div>
 
-            {/* RIGHT PANEL (width: 868px): Upright Food Bank Confidential Pass + Editorial Privacy Veil */}
-            <Interactive.Div
-              name="Food Bank Upright Privacy Vault"
-              premountFor={safeFps}
-              style={{ width: 868, height: 704, flexShrink: 0 }}
-            >
-              <KineticWindow
-                surface="dark"
-                routeLabel="jpp.polisas.edu.my/foodbank"
-                statusPill="100% RAHSIA & BERMARUAH ✓"
-                statusAccent
-                accentColor={AMBER}
-                accentSoftBg="rgba(245, 158, 11, 0.2)"
-                accentBorderColor={AMBER}
-                width="100%"
-                height="100%"
-                borderRadius={26}
-                sheenStartFrame={f60(104)}
-                sheenDuration={38}
-                style={{
-                  borderColor: AMBER,
-                  boxShadow: '0 24px 54px rgba(31, 39, 32, 0.2)',
-                }}
-              >
-                <div
-                  style={{
-                    flex: 1,
-                    padding: '20px 24px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: 16,
-                    boxSizing: 'border-box',
-                  }}
-                >
-                  {/* Food Bank Header & 3-Step Horizontal Approval Strip */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <div>
-                        <div
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 7,
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 11,
-                            fontWeight: 800,
-                            letterSpacing: '0.12em',
-                            color: AMBER,
-                          }}
-                        >
-                          <Package size={14} color={AMBER} strokeWidth={2.4} />
-                          <span>FOOD BANK JPP • PAS PENGAMBILAN TERLINDUNG</span>
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 4,
-                            fontSize: 25,
-                            fontWeight: 900,
-                            letterSpacing: '-0.02em',
-                            color: '#FFFFFF',
-                          }}
-                        >
-                          Kotak Rezeki Siswa #FB-2026-119
-                        </div>
-                      </div>
-
-                      <span
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          padding: '7px 13px',
-                          borderRadius: 999,
-                          backgroundColor: TEAL_INK,
-                          border: `1.5px solid ${TEAL_BORDER}`,
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11,
-                          fontWeight: 900,
-                          color: '#FFFFFF',
-                        }}
-                      >
-                        <ShieldCheck size={14} color={TEAL_BORDER} strokeWidth={2.5} />
-                        <span>PRIVASI SISWA</span>
-                      </span>
-                    </div>
-
-                    {/* Horizontal 3-Step Approval Pipeline */}
-                    <div
-                      style={{
-                        padding: '14px 16px',
-                        borderRadius: 16,
-                        backgroundColor: 'rgba(248, 246, 238, 0.08)',
-                        border: '1px solid rgba(253, 230, 138, 0.28)',
-                        display: 'grid',
-                        gridTemplateColumns: '1fr auto 1fr auto 1fr',
-                        alignItems: 'center',
-                        gap: 10,
-                      }}
-                    >
-                      {FOOD_BANK_STEPS.map((step, sIdx) => {
-                        const isApproved = frame >= (approvalTriggerFrames[sIdx] ?? 0);
-                        const isReady = sIdx === FOOD_BANK_STEPS.length - 1;
-                        return (
-                          <React.Fragment key={step.label}>
-                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5 }}>
-                              <span
-                                style={{
-                                  width: 28,
-                                  height: 28,
-                                  borderRadius: 999,
-                                  backgroundColor: isApproved
-                                    ? isReady
-                                      ? AMBER
-                                      : TEAL
-                                    : 'rgba(248, 246, 238, 0.14)',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                }}
-                              >
-                                {isReady ? (
-                                  <Sparkles size={14} color={LAUNCH_PALETTE.PRIMARY_DARK} strokeWidth={2.4} />
-                                ) : (
-                                  <Check size={14} color="#FFFFFF" strokeWidth={3} />
-                                )}
-                              </span>
-                              <span style={{ fontSize: 13.5, fontWeight: 900, color: '#FFFFFF' }}>
-                                {isApproved ? `${step.label} ✓` : step.label}
-                              </span>
-                              <span
-                                style={{
-                                  fontFamily: LAUNCH_FONTS.MONO,
-                                  fontSize: 10.5,
-                                  fontWeight: 700,
-                                  color: AMBER_BORDER,
-                                }}
-                              >
-                                {step.subLabel}
-                              </span>
-                            </div>
-                            {sIdx < FOOD_BANK_STEPS.length - 1 ? (
-                              <ArrowRight size={16} color={AMBER_BORDER} strokeWidth={2.3} />
-                            ) : null}
-                          </React.Fragment>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Lower Protected Pass Vault (overflow: hidden contains the sliding Editorial Privacy Veil) */}
+                {/* OPAQUE 3D PRIVACY SHIELD VISOR (lifts smoothly 314..366f; matte solid surface) */}
+                {shieldLiftProgress < 0.999 ? (
                   <div
                     style={{
-                      position: 'relative',
-                      flex: 1,
-                      borderRadius: 22,
-                      overflow: 'hidden',
+                      position: 'absolute',
+                      inset: 0,
+                      backgroundColor: VAULT_OBSIDIAN,
+                      border: `2px solid ${AMBER}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 14,
+                      transform: `translate3d(0px, ${shieldTranslateY.toFixed(2)}%, 0px)`,
+                      zIndex: 18,
                     }}
                   >
-                    {/* REVEALED LAYER: Pure White Upright QR Pickup Pass */}
                     <div
                       style={{
-                        width: '100%',
-                        height: '100%',
-                        padding: '20px 22px',
-                        borderRadius: 22,
-                        backgroundColor: '#FFFFFF',
-                        border: `2.5px solid ${AMBER_DARK}`,
+                        width: 78,
+                        height: 78,
+                        borderRadius: 24,
+                        backgroundColor: 'rgba(245, 158, 11, 0.2)',
+                        border: `2px solid ${AMBER}`,
                         display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        boxSizing: 'border-box',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
                     >
-                      <div style={{ display: 'flex', gap: 22, alignItems: 'center' }}>
-                        {/* QR Box with Smooth Verification Beam */}
-                        <div
-                          style={{
-                            position: 'relative',
-                            padding: 12,
-                            borderRadius: 18,
-                            backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                            border: `2px solid ${AMBER}`,
-                            flexShrink: 0,
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <DeterministicQrMatrix
-                            seed={2026119}
-                            size={156}
-                            fgColor={LAUNCH_PALETTE.PRIMARY_DARK}
-                            bgColor={LAUNCH_PALETTE.BACKGROUND}
-                          />
-                          <div
-                            style={{
-                              position: 'absolute',
-                              left: 8,
-                              right: 8,
-                              top: scanBeamY,
-                              height: 3.5,
-                              borderRadius: 999,
-                              backgroundColor: AMBER_DARK,
-                              boxShadow: '0 0 12px rgba(217, 119, 6, 0.78)',
-                            }}
-                          />
-                        </div>
-
-                        {/* Pass Metadata & Pickup Details */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                padding: '4px 10px',
-                                borderRadius: 999,
-                                backgroundColor: TEAL_SOFT,
-                                border: `1px solid ${TEAL_BORDER}`,
-                                fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 10.5,
-                                fontWeight: 900,
-                                color: TEAL_INK,
-                              }}
-                            >
-                              <QrCode size={13} strokeWidth={2.5} />
-                              <span>PAS PENGAMBILAN RAHSIA</span>
-                            </span>
-
-                            <span
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 5,
-                                padding: '5px 12px',
-                                borderRadius: 999,
-                                backgroundColor: TEAL_INK,
-                                color: '#FFFFFF',
-                                fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 11,
-                                fontWeight: 900,
-                              }}
-                            >
-                              <Check size={13} strokeWidth={3} />
-                              <span>SEDIA DIAMBIL ✓</span>
-                            </span>
-                          </div>
-
-                          <div>
-                            <div style={{ fontSize: 20, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
-                              Pek Asas Makanan &amp; Keperluan Harian
-                            </div>
-                            <div
-                              style={{
-                                marginTop: 2,
-                                fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 11.5,
-                                fontWeight: 800,
-                                color: LAUNCH_PALETTE.INK_SOFT,
-                              }}
-                            >
-                              KOD PAS: FB-2026-119 • TANPA NAMA PEMOHON DIPAPAR
-                            </div>
-                          </div>
-
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                            {MANIFEST_ITEMS.map((item) => (
-                              <span
-                                key={item}
-                                style={{
-                                  padding: '5px 11px',
-                                  borderRadius: 999,
-                                  backgroundColor: AMBER_SOFT,
-                                  border: `1px solid ${AMBER_BORDER}`,
-                                  fontSize: 12,
-                                  fontWeight: 800,
-                                  color: AMBER_INK,
-                                }}
-                              >
-                                {item}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* 3 Schedule Detail Cards */}
-                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-                        {PICKUP_SCHEDULE.map((row) => (
-                          <div
-                            key={row.label}
-                            style={{
-                              padding: '10px 14px',
-                              borderRadius: 14,
-                              backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
-                              border: `1px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: 4,
-                            }}
-                          >
-                            <div
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: 6,
-                                fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 10,
-                                fontWeight: 800,
-                                color: LAUNCH_PALETTE.MUTED_OLIVE,
-                              }}
-                            >
-                              {renderScheduleIcon(row.kind)}
-                              <span>{row.label.toUpperCase()}</span>
-                            </div>
-                            <div style={{ fontSize: 15, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
-                              {row.value}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                      <Lock size={38} color={AMBER_BORDER} strokeWidth={2.4} />
                     </div>
-
-                    {/* MECHANICAL EDITORIAL PRIVACY VEIL (slides smoothly upward as identity verification clears) */}
-                    {shutterOpenT < 0.995 ? (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          borderRadius: 22,
-                          padding: '28px 32px',
-                          backgroundColor: '#18221D',
-                          border: `2px solid ${TEAL}`,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          textAlign: 'center',
-                          gap: 14,
-                          boxSizing: 'border-box',
-                          transform: `translate3d(0px, ${(-shutterOpenT * 104).toFixed(2)}%, 0px)`,
-                          zIndex: 6,
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: 58,
-                            height: 58,
-                            borderRadius: 18,
-                            backgroundColor: 'rgba(20, 184, 166, 0.16)',
-                            border: `2px solid ${TEAL}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                        >
-                          <Lock size={26} color={TEAL_BORDER} strokeWidth={2.4} />
-                        </div>
-
-                        <div
-                          style={{
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 13.5,
-                            fontWeight: 900,
-                            letterSpacing: '0.14em',
-                            color: TEAL_BORDER,
-                          }}
-                        >
-                          MOD PRIVASI SISWA AKTIF
-                        </div>
-
-                        <div
-                          style={{
-                            fontSize: 19,
-                            fontWeight: 800,
-                            color: '#FFFFFF',
-                            maxWidth: 480,
-                            lineHeight: 1.35,
-                          }}
-                        >
-                          Identiti pemohon dilindungi 100% secara rahsia &amp; bermaruah sebelum pas QR dibuka.
-                        </div>
-
-                        {/* Verification Progress Bar on Veil */}
-                        <div
-                          style={{
-                            width: 340,
-                            height: 8,
-                            borderRadius: 999,
-                            backgroundColor: 'rgba(248, 246, 238, 0.14)',
-                            overflow: 'hidden',
-                            marginTop: 4,
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: `${privacyProgressPct}%`,
-                              height: '100%',
-                              borderRadius: 999,
-                              backgroundColor: TEAL,
-                            }}
-                          />
-                        </div>
-
-                        <span
-                          style={{
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 11,
-                            fontWeight: 800,
-                            color: AMBER_BORDER,
-                          }}
-                        >
-                          MEMBUKA PAS RAHSIA • {privacyProgressPct}%
-                        </span>
-                      </div>
-                    ) : null}
+                    <span
+                      style={{
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 14,
+                        fontWeight: 900,
+                        letterSpacing: '0.16em',
+                        color: AMBER_BORDER,
+                      }}
+                    >
+                      MOD PRIVASI SISWA • IDENTITI 100% DILINDUNGI
+                    </span>
+                    <span style={{ fontSize: 22, fontWeight: 800, color: '#FFFFFF' }}>
+                      Membuka Loker Pengambilan Tanpa Nama...
+                    </span>
                   </div>
-                </div>
-              </KineticWindow>
-            </Interactive.Div>
+                ) : null}
+              </div>
+            </KineticWindow>
+
+            <GeometricSparkBurst
+              triggerFrame={374}
+              x={680}
+              y={280}
+              durationFrames={34}
+              radius={112}
+              count={14}
+              seed="foodbank-privacy-unlocked"
+              colors={[AMBER, EMERALD, '#FFFBEB']}
+            />
           </div>
         </div>
       </CameraStage>
 
       <EditorialFrameMarks
-        chapterCode="05"
+        chapterCode="06"
         chapterLabel="PRIHATIN SISWA • ADUAN KAMSIS & FOOD BANK"
       />
     </>
@@ -1045,12 +984,12 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
 };
 
 const welfareCareSchema = {
-  ticketNo: { type: 'string', default: 'KBJ-0842', description: 'Ticket Number' },
-  slaLabel: { type: 'string', default: '< 48 JAM', description: 'Resolution Guarantee' },
+  ticketNo: { type: 'string', default: 'KBJ-0842', description: 'Sample Student Ticket Number' },
+  slaLabel: { type: 'string', default: '< 48 JAM', description: 'Resolution Guarantee SLA' },
   headline: {
     type: 'string',
     default: STUDENT_HEADLINE_DEFAULT,
-    description: 'Section Headline',
+    description: 'Headline',
   },
 } as const satisfies InteractivitySchema;
 

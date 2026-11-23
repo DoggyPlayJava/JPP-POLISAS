@@ -16,6 +16,7 @@ import {
   WarmLightSweepOverlay,
   depthLiftMatch,
   editorialSplitCurtain,
+  kineticCameraPush,
   orbitalIrisMatch,
   portalZoomMorph,
   swissLouversWipe,
@@ -23,6 +24,7 @@ import {
 import { OpeningHeroScene, PORTAL_POLYMAPS_ORIGIN } from './scenes/OpeningHeroScene';
 import { PolyMapsCampusScene } from './scenes/PolyMapsCampusScene';
 import { PolyMartCommerceScene } from './scenes/PolyMartCommerceScene';
+import { PolyRentHousingScene } from './scenes/PolyRentHousingScene';
 import { PolySuaraVoiceScene } from './scenes/PolySuaraVoiceScene';
 import { WelfareCareScene } from './scenes/WelfareCareScene';
 import { ClubsEmsScene } from './scenes/ClubsEmsScene';
@@ -116,19 +118,36 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           <TransitionSeries.Overlay durationInFrames={LAUNCH_OVERLAY_FRAMES} premountFor={fps}>
             <EditorialShutterOverlay
               chapterCode="03"
-              chapterLabel="MAKAN & BILIK SEWA SISWA"
+              chapterLabel="12:30 TGH HARI • KAFETERIA & JPP PAY"
               leadBladeColor={LAUNCH_MODULE_THEMES.polymart.dark}
-              midBladeColor={LAUNCH_MODULE_THEMES.polyrent.dark}
+              midBladeColor={LAUNCH_MODULE_THEMES.polymaps.dark}
               accentColor={LAUNCH_MODULE_THEMES.polymart.primary}
             />
           </TransitionSeries.Overlay>
 
-          <TransitionSeries.Sequence name="03 PolyMart Commerce" durationInFrames={396} premountFor={fps}>
+          <TransitionSeries.Sequence name="03 PolyMart Commerce" durationInFrames={540} premountFor={fps}>
             <PolyMartCommerceScene
               name="PolyMart Commerce"
               productsCount={stats.productsCount}
               ordersCount={stats.ordersCount}
-              headline="Lapar Lepas Kelas? Cari Bilik Sewa? Semua Di Sini."
+              headline="Lapar Lepas Kelas? Pesan Terus Tanpa Beratur."
+            />
+          </TransitionSeries.Sequence>
+
+          <TransitionSeries.Transition
+            presentation={kineticCameraPush({
+              direction: 'from-right',
+              accentColor: LAUNCH_MODULE_THEMES.polyrent.primary,
+            })}
+            timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
+          />
+
+          <TransitionSeries.Sequence name="04 PolyRent Housing" durationInFrames={540} premountFor={fps}>
+            <PolyRentHousingScene
+              name="PolyRent Housing"
+              houseRentRm={680}
+              walkMinutes={3}
+              headline="Cari Bilik Sewa Sekitar Semambu? Kongsi Jimat Tanpa Scam."
             />
           </TransitionSeries.Sequence>
 
@@ -139,7 +158,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
-          <TransitionSeries.Sequence name="04 PolySuara Voice" durationInFrames={366} premountFor={fps}>
+          <TransitionSeries.Sequence name="05 PolySuara Voice" durationInFrames={576} premountFor={fps}>
             <PolySuaraVoiceScene
               name="PolySuara Voice"
               pollTitle="Cadangan Kemudahan Siswa Semester Baharu"
@@ -162,7 +181,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
-          <TransitionSeries.Sequence name="05 Welfare & Care" durationInFrames={366} premountFor={fps}>
+          <TransitionSeries.Sequence name="06 Welfare & Care" durationInFrames={576} premountFor={fps}>
             <WelfareCareScene
               name="Welfare & Care"
               ticketNo="KBJ-0842"
@@ -178,7 +197,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
-          <TransitionSeries.Sequence name="06 Clubs & EMS" durationInFrames={390} premountFor={fps}>
+          <TransitionSeries.Sequence name="07 Clubs & EMS" durationInFrames={612} premountFor={fps}>
             <ClubsEmsScene
               name="Clubs & EMS"
               clubsCount={stats.clubsCount}
@@ -191,7 +210,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             <WarmLightSweepOverlay accentColor={LAUNCH_MODULE_THEMES.meritQr.primary} />
           </TransitionSeries.Overlay>
 
-          <TransitionSeries.Sequence name="07 Impact Numbers" durationInFrames={366} premountFor={fps}>
+          <TransitionSeries.Sequence name="08 Impact Numbers" durationInFrames={426} premountFor={fps}>
             <ImpactNumbersScene
               name="Impact Numbers"
               clubsCount={stats.clubsCount}
@@ -209,7 +228,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
-          <TransitionSeries.Sequence name="08 Closing Vault" durationInFrames={450} premountFor={fps}>
+          <TransitionSeries.Sequence name="09 Closing Vault" durationInFrames={600} premountFor={fps}>
             <ClosingVaultScene
               name="Closing Vault"
               headlinePrimary="Imbas Sekarang. Mulakan Pengalaman Kampus Anda."

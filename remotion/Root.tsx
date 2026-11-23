@@ -8,6 +8,7 @@ import { LAUNCH_FPS, LAUNCH_HEIGHT, LAUNCH_WIDTH } from './launch/tokens';
 import { OpeningHeroScene } from './launch/scenes/OpeningHeroScene';
 import { PolyMapsCampusScene } from './launch/scenes/PolyMapsCampusScene';
 import { PolyMartCommerceScene } from './launch/scenes/PolyMartCommerceScene';
+import { PolyRentHousingScene } from './launch/scenes/PolyRentHousingScene';
 import { PolySuaraVoiceScene } from './launch/scenes/PolySuaraVoiceScene';
 import { WelfareCareScene } from './launch/scenes/WelfareCareScene';
 import { ClubsEmsScene } from './launch/scenes/ClubsEmsScene';
@@ -121,20 +122,33 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="PolyMartCommerceScene"
           component={PolyMartCommerceScene}
-          durationInFrames={396}
+          durationInFrames={540}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
           defaultProps={{
             productsCount: 277,
             ordersCount: 344,
-            headline: 'Lapar Lepas Kelas? Cari Bilik Sewa? Semua Di Sini.',
+            headline: 'Lapar Lepas Kelas? Pesan Terus Tanpa Beratur.',
+          }}
+        />
+        <Composition
+          id="PolyRentHousingScene"
+          component={PolyRentHousingScene}
+          durationInFrames={540}
+          fps={LAUNCH_FPS}
+          width={LAUNCH_WIDTH}
+          height={LAUNCH_HEIGHT}
+          defaultProps={{
+            houseRentRm: 680,
+            walkMinutes: 3,
+            headline: 'Cari Bilik Sewa Sekitar Semambu? Kongsi Jimat Tanpa Scam.',
           }}
         />
         <Composition
           id="PolySuaraVoiceScene"
           component={PolySuaraVoiceScene}
-          durationInFrames={366}
+          durationInFrames={576}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -149,7 +163,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="WelfareCareScene"
           component={WelfareCareScene}
-          durationInFrames={366}
+          durationInFrames={576}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -162,7 +176,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="ClubsEmsScene"
           component={ClubsEmsScene}
-          durationInFrames={390}
+          durationInFrames={612}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -175,7 +189,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="ImpactNumbersScene"
           component={ImpactNumbersScene}
-          durationInFrames={366}
+          durationInFrames={426}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -190,7 +204,7 @@ export const RemotionRoot: React.FC = () => {
         <Composition
           id="ClosingVaultScene"
           component={ClosingVaultScene}
-          durationInFrames={450}
+          durationInFrames={600}
           fps={LAUNCH_FPS}
           width={LAUNCH_WIDTH}
           height={LAUNCH_HEIGHT}
@@ -198,6 +212,7 @@ export const RemotionRoot: React.FC = () => {
             headlinePrimary: 'Imbas Sekarang. Mulakan Pengalaman Kampus Anda.',
             headlineItalic: 'Satu Kampus. Satu SuperApp Mahasiswa POLISAS.',
             portalUrl: 'https://jpp.polisas.edu.my',
+            studentsCount: 1083,
           }}
         />
       </Folder>

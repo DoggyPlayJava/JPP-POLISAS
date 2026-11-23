@@ -68,24 +68,25 @@ describe('Shared Campus Stats Contract', () => {
 });
 
 describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
-  it('computes exact 2940-frame 60fps TransitionSeries timeline and chapter offsets', () => {
+  it('computes exact 4440-frame 60fps TransitionSeries timeline and 9-chapter offsets', () => {
     expect(LAUNCH_FPS).toBe(60);
     expect(LAUNCH_TRANSITION_FRAMES).toBe(36);
     expect(LAUNCH_OVERLAY_FRAMES).toBe(48);
-    expect(LAUNCH_TOTAL_FRAMES).toBe(2940);
-    expect(LAUNCH_CHAPTERS).toHaveLength(8);
+    expect(LAUNCH_TOTAL_FRAMES).toBe(4440);
+    expect(LAUNCH_CHAPTERS).toHaveLength(9);
     expect(LAUNCH_CHAPTERS.map((c) => c.code)).toEqual([
-      '01', '02', '03', '04', '05', '06', '07', '08',
+      '01', '02', '03', '04', '05', '06', '07', '08', '09',
     ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.durationInFrames)).toEqual([
-      306, 480, 396, 366, 366, 390, 366, 450,
+      306, 480, 540, 540, 576, 576, 612, 426, 600,
     ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.startFrame)).toEqual([
-      0, 270, 750, 1110, 1440, 1770, 2160, 2490,
+      0, 270, 750, 1254, 1758, 2298, 2838, 3450, 3840,
     ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.transitionOut)).toEqual([
       'portal-zoom-morph',
       'editorial-shutter',
+      'kinetic-push',
       'split-curtain',
       'swiss-louvers',
       'depth-lift',
@@ -96,7 +97,8 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
     expect(LAUNCH_CHAPTERS.map((c) => c.title)).toEqual([
       'SuperApp Siswa',
       'PolyMaps & Jadual',
-      'PolyMart & PolyRent',
+      'PolyMart & JPP Pay',
+      'PolyRent Kediaman',
       'PolySuara Komuniti',
       'E-Kebajikan',
       'Kelab & Merit QR',
@@ -106,7 +108,8 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
     expect(LAUNCH_CHAPTERS.map((c) => c.gateLabel)).toEqual([
       'SELAMAT DATANG MAHASISWA BAHARU',
       '08:00 PAGI • TAK SESAT CARI KELAS',
-      '12:30 TGH HARI • MAKAN & BILIK SEWA',
+      '12:30 TGH HARI • KAFETERIA & JPP PAY',
+      '14:00 PETANG • BILIK SEWA & KONGSI SEWA',
       'KOMUNITI SISWA • LUAH & UNDI TANPA NAMA',
       'PRIHATIN SISWA • ADUAN KAMSIS & FOOD BANK',
       '17:00 PETANG • 21 KELAB, MERIT & E-SIJIL',
@@ -118,12 +121,12 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
       expect(chapter.gateLabel).toBe(chapter.gateLabel.toUpperCase());
     }
     const rawDurationSum = LAUNCH_CHAPTERS.reduce((acc, c) => acc + c.durationInFrames, 0);
-    expect(rawDurationSum - 5 * LAUNCH_TRANSITION_FRAMES).toBe(LAUNCH_TOTAL_FRAMES);
+    expect(rawDurationSum - 6 * LAUNCH_TRANSITION_FRAMES).toBe(LAUNCH_TOTAL_FRAMES);
     const last = LAUNCH_CHAPTERS[LAUNCH_CHAPTERS.length - 1];
-    expect(last.startFrame + last.durationInFrames).toBe(2940);
+    expect(last.startFrame + last.durationInFrames).toBe(4440);
   });
 
-  it('validates Zod defaults with official POLISAS Student-POV v4 identity', () => {
+  it('validates Zod defaults with official POLISAS Student-POV v7 identity', () => {
     const parsed = LaunchShowcaseSchema.parse({});
     expect(parsed.portalUrl).toBe('https://jpp.polisas.edu.my');
     expect(parsed.headlinePrimary).toBe('Baru Masuk POLISAS? Satu App Untuk Semua.');
@@ -149,11 +152,19 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
     expect(computeCampusRouteProgress(Number.NaN, 60, 260)).toBe(0);
     expect(computeCampusRouteProgress(100, Number.NaN, Number.NaN)).toBe(1);
 
-    expect(CHAPTER_MODULE_THEMES).toHaveLength(8);
+    expect(CHAPTER_MODULE_THEMES).toHaveLength(9);
     const distinctChapterAccents = new Set(CHAPTER_MODULE_THEMES.map((ch) => ch.accent));
-    expect(distinctChapterAccents.size).toBeGreaterThanOrEqual(7);
+    expect(distinctChapterAccents.size).toBeGreaterThanOrEqual(8);
     expect(CHAPTER_MODULE_THEMES.map((c) => c.accent)).toEqual(
-      expect.arrayContaining(['#10B981', '#F59E0B', '#F43F5E', '#14B8A6', '#3B82F6', '#A855F7']),
+      expect.arrayContaining([
+        '#10B981',
+        '#F59E0B',
+        '#06B6D4',
+        '#F43F5E',
+        '#14B8A6',
+        '#3B82F6',
+        '#A855F7',
+      ]),
     );
     expect(LAUNCH_MODULE_THEMES.polyrent.primary).toBe('#06B6D4');
     expect(LAUNCH_MODULE_THEMES.takwim.primary).toBe('#6366F1');
@@ -463,7 +474,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     }
   });
 
-  it('wires portalZoomMorph, Student-POV v4 copy, Scene 2 checkmark polish, Scene 7 6-month trend, and Scene 8 QR onboarding steps', () => {
+  it('wires 9-chapter v7 cinema, dedicated PolyRent Semambu scene, single-hero 3D choreography, and symmetric LED-wall 340px QR lock', () => {
     const cinemaSource = readFileSync(join(LAUNCH_ROOT_DIR, 'JppLaunchCinema.tsx'), 'utf8');
     const rootSource = readFileSync(join(process.cwd(), 'remotion', 'Root.tsx'), 'utf8');
     const polymapsSource = readFileSync(
@@ -482,15 +493,18 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     expect(cinemaSource).toContain('portalZoomMorph({');
     expect(cinemaSource).toContain('PORTAL_POLYMAPS_ORIGIN.xPercent');
     expect(cinemaSource).toContain('PORTAL_POLYMAPS_ORIGIN.yPercent');
-    expect(cinemaSource).toContain('chapterLabel="MAKAN & BILIK SEWA SISWA"');
-    expect(cinemaSource).toContain('headline="Lapar Lepas Kelas? Cari Bilik Sewa? Semua Di Sini."');
+    expect(cinemaSource).toContain('chapterLabel="12:30 TGH HARI • KAFETERIA & JPP PAY"');
+    expect(cinemaSource).toContain('headline="Lapar Lepas Kelas? Pesan Terus Tanpa Beratur."');
+    expect(cinemaSource).toContain('<PolyRentHousingScene');
+    expect(cinemaSource).toContain('kineticCameraPush({');
     expect(cinemaSource).toContain('pollTitle="Cadangan Kemudahan Siswa Semester Baharu"');
     expect(cinemaSource).toContain('ticketNo="KBJ-0842"');
     expect(cinemaSource).toContain('headline="Kamsis Bermasalah? Perlukan Food Bank? Kami Ada."');
     expect(cinemaSource).toContain('headlinePrimary="Imbas Sekarang. Mulakan Pengalaman Kampus Anda."');
 
+    expect(rootSource).toContain("id=\"PolyRentHousingScene\"");
     expect(rootSource).toContain("headlinePrimary: 'Baru Masuk POLISAS? Satu App Untuk Semua.'");
-    expect(rootSource).toContain("headline: 'Lapar Lepas Kelas? Cari Bilik Sewa? Semua Di Sini.'");
+    expect(rootSource).toContain("headline: 'Lapar Lepas Kelas? Pesan Terus Tanpa Beratur.'");
     expect(rootSource).toContain("ticketNo: 'KBJ-0842'");
     expect(rootSource).toContain("headlinePrimary: 'Imbas Sekarang. Mulakan Pengalaman Kampus Anda.'");
     expect(rootSource).toContain("headlineItalic: 'Satu Kampus. Satu SuperApp Mahasiswa POLISAS.'");
@@ -499,6 +513,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     expect(polymapsSource).not.toContain('TIBA TEPAT MASA ✓');
     expect(polymapsSource).not.toContain('TIBA DI KELAS ✓');
 
+    expect(impactSource).toContain('chapterCode="08"');
     expect(impactSource).toContain('KOMUNITI HIDUP • 5 JABATAN POLISAS');
     expect(impactSource).toContain('MAHASISWA DAH AKSES');
     expect(impactSource).toContain('KELAB & PERSATUAN');
@@ -513,6 +528,16 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
       expect(impactSource).toContain(`'${month}'`);
     }
 
+    expect(closingSource).toContain('chapterCode="09"');
+    expect(closingSource).toContain('<QRCode');
+    expect(closingSource).toContain('size={340}');
+    expect(closingSource).toContain('bgColor="#FFFFFF"');
+    expect(closingSource).toContain('fgColor="#111812"');
+    expect(closingSource).toMatch(/isQrOrthogonalLocked\s*\?\s*0/);
+    expect(closingSource).toMatch(/isQrOrthogonalLocked\s*\?\s*'none'/);
+    expect(closingSource).toContain('rotateY(7deg)');
+    expect(closingSource).toContain('rotateY(-7deg)');
+    expect(closingSource).toContain('SpatialFloorGrid');
     expect(closingSource).toContain('Imbas Sekarang. Mulakan Pengalaman Kampus Anda.');
     expect(closingSource).toContain('Satu Kampus. Satu SuperApp Mahasiswa POLISAS.');
     expect(closingSource).toContain('Buka Kamera Telefon');
@@ -522,34 +547,18 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     expect(closingSource).toContain('AKSES SERTA-MERTA • IMBAS QR SEKARANG');
   });
 
-  it('enforces v6 upright orthogonality (0-deg UI cards), motivated choreography across Chapters 03-06, and symmetrical LED-wall 340px QR lock on Chapter 08', () => {
-    const closingSource = readFileSync(
-      join(LAUNCH_ROOT_DIR, 'scenes', 'ClosingVaultScene.tsx'),
-      'utf8',
-    );
-    expect(closingSource).toContain('<QRCode');
-    expect(closingSource).toContain('size={340}');
-    expect(closingSource).toContain('bgColor="#FFFFFF"');
-    expect(closingSource).toContain('fgColor="#111812"');
-    expect(closingSource).toMatch(/isQrOrthogonalLocked\s*\?\s*0/);
-    expect(closingSource).toContain('SpatialFloorGrid');
-    expect(closingSource).not.toContain('rotateY(17deg)');
-    expect(closingSource).not.toContain('rotateY(-17deg)');
-
-    for (const sceneName of [
+  it('enforces v7 single-hero 3D depth scenes (zero raw emojis, 180-deg flip geometry, and valid motion actor contracts)', () => {
+    const v7RebuiltScenes = [
       'PolyMartCommerceScene.tsx',
+      'PolyRentHousingScene.tsx',
       'PolySuaraVoiceScene.tsx',
       'WelfareCareScene.tsx',
       'ClubsEmsScene.tsx',
-    ]) {
+    ];
+
+    for (const sceneName of v7RebuiltScenes) {
       const sceneSource = readFileSync(join(LAUNCH_ROOT_DIR, 'scenes', sceneName), 'utf8');
-      expect(sceneSource, `${sceneName} must keep UI cards upright without rotateX`).not.toContain(
-        'rotateX(',
-      );
-      expect(sceneSource, `${sceneName} must keep UI cards upright without rotateY`).not.toContain(
-        'rotateY(',
-      );
-      expect(sceneSource, `${sceneName} should not use SpatialFloorGrid on upright stage`).not.toContain(
+      expect(sceneSource, `${sceneName} must include SpatialFloorGrid depth cue`).toContain(
         'SpatialFloorGrid',
       );
       expect(sceneSource, `${sceneName} must not contain raw OS emojis`).not.toMatch(
@@ -562,11 +571,24 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
       'utf8',
     );
     expect(polymartSource).toContain('WHIP_S_CURVE');
-    expect(polymartSource).toContain('12:30 POLYMART');
-    expect(polymartSource).toContain('18:00 POLYRENT');
-    expect(polymartSource).toContain('RM {totalHouseRent}');
+    expect(polymartSource).toContain("backfaceVisibility: 'hidden'");
+    expect(polymartSource).toContain('JPP PAY • PESANAN #');
     expect(polymartSource).toContain('GeometricSparkBurst');
     expect(polymartSource).toContain('GhostCursor');
+    expect(polymartSource).not.toContain('Taman Pertama');
+
+    const polyrentSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'PolyRentHousingScene.tsx'),
+      'utf8',
+    );
+    expect(polyrentSource).toContain('export const PolyRentHousingScene');
+    expect(polyrentSource).toContain('Taman Pertama Semambu');
+    expect(polyrentSource).toContain('PINTU UTAMA POLISAS');
+    expect(polyrentSource).toContain('BEBAS SCAM');
+    expect(polyrentSource).toContain('WHATSAPP TUAN RUMAH TERUS');
+    expect(polyrentSource).toContain('EvolvingPath');
+    expect(polyrentSource).toContain('GeometricSparkBurst');
+    expect(polyrentSource).toContain('GhostCursor');
 
     const polysuaraSource = readFileSync(
       join(LAUNCH_ROOT_DIR, 'scenes', 'PolySuaraVoiceScene.tsx'),
@@ -584,13 +606,14 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     );
     expect(welfareSource).toContain('EvolvingPath');
     expect(welfareSource).toContain('MOD PRIVASI SISWA AKTIF');
-    expect(welfareSource).toContain('100% SELESAI & DISANTUNI');
+    expect(welfareSource).toContain('SELESAI &amp; DISANTUNI');
     expect(welfareSource).toContain('DeterministicQrMatrix');
 
     const clubsSource = readFileSync(join(LAUNCH_ROOT_DIR, 'scenes', 'ClubsEmsScene.tsx'), 'utf8');
     expect(clubsSource).toContain('GhostCursor');
     expect(clubsSource).toContain('EvolvingPath');
     expect(clubsSource).toContain('MATA MERIT');
+    expect(clubsSource).toContain("backfaceVisibility: 'hidden'");
     expect(clubsSource).toContain('GeometricSparkBurst');
     expect(clubsSource).toContain('Muat Turun PDF Rasmi Serta-Merta');
 

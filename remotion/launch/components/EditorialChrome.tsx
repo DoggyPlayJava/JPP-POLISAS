@@ -253,7 +253,7 @@ export type GlobalCinemaGateProps = {
 
 /**
  * Persistent top-level Swiss editorial cinema gate owning the 1920x1080 frame
- * across all 8 chapters in `JppLaunchCinema` without cut slicing or duplication.
+ * across all 9 chapters in `JppLaunchCinema` without cut slicing or duplication.
  */
 export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
   sessionLabel = 'SESI 2026/2027',
@@ -261,16 +261,25 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
   const frame = useCurrentFrame();
   const { durationInFrames } = useVideoConfig();
 
+  const impactChapter = LAUNCH_CHAPTERS.find((chapter) => chapter.id === 'ImpactNumbers');
+  const impactStart = impactChapter?.startFrame ?? 3450;
+  const impactEnd = impactStart + (impactChapter?.durationInFrames ?? 426);
+
   const shutterDarkMix = interpolate(frame, [734, 744, 756, 766], [0, 1, 1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: DARK_MIX_EASING,
   });
-  const impactDarkMix = interpolate(frame, [2152, 2164, 2500, 2516], [0, 1, 1, 0], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: DARK_MIX_EASING,
-  });
+  const impactDarkMix = interpolate(
+    frame,
+    [impactStart - 8, impactStart + 4, impactEnd - 30, impactEnd - 14],
+    [0, 1, 1, 0],
+    {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+      easing: DARK_MIX_EASING,
+    },
+  );
   const darkMix = clampUnit(Math.max(shutterDarkMix, impactDarkMix));
 
   const mutedInk = interpolateColors(

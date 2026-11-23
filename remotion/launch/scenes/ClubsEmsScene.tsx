@@ -11,14 +11,13 @@ import {
 import {
   Award,
   Briefcase,
+  Check,
   CheckCircle2,
   Cpu,
   Download,
   Gamepad2,
-  QrCode,
   ScanLine,
   ShieldCheck,
-  Sparkles,
   Users,
 } from 'lucide-react';
 import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialChrome';
@@ -30,8 +29,9 @@ import {
   GhostCursor,
   type GhostCursorKeyframe,
 } from '../motion/MotionActors';
+import { WHIP_S_CURVE } from '../motion/transitions';
 import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
-import { DeterministicQrMatrix, KineticWindow } from '../ui/KineticCard';
+import { DeterministicQrMatrix, KineticWindow, SpatialFloorGrid } from '../ui/KineticCard';
 
 const BLUE = LAUNCH_MODULE_THEMES.kelab.primary; // #3B82F6
 const BLUE_DARK = LAUNCH_MODULE_THEMES.kelab.dark; // #2563EB
@@ -42,18 +42,27 @@ const BLUE_BORDER = LAUNCH_MODULE_THEMES.kelab.border; // #BFDBFE
 const PURPLE = LAUNCH_MODULE_THEMES.meritQr.primary; // #A855F7
 const PURPLE_DARK = LAUNCH_MODULE_THEMES.meritQr.dark; // #9333EA
 const PURPLE_INK = '#7E22CE'; // WCAG AA+ Purple-700
+const PURPLE_SOFT = LAUNCH_MODULE_THEMES.meritQr.soft; // #FAF5FF
 const PURPLE_BORDER = LAUNCH_MODULE_THEMES.meritQr.border; // #E9D5FF
 
 const PINK = LAUNCH_MODULE_THEMES.ems.primary; // #EC4899
 const PINK_DARK = LAUNCH_MODULE_THEMES.ems.dark; // #DB2777
 const PINK_INK = '#BE185D'; // WCAG AA+ Pink-700
+const PINK_SOFT = LAUNCH_MODULE_THEMES.ems.soft; // #FDF2F8
 const PINK_BORDER = LAUNCH_MODULE_THEMES.ems.border; // #FBCFE8
 
 const EMERALD = LAUNCH_MODULE_THEMES.polymaps.primary; // #10B981
 const EMERALD_INK = '#047857';
 const EMERALD_SOFT = LAUNCH_MODULE_THEMES.polymaps.soft; // #ECFDF5
 const EMERALD_BORDER = LAUNCH_MODULE_THEMES.polymaps.border; // #A7F3D0
+
 const AMBER = LAUNCH_MODULE_THEMES.polymart.primary; // #F59E0B
+const AMBER_DARK = LAUNCH_MODULE_THEMES.polymart.dark; // #D97706
+const AMBER_INK = '#B45309';
+const AMBER_SOFT = LAUNCH_MODULE_THEMES.polymart.soft; // #FFFBEB
+const AMBER_BORDER = LAUNCH_MODULE_THEMES.polymart.border; // #FDE68A
+
+const DARK_GLASS_BG = 'rgba(22, 20, 34, 0.95)';
 
 export type ClubsEmsProps = {
   readonly clubsCount: number;
@@ -61,72 +70,91 @@ export type ClubsEmsProps = {
   readonly certSerial: string;
 };
 
-type StudentClubSpec = {
+type StackedClubSpec = {
   readonly id: string;
   readonly name: string;
-  readonly meta: string;
+  readonly category: string;
+  readonly members: number;
   readonly icon: 'gamepad' | 'cpu' | 'briefcase' | 'users';
-  readonly activeTone: 'blue' | 'emerald' | 'open';
-  readonly preJoined?: boolean;
+  readonly dx: number;
+  readonly dy: number;
+  readonly dz: number;
+  readonly scale: number;
+  readonly opacity: number;
+  readonly isHero?: boolean;
 };
 
-const STUDENT_CLUBS: readonly StudentClubSpec[] = [
+const CLUB_DECK: readonly StackedClubSpec[] = [
   {
-    id: 'esport',
-    name: 'Kelab E-Sport',
-    meta: 'Sukan Digital · 142 Ahli',
-    icon: 'gamepad',
-    activeTone: 'blue',
-  },
-  {
-    id: 'robosas',
-    name: 'Robosas Robotik',
-    meta: 'Inovasi & Kejuruteraan · 98 Ahli',
-    icon: 'cpu',
-    activeTone: 'emerald',
-    preJoined: true,
+    id: 'pepka',
+    name: 'PePKa POLISAS',
+    category: 'Rakan Masjid & Bakti Siswa • 210 Ahli',
+    members: 210,
+    icon: 'users',
+    dx: -285,
+    dy: 54,
+    dz: -175,
+    scale: 0.84,
+    opacity: 0.46,
   },
   {
     id: 'commerce',
     name: 'Commerce Club',
-    meta: 'Keusahawanan Siswa · 116 Ahli',
+    category: 'Keusahawanan & Jualan • 164 Ahli',
+    members: 164,
     icon: 'briefcase',
-    activeTone: 'open',
+    dx: 185,
+    dy: 48,
+    dz: -120,
+    scale: 0.88,
+    opacity: 0.62,
   },
   {
-    id: 'pepka',
-    name: 'PePKa',
-    meta: 'Persatuan Pelajar Kampus · 210 Ahli',
-    icon: 'users',
-    activeTone: 'emerald',
-    preJoined: true,
+    id: 'robosas',
+    name: 'Robosas Robotik',
+    category: 'Inovasi & Kejuruteraan • 98 Ahli',
+    members: 98,
+    icon: 'cpu',
+    dx: -175,
+    dy: -48,
+    dz: -65,
+    scale: 0.92,
+    opacity: 0.78,
+  },
+  {
+    id: 'esport',
+    name: 'Kelab E-Sport POLISAS',
+    category: 'Sukan Digital & Kejohanan Kampus • 142 Ahli',
+    members: 142,
+    icon: 'gamepad',
+    dx: 0,
+    dy: 0,
+    dz: 70,
+    scale: 1,
+    opacity: 1,
+    isHero: true,
   },
 ];
 
 const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
-const COUNTER_EASE = Easing.bezier(0.22, 1, 0.36, 1);
-const LASER_EASE = Easing.bezier(0.45, 0, 0.55, 1);
-const SHEEN_EASE = Easing.bezier(0.25, 0.1, 0.25, 1);
 
-const renderClubIcon = (
-  icon: StudentClubSpec['icon'],
-  isActive: boolean,
-  tone: StudentClubSpec['activeTone'],
-) => {
-  const color = !isActive
-    ? LAUNCH_PALETTE.PRIMARY
-    : tone === 'blue'
-      ? BLUE_INK
-      : EMERALD_INK;
+// Shot 1 GhostCursor clicks "Sertai Kelab" at 82f and exits completely before Local 122f (f=2960)!
+const CLUB_JOIN_CURSOR_KEYFRAMES: readonly GhostCursorKeyframe[] = [
+  { frame: 40, x: 740, y: 420 },
+  { frame: 82, x: 1280, y: 556, click: true, label: 'SERTAI KELAB' },
+  { frame: 102, x: 1280, y: 556 },
+];
+
+const renderClubIcon = (icon: StackedClubSpec['icon'], size: number, color: string) => {
   switch (icon) {
     case 'gamepad':
-      return <Gamepad2 size={20} color={color} strokeWidth={2.3} />;
+      return <Gamepad2 size={size} color={color} strokeWidth={2.2} />;
     case 'cpu':
-      return <Cpu size={20} color={color} strokeWidth={2.3} />;
+      return <Cpu size={size} color={color} strokeWidth={2.2} />;
     case 'briefcase':
-      return <Briefcase size={20} color={color} strokeWidth={2.3} />;
+      return <Briefcase size={size} color={color} strokeWidth={2.2} />;
     case 'users':
-      return <Users size={20} color={color} strokeWidth={2.3} />;
+      return <Users size={size} color={color} strokeWidth={2.2} />;
   }
 };
 
@@ -139,1147 +167,1027 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
   const { fps } = useVideoConfig();
 
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
-  const f60 = (f: number) => Math.round((f / 60) * safeFps);
+  const safeClubs = Math.max(1, Math.round(Number.isFinite(clubsCount) ? clubsCount : 21));
+  const safeActivities = Math.max(1, Math.round(Number.isFinite(activitiesCount) ? activitiesCount : 41));
+  const safeSerial = certSerial.trim() || 'EMS-CERT-2026-9041';
+  const timeSec = frame / safeFps;
 
-  const safeClubs = Number.isFinite(clubsCount) ? Math.max(0, Math.round(clubsCount)) : 21;
-  const safeActivities = Number.isFinite(activitiesCount)
-    ? Math.max(0, Math.round(activitiesCount))
-    : 41;
-  const safeCertSerial = certSerial.trim() || 'EMS-CERT-2026-9041';
+  // Header timing
+  const wordStagger = Math.max(2, Math.round(0.04 * safeFps));
+  const wordDuration = Math.max(8, Math.round(0.28 * safeFps));
 
-  // Beat timings
-  const pillStart = 0;
-  const pillDuration = Math.max(8, f60(22));
-  const headlineStart = f60(5);
-  const wordStagger = Math.max(2, f60(3));
-  const wordDuration = Math.max(8, f60(20));
-
-  const counterDuration = Math.max(18, f60(56));
-  const liveClubs = Math.round(
-    interpolate(frame, [f60(8), f60(8) + counterDuration], [0, safeClubs], {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: COUNTER_EASE,
-    }),
-  );
-  const liveActivities = Math.round(
-    interpolate(frame, [f60(12), f60(12) + counterDuration], [0, safeActivities], {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: COUNTER_EASE,
-    }),
-  );
-
-  // STAGE 1 (Left Upright Blue Panel): Join Kelab E-Sport
-  const deckEnter = interpolate(frame, [f60(10), f60(32)], [0, 1], {
+  // SHOT 1 -> SHOT 2 Z-Fly-Through (180..230f)
+  const toShot2T = interpolate(frame, [180, 230], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: EXPO_OUT,
+    easing: WHIP_S_CURVE,
   });
-  const esportJoinClickFrame = f60(48);
-  const esportJoined = frame >= esportJoinClickFrame;
-  const esportJoinSpring = esportJoined
+
+  // Club Joined State (clicked at 82f -> ready cleanly before Local 122f / f=2960!)
+  const clubJoined = frame >= 82;
+  const joinStampSpring = clubJoined
     ? spring({
-        frame: frame - esportJoinClickFrame,
+        frame: frame - 82,
         fps: safeFps,
-        config: { damping: 15, stiffness: 245, mass: 0.78 },
-      })
-    : 0;
-  const buttonPressScale = interpolate(
-    frame,
-    [esportJoinClickFrame - 2, esportJoinClickFrame + 3, esportJoinClickFrame + 11],
-    [1, 0.93, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-    },
-  );
-
-  const cursorKeyframes: readonly GhostCursorKeyframe[] = [
-    { frame: f60(18), x: 240, y: 310 },
-    { frame: esportJoinClickFrame, x: 443, y: 194, click: true, label: 'Sertai Kelab' },
-    { frame: f60(82), x: 500, y: 215 },
-  ];
-
-  // Connector 1 (Stage 1 -> Stage 2): 54..76f
-  const conn1Start = f60(54);
-  const conn1Duration = Math.max(10, f60(22));
-
-  // STAGE 2 (Center Upright Purple Laser Gate + Rolling Merit Counter): Wakes at 72..92f
-  const stage2Wake = interpolate(frame, [f60(72), f60(92)], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: EXPO_OUT,
-  });
-  const stage2Opacity = 0.48 + 0.52 * stage2Wake;
-  const stage2Scale = 0.98 + 0.02 * stage2Wake;
-
-  const sweepStart = f60(88);
-  const sweepEnd = f60(126);
-  const sweepProgress = interpolate(frame, [sweepStart, sweepEnd], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: LASER_EASE,
-  });
-  const laserOffsetY = interpolate(sweepProgress, [0, 0.5, 1], [12, 206, 108]);
-  const isScanLocked = frame >= sweepEnd;
-
-  // 6-frame camera-shutter flash at scan lock (126..132f)
-  const shutterFlashOpacity = interpolate(
-    frame,
-    [sweepEnd, sweepEnd + 2, sweepEnd + 6],
-    [0, 0.52, 0],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-    },
-  );
-
-  // Live Rolling Merit Score Counter (120 -> 135 MATA MERIT +15 ✓)
-  const liveMeritTotal = Math.round(
-    interpolate(frame, [sweepEnd, sweepEnd + f60(24)], [120, 135], {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: COUNTER_EASE,
-    }),
-  );
-  const meritLockSpring = isScanLocked
-    ? spring({
-        frame: frame - sweepEnd,
-        fps: safeFps,
-        config: { damping: 15, stiffness: 245, mass: 0.8 },
+        config: { damping: 16, stiffness: 225, mass: 0.85 },
       })
     : 0;
 
-  // Connector 2 (Stage 2 -> Stage 3): 138..160f
-  const conn2Start = f60(138);
-  const conn2Duration = Math.max(10, f60(22));
+  // Club Deck Z-Depth Recession into Shot 2
+  const deckZ = interpolate(toShot2T, [0, 1], [0, -210]);
+  const deckScale = interpolate(toShot2T, [0, 1], [1, 0.72]);
+  const deckOpacity =
+    interpolate(toShot2T, [0, 0.85, 1], [1, 0.28, 0.24], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    }) *
+    interpolate(frame, [368, 400], [1, 0], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    });
 
-  // STAGE 3 (Right Upright Pink e-Certificate): Wakes at 154..176f
-  const stage3Wake = interpolate(frame, [f60(154), f60(176)], [0, 1], {
+  // SHOT 2: Holographic QR Scanner Gate flies forward (192..236f)
+  const qrGateEnter = interpolate(frame, [192, 236], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
-  const stage3Opacity = 0.48 + 0.52 * stage3Wake;
-  const stage3Scale = 0.98 + 0.02 * stage3Wake;
 
-  const medallionStampFrame = f60(176);
-  const medallionStampSpring =
-    frame >= medallionStampFrame
-      ? spring({
-          frame: frame - medallionStampFrame,
-          fps: safeFps,
-          config: { damping: 14, stiffness: 240, mass: 0.82 },
-        })
-      : 0;
-  const medallionScale =
-    frame >= medallionStampFrame
-      ? interpolate(medallionStampSpring, [0, 1], [1.24, 1])
-      : 0.9;
-
-  const certSparkFrame = f60(188);
-  const foilStart = f60(190);
-  const foilProgress = interpolate(frame, [foilStart, foilStart + 46], [0, 1], {
+  // Volumetric Purple laser sweep + 6-frame exposure flash (232..282f -> locked +15 MERIT well before Local 302f / f=3140!)
+  const qrLaserY = interpolate(frame, [232, 276], [12, 168], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: SHEEN_EASE,
+    easing: Easing.inOut(Easing.sin),
   });
-  const foilLeftPct = interpolate(foilProgress, [0, 1], [-42, 132]);
-  const foilOpacity = interpolate(foilProgress, [0, 0.2, 0.78, 1], [0, 0.5, 0.5, 0], {
+  const flashOpacity = interpolate(frame, [272, 276, 282], [0, 0.48, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
+  const meritAwarded = frame >= 274;
+  const meritSpring = meritAwarded
+    ? spring({
+        frame: frame - 274,
+        fps: safeFps,
+        config: { damping: 15, stiffness: 220, mass: 0.86 },
+      })
+    : 0;
+  const liveMeritTotal = Math.round(120 + 15 * meritSpring);
 
-  const downloadSpring =
-    frame >= f60(202)
-      ? spring({
-          frame: frame - f60(202),
-          fps: safeFps,
-          config: { damping: 15, stiffness: 230, mass: 0.82 },
-        })
-      : 0;
+  // SHOT 2 -> SHOT 3 True 2-Face 180-deg Y-Axis Card Flip (384..434f -> settled razor-sharp well before Local 502f / f=3340!)
+  const flipPhaseT = interpolate(frame, [384, 434], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: WHIP_S_CURVE,
+  });
+  const flipDeg = interpolate(flipPhaseT, [0, 1], [0, 180]);
+
+  // Card stage angle smoothly shifts from Shot 2 QR Scanner (4deg X, 0deg Y) to Shot 3 e-Certificate (3deg X, -5deg Y)
+  const stageRotX = interpolate(flipPhaseT, [0, 1], [4, 3]);
+  const stageRotY = interpolate(flipPhaseT, [0, 1], [0, -5]);
+  const stageWidth = interpolate(flipPhaseT, [0, 1], [840, 1000]);
+  const stageHeight = interpolate(flipPhaseT, [0, 1], [568, 578]);
+
+  // Diagonal foil sheen across e-Certificate (448..516f)
+  const foilLeftPct = interpolate(frame, [448, 516], [-45, 135], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+  });
+  const foilOpacity = interpolate(frame, [448, 464, 500, 516], [0, 0.52, 0.52, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+
+  const isCertActive = flipPhaseT >= 0.5;
+  const liveDotScale = 0.86 + Math.sin(timeSec * 5.2) * 0.16;
 
   return (
     <>
       <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.kelab.tint} />
 
       <CameraStage
-        zoomFrom={1}
-        zoomTo={1.016}
-        panXFrom={3}
-        panXTo={-3}
-        panYFrom={2}
-        panYTo={-2}
+        zoomFrom={0.995}
+        zoomTo={1.018}
+        panXFrom={0}
+        panXTo={0}
+        panYFrom={3}
+        panYTo={-3}
         tiltXFrom={0}
         tiltXTo={0}
-        tiltYFrom={0}
-        tiltYTo={0}
-        breathingAmplitude={0.22}
-        entryPanYOffset={18}
-        entryZoomOffset={-0.018}
-        exitZoomDelta={0.024}
-        exitFrames={Math.round(0.32 * safeFps)}
+        tiltYFrom={-0.35}
+        tiltYTo={0.35}
+        breathingAmplitude={0.35}
+        entryZoomOffset={0.024}
+        entryPanXOffset={24}
+        entryFrames={Math.round(0.45 * safeFps)}
+        exitZoomDelta={0.015}
+        exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
+        <SpatialFloorGrid
+          accentColor={isCertActive ? PINK : meritAwarded ? PURPLE : BLUE}
+          secondaryColor={PURPLE}
+          gridOpacity={0.22}
+          scrollSpeed={15}
+        />
+
+        {/* Top Editorial Header Lockup */}
         <div
           style={{
             position: 'absolute',
-            inset: 0,
+            left: 88,
+            right: 88,
+            top: 74,
+            display: 'flex',
+            alignItems: 'flex-end',
+            justifyContent: 'space-between',
+            gap: 28,
             fontFamily: LAUNCH_FONTS.DISPLAY,
+            zIndex: 14,
           }}
         >
-          {/* Editorial Top Row */}
-          <div
-            style={{
-              position: 'absolute',
-              left: 72,
-              right: 72,
-              top: 62,
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'flex-end',
-              gap: 24,
-              zIndex: 8,
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <KineticReveal startFrame={pillStart} durationFrames={pillDuration}>
-                <div
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 1240 }}>
+            <KineticReveal startFrame={4} durationFrames={18}>
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '6px 14px',
+                  borderRadius: 999,
+                  backgroundColor: isCertActive ? PINK_SOFT : meritAwarded ? PURPLE_SOFT : BLUE_SOFT,
+                  border: `1.5px solid ${isCertActive ? PINK_BORDER : meritAwarded ? PURPLE_BORDER : BLUE_BORDER}`,
+                }}
+              >
+                <span
                   style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    alignSelf: 'flex-start',
-                    padding: '6px 17px',
+                    width: 8,
+                    height: 8,
                     borderRadius: 999,
-                    backgroundColor: BLUE_SOFT,
-                    border: `1.5px solid ${BLUE}`,
-                    color: BLUE_INK,
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 12.5,
-                    fontWeight: 800,
-                    letterSpacing: '0.16em',
+                    backgroundColor: isCertActive ? PINK : meritAwarded ? PURPLE : BLUE,
+                    transform: `scale(${liveDotScale.toFixed(3)})`,
                   }}
-                >
-                  <Award size={14} color={BLUE_INK} strokeWidth={2.4} />
-                  <span>17:00 PETANG • 21 KELAB, MERIT &amp; E-SIJIL</span>
-                </div>
-              </KineticReveal>
-
-              <KineticWords
-                as="h2"
-                text="21 Kelab. Imbas QR Acara. Kumpul Merit & e-Sijil."
-                startFrame={headlineStart}
-                staggerFrames={wordStagger}
-                wordDurationFrames={wordDuration}
-                accentWords={['21', 'Merit']}
-                accentColor={PURPLE_DARK}
-                style={{
-                  margin: 0,
-                  fontSize: 47,
-                  fontWeight: 900,
-                  letterSpacing: '-0.03em',
-                  lineHeight: 1.07,
-                  color: LAUNCH_PALETTE.PRIMARY,
-                }}
-              />
-            </div>
-
-            {/* Right Counters Pill Group */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-              <div
-                style={{
-                  padding: '9px 20px',
-                  borderRadius: 18,
-                  backgroundColor: '#FFFFFF',
-                  border: `1.5px solid ${BLUE_BORDER}`,
-                  boxShadow: '0 8px 20px rgba(37, 99, 235, 0.1)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  minWidth: 112,
-                }}
-              >
+                />
                 <span
                   style={{
                     fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 23,
+                    fontSize: 12,
                     fontWeight: 900,
-                    color: BLUE_INK,
-                    fontVariantNumeric: 'tabular-nums',
+                    letterSpacing: '0.14em',
+                    color: isCertActive ? PINK_INK : meritAwarded ? PURPLE_INK : BLUE_INK,
                   }}
                 >
-                  {liveClubs}
-                </span>
-                <span
-                  style={{
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 10,
-                    fontWeight: 800,
-                    color: LAUNCH_PALETTE.INK_SOFT,
-                  }}
-                >
-                  KELAB AKTIF
+                  BAB 07 • {safeClubs} KELAB, MATA MERIT QR &amp; E-SIJIL ({safeActivities} AKTIVITI)
                 </span>
               </div>
+            </KineticReveal>
 
-              <div
-                style={{
-                  padding: '9px 20px',
-                  borderRadius: 18,
-                  backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                  border: `1.5px solid ${PINK}`,
-                  boxShadow: '0 8px 20px rgba(236, 72, 153, 0.14)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  minWidth: 118,
-                }}
-              >
-                <span
-                  style={{
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 23,
-                    fontWeight: 900,
-                    color: PINK,
-                    fontVariantNumeric: 'tabular-nums',
-                  }}
-                >
-                  {liveActivities}
-                </span>
-                <span
-                  style={{
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 10,
-                    fontWeight: 800,
-                    color: LAUNCH_PALETTE.BACKGROUND,
-                  }}
-                >
-                  ACARA KAMPUS
-                </span>
-              </div>
-            </div>
+            <KineticWords
+              as="h1"
+              text="Aktif Kelab? Imbas Merit QR & Terus Muat Turun e-Sijil."
+              startFrame={8}
+              staggerFrames={wordStagger}
+              wordDurationFrames={wordDuration}
+              accentWords={['Merit', 'e-Sijil.']}
+              accentColor={isCertActive ? PINK_INK : PURPLE_INK}
+              style={{
+                margin: 0,
+                fontSize: 44,
+                fontWeight: 900,
+                letterSpacing: '-0.032em',
+                lineHeight: 1.07,
+                color: LAUNCH_PALETTE.PRIMARY,
+              }}
+            />
           </div>
 
-          {/* UPRIGHT 1-2-3 CAUSAL CONVEYOR PIPELINE (left: 72, width: 1776, top: 226, height: 712) */}
-          <div
-            style={{
-              position: 'absolute',
-              left: 72,
-              top: 226,
-              width: 1776,
-              height: 712,
-            }}
-          >
-            {/* STAGE 1 — LEFT PANEL (Blue #3B82F6): Directory + Tactile GhostCursor Join */}
-            <Interactive.Div
-              name="Clubs Upright Directory"
-              premountFor={safeFps}
+          <KineticReveal startFrame={18} durationFrames={22}>
+            <div
               style={{
-                position: 'absolute',
-                left: 0,
-                top: 0,
-                width: 536,
-                height: 712,
-                opacity: deckEnter,
-                transform: `translate3d(0px, ${((1 - deckEnter) * 22).toFixed(2)}px, 0px)`,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: '10px 18px',
+                borderRadius: 16,
+                backgroundColor: isCertActive ? PINK_SOFT : LAUNCH_PALETTE.CARD_BG,
+                border: `1.5px solid ${isCertActive ? PINK_BORDER : PURPLE_BORDER}`,
+                boxShadow: '0 12px 26px rgba(31, 39, 32, 0.08)',
               }}
             >
-              <KineticWindow
-                surface="light"
-                routeLabel="jpp.polisas.edu.my/kelab"
-                statusPill={esportJoined ? 'AHLI DISAHKAN ✓' : 'LANGKAH 01'}
-                statusAccent
-                accentColor={BLUE_INK}
-                accentSoftBg={BLUE_SOFT}
-                accentBorderColor={BLUE_BORDER}
-                width="100%"
-                height="100%"
-                borderRadius={26}
-                sheenStartFrame={f60(52)}
-                sheenDuration={36}
+              <Award
+                size={18}
+                color={isCertActive ? PINK_INK : PURPLE_INK}
+                strokeWidth={2.5}
+              />
+              <span
                 style={{
-                  borderColor: BLUE_BORDER,
-                  boxShadow: '0 22px 48px rgba(37, 99, 235, 0.1)',
+                  fontFamily: LAUNCH_FONTS.MONO,
+                  fontSize: 13,
+                  fontWeight: 900,
+                  letterSpacing: '0.07em',
+                  color: isCertActive ? PINK_INK : LAUNCH_PALETTE.PRIMARY,
+                  fontVariantNumeric: 'tabular-nums',
+                  whiteSpace: 'nowrap',
                 }}
               >
-                <div
-                  style={{
-                    flex: 1,
-                    padding: '18px 20px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: 12,
-                    boxSizing: 'border-box',
-                  }}
-                >
+                {isCertActive
+                  ? `SIJIL #${safeSerial} • SEDIA`
+                  : meritAwarded
+                    ? `${liveMeritTotal} MATA MERIT AKTIF ✓`
+                    : `${safeClubs} KELAB TERBUKA`}
+              </span>
+            </div>
+          </KineticReveal>
+        </div>
+
+        {/* 3D Z-Axis Fly-Through Workspace (x=0..1920, y=204..968) */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            top: 204,
+            height: 764,
+            perspective: '1700px',
+            transformStyle: 'preserve-3d',
+            fontFamily: LAUNCH_FONTS.DISPLAY,
+            zIndex: 8,
+          }}
+        >
+          {/* Decorative Blue->Purple Vector Energy Ribbon tying Shot 1 Club Join -> Shot 2 Merit Scan (fades out cleanly before Shot 2 hero still!) */}
+          {frame >= 176 && frame < 270 ? (
+            <EvolvingPath
+              d="M 300 410 Q 640 200 960 360"
+              width={1920}
+              height={764}
+              startFrame={178}
+              durationFrames={44}
+              stroke={PURPLE}
+              strokeWidth={4.5}
+              trackStroke="rgba(168, 85, 247, 0.16)"
+              headDotColor="#FFFFFF"
+              headDotRadius={7}
+              hideDotWhenComplete
+              style={{
+                position: 'absolute',
+                inset: 0,
+                opacity: interpolate(frame, [238, 266], [1, 0], {
+                  extrapolateLeft: 'clamp',
+                  extrapolateRight: 'clamp',
+                }),
+                pointerEvents: 'none',
+              }}
+            />
+          ) : null}
+
+          {/* SHOT 1 HERO (and Shot 2 Recessed Z-Context): 3D Z-Stacked Club Deck */}
+          {deckOpacity > 0.01 ? (
+            <div
+              style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                width: 960,
+                height: 520,
+                transformStyle: 'preserve-3d',
+                opacity: deckOpacity,
+                transform: `translate(-50%, -50%) translateZ(${deckZ.toFixed(1)}px) scale(${deckScale.toFixed(4)})`,
+              }}
+            >
+              {CLUB_DECK.map((club, idx) => {
+                const enterSpring = spring({
+                  frame: Math.max(0, frame - (8 + idx * 6)),
+                  fps: safeFps,
+                  config: { damping: 18, stiffness: 205, mass: 0.9 },
+                });
+                const isHero = Boolean(club.isHero);
+                return (
                   <div
+                    key={club.id}
                     style={{
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                      padding: '10px 14px',
-                      borderRadius: 14,
-                      backgroundColor: BLUE_SOFT,
-                      border: `1px solid ${BLUE_BORDER}`,
+                      position: 'absolute',
+                      inset: 0,
+                      opacity: club.opacity * enterSpring,
+                      transformStyle: 'preserve-3d',
+                      transform: `translate3d(${club.dx}px, ${(club.dy + (1 - enterSpring) * 28).toFixed(1)}px, ${club.dz}px) rotateX(3deg) scale(${club.scale})`,
                     }}
                   >
-                    <div>
-                      <div
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 10,
-                          fontWeight: 800,
-                          letterSpacing: '0.1em',
-                          color: BLUE_INK,
-                        }}
-                      >
-                        LANGKAH 01 • SERTAI 21 KELAB
-                      </div>
-                      <div style={{ fontSize: 17.5, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
-                        Direktori Kelab Pelajar
-                      </div>
-                    </div>
-                    <span
+                    <KineticWindow
+                      surface={isHero ? 'light' : 'sand'}
+                      routeLabel={isHero ? '/portal/kelab/esport' : '/portal/kelab'}
+                      statusPill={isHero ? (clubJoined ? 'AHLI DISAHKAN ✓' : 'OPEN 2026') : 'KELAB AKTIF'}
+                      statusAccent={isHero}
+                      accentColor={isHero && clubJoined ? EMERALD : BLUE}
+                      accentSoftBg={isHero && clubJoined ? EMERALD_SOFT : BLUE_SOFT}
+                      accentBorderColor={isHero && clubJoined ? EMERALD_BORDER : BLUE_BORDER}
+                      width={960}
+                      height={510}
+                      sheenStartFrame={isHero ? 88 : undefined}
+                      sheenDuration={34}
                       style={{
-                        padding: '5px 11px',
-                        borderRadius: 999,
-                        backgroundColor: BLUE_INK,
-                        color: '#FFFFFF',
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 10.5,
-                        fontWeight: 900,
+                        borderBottom: `6px solid ${isHero && clubJoined ? EMERALD : BLUE}`,
+                        boxShadow: isHero
+                          ? '0 34px 74px rgba(37, 99, 235, 0.16)'
+                          : '0 18px 42px rgba(31, 39, 32, 0.12)',
                       }}
                     >
-                      {esportJoined ? '3 DISERTAI ✓' : '2 DISERTAI'}
-                    </span>
-                  </div>
-
-                  {/* 4 Upright Club Rows */}
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', gap: 11 }}>
-                    {STUDENT_CLUBS.map((club) => {
-                      const isTargetEsport = club.id === 'esport';
-                      const isJoined = club.preJoined || (isTargetEsport && esportJoined);
-                      const rowAccent = club.activeTone === 'blue' ? BLUE_INK : EMERALD_INK;
-                      const rowBg = isJoined
-                        ? club.activeTone === 'blue'
-                          ? BLUE_SOFT
-                          : EMERALD_SOFT
-                        : '#FFFFFF';
-                      const rowBorder = isJoined
-                        ? club.activeTone === 'blue'
-                          ? BLUE
-                          : EMERALD
-                        : LAUNCH_PALETTE.TERTIARY;
-
-                      return (
-                        <div
-                          key={club.id}
-                          style={{
-                            flex: 1,
-                            borderRadius: 18,
-                            padding: '0 16px',
-                            backgroundColor: rowBg,
-                            border: `1.8px solid ${rowBorder}`,
-                            borderBottom: `4px solid ${isJoined ? rowAccent : LAUNCH_PALETTE.TERTIARY}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 10,
-                            transform:
-                              isTargetEsport && esportJoined
-                                ? `translate3d(0px, ${(-2 * esportJoinSpring).toFixed(2)}px, 0px)`
-                                : 'none',
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                            <span
+                      <div
+                        style={{
+                          flex: 1,
+                          padding: '28px 32px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                          gap: 18,
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 18 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                            <div
                               style={{
-                                width: 42,
-                                height: 42,
-                                borderRadius: 13,
-                                backgroundColor: '#FFFFFF',
-                                border: `1.5px solid ${isJoined ? rowBorder : BLUE_BORDER}`,
+                                width: 64,
+                                height: 64,
+                                borderRadius: 18,
+                                backgroundColor: BLUE_SOFT,
+                                border: `1.5px solid ${BLUE_BORDER}`,
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
-                                flexShrink: 0,
                               }}
                             >
-                              {renderClubIcon(club.icon, isJoined, club.activeTone)}
-                            </span>
-                            <div style={{ minWidth: 0 }}>
-                              <div style={{ fontSize: 16.5, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
-                                {club.name}
-                              </div>
-                              <div
+                              {renderClubIcon(club.icon, 30, BLUE_INK)}
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                              <span
                                 style={{
                                   fontFamily: LAUNCH_FONTS.MONO,
-                                  fontSize: 11,
-                                  fontWeight: 700,
-                                  color: LAUNCH_PALETTE.INK_SOFT,
+                                  fontSize: 12,
+                                  fontWeight: 900,
+                                  letterSpacing: '0.11em',
+                                  color: BLUE_INK,
                                 }}
                               >
-                                {club.meta}
-                              </div>
+                                KELAB PELAJAR RASMI POLISAS
+                              </span>
+                              <span
+                                style={{
+                                  fontSize: 30,
+                                  fontWeight: 900,
+                                  color: LAUNCH_PALETTE.PRIMARY,
+                                }}
+                              >
+                                {club.name}
+                              </span>
                             </div>
                           </div>
 
                           <span
                             style={{
-                              padding: '7px 12px',
+                              padding: '7px 14px',
                               borderRadius: 999,
-                              backgroundColor: isJoined
-                                ? rowAccent
-                                : isTargetEsport
-                                  ? LAUNCH_PALETTE.PRIMARY_DARK
-                                  : LAUNCH_PALETTE.SURFACE_MUTED,
-                              border: `1px solid ${
-                                isJoined ? rowAccent : LAUNCH_PALETTE.TERTIARY
-                              }`,
-                              color:
-                                isJoined || isTargetEsport
-                                  ? '#FFFFFF'
-                                  : LAUNCH_PALETTE.PRIMARY_DARK,
+                              backgroundColor: BLUE_SOFT,
+                              border: `1.5px solid ${BLUE_BORDER}`,
                               fontFamily: LAUNCH_FONTS.MONO,
-                              fontSize: 10.5,
+                              fontSize: 12,
                               fontWeight: 900,
-                              whiteSpace: 'nowrap',
-                              flexShrink: 0,
-                              transform: isTargetEsport
-                                ? `scale(${buttonPressScale.toFixed(4)})`
-                                : 'none',
+                              color: BLUE_INK,
                             }}
                           >
-                            {isTargetEsport
-                              ? esportJoined
-                                ? '✓ Ahli Disahkan'
-                                : 'Sertai Kelab'
-                              : isJoined
-                                ? 'Ahli Aktif ✓'
-                                : 'Terbuka'}
+                            {club.members} AHLI AKTIF
                           </span>
                         </div>
-                      );
-                    })}
+
+                        <div
+                          style={{
+                            padding: '20px 24px',
+                            borderRadius: 18,
+                            backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                            border: `1.5px solid ${BLUE_BORDER}`,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: 16,
+                          }}
+                        >
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <span style={{ fontSize: 19, fontWeight: 800, color: LAUNCH_PALETTE.PRIMARY }}>
+                              {club.category}
+                            </span>
+                            <span style={{ fontSize: 14, fontWeight: 600, color: LAUNCH_PALETTE.INK_SOFT }}>
+                              Daftar 1-klik • Sijil &amp; merit kokurikulum automatik ke profil pelajar
+                            </span>
+                          </div>
+                        </div>
+
+                        {isHero ? (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                              <span
+                                style={{
+                                  padding: '8px 14px',
+                                  borderRadius: 999,
+                                  backgroundColor: PURPLE_SOFT,
+                                  border: `1.5px solid ${PURPLE_BORDER}`,
+                                  fontFamily: LAUNCH_FONTS.MONO,
+                                  fontSize: 12,
+                                  fontWeight: 900,
+                                  color: PURPLE_INK,
+                                }}
+                              >
+                                +MATA MERIT KOKURIKULUM
+                              </span>
+                              <span
+                                style={{
+                                  padding: '8px 14px',
+                                  borderRadius: 999,
+                                  backgroundColor: PINK_SOFT,
+                                  border: `1.5px solid ${PINK_BORDER}`,
+                                  fontFamily: LAUNCH_FONTS.MONO,
+                                  fontSize: 12,
+                                  fontWeight: 900,
+                                  color: PINK_INK,
+                                }}
+                              >
+                                E-SIJIL DISAHKAN
+                              </span>
+                            </div>
+
+                            <div
+                              style={{
+                                padding: '13px 22px',
+                                borderRadius: 15,
+                                backgroundColor: clubJoined ? EMERALD_INK : BLUE_DARK,
+                                color: '#FFFFFF',
+                                fontFamily: LAUNCH_FONTS.MONO,
+                                fontSize: 13.5,
+                                fontWeight: 900,
+                                letterSpacing: '0.07em',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: 8,
+                                transform: `scale(${(0.96 + 0.04 * joinStampSpring).toFixed(4)})`,
+                                boxShadow: clubJoined
+                                  ? '0 14px 28px rgba(4, 120, 87, 0.28)'
+                                  : '0 14px 28px rgba(37, 99, 235, 0.28)',
+                              }}
+                            >
+                              {clubJoined ? (
+                                <>
+                                  <CheckCircle2 size={16} strokeWidth={2.8} />
+                                  <span>Ahli Rasmi Disahkan</span>
+                                </>
+                              ) : (
+                                <span>Sertai Kelab</span>
+                              )}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    </KineticWindow>
                   </div>
-                </div>
-              </KineticWindow>
+                );
+              })}
+            </div>
+          ) : null}
 
-              <GhostCursor
-                keyframes={cursorKeyframes}
-                appearFrame={f60(18)}
-                disappearFrame={f60(82)}
-                color={LAUNCH_PALETTE.PRIMARY}
-                rippleColor={BLUE}
-              />
-            </Interactive.Div>
-
-            {/* Swiss Architectural Connector 1: Club Join -> QR Scanner Gate */}
+          {/* SHOT 2 -> SHOT 3: 2-FACE 180-DEG 3D FLIP STAGE (QR Gate <-> Digital e-Certificate) */}
+          {qrGateEnter > 0.01 ? (
             <div
               style={{
                 position: 'absolute',
-                left: 536,
-                top: 332,
-                width: 64,
-                height: 48,
-                pointerEvents: 'none',
+                left: '50%',
+                top: '50%',
+                width: stageWidth,
+                height: stageHeight,
+                transformStyle: 'preserve-3d',
+                opacity: qrGateEnter,
+                transform: `translate(-50%, -50%) translateZ(${(interpolate(qrGateEnter, [0, 1], [-180, 80])).toFixed(1)}px) rotateX(${stageRotX.toFixed(2)}deg) rotateY(${stageRotY.toFixed(2)}deg) scale(${(0.82 + 0.18 * qrGateEnter).toFixed(4)})`,
               }}
             >
-              <EvolvingPath
-                d="M 4 24 L 56 24 M 46 15 L 56 24 L 46 33"
-                width={64}
-                height={48}
-                startFrame={conn1Start}
-                durationFrames={conn1Duration}
-                stroke={BLUE_DARK}
-                trackStroke="rgba(191, 219, 254, 0.72)"
-                strokeWidth={2.5}
-                headDotColor={PURPLE}
-                headDotRadius={4}
-                hideDotWhenComplete
-              />
-            </div>
-
-            {/* STAGE 2 — CENTER PANEL (Purple #A855F7): QR Scan + Shutter Flash + Rolling Merit Counter */}
-            <Interactive.Div
-              name="Merit QR Upright Scanner"
-              premountFor={safeFps}
-              style={{
-                position: 'absolute',
-                left: 600,
-                top: 0,
-                width: 536,
-                height: 712,
-                opacity: stage2Opacity,
-                transform: `scale(${stage2Scale.toFixed(4)})`,
-              }}
-            >
+              {/* FRONT FACE (0 -> 180deg): GIANT 3D HOLOGRAPHIC QR SCANNER GATE (Shot 2 peak at f=3140 / Local 302f!) */}
               <div
                 style={{
-                  position: 'relative',
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: 26,
-                  padding: '22px 24px',
-                  backgroundColor: 'rgba(22, 20, 34, 0.95)',
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 30,
+                  backgroundColor: DARK_GLASS_BG,
                   border: `2.5px solid ${PURPLE}`,
-                  boxShadow: '0 24px 54px rgba(22, 20, 34, 0.24)',
+                  borderBottom: `8px solid ${PURPLE_DARK}`,
+                  boxShadow: '0 38px 90px rgba(22, 20, 34, 0.42)',
+                  backfaceVisibility: 'hidden',
+                  transform: `rotateY(${flipDeg.toFixed(2)}deg)`,
+                  overflow: 'hidden',
                   display: 'flex',
                   flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  boxSizing: 'border-box',
                 }}
               >
-                {/* Header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <div>
-                    <div
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 10.5,
-                        fontWeight: 800,
-                        letterSpacing: '0.14em',
-                        color: PURPLE_BORDER,
-                      }}
-                    >
-                      <ScanLine size={13} color={PURPLE} strokeWidth={2.5} />
-                      <span>LANGKAH 02 • IMBAS QR ACARA</span>
-                    </div>
-                    <div style={{ marginTop: 4, fontSize: 19, fontWeight: 900, color: '#FFFFFF' }}>
-                      jpp.polisas.edu.my/scan-qr
-                    </div>
-                  </div>
-
-                  <span
-                    style={{
-                      padding: '6px 12px',
-                      borderRadius: 999,
-                      backgroundColor: isScanLocked ? EMERALD_INK : PURPLE_INK,
-                      border: `1.5px solid ${isScanLocked ? EMERALD_BORDER : PURPLE_BORDER}`,
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 11,
-                      fontWeight: 900,
-                      color: '#FFFFFF',
-                    }}
-                  >
-                    {isScanLocked ? '✓ 100% SAH' : 'PENGIMBAS'}
-                  </span>
-                </div>
-
-                {/* Upright QR Viewfinder with Laser Sweep + 6-Frame Shutter Flash */}
+                {/* Top Dark Gate Bar */}
                 <div
                   style={{
-                    position: 'relative',
-                    alignSelf: 'center',
-                    width: 262,
-                    height: 262,
-                    borderRadius: 24,
-                    backgroundColor: 'rgba(168, 85, 247, 0.14)',
-                    border: '1.5px solid rgba(233, 213, 255, 0.34)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    overflow: 'hidden',
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: 14,
-                      borderRadius: 18,
-                      backgroundColor: '#FFFFFF',
-                      boxShadow: '0 14px 32px rgba(0, 0, 0, 0.28)',
-                    }}
-                  >
-                    <DeterministicQrMatrix
-                      seed={20269041}
-                      size={184}
-                      fgColor="#111812"
-                      bgColor="#FFFFFF"
-                    />
-                  </div>
-
-                  {/* Corner Viewfinder Brackets */}
-                  {[
-                    {
-                      top: 10,
-                      left: 10,
-                      borderTop: `4px solid ${PURPLE}`,
-                      borderLeft: `4px solid ${PURPLE}`,
-                      borderTopLeftRadius: 10,
-                    },
-                    {
-                      top: 10,
-                      right: 10,
-                      borderTop: `4px solid ${PURPLE}`,
-                      borderRight: `4px solid ${PURPLE}`,
-                      borderTopRightRadius: 10,
-                    },
-                    {
-                      bottom: 10,
-                      left: 10,
-                      borderBottom: `4px solid ${PURPLE}`,
-                      borderLeft: `4px solid ${PURPLE}`,
-                      borderBottomLeftRadius: 10,
-                    },
-                    {
-                      bottom: 10,
-                      right: 10,
-                      borderBottom: `4px solid ${PURPLE}`,
-                      borderRight: `4px solid ${PURPLE}`,
-                      borderBottomRightRadius: 10,
-                    },
-                  ].map((corner, cIdx) => (
-                    <div
-                      key={cIdx}
-                      style={{
-                        position: 'absolute',
-                        width: 28,
-                        height: 28,
-                        ...corner,
-                      }}
-                    />
-                  ))}
-
-                  {/* Volumetric Laser Blade */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: 16,
-                      right: 16,
-                      top: laserOffsetY,
-                      height: 4.5,
-                      borderRadius: 999,
-                      backgroundColor: isScanLocked ? EMERALD : PURPLE,
-                      boxShadow: isScanLocked
-                        ? '0 0 22px rgba(16, 185, 129, 0.95)'
-                        : '0 0 22px rgba(168, 85, 247, 0.95)',
-                    }}
-                  />
-
-                  {/* Crisp 6-Frame Shutter Flash Overlay at Scan Lock */}
-                  {shutterFlashOpacity > 0.004 ? (
-                    <div
-                      aria-hidden
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        backgroundColor: '#FFFFFF',
-                        opacity: shutterFlashOpacity,
-                        pointerEvents: 'none',
-                      }}
-                    />
-                  ) : null}
-                </div>
-
-                {/* Event Metadata Row */}
-                <div
-                  style={{
-                    padding: '12px 16px',
-                    borderRadius: 16,
-                    backgroundColor: 'rgba(248, 246, 238, 0.08)',
-                    border: '1px solid rgba(233, 213, 255, 0.24)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: 10,
-                  }}
-                >
-                  <div>
-                    <div style={{ fontSize: 16, fontWeight: 900, color: '#FFFFFF' }}>
-                      MAKMP 2026 • Dewan Jubli Perak
-                    </div>
-                    <div
-                      style={{
-                        marginTop: 2,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11.5,
-                        fontWeight: 700,
-                        color: isScanLocked ? EMERALD : PURPLE_BORDER,
-                      }}
-                    >
-                      {isScanLocked ? 'Kehadiran Disahkan ✓ • 17:12 PM' : 'Mengimbas Kod Acara...'}
-                    </div>
-                  </div>
-                  <QrCode size={22} color={PURPLE_BORDER} strokeWidth={2.2} />
-                </div>
-
-                {/* Live Rolling Merit Score Counter Box */}
-                <div
-                  style={{
-                    padding: '14px 18px',
-                    borderRadius: 18,
-                    backgroundColor: isScanLocked ? PURPLE_INK : 'rgba(168, 85, 247, 0.18)',
-                    border: `2px solid ${PURPLE_BORDER}`,
+                    padding: '16px 28px',
+                    backgroundColor: '#12101D',
+                    borderBottom: `1px solid rgba(233, 213, 255, 0.22)`,
+                    color: '#FFFFFF',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap: 12,
-                    transform: `scale(${(0.97 + 0.03 * meritLockSpring).toFixed(4)})`,
                   }}
                 >
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <CheckCircle2 size={18} color="#FFFFFF" strokeWidth={2.6} />
-                    <div>
+                    <ScanLine size={18} color={PURPLE} strokeWidth={2.5} />
+                    <span
+                      style={{
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 13.5,
+                        fontWeight: 900,
+                        letterSpacing: '0.14em',
+                      }}
+                    >
+                      IMBAS KEHADIRAN QR MERIT • EMS KAMPUS
+                    </span>
+                  </div>
+                  <span
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: 999,
+                      backgroundColor: meritAwarded ? 'rgba(16, 185, 129, 0.22)' : 'rgba(168, 85, 247, 0.24)',
+                      border: `1.5px solid ${meritAwarded ? EMERALD : PURPLE}`,
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 11.5,
+                      fontWeight: 900,
+                      color: meritAwarded ? EMERALD_BORDER : PURPLE_BORDER,
+                    }}
+                  >
+                    {meritAwarded ? 'KEHADIRAN DISAHKAN ✓' : 'SEDIA IMBAS QR'}
+                  </span>
+                </div>
+
+                {/* Inner Scanner Layout */}
+                <div
+                  style={{
+                    flex: 1,
+                    padding: '26px 32px',
+                    display: 'grid',
+                    gridTemplateColumns: '0.95fr 1.05fr',
+                    gap: 30,
+                    alignItems: 'center',
+                  }}
+                >
+                  {/* Left: Target QR Matrix with Purple Holographic Laser */}
+                  <div
+                    style={{
+                      padding: 20,
+                      borderRadius: 24,
+                      backgroundColor: '#FFFFFF',
+                      border: `3px solid ${meritAwarded ? EMERALD : PURPLE}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 10,
+                    }}
+                  >
+                    <div
+                      style={{
+                        position: 'relative',
+                        padding: 10,
+                        borderRadius: 16,
+                        backgroundColor: '#FFFFFF',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <DeterministicQrMatrix
+                        seed={2026}
+                        size={182}
+                        fgColor="#161422"
+                        bgColor="#FFFFFF"
+                      />
                       <div
+                        aria-hidden
                         style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 10.5,
-                          fontWeight: 800,
-                          color: PURPLE_BORDER,
+                          position: 'absolute',
+                          left: 4,
+                          right: 4,
+                          top: qrLaserY,
+                          height: 4,
+                          borderRadius: 999,
+                          backgroundColor: PINK,
+                          boxShadow: '0 0 14px rgba(236, 72, 153, 0.9)',
                         }}
-                      >
-                        JUMLAH MATA MERIT KOKURIKULUM
+                      />
+                    </div>
+                    <span
+                      style={{
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 11.5,
+                        fontWeight: 900,
+                        color: PURPLE_INK,
+                      }}
+                    >
+                      DEWAN JUBLI PERAK • MAKMP 2026
+                    </span>
+                  </div>
+
+                  {/* Right: Live Event Details + Floating Z-Parallax +15 Merit Pill */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                    <span
+                      style={{
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 11.5,
+                        fontWeight: 900,
+                        letterSpacing: '0.12em',
+                        color: PURPLE_BORDER,
+                      }}
+                    >
+                      PROGRAM KECEMERLANGAN POLISAS
+                    </span>
+                    <span
+                      style={{
+                        fontSize: 29,
+                        fontWeight: 900,
+                        lineHeight: 1.18,
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      Malam Anugerah Kecemerlangan Mahasiswa (MAKMP 2026)
+                    </span>
+                    <span style={{ fontSize: 15, fontWeight: 600, color: 'rgba(248, 246, 238, 0.78)' }}>
+                      Sekali imbas QR di pintu masuk, rekod kehadiran &amp; mata merit terus dikemas kini.
+                    </span>
+
+                    {/* Merit Launch Box */}
+                    <div
+                      style={{
+                        padding: '16px 20px',
+                        borderRadius: 20,
+                        backgroundColor: meritAwarded ? 'rgba(16, 185, 129, 0.22)' : 'rgba(168, 85, 247, 0.2)',
+                        border: `2px solid ${meritAwarded ? EMERALD : PURPLE}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        transform: `scale(${(0.95 + 0.06 * meritSpring).toFixed(4)})`,
+                      }}
+                    >
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <span
+                          style={{
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 11,
+                            fontWeight: 900,
+                            letterSpacing: '0.1em',
+                            color: EMERALD_BORDER,
+                          }}
+                        >
+                          MATA MERIT KOKURIKULUM
+                        </span>
+                        <span
+                          style={{
+                            fontSize: 24,
+                            fontWeight: 900,
+                            color: '#FFFFFF',
+                            fontVariantNumeric: 'tabular-nums',
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          +15 MATA MERIT
+                        </span>
                       </div>
+
                       <div
                         style={{
+                          padding: '8px 14px',
+                          borderRadius: 14,
+                          backgroundColor: '#FFFFFF',
+                          color: EMERALD_INK,
                           fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 15,
+                          fontSize: 14,
                           fontWeight: 900,
-                          color: '#FFFFFF',
+                          fontVariantNumeric: 'tabular-nums',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0,
                         }}
                       >
-                        +15 MATA MERIT ACARA ✓
+                        {liveMeritTotal} MERIT ✓
                       </div>
                     </div>
                   </div>
-
-                  <div
-                    style={{
-                      padding: '6px 14px',
-                      borderRadius: 12,
-                      backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                      border: `1.5px solid ${EMERALD}`,
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 22,
-                      fontWeight: 900,
-                      color: EMERALD,
-                      fontVariantNumeric: 'tabular-nums',
-                    }}
-                  >
-                    {liveMeritTotal}
-                  </div>
                 </div>
-              </div>
-            </Interactive.Div>
 
-            {/* Swiss Architectural Connector 2: Merit Counter -> e-Certificate Print */}
-            <div
-              style={{
-                position: 'absolute',
-                left: 1136,
-                top: 332,
-                width: 64,
-                height: 48,
-                pointerEvents: 'none',
-              }}
-            >
-              <EvolvingPath
-                d="M 4 24 L 56 24 M 46 15 L 56 24 L 46 33"
-                width={64}
-                height={48}
-                startFrame={conn2Start}
-                durationFrames={conn2Duration}
-                stroke={PINK_DARK}
-                trackStroke="rgba(251, 207, 232, 0.72)"
-                strokeWidth={2.5}
-                headDotColor={PINK}
-                headDotRadius={4}
-                hideDotWhenComplete
-              />
-            </div>
-
-            {/* STAGE 3 — RIGHT PANEL (Pink #EC4899): Upright Official PDF e-Certificate Stamp */}
-            <Interactive.Div
-              name="EMS Upright Official e-Certificate"
-              premountFor={safeFps}
-              style={{
-                position: 'absolute',
-                left: 1200,
-                top: 0,
-                width: 576,
-                height: 712,
-                opacity: stage3Opacity,
-                transform: `scale(${stage3Scale.toFixed(4)})`,
-              }}
-            >
-              <div
-                style={{
-                  position: 'relative',
-                  width: '100%',
-                  height: '100%',
-                  borderRadius: 26,
-                  padding: '22px 26px',
-                  backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                  border: `2.5px solid ${PINK}`,
-                  boxShadow: '0 26px 56px rgba(31, 39, 32, 0.24)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  boxSizing: 'border-box',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Sweeping Foil Reflection Sheen */}
-                {foilOpacity > 0.004 ? (
+                {/* Brief 6-Frame Scan Flash */}
+                {flashOpacity > 0.01 ? (
                   <div
                     aria-hidden
                     style={{
                       position: 'absolute',
-                      top: '-45%',
-                      left: `${foilLeftPct.toFixed(2)}%`,
-                      width: '32%',
-                      height: '190%',
-                      opacity: foilOpacity,
-                      background:
-                        'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(251, 207, 232, 0.5) 50%, rgba(255,255,255,0) 100%)',
-                      transform: 'rotate(24deg)',
+                      inset: 0,
+                      backgroundColor: '#FFFFFF',
+                      opacity: flashOpacity,
                       pointerEvents: 'none',
-                      zIndex: 5,
                     }}
                   />
                 ) : null}
+              </div>
 
-                {/* Certificate Chrome Row */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span
-                    style={{
-                      padding: '5px 12px',
-                      borderRadius: 999,
-                      backgroundColor: 'rgba(248, 246, 238, 0.08)',
-                      border: '1px solid rgba(251, 207, 232, 0.32)',
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      color: PINK_BORDER,
-                    }}
-                  >
-                    jpp.polisas.edu.my/sijil
-                  </span>
-
-                  <span
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 5,
-                      padding: '5px 12px',
-                      borderRadius: 999,
-                      backgroundColor: 'rgba(236, 72, 153, 0.22)',
-                      border: `1px solid ${PINK}`,
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 11,
-                      fontWeight: 900,
-                      color: '#FFFFFF',
-                    }}
-                  >
-                    <Sparkles size={12} color={AMBER} strokeWidth={2.5} />
-                    <span>LANGKAH 03 • E-SIJIL SAH ✓</span>
-                  </span>
-                </div>
-
-                {/* Official Medallion Seal + Title */}
+              {/* BACK FACE (-180 -> 0deg, guaranteed upright & un-mirrored!): GIANT HERO 3D DIGITAL E-CERTIFICATE (Shot 3 peak at f=3340 / Local 502f!) */}
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 30,
+                  backgroundColor: '#FFFFFF',
+                  border: `3px solid ${PINK}`,
+                  borderBottom: `8px solid ${AMBER_DARK}`,
+                  boxShadow: '0 40px 92px rgba(190, 24, 93, 0.22)',
+                  backfaceVisibility: 'hidden',
+                  transform: `rotateY(${(flipDeg - 180).toFixed(2)}deg)`,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                }}
+              >
+                {/* Certificate Top Accent Ribbon */}
                 <div
                   style={{
+                    height: 8,
                     display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    gap: 10,
                   }}
                 >
-                  <span
-                    style={{
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 11,
-                      fontWeight: 800,
-                      letterSpacing: '0.16em',
-                      color: PINK_BORDER,
-                    }}
-                  >
-                    SIJIL DIGITAL RASMI • POLISAS
-                  </span>
+                  <span style={{ flex: 1, backgroundColor: BLUE }} />
+                  <span style={{ flex: 1, backgroundColor: PURPLE }} />
+                  <span style={{ flex: 1, backgroundColor: PINK }} />
+                  <span style={{ flex: 1, backgroundColor: AMBER }} />
+                </div>
 
-                  <div
-                    style={{
-                      width: 96,
-                      height: 96,
-                      borderRadius: 999,
-                      backgroundColor: 'rgba(236, 72, 153, 0.22)',
-                      border: `2.5px solid ${PINK}`,
-                      boxShadow:
-                        '0 18px 36px rgba(236, 72, 153, 0.3), inset 0 0 18px rgba(245, 158, 11, 0.24)',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: 4,
-                      transform: `scale(${medallionScale.toFixed(4)})`,
-                    }}
-                  >
-                    <Award size={30} color={AMBER} strokeWidth={2.2} />
+                <div
+                  style={{
+                    flex: 1,
+                    padding: '26px 36px 24px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    gap: 16,
+                    transformStyle: 'preserve-3d',
+                  }}
+                >
+                  {/* Top Institution Tag & Serial Pill */}
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <div
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 13,
+                          backgroundColor: PINK_SOFT,
+                          border: `1.5px solid ${PINK_BORDER}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <Award size={23} color={PINK_INK} strokeWidth={2.4} />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span
+                          style={{
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 11.5,
+                            fontWeight: 900,
+                            letterSpacing: '0.13em',
+                            color: PINK_INK,
+                          }}
+                        >
+                          SIJIL DIGITAL RASMI • EMS JPP POLISAS
+                        </span>
+                        <span style={{ fontSize: 15, fontWeight: 800, color: LAUNCH_PALETTE.MUTED_OLIVE }}>
+                          Politeknik Sultan Haji Ahmad Shah, Kuantan
+                        </span>
+                      </div>
+                    </div>
+
                     <span
                       style={{
+                        padding: '6px 13px',
+                        borderRadius: 999,
+                        backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                        border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
                         fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 10,
+                        fontSize: 11.5,
                         fontWeight: 900,
-                        letterSpacing: '0.11em',
-                        color: PINK_BORDER,
+                        color: LAUNCH_PALETTE.PRIMARY,
                       }}
                     >
-                      E-SIJIL 2026
+                      #{safeSerial}
                     </span>
                   </div>
 
+                  {/* Center Certificate Main Awardee Block + Floating Gold/Magenta Medallion */}
                   <div
                     style={{
-                      fontFamily: LAUNCH_FONTS.SERIF_ITALIC,
-                      fontStyle: 'italic',
-                      fontSize: 38,
-                      lineHeight: 1.08,
-                      color: '#FFFFFF',
-                      textAlign: 'center',
-                    }}
-                  >
-                    Anugerah Penyertaan Aktif
-                  </div>
-
-                  <span
-                    style={{
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 11.5,
-                      fontWeight: 700,
-                      letterSpacing: '0.14em',
-                      color: LAUNCH_PALETTE.TERTIARY,
-                    }}
-                  >
-                    MAKMP 2026 • DEWAN JUBLI PERAK
-                  </span>
-                </div>
-
-                {/* Recipient Box */}
-                <div
-                  style={{
-                    padding: '15px 18px',
-                    borderRadius: 16,
-                    backgroundColor: 'rgba(248, 246, 238, 0.08)',
-                    border: '1px solid rgba(251, 207, 232, 0.24)',
-                    textAlign: 'center',
-                  }}
-                >
-                  <div
-                    style={{
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 10,
-                      fontWeight: 800,
-                      color: LAUNCH_PALETTE.TERTIARY,
-                      letterSpacing: '0.14em',
-                    }}
-                  >
-                    DIANUGERAHKAN KEPADA
-                  </div>
-                  <div style={{ marginTop: 4, fontSize: 22, fontWeight: 900, color: '#FFFFFF' }}>
-                    AIMAN HAKIM BIN AZMAN
-                  </div>
-                  <div
-                    style={{
-                      marginTop: 4,
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 12,
-                      fontWeight: 800,
-                      color: EMERALD,
-                    }}
-                  >
-                    Pelajar Semester 1 • JTMK
-                  </div>
-                </div>
-
-                {/* Serial + +15 Merit Pill */}
-                <div
-                  style={{
-                    padding: '11px 16px',
-                    borderRadius: 14,
-                    backgroundColor: 'rgba(248, 246, 238, 0.06)',
-                    border: '1px solid rgba(251, 207, 232, 0.22)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                  }}
-                >
-                  <span
-                    style={{
-                      display: 'inline-flex',
+                      padding: '24px 28px',
+                      borderRadius: 24,
+                      backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                      border: `2px solid ${AMBER_BORDER}`,
+                      display: 'flex',
                       alignItems: 'center',
-                      gap: 7,
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 12.5,
-                      fontWeight: 800,
-                      color: '#FFFFFF',
+                      justifyContent: 'space-between',
+                      gap: 24,
                     }}
                   >
-                    <ShieldCheck size={15} color={PINK} strokeWidth={2.4} />
-                    <span>{safeCertSerial}</span>
-                  </span>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxWidth: 630 }}>
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 11.5,
+                          fontWeight: 900,
+                          letterSpacing: '0.14em',
+                          color: PURPLE_INK,
+                        }}
+                      >
+                        DENGAN INI DIPERAKUI BAHAWA
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 36,
+                          fontWeight: 900,
+                          letterSpacing: '-0.025em',
+                          color: LAUNCH_PALETTE.PRIMARY,
+                          lineHeight: 1.08,
+                        }}
+                      >
+                        AIMAN HAKIM BIN AZMAN
+                      </span>
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 13,
+                          fontWeight: 800,
+                          color: EMERALD_INK,
+                        }}
+                      >
+                        NO. MATRIK: 04DAT24F1022 • JABATAN PERDAGANGAN
+                      </span>
+                      <span style={{ fontSize: 16.5, fontWeight: 700, color: LAUNCH_PALETTE.MUTED_OLIVE, lineHeight: 1.35 }}>
+                        Telah menyertai Malam Anugerah Kecemerlangan Mahasiswa (MAKMP 2026) &amp; menerima pengesahan +15 Mata Merit Kokurikulum.
+                      </span>
+                    </div>
 
-                  <span
+                    {/* Floating Gold & Magenta Medallion Seal (+44px Z) */}
+                    <div
+                      style={{
+                        width: 196,
+                        padding: '18px 16px',
+                        borderRadius: 24,
+                        backgroundColor: '#FFFFFF',
+                        border: `2.5px solid ${AMBER}`,
+                        boxShadow: '0 22px 46px rgba(217, 119, 6, 0.24)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        textAlign: 'center',
+                        gap: 8,
+                        transform: 'translateZ(44px)',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: 62,
+                          height: 62,
+                          borderRadius: 999,
+                          backgroundColor: AMBER_SOFT,
+                          border: `2px solid ${AMBER}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <ShieldCheck size={32} color={AMBER_INK} strokeWidth={2.5} />
+                      </div>
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 11.5,
+                          fontWeight: 900,
+                          color: AMBER_INK,
+                        }}
+                      >
+                        DISAHKAN EMS ✓
+                      </span>
+                      <span
+                        style={{
+                          fontSize: 19,
+                          fontWeight: 900,
+                          color: PINK_INK,
+                        }}
+                      >
+                        +15 MERIT
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bottom Crisp PDF Download CTA Strip */}
+                  <div
                     style={{
-                      padding: '4px 11px',
-                      borderRadius: 999,
-                      backgroundColor: PURPLE_INK,
-                      color: '#FFFFFF',
-                      fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 11,
-                      fontWeight: 900,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 16,
                     }}
                   >
-                    +15 MERIT ✓
-                  </span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <Check size={17} color={EMERALD_INK} strokeWidth={3} />
+                      <span style={{ fontSize: 14.5, fontWeight: 800, color: LAUNCH_PALETTE.MUTED_OLIVE }}>
+                        Tandatangan digital disahkan • Terus simpan ke telefon anda
+                      </span>
+                    </div>
+
+                    <div
+                      style={{
+                        padding: '12px 22px',
+                        borderRadius: 15,
+                        backgroundColor: PINK_DARK,
+                        color: '#FFFFFF',
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 13,
+                        fontWeight: 900,
+                        letterSpacing: '0.07em',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 9,
+                        boxShadow: '0 14px 28px rgba(219, 39, 119, 0.28)',
+                      }}
+                    >
+                      <Download size={16} strokeWidth={2.6} />
+                      <span>Muat Turun PDF Rasmi Serta-Merta ✓</span>
+                    </div>
+                  </div>
                 </div>
 
-                {/* Official PDF Download CTA */}
-                <div
-                  style={{
-                    padding: '14px 18px',
-                    borderRadius: 999,
-                    backgroundColor: PINK_INK,
-                    border: `1.5px solid ${PINK_BORDER}`,
-                    color: '#FFFFFF',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 9,
-                    fontSize: 14.5,
-                    fontWeight: 900,
-                    transform: `scale(${(0.96 + 0.04 * downloadSpring).toFixed(4)})`,
-                  }}
-                >
-                  <Download size={16} strokeWidth={2.6} />
-                  <span>Muat Turun PDF Rasmi Serta-Merta ✓</span>
-                </div>
-
-                {/* Celebration Burst Triggered at Official Seal Stamp */}
-                <GeometricSparkBurst
-                  triggerFrame={certSparkFrame}
-                  x={288}
-                  y={178}
-                  durationFrames={46}
-                  radius={74}
-                  count={10}
-                  seed="clubs-v6-ecert-burst"
-                  colors={[PINK, AMBER, PURPLE]}
-                  style={{ zIndex: 12 }}
-                />
+                {/* Animated Metallic Foil Diagonal Sheen */}
+                {foilOpacity > 0.01 ? (
+                  <div
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      top: '-40%',
+                      left: `${foilLeftPct.toFixed(1)}%`,
+                      width: '32%',
+                      height: '180%',
+                      background:
+                        'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(251, 207, 232, 0.36) 46%, rgba(253, 230, 138, 0.45) 54%, rgba(255,255,255,0) 100%)',
+                      transform: 'rotate(24deg)',
+                      opacity: foilOpacity,
+                      pointerEvents: 'none',
+                    }}
+                  />
+                ) : null}
               </div>
-            </Interactive.Div>
-          </div>
+            </div>
+          ) : null}
+
+          {/* Celebratory Sparks across all 3 Shots */}
+          <GeometricSparkBurst
+            triggerFrame={86}
+            x={1280}
+            y={556}
+            durationFrames={30}
+            radius={80}
+            count={10}
+            seed="clubs-join-spark"
+            colors={[BLUE, EMERALD, '#FFFFFF']}
+          />
+          <GeometricSparkBurst
+            triggerFrame={278}
+            x={1160}
+            y={420}
+            durationFrames={32}
+            radius={112}
+            count={12}
+            seed="clubs-merit-spark"
+            colors={[PURPLE, PINK, EMERALD]}
+          />
+          <GeometricSparkBurst
+            triggerFrame={462}
+            x={1240}
+            y={380}
+            durationFrames={34}
+            radius={118}
+            count={14}
+            seed="clubs-cert-spark"
+            colors={[PINK, AMBER, '#FFFFFF']}
+          />
+
+          <GhostCursor
+            keyframes={CLUB_JOIN_CURSOR_KEYFRAMES}
+            appearFrame={40}
+            disappearFrame={104}
+            color={LAUNCH_PALETTE.PRIMARY_DARK}
+            rippleColor={BLUE}
+          />
         </div>
       </CameraStage>
 
       <EditorialFrameMarks
-        chapterCode="06"
+        chapterCode="07"
         chapterLabel="17:00 PETANG • 21 KELAB, MERIT & E-SIJIL"
       />
     </>
@@ -1294,7 +1202,7 @@ const clubsEmsSchema = {
     max: 500,
     integer: true,
     hiddenFromList: false,
-    description: 'Clubs Count',
+    description: 'Active Clubs Count',
   },
   activitiesCount: {
     type: 'number',
@@ -1303,12 +1211,12 @@ const clubsEmsSchema = {
     max: 5000,
     integer: true,
     hiddenFromList: false,
-    description: 'Activities Count',
+    description: 'Student Activities Count',
   },
   certSerial: {
     type: 'string',
     default: 'EMS-CERT-2026-9041',
-    description: 'Certificate Serial',
+    description: 'Digital Certificate Serial Number',
   },
 } as const satisfies InteractivitySchema;
 

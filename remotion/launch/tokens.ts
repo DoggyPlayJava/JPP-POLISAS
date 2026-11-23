@@ -174,8 +174,8 @@ export type ChapterModuleThemeSpec = {
 };
 
 /**
- * Chapter-indexed (`0..7`) accent spectrum driving `<GlobalCinemaGate>` progress rail,
- * chapter ticks, and cut overlays across the 49-second film.
+ * Chapter-indexed (`0..8`) accent spectrum driving `<GlobalCinemaGate>` progress rail,
+ * chapter ticks, and cut overlays across the 74-second film.
  */
 export const CHAPTER_MODULE_THEMES: readonly ChapterModuleThemeSpec[] = [
   {
@@ -193,35 +193,41 @@ export const CHAPTER_MODULE_THEMES: readonly ChapterModuleThemeSpec[] = [
   {
     code: '03',
     accent: LAUNCH_MODULE_THEMES.polymart.primary,
-    secondary: LAUNCH_MODULE_THEMES.polyrent.primary,
+    secondary: LAUNCH_MODULE_THEMES.polymaps.primary,
     badgeBg: LAUNCH_MODULE_THEMES.polymart.soft,
   },
   {
     code: '04',
+    accent: LAUNCH_MODULE_THEMES.polyrent.primary,
+    secondary: LAUNCH_MODULE_THEMES.polymaps.primary,
+    badgeBg: LAUNCH_MODULE_THEMES.polyrent.soft,
+  },
+  {
+    code: '05',
     accent: LAUNCH_MODULE_THEMES.polysuara.primary,
     secondary: LAUNCH_MODULE_THEMES.polysuara.dark,
     badgeBg: LAUNCH_MODULE_THEMES.polysuara.soft,
   },
   {
-    code: '05',
+    code: '06',
     accent: LAUNCH_MODULE_THEMES.kebajikan.primary,
     secondary: LAUNCH_MODULE_THEMES.foodbank.primary,
     badgeBg: LAUNCH_MODULE_THEMES.kebajikan.soft,
   },
   {
-    code: '06',
+    code: '07',
     accent: LAUNCH_MODULE_THEMES.kelab.primary,
     secondary: LAUNCH_MODULE_THEMES.meritQr.primary,
     badgeBg: LAUNCH_MODULE_THEMES.kelab.soft,
   },
   {
-    code: '07',
+    code: '08',
     accent: LAUNCH_MODULE_THEMES.meritQr.primary,
     secondary: LAUNCH_MODULE_THEMES.polymaps.primary,
     badgeBg: LAUNCH_MODULE_THEMES.impact.soft,
   },
   {
-    code: '08',
+    code: '09',
     accent: LAUNCH_PALETTE.ACCENT,
     secondary: LAUNCH_MODULE_THEMES.polymaps.primary,
     badgeBg: LAUNCH_MODULE_THEMES.closing.soft,
