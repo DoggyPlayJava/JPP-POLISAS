@@ -314,7 +314,7 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
       showInTimeline={false}
       style={{
         pointerEvents: 'none',
-        zIndex: 50,
+        zIndex: 30,
         fontFamily: LAUNCH_FONTS.MONO,
         fontSize: 13,
         lineHeight: `${ODOMETER_ROW_HEIGHT}px`,
