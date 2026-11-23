@@ -27,29 +27,28 @@ import { CameraStage } from '../motion/CameraStage';
 import { KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath, GeometricSparkBurst } from '../motion/MotionActors';
 import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
-import {
-  DeterministicQrMatrix,
-  ExplodedLayer,
-  KineticWindow,
-} from '../ui/KineticCard';
+import { DeterministicQrMatrix, SpatialFloorGrid } from '../ui/KineticCard';
 
 const BLUE = LAUNCH_MODULE_THEMES.kelab.primary; // #3B82F6
 const BLUE_DARK = LAUNCH_MODULE_THEMES.kelab.dark; // #2563EB
+const BLUE_INK = '#1D4ED8'; // WCAG AA+ Blue-700
 const BLUE_SOFT = LAUNCH_MODULE_THEMES.kelab.soft; // #EFF6FF
 const BLUE_BORDER = LAUNCH_MODULE_THEMES.kelab.border; // #BFDBFE
 
 const PURPLE = LAUNCH_MODULE_THEMES.meritQr.primary; // #A855F7
 const PURPLE_DARK = LAUNCH_MODULE_THEMES.meritQr.dark; // #9333EA
+const PURPLE_INK = '#7E22CE'; // WCAG AA+ Purple-700
 const PURPLE_BORDER = LAUNCH_MODULE_THEMES.meritQr.border; // #E9D5FF
 
 const PINK = LAUNCH_MODULE_THEMES.ems.primary; // #EC4899
 const PINK_DARK = LAUNCH_MODULE_THEMES.ems.dark; // #DB2777
-const PINK_SOFT = LAUNCH_MODULE_THEMES.ems.soft; // #FDF2F8
+const PINK_INK = '#BE185D'; // WCAG AA+ Pink-700
 const PINK_BORDER = LAUNCH_MODULE_THEMES.ems.border; // #FBCFE8
 
 const EMERALD = LAUNCH_MODULE_THEMES.polymaps.primary; // #10B981
-const EMERALD_DARK = LAUNCH_MODULE_THEMES.polymaps.dark; // #059669
+const EMERALD_INK = '#047857';
 const EMERALD_SOFT = LAUNCH_MODULE_THEMES.polymaps.soft; // #ECFDF5
+const EMERALD_BORDER = LAUNCH_MODULE_THEMES.polymaps.border; // #A7F3D0
 const AMBER = LAUNCH_MODULE_THEMES.polymart.primary; // #F59E0B
 
 export type ClubsEmsProps = {
@@ -64,7 +63,9 @@ type StudentClubSpec = {
   readonly meta: string;
   readonly icon: 'gamepad' | 'cpu' | 'briefcase' | 'users';
   readonly joinTapFrame: number | null;
-  readonly activeTone: 'accent' | 'sage' | 'open';
+  readonly activeTone: 'blue' | 'emerald' | 'open';
+  readonly arcOffsetX: number;
+  readonly baseZ: number;
 };
 
 const STUDENT_CLUBS: readonly StudentClubSpec[] = [
@@ -73,16 +74,20 @@ const STUDENT_CLUBS: readonly StudentClubSpec[] = [
     name: 'Kelab E-Sport',
     meta: 'Sukan Digital · 142 Ahli',
     icon: 'gamepad',
-    joinTapFrame: 62,
-    activeTone: 'accent',
+    joinTapFrame: 48,
+    activeTone: 'blue',
+    arcOffsetX: 0,
+    baseZ: 12,
   },
   {
     id: 'robosas',
     name: 'Robosas Robotik',
     meta: 'Inovasi & Kejuruteraan · 98 Ahli',
     icon: 'cpu',
-    joinTapFrame: 76,
-    activeTone: 'sage',
+    joinTapFrame: 64,
+    activeTone: 'emerald',
+    arcOffsetX: 6,
+    baseZ: 24,
   },
   {
     id: 'commerce',
@@ -91,14 +96,18 @@ const STUDENT_CLUBS: readonly StudentClubSpec[] = [
     icon: 'briefcase',
     joinTapFrame: null,
     activeTone: 'open',
+    arcOffsetX: 8,
+    baseZ: 32,
   },
   {
     id: 'pepka',
     name: 'PePKa',
     meta: 'Persatuan Pelajar Kampus · 210 Ahli',
     icon: 'users',
-    joinTapFrame: 90,
-    activeTone: 'sage',
+    joinTapFrame: 80,
+    activeTone: 'emerald',
+    arcOffsetX: 4,
+    baseZ: 18,
   },
 ];
 
@@ -107,24 +116,12 @@ const COUNTER_EASE = Easing.bezier(0.22, 1, 0.36, 1);
 const LASER_EASE = Easing.bezier(0.45, 0, 0.55, 1);
 const SHEEN_EASE = Easing.bezier(0.25, 0.1, 0.25, 1);
 
-// 3-Column Horizontal Student Co-Curricular Journey geometry inside 1920x1080 safe bounds
-const PIPELINE_LEFT = 84;
-const PIPELINE_TOP = 228;
-const PIPELINE_HEIGHT = 738;
-const COL1_WIDTH = 540;
-const CONN_WIDTH = 60;
-const COL2_WIDTH = 540;
-const COL3_WIDTH = 552;
-const TOTAL_PIPELINE_WIDTH = COL1_WIDTH + CONN_WIDTH + COL2_WIDTH + CONN_WIDTH + COL3_WIDTH; // 1752
-
-const MEDALLION_SIZE = 104;
-
 const renderClubIcon = (icon: StudentClubSpec['icon'], isJoined: boolean, tone: StudentClubSpec['activeTone']) => {
   const color = !isJoined
     ? LAUNCH_PALETTE.PRIMARY
-    : tone === 'accent'
-      ? BLUE_DARK
-      : EMERALD_DARK;
+    : tone === 'blue'
+      ? BLUE_INK
+      : EMERALD_INK;
   switch (icon) {
     case 'gamepad':
       return <Gamepad2 size={20} color={color} strokeWidth={2.3} />;
@@ -143,10 +140,9 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
   certSerial,
 }) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps } = useVideoConfig();
 
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
-  const safeDuration = Math.max(30, Number.isFinite(durationInFrames) ? durationInFrames : 390);
   const timeSec = frame / safeFps;
 
   const safeClubs = Number.isFinite(clubsCount) ? Math.max(0, Math.round(clubsCount)) : 21;
@@ -155,253 +151,143 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
     : 41;
   const safeCertSerial = certSerial.trim() || 'EMS-CERT-2026-9041';
 
-  // Beat 1 (0..1.8s): Top Student Header + Live Rolling Counters + Column 1 Club Directory
+  // Beat 1 (0..1.5s): Header + Curved Blue Club Deck
   const pillStart = 0;
   const pillDuration = Math.max(8, Math.round(0.36 * safeFps));
-  const headlineStart = Math.round(0.1 * safeFps);
+  const headlineStart = Math.round(0.08 * safeFps);
   const wordStagger = Math.max(2, Math.round(0.055 * safeFps));
   const wordDuration = Math.max(8, Math.round(0.34 * safeFps));
 
   const counterStart = Math.round(0.12 * safeFps);
-  const clubsCounterEnd = Math.max(counterStart + 8, Math.round(1.18 * safeFps));
-  const activitiesCounterEnd = Math.max(counterStart + 10, Math.round(1.36 * safeFps));
-
+  const counterDuration = Math.max(18, Math.round(0.95 * safeFps));
   const liveClubs = Math.round(
-    interpolate(frame, [counterStart, clubsCounterEnd], [0, safeClubs], {
+    interpolate(frame, [counterStart, counterStart + counterDuration], [0, safeClubs], {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
       easing: COUNTER_EASE,
     }),
   );
   const liveActivities = Math.round(
-    interpolate(frame, [counterStart, activitiesCounterEnd], [0, safeActivities], {
+    interpolate(frame, [counterStart + 4, counterStart + counterDuration], [0, safeActivities], {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
       easing: COUNTER_EASE,
     }),
   );
 
-  const counterCardOpacity = interpolate(
-    frame,
-    [counterStart, counterStart + Math.max(6, Math.round(0.3 * safeFps))],
-    [0, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-    },
-  );
-
-  // Column 1 entry
-  const col1Enter = interpolate(
-    frame,
-    [Math.round(0.16 * safeFps), Math.round(0.74 * safeFps)],
-    [0, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: EXPO_OUT,
-    },
-  );
-  const col1Opacity = interpolate(col1Enter, [0, 0.25, 1], [0, 1, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-  const col1TranslateY = interpolate(col1Enter, [0, 1], [26, 0]);
-  const col1FloatY = Math.sin(timeSec * 1.35) * 2.2 * col1Enter;
-
-  const baseRowEnter = Math.round(0.45 * safeFps); // 27f, staggered 5 frames apart
-  const rowEnterStagger = Math.max(3, Math.round((5 / 60) * safeFps)); // 5f @ 60fps
-  const joinedCount = STUDENT_CLUBS.reduce((acc, club) => {
-    if (club.joinTapFrame !== null) {
-      const scaledTap = Math.round((club.joinTapFrame / 60) * safeFps);
-      return frame >= scaledTap ? acc + 1 : acc;
-    }
-    return acc;
-  }, 0);
-
-  // Connector 1 (Column 1 -> Column 2)
-  const conn1Start = Math.round(1.52 * safeFps); // 91f
-  const conn1Duration = Math.max(10, Math.round(0.38 * safeFps)); // 23f -> ends 114f
-  const conn1End = conn1Start + conn1Duration;
-  const conn1Done = frame >= conn1End;
-  const pulseCycle = Math.max(32, Math.round(1.05 * safeFps));
-  const conn1PulsePhase = conn1Done ? ((frame - conn1End) % pulseCycle) / pulseCycle : 0;
-  const conn1PulseX = interpolate(conn1PulsePhase, [0, 1], [8, 56]);
-  const conn1PulseOpacity = conn1Done
-    ? interpolate(conn1PulsePhase, [0, 0.18, 0.82, 1], [0.2, 1, 1, 0.15], {
-        extrapolateLeft: 'clamp',
-        extrapolateRight: 'clamp',
-      })
-    : 0;
-
-  // Beat 2 (1.6..4.0s): Column 2 Live Student Scan QR Merit Viewfinder
-  const col2EnterStart = Math.round(1.58 * safeFps); // 95f
-  const col2EnterEnd = Math.max(col2EnterStart + 10, Math.round(2.08 * safeFps)); // 125f
-  const col2Enter = interpolate(frame, [col2EnterStart, col2EnterEnd], [0, 1], {
+  const deckEnter = interpolate(frame, [Math.round(0.18 * safeFps), Math.round(0.72 * safeFps)], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
-  const col2Opacity = interpolate(col2Enter, [0, 0.28, 1], [0, 1, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-  const col2TranslateX = interpolate(col2Enter, [0, 1], [28, 0]);
-  const col2Scale = interpolate(col2Enter, [0, 1], [0.95, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    output: 'perceptual-scale',
-  });
-  const col2FloatY = Math.cos(timeSec * 1.45 + 0.6) * 2.2 * col2Enter;
 
-  // Sweeping terracotta laser beam (10% -> 90% -> 10%)
-  const laserDownStart = Math.round(2.02 * safeFps); // 121f
-  const laserMid = Math.max(laserDownStart + 4, Math.round(2.62 * safeFps)); // 157f
-  const laserUpEnd = Math.max(laserMid + 4, Math.round(3.18 * safeFps)); // 191f
-  const laserPct = interpolate(
-    frame,
-    [laserDownStart, laserMid, laserUpEnd],
-    [10, 90, 10],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: LASER_EASE,
-    },
-  );
-  const isLaserActive = frame >= laserDownStart && frame <= laserUpEnd;
-  const scanPercent = Math.round(
-    interpolate(frame, [laserDownStart, laserUpEnd], [0, 100], {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-    }),
-  );
-
-  // Crisp 6-frame lock exposure flash (snaps strictly to 0 after)
-  const flashStart = Math.max(laserUpEnd + 1, Math.round(3.2 * safeFps)); // 192f
-  const flashFrames = Math.max(3, Math.round((6 / 60) * safeFps)); // 6f @ 60fps
-  const flashPeak = flashStart + 1;
-  const flashEnd = flashStart + flashFrames;
-  const inFlashWindow = frame >= flashStart && frame < flashEnd;
-  const flashOpacity = inFlashWindow
-    ? interpolate(frame, [flashStart, flashPeak, flashEnd], [0.22, 0.92, 0], {
-        extrapolateLeft: 'clamp',
-        extrapolateRight: 'clamp',
-      })
-    : 0;
-  const isQrVerified = frame >= flashPeak;
-
-  // Spring-popping +15 MATA MERIT KOKURIKULUM DISAHKAN toast banner
-  const toastStart = flashPeak + 2; // 195f
-  const toastSpring =
-    frame >= toastStart
+  // Connector 1 -> Laser Gate
+  const conn1Start = Math.round(1.38 * safeFps); // 83f
+  const conn1Duration = Math.max(12, Math.round(0.38 * safeFps));
+  const gateStart = Math.round(1.52 * safeFps); // 91f
+  const gateSpring =
+    frame >= gateStart
       ? spring({
-          frame: frame - toastStart,
+          frame: frame - gateStart,
           fps: safeFps,
-          config: { damping: 14, stiffness: 240, mass: 0.78 },
+          config: { damping: 16, stiffness: 215, mass: 0.9 },
         })
       : 0;
-  const toastScale = 0.88 + 0.12 * toastSpring;
-  const toastOpacity =
-    frame >= toastStart
-      ? interpolate(frame - toastStart, [0, Math.max(3, Math.round(0.08 * safeFps))], [0, 1], {
+  const gateOpacity =
+    frame >= gateStart
+      ? interpolate(frame, [gateStart, gateStart + Math.round(0.2 * safeFps)], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
       : 0;
 
-  // Connector 2 (Column 2 -> Column 3)
-  const conn2Start = Math.round(3.28 * safeFps); // 197f
-  const conn2Duration = Math.max(10, Math.round(0.36 * safeFps)); // 22f -> ends 219f
-  const conn2End = conn2Start + conn2Duration;
-  const conn2Done = frame >= conn2End;
-  const conn2PulsePhase = conn2Done ? ((frame - conn2End) % pulseCycle) / pulseCycle : 0;
-  const conn2PulseX = interpolate(conn2PulsePhase, [0, 1], [8, 56]);
-  const conn2PulseOpacity = conn2Done
-    ? interpolate(conn2PulsePhase, [0, 0.18, 0.82, 1], [0.2, 1, 1, 0.15], {
-        extrapolateLeft: 'clamp',
-        extrapolateRight: 'clamp',
+  // Purple Volumetric Laser Sweeps & Locks at f=144 (Global 1914 -> active during Global f=1920!)
+  const sweepStart = gateStart + Math.round(0.2 * safeFps); // 103f
+  const sweepEnd = Math.round(2.4 * safeFps); // 144f
+  const sweepProgress = interpolate(frame, [sweepStart, sweepEnd], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: LASER_EASE,
+  });
+  const laserOffsetY = interpolate(sweepProgress, [0, 0.5, 1], [10, 192, 98]);
+  const lockFrame = sweepEnd;
+  const isScanLocked = frame >= lockFrame;
+  const meritLaunchSpring = isScanLocked
+    ? spring({
+        frame: frame - lockFrame,
+        fps: safeFps,
+        config: { damping: 14, stiffness: 255, mass: 0.78 },
       })
     : 0;
 
-  // Beat 3 (3.4..6.5s): Column 3 Official Student Digital e-Certificate (ExplodedLayer zDepth=30)
-  const certPopStart = Math.round(3.4 * safeFps); // 204f
-  const sheenStart = Math.round(4.15 * safeFps); // 249f
-  const sheenPeriod = Math.max(48, Math.round(1.65 * safeFps)); // 99f: 62% sweep + 38% rest gap
-  const sheenElapsed = frame - sheenStart;
-  const sheenPhase = sheenElapsed >= 0 ? (sheenElapsed % sheenPeriod) / sheenPeriod : 0;
-  const sheenProgress = interpolate(sheenPhase, [0, 0.62], [0, 1], {
+  // Connector 2 -> Hero 3D Swinging Pink e-Certificate Showcase
+  // Enters at f=138 so it's visibly swinging in at Global 1920 (Local 150) & fully glorious at Global 2040 (Local 270)!
+  const conn2Start = Math.round(2.3 * safeFps); // 138f
+  const conn2Duration = Math.max(12, Math.round(0.36 * safeFps));
+  const certStart = Math.round(2.28 * safeFps); // 137f
+  const certSpring =
+    frame >= certStart
+      ? spring({
+          frame: frame - certStart,
+          fps: safeFps,
+          config: { damping: 15, stiffness: 195, mass: 0.92 },
+        })
+      : 0;
+  const certOpacity =
+    frame >= certStart
+      ? interpolate(frame, [certStart, certStart + Math.round(0.2 * safeFps)], [0, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        })
+      : 0;
+
+  const certRotY = interpolate(certSpring, [0, 1], [-34, -11]);
+  const certRotX = interpolate(certSpring, [0, 1], [12, 8]);
+  const certFloatY = Math.sin(timeSec * 1.4 + 0.6) * 4 * certSpring;
+
+  const certSparkFrame = Math.round(4.15 * safeFps); // 249f -> blooming burst visible across Global f=2040 (Local 270)
+  const foilStart = Math.round(3.55 * safeFps);
+  const foilProgress = interpolate(frame, [foilStart, foilStart + 44], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: SHEEN_EASE,
   });
-  const sheenOpacity =
-    sheenElapsed >= 0
-      ? interpolate(sheenPhase, [0, 0.12, 0.5, 0.62], [0, 1, 1, 0], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-        })
-      : 0;
-  const sheenX = interpolate(sheenProgress, [0, 1], [-220, 760]);
-
-  const downloadBtnCue = Math.round(3.92 * safeFps); // 235f
-  const downloadBtnSpring =
-    frame >= downloadBtnCue
-      ? spring({
-          frame: frame - downloadBtnCue,
-          fps: safeFps,
-          config: { damping: 14, stiffness: 230, mass: 0.82 },
-        })
-      : 0;
-
-  // Restrained architectural watch-glint spark burst hugging the E-SIJIL 2026 medallion
-  const sparkTrigger = Math.round(4.83 * safeFps); // 290f -> peak crisp glint right at f300!
-  const sparkDuration = Math.max(24, Math.round(1.05 * safeFps)); // 63f
-
-  // Subtle exit lead on pipeline
-  const exitFrames = Math.max(2, Math.round(0.35 * safeFps));
-  const sceneEnd = Math.max(1, safeDuration - 1);
-  const exitStart = Math.max(0, Math.min(sceneEnd - 1, safeDuration - exitFrames));
-  const exitFactor = interpolate(frame, [exitStart, sceneEnd], [0, 1], {
+  const foilLeftPct = interpolate(foilProgress, [0, 1], [-42, 132]);
+  const foilOpacity = interpolate(foilProgress, [0, 0.2, 0.78, 1], [0, 0.5, 0.5, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: Easing.bezier(0.55, 0, 1, 0.45),
   });
-  const pipelineExitScale = 1 + 0.012 * exitFactor;
 
-  const liveDotScale = 0.84 + Math.sin(timeSec * 5.8) * 0.2;
-  const qrBoxBorderColor = inFlashWindow
-    ? '#FFFFFF'
-    : isQrVerified
-      ? PURPLE
-      : isLaserActive
-        ? PURPLE
-        : PURPLE_BORDER;
-  const bracketColor = isQrVerified
-    ? EMERALD
-    : isLaserActive
-      ? PURPLE
-      : PURPLE_BORDER;
+  const downloadSpring =
+    frame >= Math.round(3.85 * safeFps)
+      ? spring({
+          frame: frame - Math.round(3.85 * safeFps),
+          fps: safeFps,
+          config: { damping: 14, stiffness: 230, mass: 0.8 },
+        })
+      : 0;
 
   return (
     <>
       <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.kelab.tint} />
 
       <CameraStage
-        zoomFrom={1}
-        zoomTo={1.02}
-        panXFrom={8}
-        panXTo={-8}
-        panYFrom={4}
-        panYTo={-4}
-        tiltXFrom={0.32}
-        tiltXTo={-0.28}
-        tiltYFrom={0.75}
-        tiltYTo={-0.75}
-        breathingAmplitude={0.55}
-        entryPanYOffset={40}
+        perspective={1500}
+        zoomFrom={0.96}
+        zoomTo={0.995}
+        panXFrom={4}
+        panXTo={-4}
+        panYFrom={3}
+        panYTo={-3}
+        tiltXFrom={4}
+        tiltXTo={-1}
+        tiltYFrom={-4}
+        tiltYTo={4}
+        breathingAmplitude={0.35}
+        entryPanYOffset={24}
         entryZoomOffset={-0.02}
-        exitZoomDelta={0.036}
-        exitFrames={Math.round(0.35 * safeFps)}
+        exitZoomDelta={0.032}
+        exitFrames={Math.round(0.32 * safeFps)}
         clip
       >
         <div
@@ -409,117 +295,82 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
             position: 'absolute',
             inset: 0,
             fontFamily: LAUNCH_FONTS.DISPLAY,
-            perspective: '1800px',
+            perspective: '1500px',
             transformStyle: 'preserve-3d',
           }}
         >
-          {/* Top Student Header Row (y ~ 82..204) */}
-          <Interactive.Div
-            name="Clubs Student Header"
-            premountFor={safeFps}
+          {/* 3D Perspective Architectural Floor Grid with Purple & Blue Radial Glows */}
+          <SpatialFloorGrid accentColor={PURPLE} secondaryColor={BLUE} gridOpacity={0.22} scrollSpeed={15} />
+
+          {/* Beat 1: Header + Live Clubs & Activities Counters */}
+          <div
             style={{
               position: 'absolute',
-              left: PIPELINE_LEFT,
-              right: PIPELINE_LEFT,
-              top: 82,
-              height: 122,
+              left: 68,
+              right: 68,
+              top: 66,
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'flex-end',
               gap: 24,
+              zIndex: 10,
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 11, minWidth: 0 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <KineticReveal startFrame={pillStart} durationFrames={pillDuration}>
                 <div
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
-                    gap: 9,
+                    gap: 8,
                     alignSelf: 'flex-start',
                     padding: '6px 17px',
                     borderRadius: 999,
                     backgroundColor: BLUE_SOFT,
                     border: `1.5px solid ${BLUE}`,
-                    color: BLUE_DARK,
+                    color: BLUE_INK,
                     fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 12,
+                    fontSize: 12.5,
                     fontWeight: 800,
                     letterSpacing: '0.16em',
                   }}
                 >
-                  <Award size={15} color={BLUE_DARK} strokeWidth={2.4} />
-                  <span>17:00 PETANG • {safeClubs} KELAB, MERIT &amp; E-SIJIL</span>
+                  <Award size={14} color={BLUE_INK} strokeWidth={2.4} />
+                  <span>17:00 PETANG • 21 KELAB, MERIT &amp; E-SIJIL</span>
                 </div>
               </KineticReveal>
 
-              <h2
+              <KineticWords
+                as="h2"
+                text="21 Kelab. Imbas QR Acara. Kumpul Merit & e-Sijil."
+                startFrame={headlineStart}
+                staggerFrames={wordStagger}
+                wordDurationFrames={wordDuration}
+                accentWords={['21', 'Merit']}
+                accentColor={PURPLE_DARK}
                 style={{
                   margin: 0,
-                  display: 'flex',
-                  flexWrap: 'nowrap',
-                  alignItems: 'baseline',
-                  columnGap: '0.24em',
-                  fontSize: 45,
+                  fontSize: 47,
                   fontWeight: 900,
-                  lineHeight: 1.06,
                   letterSpacing: '-0.03em',
+                  lineHeight: 1.07,
                   color: LAUNCH_PALETTE.PRIMARY,
-                  whiteSpace: 'nowrap',
                 }}
-              >
-                <span
-                  style={{
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    color: BLUE_DARK,
-                    fontVariantNumeric: 'tabular-nums',
-                    display: 'inline-block',
-                    minWidth: `${Math.max(2, String(safeClubs).length)}ch`,
-                    textAlign: 'right',
-                  }}
-                >
-                  {liveClubs}
-                </span>
-                <KineticWords
-                  as="span"
-                  text="Kelab. Imbas QR Acara. Kumpul Merit & e-Sijil."
-                  startFrame={headlineStart}
-                  staggerFrames={wordStagger}
-                  wordDurationFrames={wordDuration}
-                  accentWords={['Merit', '&', 'e-Sijil.']}
-                  accentColor={PURPLE_DARK}
-                  style={{
-                    fontSize: 45,
-                    fontWeight: 900,
-                    lineHeight: 1.06,
-                    letterSpacing: '-0.03em',
-                    color: LAUNCH_PALETTE.PRIMARY,
-                  }}
-                />
-              </h2>
+              />
             </div>
 
-            {/* Compact Student KPI Pills (Blue Kelab + Pink EMS Acara) */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                opacity: counterCardOpacity,
-                flexShrink: 0,
-              }}
-            >
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, paddingBottom: 4 }}>
               <div
                 style={{
                   padding: '10px 18px',
                   borderRadius: 16,
                   backgroundColor: BLUE_SOFT,
                   border: `1.5px solid ${BLUE}`,
-                  boxShadow: '0 12px 28px rgba(59, 130, 246, 0.12)',
+                  boxShadow: '0 10px 26px rgba(59, 130, 246, 0.14)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'flex-end',
-                  minWidth: 148,
+                  minWidth: 144,
                 }}
               >
                 <span
@@ -528,22 +379,13 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     fontSize: 28,
                     fontWeight: 900,
                     lineHeight: 1,
-                    color: BLUE_DARK,
+                    color: BLUE_INK,
                     fontVariantNumeric: 'tabular-nums',
                   }}
                 >
                   {liveClubs}
                 </span>
-                <span
-                  style={{
-                    marginTop: 5,
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 10.5,
-                    fontWeight: 800,
-                    letterSpacing: '0.13em',
-                    color: LAUNCH_PALETTE.PRIMARY,
-                  }}
-                >
+                <span style={{ marginTop: 4, fontFamily: LAUNCH_FONTS.MONO, fontSize: 10.5, fontWeight: 800, color: LAUNCH_PALETTE.PRIMARY }}>
                   KELAB AKTIF
                 </span>
               </div>
@@ -554,11 +396,11 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                   borderRadius: 16,
                   backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
                   border: `1.5px solid ${PINK}`,
-                  boxShadow: '0 14px 30px rgba(236, 72, 153, 0.18)',
+                  boxShadow: '0 12px 28px rgba(236, 72, 153, 0.18)',
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'flex-end',
-                  minWidth: 158,
+                  minWidth: 152,
                 }}
               >
                 <span
@@ -573,1272 +415,711 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 >
                   {liveActivities}
                 </span>
-                <span
-                  style={{
-                    marginTop: 5,
-                    fontFamily: LAUNCH_FONTS.MONO,
-                    fontSize: 10.5,
-                    fontWeight: 800,
-                    letterSpacing: '0.13em',
-                    color: PINK_BORDER,
-                  }}
-                >
+                <span style={{ marginTop: 4, fontFamily: LAUNCH_FONTS.MONO, fontSize: 10.5, fontWeight: 800, color: PINK_BORDER }}>
                   ACARA KAMPUS
                 </span>
               </div>
             </div>
-          </Interactive.Div>
+          </div>
 
-          {/* 3-Column Horizontal Student Co-Curricular Journey (y ~ 228..966) */}
+          {/* 3-ZONE SPATIAL PIPELINE WITH TRUE Z-PARALLAX (y: 214..974) */}
           <div
             style={{
               position: 'absolute',
-              left: PIPELINE_LEFT,
-              top: PIPELINE_TOP,
-              width: TOTAL_PIPELINE_WIDTH,
-              height: PIPELINE_HEIGHT,
-              display: 'flex',
-              alignItems: 'stretch',
+              left: 0,
+              right: 0,
+              top: 214,
+              height: 754,
+              perspective: '1450px',
               transformStyle: 'preserve-3d',
-              transform: `scale(${pipelineExitScale.toFixed(4)})`,
             }}
           >
-            {/* COLUMN 1 (550px): Royal Blue Live Student Club Directory */}
+            {/* ZONE 1 (Left-Arc, x=158..590, Blue #3B82F6): 3D Curved Club Fan Deck */}
             <Interactive.Div
-              name="Student Club Directory"
+              name="Clubs 3D Curved Deck"
               premountFor={safeFps}
               style={{
-                width: COL1_WIDTH,
-                height: PIPELINE_HEIGHT,
-                flexShrink: 0,
-                opacity: col1Opacity,
+                position: 'absolute',
+                left: 158,
+                top: 20,
+                width: 432,
+                height: 600,
+                opacity: deckEnter,
                 transformStyle: 'preserve-3d',
-                transform: `translate3d(0px, ${(col1TranslateY + col1FloatY).toFixed(2)}px, 16px) rotateY(1.5deg)`,
+                transform: `translate3d(0px, ${((1 - deckEnter) * 24).toFixed(2)}px, 0px)`,
               }}
             >
-              <KineticWindow
-                surface="light"
-                routeLabel="kelab · direktori siswa"
-                statusPill={`${safeClubs} KELAB`}
-                statusAccent
-                accentColor={BLUE_DARK}
-                accentSoftBg={BLUE_SOFT}
-                accentBorderColor={BLUE}
-                width={COL1_WIDTH}
-                height={PIPELINE_HEIGHT}
-                borderRadius={24}
-                sheenStartFrame={Math.round(0.85 * safeFps)}
-                sheenDuration={42}
+              {/* Floating Top Route Pill at +16px Z */}
+              <div
                 style={{
-                  borderColor: BLUE_BORDER,
-                  boxShadow:
-                    '0 24px 54px rgba(59, 130, 246, 0.12), 0 6px 16px rgba(31, 39, 32, 0.06)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 14px',
+                  borderRadius: 18,
+                  backgroundColor: '#FFFFFF',
+                  border: `1.8px solid ${BLUE}`,
+                  borderBottom: `5px solid ${BLUE_INK}`,
+                  boxShadow: '0 16px 32px rgba(37, 99, 235, 0.14)',
+                  transform: 'translate3d(0px, 0px, 16px) rotateY(11deg)',
                 }}
               >
-                <div
+                <div>
+                  <div style={{ fontFamily: LAUNCH_FONTS.MONO, fontSize: 9.5, fontWeight: 800, letterSpacing: '0.1em', color: BLUE_INK }}>
+                    LANGKAH 01 • PILIH KELAB MINAT
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
+                    Direktori Kelab Pelajar
+                  </div>
+                </div>
+                <span
                   style={{
-                    flex: 1,
-                    padding: '20px 22px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    gap: 14,
-                    boxSizing: 'border-box',
+                    padding: '5px 11px',
+                    borderRadius: 999,
+                    backgroundColor: BLUE_INK,
+                    color: '#FFFFFF',
+                    fontFamily: LAUNCH_FONTS.MONO,
+                    fontSize: 10.5,
+                    fontWeight: 900,
                   }}
                 >
-                  {/* Column 1 Header */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      paddingBottom: 12,
-                      borderBottom: `1.5px solid ${BLUE_SOFT}`,
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <span
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 10.5,
-                          fontWeight: 800,
-                          letterSpacing: '0.14em',
-                          color: BLUE_DARK,
-                        }}
-                      >
-                        LANGKAH 01 • PILIH KELAB MINAT
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 20,
-                          fontWeight: 900,
-                          letterSpacing: '-0.02em',
-                          color: LAUNCH_PALETTE.PRIMARY,
-                        }}
-                      >
-                        Direktori Kelab Pelajar
-                      </span>
-                    </div>
+                  3 DISERTAI ✓
+                </span>
+              </div>
 
+              {/* 4 Individual Sculpted 3D Club Cards Arranged Along a Curved Z-Arc */}
+              <div
+                style={{
+                  position: 'relative',
+                  marginTop: 14,
+                  height: 520,
+                  transformStyle: 'preserve-3d',
+                }}
+              >
+                {STUDENT_CLUBS.map((club, idx) => {
+                  const joinFrame = club.joinTapFrame;
+                  const isJoined = joinFrame !== null && frame >= joinFrame;
+                  const joinSpring =
+                    joinFrame !== null && isJoined
+                      ? spring({
+                          frame: frame - joinFrame,
+                          fps: safeFps,
+                          config: { damping: 14, stiffness: 245, mass: 0.78 },
+                        })
+                      : 0;
+                  const zDepth = club.baseZ + 22 * joinSpring;
+                  const activeColor = club.activeTone === 'blue' ? BLUE_INK : EMERALD_INK;
+                  const activeBg = club.activeTone === 'blue' ? BLUE_SOFT : EMERALD_SOFT;
+                  const activeBorder = club.activeTone === 'blue' ? BLUE : EMERALD;
+
+                  return (
                     <div
+                      key={club.id}
                       style={{
-                        padding: '6px 12px',
-                        borderRadius: 999,
-                        backgroundColor: BLUE_SOFT,
-                        border: `1px solid ${BLUE}`,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11,
-                        fontWeight: 900,
-                        color: BLUE_DARK,
-                        fontVariantNumeric: 'tabular-nums',
-                        whiteSpace: 'nowrap',
+                        position: 'absolute',
+                        left: club.arcOffsetX,
+                        top: idx * 112,
+                        width: 418,
+                        height: 96,
+                        borderRadius: 18,
+                        padding: '0 14px',
+                        backgroundColor: isJoined ? activeBg : '#FFFFFF',
+                        border: `1.8px solid ${isJoined ? activeBorder : BLUE_BORDER}`,
+                        borderBottom: `5px solid ${isJoined ? activeColor : LAUNCH_PALETTE.TERTIARY}`,
+                        boxShadow: isJoined
+                          ? '0 20px 40px rgba(37, 99, 235, 0.18), 0 6px 14px rgba(31, 39, 32, 0.08)'
+                          : '0 10px 24px rgba(31, 39, 32, 0.08)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 10,
+                        boxSizing: 'border-box',
+                        transform: `translate3d(0px, ${(-3 * joinSpring).toFixed(2)}px, ${zDepth.toFixed(2)}px) rotateY(11deg)`,
                       }}
                     >
-                      {joinedCount} DISERTAI ✓
-                    </div>
-                  </div>
-
-                  {/* 4 Authentic POLISAS Student Club Rows (Staggered 5 frames apart) */}
-                  <div
-                    style={{
-                      flex: 1,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                    }}
-                  >
-                    {STUDENT_CLUBS.map((club, idx) => {
-                      const rowEnterStart = baseRowEnter + idx * rowEnterStagger;
-                      const rowProg = interpolate(
-                        frame,
-                        [rowEnterStart, rowEnterStart + Math.max(8, Math.round(0.28 * safeFps))],
-                        [0, 1],
-                        {
-                          extrapolateLeft: 'clamp',
-                          extrapolateRight: 'clamp',
-                          easing: EXPO_OUT,
-                        },
-                      );
-                      const rowY = interpolate(rowProg, [0, 1], [18, 0]);
-
-                      const scaledTapFrame =
-                        club.joinTapFrame !== null
-                          ? Math.round((club.joinTapFrame / 60) * safeFps)
-                          : null;
-                      const isJoined = scaledTapFrame !== null && frame >= scaledTapFrame;
-                      const tapElapsed = scaledTapFrame !== null ? frame - scaledTapFrame : -1;
-                      const tapSpring =
-                        isJoined && tapElapsed >= 0
-                          ? spring({
-                              frame: tapElapsed,
-                              fps: safeFps,
-                              config: { damping: 13, stiffness: 260, mass: 0.72 },
-                            })
-                          : 0;
-                      const pillTapBounce =
-                        isJoined && tapElapsed >= 0 && tapElapsed < 14
-                          ? interpolate(tapElapsed, [0, 4, 14], [0.9, 1.08, 1], {
-                              extrapolateLeft: 'clamp',
-                              extrapolateRight: 'clamp',
-                            })
-                          : 1;
-
-                      const rowBg = isJoined
-                        ? club.activeTone === 'accent'
-                          ? BLUE_SOFT
-                          : EMERALD_SOFT
-                        : LAUNCH_PALETTE.BACKGROUND;
-                      const rowBorder = isJoined
-                        ? club.activeTone === 'accent'
-                          ? BLUE
-                          : EMERALD
-                        : LAUNCH_PALETTE.TERTIARY;
-
-                      const pillBg = isJoined
-                        ? club.activeTone === 'accent'
-                          ? BLUE_DARK
-                          : EMERALD_DARK
-                        : LAUNCH_PALETTE.CARD_BG;
-                      const pillBorder = isJoined ? pillBg : LAUNCH_PALETTE.TERTIARY;
-                      const pillColor = isJoined
-                        ? LAUNCH_PALETTE.CARD_BG
-                        : LAUNCH_PALETTE.MUTED_OLIVE;
-
-                      return (
-                        <div
-                          key={club.id}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
+                        <span
                           style={{
-                            flex: 1,
-                            padding: '12px 15px',
-                            borderRadius: 16,
-                            backgroundColor: rowBg,
-                            border: `1.5px solid ${rowBorder}`,
+                            width: 42,
+                            height: 42,
+                            borderRadius: 13,
+                            backgroundColor: '#FFFFFF',
+                            border: `1.5px solid ${isJoined ? activeBorder : BLUE_BORDER}`,
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 12,
-                            opacity: rowProg,
-                            transform: `translate3d(0px, ${rowY.toFixed(2)}px, 0px)`,
+                            justifyContent: 'center',
+                            flexShrink: 0,
                           }}
                         >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
-                            <div
-                              style={{
-                                width: 42,
-                                height: 42,
-                                borderRadius: 12,
-                                backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                                border: `1.5px solid ${
-                                  isJoined ? rowBorder : BLUE_BORDER
-                                }`,
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                flexShrink: 0,
-                              }}
-                            >
-                              {renderClubIcon(club.icon, isJoined, club.activeTone)}
-                            </div>
-
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                              <span
-                                style={{
-                                  fontSize: 17,
-                                  fontWeight: 800,
-                                  color: LAUNCH_PALETTE.PRIMARY,
-                                  whiteSpace: 'nowrap',
-                                }}
-                              >
-                                {club.name}
-                              </span>
-                              <span
-                                style={{
-                                  fontFamily: LAUNCH_FONTS.MONO,
-                                  fontSize: 11.5,
-                                  fontWeight: 600,
-                                  color: LAUNCH_PALETTE.MUTED_OLIVE,
-                                  whiteSpace: 'nowrap',
-                                  overflow: 'hidden',
-                                  textOverflow: 'ellipsis',
-                                }}
-                              >
-                                {club.meta}
-                              </span>
-                            </div>
+                          {renderClubIcon(club.icon, isJoined, club.activeTone)}
+                        </span>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontSize: 16, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
+                            {club.name}
                           </div>
-
-                          <div
-                            style={{
-                              padding: '7px 13px',
-                              borderRadius: 999,
-                              backgroundColor: pillBg,
-                              border: `1.5px solid ${pillBorder}`,
-                              color: pillColor,
-                              fontFamily: LAUNCH_FONTS.MONO,
-                              fontSize: 11,
-                              fontWeight: 900,
-                              letterSpacing: '0.05em',
-                              whiteSpace: 'nowrap',
-                              flexShrink: 0,
-                              transform: `scale(${(isJoined ? (0.94 + 0.06 * tapSpring) * pillTapBounce : 1).toFixed(3)})`,
-                              boxShadow: isJoined
-                                ? '0 6px 14px rgba(37, 99, 235, 0.16)'
-                                : 'none',
-                            }}
-                          >
-                            {club.activeTone === 'open'
-                              ? 'Terbuka'
-                              : isJoined
-                                ? 'Sertai Kelab ✓'
-                                : 'Sertai'}
+                          <div style={{ fontFamily: LAUNCH_FONTS.MONO, fontSize: 11, fontWeight: 700, color: LAUNCH_PALETTE.INK_SOFT }}>
+                            {club.meta}
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
+                      </div>
 
-                  {/* Column 1 Footer Helper */}
-                  <div
-                    style={{
-                      padding: '11px 15px',
-                      borderRadius: 14,
-                      backgroundColor: BLUE_SOFT,
-                      border: `1.5px solid ${BLUE_BORDER}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 10,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11,
-                        fontWeight: 700,
-                        color: BLUE_DARK,
-                      }}
-                    >
-                      jpp.polisas.edu.my/kelab
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 10.5,
-                        fontWeight: 800,
-                        letterSpacing: '0.08em',
-                        color: BLUE_DARK,
-                      }}
-                    >
-                      DAFTAR 1 KLIK • TERBUKA
-                    </span>
-                  </div>
-                </div>
-              </KineticWindow>
+                      <span
+                        style={{
+                          padding: '7px 12px',
+                          borderRadius: 999,
+                          backgroundColor: isJoined ? activeColor : LAUNCH_PALETTE.SURFACE_MUTED,
+                          border: `1px solid ${isJoined ? activeColor : LAUNCH_PALETTE.TERTIARY}`,
+                          color: isJoined ? '#FFFFFF' : LAUNCH_PALETTE.PRIMARY_DARK,
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 11,
+                          fontWeight: 900,
+                          flexShrink: 0,
+                        }}
+                      >
+                        {isJoined ? 'Sertai Kelab ✓' : 'Terbuka'}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
             </Interactive.Div>
 
-            {/* CONNECTOR 1 (66px): Animated Blue -> Purple EvolvingPath */}
+            {/* Blue -> Purple Connector Stream 1 */}
             <div
               style={{
-                position: 'relative',
-                width: CONN_WIDTH,
-                height: PIPELINE_HEIGHT,
-                flexShrink: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
+                position: 'absolute',
+                left: 596,
+                top: 288,
+                width: 46,
+                height: 48,
+                pointerEvents: 'none',
+                transform: 'translate3d(0px, 0px, 40px)',
               }}
             >
-              <div style={{ position: 'relative', width: 66, height: 48 }}>
-                <EvolvingPath
-                  d="M 6 24 L 56 24"
-                  width={66}
-                  height={48}
-                  viewBox="0 0 66 48"
-                  startFrame={conn1Start}
-                  durationFrames={conn1Duration}
-                  stroke={BLUE}
-                  trackStroke={BLUE_BORDER}
-                  strokeWidth={3.5}
-                  showHeadDot
-                  headDotRadius={4.5}
-                  headDotColor={PURPLE}
-                  hideDotWhenComplete
-                  style={{ display: 'block' }}
-                />
-                <svg
-                  width={66}
-                  height={48}
-                  viewBox="0 0 66 48"
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    pointerEvents: 'none',
-                    overflow: 'visible',
-                  }}
-                >
-                  <path
-                    d="M 49 17 L 57 24 L 49 31"
-                    fill="none"
-                    stroke={conn1Done ? PURPLE : BLUE_BORDER}
-                    strokeWidth={3}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  {conn1Done ? (
-                    <g
-                      transform={`translate(${conn1PulseX.toFixed(2)}, 24)`}
-                      opacity={conn1PulseOpacity}
-                    >
-                      <circle cx={0} cy={0} r={4.5} fill={PURPLE} />
-                    </g>
-                  ) : null}
-                </svg>
-              </div>
+              <EvolvingPath
+                d="M 4 24 L 40 24 M 30 15 L 40 24 L 30 33"
+                width={46}
+                height={48}
+                startFrame={conn1Start}
+                durationFrames={conn1Duration}
+                stroke={BLUE_DARK}
+                trackStroke="rgba(191, 219, 254, 0.72)"
+                strokeWidth={3.5}
+                headDotColor={PURPLE}
+                headDotRadius={4.5}
+                hideDotWhenComplete
+              />
             </div>
 
-            {/* COLUMN 2 (550px): Purple Scan QR Merit Viewfinder */}
-            <Interactive.Div
-              name="Student Scan QR Merit Viewfinder"
-              premountFor={safeFps}
-              style={{
-                width: COL2_WIDTH,
-                height: PIPELINE_HEIGHT,
-                flexShrink: 0,
-                opacity: col2Opacity,
-                visibility: col2Opacity <= 0.001 ? 'hidden' : 'visible',
-                transformOrigin: '50% 50%',
-                transformStyle: 'preserve-3d',
-                transform: `translate3d(${col2TranslateX.toFixed(2)}px, ${col2FloatY.toFixed(2)}px, 36px) scale(${col2Scale.toFixed(4)})`,
-              }}
-            >
-              <KineticWindow
-                surface="dark"
-                routeLabel="scan qr · merit siswa"
-                statusPill="KAMERA AKTIF"
-                statusAccent
-                accentColor={PURPLE}
-                accentSoftBg="rgba(168, 85, 247, 0.22)"
-                accentBorderColor={PURPLE}
-                width={COL2_WIDTH}
-                height={PIPELINE_HEIGHT}
-                borderRadius={24}
-                sheenStartFrame={flashStart + 3}
-                sheenDuration={38}
+            {/* ZONE 2 (Center-Foreground, x=646..1114, Purple #A855F7): 3D Holographic QR Laser Gate (+48px Z) */}
+            {gateOpacity > 0.005 ? (
+              <Interactive.Div
+                name="Merit QR 3D Laser Gate"
+                premountFor={safeFps}
                 style={{
-                  border: `1.5px solid ${
-                    inFlashWindow ? '#FFFFFF' : isQrVerified ? EMERALD : PURPLE
-                  }`,
-                  boxShadow: inFlashWindow
-                    ? '0 24px 64px rgba(168, 85, 247, 0.38), 0 0 0 5px rgba(168, 85, 247, 0.25)'
-                    : '0 28px 64px rgba(147, 51, 234, 0.22), 0 8px 20px rgba(31, 39, 32, 0.16)',
-                  overflow: 'hidden',
+                  position: 'absolute',
+                  left: 646,
+                  top: 22,
+                  width: 468,
+                  height: 576,
+                  opacity: gateOpacity,
+                  transformOrigin: '50% 50%',
+                  transformStyle: 'preserve-3d',
+                  willChange: 'transform, opacity',
+                  transform: `translate3d(0px, ${(Math.sin(timeSec * 1.45) * 3).toFixed(2)}px, ${(48 * gateSpring).toFixed(2)}px) rotateX(7deg) rotateY(-2deg) scale(${(0.92 + 0.08 * gateSpring).toFixed(4)})`,
+                  zIndex: 14,
                 }}
               >
                 <div
                   style={{
                     position: 'relative',
-                    flex: 1,
-                    padding: '20px 24px',
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: 26,
+                    padding: '18px 22px',
+                    backgroundColor: 'rgba(22, 20, 34, 0.94)',
+                    border: `2.5px solid ${PURPLE}`,
+                    boxShadow:
+                      '0 44px 92px rgba(168, 85, 247, 0.28), 0 18px 38px rgba(31, 39, 32, 0.34)',
                     display: 'flex',
                     flexDirection: 'column',
                     justifyContent: 'space-between',
-                    gap: 14,
                     boxSizing: 'border-box',
+                    transformStyle: 'preserve-3d',
                   }}
                 >
-                  {/* Column 2 Subheader */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                    }}
-                  >
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                      <span
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 10.5,
-                          fontWeight: 800,
-                          letterSpacing: '0.14em',
-                          color: PURPLE_BORDER,
-                        }}
-                      >
-                        LANGKAH 02 • IMBAS QR ACARA
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 19,
-                          fontWeight: 900,
-                          color: LAUNCH_PALETTE.BACKGROUND,
-                        }}
-                      >
-                        jpp.polisas.edu.my/scan-qr
-                      </span>
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 7,
-                        padding: '6px 12px',
-                        borderRadius: 999,
-                        backgroundColor: isQrVerified
-                          ? 'rgba(16, 185, 129, 0.26)'
-                          : 'rgba(168, 85, 247, 0.24)',
-                        border: `1px solid ${isQrVerified ? EMERALD : PURPLE}`,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11.5,
-                        fontWeight: 900,
-                        color: LAUNCH_PALETTE.BACKGROUND,
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      {isQrVerified ? (
-                        <Check size={13} color={EMERALD} strokeWidth={3} />
-                      ) : (
-                        <span
-                          style={{
-                            width: 7,
-                            height: 7,
-                            borderRadius: 999,
-                            backgroundColor: PURPLE,
-                            transform: `scale(${liveDotScale.toFixed(3)})`,
-                            display: 'inline-block',
-                          }}
-                        />
-                      )}
-                      <span>{isQrVerified ? '100% SAH' : `${scanPercent}%`}</span>
-                    </div>
-                  </div>
-
-                  {/* Crisp Purple Viewfinder Reticle Holding Porcelain QR Card */}
-                  <div
-                    style={{
-                      position: 'relative',
-                      alignSelf: 'center',
-                      width: 266,
-                      height: 266,
-                      borderRadius: 24,
-                      backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                      border: `1.5px solid ${qrBoxBorderColor}`,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {/* 4 Corner Viewfinder Brackets */}
-                    <span
-                      style={{
-                        position: 'absolute',
-                        left: 12,
-                        top: 12,
-                        width: 22,
-                        height: 22,
-                        borderTop: `3.5px solid ${bracketColor}`,
-                        borderLeft: `3.5px solid ${bracketColor}`,
-                        borderTopLeftRadius: 6,
-                        zIndex: 4,
-                      }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        right: 12,
-                        top: 12,
-                        width: 22,
-                        height: 22,
-                        borderTop: `3.5px solid ${bracketColor}`,
-                        borderRight: `3.5px solid ${bracketColor}`,
-                        borderTopRightRadius: 6,
-                        zIndex: 4,
-                      }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        left: 12,
-                        bottom: 12,
-                        width: 22,
-                        height: 22,
-                        borderBottom: `3.5px solid ${bracketColor}`,
-                        borderLeft: `3.5px solid ${bracketColor}`,
-                        borderBottomLeftRadius: 6,
-                        zIndex: 4,
-                      }}
-                    />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        right: 12,
-                        bottom: 12,
-                        width: 22,
-                        height: 22,
-                        borderBottom: `3.5px solid ${bracketColor}`,
-                        borderRight: `3.5px solid ${bracketColor}`,
-                        borderBottomRightRadius: 6,
-                        zIndex: 4,
-                      }}
-                    />
-
-                    {/* Clean Porcelain QR Square Card */}
-                    <div
-                      style={{
-                        padding: 16,
-                        borderRadius: 16,
-                        backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                        border: `1.5px solid ${PURPLE_BORDER}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <DeterministicQrMatrix
-                        seed={9041}
-                        size={186}
-                        fgColor={LAUNCH_PALETTE.PRIMARY}
-                        bgColor={LAUNCH_PALETTE.BACKGROUND}
-                      />
-                    </div>
-
-                    {/* Sweeping Purple Laser Beam (10% -> 90% -> 10%) */}
-                    {isLaserActive ? (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: 12,
-                          right: 12,
-                          top: `${laserPct.toFixed(2)}%`,
-                          height: 24,
-                          transform: 'translate3d(0px, -50%, 0px)',
-                          pointerEvents: 'none',
-                          display: 'flex',
-                          alignItems: 'center',
-                          zIndex: 5,
-                        }}
-                      >
-                        <div
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            background:
-                              'linear-gradient(180deg, rgba(168, 85, 247, 0) 0%, rgba(168, 85, 247, 0.38) 50%, rgba(168, 85, 247, 0) 100%)',
-                          }}
-                        />
-                        <div
-                          style={{
-                            width: '100%',
-                            height: 3.5,
-                            borderRadius: 999,
-                            backgroundColor: PURPLE,
-                            boxShadow: '0 0 12px rgba(168, 85, 247, 0.85)',
-                          }}
-                        />
-                      </div>
-                    ) : null}
-
-                    {/* Crisp 6-Frame Lock Exposure Flash */}
-                    {flashOpacity > 0.001 ? (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          inset: 0,
-                          backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                          opacity: flashOpacity,
-                          pointerEvents: 'none',
-                          zIndex: 7,
-                        }}
-                      />
-                    ) : null}
-                  </div>
-
-                  {/* Event Caption & Scan Progress Box */}
-                  <div
-                    style={{
-                      padding: '14px 16px',
-                      borderRadius: 16,
-                      backgroundColor: 'rgba(168, 85, 247, 0.1)',
-                      border: `1px solid rgba(233, 213, 255, 0.28)`,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: 9,
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 10,
-                      }}
-                    >
-                      <span
-                        style={{
-                          fontSize: 18,
-                          fontWeight: 900,
-                          letterSpacing: '-0.02em',
-                          color: LAUNCH_PALETTE.BACKGROUND,
-                          whiteSpace: 'nowrap',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                        }}
-                      >
-                        MAKMP 2026 • Dewan Jubli Perak
-                      </span>
-                      <ScanLine
-                        size={17}
-                        color={isQrVerified ? EMERALD : PURPLE}
-                        strokeWidth={2.4}
-                      />
-                    </div>
-
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 12,
-                        fontWeight: 700,
-                        color: PURPLE_BORDER,
-                      }}
-                    >
-                      <span>{isQrVerified ? 'Hadir Disahkan • 17:12 PM' : 'Mengimbas Kod Acara • 17:12 PM'}</span>
-                      <span>Aiman Hakim</span>
-                    </div>
-
-                    <div
-                      style={{
-                        height: 7,
-                        borderRadius: 999,
-                        backgroundColor: 'rgba(248, 246, 238, 0.12)',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          borderRadius: 999,
-                          backgroundColor: isQrVerified ? EMERALD : PURPLE,
-                          transformOrigin: '0% 50%',
-                          transform: `scaleX(${((isQrVerified ? 100 : scanPercent) / 100).toFixed(4)})`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  {/* Spring-Popping Purple Merit Toast Banner */}
-                  <div
-                    style={{
-                      position: 'relative',
-                      height: 62,
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    {!isQrVerified ? (
-                      <div
-                        style={{
-                          width: '100%',
-                          padding: '13px 16px',
-                          borderRadius: 15,
-                          backgroundColor: 'rgba(248, 246, 238, 0.06)',
-                          border: `1px dashed ${PURPLE_BORDER}`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: 8,
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11.5,
-                          fontWeight: 700,
-                          color: PURPLE_BORDER,
-                        }}
-                      >
-                        <QrCode size={15} color={PURPLE} />
-                        <span>Arahkan kamera ke kod QR acara...</span>
-                      </div>
-                    ) : null}
-
-                    <div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        borderRadius: 15,
-                        backgroundColor: PURPLE_DARK,
-                        border: `1.5px solid ${PURPLE_BORDER}`,
-                        boxShadow: '0 14px 30px rgba(147, 51, 234, 0.36)',
-                        padding: '0 16px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 10,
-                        opacity: toastOpacity,
-                        visibility: toastOpacity <= 0.001 ? 'hidden' : 'visible',
-                        transform: `translate3d(0px, ${((1 - toastSpring) * 14).toFixed(2)}px, 0px) scale(${toastScale.toFixed(4)})`,
-                      }}
-                    >
-                      <CheckCircle2 size={20} color={LAUNCH_PALETTE.BACKGROUND} strokeWidth={2.8} />
-                      <span
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 13.5,
-                          fontWeight: 900,
-                          letterSpacing: '0.06em',
-                          color: LAUNCH_PALETTE.BACKGROUND,
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        +15 MATA MERIT KOKURIKULUM DISAHKAN
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </KineticWindow>
-            </Interactive.Div>
-
-            {/* CONNECTOR 2 (66px): Purple -> Pink EvolvingPath Arrow */}
-            <div
-              style={{
-                position: 'relative',
-                width: CONN_WIDTH,
-                height: PIPELINE_HEIGHT,
-                flexShrink: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              <div style={{ position: 'relative', width: 66, height: 48 }}>
-                <EvolvingPath
-                  d="M 6 24 L 56 24"
-                  width={66}
-                  height={48}
-                  viewBox="0 0 66 48"
-                  startFrame={conn2Start}
-                  durationFrames={conn2Duration}
-                  stroke={PURPLE}
-                  trackStroke={PURPLE_BORDER}
-                  strokeWidth={3.5}
-                  showHeadDot
-                  headDotRadius={4.5}
-                  headDotColor={PINK}
-                  hideDotWhenComplete
-                  style={{ display: 'block' }}
-                />
-                <svg
-                  width={66}
-                  height={48}
-                  viewBox="0 0 66 48"
-                  style={{
-                    position: 'absolute',
-                    inset: 0,
-                    pointerEvents: 'none',
-                    overflow: 'visible',
-                  }}
-                >
-                  <path
-                    d="M 49 17 L 57 24 L 49 31"
-                    fill="none"
-                    stroke={conn2Done ? PINK : PURPLE_BORDER}
-                    strokeWidth={3}
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  {conn2Done ? (
-                    <g
-                      transform={`translate(${conn2PulseX.toFixed(2)}, 24)`}
-                      opacity={conn2PulseOpacity}
-                    >
-                      <circle cx={0} cy={0} r={4.5} fill={PINK} />
-                    </g>
-                  ) : null}
-                </svg>
-              </div>
-            </div>
-
-            {/* COLUMN 3 (560px): Pink/Gold Official Student Digital e-Certificate */}
-            <Interactive.Div
-              name="Official Student Digital e-Certificate"
-              premountFor={safeFps}
-              style={{
-                width: COL3_WIDTH,
-                height: PIPELINE_HEIGHT,
-                flexShrink: 0,
-                transformStyle: 'preserve-3d',
-              }}
-            >
-              <ExplodedLayer
-                zDepth={76}
-                rotateY={-2.5}
-                enterFrame={certPopStart}
-                enterOffsetY={28}
-                floatAmplitude={2.4}
-                floatPhase={0.9}
-                style={{ width: COL3_WIDTH, height: PIPELINE_HEIGHT }}
-              >
-                <div
-                  style={{
-                    position: 'relative',
-                    width: COL3_WIDTH,
-                    height: PIPELINE_HEIGHT,
-                    boxSizing: 'border-box',
-                    borderRadius: 24,
-                    backgroundColor: LAUNCH_PALETTE.PRIMARY,
-                    border: `1.5px solid ${PINK}`,
-                    boxShadow:
-                      '0 32px 72px rgba(236, 72, 153, 0.22), 0 10px 24px rgba(31, 39, 32, 0.2)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    overflow: 'visible',
-                  }}
-                >
-                  {/* Inner Clipping Layer for Foil Border & Rest-Gapped Diagonal Specular Foil Sheen */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      inset: 0,
-                      borderRadius: 23,
-                      overflow: 'hidden',
-                      pointerEvents: 'none',
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: 'absolute',
-                        inset: 12,
-                        top: 52,
-                        borderRadius: 16,
-                        border: '1px solid rgba(251, 207, 232, 0.28)',
-                      }}
-                    />
-
-                    {sheenOpacity > 0.004 ? (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '-38%',
-                          left: 0,
-                          width: 170,
-                          height: '176%',
-                          opacity: sheenOpacity,
-                          background:
-                            'linear-gradient(90deg, rgba(248, 246, 238, 0) 0%, rgba(248, 246, 238, 0.22) 50%, rgba(248, 246, 238, 0) 100%)',
-                          transform: `translate3d(${sheenX.toFixed(2)}px, 0px, 0px) rotate(24deg)`,
-                        }}
-                      />
-                    ) : null}
-                  </div>
-
-                  {/* Architectural Folio Top Bar */}
-                  <div
-                    style={{
-                      height: 40,
-                      padding: '0 18px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      gap: 12,
-                      backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                      borderBottom: '1px solid rgba(251, 207, 232, 0.2)',
-                      borderTopLeftRadius: 22.5,
-                      borderTopRightRadius: 22.5,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                        <span
-                          style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: 999,
-                            backgroundColor: PINK,
-                            display: 'inline-block',
-                          }}
-                        />
-                        <span
-                          style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: 999,
-                            backgroundColor: PURPLE,
-                            display: 'inline-block',
-                          }}
-                        />
-                        <span
-                          style={{
-                            width: 8,
-                            height: 8,
-                            borderRadius: 999,
-                            backgroundColor: AMBER,
-                            display: 'inline-block',
-                          }}
-                        />
-                      </div>
-                      <span
-                        style={{
-                          padding: '3px 10px',
-                          borderRadius: 999,
-                          backgroundColor: 'rgba(248, 246, 238, 0.08)',
-                          border: '1px solid rgba(251, 207, 232, 0.28)',
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11,
-                          fontWeight: 700,
-                          letterSpacing: '0.05em',
-                          color: PINK_BORDER,
-                        }}
-                      >
-                        jpp.polisas.edu.my/sijil
-                      </span>
-                    </div>
-
-                    <span
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                        padding: '3px 10px',
-                        borderRadius: 999,
-                        backgroundColor: 'rgba(236, 72, 153, 0.22)',
-                        border: `1px solid ${PINK}`,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 10.5,
-                        fontWeight: 800,
-                        letterSpacing: '0.09em',
-                        color: LAUNCH_PALETTE.BACKGROUND,
-                      }}
-                    >
-                      <Sparkles size={11} color={AMBER} strokeWidth={2.6} />
-                      <span>E-SIJIL SAH ✓</span>
-                    </span>
-                  </div>
-
-                  {/* Certificate Body */}
-                  <div
-                    style={{
-                      position: 'relative',
-                      zIndex: 2,
-                      flex: 1,
-                      padding: '28px 32px 26px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      textAlign: 'center',
-                      boxSizing: 'border-box',
-                    }}
-                  >
-                    {/* Header Stamp + Medallion Crest with Restrained Watch-Glint GeometricSparkBurst */}
-                    <div
-                      style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: 14,
-                      }}
-                    >
+                  {/* Gate Header */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
                       <div
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          gap: 8,
+                          gap: 6,
                           fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11,
+                          fontSize: 10.5,
                           fontWeight: 800,
-                          letterSpacing: '0.16em',
+                          letterSpacing: '0.14em',
+                          color: PURPLE_BORDER,
+                        }}
+                      >
+                        <ScanLine size={13} color={PURPLE} strokeWidth={2.5} />
+                        <span>LANGKAH 02 • IMBAS QR ACARA</span>
+                      </div>
+                      <div style={{ marginTop: 4, fontSize: 18, fontWeight: 900, color: '#FFFFFF' }}>
+                        jpp.polisas.edu.my/scan-qr
+                      </div>
+                    </div>
+
+                    <span
+                      style={{
+                        padding: '6px 12px',
+                        borderRadius: 999,
+                        backgroundColor: isScanLocked ? EMERALD_INK : PURPLE_INK,
+                        border: `1.5px solid ${isScanLocked ? EMERALD_BORDER : PURPLE_BORDER}`,
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      {isScanLocked ? '✓ 100% SAH' : 'PENGIMBAS'}
+                    </span>
+                  </div>
+
+                  {/* 3D Extruded Purple Viewfinder Stage with Event QR + Volumetric Laser Blade */}
+                  <div
+                    style={{
+                      position: 'relative',
+                      alignSelf: 'center',
+                      width: 244,
+                      height: 244,
+                      borderRadius: 22,
+                      backgroundColor: 'rgba(168, 85, 247, 0.14)',
+                      border: '1.5px solid rgba(233, 213, 255, 0.34)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transformStyle: 'preserve-3d',
+                    }}
+                  >
+                    {/* Pure-White Quiet Zone QR Code inside Viewfinder */}
+                    <div
+                      style={{
+                        padding: 12,
+                        borderRadius: 16,
+                        backgroundColor: '#FFFFFF',
+                        boxShadow: '0 14px 32px rgba(0, 0, 0, 0.28)',
+                      }}
+                    >
+                      <DeterministicQrMatrix
+                        seed={20269041}
+                        size={172}
+                        fgColor="#111812"
+                        bgColor="#FFFFFF"
+                      />
+                    </div>
+
+                    {/* 4 Extruded 3D Purple Corner Viewfinder Brackets (+20px relative Z) */}
+                    {[
+                      { top: 10, left: 10, borderTop: `4px solid ${PURPLE}`, borderLeft: `4px solid ${PURPLE}`, borderTopLeftRadius: 10 },
+                      { top: 10, right: 10, borderTop: `4px solid ${PURPLE}`, borderRight: `4px solid ${PURPLE}`, borderTopRightRadius: 10 },
+                      { bottom: 10, left: 10, borderBottom: `4px solid ${PURPLE}`, borderLeft: `4px solid ${PURPLE}`, borderBottomLeftRadius: 10 },
+                      { bottom: 10, right: 10, borderBottom: `4px solid ${PURPLE}`, borderRight: `4px solid ${PURPLE}`, borderBottomRightRadius: 10 },
+                    ].map((corner, cIdx) => (
+                      <div
+                        key={cIdx}
+                        style={{
+                          position: 'absolute',
+                          width: 28,
+                          height: 28,
+                          ...corner,
+                          transform: 'translate3d(0px, 0px, 20px)',
+                        }}
+                      />
+                    ))}
+
+                    {/* Glowing Purple Volumetric Laser Blade + Projection Glow */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: 16,
+                        right: 16,
+                        top: laserOffsetY,
+                        height: 5,
+                        borderRadius: 999,
+                        backgroundColor: isScanLocked ? EMERALD : PURPLE,
+                        boxShadow: isScanLocked
+                          ? '0 0 28px rgba(16, 185, 129, 0.95), 0 10px 26px rgba(16, 185, 129, 0.45)'
+                          : '0 0 28px rgba(168, 85, 247, 0.95), 0 10px 26px rgba(168, 85, 247, 0.48)',
+                        transform: 'translate3d(0px, 0px, 28px)',
+                      }}
+                    />
+                  </div>
+
+                  {/* Verified Event Readout */}
+                  <div
+                    style={{
+                      padding: '12px 16px',
+                      borderRadius: 16,
+                      backgroundColor: 'rgba(248, 246, 238, 0.08)',
+                      border: `1px solid rgba(233, 213, 255, 0.25)`,
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontSize: 15.5, fontWeight: 900, color: '#FFFFFF' }}>
+                        MAKMP 2026 • Dewan Jubli Perak
+                      </div>
+                      <div style={{ fontFamily: LAUNCH_FONTS.MONO, fontSize: 11.5, fontWeight: 700, color: PURPLE_BORDER }}>
+                        {isScanLocked ? 'Hadir Disahkan • 17:12 PM' : 'Mengesahkan Kod Acara...'}
+                      </div>
+                    </div>
+                    <QrCode size={20} color={PURPLE_BORDER} strokeWidth={2.2} />
+                  </div>
+
+                  {/* Launching Forward 3D Merit Capsule (+34px relative Z) */}
+                  <div
+                    style={{
+                      padding: '11px 14px',
+                      borderRadius: 16,
+                      backgroundColor: PURPLE_INK,
+                      border: `2px solid ${PURPLE_BORDER}`,
+                      boxShadow: isScanLocked
+                        ? '0 24px 48px rgba(168, 85, 247, 0.42)'
+                        : '0 10px 24px rgba(0, 0, 0, 0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      color: '#FFFFFF',
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 11.5,
+                      fontWeight: 900,
+                      letterSpacing: '0.05em',
+                      whiteSpace: 'nowrap',
+                      transform: `translate3d(0px, ${(-4 * meritLaunchSpring).toFixed(2)}px, ${(34 * meritLaunchSpring).toFixed(2)}px) scale(${(0.96 + 0.04 * meritLaunchSpring).toFixed(4)})`,
+                    }}
+                  >
+                    <CheckCircle2 size={15} color="#FFFFFF" strokeWidth={2.6} />
+                    <span>+15 MATA MERIT KOKURIKULUM DISAHKAN</span>
+                  </div>
+                </div>
+              </Interactive.Div>
+            ) : null}
+
+            {/* Purple -> Pink Connector Stream 2 */}
+            <div
+              style={{
+                position: 'absolute',
+                left: 1118,
+                top: 288,
+                width: 46,
+                height: 48,
+                pointerEvents: 'none',
+                transform: 'translate3d(0px, 0px, 44px)',
+              }}
+            >
+              <EvolvingPath
+                d="M 4 24 L 40 24 M 30 15 L 40 24 L 30 33"
+                width={46}
+                height={48}
+                startFrame={conn2Start}
+                durationFrames={conn2Duration}
+                stroke={PINK}
+                trackStroke="rgba(251, 207, 232, 0.72)"
+                strokeWidth={3.5}
+                headDotColor={PINK_DARK}
+                headDotRadius={4.5}
+                hideDotWhenComplete
+              />
+            </div>
+
+            {/* ZONE 3 (Right-Hero, x=1168..1640, Pink #EC4899): 3D Swinging Metallic Foil e-Certificate (+44px Z) */}
+            {certOpacity > 0.005 ? (
+              <Interactive.Div
+                name="EMS 3D Foil e-Certificate"
+                premountFor={safeFps}
+                style={{
+                  position: 'absolute',
+                  left: 1168,
+                  top: 22,
+                  width: 472,
+                  height: 580,
+                  opacity: certOpacity,
+                  transformOrigin: '50% 50%',
+                  transformStyle: 'preserve-3d',
+                  willChange: 'transform, opacity',
+                  transform: `translate3d(0px, ${((1 - certSpring) * 34 + certFloatY).toFixed(2)}px, ${(44 * certSpring).toFixed(2)}px) rotateY(${certRotY.toFixed(2)}deg) rotateX(${certRotX.toFixed(2)}deg) scale(${(0.88 + 0.12 * certSpring).toFixed(4)})`,
+                  zIndex: 12,
+                }}
+              >
+                <div
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: 26,
+                    padding: '16px 20px',
+                    backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                    border: `2.5px solid ${PINK}`,
+                    boxShadow:
+                      '0 42px 88px rgba(236, 72, 153, 0.24), 0 18px 40px rgba(31, 39, 32, 0.34)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    boxSizing: 'border-box',
+                    transformStyle: 'preserve-3d',
+                  }}
+                >
+                  {/* Inner Clipped Foil Reflection Sheen */}
+                  <div
+                    aria-hidden
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      borderRadius: 26,
+                      overflow: 'hidden',
+                      pointerEvents: 'none',
+                      zIndex: 5,
+                    }}
+                  >
+                    {foilOpacity > 0.004 ? (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '-45%',
+                          left: `${foilLeftPct.toFixed(2)}%`,
+                          width: '32%',
+                          height: '190%',
+                          opacity: foilOpacity,
+                          background:
+                            'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(251, 207, 232, 0.5) 50%, rgba(255,255,255,0) 100%)',
+                          transform: 'rotate(24deg)',
+                        }}
+                      />
+                    ) : null}
+                  </div>
+
+                  {/* Certificate Top Chrome */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: 999,
+                        backgroundColor: 'rgba(248, 246, 238, 0.08)',
+                        border: '1px solid rgba(251, 207, 232, 0.32)',
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: PINK_BORDER,
+                      }}
+                    >
+                      jpp.polisas.edu.my/sijil
+                    </span>
+
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        padding: '5px 11px',
+                        borderRadius: 999,
+                        backgroundColor: 'rgba(236, 72, 153, 0.2)',
+                        border: `1px solid ${PINK}`,
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 10.5,
+                        fontWeight: 900,
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      <Sparkles size={12} color={AMBER} strokeWidth={2.5} />
+                      <span>E-SIJIL SAH ✓</span>
+                    </span>
+                  </div>
+
+                  {/* Elevated 3D Gold/Pink Award Medallion (+36px Z above certificate surface!) */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: 10,
+                      transformStyle: 'preserve-3d',
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 11,
+                        fontWeight: 800,
+                        letterSpacing: '0.16em',
+                        color: PINK_BORDER,
+                      }}
+                    >
+                      SIJIL DIGITAL RASMI • POLISAS
+                    </span>
+
+                    <div
+                      style={{
+                        position: 'relative',
+                        width: 88,
+                        height: 88,
+                        borderRadius: 999,
+                        backgroundColor: 'rgba(236, 72, 153, 0.22)',
+                        border: `2.5px solid ${PINK}`,
+                        boxShadow:
+                          '0 22px 40px rgba(236, 72, 153, 0.38), inset 0 0 18px rgba(245, 158, 11, 0.24)',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 3,
+                        transform: 'translate3d(0px, -4px, 36px)',
+                      }}
+                    >
+                      <Award size={26} color={AMBER} strokeWidth={2.2} />
+                      <span
+                        style={{
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 9.5,
+                          fontWeight: 900,
+                          letterSpacing: '0.11em',
                           color: PINK_BORDER,
                         }}
                       >
-                        <ShieldCheck size={15} color={PINK} strokeWidth={2.4} />
-                        <span>SIJIL DIGITAL RASMI • POLISAS</span>
-                      </div>
+                        E-SIJIL 2026
+                      </span>
 
-                      <div
-                        style={{
-                          position: 'relative',
-                          width: MEDALLION_SIZE,
-                          height: MEDALLION_SIZE,
-                          overflow: 'visible',
-                        }}
-                      >
-                        <div
-                          style={{
-                            width: MEDALLION_SIZE,
-                            height: MEDALLION_SIZE,
-                            borderRadius: 999,
-                            backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                            border: `2.5px solid ${PINK}`,
-                            boxShadow: 'inset 0 0 0 5px rgba(236, 72, 153, 0.26)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 3,
-                          }}
-                        >
-                          <Award size={32} color={AMBER} strokeWidth={2.1} />
-                          <span
-                            style={{
-                              fontFamily: LAUNCH_FONTS.MONO,
-                              fontSize: 9.5,
-                              fontWeight: 900,
-                              letterSpacing: '0.15em',
-                              color: PINK_SOFT,
-                            }}
-                          >
-                            E-SIJIL
-                          </span>
-                          <span
-                            style={{
-                              fontFamily: LAUNCH_FONTS.MONO,
-                              fontSize: 9,
-                              fontWeight: 700,
-                              letterSpacing: '0.14em',
-                              color: EMERALD,
-                            }}
-                          >
-                            2026
-                          </span>
-                        </div>
-
-                        {/* Restrained Multi-Color Luxury-Watch-Glint Spark Burst */}
+                      <div style={{ position: 'absolute', left: '50%', top: '50%', pointerEvents: 'none' }}>
                         <GeometricSparkBurst
-                          triggerFrame={sparkTrigger}
-                          x={MEDALLION_SIZE / 2}
-                          y={MEDALLION_SIZE / 2}
-                          durationFrames={sparkDuration}
-                          radius={76}
-                          count={8}
-                          seed="clubs-ems-medallion-glint"
-                          colors={[PINK, PURPLE, AMBER]}
-                          style={{ zIndex: 12 }}
+                          triggerFrame={certSparkFrame}
+                          x={0}
+                          y={0}
+                          durationFrames={38}
+                          radius={68}
+                          count={10}
+                          seed="clubs-ems-medallion-burst"
+                          colors={[PINK, AMBER, PURPLE]}
                         />
                       </div>
                     </div>
 
-                    {/* Instrument Serif Italic Certificate Title + Event Caption */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                      <div
-                        style={{
-                          fontFamily: LAUNCH_FONTS.SERIF_ITALIC,
-                          fontStyle: 'italic',
-                          fontSize: 36,
-                          fontWeight: 400,
-                          lineHeight: 1.12,
-                          color: LAUNCH_PALETTE.BACKGROUND,
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        Anugerah Penyertaan Aktif
-                      </div>
-                      <div
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 12,
-                          fontWeight: 700,
-                          letterSpacing: '0.08em',
-                          color: PINK_BORDER,
-                        }}
-                      >
-                        MAKMP 2026 • DEWAN JUBLI PERAK
-                      </div>
-                    </div>
-
-                    {/* Student Recipient Plate */}
                     <div
                       style={{
-                        width: '100%',
-                        padding: '14px 18px',
-                        borderRadius: 16,
-                        backgroundColor: 'rgba(248, 246, 238, 0.06)',
-                        border: '1px solid rgba(251, 207, 232, 0.24)',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 4,
+                        fontFamily: LAUNCH_FONTS.SERIF_ITALIC,
+                        fontStyle: 'italic',
+                        fontSize: 30,
+                        lineHeight: 1.05,
+                        color: '#FFFFFF',
+                        textAlign: 'center',
                       }}
                     >
-                      <span
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 10,
-                          fontWeight: 800,
-                          letterSpacing: '0.15em',
-                          color: PINK_BORDER,
-                        }}
-                      >
-                        DIANUGERAHKAN KEPADA
-                      </span>
-                      <span
-                        style={{
-                          fontSize: 21,
-                          fontWeight: 900,
-                          letterSpacing: '0.02em',
-                          color: LAUNCH_PALETTE.BACKGROUND,
-                        }}
-                      >
-                        AIMAN HAKIM BIN AZMAN
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 12,
-                          fontWeight: 700,
-                          color: EMERALD,
-                        }}
-                      >
-                        Pelajar Semester 1 • JTMK
-                      </span>
+                      Anugerah Penyertaan Aktif
                     </div>
 
-                    {/* Serial Chip + Purple +15 MERIT Pill */}
-                    <div
+                    <span
                       style={{
-                        width: '100%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 10,
-                        padding: '10px 14px',
-                        borderRadius: 14,
-                        backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                        border: '1.5px solid rgba(233, 213, 255, 0.35)',
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 11.5,
+                        fontWeight: 700,
+                        letterSpacing: '0.14em',
+                        color: LAUNCH_PALETTE.TERTIARY,
                       }}
                     >
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 9, minWidth: 0 }}>
-                        <QrCode size={16} color={PURPLE} />
-                        <span
-                          style={{
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 13.5,
-                            fontWeight: 900,
-                            letterSpacing: '0.07em',
-                            color: LAUNCH_PALETTE.BACKGROUND,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          {safeCertSerial}
-                        </span>
-                      </div>
+                      MAKMP 2026 • DEWAN JUBLI PERAK
+                    </span>
+                  </div>
 
-                      <span
-                        style={{
-                          padding: '4px 10px',
-                          borderRadius: 999,
-                          backgroundColor: PURPLE_DARK,
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11,
-                          fontWeight: 900,
-                          letterSpacing: '0.08em',
-                          color: LAUNCH_PALETTE.BACKGROUND,
-                          whiteSpace: 'nowrap',
-                          flexShrink: 0,
-                        }}
-                      >
-                        +15 MERIT
-                      </span>
+                  {/* Recipient Box */}
+                  <div
+                    style={{
+                      padding: '11px 16px',
+                      borderRadius: 15,
+                      backgroundColor: 'rgba(248, 246, 238, 0.08)',
+                      border: '1px solid rgba(251, 207, 232, 0.24)',
+                      textAlign: 'center',
+                    }}
+                  >
+                    <div style={{ fontFamily: LAUNCH_FONTS.MONO, fontSize: 9.5, fontWeight: 800, color: LAUNCH_PALETTE.TERTIARY, letterSpacing: '0.14em' }}>
+                      DIANUGERAHKAN KEPADA
                     </div>
-
-                    {/* Official Pink PDF Download Action Button Pill */}
-                    <div
-                      style={{
-                        width: '100%',
-                        padding: '13px 20px',
-                        borderRadius: 999,
-                        backgroundColor: PINK_DARK,
-                        border: `1.5px solid ${PINK_BORDER}`,
-                        boxShadow: '0 14px 28px rgba(219, 39, 119, 0.38)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: 10,
-                        transform: `scale(${(0.94 + 0.06 * downloadBtnSpring).toFixed(3)})`,
-                      }}
-                    >
-                      <Download size={17} color={LAUNCH_PALETTE.CARD_BG} strokeWidth={2.6} />
-                      <span
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 13.5,
-                          fontWeight: 900,
-                          letterSpacing: '0.06em',
-                          color: LAUNCH_PALETTE.CARD_BG,
-                        }}
-                      >
-                        Muat Turun PDF Rasmi ✓
-                      </span>
+                    <div style={{ marginTop: 3, fontSize: 18, fontWeight: 900, color: '#FFFFFF' }}>
+                      AIMAN HAKIM BIN AZMAN
+                    </div>
+                    <div style={{ marginTop: 3, fontFamily: LAUNCH_FONTS.MONO, fontSize: 11, fontWeight: 800, color: EMERALD }}>
+                      Pelajar Semester 1 • JTMK
                     </div>
                   </div>
+
+                  {/* Certificate Serial + Verified Merit Badge */}
+                  <div
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: 14,
+                      backgroundColor: 'rgba(248, 246, 238, 0.06)',
+                      border: '1px solid rgba(251, 207, 232, 0.22)',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 7,
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 12,
+                        fontWeight: 800,
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      <ShieldCheck size={14} color={PINK} strokeWidth={2.4} />
+                      <span>{safeCertSerial}</span>
+                    </span>
+
+                    <span
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: 999,
+                        backgroundColor: PURPLE_INK,
+                        color: '#FFFFFF',
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 10.5,
+                        fontWeight: 900,
+                      }}
+                    >
+                      +15 MERIT
+                    </span>
+                  </div>
+
+                  {/* Download Official PDF Button (+18px relative Z) */}
+                  <div
+                    style={{
+                      padding: '11px 16px',
+                      borderRadius: 999,
+                      backgroundColor: PINK_INK,
+                      border: `1.5px solid ${PINK_BORDER}`,
+                      boxShadow: '0 18px 36px rgba(219, 39, 119, 0.34)',
+                      color: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      fontSize: 13.5,
+                      fontWeight: 900,
+                      transform: `translate3d(0px, 0px, ${(18 * downloadSpring).toFixed(2)}px) scale(${(0.95 + 0.05 * downloadSpring).toFixed(4)})`,
+                    }}
+                  >
+                    <Download size={16} strokeWidth={2.6} />
+                    <span>Muat Turun PDF Rasmi ✓</span>
+                  </div>
                 </div>
-              </ExplodedLayer>
-            </Interactive.Div>
+              </Interactive.Div>
+            ) : null}
           </div>
         </div>
       </CameraStage>

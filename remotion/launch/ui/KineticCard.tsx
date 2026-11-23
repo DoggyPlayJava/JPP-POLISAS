@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useId, useMemo } from 'react';
 import {
   Easing,
   interpolate,
@@ -388,6 +388,109 @@ export const ExplodedLayer: React.FC<ExplodedLayerProps> = ({
   );
 };
 
+export type SpatialFloorGridProps = {
+  readonly accentColor: string;
+  readonly secondaryColor?: string;
+  readonly gridOpacity?: number;
+  readonly scrollSpeed?: number;
+  readonly dark?: boolean;
+};
+
+/**
+ * Deterministic 3D architectural perspective floor plane tilted at rotateX(62deg)
+ * with smooth frame-driven grid drift, horizon fadeout, and subtle module floor glow.
+ */
+export const SpatialFloorGrid: React.FC<SpatialFloorGridProps> = ({
+  accentColor,
+  secondaryColor,
+  gridOpacity = 0.24,
+  scrollSpeed = 16,
+  dark = false,
+}) => {
+  const rawId = useId();
+  const uid = rawId.replace(/[^a-zA-Z0-9_-]/g, '');
+  const frame = useCurrentFrame();
+  const { fps } = useVideoConfig();
+
+  const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
+  const safeSpeed = Number.isFinite(scrollSpeed) ? scrollSpeed : 16;
+  const safeOpacity = Math.min(1, Math.max(0, Number.isFinite(gridOpacity) ? gridOpacity : 0.24));
+  const timeSec = frame / safeFps;
+  const tileSize = 68;
+  const driftY = ((timeSec * safeSpeed) % tileSize + tileSize) % tileSize;
+  const secondary = secondaryColor ?? accentColor;
+
+  return (
+    <div
+      aria-hidden
+      style={{
+        position: 'absolute',
+        left: -180,
+        right: -180,
+        bottom: -120,
+        height: 640,
+        pointerEvents: 'none',
+        transformOrigin: '50% 100%',
+        transformStyle: 'preserve-3d',
+        transform: 'translate3d(0px, 60px, -160px) rotateX(62deg)',
+        overflow: 'hidden',
+        zIndex: 0,
+      }}
+    >
+      <svg
+        width="100%"
+        height="100%"
+        viewBox="0 0 2280 640"
+        preserveAspectRatio="none"
+        style={{ display: 'block', width: '100%', height: '100%' }}
+      >
+        <defs>
+          <pattern
+            id={`floor-grid-${uid}`}
+            width={tileSize}
+            height={tileSize}
+            patternUnits="userSpaceOnUse"
+            patternTransform={`translate(0 ${driftY.toFixed(2)})`}
+          >
+            <path
+              d={`M ${tileSize} 0 L 0 0 0 ${tileSize}`}
+              fill="none"
+              stroke={dark ? LAUNCH_PALETTE.TERTIARY : accentColor}
+              strokeOpacity={safeOpacity}
+              strokeWidth={1.35}
+            />
+          </pattern>
+          <radialGradient id={`floor-glow-a-${uid}`} cx="34%" cy="56%" r="48%">
+            <stop offset="0%" stopColor={accentColor} stopOpacity={dark ? 0.26 : 0.18} />
+            <stop offset="68%" stopColor={accentColor} stopOpacity={0.04} />
+            <stop offset="100%" stopColor={accentColor} stopOpacity={0} />
+          </radialGradient>
+          <radialGradient id={`floor-glow-b-${uid}`} cx="68%" cy="54%" r="46%">
+            <stop offset="0%" stopColor={secondary} stopOpacity={dark ? 0.2 : 0.15} />
+            <stop offset="70%" stopColor={secondary} stopOpacity={0.03} />
+            <stop offset="100%" stopColor={secondary} stopOpacity={0} />
+          </radialGradient>
+          <linearGradient id={`floor-fade-${uid}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor="#FFFFFF" stopOpacity={0} />
+            <stop offset="28%" stopColor="#FFFFFF" stopOpacity={0.78} />
+            <stop offset="86%" stopColor="#FFFFFF" stopOpacity={1} />
+            <stop offset="100%" stopColor="#FFFFFF" stopOpacity={0.18} />
+          </linearGradient>
+          <mask id={`floor-mask-${uid}`}>
+            <rect x={0} y={0} width={2280} height={640} fill={`url(#floor-fade-${uid})`} />
+          </mask>
+        </defs>
+
+        <g mask={`url(#floor-mask-${uid})`}>
+          <rect x={0} y={0} width={2280} height={640} fill={`url(#floor-glow-a-${uid})`} />
+          <rect x={0} y={0} width={2280} height={640} fill={`url(#floor-glow-b-${uid})`} />
+          <rect x={0} y={0} width={2280} height={640} fill={`url(#floor-grid-${uid})`} />
+        </g>
+      </svg>
+    </div>
+  );
+};
+
 export type LiveTypewriterTextProps = {
   readonly text: string;
   readonly startFrame: number;
@@ -446,6 +549,7 @@ export const LiveTypewriterText: React.FC<LiveTypewriterTextProps> = ({
 
 export type PersonaMonogramProps = {
   readonly size?: number;
+  readonly species?: 'fox' | 'owl' | 'cat';
   readonly accentColor?: string;
   readonly softBgColor?: string;
   readonly borderColor?: string;
@@ -453,17 +557,24 @@ export type PersonaMonogramProps = {
 };
 
 /**
- * Custom Swiss architectural origami Fox Monogram SVG representing "Rubah Semambu"
- * with configurable module accent tones.
+ * Custom Swiss architectural origami Animal Persona Monogram SVG
+ * supporting Rubah Semambu ('fox'), Burung Hantu Semambu ('owl'), and Kucing Kamsis ('cat').
  */
 export const PersonaMonogram: React.FC<PersonaMonogramProps> = ({
   size = 44,
+  species = 'fox',
   accentColor = LAUNCH_PALETTE.ACCENT,
   softBgColor = LAUNCH_PALETTE.SURFACE_MUTED,
   borderColor = LAUNCH_PALETTE.TERTIARY,
   style,
 }) => {
   const safeSize = Math.max(16, Number.isFinite(size) ? size : 44);
+  const ariaLabel =
+    species === 'owl'
+      ? 'Burung Hantu Semambu Monogram'
+      : species === 'cat'
+        ? 'Kucing Kamsis Monogram'
+        : 'Rubah Semambu Monogram';
 
   return (
     <svg
@@ -472,7 +583,7 @@ export const PersonaMonogram: React.FC<PersonaMonogramProps> = ({
       viewBox="0 0 64 64"
       fill="none"
       role="img"
-      aria-label="Rubah Semambu Monogram"
+      aria-label={ariaLabel}
       style={{ display: 'block', flexShrink: 0, ...style }}
     >
       <rect
@@ -486,40 +597,75 @@ export const PersonaMonogram: React.FC<PersonaMonogramProps> = ({
         strokeWidth={2}
       />
 
-      {/* Base folded-origami fox head silhouette */}
-      <polygon
-        points="15,13 26,22 38,22 49,13 51,33 32,51 13,33"
-        fill={accentColor}
-      />
+      {species === 'owl' ? (
+        <>
+          {/* Feathered origami owl silhouette & brow tufts */}
+          <polygon points="15,14 26,20 38,20 49,14 51,38 32,51 13,38" fill={accentColor} />
+          <polygon points="15,14 23,19 16,25" fill={LAUNCH_PALETTE.PRIMARY_DARK} fillOpacity={0.18} />
+          <polygon points="49,14 41,19 48,25" fill={LAUNCH_PALETTE.PRIMARY_DARK} fillOpacity={0.18} />
+          {/* Large architectural owl eye discs */}
+          <circle cx={24} cy={31} r={7.2} fill={LAUNCH_PALETTE.BACKGROUND} />
+          <circle cx={40} cy={31} r={7.2} fill={LAUNCH_PALETTE.BACKGROUND} />
+          <circle cx={24} cy={31} r={3.1} fill={LAUNCH_PALETTE.PRIMARY_DARK} />
+          <circle cx={40} cy={31} r={3.1} fill={LAUNCH_PALETTE.PRIMARY_DARK} />
+          {/* Origami diamond beak */}
+          <polygon points="29,34 35,34 32,42" fill="#F59E0B" />
+          <polygon points="22,44 32,48 42,44 32,51" fill={LAUNCH_PALETTE.BACKGROUND} fillOpacity={0.78} />
+        </>
+      ) : species === 'cat' ? (
+        <>
+          {/* Sleek Swiss origami cat head & tall pointed ears */}
+          <polygon points="16,12 27,23 37,23 48,12 50,36 32,51 14,36" fill={accentColor} />
+          <polygon points="18,17 24,23.5 17.5,27.5" fill={softBgColor} />
+          <polygon points="46,17 40,23.5 46.5,27.5" fill={softBgColor} />
+          {/* Cream lower muzzle + sleek folded cheeks */}
+          <polygon points="14,36 32,38 32,51" fill={LAUNCH_PALETTE.BACKGROUND} fillOpacity={0.85} />
+          <polygon points="50,36 32,38 32,51" fill={LAUNCH_PALETTE.BACKGROUND} fillOpacity={0.92} />
+          {/* Crisp almond eyes & nose */}
+          <polygon points="20,30.5 26,31.5 24.8,34.5 20.5,33" fill={LAUNCH_PALETTE.PRIMARY_DARK} />
+          <polygon points="44,30.5 38,31.5 39.2,34.5 43.5,33" fill={LAUNCH_PALETTE.PRIMARY_DARK} />
+          <polygon points="29.5,38 34.5,38 32,42" fill={LAUNCH_PALETTE.PRIMARY_DARK} />
+          <line x1={12} y1={37} x2={22} y2={39} stroke={LAUNCH_PALETTE.PRIMARY} strokeWidth={1.3} strokeOpacity={0.5} />
+          <line x1={52} y1={37} x2={42} y2={39} stroke={LAUNCH_PALETTE.PRIMARY} strokeWidth={1.3} strokeOpacity={0.5} />
+        </>
+      ) : (
+        <>
+          {/* Base folded-origami fox head silhouette */}
+          <polygon
+            points="15,13 26,22 38,22 49,13 51,33 32,51 13,33"
+            fill={accentColor}
+          />
 
-      {/* Inner ear origami facets */}
-      <polygon points="17.5,18 24,23.5 17.5,29" fill={softBgColor} />
-      <polygon points="46.5,18 40,23.5 46.5,29" fill={softBgColor} />
+          {/* Inner ear origami facets */}
+          <polygon points="17.5,18 24,23.5 17.5,29" fill={softBgColor} />
+          <polygon points="46.5,18 40,23.5 46.5,29" fill={softBgColor} />
 
-      {/* Lower cheek muzzle blazes */}
-      <polygon points="13,33 26,37 32,51" fill={LAUNCH_PALETTE.BACKGROUND} />
-      <polygon points="51,33 38,37 32,51" fill={LAUNCH_PALETTE.BACKGROUND} />
+          {/* Lower cheek muzzle blazes */}
+          <polygon points="13,33 26,37 32,51" fill={LAUNCH_PALETTE.BACKGROUND} />
+          <polygon points="51,33 38,37 32,51" fill={LAUNCH_PALETTE.BACKGROUND} />
 
-      {/* Subtle architectural forehead fold facet */}
-      <polygon
-        points="26,22 38,22 32,39"
-        fill={LAUNCH_PALETTE.PRIMARY_DARK}
-        fillOpacity={0.12}
-      />
-      <line
-        x1={32}
-        y1={22}
-        x2={32}
-        y2={45}
-        stroke={LAUNCH_PALETTE.BACKGROUND}
-        strokeOpacity={0.28}
-        strokeWidth={1.1}
-      />
+          {/* Subtle architectural forehead fold facet */}
+          <polygon
+            points="26,22 38,22 32,39"
+            fill={LAUNCH_PALETTE.PRIMARY_DARK}
+            fillOpacity={0.12}
+          />
+          <line
+            x1={32}
+            y1={22}
+            x2={32}
+            y2={45}
+            stroke={LAUNCH_PALETTE.BACKGROUND}
+            strokeOpacity={0.28}
+            strokeWidth={1.1}
+          />
 
-      {/* Crisp Swiss eyes & snout apex nose */}
-      <polygon points="20.5,30 26.5,32.2 25.2,34.8 19.8,32.6" fill={LAUNCH_PALETTE.PRIMARY} />
-      <polygon points="43.5,30 37.5,32.2 38.8,34.8 44.2,32.6" fill={LAUNCH_PALETTE.PRIMARY} />
-      <polygon points="28.5,46 35.5,46 32,51" fill={LAUNCH_PALETTE.PRIMARY} />
+          {/* Crisp Swiss eyes & snout apex nose */}
+          <polygon points="20.5,30 26.5,32.2 25.2,34.8 19.8,32.6" fill={LAUNCH_PALETTE.PRIMARY} />
+          <polygon points="43.5,30 37.5,32.2 38.8,34.8 44.2,32.6" fill={LAUNCH_PALETTE.PRIMARY} />
+          <polygon points="28.5,46 35.5,46 32,51" fill={LAUNCH_PALETTE.PRIMARY} />
+        </>
+      )}
     </svg>
   );
 };

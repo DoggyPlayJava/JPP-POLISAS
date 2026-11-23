@@ -24,16 +24,18 @@ import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath } from '../motion/MotionActors';
 import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
-import { DeterministicQrMatrix, ExplodedLayer, KineticWindow } from '../ui/KineticCard';
+import { DeterministicQrMatrix, KineticWindow, SpatialFloorGrid } from '../ui/KineticCard';
 
 const TEAL = LAUNCH_MODULE_THEMES.kebajikan.primary; // #14B8A6
 const TEAL_DARK = LAUNCH_MODULE_THEMES.kebajikan.dark; // #0D9488
-const TEAL_INK = '#0F766E'; // WCAG AA+ Teal-700 behind white text badges & checkmarks
+const TEAL_INK = '#0F766E'; // WCAG AA+ Teal-700 for white text badges & physical 3D platform depth lip
 const TEAL_SOFT = LAUNCH_MODULE_THEMES.kebajikan.soft; // #F0FDFA
 const TEAL_BORDER = LAUNCH_MODULE_THEMES.kebajikan.border; // #99F6E4
 
 const AMBER = LAUNCH_MODULE_THEMES.foodbank.primary; // #F59E0B
 const AMBER_DARK = LAUNCH_MODULE_THEMES.foodbank.dark; // #D97706
+const AMBER_INK = '#B45309';
+const AMBER_SOFT = LAUNCH_MODULE_THEMES.foodbank.soft; // #FFFBEB
 const AMBER_BORDER = LAUNCH_MODULE_THEMES.foodbank.border; // #FDE68A
 
 export type WelfareCareProps = {
@@ -90,275 +92,154 @@ const SPINE_EASING = Easing.bezier(0.37, 0, 0.63, 1);
 const TIMER_EASING = Easing.bezier(0.22, 1, 0.36, 1);
 const SHEEN_EASE = Easing.bezier(0.25, 0.1, 0.25, 1);
 
-const resolveNormalizedTimeForProgress = (
-  targetProgress: number,
-  easing: (t: number) => number,
-): number => {
-  if (targetProgress <= 0) return 0;
-  if (targetProgress >= 1) return 1;
-  let lo = 0;
-  let hi = 1;
-  for (let i = 0; i < 20; i++) {
-    const mid = (lo + hi) * 0.5;
-    if (easing(mid) < targetProgress) {
-      lo = mid;
-    } else {
-      hi = mid;
-    }
-  }
-  return (lo + hi) * 0.5;
-};
-
-// Twin-Deck Bento geometry inside 1920x1080 safe bounds
-const DECK_WIDTH = 840;
-const DECK_HEIGHT = 728;
-const DECK_GAP = 48;
-const DECK_LEFT_X = 96;
-const DECK_RIGHT_X = DECK_LEFT_X + DECK_WIDTH + DECK_GAP;
-const DECK_TOP = 252;
-
-// Pixel-locked Vertical Resolution Spine inside Left Deck
-const ROW_HEIGHT = 86;
-const ROW_GAP = 18;
-const ROW_PITCH = ROW_HEIGHT + ROW_GAP;
-const SPINE_X = 28;
-const FIRST_NODE_Y = ROW_HEIGHT / 2; // 43
-const LAST_NODE_Y = FIRST_NODE_Y + (STAGES.length - 1) * ROW_PITCH; // 355
-const TIMELINE_HEIGHT = (STAGES.length - 1) * ROW_PITCH + ROW_HEIGHT; // 398
-const SPINE_PATH_D = `M ${SPINE_X} ${FIRST_NODE_Y} L ${SPINE_X} ${LAST_NODE_Y}`;
+// Isometric 4-platform escalator Z-tiers well inside safe perspective bounds
+const ESCALATOR_BASE_Z = [16, 40, 66, 92] as const;
 
 const renderScheduleIcon = (kind: (typeof PICKUP_SCHEDULE)[number]['kind']) => {
   switch (kind) {
     case 'date':
-      return <Calendar size={15} color={AMBER} strokeWidth={2.4} />;
+      return <Calendar size={14} color={AMBER} strokeWidth={2.4} />;
     case 'time':
-      return <Clock size={15} color={AMBER} strokeWidth={2.4} />;
+      return <Clock size={14} color={AMBER} strokeWidth={2.4} />;
     case 'location':
-      return <MapPin size={15} color={TEAL} strokeWidth={2.4} />;
+      return <MapPin size={14} color={TEAL} strokeWidth={2.4} />;
   }
 };
 
-const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, headline }) => {
+const WelfareCareInner: React.FC<WelfareCareProps> = ({
+  ticketNo,
+  slaLabel,
+  headline,
+}) => {
   const frame = useCurrentFrame();
-  const { fps, durationInFrames } = useVideoConfig();
+  const { fps } = useVideoConfig();
 
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
-  const safeDuration = Math.max(30, Number.isFinite(durationInFrames) ? durationInFrames : 366);
   const timeSec = frame / safeFps;
 
   const safeTicketNo = ticketNo.trim() || 'KBJ-0842';
   const safeSlaLabel = slaLabel.trim() || '< 48 JAM';
-  const safeHeadline = resolveStudentHeadline(headline);
+  const resolvedHeadline = resolveStudentHeadline(headline);
 
-  // Beat 1 (0..1.25s): Centered Student Header + Twin-Deck Reveal
+  // Beat 1 (0..1.4s): Centered Editorial Headline + Left Escalator Entry
   const pillStart = 0;
-  const pillDuration = Math.max(8, Math.round(0.38 * safeFps));
-  const headlineStart = Math.round(0.1 * safeFps);
+  const pillDuration = Math.max(8, Math.round(0.36 * safeFps));
+  const headlineStart = Math.round(0.08 * safeFps);
   const wordStagger = Math.max(2, Math.round(0.055 * safeFps));
   const wordDuration = Math.max(8, Math.round(0.34 * safeFps));
-  const subtitleStart = Math.round(0.28 * safeFps);
-  const subtitleDuration = Math.max(8, Math.round(0.38 * safeFps));
+  const subStart = Math.round(0.35 * safeFps);
+  const subDuration = Math.max(8, Math.round(0.35 * safeFps));
 
-  const leftDeckEnter = interpolate(
-    frame,
-    [Math.round(0.22 * safeFps), Math.round(0.88 * safeFps)],
-    [0, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: EXPO_OUT,
-    },
-  );
-  const leftDeckOpacity = interpolate(leftDeckEnter, [0, 0.28, 1], [0, 1, 1], {
+  const stageEnter = interpolate(frame, [Math.round(0.18 * safeFps), Math.round(0.75 * safeFps)], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-  });
-  const leftDeckX = interpolate(leftDeckEnter, [0, 1], [-34, 0]);
-  const leftDeckY = interpolate(leftDeckEnter, [0, 1], [22, 0]);
-
-  const rightDeckEnter = interpolate(
-    frame,
-    [Math.round(0.34 * safeFps), Math.round(1.02 * safeFps)],
-    [0, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-      easing: EXPO_OUT,
-    },
-  );
-  const rightDeckOpacity = interpolate(rightDeckEnter, [0, 0.28, 1], [0, 1, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-  const rightDeckX = interpolate(rightDeckEnter, [0, 1], [34, 0]);
-  const rightDeckY = interpolate(rightDeckEnter, [0, 1], [22, 0]);
-
-  // Continuous gentle breathing across both decks right through durationInFrames - 1
-  const leftDeckFloatY = Math.sin(timeSec * 1.4) * 2.6 * leftDeckEnter;
-  const rightDeckFloatY = Math.cos(timeSec * 1.35 + 0.7) * 2.6 * rightDeckEnter;
-
-  // Subtle exit momentum lead matching CameraStage exit launch
-  const exitFrames = Math.max(2, Math.round(0.35 * safeFps));
-  const sceneEnd = Math.max(1, safeDuration - 1);
-  const exitStart = Math.max(0, Math.min(sceneEnd - 1, safeDuration - exitFrames));
-  const exitFactor = interpolate(frame, [exitStart, sceneEnd], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: Easing.bezier(0.55, 0, 1, 0.45),
-  });
-  const deckExitLift = -10 * exitFactor;
-
-  // Beat 2 (1.1..4.2s): Vertical EvolvingPath Spine + 4 Student Stage Cues + Live Elapsed Timer (09:14 -> 15:50 = 06j 36m)
-  const spineStart = Math.round(1.1 * safeFps); // 66f
-  const spineDuration = Math.max(24, Math.round(3.05 * safeFps)); // 183f -> ends 249f (~4.15s)
-  const spineEnd = spineStart + spineDuration;
-
-  const stageCueFrames = STAGES.map((_, idx) => {
-    const targetProgress = idx / Math.max(1, STAGES.length - 1);
-    const normalizedTime = resolveNormalizedTimeForProgress(targetProgress, SPINE_EASING);
-    return spineStart + Math.round(normalizedTime * spineDuration);
+    easing: EXPO_OUT,
   });
 
-  const finalStepCueFrame = stageCueFrames[stageCueFrames.length - 1] ?? spineEnd;
+  // 4 Isometric Platforms elevate step-by-step & lock solidly before Global f=1620 (Local f=180)
+  const conduitStart = Math.round(0.42 * safeFps); // 25f
+  const conduitDuration = Math.max(36, Math.round(1.65 * safeFps)); // 99f -> finishes 124f
+  const stageTriggerFrames = [
+    Math.round(0.42 * safeFps), // 25f
+    Math.round(0.92 * safeFps), // 55f
+    Math.round(1.42 * safeFps), // 85f
+    Math.round(1.92 * safeFps), // 115f
+  ] as const;
+
+  const finalCompleteFrame = stageTriggerFrames[STAGES.length - 1];
+  const allStagesComplete = frame >= finalCompleteFrame;
+
   const elapsedMinutes = Math.round(
-    interpolate(frame, [spineStart, finalStepCueFrame], [0, 396], {
+    interpolate(frame, [conduitStart, finalCompleteFrame], [12, 396], {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
       easing: TIMER_EASING,
     }),
   );
-  const displayHours = Math.floor(elapsedMinutes / 60);
-  const displayMins = elapsedMinutes % 60;
-  const elapsedLabel = `${String(displayHours).padStart(2, '0')}j ${String(displayMins).padStart(2, '0')}m`;
-  const allStagesComplete = frame >= finalStepCueFrame;
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+  const elapsedMins = elapsedMinutes % 60;
+  const elapsedDisplay = `${String(elapsedHours).padStart(2, '0')}j ${String(elapsedMins).padStart(2, '0')}m`;
 
-  const slaMeterScaleX = interpolate(frame, [spineStart, finalStepCueFrame], [0.06, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: TIMER_EASING,
-  });
+  const highlightStart = Math.round(1.78 * safeFps); // 107f
+  const highlightDuration = Math.round(0.45 * safeFps); // 27f -> completed by 134f
+  const sealStart = Math.round(2.3 * safeFps); // 138f -> stamps before Global 1620 (Local 180)
+  const sealSpring =
+    frame >= sealStart
+      ? spring({
+          frame: frame - sealStart,
+          fps: safeFps,
+          config: { damping: 14, stiffness: 235, mass: 0.85 },
+        })
+      : 0;
+  const sealOpacity =
+    frame >= sealStart
+      ? interpolate(frame, [sealStart, sealStart + Math.round(0.18 * safeFps)], [0, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        })
+      : 0;
+  const sealFloatY = Math.sin(timeSec * 2.1 + 0.6) * 2.5 * sealSpring;
 
-  // Right Deck Beat 2: 3-Step Food Bank Mini-Stepper + Schedule Cards + QR Pickup Pass
-  const fbStepCueFrames = [
-    Math.round(0.88 * safeFps), // 53f
-    Math.round(1.68 * safeFps), // 101f
-    Math.round(2.45 * safeFps), // 147f
-  ] as const;
-
-  const fbTrackScaleX = interpolate(
+  // Right Stage: Exploded 3-Plane Food Bank Vault (Base +20px, Shield +46px, QR Ration Token +54px Z)
+  const vaultBaseStart = Math.round(0.42 * safeFps); // 25f
+  const vaultProgress = interpolate(
     frame,
-    [fbStepCueFrames[0], fbStepCueFrames[2]],
+    [vaultBaseStart, vaultBaseStart + Math.round(0.65 * safeFps)],
     [0, 1],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
-      easing: SPINE_EASING,
+      easing: EXPO_OUT,
     },
   );
-
-  const privacyBadgeStart = fbStepCueFrames[2] + Math.round(0.08 * safeFps);
-  const privacyBadgeSpring =
-    frame >= privacyBadgeStart
+  const shieldStart = Math.round(1.45 * safeFps); // 87f
+  const shieldSpring =
+    frame >= shieldStart
       ? spring({
-          frame: frame - privacyBadgeStart,
+          frame: frame - shieldStart,
           fps: safeFps,
-          config: { damping: 14, stiffness: 220, mass: 0.85 },
+          config: { damping: 15, stiffness: 220, mass: 0.85 },
         })
       : 0;
 
-  const scheduleEnterStart = Math.round(1.45 * safeFps);
-  const qrTicketEnterFrame = Math.round(1.85 * safeFps); // 111f
-
-  // Continuous subtle laser / sheen glide across the Confidential QR Pickup Ticket
-  const ticketCycleFrames = Math.max(48, Math.round(2.1 * safeFps));
-  const ticketLocal = Math.max(0, frame - qrTicketEnterFrame);
-  const ticketPhase =
-    frame >= qrTicketEnterFrame ? (ticketLocal % ticketCycleFrames) / ticketCycleFrames : 0;
-  const ticketSheenX = interpolate(ticketPhase, [0, 0.72], [-220, 860], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: SHEEN_EASE,
-  });
-  const ticketSheenOpacity =
-    frame >= qrTicketEnterFrame
-      ? interpolate(ticketPhase, [0, 0.14, 0.56, 0.72], [0, 1, 1, 0], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-        })
-      : 0;
-  const qrLaserNormalizedY = 0.5 + 0.42 * Math.sin(timeSec * 2.4);
-  const qrLaserTopPx = 14 + qrLaserNormalizedY * 124;
-
-  // Beat 3 (3.9..6.1s): Rough-Notation <Highlight> across < 48 JAM + Architectural "SELESAI < 48 JAM ✓" seal + Food Bank Claim Stamp
-  const highlightStart = Math.round(3.92 * safeFps); // 235f
-  const highlightDuration = Math.max(10, Math.round(0.58 * safeFps)); // 35f -> settles by 270f
-
-  const sealStart = Math.round(4.18 * safeFps); // 251f -> cleanly stamped by f290
-  const sealElapsed = frame - sealStart;
-  const sealSpring =
-    sealElapsed >= 0
+  const tokenStart = Math.round(1.8 * safeFps); // 108f
+  const tokenSpring =
+    frame >= tokenStart
       ? spring({
-          frame: sealElapsed,
+          frame: frame - tokenStart,
           fps: safeFps,
-          config: { damping: 13, stiffness: 230, mass: 0.85 },
+          config: { damping: 15, stiffness: 205, mass: 0.9 },
         })
       : 0;
-  const sealScale = 1.36 + (1 - 1.36) * sealSpring;
-  const sealRotate = -5.2 + (-1.8 - -5.2) * Math.min(1, sealSpring);
-  const sealOpacity =
-    sealElapsed >= 0
-      ? interpolate(sealElapsed, [0, Math.max(3, Math.round(0.08 * safeFps))], [0, 1], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-        })
-      : 0;
-  const sealFloatY =
-    sealOpacity > 0.001 ? Math.sin(timeSec * 2.1) * 2.2 * Math.min(1, sealSpring) : 0;
+  const tokenFloatY = Math.sin(timeSec * 1.55) * 4 * tokenSpring;
 
-  const claimStampStart = Math.round(3.96 * safeFps); // 238f -> settled cleanly by f290
-  const claimStampElapsed = frame - claimStampStart;
-  const claimStampSpring =
-    claimStampElapsed >= 0
-      ? spring({
-          frame: claimStampElapsed,
-          fps: safeFps,
-          config: { damping: 13, stiffness: 240, mass: 0.8 },
-        })
-      : 0;
-  const claimStampScale = 1.32 + (1 - 1.32) * claimStampSpring;
-  const claimStampRotate = -4.5 + (-1.5 - -4.5) * Math.min(1, claimStampSpring);
-  const claimStampOpacity =
-    claimStampElapsed >= 0
-      ? interpolate(claimStampElapsed, [0, Math.max(3, Math.round(0.08 * safeFps))], [0, 1], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-        })
-      : 0;
-
-  const liveDotScale = 0.82 + Math.sin(timeSec * 5.6) * 0.2;
+  const scanBeamPeriod = Math.max(36, Math.round(1.65 * safeFps));
+  const scanPhase = ((frame - tokenStart) % scanBeamPeriod) / scanBeamPeriod;
+  const scanBeamY =
+    frame >= tokenStart + 10 ? 12 + 124 * Math.sin(Math.max(0, scanPhase) * Math.PI) : 12;
 
   return (
     <>
       <EditorialBackdrop ambientTint={LAUNCH_MODULE_THEMES.kebajikan.tint} />
 
       <CameraStage
-        zoomFrom={1}
-        zoomTo={1.032}
-        panXFrom={-10}
-        panXTo={10}
-        panYFrom={4}
-        panYTo={-4}
-        tiltXFrom={0.35}
-        tiltXTo={-0.25}
-        tiltYFrom={-0.75}
-        tiltYTo={0.75}
-        breathingAmplitude={0.55}
-        entryPanXOffset={34}
-        entryPanYOffset={16}
-        entryZoomOffset={0.024}
-        exitPanYDelta={-38}
-        exitZoomDelta={-0.016}
-        exitFrames={Math.round(0.35 * safeFps)}
+        perspective={1500}
+        zoomFrom={0.965}
+        zoomTo={1.0}
+        panXFrom={-4}
+        panXTo={4}
+        panYFrom={3}
+        panYTo={-3}
+        tiltXFrom={5}
+        tiltXTo={2}
+        tiltYFrom={-3.5}
+        tiltYTo={3.5}
+        breathingAmplitude={0.35}
+        entryPanXOffset={-20}
+        entryZoomOffset={-0.02}
+        exitPanYDelta={-16}
+        exitZoomDelta={0.03}
+        exitFrames={Math.round(0.32 * safeFps)}
         clip
       >
         <div
@@ -366,24 +247,25 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
             position: 'absolute',
             inset: 0,
             fontFamily: LAUNCH_FONTS.DISPLAY,
-            perspective: '1800px',
+            perspective: '1500px',
             transformStyle: 'preserve-3d',
           }}
         >
-          {/* Centered Top Student Editorial Header (y ~ 82..226) */}
-          <Interactive.Div
-            name="Welfare Student Header"
-            premountFor={safeFps}
+          {/* 3D Perspective Architectural Floor Grid with Teal & Amber Radial Glows */}
+          <SpatialFloorGrid accentColor={TEAL} secondaryColor={AMBER} gridOpacity={0.22} scrollSpeed={15} />
+
+          {/* Beat 1: Centered Editorial Headline */}
+          <div
             style={{
               position: 'absolute',
-              left: 110,
-              right: 110,
-              top: 82,
+              left: 72,
+              right: 72,
+              top: 64,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               textAlign: 'center',
-              gap: 10,
+              zIndex: 10,
             }}
           >
             <KineticReveal startFrame={pillStart} durationFrames={pillDuration}>
@@ -391,1317 +273,748 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 9,
+                  gap: 8,
                   padding: '6px 18px',
                   borderRadius: 999,
                   backgroundColor: TEAL_SOFT,
                   border: `1.5px solid ${TEAL}`,
-                  color: TEAL_DARK,
+                  color: TEAL_INK,
                   fontFamily: LAUNCH_FONTS.MONO,
-                  fontSize: 12,
+                  fontSize: 12.5,
                   fontWeight: 800,
                   letterSpacing: '0.16em',
                 }}
               >
-                <ShieldCheck size={15} color={TEAL_DARK} strokeWidth={2.4} />
+                <ShieldCheck size={14} color={TEAL_INK} strokeWidth={2.5} />
                 <span>PRIHATIN SISWA • ADUAN KAMSIS &amp; FOOD BANK</span>
               </div>
             </KineticReveal>
 
             <KineticWords
               as="h2"
-              text={safeHeadline}
+              text={resolvedHeadline}
               startFrame={headlineStart}
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
-              align="center"
               accentWords={['Kami', 'Ada.']}
               accentColor={TEAL_DARK}
+              align="center"
               style={{
-                margin: 0,
-                fontSize: 47,
+                margin: '10px 0 0',
+                fontSize: 48,
                 fontWeight: 900,
-                lineHeight: 1.07,
                 letterSpacing: '-0.03em',
+                lineHeight: 1.07,
                 color: LAUNCH_PALETTE.PRIMARY,
               }}
             />
 
-            <KineticReveal startFrame={subtitleStart} durationFrames={subtitleDuration}>
+            <KineticReveal startFrame={subStart} durationFrames={subDuration}>
               <p
                 style={{
-                  margin: 0,
-                  fontSize: 17.5,
+                  margin: '6px 0 0',
+                  fontSize: 16.5,
                   fontWeight: 500,
-                  lineHeight: 1.35,
-                  color: LAUNCH_PALETTE.MUTED_OLIVE,
-                  letterSpacing: '-0.01em',
+                  lineHeight: 1.4,
+                  color: LAUNCH_PALETTE.INK_SOFT,
                 }}
               >
                 Jejak aduan kerosakan kamsis terus di telefon dan mohon bantuan Food Bank secara rahsia serta bermaruah.
               </p>
             </KineticReveal>
-          </Interactive.Div>
+          </div>
 
-          {/* Left Deck (840px): Teal Student KebajikanLiveTrackerCard */}
-          <Interactive.Div
-            name="Kamsis Student Tracker Deck"
-            premountFor={safeFps}
+          {/* SPLIT-LEVEL 3D CARE DIORAMA STAGE (y: 214..986) */}
+          <div
             style={{
               position: 'absolute',
-              left: DECK_LEFT_X,
-              top: DECK_TOP,
-              width: DECK_WIDTH,
-              height: DECK_HEIGHT,
-              opacity: leftDeckOpacity,
-              transform: `translate3d(${leftDeckX.toFixed(2)}px, ${(leftDeckY + leftDeckFloatY + deckExitLift).toFixed(2)}px, 16px) rotateY(1.2deg)`,
-              transformStyle: 'preserve-3d',
-              overflow: 'visible',
-            }}
-          >
-            <KineticWindow
-              surface="light"
-              routeLabel="jpp.polisas.edu.my/kebajikan"
-              statusPill={allStagesComplete ? 'SELESAI ✓' : 'TIKET AKTIF'}
-              statusAccent={!allStagesComplete}
-              accentColor={TEAL_DARK}
-              accentSoftBg={TEAL_SOFT}
-              accentBorderColor={TEAL}
-              width={DECK_WIDTH}
-              height={DECK_HEIGHT}
-              borderRadius={26}
-              sheenStartFrame={Math.round(0.95 * safeFps)}
-              sheenDuration={44}
-              style={{
-                borderColor: allStagesComplete ? TEAL : TEAL_BORDER,
-                boxShadow: '0 26px 56px rgba(20, 184, 166, 0.12), 0 8px 20px rgba(31, 39, 32, 0.08)',
-                overflow: 'visible',
-              }}
-            >
-              <div
-                style={{
-                  flex: 1,
-                  padding: '24px 30px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  boxSizing: 'border-box',
-                  overflow: 'visible',
-                  transformStyle: 'preserve-3d',
-                }}
-              >
-                {/* Ticket Header Row with < 48 JAM <Highlight> & Beat 3 Architectural Seal */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                    gap: 18,
-                    paddingBottom: 18,
-                    borderBottom: `1.5px solid ${TEAL_SOFT}`,
-                    overflow: 'visible',
-                    transformStyle: 'preserve-3d',
-                  }}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
-                    <div
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11,
-                        fontWeight: 800,
-                        letterSpacing: '0.14em',
-                        color: TEAL_DARK,
-                      }}
-                    >
-                      <span
-                        style={{
-                          width: 7,
-                          height: 7,
-                          borderRadius: 999,
-                          backgroundColor: allStagesComplete ? TEAL_DARK : TEAL,
-                          transform: `scale(${liveDotScale.toFixed(3)})`,
-                          display: 'inline-block',
-                        }}
-                      />
-                      <span>JEJAK ADUAN KAMSIS • STATUS LANGSUNG</span>
-                    </div>
-
-                    <div
-                      style={{
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 22,
-                        fontWeight: 900,
-                        letterSpacing: '0.02em',
-                        color: TEAL_DARK,
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      TIKET #{safeTicketNo}
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: 16.5,
-                        fontWeight: 800,
-                        color: LAUNCH_PALETTE.PRIMARY,
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                      }}
-                    >
-                      Kipas &amp; Lampu Bilik Kamsis Blok B-204
-                    </div>
-                  </div>
-
-                  {/* Top-Right Jaminan Siap Highlight Badge + Beat 3 Architectural Seal */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'flex-end',
-                      gap: 10,
-                      flexShrink: 0,
-                      overflow: 'visible',
-                    }}
-                  >
-                    <div
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        padding: '6px 14px',
-                        borderRadius: 999,
-                        backgroundColor: TEAL_SOFT,
-                        border: `1.5px solid ${TEAL_BORDER}`,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 12,
-                        fontWeight: 800,
-                        letterSpacing: '0.1em',
-                        color: TEAL_DARK,
-                        overflow: 'visible',
-                      }}
-                    >
-                      <span>SIAP</span>
-                      <span style={{ display: 'inline-block', overflow: 'visible' }}>
-                        <EditorialAnnotation
-                          type="highlight"
-                          startFrame={highlightStart}
-                          durationFrames={highlightDuration}
-                          color="rgba(20, 184, 166, 0.34)"
-                          padding={{ top: 4, right: 9, bottom: 4, left: 9 }}
-                          iterations={1}
-                          seed={22}
-                          style={{ overflow: 'visible' }}
-                        >
-                          <span style={{ fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY_DARK }}>
-                            {safeSlaLabel}
-                          </span>
-                        </EditorialAnnotation>
-                      </span>
-                    </div>
-
-                    <div
-                      style={{
-                        position: 'relative',
-                        minWidth: 252,
-                        height: 44,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'flex-end',
-                        overflow: 'visible',
-                        transformStyle: 'preserve-3d',
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 8,
-                          padding: '7px 14px',
-                          borderRadius: 999,
-                          backgroundColor: TEAL_SOFT,
-                          border: `1px solid ${TEAL}`,
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11.5,
-                          fontWeight: 800,
-                          letterSpacing: '0.11em',
-                          color: TEAL_DARK,
-                          opacity: Math.max(0, 1 - sealOpacity),
-                        }}
-                      >
-                        <Clock size={13} color={TEAL_DARK} strokeWidth={2.5} />
-                        <span>PASUKAN KEBAJIKAN SISWA</span>
-                      </div>
-
-                      {/* Beat 3 Architectural Seal elevated in 3D */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          right: 0,
-                          top: '50%',
-                          opacity: sealOpacity,
-                          visibility: sealOpacity <= 0.001 ? 'hidden' : 'visible',
-                          transformOrigin: '50% 50%',
-                          transform: `translate3d(0px, calc(-50% + ${sealFloatY.toFixed(2)}px), 48px) rotate(${sealRotate.toFixed(2)}deg) scale(${sealScale.toFixed(4)})`,
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 9,
-                            padding: '8px 14px',
-                            borderRadius: 12,
-                            backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                            border: `2px solid ${TEAL}`,
-                            boxShadow:
-                              '0 12px 28px rgba(20, 184, 166, 0.24), inset 0 0 0 1px rgba(153, 246, 228, 0.35)',
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          <span
-                            style={{
-                              width: 20,
-                              height: 20,
-                              borderRadius: 999,
-                              backgroundColor: TEAL,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Check size={12} color={LAUNCH_PALETTE.CARD_BG} strokeWidth={3} />
-                          </span>
-                          <span
-                            style={{
-                              fontFamily: LAUNCH_FONTS.MONO,
-                              fontSize: 12.5,
-                              fontWeight: 900,
-                              letterSpacing: '0.09em',
-                              color: LAUNCH_PALETTE.BACKGROUND,
-                            }}
-                          >
-                            SELESAI &lt; 48 JAM ✓
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Beat 2: Vertical Teal EvolvingPath Resolution Spine + 4 Student-Visible Nodes */}
-                <div
-                  style={{
-                    position: 'relative',
-                    width: '100%',
-                    height: TIMELINE_HEIGHT,
-                  }}
-                >
-                  <EvolvingPath
-                    d={SPINE_PATH_D}
-                    width={56}
-                    height={TIMELINE_HEIGHT}
-                    viewBox={`0 0 56 ${TIMELINE_HEIGHT}`}
-                    startFrame={spineStart}
-                    durationFrames={spineDuration}
-                    stroke={TEAL}
-                    trackStroke={TEAL_BORDER}
-                    strokeWidth={3.5}
-                    showHeadDot
-                    headDotRadius={6}
-                    headDotColor={TEAL_DARK}
-                    hideDotWhenComplete
-                    easing={SPINE_EASING}
-                    style={{ position: 'absolute', left: 0, top: 0, pointerEvents: 'none', zIndex: 1 }}
-                  />
-
-                  {STAGES.map((stage, idx) => {
-                    const cueFrame = stageCueFrames[idx] ?? spineStart;
-                    const isStepDone = frame >= cueFrame;
-                    const cueElapsed = frame - cueFrame;
-                    const stepSpring =
-                      cueElapsed >= 0
-                        ? spring({
-                            frame: cueElapsed,
-                            fps: safeFps,
-                            config: { damping: 13, stiffness: 250, mass: 0.72 },
-                          })
-                        : 0;
-                    const clampedSpring = Math.min(1, Math.max(0, stepSpring));
-                    const nudgeX =
-                      isStepDone && clampedSpring < 0.999
-                        ? Math.sin(clampedSpring * Math.PI) * 9
-                        : 0;
-                    const nodeScale = isStepDone ? 0.78 + 0.22 * stepSpring : 1;
-                    const checkOpacity = isStepDone
-                      ? interpolate(cueElapsed, [0, Math.max(3, Math.round(0.1 * safeFps))], [0, 1], {
-                          extrapolateLeft: 'clamp',
-                          extrapolateRight: 'clamp',
-                        })
-                      : 0;
-                    const badgeScale = isStepDone ? 0.86 + 0.14 * clampedSpring : 0.92;
-
-                    const nodeY = FIRST_NODE_Y + idx * ROW_PITCH;
-                    const rowTop = idx * ROW_PITCH;
-                    const isFinalStage = idx === STAGES.length - 1;
-
-                    const nodeBg = !isStepDone
-                      ? TEAL_SOFT
-                      : isFinalStage
-                        ? TEAL_DARK
-                        : TEAL_INK;
-                    const nodeBorder = !isStepDone
-                      ? TEAL_BORDER
-                      : isFinalStage
-                        ? TEAL_DARK
-                        : TEAL;
-                    const cardBg = !isStepDone
-                      ? LAUNCH_PALETTE.SURFACE_MUTED
-                      : isFinalStage
-                        ? TEAL_SOFT
-                        : 'rgba(20, 184, 166, 0.08)';
-                    const cardBorder = !isStepDone
-                      ? LAUNCH_PALETTE.TERTIARY
-                      : isFinalStage
-                        ? TEAL_DARK
-                        : TEAL;
-
-                    return (
-                      <React.Fragment key={stage.title}>
-                        <div
-                          style={{
-                            position: 'absolute',
-                            left: SPINE_X + 18,
-                            top: nodeY - 1,
-                            width: 18,
-                            height: 2,
-                            backgroundColor: isStepDone ? TEAL : TEAL_BORDER,
-                            zIndex: 1,
-                          }}
-                        />
-
-                        <div
-                          style={{
-                            position: 'absolute',
-                            left: SPINE_X,
-                            top: nodeY,
-                            width: 36,
-                            height: 36,
-                            borderRadius: 999,
-                            backgroundColor: nodeBg,
-                            border: `2.5px solid ${nodeBorder}`,
-                            boxSizing: 'border-box',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            zIndex: 3,
-                            boxShadow: isStepDone
-                              ? '0 6px 14px rgba(13, 148, 136, 0.24)'
-                              : 'none',
-                            transform: `translate(-50%, -50%) scale(${nodeScale.toFixed(4)})`,
-                          }}
-                        >
-                          {isStepDone ? (
-                            <span style={{ opacity: checkOpacity, display: 'inline-flex' }}>
-                              <Check size={17} color={LAUNCH_PALETTE.CARD_BG} strokeWidth={3} />
-                            </span>
-                          ) : (
-                            <span
-                              style={{
-                                fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 12,
-                                fontWeight: 800,
-                                color: TEAL_DARK,
-                              }}
-                            >
-                              0{idx + 1}
-                            </span>
-                          )}
-                        </div>
-
-                        <div
-                          style={{
-                            position: 'absolute',
-                            left: 64,
-                            right: 0,
-                            top: rowTop,
-                            height: ROW_HEIGHT,
-                            boxSizing: 'border-box',
-                            padding: '12px 20px',
-                            borderRadius: 16,
-                            backgroundColor: cardBg,
-                            border: `1.5px solid ${cardBorder}`,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 16,
-                            zIndex: 2,
-                            transform: `translate3d(${nudgeX.toFixed(2)}px, 0px, 0px)`,
-                          }}
-                        >
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-                            <span
-                              style={{
-                                fontSize: 18.5,
-                                fontWeight: 800,
-                                color: isStepDone
-                                  ? LAUNCH_PALETTE.PRIMARY
-                                  : LAUNCH_PALETTE.MUTED_OLIVE,
-                                whiteSpace: 'nowrap',
-                              }}
-                            >
-                              0{idx + 1}. {stage.title}
-                            </span>
-                            <span
-                              style={{
-                                fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 12,
-                                fontWeight: 600,
-                                color: isStepDone ? TEAL_DARK : LAUNCH_PALETTE.MUTED_OLIVE,
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }}
-                            >
-                              {stage.meta}
-                            </span>
-                          </div>
-
-                          <span
-                            style={{
-                              padding: '5px 12px',
-                              borderRadius: 999,
-                              backgroundColor: !isStepDone
-                                ? LAUNCH_PALETTE.CARD_BG
-                                : TEAL_INK,
-                              border: `1px solid ${
-                                !isStepDone ? TEAL_BORDER : 'transparent'
-                              }`,
-                              color: !isStepDone
-                                ? TEAL_DARK
-                                : LAUNCH_PALETTE.CARD_BG,
-                              fontFamily: LAUNCH_FONTS.MONO,
-                              fontSize: 11,
-                              fontWeight: 800,
-                              letterSpacing: '0.1em',
-                              whiteSpace: 'nowrap',
-                              flexShrink: 0,
-                              transform: `scale(${badgeScale.toFixed(3)})`,
-                            }}
-                          >
-                            {isStepDone ? stage.badge : 'MENUNGGU'}
-                          </span>
-                        </div>
-                      </React.Fragment>
-                    );
-                  })}
-                </div>
-
-                {/* Live Elapsed Resolution Readout Footer */}
-                <div
-                  style={{
-                    borderRadius: 16,
-                    backgroundColor: TEAL_SOFT,
-                    border: `1.5px solid ${TEAL_BORDER}`,
-                    padding: '14px 20px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: 20,
-                  }}
-                >
-                  <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11,
-                          fontWeight: 800,
-                          letterSpacing: '0.14em',
-                          color: TEAL_DARK,
-                        }}
-                      >
-                        TEMPOH PENYELESAIAN · {elapsedLabel} · {allStagesComplete ? 'PANTAS' : 'PROSES'}
-                      </span>
-                      <span
-                        style={{
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 11,
-                          fontWeight: 800,
-                          letterSpacing: '0.08em',
-                          color: TEAL_DARK,
-                        }}
-                      >
-                        {allStagesComplete ? '100% SELESAI' : 'DALAM TINDAKAN'}
-                      </span>
-                    </div>
-                    <div
-                      style={{
-                        height: 6,
-                        borderRadius: 999,
-                        backgroundColor: 'rgba(153, 246, 228, 0.55)',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          borderRadius: 999,
-                          backgroundColor: allStagesComplete ? TEAL_DARK : TEAL,
-                          transformOrigin: '0% 50%',
-                          transform: `scaleX(${slaMeterScaleX.toFixed(4)})`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 10,
-                      padding: '8px 15px',
-                      borderRadius: 12,
-                      backgroundColor: allStagesComplete
-                        ? LAUNCH_PALETTE.PRIMARY_DARK
-                        : LAUNCH_PALETTE.CARD_BG,
-                      border: `1.5px solid ${TEAL}`,
-                      flexShrink: 0,
-                    }}
-                  >
-                    <span
-                      style={{
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 20,
-                        fontWeight: 900,
-                        fontVariantNumeric: 'tabular-nums',
-                        color: allStagesComplete
-                          ? LAUNCH_PALETTE.BACKGROUND
-                          : TEAL_DARK,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {elapsedLabel}
-                    </span>
-                    <span
-                      style={{
-                        padding: '3px 8px',
-                        borderRadius: 999,
-                        backgroundColor: allStagesComplete ? TEAL : TEAL_SOFT,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 10.5,
-                        fontWeight: 900,
-                        letterSpacing: '0.1em',
-                        color: allStagesComplete ? LAUNCH_PALETTE.CARD_BG : TEAL_DARK,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {allStagesComplete ? '· PANTAS' : 'PROSES'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </KineticWindow>
-          </Interactive.Div>
-
-          {/* Right Deck (840px): Amber Confidential Food Bank JPP Pickup Pass */}
-          <Interactive.Div
-            name="Food Bank Confidential Pass Deck"
-            premountFor={safeFps}
-            style={{
-              position: 'absolute',
-              left: DECK_RIGHT_X,
-              top: DECK_TOP,
-              width: DECK_WIDTH,
-              height: DECK_HEIGHT,
-              opacity: rightDeckOpacity,
-              transform: `translate3d(${rightDeckX.toFixed(2)}px, ${(rightDeckY + rightDeckFloatY + deckExitLift).toFixed(2)}px, 16px) rotateY(-1.2deg)`,
+              left: 0,
+              right: 0,
+              top: 214,
+              height: 760,
+              perspective: '1450px',
               transformStyle: 'preserve-3d',
             }}
           >
-            <KineticWindow
-              surface="dark"
-              routeLabel="foodbank · pas rahsia siswa"
-              statusPill="RAHSIA ✓"
-              statusAccent
-              accentColor={AMBER}
-              accentSoftBg="rgba(245, 158, 11, 0.22)"
-              accentBorderColor={AMBER}
-              width={DECK_WIDTH}
-              height={DECK_HEIGHT}
-              borderRadius={26}
-              sheenStartFrame={Math.round(1.18 * safeFps)}
-              sheenDuration={48}
+            {/* LEFT STAGE: 3D Ascending 4-Step Isometric SLA Escalator (Inset Safe Bounds) */}
+            <Interactive.Div
+              name="Kebajikan 3D Isometric Escalator"
+              premountFor={safeFps}
               style={{
-                borderColor: AMBER,
-                boxShadow:
-                  '0 28px 64px rgba(245, 158, 11, 0.16), 0 8px 20px rgba(31, 39, 32, 0.18)',
+                position: 'absolute',
+                left: 164,
+                top: 20,
+                width: 690,
+                height: 650,
+                opacity: stageEnter,
+                transformStyle: 'preserve-3d',
+                transform: `translate3d(0px, ${((1 - stageEnter) * 24).toFixed(2)}px, 0px) rotateX(8deg) rotateY(8deg)`,
               }}
             >
+              {/* Floating 3D Ticket Header Plate (+20px Z) */}
               <div
                 style={{
-                  flex: 1,
-                  padding: '22px 28px 24px',
+                  position: 'relative',
+                  left: 0,
+                  top: 4,
+                  width: 644,
+                  padding: '13px 18px',
+                  borderRadius: 20,
+                  backgroundColor: '#FFFFFF',
+                  border: `2px solid ${allStagesComplete ? TEAL : TEAL_BORDER}`,
+                  boxShadow: '0 20px 42px rgba(15, 118, 110, 0.16), 0 8px 18px rgba(31, 39, 32, 0.08)',
+                  borderBottom: `6px solid ${TEAL_INK}`,
                   display: 'flex',
-                  flexDirection: 'column',
+                  alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: 13,
-                  boxSizing: 'border-box',
+                  gap: 12,
                   transformStyle: 'preserve-3d',
+                  transform: 'translate3d(0px, 0px, 20px)',
                 }}
               >
-                {/* Food Bank Confidential Pass Header */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'space-between',
-                    gap: 14,
-                    paddingBottom: 14,
-                    borderBottom: '1px solid rgba(253, 230, 138, 0.22)',
-                  }}
-                >
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 5, minWidth: 0 }}>
-                    <div
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 8,
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11.5,
-                        fontWeight: 800,
-                        letterSpacing: '0.12em',
-                        color: AMBER,
-                        fontVariantNumeric: 'tabular-nums',
-                      }}
-                    >
-                      <Package size={14} color={AMBER} strokeWidth={2.5} />
-                      <span>FOOD BANK JPP · PAS PENGAMBILAN TERLINDUNG</span>
-                    </div>
-
-                    <div
-                      style={{
-                        fontSize: 24.5,
-                        fontWeight: 900,
-                        letterSpacing: '-0.025em',
-                        color: LAUNCH_PALETTE.BACKGROUND,
-                        lineHeight: 1.15,
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      Kotak Rezeki Siswa #FB-2026-119
-                    </div>
-
-                    <div
-                      style={{
-                        fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 12,
-                        fontWeight: 600,
-                        letterSpacing: '0.07em',
-                        color: AMBER_BORDER,
-                      }}
-                    >
-                      Aiman Hakim · Kamsis Blok B
-                    </div>
-                  </div>
-
-                  {/* Animated Teal Privacy Shield Badge */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
                   <div
                     style={{
                       display: 'inline-flex',
                       alignItems: 'center',
                       gap: 7,
-                      padding: '8px 14px',
-                      borderRadius: 999,
-                      backgroundColor: 'rgba(20, 184, 166, 0.22)',
-                      border: `1.5px solid ${TEAL}`,
-                      color: LAUNCH_PALETTE.BACKGROUND,
                       fontFamily: LAUNCH_FONTS.MONO,
                       fontSize: 10.5,
-                      fontWeight: 900,
-                      letterSpacing: '0.1em',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                      transform: `scale(${(0.92 + 0.08 * privacyBadgeSpring).toFixed(3)})`,
+                      fontWeight: 800,
+                      letterSpacing: '0.13em',
+                      color: TEAL_INK,
                     }}
                   >
-                    <ShieldCheck size={14} color={TEAL_BORDER} strokeWidth={2.5} />
-                    <span>100% RAHSIA &amp; BERMARUAH</span>
+                    <span
+                      style={{
+                        width: 7,
+                        height: 7,
+                        borderRadius: 999,
+                        backgroundColor: TEAL,
+                      }}
+                    />
+                    <span>E-KEBAJIKAN • JEJAK ADUAN KAMSIS</span>
+                  </div>
+                  <div style={{ fontSize: 19.5, fontWeight: 900, letterSpacing: '-0.025em', color: LAUNCH_PALETTE.PRIMARY }}>
+                    TIKET #{safeTicketNo} •{' '}
+                    <span style={{ fontSize: 15, fontWeight: 700, color: LAUNCH_PALETTE.INK_SOFT }}>
+                      Kipas &amp; Lampu Blok B-204
+                    </span>
                   </div>
                 </div>
 
-                {/* Live 3-Step Student Mini-Stepper */}
-                <div
-                  style={{
-                    position: 'relative',
-                    padding: '14px 18px',
-                    borderRadius: 18,
-                    backgroundColor: 'rgba(245, 158, 11, 0.08)',
-                    border: '1px solid rgba(253, 230, 138, 0.24)',
-                  }}
-                >
+                <div style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0, transformStyle: 'preserve-3d' }}>
                   <div
                     style={{
-                      position: 'relative',
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(3, 1fr)',
-                      gap: 12,
+                      padding: '7px 12px',
+                      borderRadius: 12,
+                      backgroundColor: TEAL_SOFT,
+                      border: `1.5px solid ${TEAL_BORDER}`,
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 12.5,
+                      fontWeight: 900,
+                      color: LAUNCH_PALETTE.PRIMARY_DARK,
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    {/* Connecting Track Behind Step Circles */}
+                    SLA{' '}
+                    <EditorialAnnotation
+                      type="highlight"
+                      startFrame={highlightStart}
+                      durationFrames={highlightDuration}
+                      color="rgba(20, 184, 166, 0.36)"
+                      strokeWidth={11}
+                      padding={3}
+                      iterations={1}
+                      seed={19}
+                    >
+                      <span style={{ fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY_DARK }}>
+                        {safeSlaLabel}
+                      </span>
+                    </EditorialAnnotation>
+                  </div>
+
+                  {sealOpacity > 0.01 ? (
                     <div
                       style={{
-                        position: 'absolute',
-                        top: 17,
-                        left: '16.5%',
-                        right: '16.5%',
-                        height: 3,
-                        borderRadius: 999,
-                        backgroundColor: 'rgba(253, 230, 138, 0.22)',
-                        overflow: 'hidden',
-                        zIndex: 0,
+                        padding: '7px 12px',
+                        borderRadius: 11,
+                        backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                        border: `2px solid ${TEAL}`,
+                        color: '#FFFFFF',
+                        fontFamily: LAUNCH_FONTS.MONO,
+                        fontSize: 11,
+                        fontWeight: 900,
+                        letterSpacing: '0.07em',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        whiteSpace: 'nowrap',
+                        boxShadow: '0 20px 40px rgba(13, 148, 136, 0.3)',
+                        opacity: sealOpacity,
+                        transform: `translate3d(0px, ${sealFloatY.toFixed(2)}px, ${(62 * sealSpring).toFixed(2)}px) scale(${(0.92 + 0.08 * sealSpring).toFixed(4)})`,
                       }}
                     >
-                      <div
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          borderRadius: 999,
-                          backgroundColor: AMBER,
-                          transformOrigin: '0% 50%',
-                          transform: `scaleX(${fbTrackScaleX.toFixed(4)})`,
-                        }}
-                      />
+                      <Sparkles size={12} color={TEAL} strokeWidth={2.5} />
+                      <span>SELESAI &lt; 48 JAM ✓</span>
                     </div>
+                  ) : null}
+                </div>
+              </div>
 
-                    {/* Subtle directional step arrows at track midpoints */}
-                    <span
+              {/* Diagonal Teal Architectural EvolvingPath Conduit connecting Escalator Platforms */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 8,
+                  top: 108,
+                  width: 720,
+                  height: 460,
+                  pointerEvents: 'none',
+                  transform: 'translate3d(0px, 0px, 10px)',
+                }}
+              >
+                <EvolvingPath
+                  d="M 32 34 L 60 134 L 88 234 L 116 334"
+                  width={720}
+                  height={460}
+                  startFrame={conduitStart}
+                  durationFrames={conduitDuration}
+                  easing={SPINE_EASING}
+                  stroke={TEAL}
+                  trackStroke="rgba(153, 246, 228, 0.72)"
+                  strokeWidth={4}
+                  headDotColor={TEAL_INK}
+                  headDotRadius={5}
+                  hideDotWhenComplete={allStagesComplete}
+                />
+              </div>
+
+              {/* 4 Physical Isometric Ascending Escalator Platforms */}
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  height: 520,
+                  marginTop: 18,
+                  transformStyle: 'preserve-3d',
+                }}
+              >
+                {STAGES.map((stage, idx) => {
+                  const stepTrigger = stageTriggerFrames[idx] ?? finalCompleteFrame;
+                  const isStepDone = frame >= stepTrigger;
+                  const popSpring = isStepDone
+                    ? spring({
+                        frame: frame - stepTrigger,
+                        fps: safeFps,
+                        config: { damping: 14, stiffness: 250, mass: 0.78 },
+                      })
+                    : 0;
+                  const zDepth = ESCALATOR_BASE_Z[idx] + 14 * popSpring;
+                  const isFinalStage = idx === STAGES.length - 1;
+                  const stepLeft = 10 + idx * 28;
+                  const stepTop = 4 + idx * 100;
+
+                  return (
+                    <div
+                      key={stage.title}
                       style={{
                         position: 'absolute',
-                        top: 10,
-                        left: '33.33%',
-                        transform: 'translateX(-50%)',
-                        zIndex: 1,
-                        display: 'inline-flex',
-                        padding: '2px 5px',
-                        borderRadius: 999,
-                        backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                        border: `1px solid ${AMBER}`,
+                        left: stepLeft,
+                        top: stepTop,
+                        width: 516,
+                        height: 84,
+                        borderRadius: 18,
+                        padding: '0 20px',
+                        backgroundColor: isStepDone
+                          ? isFinalStage
+                            ? TEAL_SOFT
+                            : '#FFFFFF'
+                          : LAUNCH_PALETTE.SURFACE_MUTED,
+                        border: `1.8px solid ${isStepDone ? TEAL : LAUNCH_PALETTE.TERTIARY}`,
+                        borderBottom: `6px solid ${isStepDone ? TEAL_INK : LAUNCH_PALETTE.TERTIARY}`,
+                        boxShadow: isStepDone
+                          ? `0 ${(14 + idx * 6).toFixed(0)}px ${(30 + idx * 7).toFixed(0)}px rgba(15, 118, 110, 0.2), 0 6px 14px rgba(31, 39, 32, 0.08)`
+                          : '0 8px 18px rgba(31, 39, 32, 0.06)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 12,
+                        boxSizing: 'border-box',
+                        transform: `translate3d(0px, ${(-5 * popSpring).toFixed(2)}px, ${zDepth.toFixed(2)}px)`,
                       }}
                     >
-                      <ArrowRight size={10} color={AMBER_BORDER} strokeWidth={2.8} />
-                    </span>
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: 10,
-                        left: '66.66%',
-                        transform: 'translateX(-50%)',
-                        zIndex: 1,
-                        display: 'inline-flex',
-                        padding: '2px 5px',
-                        borderRadius: 999,
-                        backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                        border: `1px solid ${AMBER}`,
-                      }}
-                    >
-                      <ArrowRight size={10} color={AMBER_BORDER} strokeWidth={2.8} />
-                    </span>
-
-                    {FOOD_BANK_STEPS.map((step, idx) => {
-                      const cue = fbStepCueFrames[idx] ?? 0;
-                      const isDone = frame >= cue;
-                      const stepSpring =
-                        frame >= cue
-                          ? spring({
-                              frame: frame - cue,
-                              fps: safeFps,
-                              config: { damping: 14, stiffness: 250, mass: 0.78 },
-                            })
-                          : 0;
-                      const isFinal = idx === FOOD_BANK_STEPS.length - 1;
-
-                      return (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, minWidth: 0 }}>
                         <div
-                          key={step.label}
                           style={{
-                            position: 'relative',
-                            zIndex: 1,
+                            width: 34,
+                            height: 34,
+                            borderRadius: 999,
+                            backgroundColor: isStepDone ? TEAL_INK : TEAL_SOFT,
+                            border: `2px solid ${isStepDone ? TEAL : TEAL_BORDER}`,
                             display: 'flex',
-                            flexDirection: 'column',
                             alignItems: 'center',
-                            textAlign: 'center',
-                            gap: 6,
+                            justifyContent: 'center',
+                            flexShrink: 0,
                           }}
                         >
-                          <div
-                            style={{
-                              width: 34,
-                              height: 34,
-                              borderRadius: 999,
-                              backgroundColor: !isDone
-                                ? LAUNCH_PALETTE.PRIMARY_DARK
-                                : isFinal
-                                  ? AMBER
-                                  : TEAL,
-                              border: `2px solid ${
-                                !isDone
-                                  ? 'rgba(253, 230, 138, 0.35)'
-                                  : isFinal
-                                    ? AMBER_BORDER
-                                    : TEAL_BORDER
-                              }`,
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              transform: `scale(${(isDone ? 0.8 + 0.2 * stepSpring : 0.94).toFixed(3)})`,
-                              boxShadow: isDone ? '0 6px 14px rgba(31, 39, 32, 0.35)' : 'none',
-                            }}
-                          >
-                            {isDone ? (
-                              isFinal ? (
-                                <Sparkles size={15} color={LAUNCH_PALETTE.PRIMARY_DARK} strokeWidth={2.5} />
-                              ) : (
-                                <Check size={16} color={LAUNCH_PALETTE.BACKGROUND} strokeWidth={3} />
-                              )
-                            ) : (
-                              <span
-                                style={{
-                                  fontFamily: LAUNCH_FONTS.MONO,
-                                  fontSize: 11,
-                                  fontWeight: 800,
-                                  color: AMBER_BORDER,
-                                }}
-                              >
-                                0{idx + 1}
-                              </span>
-                            )}
-                          </div>
-
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            <span
-                              style={{
-                                fontSize: 13.5,
-                                fontWeight: 800,
-                                color: isDone
-                                  ? LAUNCH_PALETTE.BACKGROUND
-                                  : 'rgba(253, 230, 138, 0.65)',
-                              }}
-                            >
-                              {step.label}
-                            </span>
+                          {isStepDone ? (
+                            <Check size={16} color="#FFFFFF" strokeWidth={3} />
+                          ) : (
                             <span
                               style={{
                                 fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 10.5,
-                                fontWeight: 600,
-                                color: isDone ? AMBER_BORDER : 'rgba(253, 230, 138, 0.48)',
+                                fontSize: 12.5,
+                                fontWeight: 900,
+                                color: TEAL_INK,
                               }}
                             >
-                              {step.subLabel}
+                              {idx + 1}
                             </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* Pickup Schedule Metadata Grid */}
-                <div
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, 1fr)',
-                    gap: 12,
-                  }}
-                >
-                  {PICKUP_SCHEDULE.map((item, idx) => {
-                    const cardStart = scheduleEnterStart + idx * Math.round(0.1 * safeFps);
-                    const cardProg = interpolate(
-                      frame,
-                      [cardStart, cardStart + Math.max(8, Math.round(0.32 * safeFps))],
-                      [0, 1],
-                      {
-                        extrapolateLeft: 'clamp',
-                        extrapolateRight: 'clamp',
-                        easing: EXPO_OUT,
-                      },
-                    );
-
-                    return (
-                      <div
-                        key={item.label}
-                        style={{
-                          padding: '13px 14px',
-                          borderRadius: 16,
-                          backgroundColor: 'rgba(248, 246, 238, 0.06)',
-                          border: '1px solid rgba(253, 230, 138, 0.24)',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: 6,
-                          opacity: cardProg,
-                          transform: `translate3d(0px, ${((1 - cardProg) * 14).toFixed(2)}px, 0px)`,
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                          {renderScheduleIcon(item.kind)}
-                          <span
-                            style={{
-                              fontFamily: LAUNCH_FONTS.MONO,
-                              fontSize: 10,
-                              fontWeight: 800,
-                              letterSpacing: '0.11em',
-                              textTransform: 'uppercase',
-                              color: AMBER_BORDER,
-                            }}
-                          >
-                            {item.label}
-                          </span>
-                        </div>
-                        <span
-                          style={{
-                            fontSize: 15,
-                            fontWeight: 800,
-                            color: LAUNCH_PALETTE.BACKGROUND,
-                            lineHeight: 1.25,
-                          }}
-                        >
-                          {item.value}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Perforated Boarding-Pass Divider */}
-                <div
-                  style={{
-                    position: 'relative',
-                    height: 12,
-                    display: 'flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  <div
-                    style={{
-                      width: '100%',
-                      borderTop: '2px dashed rgba(253, 230, 138, 0.34)',
-                    }}
-                  />
-                </div>
-
-                {/* Elevated Porcelain QR Pickup Ticket (ExplodedLayer zDepth=62) */}
-                <ExplodedLayer
-                  zDepth={62}
-                  enterFrame={qrTicketEnterFrame}
-                  enterOffsetY={24}
-                  floatAmplitude={2.2}
-                  floatPhase={1.1}
-                  style={{ flex: 1, display: 'flex' }}
-                >
-                  <div
-                    style={{
-                      position: 'relative',
-                      flex: 1,
-                      borderRadius: 20,
-                      backgroundColor: LAUNCH_PALETTE.BACKGROUND,
-                      border: `1.5px solid ${AMBER}`,
-                      boxShadow:
-                        '0 22px 46px rgba(31, 39, 32, 0.38), 0 4px 12px rgba(31, 39, 32, 0.2)',
-                      padding: '18px 22px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 22,
-                      overflow: 'hidden',
-                    }}
-                  >
-                    {/* Subtle Diagonal Sheen Glide across Ticket Cutout */}
-                    {ticketSheenOpacity > 0.004 ? (
-                      <div
-                        style={{
-                          position: 'absolute',
-                          top: '-40%',
-                          left: 0,
-                          width: 140,
-                          height: '180%',
-                          opacity: ticketSheenOpacity,
-                          background:
-                            'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0) 100%)',
-                          transform: `translate3d(${ticketSheenX.toFixed(2)}px, 0px, 0px) rotate(22deg)`,
-                          pointerEvents: 'none',
-                          zIndex: 5,
-                        }}
-                      />
-                    ) : null}
-
-                    {/* Left: Warm Porcelain QR Pedestal + DeterministicQrMatrix + Amber Laser Glide */}
-                    <div
-                      style={{
-                        position: 'relative',
-                        width: 150,
-                        height: 150,
-                        flexShrink: 0,
-                        borderRadius: 16,
-                        backgroundColor: LAUNCH_PALETTE.CARD_BG,
-                        border: `1.5px solid ${AMBER_BORDER}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <span
-                        style={{
-                          position: 'absolute',
-                          left: 7,
-                          top: 7,
-                          width: 12,
-                          height: 12,
-                          borderTop: `2.5px solid ${TEAL}`,
-                          borderLeft: `2.5px solid ${TEAL}`,
-                          borderTopLeftRadius: 4,
-                        }}
-                      />
-                      <span
-                        style={{
-                          position: 'absolute',
-                          right: 7,
-                          top: 7,
-                          width: 12,
-                          height: 12,
-                          borderTop: `2.5px solid ${TEAL}`,
-                          borderRight: `2.5px solid ${TEAL}`,
-                          borderTopRightRadius: 4,
-                        }}
-                      />
-                      <span
-                        style={{
-                          position: 'absolute',
-                          left: 7,
-                          bottom: 7,
-                          width: 12,
-                          height: 12,
-                          borderBottom: `2.5px solid ${TEAL}`,
-                          borderLeft: `2.5px solid ${TEAL}`,
-                          borderBottomLeftRadius: 4,
-                        }}
-                      />
-                      <span
-                        style={{
-                          position: 'absolute',
-                          right: 7,
-                          bottom: 7,
-                          width: 12,
-                          height: 12,
-                          borderBottom: `2.5px solid ${TEAL}`,
-                          borderRight: `2.5px solid ${TEAL}`,
-                          borderBottomRightRadius: 4,
-                        }}
-                      />
-
-                      <DeterministicQrMatrix
-                        seed={119}
-                        size={116}
-                        fgColor={LAUNCH_PALETTE.PRIMARY}
-                        bgColor={LAUNCH_PALETTE.CARD_BG}
-                      />
-
-                      {/* Subtle Amber Verification Laser Glide */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: 8,
-                          right: 8,
-                          top: qrLaserTopPx - 8,
-                          height: 16,
-                          display: 'flex',
-                          alignItems: 'center',
-                          pointerEvents: 'none',
-                          zIndex: 3,
-                        }}
-                      >
-                        <div
-                          style={{
-                            position: 'absolute',
-                            inset: 0,
-                            background:
-                              'linear-gradient(180deg, rgba(245, 158, 11, 0) 0%, rgba(245, 158, 11, 0.28) 50%, rgba(245, 158, 11, 0) 100%)',
-                          }}
-                        />
-                        <div
-                          style={{
-                            width: '100%',
-                            height: 2,
-                            borderRadius: 999,
-                            backgroundColor: AMBER_DARK,
-                            opacity: 0.78,
-                          }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Right: Confidential Pickup Ticket Metadata, Manifest Pills & Beat 3 Claim Stamp */}
-                    <div
-                      style={{
-                        position: 'relative',
-                        zIndex: 2,
-                        flex: 1,
-                        minWidth: 0,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        justifyContent: 'space-between',
-                        gap: 9,
-                      }}
-                    >
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: 8,
-                        }}
-                      >
-                        <div
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            padding: '5px 10px',
-                            borderRadius: 999,
-                            backgroundColor: TEAL_SOFT,
-                            border: `1px solid ${TEAL}`,
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 10,
-                            fontWeight: 900,
-                            letterSpacing: '0.07em',
-                            color: TEAL_DARK,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
-                          <QrCode size={12} color={TEAL_DARK} strokeWidth={2.5} />
-                          <span>PAS PENGAMBILAN RAHSIA · IMBAS DI KAUNTER</span>
+                          )}
                         </div>
 
-                        {/* Beat 3 Animated Teal/Amber Claim Checkmark Stamp */}
-                        <div
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            padding: '5px 11px',
-                            borderRadius: 10,
-                            backgroundColor: TEAL_DARK,
-                            border: `1.5px solid ${AMBER}`,
-                            boxShadow: '0 8px 18px rgba(13, 148, 136, 0.26)',
-                            opacity: claimStampOpacity,
-                            visibility: claimStampOpacity <= 0.001 ? 'hidden' : 'visible',
-                            transformOrigin: '50% 50%',
-                            transform: `rotate(${claimStampRotate.toFixed(2)}deg) scale(${claimStampScale.toFixed(4)})`,
-                            flexShrink: 0,
-                            whiteSpace: 'nowrap',
-                          }}
-                        >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                           <span
                             style={{
-                              width: 15,
-                              height: 15,
-                              borderRadius: 999,
-                              backgroundColor: AMBER,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
-                            }}
-                          >
-                            <Check size={10} color={LAUNCH_PALETTE.PRIMARY_DARK} strokeWidth={3.2} />
-                          </span>
-                          <span
-                            style={{
-                              fontFamily: LAUNCH_FONTS.MONO,
-                              fontSize: 10.5,
+                              fontSize: 16.5,
                               fontWeight: 900,
-                              letterSpacing: '0.08em',
-                              color: LAUNCH_PALETTE.BACKGROUND,
-                            }}
-                          >
-                            SEDIA DIAMBIL ✓
-                          </span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <div
-                          style={{
-                            fontSize: 20,
-                            fontWeight: 900,
-                            letterSpacing: '-0.02em',
-                            color: LAUNCH_PALETTE.PRIMARY,
-                            lineHeight: 1.15,
-                          }}
-                        >
-                          Kotak Rezeki Siswa — Pek Asas Harian
-                        </div>
-                        <div
-                          style={{
-                            marginTop: 4,
-                            fontFamily: LAUNCH_FONTS.MONO,
-                            fontSize: 11.5,
-                            fontWeight: 700,
-                            color: LAUNCH_PALETTE.MUTED_OLIVE,
-                          }}
-                        >
-                          KOD PAS: FB-2026-119 • PRIVASI TANPA NAMA DIPAPAR
-                        </div>
-                      </div>
-
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                        {MANIFEST_ITEMS.map((item) => (
-                          <span
-                            key={item}
-                            style={{
-                              padding: '4px 10px',
-                              borderRadius: 999,
-                              backgroundColor: LAUNCH_MODULE_THEMES.foodbank.soft,
-                              border: `1px solid ${AMBER_BORDER}`,
-                              fontSize: 11.5,
-                              fontWeight: 700,
+                              letterSpacing: '-0.02em',
                               color: LAUNCH_PALETTE.PRIMARY,
                               whiteSpace: 'nowrap',
                             }}
                           >
-                            {item}
+                            0{idx + 1}. {stage.title}
                           </span>
-                        ))}
+                          <span
+                            style={{
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 11.5,
+                              fontWeight: 700,
+                              color: LAUNCH_PALETTE.INK_SOFT,
+                            }}
+                          >
+                            {stage.meta}
+                          </span>
+                        </div>
                       </div>
 
-                      <div
+                      <span
                         style={{
-                          paddingTop: 8,
-                          borderTop: `1px solid ${AMBER_BORDER}`,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
+                          padding: '6px 12px',
+                          borderRadius: 999,
+                          backgroundColor: isStepDone ? TEAL_INK : '#FFFFFF',
+                          border: `1.5px solid ${isStepDone ? TEAL_DARK : TEAL_BORDER}`,
+                          color: isStepDone ? '#FFFFFF' : TEAL_INK,
                           fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 10,
-                          fontWeight: 800,
-                          letterSpacing: '0.1em',
-                          color: TEAL_DARK,
+                          fontSize: 11,
+                          fontWeight: 900,
+                          letterSpacing: '0.09em',
+                          flexShrink: 0,
                         }}
                       >
-                        <span>SAH HARI INI · 2:00 PM – 4:00 PM</span>
-                        <span>BILIK GERAKAN JPP</span>
+                        {isStepDone ? stage.badge : 'MENUNGGU'}
+                      </span>
+                    </div>
+                  );
+                })}
+
+                {/* Bottom Escalator Elapsed Telemetry Slab (+56px Z, stays well above GlobalCinemaGate footer!) */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 94,
+                    top: 416,
+                    width: 516,
+                    padding: '10px 18px',
+                    borderRadius: 14,
+                    backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                    border: `1.5px solid ${TEAL}`,
+                    boxShadow: '0 18px 36px rgba(15, 118, 110, 0.22)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    transform: 'translate3d(0px, 0px, 56px)',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 11.5,
+                      fontWeight: 800,
+                      letterSpacing: '0.09em',
+                      color: TEAL_BORDER,
+                    }}
+                  >
+                    TEMPOH SELESAI : {elapsedDisplay} • PANTAS
+                  </span>
+                  <span
+                    style={{
+                      padding: '4px 11px',
+                      borderRadius: 999,
+                      backgroundColor: TEAL_INK,
+                      color: '#FFFFFF',
+                      fontFamily: LAUNCH_FONTS.MONO,
+                      fontSize: 11,
+                      fontWeight: 900,
+                    }}
+                  >
+                    {allStagesComplete ? '100% SELESAI ✓' : 'MEMPROSES...'}
+                  </span>
+                </div>
+              </div>
+            </Interactive.Div>
+
+            {/* RIGHT STAGE: 3D Exploded Food Bank Care Vault (Inset Safe Bounds) */}
+            <Interactive.Div
+              name="Food Bank 3D Care Vault"
+              premountFor={safeFps}
+              style={{
+                position: 'absolute',
+                left: 912,
+                top: 20,
+                width: 696,
+                height: 640,
+                opacity: vaultProgress,
+                transformStyle: 'preserve-3d',
+                transform: `translate3d(0px, ${((1 - vaultProgress) * 28).toFixed(2)}px, 0px) rotateX(8deg) rotateY(-9deg)`,
+              }}
+            >
+              {/* PLANE 1 (+20px Z): Dark Editorial Food Bank Base Deck */}
+              <div
+                style={{
+                  position: 'absolute',
+                  left: 8,
+                  top: 18,
+                  width: 676,
+                  height: 376,
+                  transformStyle: 'preserve-3d',
+                  transform: 'translate3d(0px, 0px, 20px)',
+                }}
+              >
+                <KineticWindow
+                  surface="dark"
+                  routeLabel="foodbank · pas rahsia siswa"
+                  statusPill="RAHSIA ✓"
+                  statusAccent
+                  accentColor={AMBER}
+                  accentSoftBg="rgba(245, 158, 11, 0.2)"
+                  accentBorderColor={AMBER}
+                  width="100%"
+                  height="100%"
+                  borderRadius={26}
+                  sheenStartFrame={Math.round(1.65 * safeFps)}
+                  sheenDuration={44}
+                  style={{
+                    borderColor: AMBER,
+                    boxShadow:
+                      '0 42px 88px rgba(31, 39, 32, 0.34), 0 14px 34px rgba(245, 158, 11, 0.14)',
+                  }}
+                >
+                  <div
+                    style={{
+                      flex: 1,
+                      padding: '22px 26px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: 14,
+                      boxSizing: 'border-box',
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 11.5,
+                          fontWeight: 800,
+                          letterSpacing: '0.14em',
+                          color: AMBER_BORDER,
+                        }}
+                      >
+                        <Package size={14} color={AMBER} strokeWidth={2.4} />
+                        <span>FOOD BANK JPP • PAS PENGAMBILAN TERLINDUNG</span>
+                      </div>
+
+                      <div style={{ fontSize: 28, fontWeight: 900, letterSpacing: '-0.025em', color: LAUNCH_PALETTE.BACKGROUND }}>
+                        Kotak Rezeki Siswa #FB-2026-119
+                      </div>
+
+                      <div style={{ fontFamily: LAUNCH_FONTS.MONO, fontSize: 12.5, fontWeight: 700, color: TEAL_BORDER }}>
+                        Aiman Hakim • Kamsis Blok B • Pek Bulanan
                       </div>
                     </div>
+
+                    {/* 3 Horizontal Amber & Teal Approval Orbs */}
+                    <div
+                      style={{
+                        borderRadius: 18,
+                        padding: '16px 20px',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        border: '1.5px solid rgba(253, 230, 138, 0.28)',
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(3, 1fr)',
+                        gap: 14,
+                      }}
+                    >
+                      {FOOD_BANK_STEPS.map((fbStep, idx) => {
+                        const isLast = idx === FOOD_BANK_STEPS.length - 1;
+                        return (
+                          <div
+                            key={fbStep.label}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'column',
+                              alignItems: 'center',
+                              textAlign: 'center',
+                              gap: 6,
+                              position: 'relative',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: 34,
+                                height: 34,
+                                borderRadius: 999,
+                                backgroundColor: isLast ? AMBER : TEAL_INK,
+                                border: `2px solid ${isLast ? AMBER_BORDER : TEAL_BORDER}`,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {isLast ? (
+                                <Sparkles size={15} color={LAUNCH_PALETTE.PRIMARY_DARK} strokeWidth={2.6} />
+                              ) : (
+                                <Check size={16} color="#FFFFFF" strokeWidth={3} />
+                              )}
+                            </div>
+                            <span style={{ fontSize: 14, fontWeight: 900, color: isLast ? AMBER_BORDER : '#FFFFFF' }}>
+                              {fbStep.label}
+                            </span>
+                            <span style={{ fontFamily: LAUNCH_FONTS.MONO, fontSize: 11, fontWeight: 700, color: LAUNCH_PALETTE.TERTIARY }}>
+                              {fbStep.subLabel}
+                            </span>
+                            {idx < FOOD_BANK_STEPS.length - 1 ? (
+                              <span style={{ position: 'absolute', right: -14, top: 7 }}>
+                                <ArrowRight size={14} color={AMBER_BORDER} strokeWidth={2.4} />
+                              </span>
+                            ) : null}
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    {/* Schedule 3-Column Strip */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '0.9fr 1.15fr 1.15fr', gap: 12 }}>
+                      {PICKUP_SCHEDULE.map((item) => (
+                        <div
+                          key={item.label}
+                          style={{
+                            borderRadius: 14,
+                            padding: '10px 14px',
+                            backgroundColor: 'rgba(248, 246, 238, 0.08)',
+                            border: '1px solid rgba(253, 230, 138, 0.24)',
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: 4,
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 10,
+                              fontWeight: 800,
+                              color: LAUNCH_PALETTE.TERTIARY,
+                              letterSpacing: '0.1em',
+                            }}
+                          >
+                            {renderScheduleIcon(item.kind)}
+                            <span>{item.label.toUpperCase()}</span>
+                          </div>
+                          <span style={{ fontSize: 15.5, fontWeight: 900, color: '#FFFFFF' }}>
+                            {item.value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </ExplodedLayer>
+                </KineticWindow>
               </div>
-            </KineticWindow>
-          </Interactive.Div>
+
+              {/* PLANE 2 (+46px Z): Floating 100% RAHSIA & BERMARUAH Privacy Shield */}
+              <div
+                style={{
+                  position: 'absolute',
+                  right: 20,
+                  top: -12,
+                  padding: '10px 18px',
+                  borderRadius: 999,
+                  backgroundColor: TEAL_INK,
+                  border: `2px solid ${TEAL_BORDER}`,
+                  boxShadow: '0 24px 44px rgba(15, 118, 110, 0.34)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  fontFamily: LAUNCH_FONTS.MONO,
+                  fontSize: 12,
+                  fontWeight: 900,
+                  letterSpacing: '0.09em',
+                  color: '#FFFFFF',
+                  opacity: shieldSpring,
+                  transform: `translate3d(0px, ${((1 - shieldSpring) * -16).toFixed(2)}px, ${(46 * shieldSpring).toFixed(2)}px) scale(${(0.9 + 0.1 * shieldSpring).toFixed(4)})`,
+                  zIndex: 14,
+                }}
+              >
+                <ShieldCheck size={15} color={TEAL_BORDER} strokeWidth={2.6} />
+                <span>100% RAHSIA &amp; BERMARUAH</span>
+              </div>
+
+              {/* PLANE 3 (+54px Z): Floating 3D Ration QR Pickup Token hovering out toward camera */}
+              {tokenSpring > 0.01 ? (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 10,
+                    top: 376,
+                    width: 668,
+                    height: 210,
+                    borderRadius: 24,
+                    padding: '15px 18px',
+                    backgroundColor: '#FFFFFF',
+                    border: `2.5px solid ${AMBER_DARK}`,
+                    borderBottom: `7px solid ${AMBER_INK}`,
+                    boxShadow:
+                      '0 44px 86px rgba(180, 83, 9, 0.28), 0 18px 36px rgba(31, 39, 32, 0.22)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 16,
+                    boxSizing: 'border-box',
+                    opacity: tokenSpring,
+                    transform: `translate3d(0px, ${((1 - tokenSpring) * 32 + tokenFloatY).toFixed(2)}px, ${(54 * tokenSpring).toFixed(2)}px)`,
+                    zIndex: 16,
+                  }}
+                >
+                  <div
+                    style={{
+                      position: 'relative',
+                      padding: 10,
+                      borderRadius: 16,
+                      backgroundColor: LAUNCH_PALETTE.BACKGROUND,
+                      border: `1.5px solid ${AMBER}`,
+                      flexShrink: 0,
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <DeterministicQrMatrix
+                      seed={2026119}
+                      size={134}
+                      fgColor={LAUNCH_PALETTE.PRIMARY_DARK}
+                      bgColor={LAUNCH_PALETTE.BACKGROUND}
+                    />
+                    <div
+                      aria-hidden
+                      style={{
+                        position: 'absolute',
+                        left: 10,
+                        right: 10,
+                        top: 0,
+                        height: 3,
+                        borderRadius: 999,
+                        backgroundColor: AMBER,
+                        boxShadow: '0 0 14px rgba(245, 158, 11, 0.9)',
+                        transform: `translate3d(0px, ${scanBeamY.toFixed(2)}px, 0px)`,
+                      }}
+                    />
+                  </div>
+
+                  <div
+                    style={{
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'space-between',
+                      gap: 10,
+                      minWidth: 0,
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 }}>
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '4px 11px',
+                          borderRadius: 999,
+                          backgroundColor: TEAL_SOFT,
+                          border: `1px solid ${TEAL_BORDER}`,
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 10.5,
+                          fontWeight: 900,
+                          color: TEAL_INK,
+                        }}
+                      >
+                        <QrCode size={12} color={TEAL_INK} strokeWidth={2.5} />
+                        <span>PAS PENGAMBILAN RAHSIA</span>
+                      </span>
+
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 5,
+                          padding: '6px 12px',
+                          borderRadius: 999,
+                          backgroundColor: '#047857',
+                          color: '#FFFFFF',
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 11,
+                          fontWeight: 900,
+                        }}
+                      >
+                        <Check size={13} strokeWidth={3} />
+                        <span>SEDIA DIAMBIL ✓</span>
+                      </span>
+                    </div>
+
+                    <div>
+                      <div style={{ fontSize: 16.5, fontWeight: 900, color: LAUNCH_PALETTE.PRIMARY }}>
+                        Kotak Rezeki Siswa — Pek Asas Harian
+                      </div>
+                      <div style={{ fontFamily: LAUNCH_FONTS.MONO, fontSize: 11, fontWeight: 700, color: LAUNCH_PALETTE.INK_SOFT }}>
+                        KOD PAS: FB-2026-119 • PRIVASI TANPA NAMA DIPAPAR
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {MANIFEST_ITEMS.map((item) => (
+                        <span
+                          key={item}
+                          style={{
+                            padding: '4px 9px',
+                            borderRadius: 999,
+                            backgroundColor: AMBER_SOFT,
+                            border: `1px solid ${AMBER_BORDER}`,
+                            fontSize: 11.5,
+                            fontWeight: 800,
+                            color: AMBER_INK,
+                          }}
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
+            </Interactive.Div>
+          </div>
         </div>
       </CameraStage>
 
