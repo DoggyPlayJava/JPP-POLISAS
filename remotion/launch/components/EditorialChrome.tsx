@@ -265,7 +265,6 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
   const shutterCenter = polymartChapter?.startFrame ?? 1038;
   const impactChapter = LAUNCH_CHAPTERS.find((chapter) => chapter.id === 'ImpactNumbers');
   const impactStart = impactChapter?.startFrame ?? 4572;
-  const impactEnd = impactStart + (impactChapter?.durationInFrames ?? 570);
 
   const shutterDarkMix = interpolate(
     frame,
@@ -277,17 +276,17 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
       easing: DARK_MIX_EASING,
     },
   );
-  const impactDarkMix = interpolate(
+  const finaleDarkMix = interpolate(
     frame,
-    [impactStart - 8, impactStart + 4, impactEnd - 30, impactEnd - 14],
-    [0, 1, 1, 0],
+    [impactStart - 8, impactStart + 4],
+    [0, 1],
     {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
       easing: DARK_MIX_EASING,
     },
   );
-  const darkMix = clampUnit(Math.max(shutterDarkMix, impactDarkMix));
+  const darkMix = clampUnit(Math.max(shutterDarkMix, finaleDarkMix));
 
   const mutedInk = interpolateColors(
     darkMix,

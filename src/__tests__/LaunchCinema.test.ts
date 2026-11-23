@@ -101,7 +101,7 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
       'PolyRent Kediaman',
       'PolySuara Komuniti',
       'E-Kebajikan',
-      'Kelab & Merit QR',
+      '21 Kelab & e-Sijil',
       'Komuniti Siswa',
       'Imbas & Masuk',
     ]);
@@ -111,9 +111,9 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
       '12:30 TGH HARI • KAFETERIA & JPP PAY',
       '14:00 PETANG • BILIK SEWA & KONGSI SEWA',
       'KOMUNITI SISWA • LUAH & UNDI TANPA NAMA',
-      'PRIHATIN SISWA • ADUAN KAMSIS & FOOD BANK',
-      '17:00 PETANG • 21 KELAB, MERIT & E-SIJIL',
-      'KOMUNITI HIDUP • 1,083+ SISWA AKTIF',
+      'PRIHATIN SISWA • LIVE CHAT TIKET & FOOD BANK',
+      '17:00 PETANG • 21 KELAB, AJK & E-SIJIL',
+      'KOMUNITI HIDUP • 2,841+ SISWA BERDAFTAR',
       'AKSES SERTA-MERTA • IMBAS QR SEKARANG',
     ]);
     for (const chapter of LAUNCH_CHAPTERS) {
@@ -126,12 +126,13 @@ describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
     expect(last.startFrame + last.durationInFrames).toBe(6120);
   });
 
-  it('validates Zod defaults with official POLISAS Student-POV v7 identity', () => {
+  it('validates Zod defaults with official POLISAS Student-POV v9 identity', () => {
     const parsed = LaunchShowcaseSchema.parse({});
     expect(parsed.portalUrl).toBe('https://jpp.polisas.edu.my');
     expect(parsed.headlinePrimary).toBe('Baru Masuk POLISAS? Satu App Untuk Semua.');
     expect(parsed.headlineItalic).toBe('Satu Kampus. Satu SuperApp Mahasiswa POLISAS.');
     expect(parsed.stats.clubsCount).toBe(21);
+    expect(parsed.stats.studentsCount).toBe(2841);
   });
 
   it('generates deterministic 17-waypoint Turf walking route inside POLISAS Semambu coordinates & distinct module themes', () => {
@@ -474,7 +475,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     }
   });
 
-  it('wires 9-chapter v7 cinema, dedicated PolyRent Semambu scene, single-hero 3D choreography, and symmetric LED-wall 340px QR lock', () => {
+  it('wires 9-chapter v9 cinema, dedicated PolyRent Semambu scene, single-hero 3D choreography, and symmetric LED-wall 352px QR lock', () => {
     const cinemaSource = readFileSync(join(LAUNCH_ROOT_DIR, 'JppLaunchCinema.tsx'), 'utf8');
     const rootSource = readFileSync(join(process.cwd(), 'remotion', 'Root.tsx'), 'utf8');
     const polymapsSource = readFileSync(
@@ -515,7 +516,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
 
     expect(impactSource).toContain('chapterCode="08"');
     expect(impactSource).toContain('KOMUNITI HIDUP • 5 JABATAN POLISAS');
-    expect(impactSource).toContain('MAHASISWA DAH AKSES');
+    expect(impactSource).toContain('MAHASISWA BERDAFTAR');
     expect(impactSource).toContain('KELAB & PERSATUAN');
     expect(impactSource).toContain('MENU & BARANG SISWA');
     expect(impactSource).toContain('ACARA & PROGRAM KAMPUS');
@@ -530,7 +531,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
 
     expect(closingSource).toContain('chapterCode="09"');
     expect(closingSource).toContain('<QRCode');
-    expect(closingSource).toContain('size={340}');
+    expect(closingSource).toContain('size={352}');
     expect(closingSource).toContain('bgColor="#FFFFFF"');
     expect(closingSource).toContain('fgColor="#061714"');
     expect(closingSource).toMatch(/isQrOrthogonalLocked\s*\?\s*0/);
@@ -677,16 +678,19 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     );
     expect(welfareSource).toContain('EvolvingPath');
     expect(welfareSource).toContain('MOD PRIVASI SISWA AKTIF');
-    expect(welfareSource).toContain('SELESAI &amp; DISANTUNI');
+    expect(welfareSource).toContain('SELESAI & DISANTUNI');
     expect(welfareSource).toContain('DeterministicQrMatrix');
 
     const clubsSource = readFileSync(join(LAUNCH_ROOT_DIR, 'scenes', 'ClubsEmsScene.tsx'), 'utf8');
     expect(clubsSource).toContain('GhostCursor');
     expect(clubsSource).toContain('EvolvingPath');
-    expect(clubsSource).toContain('MATA MERIT');
+    expect(clubsSource).toContain('21');
+    expect(clubsSource).toContain('Mohon Barisan AJK');
+    expect(clubsSource).toContain('EMS-CERT');
     expect(clubsSource).toContain("backfaceVisibility: 'hidden'");
     expect(clubsSource).toContain('GeometricSparkBurst');
     expect(clubsSource).toContain('Muat Turun PDF Rasmi Serta-Merta');
+    expect(clubsSource).not.toMatch(/<QRCode|DeterministicQrMatrix|ScanLine|IMBAS KEHADIRAN QR/);
 
     for (const filePath of walkLaunchTsFiles(LAUNCH_ROOT_DIR)) {
       const content = readFileSync(filePath, 'utf8');
@@ -716,6 +720,123 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
           /\b(color|height|tiltDeg|opacity)=/,
         );
       }
+    }
+  });
+
+  it('enforces v9 contextual morphs, product-truth storytelling across all modules, 2841+ milestone, and Midnight-Teal Aurora QR finale', async () => {
+    const bumperSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'motion', 'Module3DIntroBumper.tsx'),
+      'utf8',
+    );
+    const expectedModes = [
+      'compass-drop-to-map',
+      'unbox-carousel-fan',
+      'roof-drop-to-3d-map',
+      'flip-into-chat-composer',
+      'split-twin-pillars',
+      'constellation-burst-21-clubs',
+    ] as const;
+    for (const mode of expectedModes) {
+      expect(bumperSource).toContain(`'${mode}'`);
+    }
+
+    const moduleScenes = [
+      'PolyMapsCampusScene.tsx',
+      'PolyMartCommerceScene.tsx',
+      'PolyRentHousingScene.tsx',
+      'PolySuaraVoiceScene.tsx',
+      'WelfareCareScene.tsx',
+      'ClubsEmsScene.tsx',
+    ] as const;
+    const mountedModes = new Set<string>();
+    for (const sceneName of moduleScenes) {
+      const sceneSource = readFileSync(join(LAUNCH_ROOT_DIR, 'scenes', sceneName), 'utf8');
+      const match = sceneSource.match(/morphMode="([^"]+)"/);
+      expect(match, `${sceneName} must specify morphMode`).not.toBeNull();
+      if (match) mountedModes.add(match[1]);
+    }
+    expect(mountedModes.size).toBe(6);
+    for (const mode of expectedModes) {
+      expect(mountedModes.has(mode)).toBe(true);
+    }
+
+    expect(LaunchShowcaseSchema.parse({}).stats.studentsCount).toBe(2841);
+
+    const clubsSource = readFileSync(join(LAUNCH_ROOT_DIR, 'scenes', 'ClubsEmsScene.tsx'), 'utf8');
+    expect(clubsSource).toContain('21');
+    expect(clubsSource).toContain('Mohon Barisan AJK');
+    expect(clubsSource).toContain('EMS-CERT');
+    expect(clubsSource).not.toContain('<QRCode');
+    expect(clubsSource).not.toContain('DeterministicQrMatrix');
+    expect(clubsSource).not.toContain('ScanLine');
+    expect(clubsSource).not.toContain('IMBAS KEHADIRAN QR');
+
+    const { scrambleIdentityText } = await import('../../remotion/launch/scenes/PolySuaraVoiceScene');
+    expect(scrambleIdentityText('Aiman Hakim Bin Azman', 'Rubah Semambu (Anon #409)', 0)).toBe(
+      'Aiman Hakim Bin Azman',
+    );
+    expect(scrambleIdentityText('Aiman Hakim Bin Azman', 'Rubah Semambu (Anon #409)', 1)).toBe(
+      'Rubah Semambu (Anon #409)',
+    );
+    const midA = scrambleIdentityText('Aiman Hakim Bin Azman', 'Rubah Semambu (Anon #409)', 0.32);
+    const midB = scrambleIdentityText('Aiman Hakim Bin Azman', 'Rubah Semambu (Anon #409)', 0.32);
+    expect(midA).toBe(midB);
+    expect(midA.length).toBeGreaterThan(0);
+    expect(scrambleIdentityText('Aiman Hakim Bin Azman', 'Rubah Semambu (Anon #409)', Number.NaN)).toBe(
+      'Aiman Hakim Bin Azman',
+    );
+
+    const polysuaraSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'PolySuaraVoiceScene.tsx'),
+      'utf8',
+    );
+    expect(polysuaraSource).toContain('Aiman Hakim Bin Azman');
+    expect(polysuaraSource).toContain('Rubah Semambu (Anon #409)');
+    expect(polysuaraSource).toContain('scrambleIdentityText');
+    expect(polysuaraSource).toContain('UNDIAN TERTUTUP');
+
+    const welfareSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'WelfareCareScene.tsx'),
+      'utf8',
+    );
+    expect(welfareSource).toContain('DALAM KAMPUS');
+    expect(welfareSource).toContain('LUAR KAMPUS');
+    expect(welfareSource).toContain('LIVE CHAT 2-HALA');
+
+    const polyrentSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'PolyRentHousingScene.tsx'),
+      'utf8',
+    );
+    expect(polyrentSource).toContain('Iklan Rumah');
+    expect(polyrentSource).toContain('Pelajar Mencari');
+    expect(polyrentSource).toContain('Pilihan Berbaloi');
+    expect(polyrentSource).toContain('JALAN SEMAMBU');
+
+    const closingSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'ClosingVaultScene.tsx'),
+      'utf8',
+    );
+    expect(closingSource).toContain('<EditorialBackdrop dark');
+    expect(closingSource).toContain('size={352}');
+    expect(closingSource).toContain('fgColor="#061714"');
+
+    const chromeSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'components', 'EditorialChrome.tsx'),
+      'utf8',
+    );
+    expect(chromeSource).toContain('finaleDarkMix');
+    expect(bumperSource).toMatch(/!isComposerBackVisible[\s\S]*?backfaceVisibility:\s*'hidden'/);
+
+    const filesChecking1083 = [
+      ...walkLaunchTsFiles(LAUNCH_ROOT_DIR),
+      join(process.cwd(), 'remotion', 'Root.tsx'),
+      join(process.cwd(), 'src', 'pages', 'LaunchVideo.tsx'),
+    ];
+    for (const filePath of filesChecking1083) {
+      const content = readFileSync(filePath, 'utf8');
+      expect(content, `${relative(process.cwd(), filePath)} retains stale 1083`).not.toMatch(
+        /\b1,?083\b/,
+      );
     }
   });
 });

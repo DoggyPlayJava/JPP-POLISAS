@@ -40,7 +40,10 @@ export function LaunchVideo() {
     return {
       ...DEFAULT_LAUNCH_PROPS,
       portalUrl: portalOrigin,
-      stats,
+      stats: {
+        ...stats,
+        studentsCount: Math.max(stats.studentsCount, DEFAULT_LAUNCH_PROPS.stats.studentsCount),
+      },
     };
   }, [stats]);
 
