@@ -16,18 +16,30 @@ export type CameraStageProps = {
   readonly startFrame?: number;
   readonly endFrame?: number;
   readonly breathingAmplitude?: number;
+  readonly entryZoomOffset?: number;
+  readonly entryPanXOffset?: number;
+  readonly entryPanYOffset?: number;
+  readonly entryTiltYOffset?: number;
+  readonly entryFrames?: number;
+  readonly exitZoomDelta?: number;
+  readonly exitPanXDelta?: number;
+  readonly exitPanYDelta?: number;
+  readonly exitTiltYDelta?: number;
+  readonly exitFrames?: number;
   readonly transformOrigin?: string;
   readonly clip?: boolean;
   readonly style?: React.CSSProperties;
   readonly children: React.ReactNode;
 };
 
-const CAMERA_EASING = Easing.bezier(0.22, 1, 0.36, 1);
+const CAMERA_EASING = Easing.bezier(0.33, 0.08, 0.67, 0.92);
+const ENTRY_EASING = Easing.bezier(0.16, 1, 0.3, 1);
+const EXIT_EASING = Easing.bezier(0.55, 0, 1, 0.45);
 
 /**
- * Continuous 3D perspective camera rig driven strictly by Remotion frame timing.
- * Pairs smooth cubic-out camera dolly/pan/tilt with a subtle Steadicam breathing drift
- * so compositions remain alive on every frame without layout reflow.
+ * Continuous 3-phase 3D perspective camera rig driven strictly by Remotion frame timing.
+ * Pairs an expo-out entry momentum catch and cubic-in exit momentum launch with
+ * an S-balanced continuous dolly/pan/tilt drift and subtle Steadicam breathing.
  */
 export const CameraStage: React.FC<CameraStageProps> = ({
   zoomFrom = 1,
@@ -44,6 +56,16 @@ export const CameraStage: React.FC<CameraStageProps> = ({
   startFrame = 0,
   endFrame,
   breathingAmplitude = 1,
+  entryZoomOffset = 0,
+  entryPanXOffset = 0,
+  entryPanYOffset = 0,
+  entryTiltYOffset = 0,
+  entryFrames,
+  exitZoomDelta = 0,
+  exitPanXDelta = 0,
+  exitPanYDelta = 0,
+  exitTiltYDelta = 0,
+  exitFrames,
   transformOrigin = '50% 50%',
   clip = false,
   style,
@@ -52,7 +74,12 @@ export const CameraStage: React.FC<CameraStageProps> = ({
   const frame = useCurrentFrame();
   const { fps, durationInFrames } = useVideoConfig();
 
-  const resolvedEnd = Math.max(startFrame + 1, endFrame ?? Math.max(startFrame + 1, durationInFrames - 1));
+  const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
+  const safeDuration = Math.max(2, Number.isFinite(durationInFrames) ? durationInFrames : 2);
+  const resolvedEnd = Math.max(
+    startFrame + 1,
+    endFrame ?? Math.max(startFrame + 1, safeDuration - 1),
+  );
   const inputRange: readonly [number, number] = [startFrame, resolvedEnd];
   const interpOptions = {
     extrapolateLeft: 'clamp' as const,
@@ -60,18 +87,78 @@ export const CameraStage: React.FC<CameraStageProps> = ({
     easing: CAMERA_EASING,
   };
 
-  const timeSec = frame / Math.max(1, fps);
+  // Phase 1: Entry momentum catch (expo-out settle from transition impulse to 0)
+  const resolvedEntryInput =
+    entryFrames !== undefined && Number.isFinite(entryFrames)
+      ? entryFrames
+      : Math.round(0.4 * safeFps);
+  const hasEntryMotion =
+    resolvedEntryInput > 0 &&
+    (entryZoomOffset !== 0 ||
+      entryPanXOffset !== 0 ||
+      entryPanYOffset !== 0 ||
+      entryTiltYOffset !== 0);
+  const safeEntryFrames = Math.max(1, Math.round(resolvedEntryInput));
+  const entryRange: readonly [number, number] = [startFrame, startFrame + safeEntryFrames];
+  const entryFactor = hasEntryMotion
+    ? interpolate(frame, entryRange, [1, 0], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+        easing: ENTRY_EASING,
+      })
+    : 0;
+
+  // Phase 3: Exit momentum launch (accelerates smoothly into outgoing transition)
+  const resolvedExitInput =
+    exitFrames !== undefined && Number.isFinite(exitFrames)
+      ? exitFrames
+      : Math.round(0.32 * safeFps);
+  const hasExitMotion =
+    resolvedExitInput > 0 &&
+    (exitZoomDelta !== 0 ||
+      exitPanXDelta !== 0 ||
+      exitPanYDelta !== 0 ||
+      exitTiltYDelta !== 0);
+  const safeExitFrames = Math.max(1, Math.round(resolvedExitInput));
+  const exitEnd = resolvedEnd;
+  const exitStart = Math.min(exitEnd - 1, Math.max(startFrame, exitEnd + 1 - safeExitFrames));
+  const exitRange: readonly [number, number] = [exitStart, exitEnd];
+  const exitFactor = hasExitMotion
+    ? interpolate(frame, exitRange, [0, 1], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+        easing: EXIT_EASING,
+      })
+    : 0;
+
+  const timeSec = frame / safeFps;
   const breathePanX = Math.sin(timeSec * 0.85) * 3 * breathingAmplitude;
   const breathePanY = Math.cos(timeSec * 0.7) * 2.5 * breathingAmplitude;
   const breatheTiltX = Math.sin(timeSec * 0.65) * 0.25 * breathingAmplitude;
   const breatheTiltY = Math.cos(timeSec * 0.55) * 0.35 * breathingAmplitude;
   const breatheZoom = Math.sin(timeSec * 0.6) * 0.0025 * breathingAmplitude;
 
-  const zoom = interpolate(frame, inputRange, [zoomFrom, zoomTo], interpOptions) + breatheZoom;
-  const panX = interpolate(frame, inputRange, [panXFrom, panXTo], interpOptions) + breathePanX;
-  const panY = interpolate(frame, inputRange, [panYFrom, panYTo], interpOptions) + breathePanY;
+  const zoom =
+    interpolate(frame, inputRange, [zoomFrom, zoomTo], interpOptions) +
+    entryFactor * entryZoomOffset +
+    exitFactor * exitZoomDelta +
+    breatheZoom;
+  const panX =
+    interpolate(frame, inputRange, [panXFrom, panXTo], interpOptions) +
+    entryFactor * entryPanXOffset +
+    exitFactor * exitPanXDelta +
+    breathePanX;
+  const panY =
+    interpolate(frame, inputRange, [panYFrom, panYTo], interpOptions) +
+    entryFactor * entryPanYOffset +
+    exitFactor * exitPanYDelta +
+    breathePanY;
   const tiltX = interpolate(frame, inputRange, [tiltXFrom, tiltXTo], interpOptions) + breatheTiltX;
-  const tiltY = interpolate(frame, inputRange, [tiltYFrom, tiltYTo], interpOptions) + breatheTiltY;
+  const tiltY =
+    interpolate(frame, inputRange, [tiltYFrom, tiltYTo], interpOptions) +
+    entryFactor * entryTiltYOffset +
+    exitFactor * exitTiltYDelta +
+    breatheTiltY;
 
   return (
     <div

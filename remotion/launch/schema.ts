@@ -1,37 +1,118 @@
 import { z } from 'zod';
 
-export const LAUNCH_TRANSITION_FRAMES = 30;
+export const LAUNCH_TRANSITION_FRAMES = 36;
 export const LAUNCH_OVERLAY_FRAMES = 48;
 
 export type LaunchTransitionKind =
   | 'kinetic-push'
   | 'editorial-shutter'
   | 'split-curtain'
-  | 'clock-wipe'
+  | 'swiss-louvers'
   | 'depth-lift'
-  | 'light-sweep'
-  | 'orbital-iris'
-  | 'none';
+  | 'warm-light-sweep'
+  | 'orbital-iris';
 
 export interface LaunchChapterMeta {
   readonly id: string;
+  readonly code: string;
   readonly indexLabel: string;
   readonly title: string;
   readonly subtitle: string;
+  readonly gateLabel: string;
   readonly durationInFrames: number;
   readonly startFrame: number;
-  readonly transitionAfter: LaunchTransitionKind;
+  readonly transitionOut: LaunchTransitionKind | null;
 }
 
 export const LAUNCH_CHAPTERS: readonly LaunchChapterMeta[] = [
-  { id: 'OpeningHero', indexLabel: '01', title: 'Pembukaan', subtitle: 'Identiti & Portal Rasmi', durationInFrames: 300, startFrame: 0, transitionAfter: 'kinetic-push' },
-  { id: 'PolyMapsCampus', indexLabel: '02', title: 'PolyMaps', subtitle: 'Navigasi Kampus & Jadual', durationInFrames: 480, startFrame: 270, transitionAfter: 'editorial-shutter' },
-  { id: 'PolyMartCommerce', indexLabel: '03', title: 'PolyMart', subtitle: 'Keusahawanan Siswa', durationInFrames: 390, startFrame: 750, transitionAfter: 'split-curtain' },
-  { id: 'PolySuaraVoice', indexLabel: '04', title: 'PolySuara', subtitle: 'Suara & Undian Kampus', durationInFrames: 360, startFrame: 1110, transitionAfter: 'clock-wipe' },
-  { id: 'WelfareCare', indexLabel: '05', title: 'E-Kebajikan', subtitle: 'Aduan & Food Bank', durationInFrames: 360, startFrame: 1440, transitionAfter: 'depth-lift' },
-  { id: 'ClubsEms', indexLabel: '06', title: 'Kelab & EMS', subtitle: 'Aktiviti & Sijil Digital', durationInFrames: 390, startFrame: 1770, transitionAfter: 'light-sweep' },
-  { id: 'ImpactNumbers', indexLabel: '07', title: 'Impak', subtitle: 'Angka Sebenar POLISAS', durationInFrames: 360, startFrame: 2160, transitionAfter: 'orbital-iris' },
-  { id: 'ClosingVault', indexLabel: '08', title: 'Penutup', subtitle: 'Akses Portal Rasmi', durationInFrames: 450, startFrame: 2490, transitionAfter: 'none' },
+  {
+    id: 'OpeningHero',
+    code: '01',
+    indexLabel: '01',
+    title: 'Pembukaan',
+    subtitle: 'Identiti & Portal Rasmi',
+    gateLabel: 'PEMBUKAAN RASMI',
+    durationInFrames: 306,
+    startFrame: 0,
+    transitionOut: 'kinetic-push',
+  },
+  {
+    id: 'PolyMapsCampus',
+    code: '02',
+    indexLabel: '02',
+    title: 'PolyMaps',
+    subtitle: 'Navigasi Kampus & Jadual',
+    gateLabel: 'POLYMAPS & JADUAL KULIAH',
+    durationInFrames: 480,
+    startFrame: 270,
+    transitionOut: 'editorial-shutter',
+  },
+  {
+    id: 'PolyMartCommerce',
+    code: '03',
+    indexLabel: '03',
+    title: 'PolyMart',
+    subtitle: 'Keusahawanan Siswa',
+    gateLabel: 'POLYMART • EKONOMI SISWA',
+    durationInFrames: 396,
+    startFrame: 750,
+    transitionOut: 'split-curtain',
+  },
+  {
+    id: 'PolySuaraVoice',
+    code: '04',
+    indexLabel: '04',
+    title: 'PolySuara',
+    subtitle: 'Suara & Undian Kampus',
+    gateLabel: 'POLYSUARA • SUARA MAHASISWA',
+    durationInFrames: 366,
+    startFrame: 1110,
+    transitionOut: 'swiss-louvers',
+  },
+  {
+    id: 'WelfareCare',
+    code: '05',
+    indexLabel: '05',
+    title: 'E-Kebajikan',
+    subtitle: 'Aduan & Food Bank',
+    gateLabel: 'E-KEBAJIKAN & FOOD BANK',
+    durationInFrames: 366,
+    startFrame: 1440,
+    transitionOut: 'depth-lift',
+  },
+  {
+    id: 'ClubsEms',
+    code: '06',
+    indexLabel: '06',
+    title: 'Kelab & EMS',
+    subtitle: 'Aktiviti & Sijil Digital',
+    gateLabel: 'SISTEM KELAB & EMS',
+    durationInFrames: 390,
+    startFrame: 1770,
+    transitionOut: 'warm-light-sweep',
+  },
+  {
+    id: 'ImpactNumbers',
+    code: '07',
+    indexLabel: '07',
+    title: 'Impak',
+    subtitle: 'Angka Sebenar POLISAS',
+    gateLabel: 'TELEMETRI MASA NYATA',
+    durationInFrames: 366,
+    startFrame: 2160,
+    transitionOut: 'orbital-iris',
+  },
+  {
+    id: 'ClosingVault',
+    code: '08',
+    indexLabel: '08',
+    title: 'Penutup',
+    subtitle: 'Akses Portal Rasmi',
+    gateLabel: 'AKSES PORTAL RASMI',
+    durationInFrames: 450,
+    startFrame: 2490,
+    transitionOut: null,
+  },
 ];
 
 export const LAUNCH_TOTAL_FRAMES = 2940;

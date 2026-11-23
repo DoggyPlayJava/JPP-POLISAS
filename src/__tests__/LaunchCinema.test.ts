@@ -27,6 +27,13 @@ import {
   EditorialShutterOverlay,
   WarmLightSweepOverlay,
 } from '../../remotion/launch/motion/transitions';
+import {
+  CinemaChromeContext,
+  EditorialBackdrop,
+  EditorialFrameMarks,
+  GlobalCinemaGate,
+} from '../../remotion/launch/components/EditorialChrome';
+import { CameraStage } from '../../remotion/launch/motion/CameraStage';
 
 describe('Shared Campus Stats Contract', () => {
   it('exposes safe non-zero fallback defaults and stable cache key', () => {
@@ -41,26 +48,35 @@ describe('Shared Campus Stats Contract', () => {
 describe('Launch Cinema Schema, Timeline, GIS Route & Media Probe', () => {
   it('computes exact 2940-frame 60fps TransitionSeries timeline and chapter offsets', () => {
     expect(LAUNCH_FPS).toBe(60);
-    expect(LAUNCH_TRANSITION_FRAMES).toBe(30);
+    expect(LAUNCH_TRANSITION_FRAMES).toBe(36);
     expect(LAUNCH_OVERLAY_FRAMES).toBe(48);
     expect(LAUNCH_TOTAL_FRAMES).toBe(2940);
     expect(LAUNCH_CHAPTERS).toHaveLength(8);
+    expect(LAUNCH_CHAPTERS.map((c) => c.code)).toEqual([
+      '01', '02', '03', '04', '05', '06', '07', '08',
+    ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.durationInFrames)).toEqual([
-      300, 480, 390, 360, 360, 390, 360, 450,
+      306, 480, 396, 366, 366, 390, 366, 450,
     ]);
     expect(LAUNCH_CHAPTERS.map((c) => c.startFrame)).toEqual([
       0, 270, 750, 1110, 1440, 1770, 2160, 2490,
     ]);
-    expect(LAUNCH_CHAPTERS.map((c) => c.transitionAfter)).toEqual([
+    expect(LAUNCH_CHAPTERS.map((c) => c.transitionOut)).toEqual([
       'kinetic-push',
       'editorial-shutter',
       'split-curtain',
-      'clock-wipe',
+      'swiss-louvers',
       'depth-lift',
-      'light-sweep',
+      'warm-light-sweep',
       'orbital-iris',
-      'none',
+      null,
     ]);
+    for (const chapter of LAUNCH_CHAPTERS) {
+      expect(chapter.gateLabel.length).toBeGreaterThan(0);
+      expect(chapter.gateLabel).toBe(chapter.gateLabel.toUpperCase());
+    }
+    const rawDurationSum = LAUNCH_CHAPTERS.reduce((acc, c) => acc + c.durationInFrames, 0);
+    expect(rawDurationSum - 5 * LAUNCH_TRANSITION_FRAMES).toBe(LAUNCH_TOTAL_FRAMES);
     const last = LAUNCH_CHAPTERS[LAUNCH_CHAPTERS.length - 1];
     expect(last.startFrame + last.durationInFrames).toBe(2940);
   });
@@ -149,5 +165,30 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
     expect(source).not.toMatch(/@keyframes|\banimate-|transition\s*:/);
     expect(source).toContain('premountFor={fps}');
     expect(source).toContain("from '@remotion/effects/light-leak'");
+  });
+
+  it('exports GlobalCinemaGate, CinemaChromeContext, and 3-phase CameraStage with pure frame-driven motion', () => {
+    expect(typeof GlobalCinemaGate).toBe('function');
+    expect(typeof EditorialFrameMarks).toBe('function');
+    expect(typeof EditorialBackdrop).toBe('function');
+    expect(typeof CameraStage).toBe('function');
+    expect(CinemaChromeContext).toBeDefined();
+
+    const chromeSource = readFileSync(
+      join(process.cwd(), 'remotion', 'launch', 'components', 'EditorialChrome.tsx'),
+      'utf8',
+    );
+    expect(chromeSource).toContain('interpolateColors');
+    expect(chromeSource).toContain('suppressLocalFrameMarks');
+    expect(chromeSource).not.toMatch(/HtmlInCanvas|Math\.random|@keyframes|\banimate-|transition\s*:/i);
+
+    const cameraSource = readFileSync(
+      join(process.cwd(), 'remotion', 'launch', 'motion', 'CameraStage.tsx'),
+      'utf8',
+    );
+    expect(cameraSource).toContain('entryZoomOffset');
+    expect(cameraSource).toContain('exitZoomDelta');
+    expect(cameraSource).toContain('Easing.bezier(0.33, 0.08, 0.67, 0.92)');
+    expect(cameraSource).not.toMatch(/HtmlInCanvas|Math\.random|@keyframes|\banimate-|transition\s*:/i);
   });
 });
