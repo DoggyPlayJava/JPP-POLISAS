@@ -564,9 +564,9 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                       {/* Vertical Status Spine + 4 Steps */}
                       <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 8 }}>
                         <EvolvingPath
-                          d="M 13 14 L 13 150"
+                          d="M 13 10 L 13 94"
                           width={26}
-                          height={164}
+                          height={104}
                           startFrame={O + 24}
                           durationFrames={100}
                           stroke={TEAL}
@@ -1093,15 +1093,30 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                         inset: 0,
                         backgroundColor: VAULT_OBSIDIAN,
                         border: `2px solid ${AMBER}`,
+                        borderBottom: `4px solid ${AMBER}`,
+                        boxShadow: '0 24px 48px rgba(245, 158, 11, 0.28)',
                         display: 'flex',
                         flexDirection: 'column',
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: 14,
-                        transform: `translate3d(0px, ${shieldTranslateY.toFixed(2)}%, 0px)`,
+                        transform: `perspective(1200px) translate3d(0px, ${shieldTranslateY.toFixed(2)}%, ${(shieldLiftProgress * 36).toFixed(1)}px) rotateX(${(shieldLiftProgress * 18).toFixed(2)}deg)`,
+                        transformOrigin: 'top center',
                         zIndex: 18,
                       }}
                     >
+                      <div
+                        aria-hidden
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          height: 6,
+                          background: `linear-gradient(90deg, transparent 0%, ${AMBER} 50%, transparent 100%)`,
+                          opacity: 0.45 + shieldLiftProgress * 0.55,
+                        }}
+                      />
                       <div
                         style={{
                           width: 78,

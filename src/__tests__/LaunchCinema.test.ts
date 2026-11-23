@@ -448,7 +448,15 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     }
   });
 
-  it('allows only jpp-logo.png in staticFile(...) calls inside remotion/launch/ (plus dynamic bgmSrc in JppLaunchCinema.tsx)', () => {
+  it('allows only jpp-logo.png and curated launch-photos/*.jpg assets in staticFile(...) calls inside remotion/launch/ (plus dynamic bgmSrc in JppLaunchCinema.tsx)', () => {
+    const allowedStaticAssets = new Set([
+      'jpp-logo.png',
+      'launch-photos/polyrent/taman-pertama.jpg',
+      'launch-photos/polyrent/semambu-baru.jpg',
+      'launch-photos/polymart/chicken-popcorn.jpg',
+      'launch-photos/polymart/loaded-fries.jpg',
+      'launch-photos/polymart/lanyard-jpp.jpg',
+    ]);
     const staticFileRegex = /staticFile\s*\(\s*([^)]+?)\s*\)/g;
     const quotedLiteralRegex = /^(?:'([^']*)'|"([^"]*)"|`([^`]*)`)$/;
 
@@ -462,9 +470,10 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
         const literalMatch = argExpr.match(quotedLiteralRegex);
         if (literalMatch) {
           const assetName = literalMatch[1] ?? literalMatch[2] ?? literalMatch[3] ?? '';
-          expect(assetName, `${relPath} used disallowed staticFile('${assetName}')`).toBe(
-            'jpp-logo.png',
-          );
+          expect(
+            allowedStaticAssets.has(assetName),
+            `${relPath} used disallowed staticFile('${assetName}')`,
+          ).toBe(true);
         } else {
           expect(relPath, `${relPath} used non-literal staticFile(${argExpr})`).toBe(
             'JppLaunchCinema.tsx',
@@ -475,7 +484,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     }
   });
 
-  it('wires 9-chapter v9 cinema, dedicated PolyRent Semambu scene, single-hero 3D choreography, and symmetric LED-wall 352px QR lock', () => {
+  it('wires 9-chapter v10 cinema, dedicated PolyRent Semambu scene, single-hero 3D choreography, and symmetric LED-wall 440px QR lock', () => {
     const cinemaSource = readFileSync(join(LAUNCH_ROOT_DIR, 'JppLaunchCinema.tsx'), 'utf8');
     const rootSource = readFileSync(join(process.cwd(), 'remotion', 'Root.tsx'), 'utf8');
     const polymapsSource = readFileSync(
@@ -531,7 +540,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
 
     expect(closingSource).toContain('chapterCode="09"');
     expect(closingSource).toContain('<QRCode');
-    expect(closingSource).toContain('size={352}');
+    expect(closingSource).toContain('size={440}');
     expect(closingSource).toContain('bgColor="#FFFFFF"');
     expect(closingSource).toContain('fgColor="#061714"');
     expect(closingSource).toMatch(/isQrOrthogonalLocked\s*\?\s*0/);
@@ -666,7 +675,8 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
       join(LAUNCH_ROOT_DIR, 'scenes', 'PolySuaraVoiceScene.tsx'),
       'utf8',
     );
-    expect(polysuaraSource).toContain('EvolvingPath');
+    expect(polysuaraSource).not.toContain('M 520 390 Q 760 220 960 360');
+    expect(polysuaraSource).not.toContain('<EvolvingPath');
     expect(polysuaraSource).toContain('PersonaMonogram');
     expect(polysuaraSource).toContain('USUL DITERIMA JPP');
     expect(polysuaraSource).toContain('IG STORY');
@@ -817,7 +827,7 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
       'utf8',
     );
     expect(closingSource).toContain('<EditorialBackdrop dark');
-    expect(closingSource).toContain('size={352}');
+    expect(closingSource).toContain('size={440}');
     expect(closingSource).toContain('fgColor="#061714"');
 
     const chromeSource = readFileSync(
@@ -838,5 +848,82 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
         /\b1,?083\b/,
       );
     }
+  });
+
+  it('enforces v10 photographic realism, continuous 3D 21-club ring, zero stray EvolvingPath lines, 3D Ch08 amphitheater, and 440px spiral QR finale', async () => {
+    const fs = await import('node:fs');
+
+    const expectedPhotoAssets = [
+      'public/launch-photos/polyrent/taman-pertama.jpg',
+      'public/launch-photos/polyrent/semambu-baru.jpg',
+      'public/launch-photos/polymart/chicken-popcorn.jpg',
+      'public/launch-photos/polymart/loaded-fries.jpg',
+      'public/launch-photos/polymart/lanyard-jpp.jpg',
+    ] as const;
+
+    for (const relAsset of expectedPhotoAssets) {
+      const absAsset = join(process.cwd(), relAsset);
+      expect(fs.existsSync(absAsset), `${relAsset} must exist on disk`).toBe(true);
+      expect(fs.statSync(absAsset).size, `${relAsset} must be non-trivial JPEG`).toBeGreaterThan(
+        5000,
+      );
+    }
+
+    const openingSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'OpeningHeroScene.tsx'),
+      'utf8',
+    );
+    expect(openingSource).toContain('M 410 23 L 520 23');
+    expect(openingSource).toContain('M 1150 23 L 1040 23');
+
+    const polymartSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'PolyMartCommerceScene.tsx'),
+      'utf8',
+    );
+    expect(polymartSource).toContain('<CanvasImage');
+    expect(polymartSource).toContain('launch-photos/polymart/chicken-popcorn.jpg');
+    expect(polymartSource).toContain('launch-photos/polymart/loaded-fries.jpg');
+    expect(polymartSource).toContain('launch-photos/polymart/lanyard-jpp.jpg');
+    expect(polymartSource).not.toContain('CHICKEN_BITES');
+
+    const polyrentSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'PolyRentHousingScene.tsx'),
+      'utf8',
+    );
+    expect(polyrentSource).toContain('<CanvasImage');
+    expect(polyrentSource).toContain('launch-photos/polyrent/taman-pertama.jpg');
+    expect(polyrentSource).toContain('launch-photos/polyrent/semambu-baru.jpg');
+    expect(polyrentSource).not.toMatch(/skyPertama|roofPertama|skyBaru/);
+    expect(polyrentSource).toContain('M 392 126 L 676 126');
+    expect(polyrentSource).toContain('M 304 268 L 392 268 L 498 268');
+
+    const welfareSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'WelfareCareScene.tsx'),
+      'utf8',
+    );
+    expect(welfareSource).toContain('M 13 10 L 13 94');
+
+    const clubsSource = readFileSync(join(LAUNCH_ROOT_DIR, 'scenes', 'ClubsEmsScene.tsx'), 'utf8');
+    expect(clubsSource).not.toContain('KineticWindow');
+    expect(clubsSource).toContain('ALL_21_POLISAS_CLUBS');
+
+    const impactSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'ImpactNumbersScene.tsx'),
+      'utf8',
+    );
+    expect(impactSource).toContain('SpatialFloorGrid');
+    expect(impactSource).toContain('ry: 11');
+    expect(impactSource).toContain('ry: -11');
+    expect(impactSource).toContain('translateZ(26px)');
+    expect(impactSource).toContain('+30 Merit AJK Robosas');
+
+    const closingSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'ClosingVaultScene.tsx'),
+      'utf8',
+    );
+    expect(closingSource).toContain('cometRotDeg');
+    expect(closingSource).toContain('aurora-shockwave-');
+    expect(closingSource).toContain('wake-arc-');
+    expect(closingSource).toContain('size={440}');
   });
 });

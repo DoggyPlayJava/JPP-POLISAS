@@ -803,7 +803,7 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
           </div>
         ) : null}
 
-        {/* MODE F Overlay: e-Kelab Radial 8-Club Constellation Burst */}
+        {/* MODE F Overlay: e-Kelab Continuous 3D Orbital Ring Expansion (zero-cut handoff into ClubsEmsScene) */}
         {morphMode === 'constellation-burst-21-clubs' && fanOpacity > 0.01 ? (
           <div
             style={{
@@ -814,17 +814,33 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
             }}
           >
             {CLUB_BURST_TILES.map((club, idx) => {
-              const rad = (club.angleDeg * Math.PI) / 180;
-              const burstT = interpolate(frame, [112 + idx * 2, 152], [0, 1], {
+              const burstT = interpolate(frame, [112 + idx * 1.5, 168], [0, 1], {
                 extrapolateLeft: 'clamp',
                 extrapolateRight: 'clamp',
                 easing: EXPO_OUT,
               });
-              const rNow = interpolate(burstT, [0, 1], [18, club.radius]);
-              const bx = Math.cos(rad) * rNow;
-              const by = Math.sin(rad) * (rNow * 0.58);
-              const bz = club.z * burstT;
-              const tileScale = interpolate(burstT, [0, 1], [0.28, 1]);
+              const baseAngleRad = (idx / CLUB_BURST_TILES.length) * Math.PI * 2;
+              const liveAngle = baseAngleRad + timeSec * 0.68;
+              const rx = interpolate(burstT, [0, 1], [180, 740], {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+              });
+              const ry = interpolate(burstT, [0, 1], [68, 225], {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+              });
+              const rz = interpolate(burstT, [0, 1], [80, 320], {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+              });
+              const bx = Math.cos(liveAngle) * rx;
+              const by = 28 + Math.sin(liveAngle) * ry;
+              const bz = Math.sin(liveAngle) * rz;
+              const depthNorm = (Math.sin(liveAngle) + 1) * 0.5;
+              const tileScale = interpolate(burstT, [0, 1], [0.42, 0.72 + depthNorm * 0.34], {
+                extrapolateLeft: 'clamp',
+                extrapolateRight: 'clamp',
+              });
 
               return (
                 <div
@@ -834,7 +850,7 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
                     left: '50%',
                     top: '50%',
                     marginLeft: -72,
-                    marginTop: -28,
+                    marginTop: -24,
                     padding: '9px 14px 9px 10px',
                     borderRadius: 16,
                     backgroundColor: '#FFFFFF',
@@ -843,14 +859,14 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 10,
-                    opacity: fanOpacity,
+                    opacity: fanOpacity * (0.64 + depthNorm * 0.36),
                     transform: `translate3d(${bx.toFixed(1)}px, ${by.toFixed(1)}px, ${bz.toFixed(1)}px) scale(${tileScale.toFixed(4)})`,
                   }}
                 >
                   <div
                     style={{
-                      width: 38,
-                      height: 38,
+                      width: 36,
+                      height: 36,
                       borderRadius: 11,
                       background: `linear-gradient(145deg, ${club.color} 0%, ${club.dark} 100%)`,
                       display: 'flex',
