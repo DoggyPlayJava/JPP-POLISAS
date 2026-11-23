@@ -1196,7 +1196,7 @@ const PortalZoomMorphPresentation: React.FC<
       if (isSettled) {
         return { width: '100%', height: '100%' };
       }
-      const enterScale = interpolate(s, [0, 1], [0.78, 1]);
+      const enterScale = interpolate(s, [0, 1], [1.14, 1]);
       return {
         width: '100%',
         height: '100%',
