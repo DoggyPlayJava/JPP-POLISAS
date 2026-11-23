@@ -386,6 +386,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
         moduleCategory="NAVIGASI & AKADEMIK"
         moduleName="PolyMaps"
         tagline="Navigasi 3D & Jadual Kuliah Masa Nyata"
+        morphMode="compass-drop-to-map"
         accentColor={LAUNCH_MODULE_THEMES.polymaps.primary}
         darkColor={LAUNCH_MODULE_THEMES.polymaps.dark}
         softColor={LAUNCH_MODULE_THEMES.polymaps.soft}

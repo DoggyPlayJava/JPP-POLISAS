@@ -19,7 +19,7 @@ import {
   ShieldCheck,
   ShoppingBag,
   Sparkles,
-  Tag,
+  Star,
   UtensilsCrossed,
   Zap,
 } from 'lucide-react';
@@ -60,7 +60,8 @@ type MenuProductSpec = {
   readonly tag: string;
   readonly vendor: string;
   readonly prepMins: number;
-  readonly icon: 'food' | 'bag' | 'tag';
+  readonly rating: string;
+  readonly reviews: number;
   readonly clickFrame: number;
   readonly flyStartFrame: number;
   readonly baseX: number;
@@ -88,13 +89,14 @@ const O = MODULE_CONTENT_ENTER_OFFSET; // 132f bumper handoff
 const MENU_PRODUCTS: readonly MenuProductSpec[] = [
   {
     id: 'chicken-popcorn',
-    title: 'Chicken Popcorn',
-    desc: 'Sos Keju & Lada Hitam · Panas Rangup',
+    title: 'Chicken Popcorn Cheese',
+    desc: 'Popcorn rangup & lelehan sos keju pedas',
     priceRm: 9,
     tag: 'PALING LARIS',
     vendor: 'Quadra H Bistro',
     prepMins: 5,
-    icon: 'food',
+    rating: '4.9',
+    reviews: 142,
     clickFrame: O + 56,
     flyStartFrame: O + 58,
     baseX: 16,
@@ -107,13 +109,14 @@ const MENU_PRODUCTS: readonly MenuProductSpec[] = [
   },
   {
     id: 'loaded-fries',
-    title: 'Loaded Fries',
-    desc: 'Kentang Rangup Sos Keju Istimewa',
+    title: 'Loaded Crinkle Fries',
+    desc: 'Kentang keju nacho, herba & serbuk cili',
     priceRm: 6,
-    tag: 'TERHANGAT',
+    tag: 'SIAP 4 MIN',
     vendor: 'Kafeteria Blok D',
     prepMins: 4,
-    icon: 'bag',
+    rating: '4.8',
+    reviews: 96,
     clickFrame: O + 92,
     flyStartFrame: O + 94,
     baseX: 462,
@@ -126,13 +129,14 @@ const MENU_PRODUCTS: readonly MenuProductSpec[] = [
   },
   {
     id: 'lanyard-jpp',
-    title: 'Lanyard Rasmi JPP',
-    desc: 'Edisi Mahasiswa POLISAS 2026',
+    title: 'Set Lanyard Rasmi JPP',
+    desc: 'Tenun Teal-Emas POLISAS + pemegang ID',
     priceRm: 12,
-    tag: 'MERCH RASMI',
+    tag: 'EDISI 2026/2027',
     vendor: 'Kiosk Kelab EKPP',
     prepMins: 2,
-    icon: 'tag',
+    rating: '5.0',
+    reviews: 210,
     clickFrame: O + 128,
     flyStartFrame: O + 130,
     baseX: 826,
@@ -163,15 +167,260 @@ const MENU_CURSOR_KEYFRAMES: readonly GhostCursorKeyframe[] = [
   { frame: O + 146, x: 1080, y: 536 },
 ];
 
-const renderProductIcon = (icon: MenuProductSpec['icon'], size: number, color: string) => {
-  switch (icon) {
-    case 'food':
-      return <UtensilsCrossed size={size} color={color} strokeWidth={2.2} />;
-    case 'bag':
-      return <ShoppingBag size={size} color={color} strokeWidth={2.2} />;
-    case 'tag':
-      return <Tag size={size} color={color} strokeWidth={2.2} />;
-  }
+const CHICKEN_BITES = [
+  { cx: 124, cy: 96, r: 19, fill: '#D97706' },
+  { cx: 156, cy: 86, r: 22, fill: '#F59E0B' },
+  { cx: 192, cy: 95, r: 20, fill: '#B45309' },
+  { cx: 138, cy: 112, r: 18, fill: '#FBBF24' },
+  { cx: 174, cy: 108, r: 21, fill: '#D97706' },
+  { cx: 206, cy: 114, r: 17, fill: '#F59E0B' },
+  { cx: 152, cy: 70, r: 15, fill: '#FBBF24' },
+  { cx: 184, cy: 73, r: 16, fill: '#D97706' },
+] as const;
+
+const renderMenuIllustration = (
+  id: string,
+  vendor: string,
+  isHero: boolean,
+  rating: string,
+  reviews: number,
+  timeSec: number,
+) => {
+  const artHeight = isHero ? 214 : 172;
+  const steamDrift = Math.sin(timeSec * 2.4) * 3.5;
+
+  return (
+    <div
+      style={{
+        position: 'relative',
+        flex: 1,
+        minHeight: artHeight,
+        borderRadius: 20,
+        overflow: 'hidden',
+        border: `1.5px solid ${isHero ? AMBER_BORDER : LAUNCH_PALETTE.TERTIARY}`,
+        background:
+          id === 'chicken-popcorn'
+            ? 'linear-gradient(155deg, #FEF3C7 0%, #FDE68A 55%, #FED7AA 100%)'
+            : id === 'loaded-fries'
+              ? 'linear-gradient(155deg, #FFFBEB 0%, #FEF08A 56%, #CCFBF1 100%)'
+              : 'linear-gradient(155deg, #EBF7F4 0%, #CCFBF1 56%, #FEF3C7 100%)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      {id === 'chicken-popcorn' ? (
+        <svg width="100%" height={artHeight} viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+          <defs>
+            <radialGradient id="glowPop" cx="50%" cy="48%" r="52%">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.82" />
+              <stop offset="100%" stopColor="#FDE68A" stopOpacity="0" />
+            </radialGradient>
+            <linearGradient id="cupBody" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#0D9488" />
+              <stop offset="100%" stopColor="#061714" />
+            </linearGradient>
+          </defs>
+          <circle cx="164" cy="108" r="88" fill="url(#glowPop)" />
+          {/* Gentle Steam Ribbons */}
+          <path
+            d={`M 134 ${46 + steamDrift} Q 124 30 138 18`}
+            fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            opacity="0.72"
+          />
+          <path
+            d={`M 176 ${42 - steamDrift} Q 188 26 172 14`}
+            fill="none"
+            stroke="#FFFFFF"
+            strokeWidth="3.5"
+            strokeLinecap="round"
+            opacity="0.68"
+          />
+          {/* Crispy Chicken Popcorn Pile */}
+          {CHICKEN_BITES.map((bite, bIdx) => (
+            <g key={bIdx}>
+              <circle cx={bite.cx} cy={bite.cy} r={bite.r} fill={bite.fill} />
+              <circle cx={bite.cx - 4} cy={bite.cy - 4} r={bite.r * 0.45} fill="#FEF08A" opacity="0.45" />
+            </g>
+          ))}
+          {/* Melted Nacho Cheese Drizzle */}
+          <path
+            d="M 118 92 Q 140 112 158 96 Q 178 118 208 94 Q 188 80 162 84 Q 138 78 118 92 Z"
+            fill="#FACC15"
+            opacity="0.92"
+          />
+          <path
+            d="M 136 92 C 138 110, 146 116, 146 124 M 182 95 C 182 114, 174 118, 176 126"
+            fill="none"
+            stroke="#FDE047"
+            strokeWidth="4.5"
+            strokeLinecap="round"
+          />
+          {/* Branded Bistro Takeaway Cup */}
+          <polygon points="102,110 222,110 202,188 122,188" fill="url(#cupBody)" />
+          <polygon points="108,136 216,136 211,152 113,152" fill="#F59E0B" />
+          <text
+            x="162"
+            y="148"
+            textAnchor="middle"
+            fill="#061714"
+            fontFamily={LAUNCH_FONTS.MONO}
+            fontSize="10"
+            fontWeight="900"
+            letterSpacing="0.14em"
+          >
+            QUADRA H
+          </text>
+          <ellipse cx="162" cy="188" rx="46" ry="7" fill="#061714" opacity="0.18" />
+        </svg>
+      ) : id === 'loaded-fries' ? (
+        <svg width="100%" height={artHeight} viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+          <circle cx="160" cy="108" r="84" fill="#FFFFFF" opacity="0.52" />
+          {/* Golden Crinkle Fries Bundles */}
+          {[
+            { x: 96, y: 66, rot: -16, fill: '#F59E0B' },
+            { x: 114, y: 54, rot: -8, fill: '#FBBF24' },
+            { x: 134, y: 48, rot: -2, fill: '#D97706' },
+            { x: 156, y: 46, rot: 4, fill: '#FACC15' },
+            { x: 178, y: 52, rot: 11, fill: '#F59E0B' },
+            { x: 196, y: 60, rot: 18, fill: '#FBBF24' },
+            { x: 124, y: 74, rot: -12, fill: '#FDE047' },
+            { x: 168, y: 72, rot: 9, fill: '#FBBF24' },
+          ].map((fry, fIdx) => (
+            <rect
+              key={fIdx}
+              x={fry.x}
+              y={fry.y}
+              width="14"
+              height="68"
+              rx="4"
+              fill={fry.fill}
+              stroke="#B45309"
+              strokeWidth="1"
+              transform={`rotate(${fry.rot} ${fry.x + 7} ${fry.y + 34})`}
+            />
+          ))}
+          {/* Thick Melted Cheese Wave + Parsley & Chili Specks */}
+          <path
+            d="M 102 98 Q 134 114 162 96 Q 190 116 220 98 L 210 124 L 112 124 Z"
+            fill="#FACC15"
+            opacity="0.95"
+          />
+          <circle cx="136" cy="96" r="3" fill="#E11D48" />
+          <circle cx="176" cy="94" r="3" fill="#E11D48" />
+          <circle cx="156" cy="104" r="3.2" fill="#059669" />
+          <circle cx="192" cy="103" r="2.8" fill="#059669" />
+          {/* Dark Teal Cafeteria Boat Tray */}
+          <polygon points="82,118 238,118 214,174 106,174" fill="#0B2420" />
+          <polygon points="94,126 226,126 218,136 102,136" fill="#14B8A6" />
+          <ellipse cx="160" cy="178" rx="60" ry="7" fill="#061714" opacity="0.16" />
+        </svg>
+      ) : (
+        <svg width="100%" height={artHeight} viewBox="0 0 320 200" preserveAspectRatio="xMidYMid slice">
+          <circle cx="160" cy="104" r="82" fill="#FFFFFF" opacity="0.58" />
+          {/* Woven POLISAS Teal & Gold Lanyard Ribbon */}
+          <path
+            d="M 88 8 L 152 84 L 172 84 L 234 8"
+            fill="none"
+            stroke="#0D9488"
+            strokeWidth="20"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M 98 8 L 160 84 L 224 8"
+            fill="none"
+            stroke="#F59E0B"
+            strokeWidth="5"
+            strokeDasharray="6 6"
+          />
+          {/* Steel Clasp Hook */}
+          <rect x="150" y="76" width="20" height="16" rx="5" fill="#475569" />
+          <circle cx="160" cy="94" r="5" fill="#94A3B8" />
+          {/* Transparent Frosted Matric ID Card Holder */}
+          <rect
+            x="104"
+            y="98"
+            width="112"
+            height="86"
+            rx="10"
+            fill="#FFFFFF"
+            stroke="#0D9488"
+            strokeWidth="2.5"
+          />
+          <rect x="104" y="98" width="112" height="22" rx="8" fill="#0B2420" />
+          <text
+            x="160"
+            y="113"
+            textAnchor="middle"
+            fill="#5EEAD4"
+            fontFamily={LAUNCH_FONTS.MONO}
+            fontSize="8.5"
+            fontWeight="900"
+            letterSpacing="0.12em"
+          >
+            JPP POLISAS • 2026
+          </text>
+          <rect x="116" y="130" width="28" height="34" rx="5" fill="#CCFBF1" stroke="#14B8A6" strokeWidth="1.5" />
+          <circle cx="130" cy="142" r="5" fill="#0D9488" />
+          <path d="M 121 158 Q 130 148 139 158" fill="#0D9488" />
+          <rect x="152" y="132" width="52" height="7" rx="3.5" fill="#0B2420" opacity="0.85" />
+          <rect x="152" y="144" width="38" height="6" rx="3" fill="#3B635C" opacity="0.55" />
+          <rect x="152" y="156" width="44" height="6" rx="3" fill="#F59E0B" opacity="0.85" />
+        </svg>
+      )}
+
+      {/* Floating Top-Right Star Rating Pill */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 10,
+          right: 10,
+          padding: '4px 10px',
+          borderRadius: 999,
+          backgroundColor: 'rgba(255, 255, 255, 0.94)',
+          border: '1px solid rgba(217, 119, 6, 0.28)',
+          boxShadow: '0 6px 14px rgba(6, 23, 20, 0.12)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 4,
+        }}
+      >
+        <Star size={11} fill="#F59E0B" color="#F59E0B" strokeWidth={2.2} />
+        <span
+          style={{
+            fontFamily: LAUNCH_FONTS.MONO,
+            fontSize: 10.5,
+            fontWeight: 900,
+            color: LAUNCH_PALETTE.PRIMARY,
+          }}
+        >
+          {rating} ({reviews})
+        </span>
+      </div>
+
+      {/* Floating Bottom-Left Vendor Name Pill */}
+      <div
+        style={{
+          position: 'absolute',
+          left: 10,
+          bottom: 10,
+          padding: '4px 10px',
+          borderRadius: 999,
+          backgroundColor: 'rgba(6, 23, 20, 0.88)',
+          color: '#FFFFFF',
+          fontFamily: LAUNCH_FONTS.MONO,
+          fontSize: 10,
+          fontWeight: 900,
+          letterSpacing: '0.09em',
+        }}
+      >
+        {vendor.toUpperCase()}
+      </div>
+    </div>
+  );
 };
 
 const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
@@ -273,6 +522,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
         moduleCategory="KAFETERIA & JPP PAY"
         moduleName="PolyMart"
         tagline="Pesan Makanan Kafeteria Tanpa Beratur"
+        morphMode="unbox-carousel-fan"
         accentColor={LAUNCH_MODULE_THEMES.polymart.primary}
         darkColor={LAUNCH_MODULE_THEMES.polymart.dark}
         softColor={LAUNCH_MODULE_THEMES.polymart.soft}
@@ -586,10 +836,30 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                               justifyContent: 'center',
                             }}
                           >
-                            {renderProductIcon(
-                              item.icon,
-                              18,
-                              isAdded ? (isPassReady ? EMERALD_INK : AMBER_INK) : LAUNCH_PALETTE.INK_SOFT,
+                            {item.id === 'chicken-popcorn' ? (
+                              <Flame
+                                size={18}
+                                color={
+                                  isAdded ? (isPassReady ? EMERALD_INK : AMBER_INK) : LAUNCH_PALETTE.INK_SOFT
+                                }
+                                strokeWidth={2.3}
+                              />
+                            ) : item.id === 'loaded-fries' ? (
+                              <UtensilsCrossed
+                                size={18}
+                                color={
+                                  isAdded ? (isPassReady ? EMERALD_INK : AMBER_INK) : LAUNCH_PALETTE.INK_SOFT
+                                }
+                                strokeWidth={2.3}
+                              />
+                            ) : (
+                              <ShoppingBag
+                                size={18}
+                                color={
+                                  isAdded ? (isPassReady ? EMERALD_INK : AMBER_INK) : LAUNCH_PALETTE.INK_SOFT
+                                }
+                                strokeWidth={2.3}
+                              />
                             )}
                           </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -924,48 +1194,15 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                           </span>
                         </div>
 
-                        {/* Stylized Product Showcase Emblem */}
-                        <div
-                          style={{
-                            flex: 1,
-                            borderRadius: 20,
-                            backgroundColor: isHero ? AMBER_SOFT : LAUNCH_PALETTE.BACKGROUND,
-                            border: `1.5px solid ${isHero ? AMBER_BORDER : LAUNCH_PALETTE.TERTIARY}`,
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: 12,
-                            padding: 16,
-                          }}
-                        >
-                          <div
-                            style={{
-                              width: isHero ? 92 : 76,
-                              height: isHero ? 92 : 76,
-                              borderRadius: 24,
-                              backgroundColor: '#FFFFFF',
-                              border: `2px solid ${isHero ? AMBER : EMERALD_BORDER}`,
-                              boxShadow: '0 14px 28px rgba(217, 119, 6, 0.16)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            {renderProductIcon(item.icon, isHero ? 42 : 34, isHero ? AMBER_INK : LAUNCH_PALETTE.PRIMARY)}
-                          </div>
-                          <span
-                            style={{
-                              fontFamily: LAUNCH_FONTS.MONO,
-                              fontSize: 11.5,
-                              fontWeight: 900,
-                              letterSpacing: '0.1em',
-                              color: AMBER_INK,
-                            }}
-                          >
-                            {item.vendor.toUpperCase()}
-                          </span>
-                        </div>
+                        {/* Full-Bleed Culinary & Product Artwork Plate */}
+                        {renderMenuIllustration(
+                          item.id,
+                          item.vendor,
+                          isHero,
+                          item.rating,
+                          item.reviews,
+                          timeSec,
+                        )}
 
                         {/* Product Title & Price */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>

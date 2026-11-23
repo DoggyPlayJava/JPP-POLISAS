@@ -107,7 +107,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
 
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
   const safeClubs = Number.isFinite(clubsCount) ? Math.max(0, Math.round(clubsCount)) : 21;
-  const safeStudents = Number.isFinite(studentsCount) ? Math.max(0, Math.round(studentsCount)) : 1083;
+  const safeStudents = Number.isFinite(studentsCount) ? Math.max(0, Math.round(studentsCount)) : 2841;
   const safeActivities = Number.isFinite(activitiesCount) ? Math.max(0, Math.round(activitiesCount)) : 41;
   const safeProducts = Number.isFinite(productsCount) ? Math.max(0, Math.round(productsCount)) : 277;
   const safeOrders = Number.isFinite(ordersCount) ? Math.max(0, Math.round(ordersCount)) : 344;
@@ -216,7 +216,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
     {
       code: '01 · KOMUNITI',
       tag: '5 JABATAN',
-      label: 'MAHASISWA DAH AKSES',
+      label: 'MAHASISWA BERDAFTAR',
       sub: 'Komuniti Aktif 5 Jabatan',
       target: safeStudents,
       suffix: '+',
@@ -339,7 +339,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
 
             <KineticWords
               as="h2"
-              text={`${safeStudents.toLocaleString('en-US')}+ Siswa POLISAS Sudah Aktif. Giliran Anda.`}
+              text={`${safeStudents.toLocaleString('en-US')}+ Siswa POLISAS Sudah Mendaftar. Giliran Anda.`}
               startFrame={headlineStart}
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
@@ -991,14 +991,14 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
         </div>
       </CameraStage>
 
-      <EditorialFrameMarks chapterCode="08" chapterLabel="KOMUNITI HIDUP • 1,083+ SISWA AKTIF" dark />
+      <EditorialFrameMarks chapterCode="08" chapterLabel="KOMUNITI HIDUP • 2,841+ SISWA BERDAFTAR" dark />
     </>
   );
 };
 
 const impactNumbersSchema = {
   clubsCount: { type: 'number', default: 21, min: 0, max: 500, integer: true, hiddenFromList: false, description: 'Clubs Count' },
-  studentsCount: { type: 'number', default: 1083, min: 0, max: 50000, integer: true, hiddenFromList: false, description: 'Students Count' },
+  studentsCount: { type: 'number', default: 2841, min: 0, max: 50000, integer: true, hiddenFromList: false, description: 'Students Count' },
   activitiesCount: { type: 'number', default: 41, min: 0, max: 5000, integer: true, hiddenFromList: false, description: 'Activities Count' },
   productsCount: { type: 'number', default: 277, min: 0, max: 9999, integer: true, hiddenFromList: false, description: 'Products Count' },
   ordersCount: { type: 'number', default: 344, min: 0, max: 99999, integer: true, hiddenFromList: false, description: 'Orders Count' },

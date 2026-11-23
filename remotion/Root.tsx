@@ -83,7 +83,7 @@ export const RemotionRoot: React.FC = () => {
             stats: {
               clubsCount: 21,
               activitiesCount: 41,
-              studentsCount: 1083,
+              studentsCount: 2841,
               productsCount: 277,
               ordersCount: 344,
             },
@@ -195,7 +195,7 @@ export const RemotionRoot: React.FC = () => {
           height={LAUNCH_HEIGHT}
           defaultProps={{
             clubsCount: 21,
-            studentsCount: 1083,
+            studentsCount: 2841,
             activitiesCount: 41,
             productsCount: 277,
             ordersCount: 344,
@@ -212,7 +212,7 @@ export const RemotionRoot: React.FC = () => {
             headlinePrimary: 'Imbas Sekarang. Mulakan Pengalaman Kampus Anda.',
             headlineItalic: 'Satu Kampus. Satu SuperApp Mahasiswa POLISAS.',
             portalUrl: 'https://jpp.polisas.edu.my',
-            studentsCount: 1083,
+            studentsCount: 2841,
           }}
         />
       </Folder>
