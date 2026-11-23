@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { readdirSync, readFileSync, statSync } from 'fs';
+import { join, relative } from 'path';
 import { DEFAULT_CAMPUS_STATS, LANDING_STATS_CACHE_KEY } from '@/hooks/useCampusStats';
 import {
   LaunchShowcaseSchema,
@@ -296,5 +296,126 @@ describe('Launch Cinema Bespoke Motion-Graphic Transitions & Overlays', () => {
     expect(cameraSource).toContain('exitZoomDelta');
     expect(cameraSource).toContain('Easing.bezier(0.33, 0.08, 0.67, 0.92)');
     expect(cameraSource).not.toMatch(/HtmlInCanvas|Math\.random|@keyframes|\banimate-|transition\s*:/i);
+  });
+});
+
+const LAUNCH_ROOT_DIR = join(process.cwd(), 'remotion', 'launch');
+
+function walkLaunchTsFiles(dir: string): string[] {
+  return readdirSync(dir).flatMap((entry) => {
+    const fullPath = join(dir, entry);
+    if (statSync(fullPath).isDirectory()) {
+      return walkLaunchTsFiles(fullPath);
+    }
+    return entry.endsWith('.ts') || entry.endsWith('.tsx') ? [fullPath] : [];
+  });
+}
+
+describe('v4 Zero Static UI Screenshot Policy', () => {
+  const launchFiles = walkLaunchTsFiles(LAUNCH_ROOT_DIR);
+
+  it('scans all TypeScript modules under remotion/launch/', () => {
+    expect(launchFiles.length).toBeGreaterThanOrEqual(20);
+  });
+
+  it('contains ZERO references to static UI screenshots across every file under remotion/launch/', () => {
+    const forbiddenScreenshotPatterns: readonly RegExp[] = [
+      /GAMBAR\//i,
+      /Portal View/,
+      /Polymart View/,
+      /Inside Polymart/,
+      /Foodbank Admin Preview/,
+      /Kelab Preview/,
+      /Event Management System \(EMS\) Preview/,
+      /Automated E-akademik/,
+      /Integrated Jadual Akademik/,
+      /Polymap View/,
+      /Aduan Kebajikan Status/,
+    ];
+
+    for (const filePath of launchFiles) {
+      const relPath = relative(LAUNCH_ROOT_DIR, filePath).replace(/\\/g, '/');
+      const content = readFileSync(filePath, 'utf8');
+      for (const pattern of forbiddenScreenshotPatterns) {
+        expect(content, `${relPath} matched forbidden screenshot pattern ${pattern}`).not.toMatch(
+          pattern,
+        );
+      }
+    }
+  });
+
+  it('contains ZERO HtmlInCanvas, deprecated transition strings, or Math.random( across remotion/launch/', () => {
+    const forbiddenRuntimePatterns: readonly RegExp[] = [
+      /<HtmlInCanvas/,
+      /HtmlInCanvasMotionBlur/,
+      /blur-slide/,
+      /zoom-in-out/,
+      /film-burn/,
+      /Math\.random\(/,
+    ];
+
+    for (const filePath of launchFiles) {
+      const relPath = relative(LAUNCH_ROOT_DIR, filePath).replace(/\\/g, '/');
+      const content = readFileSync(filePath, 'utf8');
+      for (const pattern of forbiddenRuntimePatterns) {
+        expect(content, `${relPath} matched forbidden pattern ${pattern}`).not.toMatch(pattern);
+      }
+    }
+  });
+
+  it('allows only jpp-logo.png in staticFile(...) calls inside remotion/launch/ (plus dynamic bgmSrc in JppLaunchCinema.tsx)', () => {
+    const staticFileRegex = /staticFile\s*\(\s*([^)]+?)\s*\)/g;
+    const quotedLiteralRegex = /^(?:'([^']*)'|"([^"]*)"|`([^`]*)`)$/;
+
+    for (const filePath of launchFiles) {
+      const relPath = relative(LAUNCH_ROOT_DIR, filePath).replace(/\\/g, '/');
+      const content = readFileSync(filePath, 'utf8');
+      const matches = [...content.matchAll(staticFileRegex)];
+
+      for (const match of matches) {
+        const argExpr = match[1].trim();
+        const literalMatch = argExpr.match(quotedLiteralRegex);
+        if (literalMatch) {
+          const assetName = literalMatch[1] ?? literalMatch[2] ?? literalMatch[3] ?? '';
+          expect(assetName, `${relPath} used disallowed staticFile('${assetName}')`).toBe(
+            'jpp-logo.png',
+          );
+        } else {
+          expect(relPath, `${relPath} used non-literal staticFile(${argExpr})`).toBe(
+            'JppLaunchCinema.tsx',
+          );
+          expect(argExpr).toMatch(/^(?:trimmedBgm|resolvedBgmSrc|bgmSrc)$/);
+        }
+      }
+    }
+  });
+
+  it('wires portalZoomMorph, chapter 03 alignment, Scene 2 checkmark polish, and Scene 7 6-month bar chart', () => {
+    const cinemaSource = readFileSync(join(LAUNCH_ROOT_DIR, 'JppLaunchCinema.tsx'), 'utf8');
+    const rootSource = readFileSync(join(process.cwd(), 'remotion', 'Root.tsx'), 'utf8');
+    const polymapsSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'PolyMapsCampusScene.tsx'),
+      'utf8',
+    );
+    const impactSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'ImpactNumbersScene.tsx'),
+      'utf8',
+    );
+
+    expect(cinemaSource).toContain('portalZoomMorph({');
+    expect(cinemaSource).toContain('PORTAL_POLYMAPS_ORIGIN.xPercent');
+    expect(cinemaSource).toContain('PORTAL_POLYMAPS_ORIGIN.yPercent');
+    expect(cinemaSource).toContain('chapterLabel="EKONOMI & KEDIAMAN"');
+    expect(cinemaSource).toContain('headline="Niaga & Kediaman Dalam Genggaman."');
+
+    expect(rootSource).toContain("headline: 'Niaga & Kediaman Dalam Genggaman.'");
+
+    expect(polymapsSource).toContain('<span>TIBA DI KELAS</span>');
+    expect(polymapsSource).not.toContain('TIBA DI KELAS ✓');
+
+    expect(impactSource).toContain('TREND E-KEUSAHAWANAN · 6 BULAN');
+    for (const month of ['OKT', 'NOV', 'DIS', 'JAN', 'FEB', 'MAC']) {
+      expect(impactSource).toContain(`'${month}'`);
+    }
   });
 });

@@ -16,11 +16,11 @@ import {
   WarmLightSweepOverlay,
   depthLiftMatch,
   editorialSplitCurtain,
-  kineticCameraPush,
   orbitalIrisMatch,
+  portalZoomMorph,
   swissLouversWipe,
 } from './motion/transitions';
-import { OpeningHeroScene } from './scenes/OpeningHeroScene';
+import { OpeningHeroScene, PORTAL_POLYMAPS_ORIGIN } from './scenes/OpeningHeroScene';
 import { PolyMapsCampusScene } from './scenes/PolyMapsCampusScene';
 import { PolyMartCommerceScene } from './scenes/PolyMartCommerceScene';
 import { PolySuaraVoiceScene } from './scenes/PolySuaraVoiceScene';
@@ -95,7 +95,10 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Transition
-            presentation={kineticCameraPush({ direction: 'from-right' })}
+            presentation={portalZoomMorph({
+              originXPercent: PORTAL_POLYMAPS_ORIGIN.xPercent,
+              originYPercent: PORTAL_POLYMAPS_ORIGIN.yPercent,
+            })}
             timing={linearTiming({ durationInFrames: LAUNCH_TRANSITION_FRAMES })}
           />
 
@@ -110,7 +113,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
           </TransitionSeries.Sequence>
 
           <TransitionSeries.Overlay durationInFrames={LAUNCH_OVERLAY_FRAMES} premountFor={fps}>
-            <EditorialShutterOverlay chapterCode="03" chapterLabel="EKONOMI KAMPUS" />
+            <EditorialShutterOverlay chapterCode="03" chapterLabel="EKONOMI & KEDIAMAN" />
           </TransitionSeries.Overlay>
 
           <TransitionSeries.Sequence name="03 PolyMart Commerce" durationInFrames={396} premountFor={fps}>
@@ -118,7 +121,7 @@ export const JppLaunchCinema: React.FC<LaunchShowcaseProps> = ({
               name="PolyMart Commerce"
               productsCount={stats.productsCount}
               ordersCount={stats.ordersCount}
-              headline="Niaga Kampus Dalam Genggaman."
+              headline="Niaga & Kediaman Dalam Genggaman."
             />
           </TransitionSeries.Sequence>
 

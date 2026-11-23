@@ -39,6 +39,23 @@ const TICKER_MODULES: readonly string[] = [
 
 const TICKER_REPEATED_HALF: readonly string[] = [...TICKER_MODULES, ...TICKER_MODULES];
 
+type MonthlyTrendSpec = {
+  readonly month: string;
+  readonly pct: number;
+  readonly isPeak?: boolean;
+};
+
+const EKEUSAHAWANAN_6M_TREND: readonly MonthlyTrendSpec[] = [
+  { month: 'OKT', pct: 34 },
+  { month: 'NOV', pct: 48 },
+  { month: 'DIS', pct: 62 },
+  { month: 'JAN', pct: 74 },
+  { month: 'FEB', pct: 88 },
+  { month: 'MAC', pct: 100, isPeak: true },
+];
+
+const BAR_TRACK_HEIGHT_PX = 72;
+
 type MetricCardSpec = {
   readonly code: string;
   readonly tag: string;
@@ -110,6 +127,28 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
   const tickerPhase = (timeSec / tickerCycleSec) % 1;
   const tickerShiftPercent = -(tickerPhase * 50);
 
+  // Beat 2b (1.55..3.2s): Live animated e-Keusahawanan 6-month bar chart telemetry strip
+  const chartStart = Math.round(1.55 * fps);
+  const chartElapsed = frame - chartStart;
+  const chartSpring =
+    chartElapsed >= 0
+      ? spring({
+          frame: chartElapsed,
+          fps,
+          config: { damping: 180, stiffness: 210, mass: 0.9 },
+        })
+      : 0;
+  const chartOpacity =
+    chartElapsed >= 0
+      ? interpolate(chartElapsed, [0, Math.max(6, Math.round(0.24 * fps))], [0, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        })
+      : 0;
+  const chartTranslateY = (1 - chartSpring) * 24;
+  const barBaseStart = Math.round(1.85 * fps);
+  const barStagger = Math.max(2, Math.round((4 / 60) * fps));
+
   // Beat 3 (4.0..6.0s): Terracotta (#C96F4F) transaction pill lifts with sweeping translucent sheen highlight
   const beat3Start = Math.round(4.00 * fps);
   const pillElapsed = frame - beat3Start;
@@ -155,7 +194,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
     easing: SHEEN_EASE,
   });
   const sheenActive = sheenProgress > 0.001 && sheenProgress < 0.999;
-  const sheenX = interpolate(sheenProgress, [0, 1], [-240, 1120]);
+  const sheenX = interpolate(sheenProgress, [0, 1], [-220, 960]);
   const liveDotScale = 0.84 + Math.sin(timeSec * 5.8) * 0.18;
 
   const metrics: readonly MetricCardSpec[] = [
@@ -230,7 +269,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
           style={{
             position: 'absolute',
             inset: 0,
-            padding: '84px 88px 80px',
+            padding: '74px 88px 72px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -293,8 +332,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
               accentColor={LAUNCH_PALETTE.TERTIARY}
               align="center"
               style={{
-                margin: '16px 0 0',
-                fontSize: 66,
+                margin: '14px 0 0',
+                fontSize: 60,
                 fontWeight: 900,
                 letterSpacing: '-0.03em',
                 lineHeight: 1.06,
@@ -302,7 +341,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
               }}
             />
 
-            <div style={{ marginTop: 14, width: 380, height: 10 }}>
+            <div style={{ marginTop: 10, width: 380, height: 10 }}>
               <EvolvingPath
                 d="M 10 5 L 370 5"
                 width={380}
@@ -324,11 +363,11 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
             name="Metrics Grid"
             premountFor={fps}
             style={{
-              marginTop: 32,
+              marginTop: 22,
               width: '100%',
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
-              gap: 28,
+              gap: 24,
               flexShrink: 0,
             }}
           >
@@ -380,8 +419,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                     border: `1.5px solid ${
                       ringSettled ? 'rgba(217, 201, 178, 0.42)' : 'rgba(217, 201, 178, 0.26)'
                     }`,
-                    borderRadius: 28,
-                    padding: '30px 26px 32px',
+                    borderRadius: 26,
+                    padding: '22px 24px 24px',
                     boxShadow: '0 24px 52px rgba(31, 39, 32, 0.34)',
                     display: 'flex',
                     flexDirection: 'column',
@@ -424,19 +463,19 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   <div
                     style={{
                       position: 'relative',
-                      width: 122,
-                      height: 122,
-                      marginTop: 14,
+                      width: 110,
+                      height: 110,
+                      marginTop: 10,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                     }}
                   >
                     <Circle
-                      radius={52}
+                      radius={47}
                       fill="none"
                       stroke="rgba(217, 201, 178, 0.16)"
-                      strokeWidth={7}
+                      strokeWidth={6.5}
                       premountFor={fps}
                       showInTimeline={false}
                       style={{
@@ -449,12 +488,12 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
 
                     {clampedArc > 0.001 ? (
                       <Pie
-                        radius={52}
+                        radius={47}
                         progress={clampedArc}
                         closePath={false}
                         fill="none"
                         stroke={m.ringColor}
-                        strokeWidth={7}
+                        strokeWidth={6.5}
                         strokeLinecap="round"
                         premountFor={fps}
                         showInTimeline={false}
@@ -469,8 +508,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
 
                     <div
                       style={{
-                        width: 66,
-                        height: 66,
+                        width: 60,
+                        height: 60,
                         borderRadius: 999,
                         backgroundColor: LAUNCH_PALETTE.PRIMARY,
                         border: '1.5px solid rgba(217, 201, 178, 0.36)',
@@ -487,9 +526,9 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   {/* Tabular Value Counter */}
                   <div
                     style={{
-                      marginTop: 18,
+                      marginTop: 12,
                       fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 66,
+                      fontSize: 58,
                       fontWeight: 900,
                       lineHeight: 1,
                       color: LAUNCH_PALETTE.BACKGROUND,
@@ -501,8 +540,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
 
                   <div
                     style={{
-                      marginTop: 12,
-                      fontSize: 18,
+                      marginTop: 10,
+                      fontSize: 17,
                       fontWeight: 800,
                       letterSpacing: '0.08em',
                       textTransform: 'uppercase',
@@ -515,8 +554,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   {/* High-contrast Warm Sand (#D9C9B2) sublabel for crisp projector readability */}
                   <div
                     style={{
-                      marginTop: 6,
-                      fontSize: 15.5,
+                      marginTop: 5,
+                      fontSize: 15,
                       fontWeight: 600,
                       color: LAUNCH_PALETTE.TERTIARY,
                     }}
@@ -528,13 +567,316 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
             })}
           </Interactive.Div>
 
+          {/* Beat 2b & Beat 3: Live e-Keusahawanan 6-Month Bar Chart Strip + Terracotta Transaction Pill */}
+          <div
+            style={{
+              marginTop: 22,
+              width: '100%',
+              display: 'grid',
+              gridTemplateColumns: '1.05fr 0.95fr',
+              gap: 24,
+              alignItems: 'center',
+              flexShrink: 0,
+            }}
+          >
+            {/* Left Half: Dark-Surface e-Keusahawanan 6-Month Telemetry Strip */}
+            <Interactive.Div
+              name="e-Keusahawanan Trend Chart"
+              premountFor={fps}
+              style={{
+                backgroundColor: 'rgba(31, 39, 32, 0.55)',
+                border: '1px solid rgba(217, 201, 178, 0.16)',
+                borderRadius: 20,
+                padding: '15px 26px 14px',
+                opacity: chartOpacity,
+                visibility: chartOpacity <= 0.001 ? 'hidden' : 'visible',
+                willChange: 'transform, opacity',
+                transform: `translate3d(0px, ${chartTranslateY.toFixed(2)}px, 0px)`,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 12,
+                }}
+              >
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 8,
+                    fontFamily: LAUNCH_FONTS.MONO,
+                    fontSize: 12,
+                    fontWeight: 800,
+                    letterSpacing: '0.14em',
+                    color: LAUNCH_PALETTE.TERTIARY,
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: 2,
+                      backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                      display: 'inline-block',
+                    }}
+                  />
+                  <span>TREND E-KEUSAHAWANAN · 6 BULAN</span>
+                </div>
+
+                <span
+                  style={{
+                    fontFamily: LAUNCH_FONTS.MONO,
+                    fontSize: 10.5,
+                    fontWeight: 800,
+                    letterSpacing: '0.12em',
+                    color: LAUNCH_PALETTE.ACCENT,
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  MOMENTUM JUALAN SISWA
+                </span>
+              </div>
+
+              <div
+                style={{
+                  marginTop: 10,
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(6, 1fr)',
+                  gap: 14,
+                  alignItems: 'end',
+                }}
+              >
+                {EKEUSAHAWANAN_6M_TREND.map((item, idx) => {
+                  const barStart = barBaseStart + idx * barStagger;
+                  const barElapsed = frame - barStart;
+                  const barSpring =
+                    barElapsed >= 0
+                      ? spring({
+                          frame: barElapsed,
+                          fps,
+                          config: { damping: 165, stiffness: 215, mass: 0.85 },
+                        })
+                      : 0;
+                  const barOpacity =
+                    barElapsed >= 0
+                      ? interpolate(barElapsed, [0, 4], [0, 1], {
+                          extrapolateLeft: 'clamp',
+                          extrapolateRight: 'clamp',
+                        })
+                      : 0;
+                  const barTargetPx = Math.round((item.pct / 100) * BAR_TRACK_HEIGHT_PX);
+                  const barScaleY = Math.max(0.001, barSpring);
+                  const isPeak = Boolean(item.isPeak);
+
+                  return (
+                    <div
+                      key={item.month}
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: 22,
+                          marginBottom: 4,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          opacity: barOpacity,
+                        }}
+                      >
+                        {isPeak ? (
+                          <span
+                            style={{
+                              padding: '2px 8px',
+                              borderRadius: 999,
+                              backgroundColor: 'rgba(201, 111, 79, 0.24)',
+                              border: '1px solid rgba(201, 111, 79, 0.65)',
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 11,
+                              fontWeight: 900,
+                              color: LAUNCH_PALETTE.BACKGROUND,
+                              fontVariantNumeric: 'tabular-nums',
+                              whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {liveOrders.toLocaleString('en-US')}+
+                          </span>
+                        ) : (
+                          <span
+                            style={{
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 10.5,
+                              fontWeight: 700,
+                              color: 'rgba(217, 201, 178, 0.58)',
+                              fontVariantNumeric: 'tabular-nums',
+                            }}
+                          >
+                            {item.pct}%
+                          </span>
+                        )}
+                      </div>
+
+                      <div
+                        style={{
+                          width: '100%',
+                          height: BAR_TRACK_HEIGHT_PX,
+                          display: 'flex',
+                          alignItems: 'flex-end',
+                          justifyContent: 'center',
+                          borderBottom: '1px solid rgba(217, 201, 178, 0.16)',
+                          paddingBottom: 2,
+                        }}
+                      >
+                        <div
+                          style={{
+                            width: '70%',
+                            maxWidth: 66,
+                            height: BAR_TRACK_HEIGHT_PX,
+                            borderRadius: 8,
+                            backgroundColor: 'rgba(217, 201, 178, 0.06)',
+                            display: 'flex',
+                            alignItems: 'flex-end',
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: '100%',
+                              height: barTargetPx,
+                              borderRadius: 7,
+                              backgroundColor: isPeak
+                                ? LAUNCH_PALETTE.ACCENT
+                                : LAUNCH_PALETTE.SECONDARY,
+                              border: isPeak
+                                ? '1px solid rgba(248, 246, 238, 0.4)'
+                                : '1px solid rgba(217, 201, 178, 0.2)',
+                              boxShadow: isPeak
+                                ? '0 0 22px rgba(201, 111, 79, 0.52), 0 4px 12px rgba(201, 111, 79, 0.32)'
+                                : 'none',
+                              opacity: barOpacity,
+                              transformOrigin: '50% 100%',
+                              willChange: 'transform, opacity',
+                              transform: `scaleY(${barScaleY.toFixed(4)})`,
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <span
+                        style={{
+                          marginTop: 7,
+                          fontFamily: LAUNCH_FONTS.MONO,
+                          fontSize: 11.5,
+                          fontWeight: isPeak ? 900 : 700,
+                          letterSpacing: '0.12em',
+                          color: isPeak ? LAUNCH_PALETTE.BACKGROUND : LAUNCH_PALETTE.TERTIARY,
+                        }}
+                      >
+                        {item.month}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </Interactive.Div>
+
+            {/* Right Half: Beat 3 Terracotta (#C96F4F) Transaction Pill Lifting with Diagonal Sheen Sweep */}
+            <Interactive.Div
+              name="PolyMart Transaction Pill"
+              premountFor={fps}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: beat3Opacity,
+                visibility: beat3Opacity <= 0.001 ? 'hidden' : 'visible',
+                willChange: 'transform, opacity',
+                transform: `translate3d(0px, ${beat3TranslateY.toFixed(2)}px, 0px) scale(${beat3Scale.toFixed(4)})`,
+                flexShrink: 0,
+              }}
+            >
+              <div
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 12,
+                  padding: '22px 26px',
+                  borderRadius: 999,
+                  backgroundColor: LAUNCH_PALETTE.ACCENT,
+                  border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
+                  boxShadow: '0 22px 48px rgba(31, 39, 32, 0.36)',
+                  overflow: 'hidden',
+                }}
+              >
+                {sheenActive ? (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '-50%',
+                      left: 0,
+                      width: 170,
+                      height: '200%',
+                      background:
+                        'linear-gradient(90deg, rgba(248, 246, 238, 0) 0%, rgba(248, 246, 238, 0.38) 50%, rgba(248, 246, 238, 0) 100%)',
+                      transform: `translate3d(${sheenX.toFixed(2)}px, 0px, 0px) rotate(22deg)`,
+                      pointerEvents: 'none',
+                      zIndex: 2,
+                    }}
+                  />
+                ) : null}
+
+                <span
+                  style={{
+                    position: 'relative',
+                    zIndex: 1,
+                    width: 30,
+                    height: 30,
+                    borderRadius: 999,
+                    backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  <TrendingUp size={16} color={LAUNCH_PALETTE.TERTIARY} strokeWidth={2.4} />
+                </span>
+
+                <span
+                  style={{
+                    position: 'relative',
+                    zIndex: 1,
+                    fontFamily: LAUNCH_FONTS.MONO,
+                    fontSize: 17,
+                    fontWeight: 800,
+                    letterSpacing: '0.045em',
+                    color: LAUNCH_PALETTE.CARD_BG,
+                    fontVariantNumeric: 'tabular-nums',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {liveOrders.toLocaleString('en-US')}+ TRANSAKSI POLYMART DISELESAIKAN SECARA DIGITAL
+                </span>
+              </div>
+            </Interactive.Div>
+          </div>
+
           {/* Beat 2: Seamless Frame-Driven Infinite Kinetic Ticker Strip */}
           <div
             style={{
               position: 'relative',
-              marginTop: 32,
+              marginTop: 22,
               width: '100%',
-              height: 58,
+              height: 54,
               borderRadius: 999,
               backgroundColor: 'rgba(31, 39, 32, 0.78)',
               border: '1.5px solid rgba(217, 201, 178, 0.28)',
@@ -631,85 +973,6 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
               }}
             />
           </div>
-
-          {/* Beat 3 (4.0..6.0s): Terracotta (#C96F4F) Transaction Pill Lifting with Diagonal Sheen Sweep */}
-          <Interactive.Div
-            name="PolyMart Transaction Pill"
-            premountFor={fps}
-            style={{
-              marginTop: 28,
-              opacity: beat3Opacity,
-              visibility: beat3Opacity <= 0.001 ? 'hidden' : 'visible',
-              willChange: 'transform, opacity',
-              transform: `translate3d(0px, ${beat3TranslateY.toFixed(2)}px, 0px) scale(${beat3Scale.toFixed(4)})`,
-              flexShrink: 0,
-            }}
-          >
-            <div
-              style={{
-                position: 'relative',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 14,
-                padding: '15px 34px',
-                borderRadius: 999,
-                backgroundColor: LAUNCH_PALETTE.ACCENT,
-                border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
-                boxShadow: '0 22px 48px rgba(31, 39, 32, 0.36)',
-                overflow: 'hidden',
-              }}
-            >
-              {sheenActive ? (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '-50%',
-                    left: 0,
-                    width: 170,
-                    height: '200%',
-                    background:
-                      'linear-gradient(90deg, rgba(248, 246, 238, 0) 0%, rgba(248, 246, 238, 0.38) 50%, rgba(248, 246, 238, 0) 100%)',
-                    transform: `translate3d(${sheenX.toFixed(2)}px, 0px, 0px) rotate(22deg)`,
-                    pointerEvents: 'none',
-                    zIndex: 2,
-                  }}
-                />
-              ) : null}
-
-              <span
-                style={{
-                  position: 'relative',
-                  zIndex: 1,
-                  width: 30,
-                  height: 30,
-                  borderRadius: 999,
-                  backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <TrendingUp size={16} color={LAUNCH_PALETTE.TERTIARY} strokeWidth={2.4} />
-              </span>
-
-              <span
-                style={{
-                  position: 'relative',
-                  zIndex: 1,
-                  fontFamily: LAUNCH_FONTS.MONO,
-                  fontSize: 20,
-                  fontWeight: 800,
-                  letterSpacing: '0.06em',
-                  color: LAUNCH_PALETTE.CARD_BG,
-                  fontVariantNumeric: 'tabular-nums',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {liveOrders.toLocaleString('en-US')}+ TRANSAKSI POLYMART DISELESAIKAN SECARA DIGITAL
-              </span>
-            </div>
-          </Interactive.Div>
         </div>
       </CameraStage>
 

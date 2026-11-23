@@ -717,7 +717,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                           {hasArrived ? (
                             <>
                               <Check size={15} strokeWidth={2.8} />
-                              <span>TIBA DI KELAS ✓</span>
+                              <span>TIBA DI KELAS</span>
                             </>
                           ) : isNavigating ? (
                             <>

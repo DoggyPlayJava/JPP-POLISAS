@@ -128,7 +128,7 @@ export const RemotionRoot: React.FC = () => {
           defaultProps={{
             productsCount: 277,
             ordersCount: 344,
-            headline: 'Niaga Kampus Dalam Genggaman.',
+            headline: 'Niaga & Kediaman Dalam Genggaman.',
           }}
         />
         <Composition
