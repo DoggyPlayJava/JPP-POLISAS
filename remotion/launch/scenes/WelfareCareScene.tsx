@@ -9,6 +9,7 @@ import {
   type InteractivitySchema,
 } from 'remotion';
 import {
+  ArrowRight,
   Calendar,
   Check,
   Clock,
@@ -31,7 +32,7 @@ export type WelfareCareProps = {
   readonly headline: string;
 };
 
-type SlaStageSpec = {
+type ComplaintStageSpec = {
   readonly title: string;
   readonly meta: string;
   readonly badge: string;
@@ -42,23 +43,34 @@ type FoodBankStepSpec = {
   readonly subLabel: string;
 };
 
-const STAGES: readonly SlaStageSpec[] = [
-  { title: 'Dihantar', meta: '09:14 AM • Portal Rasmi Pelajar', badge: 'DITERIMA' },
-  { title: 'Disemak EXCO', meta: '10:02 AM • Unit Kebajikan JPP', badge: 'DISAHKAN' },
-  { title: 'Tindakan Fasiliti', meta: '02:30 PM • Agihan & Penyelenggaraan', badge: 'DILAKSANA' },
-  { title: 'Selesai', meta: '03:56 PM • Rekod & Audit Ditutup', badge: 'SELESAI ✓' },
+const STUDENT_HEADLINE_DEFAULT = 'Kamsis Bermasalah? Perlukan Food Bank? Kami Ada.';
+const LEGACY_HEADLINE = 'kebajikan disantuni dengan telus.';
+
+const resolveStudentHeadline = (headline: string): string => {
+  const trimmed = headline.trim();
+  if (!trimmed || trimmed.toLowerCase() === LEGACY_HEADLINE) {
+    return STUDENT_HEADLINE_DEFAULT;
+  }
+  return trimmed;
+};
+
+const STAGES: readonly ComplaintStageSpec[] = [
+  { title: 'Laporan Dihantar', meta: '09:14 AM · Portal Pelajar', badge: 'DITERIMA' },
+  { title: 'Diterima JPP', meta: '09:42 AM · Semakan Serta-Merta', badge: 'DISAHKAN' },
+  { title: 'Juruteknik Dalam Perjalanan', meta: '11:15 AM · Blok B-204 Kamsis', badge: 'TINDAKAN' },
+  { title: 'Selesai < 48 Jam ✓', meta: '03:50 PM · Bilik Sedia & Selesa', badge: 'SELESAI ✓' },
 ];
 
 const FOOD_BANK_STEPS: readonly FoodBankStepSpec[] = [
-  { label: 'Dipohon ✓', subLabel: '08:40 AM' },
-  { label: 'Disemak ✓', subLabel: '11:15 AM' },
-  { label: 'Sedia Diambil ✓', subLabel: 'Kaunter Aktif' },
+  { label: 'Dimohon ✓', subLabel: '08:40 AM' },
+  { label: 'Diluluskan ✓', subLabel: '09:05 AM' },
+  { label: 'Sedia Diambil ✓', subLabel: 'Kaunter Rahsia' },
 ];
 
 const PICKUP_SCHEDULE = [
-  { label: 'Tarikh Pengambilan', value: 'Khamis, 26 Nov 2026', kind: 'date' as const },
-  { label: 'Slot Masa', value: '2:30 PM – 4:00 PM', kind: 'time' as const },
-  { label: 'Lokasi Agihan', value: 'Bilik Gerakan JPP · Blok A', kind: 'location' as const },
+  { label: 'Tarikh', value: 'Hari Ini', kind: 'date' as const },
+  { label: 'Slot Masa', value: '2:00 PM – 4:00 PM', kind: 'time' as const },
+  { label: 'Lokasi', value: 'Bilik Gerakan JPP', kind: 'location' as const },
 ];
 
 const MANIFEST_ITEMS = ['Beras 5kg', 'Minyak Masak', 'Biskut Kering', 'Pek Minuman'] as const;
@@ -89,13 +101,13 @@ const resolveNormalizedTimeForProgress = (
 
 // Twin-Deck Bento geometry inside 1920x1080 safe bounds
 const DECK_WIDTH = 840;
-const DECK_HEIGHT = 724;
+const DECK_HEIGHT = 728;
 const DECK_GAP = 48;
 const DECK_LEFT_X = 96;
 const DECK_RIGHT_X = DECK_LEFT_X + DECK_WIDTH + DECK_GAP;
-const DECK_TOP = 256;
+const DECK_TOP = 252;
 
-// Pixel-locked Vertical SLA Spine inside Left Deck
+// Pixel-locked Vertical Resolution Spine inside Left Deck
 const ROW_HEIGHT = 86;
 const ROW_GAP = 18;
 const ROW_PITCH = ROW_HEIGHT + ROW_GAP;
@@ -124,15 +136,15 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
   const safeDuration = Math.max(30, Number.isFinite(durationInFrames) ? durationInFrames : 366);
   const timeSec = frame / safeFps;
 
-  const safeTicketNo = ticketNo.trim() || 'KBJ-2026-0842';
+  const safeTicketNo = ticketNo.trim() || 'KBJ-0842';
   const safeSlaLabel = slaLabel.trim() || '< 48 JAM';
-  const safeHeadline = headline.trim() || 'Kebajikan Disantuni Dengan Telus.';
+  const safeHeadline = resolveStudentHeadline(headline);
 
-  // Beat 1 (0..1.25s): Centered Editorial Header + Twin-Deck Reveal
+  // Beat 1 (0..1.25s): Centered Student Header + Twin-Deck Reveal
   const pillStart = 0;
   const pillDuration = Math.max(8, Math.round(0.38 * safeFps));
   const headlineStart = Math.round(0.1 * safeFps);
-  const wordStagger = Math.max(2, Math.round(0.06 * safeFps));
+  const wordStagger = Math.max(2, Math.round(0.055 * safeFps));
   const wordDuration = Math.max(8, Math.round(0.34 * safeFps));
   const subtitleStart = Math.round(0.28 * safeFps);
   const subtitleDuration = Math.max(8, Math.round(0.38 * safeFps));
@@ -186,7 +198,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
   });
   const deckExitLift = -10 * exitFactor;
 
-  // Beat 2 (1.1..4.2s): Vertical EvolvingPath SLA Spine + 4 Stage Cues + Live Elapsed Timer
+  // Beat 2 (1.1..4.2s): Vertical EvolvingPath Spine + 4 Student Stage Cues + Live Elapsed Timer (09:14 -> 15:50 = 06j 36m)
   const spineStart = Math.round(1.1 * safeFps); // 66f
   const spineDuration = Math.max(24, Math.round(3.05 * safeFps)); // 183f -> ends 249f (~4.15s)
   const spineEnd = spineStart + spineDuration;
@@ -199,7 +211,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
 
   const finalStepCueFrame = stageCueFrames[stageCueFrames.length - 1] ?? spineEnd;
   const elapsedMinutes = Math.round(
-    interpolate(frame, [spineStart, finalStepCueFrame], [0, 402], {
+    interpolate(frame, [spineStart, finalStepCueFrame], [0, 396], {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
       easing: TIMER_EASING,
@@ -216,7 +228,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
     easing: TIMER_EASING,
   });
 
-  // Right Deck Beat 2: 3-Step Food Bank Mini-Stepper + Schedule Cards + QR Pickup Cutout
+  // Right Deck Beat 2: 3-Step Food Bank Mini-Stepper + Schedule Cards + QR Pickup Pass
   const fbStepCueFrames = [
     Math.round(0.88 * safeFps), // 53f
     Math.round(1.68 * safeFps), // 101f
@@ -234,11 +246,11 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
     },
   );
 
-  const excoBadgeStart = fbStepCueFrames[2] + Math.round(0.08 * safeFps);
-  const excoBadgeSpring =
-    frame >= excoBadgeStart
+  const privacyBadgeStart = fbStepCueFrames[2] + Math.round(0.08 * safeFps);
+  const privacyBadgeSpring =
+    frame >= privacyBadgeStart
       ? spring({
-          frame: frame - excoBadgeStart,
+          frame: frame - privacyBadgeStart,
           fps: safeFps,
           config: { damping: 14, stiffness: 220, mass: 0.85 },
         })
@@ -247,10 +259,11 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
   const scheduleEnterStart = Math.round(1.45 * safeFps);
   const qrTicketEnterFrame = Math.round(1.85 * safeFps); // 111f
 
-  // Continuous subtle laser / sheen glide across the Digital QR Pickup Ticket
+  // Continuous subtle laser / sheen glide across the Confidential QR Pickup Ticket
   const ticketCycleFrames = Math.max(48, Math.round(2.1 * safeFps));
   const ticketLocal = Math.max(0, frame - qrTicketEnterFrame);
-  const ticketPhase = frame >= qrTicketEnterFrame ? (ticketLocal % ticketCycleFrames) / ticketCycleFrames : 0;
+  const ticketPhase =
+    frame >= qrTicketEnterFrame ? (ticketLocal % ticketCycleFrames) / ticketCycleFrames : 0;
   const ticketSheenX = interpolate(ticketPhase, [0, 0.72], [-220, 860], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -266,7 +279,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
   const qrLaserNormalizedY = 0.5 + 0.42 * Math.sin(timeSec * 2.4);
   const qrLaserTopPx = 14 + qrLaserNormalizedY * 124;
 
-  // Beat 3 (3.95..6.1s): Rough-Notation <Highlight> across < 48 JAM + Architectural "SELESAI & DISANTUNI ✓" seal
+  // Beat 3 (3.9..6.1s): Rough-Notation <Highlight> across < 48 JAM + Architectural "SELESAI < 48 JAM ✓" seal + Food Bank Claim Stamp
   const highlightStart = Math.round(3.92 * safeFps); // 235f
   const highlightDuration = Math.max(10, Math.round(0.58 * safeFps)); // 35f -> settles by 270f
 
@@ -289,7 +302,29 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
           extrapolateRight: 'clamp',
         })
       : 0;
-  const sealFloatY = sealOpacity > 0.001 ? Math.sin(timeSec * 2.1) * 2.2 * Math.min(1, sealSpring) : 0;
+  const sealFloatY =
+    sealOpacity > 0.001 ? Math.sin(timeSec * 2.1) * 2.2 * Math.min(1, sealSpring) : 0;
+
+  const claimStampStart = Math.round(3.96 * safeFps); // 238f -> settled cleanly by f290
+  const claimStampElapsed = frame - claimStampStart;
+  const claimStampSpring =
+    claimStampElapsed >= 0
+      ? spring({
+          frame: claimStampElapsed,
+          fps: safeFps,
+          config: { damping: 13, stiffness: 240, mass: 0.8 },
+        })
+      : 0;
+  const claimStampScale = 1.32 + (1 - 1.32) * claimStampSpring;
+  const claimStampRotate = -4.5 + (-1.5 - -4.5) * Math.min(1, claimStampSpring);
+  const claimStampOpacity =
+    claimStampElapsed >= 0
+      ? interpolate(claimStampElapsed, [0, Math.max(3, Math.round(0.08 * safeFps))], [0, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        })
+      : 0;
+
   const liveDotScale = 0.82 + Math.sin(timeSec * 5.6) * 0.2;
 
   return (
@@ -325,15 +360,15 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
             transformStyle: 'preserve-3d',
           }}
         >
-          {/* Centered Top Editorial Header (y ~ 86..226) */}
+          {/* Centered Top Student Editorial Header (y ~ 82..226) */}
           <Interactive.Div
-            name="Welfare Header"
+            name="Welfare Student Header"
             premountFor={safeFps}
             style={{
               position: 'absolute',
-              left: 140,
-              right: 140,
-              top: 84,
+              left: 110,
+              right: 110,
+              top: 82,
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -359,7 +394,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                 }}
               >
                 <ShieldCheck size={15} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.4} />
-                <span>E-KEBAJIKAN &amp; FOOD BANK JPP</span>
+                <span>PRIHATIN SISWA • ADUAN KAMSIS &amp; FOOD BANK</span>
               </div>
             </KineticReveal>
 
@@ -370,11 +405,11 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
               staggerFrames={wordStagger}
               wordDurationFrames={wordDuration}
               align="center"
-              accentWords={['Dengan', 'Telus.']}
+              accentWords={['Kami', 'Ada.']}
               accentColor={LAUNCH_PALETTE.ACCENT}
               style={{
                 margin: 0,
-                fontSize: 52,
+                fontSize: 47,
                 fontWeight: 900,
                 lineHeight: 1.07,
                 letterSpacing: '-0.03em',
@@ -393,14 +428,14 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                   letterSpacing: '-0.01em',
                 }}
               >
-                Penjejakan aduan fasiliti bertempoh SLA bersama pas pengambilan digital Food Bank JPP secara masa nyata.
+                Jejak aduan kerosakan kamsis terus di telefon dan mohon bantuan Food Bank secara rahsia serta bermaruah.
               </p>
             </KineticReveal>
           </Interactive.Div>
 
-          {/* Left Deck (840px): Live KebajikanLiveTrackerCard */}
+          {/* Left Deck (840px): Student KebajikanLiveTrackerCard */}
           <Interactive.Div
-            name="Kebajikan Live Tracker Deck"
+            name="Kamsis Student Tracker Deck"
             premountFor={safeFps}
             style={{
               position: 'absolute',
@@ -416,7 +451,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
             <KineticWindow
               surface="light"
               routeLabel="jpp.polisas.edu.my/kebajikan"
-              statusPill="TIKET AKTIF"
+              statusPill={allStagesComplete ? 'SELESAI ✓' : 'TIKET AKTIF'}
               statusAccent={!allStagesComplete}
               width={DECK_WIDTH}
               height={DECK_HEIGHT}
@@ -439,7 +474,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                   overflow: 'visible',
                 }}
               >
-                {/* Ticket Header Row with SLA <Highlight> & Beat 3 Architectural Seal */}
+                {/* Ticket Header Row with < 48 JAM <Highlight> & Beat 3 Architectural Seal */}
                 <div
                   style={{
                     display: 'flex',
@@ -476,7 +511,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           display: 'inline-block',
                         }}
                       />
-                      <span>PENJEJAK ADUAN LANGSUNG • PRASARANA</span>
+                      <span>JEJAK ADUAN KAMSIS • STATUS LANGSUNG</span>
                     </div>
 
                     <div
@@ -494,19 +529,19 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
 
                     <div
                       style={{
-                        fontSize: 15.5,
-                        fontWeight: 700,
+                        fontSize: 16.5,
+                        fontWeight: 800,
                         color: LAUNCH_PALETTE.PRIMARY,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                       }}
                     >
-                      Aduan Fasiliti: Lampu Koridor Blok Kediaman C
+                      Kipas &amp; Lampu Bilik Kamsis Blok B-204
                     </div>
                   </div>
 
-                  {/* Top-Right SLA Highlight Badge + Stamping Architectural Seal */}
+                  {/* Top-Right Jaminan Siap Highlight Badge + Beat 3 Architectural Seal */}
                   <div
                     style={{
                       display: 'flex',
@@ -534,7 +569,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         overflow: 'visible',
                       }}
                     >
-                      <span>SLA</span>
+                      <span>SIAP</span>
                       <span style={{ display: 'inline-block', overflow: 'visible' }}>
                         <EditorialAnnotation
                           type="highlight"
@@ -582,7 +617,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         }}
                       >
                         <Clock size={13} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.5} />
-                        <span>PEMANTAUAN EXCO</span>
+                        <span>PASUKAN KEBAJIKAN SISWA</span>
                       </div>
 
                       {/* Beat 3 Architectural Seal */}
@@ -634,7 +669,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                               color: LAUNCH_PALETTE.BACKGROUND,
                             }}
                           >
-                            SELESAI &amp; DISANTUNI ✓
+                            SELESAI &lt; 48 JAM ✓
                           </span>
                         </div>
                       </div>
@@ -642,7 +677,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                   </div>
                 </div>
 
-                {/* Beat 2: Vertical EvolvingPath SLA Spine + 4 Pixel-Locked Nodes */}
+                {/* Beat 2: Vertical EvolvingPath Resolution Spine + 4 Student-Visible Nodes */}
                 <div
                   style={{
                     position: 'relative',
@@ -797,7 +832,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
                             <span
                               style={{
-                                fontSize: 19,
+                                fontSize: 18.5,
                                 fontWeight: 800,
                                 color: isStepDone
                                   ? LAUNCH_PALETTE.PRIMARY
@@ -880,7 +915,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           color: LAUNCH_PALETTE.MUTED_OLIVE,
                         }}
                       >
-                        TEMPOH PENYELESAIAN MASA NYATA
+                        TEMPOH PENYELESAIAN · {elapsedLabel} · {allStagesComplete ? 'PANTAS' : 'PROSES'}
                       </span>
                       <span
                         style={{
@@ -893,7 +928,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                             : LAUNCH_PALETTE.ACCENT,
                         }}
                       >
-                        {allStagesComplete ? '100% DISAHKAN' : 'SLA AKTIF'}
+                        {allStagesComplete ? '100% SELESAI' : 'DALAM TINDAKAN'}
                       </span>
                     </div>
                     <div
@@ -974,9 +1009,9 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
             </KineticWindow>
           </Interactive.Div>
 
-          {/* Right Deck (840px): Live Digital Food Bank JPP Pickup Pass */}
+          {/* Right Deck (840px): Confidential Food Bank JPP Pickup Pass */}
           <Interactive.Div
-            name="Food Bank Digital Pass Deck"
+            name="Food Bank Confidential Pass Deck"
             premountFor={safeFps}
             style={{
               position: 'absolute',
@@ -991,8 +1026,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
           >
             <KineticWindow
               surface="dark"
-              routeLabel="foodbank · pas digital"
-              statusPill="LULUS ✓"
+              routeLabel="foodbank · pas rahsia siswa"
+              statusPill="RAHSIA ✓"
               width={DECK_WIDTH}
               height={DECK_HEIGHT}
               borderRadius={26}
@@ -1011,18 +1046,18 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
-                  gap: 14,
+                  gap: 13,
                   boxSizing: 'border-box',
                   transformStyle: 'preserve-3d',
                 }}
               >
-                {/* Food Bank Header */}
+                {/* Food Bank Confidential Pass Header */}
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'flex-start',
                     justifyContent: 'space-between',
-                    gap: 16,
+                    gap: 14,
                     paddingBottom: 14,
                     borderBottom: '1px solid rgba(217, 201, 178, 0.16)',
                   }}
@@ -1034,7 +1069,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         alignItems: 'center',
                         gap: 8,
                         fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 12,
+                        fontSize: 11.5,
                         fontWeight: 800,
                         letterSpacing: '0.12em',
                         color: LAUNCH_PALETTE.ACCENT,
@@ -1042,35 +1077,36 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       }}
                     >
                       <Package size={14} color={LAUNCH_PALETTE.ACCENT} strokeWidth={2.5} />
-                      <span>PERMOHONAN #FB-2026-0419</span>
+                      <span>FOOD BANK JPP · PAS PENGAMBILAN TERLINDUNG</span>
                     </div>
 
                     <div
                       style={{
-                        fontSize: 27,
+                        fontSize: 24.5,
                         fontWeight: 900,
                         letterSpacing: '-0.025em',
                         color: LAUNCH_PALETTE.BACKGROUND,
-                        lineHeight: 1.12,
+                        lineHeight: 1.15,
+                        whiteSpace: 'nowrap',
                       }}
                     >
-                      Bantuan Pek Asas Siswa
+                      Kotak Rezeki Siswa #FB-2026-119
                     </div>
 
                     <div
                       style={{
                         fontFamily: LAUNCH_FONTS.MONO,
-                        fontSize: 11.5,
+                        fontSize: 12,
                         fontWeight: 600,
                         letterSpacing: '0.07em',
                         color: LAUNCH_PALETTE.TERTIARY,
                       }}
                     >
-                      AMIRUL HAKIM BIN AZMAN • 04DAT24F1022 • KAMSIS C
+                      Aiman Hakim · Kamsis Blok B
                     </div>
                   </div>
 
-                  {/* Sage DISAHKAN EXCO Badge */}
+                  {/* Animated Privacy Shield Badge */}
                   <div
                     style={{
                       display: 'inline-flex',
@@ -1082,20 +1118,20 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       border: `1.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
                       color: LAUNCH_PALETTE.BACKGROUND,
                       fontFamily: LAUNCH_FONTS.MONO,
-                      fontSize: 11,
+                      fontSize: 10.5,
                       fontWeight: 900,
-                      letterSpacing: '0.11em',
+                      letterSpacing: '0.1em',
                       whiteSpace: 'nowrap',
                       flexShrink: 0,
-                      transform: `scale(${(0.92 + 0.08 * excoBadgeSpring).toFixed(3)})`,
+                      transform: `scale(${(0.92 + 0.08 * privacyBadgeSpring).toFixed(3)})`,
                     }}
                   >
                     <ShieldCheck size={14} color={LAUNCH_PALETTE.TERTIARY} strokeWidth={2.5} />
-                    <span>DISAHKAN EXCO</span>
+                    <span>100% RAHSIA &amp; BERMARUAH</span>
                   </div>
                 </div>
 
-                {/* Live 3-Step Food Bank Mini-Stepper */}
+                {/* Live 3-Step Student Mini-Stepper (Dimohon ✓ -> Diluluskan ✓ -> Sedia Diambil ✓) */}
                 <div
                   style={{
                     position: 'relative',
@@ -1138,6 +1174,40 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         }}
                       />
                     </div>
+
+                    {/* Subtle directional step arrows at track midpoints */}
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 10,
+                        left: '33.33%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 1,
+                        display: 'inline-flex',
+                        padding: '2px 5px',
+                        borderRadius: 999,
+                        backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                        border: '1px solid rgba(217, 201, 178, 0.25)',
+                      }}
+                    >
+                      <ArrowRight size={10} color={LAUNCH_PALETTE.TERTIARY} strokeWidth={2.8} />
+                    </span>
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: 10,
+                        left: '66.66%',
+                        transform: 'translateX(-50%)',
+                        zIndex: 1,
+                        display: 'inline-flex',
+                        padding: '2px 5px',
+                        borderRadius: 999,
+                        backgroundColor: LAUNCH_PALETTE.PRIMARY_DARK,
+                        border: '1px solid rgba(217, 201, 178, 0.25)',
+                      }}
+                    >
+                      <ArrowRight size={10} color={LAUNCH_PALETTE.TERTIARY} strokeWidth={2.8} />
+                    </span>
 
                     {FOOD_BANK_STEPS.map((step, idx) => {
                       const cue = fbStepCueFrames[idx] ?? 0;
@@ -1291,7 +1361,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         </div>
                         <span
                           style={{
-                            fontSize: 14.5,
+                            fontSize: 15,
                             fontWeight: 800,
                             color: LAUNCH_PALETTE.BACKGROUND,
                             lineHeight: 1.25,
@@ -1308,7 +1378,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                 <div
                   style={{
                     position: 'relative',
-                    height: 14,
+                    height: 12,
                     display: 'flex',
                     alignItems: 'center',
                   }}
@@ -1321,7 +1391,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                   />
                 </div>
 
-                {/* Elevated Digital QR Pickup Ticket (ExplodedLayer zDepth=26) */}
+                {/* Elevated Porcelain QR Pickup Ticket (ExplodedLayer zDepth=26) */}
                 <ExplodedLayer
                   zDepth={26}
                   enterFrame={qrTicketEnterFrame}
@@ -1339,10 +1409,10 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
                       boxShadow:
                         '0 22px 46px rgba(31, 39, 32, 0.38), 0 4px 12px rgba(31, 39, 32, 0.2)',
-                      padding: '20px 24px',
+                      padding: '18px 22px',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: 24,
+                      gap: 22,
                       overflow: 'hidden',
                     }}
                   >
@@ -1369,8 +1439,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                     <div
                       style={{
                         position: 'relative',
-                        width: 152,
-                        height: 152,
+                        width: 150,
+                        height: 150,
                         flexShrink: 0,
                         borderRadius: 16,
                         backgroundColor: LAUNCH_PALETTE.CARD_BG,
@@ -1381,13 +1451,57 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         overflow: 'hidden',
                       }}
                     >
-                      <span style={{ position: 'absolute', left: 7, top: 7, width: 12, height: 12, borderTop: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`, borderLeft: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`, borderTopLeftRadius: 4 }} />
-                      <span style={{ position: 'absolute', right: 7, top: 7, width: 12, height: 12, borderTop: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`, borderRight: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`, borderTopRightRadius: 4 }} />
-                      <span style={{ position: 'absolute', left: 7, bottom: 7, width: 12, height: 12, borderBottom: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`, borderLeft: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`, borderBottomLeftRadius: 4 }} />
-                      <span style={{ position: 'absolute', right: 7, bottom: 7, width: 12, height: 12, borderBottom: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`, borderRight: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`, borderBottomRightRadius: 4 }} />
+                      <span
+                        style={{
+                          position: 'absolute',
+                          left: 7,
+                          top: 7,
+                          width: 12,
+                          height: 12,
+                          borderTop: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderLeft: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderTopLeftRadius: 4,
+                        }}
+                      />
+                      <span
+                        style={{
+                          position: 'absolute',
+                          right: 7,
+                          top: 7,
+                          width: 12,
+                          height: 12,
+                          borderTop: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderRight: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderTopRightRadius: 4,
+                        }}
+                      />
+                      <span
+                        style={{
+                          position: 'absolute',
+                          left: 7,
+                          bottom: 7,
+                          width: 12,
+                          height: 12,
+                          borderBottom: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderLeft: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderBottomLeftRadius: 4,
+                        }}
+                      />
+                      <span
+                        style={{
+                          position: 'absolute',
+                          right: 7,
+                          bottom: 7,
+                          width: 12,
+                          height: 12,
+                          borderBottom: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderRight: `2.5px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                          borderBottomRightRadius: 4,
+                        }}
+                      />
 
                       <DeterministicQrMatrix
-                        seed={419}
+                        seed={119}
                         size={116}
                         fgColor={LAUNCH_PALETTE.PRIMARY}
                         bgColor={LAUNCH_PALETTE.CARD_BG}
@@ -1427,7 +1541,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       </div>
                     </div>
 
-                    {/* Right: Pickup Ticket Metadata & Manifest Pills */}
+                    {/* Right: Confidential Pickup Ticket Metadata, Manifest Pills & Beat 3 Claim Stamp */}
                     <div
                       style={{
                         position: 'relative',
@@ -1437,41 +1551,96 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'space-between',
-                        gap: 10,
+                        gap: 9,
                       }}
                     >
                       <div
                         style={{
-                          display: 'inline-flex',
+                          display: 'flex',
                           alignItems: 'center',
-                          gap: 7,
-                          alignSelf: 'flex-start',
-                          padding: '5px 11px',
-                          borderRadius: 999,
-                          backgroundColor: 'rgba(107, 127, 91, 0.16)',
-                          border: `1px solid ${LAUNCH_PALETTE.SECONDARY}`,
-                          fontFamily: LAUNCH_FONTS.MONO,
-                          fontSize: 10.5,
-                          fontWeight: 900,
-                          letterSpacing: '0.1em',
-                          color: LAUNCH_PALETTE.PRIMARY,
+                          justifyContent: 'space-between',
+                          gap: 8,
                         }}
                       >
-                        <QrCode size={13} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.5} />
-                        <span>PAS PENGAMBILAN SAH · IMBAS DI KAUNTER</span>
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '5px 10px',
+                            borderRadius: 999,
+                            backgroundColor: 'rgba(107, 127, 91, 0.16)',
+                            border: `1px solid ${LAUNCH_PALETTE.SECONDARY}`,
+                            fontFamily: LAUNCH_FONTS.MONO,
+                            fontSize: 10,
+                            fontWeight: 900,
+                            letterSpacing: '0.07em',
+                            color: LAUNCH_PALETTE.PRIMARY,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <QrCode size={12} color={LAUNCH_PALETTE.SECONDARY} strokeWidth={2.5} />
+                          <span>PAS PENGAMBILAN RAHSIA · IMBAS DI KAUNTER</span>
+                        </div>
+
+                        {/* Beat 3 Animated Sage/Terracotta Claim Checkmark Stamp */}
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                            padding: '5px 11px',
+                            borderRadius: 10,
+                            backgroundColor: LAUNCH_PALETTE.SECONDARY,
+                            border: `1.5px solid ${LAUNCH_PALETTE.ACCENT}`,
+                            boxShadow: '0 8px 18px rgba(46, 58, 47, 0.22)',
+                            opacity: claimStampOpacity,
+                            visibility: claimStampOpacity <= 0.001 ? 'hidden' : 'visible',
+                            transformOrigin: '50% 50%',
+                            transform: `rotate(${claimStampRotate.toFixed(2)}deg) scale(${claimStampScale.toFixed(4)})`,
+                            flexShrink: 0,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          <span
+                            style={{
+                              width: 15,
+                              height: 15,
+                              borderRadius: 999,
+                              backgroundColor: LAUNCH_PALETTE.ACCENT,
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            <Check size={10} color={LAUNCH_PALETTE.CARD_BG} strokeWidth={3.2} />
+                          </span>
+                          <span
+                            style={{
+                              fontFamily: LAUNCH_FONTS.MONO,
+                              fontSize: 10.5,
+                              fontWeight: 900,
+                              letterSpacing: '0.08em',
+                              color: LAUNCH_PALETTE.BACKGROUND,
+                            }}
+                          >
+                            SEDIA DIAMBIL ✓
+                          </span>
+                        </div>
                       </div>
 
                       <div>
                         <div
                           style={{
-                            fontSize: 21,
+                            fontSize: 20,
                             fontWeight: 900,
                             letterSpacing: '-0.02em',
                             color: LAUNCH_PALETTE.PRIMARY,
                             lineHeight: 1.15,
                           }}
                         >
-                          Pek Bantuan Makanan Asas (Set A)
+                          Kotak Rezeki Siswa — Pek Asas Harian
                         </div>
                         <div
                           style={{
@@ -1482,7 +1651,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                             color: LAUNCH_PALETTE.MUTED_OLIVE,
                           }}
                         >
-                          TOKEN: FB-2026-0419-JPP • VERIFIKASI KAMPUS
+                          KOD PAS: FB-2026-119 • PRIVASI TANPA NAMA DIPAPAR
                         </div>
                       </div>
 
@@ -1520,8 +1689,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                           color: LAUNCH_PALETTE.SECONDARY,
                         }}
                       >
-                        <span>SAH SEHINGGA 26 NOV 2026</span>
-                        <span>KAUNTER KEBAJIKAN JPP</span>
+                        <span>SAH HARI INI · 2:00 PM – 4:00 PM</span>
+                        <span>BILIK GERAKAN JPP</span>
                       </div>
                     </div>
                   </div>
@@ -1532,15 +1701,22 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
         </div>
       </CameraStage>
 
-      <EditorialFrameMarks chapterCode="05" chapterLabel="E-Kebajikan & Food Bank" />
+      <EditorialFrameMarks
+        chapterCode="05"
+        chapterLabel="PRIHATIN SISWA • ADUAN KAMSIS & FOOD BANK"
+      />
     </>
   );
 };
 
 const welfareCareSchema = {
-  ticketNo: { type: 'string', default: 'KBJ-2026-0842', description: 'Ticket Number' },
-  slaLabel: { type: 'string', default: '< 48 JAM', description: 'SLA Guarantee' },
-  headline: { type: 'string', default: 'Kebajikan Disantuni Dengan Telus.', description: 'Section Headline' },
+  ticketNo: { type: 'string', default: 'KBJ-0842', description: 'Ticket Number' },
+  slaLabel: { type: 'string', default: '< 48 JAM', description: 'Resolution Guarantee' },
+  headline: {
+    type: 'string',
+    default: STUDENT_HEADLINE_DEFAULT,
+    description: 'Section Headline',
+  },
 } as const satisfies InteractivitySchema;
 
 export const WelfareCareScene = Interactive.withSchema({
