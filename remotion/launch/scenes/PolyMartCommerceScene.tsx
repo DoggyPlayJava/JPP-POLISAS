@@ -916,7 +916,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       letterSpacing: '0.08em',
                     }}
                   >
-                    {frame >= receiptSlamFrame ? 'PESANAN #344 DISAHKAN ✓' : 'BAYAR TANPA TUNAI'}
+                    {frame >= receiptSlamFrame ? `PESANAN #${safeOrdersCount} DISAHKAN ✓` : 'BAYAR TANPA TUNAI'}
                   </div>
                 </div>
               </div>
@@ -1035,7 +1035,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                     whiteSpace: 'nowrap',
                   }}
                 >
-                  PESANAN #344 • RM 15.00 • TANPA TUNAI
+                  {`PESANAN #${safeOrdersCount} • RM 15.00 • TANPA TUNAI`}
                 </div>
 
                 <div

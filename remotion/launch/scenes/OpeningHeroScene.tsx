@@ -308,7 +308,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
       : 0;
 
   // Gentle final-24-frame expansion carrying momentum into portalZoomMorph (270..306f)
-  const finalRampStart = Math.max(clickFrame + 8, safeDuration - 24);
+  const finalRampStart = Math.min(safeDuration - 2, Math.max(clickFrame + 8, safeDuration - 24));
   const finalRampProgress = interpolate(frame, [finalRampStart, safeDuration - 1], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -641,7 +641,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                   boxSizing: 'border-box',
                   padding: '16px 32px 18px',
                   background:
-                    'linear-gradient(135deg, #2E3A2F 0%, #243025 58%, #1F2720 100%)',
+                    'linear-gradient(135deg, #2E3A2F 0%, #2E3A2F 45%, #1F2720 100%)',
                   borderBottomLeftRadius: 32,
                   borderBottomRightRadius: 32,
                   borderBottom: '1px solid rgba(217, 201, 178, 0.24)',
@@ -828,7 +828,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                     borderRadius: 999,
                     backgroundColor: LAUNCH_PALETTE.CARD_BG,
                     border: '1.5px solid rgba(217, 201, 178, 0.72)',
-                    boxShadow: '0 8px 22px rgba(0, 0, 0, 0.16)',
+                    boxShadow: '0 8px 22px rgba(31, 39, 32, 0.16)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',

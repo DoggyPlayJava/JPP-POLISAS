@@ -1338,7 +1338,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                       backgroundColor: LAUNCH_PALETTE.BACKGROUND,
                       border: `1.5px solid ${LAUNCH_PALETTE.TERTIARY}`,
                       boxShadow:
-                        '0 22px 46px rgba(15, 22, 16, 0.38), 0 4px 12px rgba(15, 22, 16, 0.2)',
+                        '0 22px 46px rgba(31, 39, 32, 0.38), 0 4px 12px rgba(31, 39, 32, 0.2)',
                       padding: '20px 24px',
                       display: 'flex',
                       alignItems: 'center',
