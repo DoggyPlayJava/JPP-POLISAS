@@ -165,7 +165,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
 
   const timeSec = frame / Math.max(1, fps);
   const liveDotScale = 0.82 + Math.sin(timeSec * 5.8) * 0.22;
-  const sealFloatY = sealOpacity > 0.001 ? Math.sin(timeSec * 2.2) * 2 * Math.min(1, sealSpring) : 0;
+  const sealFloatY = sealOpacity > 0.001 ? Math.sin(timeSec * 2.2) * 3 * Math.min(1, sealSpring) : 0;
+  const cardFloatY = Math.sin(timeSec * 1.45 + 0.8) * 3 * cardEnterProgress;
 
   return (
     <>
@@ -183,6 +184,12 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
         tiltYFrom={-0.8}
         tiltYTo={0.8}
         breathingAmplitude={0.55}
+        entryPanXOffset={34}
+        entryPanYOffset={16}
+        entryZoomOffset={0.024}
+        exitPanYDelta={-38}
+        exitZoomDelta={-0.016}
+        exitFrames={Math.round(0.35 * fps)}
         clip
       >
         <div
@@ -435,7 +442,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({ ticketNo, slaLabel, head
                 padding: '26px 30px',
                 boxShadow: '0 24px 54px rgba(46, 58, 47, 0.09)',
                 opacity: cardOpacity,
-                transform: `translate3d(${cardTranslateX.toFixed(2)}px, 0px, 0px)`,
+                transform: `translate3d(${cardTranslateX.toFixed(2)}px, ${cardFloatY.toFixed(2)}px, 0px)`,
               }}
             >
               {/* Ticket Header + Beat 3 Architectural Seal */}

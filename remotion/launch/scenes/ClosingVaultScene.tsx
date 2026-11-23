@@ -233,6 +233,8 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
         tiltYFrom={-0.4}
         tiltYTo={0.4}
         breathingAmplitude={0.45}
+        entryZoomOffset={0.038}
+        entryFrames={Math.round(0.45 * fps)}
         clip
       >
         {/* Beat 1: Four Symmetrical Architectural Corner L-Brackets Drawing Cleanly Inward */}

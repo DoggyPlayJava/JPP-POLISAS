@@ -49,7 +49,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   totalVotes,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, durationInFrames } = useVideoConfig();
 
   const clampedA = Number.isFinite(percentageA) ? Math.min(100, Math.max(0, percentageA)) : 68;
   const clampedB = 100 - clampedA;
@@ -182,6 +182,17 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   const reactionRiseDuration = Math.max(12, Math.round(0.65 * fps));
   const timeSec = frame / Math.max(1, fps);
 
+  const exitWindowFrames = Math.max(2, Math.round(0.35 * fps));
+  const sceneEnd = Math.max(1, durationInFrames - 1);
+  const exitLeadStart = Math.max(0, Math.min(sceneEnd - 1, durationInFrames - exitWindowFrames));
+  const exitLeadFactor = interpolate(frame, [exitLeadStart, sceneEnd], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.bezier(0.55, 0, 1, 0.45),
+  });
+  const pillExitX = -10 * exitLeadFactor;
+  const pillExitY = -5 * exitLeadFactor;
+
   // Beat 3 (4.0..6.0s): Terracotta rough-notation <Circle> around winning percentageA
   const circleStart = Math.round(4.05 * fps);
   const circleDuration = Math.max(12, Math.round(0.68 * fps));
@@ -207,6 +218,11 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
         tiltYFrom={0.6}
         tiltYTo={-0.6}
         breathingAmplitude={0.45}
+        entryZoomOffset={0.034}
+        exitPanXDelta={-30}
+        exitPanYDelta={-16}
+        exitZoomDelta={0.022}
+        exitFrames={Math.round(0.35 * fps)}
         clip
       >
         <div
@@ -655,8 +671,8 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
             });
             if (opacity <= 0.001) return null;
 
-            const driftX = Math.sin(timeSec * 2.1 + pill.phase) * 11 * progress;
-            const driftY = Math.cos(timeSec * 1.85 + pill.phase) * 6 * progress;
+            const driftX = Math.sin(timeSec * 2.1 + pill.phase) * 11 * progress + pillExitX;
+            const driftY = Math.cos(timeSec * 1.85 + pill.phase) * 6 * progress + pillExitY;
             const riseY = interpolate(progress, [0, 1], [62, 0]) + driftY;
             const pillScale = interpolate(progress, [0, 0.72, 1], [0.76, 1.05, 1], {
               extrapolateLeft: 'clamp',

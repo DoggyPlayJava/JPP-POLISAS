@@ -185,6 +185,12 @@ const PolyMapsCampusInner: React.FC<PolyMapsSceneProps> = ({
         tiltYFrom={0}
         tiltYTo={0}
         breathingAmplitude={0.3}
+        entryPanXOffset={42}
+        entryZoomOffset={0.024}
+        entryTiltYOffset={1.2}
+        exitPanXDelta={34}
+        exitZoomDelta={0.022}
+        exitFrames={Math.round(0.35 * fps)}
         clip
       >
         <div

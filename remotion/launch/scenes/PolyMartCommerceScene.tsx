@@ -76,10 +76,19 @@ const CommerceCalloutTrailLayer: React.FC<{
   readonly burstDurationFrames: number;
 }> = ({ firstStartFrame, staggerFrames, burstDurationFrames }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, durationInFrames } = useVideoConfig();
 
   const timeSec = frame / Math.max(1, fps);
   const safeDuration = Math.max(1, burstDurationFrames);
+  const splitExitFrames = Math.max(2, Math.round(0.3 * fps));
+  const sceneEnd = Math.max(1, durationInFrames - 1);
+  const splitExitStart = Math.max(0, Math.min(sceneEnd - 1, durationInFrames - splitExitFrames));
+  const splitExitFactor = interpolate(frame, [splitExitStart, sceneEnd], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.bezier(0.55, 0, 1, 0.45),
+  });
+  const splitOutX = 12 * splitExitFactor;
 
   return (
     <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
@@ -97,9 +106,10 @@ const CommerceCalloutTrailLayer: React.FC<{
         });
         if (opacity <= 0.001) return null;
 
+        const bobX = Math.sin(timeSec * 1.45 + card.phase) * 4 * progress;
         const bobY = Math.sin(timeSec * 2.0 + card.phase) * 6 * progress;
         const bobZ = Math.cos(timeSec * 1.65 + card.phase) * 18 * progress;
-        const tx = interpolate(progress, [0, 1], [card.originOffsetX, 0]);
+        const tx = interpolate(progress, [0, 1], [card.originOffsetX, 0]) + bobX + splitOutX;
         const ty = interpolate(progress, [0, 1], [card.originOffsetY, 0]) + bobY;
         const tz = interpolate(progress, [0, 1], [-200, 72]) + bobZ;
         const scale = interpolate(progress, [0, 0.74, 1], [0.62, 1.05, 1], {
@@ -193,7 +203,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   headline,
 }) => {
   const frame = useCurrentFrame();
-  const { fps } = useVideoConfig();
+  const { fps, durationInFrames } = useVideoConfig();
 
   const safeProductsCount = Number.isFinite(productsCount) ? Math.max(0, Math.round(productsCount)) : 277;
   const safeOrdersCount = Number.isFinite(ordersCount) ? Math.max(0, Math.round(ordersCount)) : 344;
@@ -285,6 +295,17 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   const highlightStart = Math.round(4.15 * fps);
   const highlightDuration = Math.max(10, Math.round(0.55 * fps));
 
+  const splitExitFrames = Math.max(2, Math.round(0.3 * fps));
+  const sceneEnd = Math.max(1, durationInFrames - 1);
+  const splitExitStart = Math.max(0, Math.min(sceneEnd - 1, durationInFrames - splitExitFrames));
+  const splitExitFactor = interpolate(frame, [splitExitStart, sceneEnd], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.bezier(0.55, 0, 1, 0.45),
+  });
+  const splitLeftX = -12 * splitExitFactor;
+  const splitRightX = 12 * splitExitFactor;
+
   return (
     <>
       <EditorialBackdrop />
@@ -301,6 +322,10 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
         tiltYFrom={-1.2}
         tiltYTo={1.2}
         breathingAmplitude={0.55}
+        entryZoomOffset={0.032}
+        entryPanXOffset={-24}
+        exitZoomDelta={0.032}
+        exitFrames={Math.round(0.35 * fps)}
         clip
       >
         <div
@@ -325,6 +350,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               display: 'flex',
               flexDirection: 'column',
               gap: 24,
+              transform: `translate3d(${splitLeftX.toFixed(2)}px, 0px, 0px)`,
             }}
           >
             <KineticReveal startFrame={pillStart} durationFrames={pillDuration}>
@@ -499,6 +525,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               height: 820,
               perspective: '1800px',
               transformStyle: 'preserve-3d',
+              transform: `translate3d(${splitRightX.toFixed(2)}px, 0px, 0px)`,
             }}
           >
             <Device3DRig
@@ -605,7 +632,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
             pointerEvents: 'none',
             opacity: stampOpacity,
             visibility: stampOpacity <= 0.001 ? 'hidden' : 'visible',
-            transform: `translate3d(0px, ${stampHoverY.toFixed(2)}px, 90px) rotate(-3deg) scale(${stampScale.toFixed(4)})`,
+            transform: `translate3d(${splitRightX.toFixed(2)}px, ${stampHoverY.toFixed(2)}px, 90px) rotate(-3deg) scale(${stampScale.toFixed(4)})`,
             transformOrigin: '50% 50%',
           }}
         >

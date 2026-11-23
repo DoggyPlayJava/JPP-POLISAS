@@ -249,18 +249,28 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
   const certTranslateY = (1 - certSpring) * 42;
 
   const sheenStart = Math.round(4.32 * fps);
-  const sheenEnd = Math.max(sheenStart + 10, Math.round(5.18 * fps));
-  const sheenProgress = interpolate(frame, [sheenStart, sheenEnd], [0, 1], {
+  const sheenPeriod = Math.max(32, Math.round(1.18 * fps));
+  const sheenElapsed = frame - sheenStart;
+  const sheenPhase = sheenElapsed >= 0 ? (sheenElapsed % sheenPeriod) / sheenPeriod : 0;
+  const sheenProgress = interpolate(sheenPhase, [0, 0.82], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: SHEEN_EASE,
   });
-  const sheenActive = sheenProgress > 0.001 && sheenProgress < 0.999;
+  const sheenOpacity =
+    sheenElapsed >= 0
+      ? interpolate(sheenPhase, [0, 0.14, 0.64, 0.82], [0, 1, 1, 0], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+        })
+      : 0;
+  const sheenActive = sheenOpacity > 0.005;
   const sheenX = interpolate(sheenProgress, [0, 1], [-280, 1020]);
 
   const sparkTrigger = certPopStart + Math.max(2, Math.round(0.08 * fps));
   const timeSec = frame / Math.max(1, fps);
-  const certHoverY = certOpacity > 0.001 ? Math.sin(timeSec * 2.1) * 3 * Math.min(1, certSpring) : 0;
+  const certHoverY = certOpacity > 0.001 ? Math.sin(timeSec * 2.1) * 4 * Math.min(1, certSpring) : 0;
+  const qrFloatY = frame >= qrShiftStart ? Math.sin(timeSec * 1.8 + 1.1) * 3 * qrShiftProgress : 0;
   const liveDotScale = 0.84 + Math.sin(timeSec * 6.0) * 0.2;
 
   const qrCardBorderColor = inFlashWindow
@@ -293,6 +303,10 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
         tiltYFrom={0.9}
         tiltYTo={-0.9}
         breathingAmplitude={0.55}
+        entryPanYOffset={40}
+        entryZoomOffset={-0.02}
+        exitZoomDelta={0.036}
+        exitFrames={Math.round(0.35 * fps)}
         clip
       >
         {/* Top Editorial Header + Live Rolling Tabular Counters */}
@@ -612,7 +626,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
             opacity: qrCardOpacity,
             visibility: qrCardOpacity <= 0.001 ? 'hidden' : 'visible',
             transformOrigin: '50% 50%',
-            transform: `translate3d(${qrShiftX.toFixed(2)}px, ${qrRiseY.toFixed(2)}px, 0px) scale(${(qrEnterScale * qrBeat3Scale).toFixed(4)})`,
+            transform: `translate3d(${qrShiftX.toFixed(2)}px, ${(qrRiseY + qrFloatY).toFixed(2)}px, 0px) scale(${(qrEnterScale * qrBeat3Scale).toFixed(4)})`,
             zIndex: 12,
             fontFamily: LAUNCH_FONTS.DISPLAY,
           }}
@@ -931,6 +945,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                   left: 0,
                   width: 180,
                   height: '170%',
+                  opacity: sheenOpacity * certOpacity,
                   background:
                     'linear-gradient(90deg, rgba(248, 246, 238, 0) 0%, rgba(248, 246, 238, 0.26) 50%, rgba(248, 246, 238, 0) 100%)',
                   transform: `translate3d(${sheenX.toFixed(2)}px, 0px, 0px) rotate(24deg)`,

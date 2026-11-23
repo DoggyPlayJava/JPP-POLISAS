@@ -290,6 +290,15 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
   const pillPopDuration = Math.max(12, Math.round(0.65 * fps));
   const sceneEnd = Math.max(beat3Start + 1, durationInFrames - 1);
 
+  const exitFrames = Math.max(2, Math.round(0.35 * fps));
+  const exitEnd = Math.max(1, durationInFrames - 1);
+  const exitStart = Math.max(0, Math.min(exitEnd - 1, durationInFrames - exitFrames));
+  const exitLeadNudgeX = interpolate(frame, [exitStart, exitEnd], [0, -24], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: Easing.bezier(0.55, 0, 1, 0.45),
+  });
+
   const portalPushProgress = interpolate(frame, [beat3Start, sceneEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -311,6 +320,10 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
         panYFrom={6}
         panYTo={-8}
         breathingAmplitude={0.75}
+        exitPanXDelta={-46}
+        exitZoomDelta={0.028}
+        exitTiltYDelta={-1.5}
+        exitFrames={Math.round(0.35 * fps)}
         clip
       >
         <div
@@ -606,7 +619,7 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
             position: 'absolute',
             inset: 0,
             pointerEvents: 'none',
-            transform: 'translate3d(0px, 0px, 42px)',
+            transform: `translate3d(${exitLeadNudgeX.toFixed(2)}px, 0px, 42px)`,
             zIndex: 12,
           }}
         >

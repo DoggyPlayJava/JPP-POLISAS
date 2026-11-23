@@ -221,6 +221,9 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
         tiltYFrom={-0.9}
         tiltYTo={0.9}
         breathingAmplitude={0.45}
+        entryZoomOffset={0.036}
+        exitZoomDelta={0.042}
+        exitFrames={Math.round(0.35 * fps)}
         clip
       >
         <div
