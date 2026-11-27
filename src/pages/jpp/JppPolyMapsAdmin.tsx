@@ -43,6 +43,7 @@ import {
 import { computeAdmin360Coverage } from '@/features/polymaps/domain/campusSearch';
 import {
   approveFieldSubmissionAtomic,
+  compressPanoramaBlobForUpload,
   insertLocationsWithFloorFallback,
   invalidatePolyMapsCache,
   updateLocationWithFloorFallback,
@@ -560,8 +561,19 @@ export function JppPolyMapsAdmin() {
         fileToUpload = new File([blobArray], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
       }
 
-      // Handle compression using the shared helper (skip 1080px compression for 360 panorama to preserve equirectangular resolution)
-      if (fieldName !== 'panorama_360_url' && fileToUpload.type.startsWith('image/')) {
+      // Compress standard photos via imageCompression, and 360° panoramas via equirectangular-safe compressor (<= 3.5MB JPEG)
+      if (fieldName === 'panorama_360_url' && fileToUpload.type.startsWith('image/')) {
+        toast.loading(t('services:compressing_image', 'Mengompres imej 360°...'), { id: toastId });
+        const compressedBlob = await compressPanoramaBlobForUpload(fileToUpload, {
+          maxBytes: 3_500_000,
+          maxWidth: 4096,
+        });
+        fileToUpload = new File(
+          [compressedBlob],
+          fileToUpload.name.replace(/\.[^/.]+$/, '.jpg'),
+          { type: 'image/jpeg' },
+        );
+      } else if (fieldName !== 'panorama_360_url' && fileToUpload.type.startsWith('image/')) {
         toast.loading(t('services:compressing_image', 'Mengompres imej...'), { id: toastId });
         const { compressImage } = await import('@/lib/imageCompression');
         const compressedFile = await compressImage(fileToUpload);

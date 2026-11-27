@@ -739,7 +739,7 @@ export async function approveFieldSubmissionAtomic(
 
 /**
  * Compresses a stitched or phone panorama JPEG client-side so uploads stay under
- * `maxBytes` (default 3.5MB) for Supabase Storage (`imaps_assets`, 12MB bucket limit).
+ * `maxBytes` (default 3.5MB) for Supabase Storage (`imaps_assets`, 5MB bucket limit).
  * Never falls back to Base64 data URIs.
  */
 export async function compressPanoramaBlobForUpload(
@@ -792,8 +792,8 @@ export async function compressPanoramaBlobForUpload(
       }
     }
 
-    if (smallestBlob.size > 11_500_000) {
-      throw new Error('Saiz imej panorama terlalu besar walaupun selepas dimampatkan (melebihi had storan).');
+    if (smallestBlob.size > 5_000_000) {
+      throw new Error('Saiz imej panorama terlalu besar walaupun selepas dimampatkan (melebihi had storan 5MB).');
     }
     return smallestBlob;
   } finally {
