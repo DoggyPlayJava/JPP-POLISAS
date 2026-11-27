@@ -56,7 +56,7 @@ export const LandingNavbar: React.FC = () => {
         animate={{ y: 0 }}
         className={cn(
           "fixed top-0 left-0 right-0 z-50 transition-all duration-500 flex justify-center px-3 sm:px-4 md:px-6",
-          isScrolled ? "py-2 sm:py-2.5 md:py-2.5" : "py-2.5 sm:py-4 md:py-6"
+          isScrolled ? "pt-[calc(0.5rem+var(--sat,env(safe-area-inset-top,0px)))] pb-2 sm:pt-2.5 sm:pb-2.5 md:py-2.5" : "pt-[calc(0.625rem+var(--sat,env(safe-area-inset-top,0px)))] pb-2.5 sm:py-4 md:py-6"
         )}
       >
         <div

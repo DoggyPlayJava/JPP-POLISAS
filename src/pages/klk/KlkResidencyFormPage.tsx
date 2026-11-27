@@ -137,7 +137,7 @@ export function KlkResidencyFormPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] flex items-center justify-center p-4 transition-colors">
+    <div className="min-h-screen bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] flex items-center justify-center px-4 pb-4 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] transition-colors">
       {/* BG Glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full opacity-15 dark:opacity-10"

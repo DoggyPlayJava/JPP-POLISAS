@@ -234,7 +234,7 @@ export function NotifikasiPage() {
   return (
     <div className="min-h-screen bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] transition-colors">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-[#0B2420]/95 backdrop-blur-md border-b border-[#B8E4DC]/60 dark:border-[#1E4D45]">
+      <div className="sticky top-0 z-30 bg-white/95 dark:bg-[#0B2420]/95 backdrop-blur-md border-b border-[#B8E4DC]/60 dark:border-[#1E4D45] pt-[var(--sat,env(safe-area-inset-top,0px))]">
         <div className="max-w-2xl mx-auto px-4 pt-4 pb-3">
           <div className="flex items-center gap-3 mb-3">
             <button

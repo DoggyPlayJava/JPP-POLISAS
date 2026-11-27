@@ -143,7 +143,7 @@ export function CampusServicesGrid({
               type="button"
               onClick={() => handleAction(service)}
               className={cn(
-                'relative flex flex-col items-center justify-start text-center group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E] focus-visible:ring-offset-2 px-1.5 py-2.5 sm:p-3.5 min-h-[84px] sm:min-h-[96px] rounded-2xl transition-[transform,background-color,border-color,box-shadow] duration-150 ease-out active:scale-[0.97]',
+                'relative flex flex-col items-center justify-start text-center group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E] focus-visible:ring-offset-2 px-1.5 py-2.5 sm:p-3.5 min-h-[84px] sm:min-h-[96px] rounded-[18px] transition-[transform,background-color,border-color,box-shadow] duration-150 ease-out active:scale-[0.97]',
                 'bg-white hover:bg-[#F6FBF9] border border-[#B8E4DC]/80 hover:border-[#0F766E]/40 shadow-xs hover:shadow-md',
                 'dark:bg-[#0B2420] dark:hover:bg-[#11332D] dark:border-[#1E4D45] dark:hover:border-[#2DD4BF]/40',
                 service.tourClass,
@@ -166,7 +166,7 @@ export function CampusServicesGrid({
 
               <div
                 className={cn(
-                  'w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center mb-1.5 border transition-transform duration-150 ease-out group-hover:scale-105',
+                  'w-11 h-11 sm:w-12 sm:h-12 rounded-[14px] flex items-center justify-center mb-1.5 border transition-transform duration-150 ease-out group-hover:scale-105',
                   style.squircleClass
                 )}
               >

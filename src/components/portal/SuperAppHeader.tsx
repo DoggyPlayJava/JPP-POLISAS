@@ -46,7 +46,7 @@ export function SuperAppHeader({
   return (
     <header
       className={cn(
-        'tour-superapp-header relative overflow-hidden rounded-b-3xl border-b border-[#B8E4DC]/20 shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition-colors duration-300',
+        'tour-superapp-header relative overflow-hidden rounded-b-3xl border-b border-[#B8E4DC]/20 shadow-[0_12px_32px_rgba(0,0,0,0.35)] transition-colors duration-300 pt-[var(--sat,env(safe-area-inset-top,0px))]',
         'bg-gradient-to-br',
         gradientClass,
         className

@@ -88,7 +88,7 @@ describe('BottomNav React Portal Architecture', () => {
 
   it('anchors dock with fixed viewport coordinates and high z-index (z-[120])', () => {
     const content = fs.readFileSync(bottomNavSourcePath, 'utf8');
-    expect(content).toContain('fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))]');
+    expect(content).toContain('fixed bottom-[max(0.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))*0.82))]');
     expect(content).toContain('z-[120]');
     expect(content).toContain('id="bottom-nav-dock"');
   });

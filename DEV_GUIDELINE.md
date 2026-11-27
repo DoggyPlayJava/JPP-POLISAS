@@ -5563,3 +5563,19 @@ Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asa
   - `PolyMartLayout.tsx` membaca kiraan troli Dev Mode secara dinamik daripada `localStorage` (`0` jika kosong) serta menambah penukar bahasa/tema pada pengepala.
   - `CampusServicesGrid.tsx` mengalihkan lencana `MERIT`/`CLUB` ke penjuru kad dan mengelakkan pemotongan label (`E-Kebajikan`), `LandingNavbar.tsx` menggunakan breakpoint `lg:` untuk mengelakkan pembalutan bar atas pada paparan tengah `860px`, dan `Sidebar.tsx` menukar pembungkus `<div>` di luar `<p>` bagi membuang amaran hidrasi React.
 
+---
+
+## 40. Penambahbaikan iOS Dynamic Island Safe-Area, BottomNav & Lapisan Mudah Alih (Nov 2026)
+
+- **Pembolehubah Safe-Area Seragam (`src/index.css`):**
+  - Menakrifkan `--sat: env(safe-area-inset-top, 0px)` dan `--sab: env(safe-area-inset-bottom, 0px)` pada `:root`, bersama kelas utiliti `.pt-safe`, `.pt-safe-top`, dan `.pb-safe`.
+  - Pengepala mudah alih merentasi `SuperAppHeader`, `PolySuaraPage`, `PolyMartLayout`, `AppLayout`, `NotifikasiPage`, `AkademikLayout` (via `style.paddingTop` supaya tidak mengubah kelas yang disemak ujian pariti), `KebajikanLayout`, `PolyTaskLayout`, `PolyRentPage`, `SettingsPage`, `KlkResidencyFormPage`, dan `LandingNavbar` kini melepasi kawasan takuk / *Dynamic Island* iPhone dengan bersih.
+- **Ketinggian `BottomNav`, Helaian Hub & Lapisan `FloatingAiChat`:**
+  - `#bottom-nav-dock` diturunkan kepada `bottom-[max(0.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))*0.82))]` (`~28px` pada iPhone `--sab: 34px`, `12px` pada Android/Desktop) dan dirampingkan kepada ketinggian `<= 58px` sambil mengekalkan sasaran sentuh `min-h-[48px]` serta skirikel tajam (`rounded-[14px]` / `rounded-[20px]`) bebas daripada `--radius: 1.25rem`.
+  - `.quick-actions-menu` (`Hub`) menggunakan `bottom-[calc(4.75rem+max(0.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))*0.82)))]` (`z-[111]`) untuk mengekalkan jarak `>= 10px` di atas dok.
+  - `#nexus-chat-container` pada `FloatingAiChat.tsx` dilaraskan kepada `z-[105]` apabila ditutup (`z-[130]` apabila dibuka) supaya tidak bertindih di atas helaian `Hub` yang sedang dibuka, dan tema lalainya diselaraskan kepada palet *Mineral Teal*.
+- **Kad PolySuara & Portal Mudah Alih (`393×852`):**
+  - `PolySuaraConfessionCard.tsx` mengasingkan lencana status/konteks (`Pinned`, `Resolved`, `QNA`, dsb.) daripada baris pengepala pengarang dan menetapkan `whitespace-nowrap` pada cap masa supaya nama samaran dan tarikh relatif tidak terhimpit di skrin `393px`.
+  - `PolySuaraPage.tsx` menggunakan ikon `MessageSquare` (tiada emoji mentah `✍️`) dan label kompak mudah alih `Tapis` (`< 420px`) sambil mengekalkan teks `Saluran & Tapis` dalam DOM supaya ketiga-tiga tab suapan bebas daripada pemotongan.
+  - `NextClassBentoCard.tsx` dan `CampusServicesGrid.tsx` memaparkan baris metadata masa/lokasi sebaris dan sudut skirikel `rounded-[14px]` / `rounded-[18px]`.
+

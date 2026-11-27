@@ -196,7 +196,7 @@ export function PolySuaraPage({
   initialActiveConfession,
   initialMyConfessions,
 }: PolySuaraPageProps = {}) {
-  const { t } = useTranslation(['services', 'common']);
+  const { t, i18n } = useTranslation(['services', 'common']);
   const { profile } = useAuth();
   const canReplyJpp = ['JPP', 'SUPER_ADMIN_JPP', 'ADMIN', 'SUPER_ADMIN'].includes(profile?.role || '');
   const { isSubscribed, requestPermission, unsubscribe } = usePushNotifications();
@@ -2051,8 +2051,8 @@ export function PolySuaraPage({
   return (
     <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] pb-36 md:pb-32 relative overflow-x-clip transition-colors duration-200">
       {/* Mineral Teal Opaque Sticky Header */}
-      <header className="sticky top-0 z-50 bg-[#F6FBF9] dark:bg-[#061714] border-b border-[#B8E4DC]/80 dark:border-[#1E4D45]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <header className="sticky top-0 z-50 bg-[#F6FBF9] dark:bg-[#061714] border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] pt-[var(--sat,env(safe-area-inset-top,0px))]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               type="button"
@@ -2207,8 +2207,8 @@ export function PolySuaraPage({
                   aria-label={t('services:write_new_confession_aria', 'Tulis luahan kampus baharu')}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-xl bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center text-lg shrink-0 group-hover:scale-105 transition-transform">
-                      ✍️
+                    <div className="w-9 h-9 rounded-[12px] bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                      <MessageSquare className="w-4 h-4" />
                     </div>
                     <span className="text-xs sm:text-sm text-[#3B635C] dark:text-[#99CBC2] group-hover:text-[#0B2420] dark:group-hover:text-[#F6FBF9] font-medium truncate">
                       {t('services:suara_quick_compose_placeholder', 'Ada luahan atau rahsia kampus? Kongsi secara rahsia...')}
@@ -2240,8 +2240,8 @@ export function PolySuaraPage({
                 )}
 
                 {/* X / Threads Clean 3-Tab Underline Navigation + Saluran & Tapis Drawer Trigger */}
-                <div className="flex items-center justify-between gap-2 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] mb-4">
-                  <div className="flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none">
+                <div className="flex items-center justify-between gap-1.5 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] mb-4">
+                  <div className="flex items-center gap-0.5 sm:gap-2 overflow-x-auto scrollbar-none min-w-0">
                     {([
                       { id: 'LATEST', label: t('suara_sort_newest', 'Terkini'), icon: Clock },
                       { id: 'TRENDING', label: t('services:suara_sort_trending', 'Hangat'), icon: Flame },
@@ -2255,7 +2255,7 @@ export function PolySuaraPage({
                           type="button"
                           onClick={() => setSortBy(tab.id)}
                           className={cn(
-                            'relative py-3 px-2.5 sm:px-3.5 text-xs sm:text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1.5 cursor-pointer shrink-0',
+                            'relative py-3 px-2 sm:px-3.5 text-[11px] sm:text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0',
                             isActive
                               ? 'text-[#0F766E] dark:text-[#2DD4BF]'
                               : 'text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-[#F6FBF9]'
@@ -2264,7 +2264,7 @@ export function PolySuaraPage({
                           <TabIcon className="w-3.5 h-3.5 shrink-0" />
                           <span>{tab.label}</span>
                           {isActive && (
-                            <span className="absolute bottom-0 inset-x-2 h-[3px] rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
+                            <span className="absolute bottom-0 inset-x-1.5 sm:inset-x-2 h-[3px] rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
                           )}
                         </button>
                       );
@@ -2274,10 +2274,11 @@ export function PolySuaraPage({
                   <button
                     type="button"
                     onClick={() => setMobileDrawerOpen(true)}
-                    className="lg:hidden inline-flex items-center gap-1.5 px-3 py-1.5 mb-1 rounded-full text-xs font-semibold bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9] shrink-0 cursor-pointer hover:border-[#0F766E]/50"
+                    className="lg:hidden inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 mb-1 rounded-full text-xs font-semibold bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9] shrink-0 cursor-pointer hover:border-[#0F766E]/50"
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
-                    <span>{t('services:suara_channels_filters_btn', 'Saluran & Tapis')}</span>
+                    <span className="hidden min-[420px]:inline">{t('services:suara_channels_filters_btn', 'Saluran & Tapis')}</span>
+                    <span className="min-[420px]:hidden">{t('services:suara_filter_short', i18n?.language?.startsWith('en') ? 'Filters' : 'Tapis')}</span>
                     {(activeCategory !== 'SEMUA' || activeFormat !== 'ALL' || focusMode || activeTag || sortBy === 'MINE' || sortBy === 'BOOKMARKS') && (
                       <span className="w-2 h-2 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
                     )}

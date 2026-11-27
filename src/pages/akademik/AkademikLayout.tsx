@@ -144,7 +144,10 @@ export function AkademikLayout() {
       <div className="relative z-10 md:ml-64 flex flex-col min-h-[100dvh]">
 
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420]">
+        <header
+          className="sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420]"
+          style={{ paddingTop: 'calc(0.875rem + var(--sat, env(safe-area-inset-top, 0px)))' }}
+        >
           <button
             onClick={() => setSidebarOpen(true)}
             className="tour-mobile-hamburger md:hidden p-2 rounded-xl text-[#3B635C] dark:text-white/50 hover:text-[#0B2420] dark:hover:text-white hover:bg-[#EBF7F4] dark:hover:bg-white/[0.06] transition-all"

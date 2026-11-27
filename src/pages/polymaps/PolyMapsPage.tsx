@@ -2383,7 +2383,7 @@ export function PolyMapsPage() {
       </AnimatePresence>
 
       {/* ── BOTTOM CONTROLS & INFO SHEET ── */}
-      <div className="absolute bottom-[104px] sm:bottom-[108px] md:bottom-7 left-0 right-0 z-[1000] p-3 sm:p-4 pointer-events-none pb-safe">
+      <div className="absolute bottom-[calc(4.75rem+max(0.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))*0.82)))] md:bottom-7 left-0 right-0 z-[1000] p-3 sm:p-4 pointer-events-none pb-safe">
         <div className="max-w-md mx-auto pointer-events-auto flex flex-col gap-4">
           
           {/* Navigation: Collapsible Mini Bar + Expand */}

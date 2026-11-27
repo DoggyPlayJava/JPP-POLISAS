@@ -846,7 +846,7 @@ export function SettingsPage() {
 
   return (
     <>
-      <div className="page-container bg-[#F6FBF9] dark:bg-[#061714] text-[#0F172A] dark:text-[#F6FBF9] min-h-[100dvh] relative space-y-6 pb-36 after:content-[''] after:block after:h-28 after:shrink-0 overflow-x-hidden pt-4 sm:pt-6">
+      <div className="page-container bg-[#F6FBF9] dark:bg-[#061714] text-[#0F172A] dark:text-[#F6FBF9] min-h-[100dvh] relative space-y-6 pb-36 after:content-[''] after:block after:h-28 after:shrink-0 overflow-x-hidden pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] sm:pt-[calc(1.5rem+var(--sat,env(safe-area-inset-top,0px)))]">
         
         {/* Subtle Ambient Mesh Glow */}
         <div className="absolute inset-0 -z-10 pointer-events-none overflow-hidden" aria-hidden="true">

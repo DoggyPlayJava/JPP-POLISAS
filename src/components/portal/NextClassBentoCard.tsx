@@ -351,22 +351,23 @@ export function NextClassBentoCard({
               </span>
             )}
 
-            <div className="min-w-0 space-y-0.5">
+            <div className="min-w-0 space-y-1">
               {stateData.type === 'TODAY_ACTIVE' ? (
                 <>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-black text-[#0B2420] dark:text-[#F6FBF9] tracking-tight">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className="text-sm font-black text-[#0B2420] dark:text-[#F6FBF9] tracking-tight truncate">
                       {stateData.entry.course_name?.trim() || stateData.entry.course_code}
                     </span>
-                    <span className="text-xs text-[#3B635C] dark:text-[#99CBC2] font-medium font-mono tabular-nums">
-                      ({formatDisplayTime(stateData.entry.start_time)} - {formatDisplayTime(stateData.entry.end_time)})
-                    </span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-[#3B635C] dark:text-[#99CBC2] truncate">
+                  <div className="flex items-center gap-1.5 text-xs text-[#3B635C] dark:text-[#99CBC2] min-w-0">
+                    <span className="text-[#0B2420] dark:text-[#D9F2ED] font-semibold tabular-nums whitespace-nowrap shrink-0">
+                      {formatDisplayTime(stateData.entry.start_time)} – {formatDisplayTime(stateData.entry.end_time)}
+                    </span>
+                    <span className="text-[#3B635C]/50 dark:text-[#99CBC2]/50 shrink-0">·</span>
                     {stateData.entry.is_online ? (
-                      <span className="text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1">
-                        <Laptop className="w-3 h-3" />
-                        <span>{t('portal:online_teams', 'Dalam Talian (Teams)')}</span>
+                      <span className="text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1 truncate">
+                        <Laptop className="w-3 h-3 shrink-0" />
+                        <span className="truncate">{t('portal:online_teams', 'Dalam Talian (Teams)')}</span>
                       </span>
                     ) : (
                       <span className="text-emerald-700 dark:text-emerald-300 font-semibold flex items-center gap-1 truncate">

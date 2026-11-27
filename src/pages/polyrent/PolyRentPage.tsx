@@ -278,7 +278,7 @@ export function PolyRentPage() {
     <div className="min-h-[100dvh] bg-white dark:bg-slate-950 pb-24 selection:bg-teal-500/30">
       
       {/* ── CINEMATIC HERO SECTION ── */}
-      <div className="relative pt-6 pb-28 md:pb-36 overflow-hidden bg-slate-900">
+      <div className="relative pt-[calc(1.5rem+var(--sat,env(safe-area-inset-top,0px)))] pb-28 md:pb-36 overflow-hidden bg-slate-900">
         <div className="absolute inset-0 z-0">
           <img src="https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2000&auto=format&fit=crop" className="w-full h-full object-cover opacity-20 mix-blend-overlay" alt="Room background" />
           <div className="absolute inset-0 bg-gradient-to-t from-white dark:from-slate-950 via-slate-900/40 to-slate-900/80" />

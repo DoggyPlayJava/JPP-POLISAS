@@ -4,6 +4,9 @@
 
 @layer base {
   :root {
+    /* iOS Safe Area Insets (overridable in tests via --sat / --sab) */
+    --sat: env(safe-area-inset-top, 0px);
+    --sab: env(safe-area-inset-bottom, 0px);
     /* JPP Polisas - Semambu Mineral Teal & Crisp Alabaster */
     --background: 160 45% 97%;
     --foreground: 170 53% 9%;
@@ -262,4 +265,16 @@ body.supsas-route {
 .dark .jpp-canvas-texture {
   background-image: radial-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 0);
   background-size: 24px 24px;
+}
+
+@layer utilities {
+  .pt-safe {
+    padding-top: var(--sat, env(safe-area-inset-top, 0px));
+  }
+  .pt-safe-top {
+    padding-top: calc(0.75rem + var(--sat, env(safe-area-inset-top, 0px)));
+  }
+  .pb-safe {
+    padding-bottom: var(--sab, env(safe-area-inset-bottom, 0px));
+  }
 }

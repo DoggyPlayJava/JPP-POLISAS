@@ -157,9 +157,9 @@ export function PolySuaraConfessionCard({
         isTrending && 'border-[#0F766E]/45 dark:border-[#2DD4BF]/40'
       )}
     >
-      {/* Author & Context Header */}
-      <div className="flex items-start justify-between gap-2.5 mb-3">
-        <div className="flex items-center gap-3 min-w-0">
+      {/* Author & Compact Category/Action Row */}
+      <div className="flex items-start justify-between gap-2.5 mb-2.5">
+        <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
           <div className="p-[2px] rounded-full bg-gradient-to-tr from-[#0F766E] via-[#14B8A6] to-[#2DD4BF] shrink-0">
             <div
               className={cn(
@@ -175,9 +175,9 @@ export function PolySuaraConfessionCard({
             </div>
           </div>
 
-          <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <h4 className="text-sm sm:text-base font-bold text-[#0B2420] dark:text-[#F6FBF9] truncate">
+          <div className="flex flex-col min-w-0 flex-1">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <h4 className="text-sm sm:text-base font-bold text-[#0B2420] dark:text-[#F6FBF9] truncate min-w-0">
                 {confession.codename || t('services:anon_student', 'Pelajar Anon')}
               </h4>
               <span
@@ -195,7 +195,7 @@ export function PolySuaraConfessionCard({
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-[#3B635C] dark:text-[#99CBC2] mt-0.5">
+            <p className="text-[11px] text-[#3B635C] dark:text-[#99CBC2] mt-0.5 whitespace-nowrap truncate">
               {formatDistanceToNow(new Date(confession.created_at), {
                 addSuffix: true,
                 locale: ms,
@@ -205,7 +205,55 @@ export function PolySuaraConfessionCard({
         </div>
 
         <div
-          className="flex items-center gap-1.5 flex-wrap justify-end shrink-0"
+          className="flex items-center gap-1 shrink-0"
+          data-html2canvas-ignore
+        >
+          <span className="whitespace-nowrap text-[11px] font-bold px-3 py-1 rounded-full text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#11322C] border border-[#B8E4DC]/80 dark:border-[#1E4D45] shrink-0">
+            {getCategoryLabel(confession.category)}
+          </span>
+
+          {canDeleteConfession && (
+            <button
+              type="button"
+              onClick={() => onDeleteConfession(confession.id)}
+              title={t('services:delete_confession_tooltip', 'Padam luahan anda')}
+              aria-label={t('services:delete_confession', 'Padam Luahan')}
+              className="text-[#3B635C] hover:text-rose-500 dark:text-[#99CBC2] dark:hover:text-rose-400 transition-colors p-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 cursor-pointer flex items-center gap-1 text-xs"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span className="hidden sm:inline text-[11px] font-medium">
+                {t('services:delete_confession', 'Padam Luahan')}
+              </span>
+            </button>
+          )}
+
+          {!isConfessionDeleted && (
+            <button
+              type="button"
+              onClick={() => onOpenReport(confession.id)}
+              title={t('services:report_content_tooltip', 'Laporkan kandungan ini')}
+              aria-label={t('services:report_content_tooltip', 'Laporkan kandungan ini')}
+              className="text-[#3B635C] dark:text-[#99CBC2] hover:text-amber-500 dark:hover:text-amber-400 transition-colors p-1.5 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] cursor-pointer"
+            >
+              <AlertTriangle className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Context & Status Badges Strip (kept off the author header so names & timestamps stay clean) */}
+      {(intent === 'QNA' ||
+        intent === 'SHOUTOUT' ||
+        intent === 'DEBATE' ||
+        isTrending ||
+        confession.is_pinned ||
+        confession.status === 'ACKNOWLEDGED' ||
+        confession.status === 'INVESTIGATING' ||
+        confession.status === 'RESOLVED' ||
+        isFactCheck ||
+        isOfficialNote) && (
+        <div
+          className="flex items-center gap-1.5 flex-wrap mb-2.5"
           data-html2canvas-ignore
         >
           {intent === 'QNA' && (
@@ -267,39 +315,8 @@ export function PolySuaraConfessionCard({
               {t('services:status_official_note', 'Nota JPP')}
             </span>
           )}
-
-          <span className="text-[11px] font-bold px-3 py-1 rounded-full text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#11322C] border border-[#B8E4DC]/80 dark:border-[#1E4D45] shrink-0">
-            {getCategoryLabel(confession.category)}
-          </span>
-
-          {canDeleteConfession && (
-            <button
-              type="button"
-              onClick={() => onDeleteConfession(confession.id)}
-              title={t('services:delete_confession_tooltip', 'Padam luahan anda')}
-              aria-label={t('services:delete_confession', 'Padam Luahan')}
-              className="text-[#3B635C] hover:text-rose-500 dark:text-[#99CBC2] dark:hover:text-rose-400 transition-colors p-1.5 rounded-full hover:bg-rose-50 dark:hover:bg-rose-500/10 cursor-pointer flex items-center gap-1 text-xs"
-            >
-              <Trash2 className="w-4 h-4" />
-              <span className="hidden sm:inline text-[11px] font-medium">
-                {t('services:delete_confession', 'Padam Luahan')}
-              </span>
-            </button>
-          )}
-
-          {!isConfessionDeleted && (
-            <button
-              type="button"
-              onClick={() => onOpenReport(confession.id)}
-              title={t('services:report_content_tooltip', 'Laporkan kandungan ini')}
-              aria-label={t('services:report_content_tooltip', 'Laporkan kandungan ini')}
-              className="text-[#3B635C] dark:text-[#99CBC2] hover:text-amber-500 dark:hover:text-amber-400 transition-colors p-1.5 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] cursor-pointer"
-            >
-              <AlertTriangle className="w-4 h-4" />
-            </button>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Main Editorial Content */}
       {isConfessionDeleted ? (

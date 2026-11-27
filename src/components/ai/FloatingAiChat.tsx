@@ -520,11 +520,11 @@ export function FloatingAiChat() {
       };
     }
     return {
-      accent: '#6366f1',
-      bg: 'from-indigo-600 to-violet-600',
-      text: 'text-indigo-500',
-      border: 'border-indigo-500/20',
-      tint: 'rgba(99,102,241,0.08)',
+      accent: '#0F766E',
+      bg: 'from-[#0F766E] to-[#0D9488]',
+      text: 'text-[#0F766E] dark:text-[#2DD4BF]',
+      border: 'border-[#0F766E]/20 dark:border-[#2DD4BF]/25',
+      tint: 'rgba(15,118,110,0.08)',
       glow: ''
     };
   }, [location.pathname]);
@@ -1818,7 +1818,7 @@ export function FloatingAiChat() {
   };
 
   const content = (
-    <div id="nexus-chat-container" className={`fixed bottom-6 max-md:bottom-[calc(6.75rem+env(safe-area-inset-bottom,0px))] right-4 md:right-6 z-[120] transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
+    <div id="nexus-chat-container" className={`fixed bottom-6 max-md:bottom-[calc(4.75rem+max(0.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))*0.82)))] right-4 md:right-6 ${isOpen ? 'z-[130]' : 'z-[105]'} transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
       
       {/* ── Floating Notification Popout (New Message Alert) ── */}
       <AnimatePresence>
@@ -2356,7 +2356,7 @@ export function FloatingAiChat() {
                 <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth">
                   {/* Pinned Welcome */}
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-indigo-100 dark:bg-indigo-500/20 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-7 h-7 rounded-full bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 mt-0.5">
                       <Sparkles size={14} />
                     </div>
                     <div className="bg-card border border-border/50 p-4 rounded-2xl rounded-tl-sm text-sm text-foreground shadow-sm flex-1">

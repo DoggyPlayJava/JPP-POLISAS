@@ -55,7 +55,7 @@ export function PolyTaskLayout() {
 
       {/* Mobile Header */}
       <div className={cn(
-        "md:hidden sticky top-0 z-50 border-b flex items-center justify-between p-4 transition-colors",
+        "md:hidden sticky top-0 z-50 border-b flex items-center justify-between px-4 pb-4 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] transition-colors",
         isDark ? "bg-[#0B2420] border-[#1E4D45]" : "bg-white border-[#B8E4DC]/80"
       )}>
         <div className="flex items-center gap-3">
