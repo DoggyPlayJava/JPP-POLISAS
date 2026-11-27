@@ -739,7 +739,7 @@ export async function approveFieldSubmissionAtomic(
 
 /**
  * Compresses a stitched or phone panorama JPEG client-side so uploads stay under
- * `maxBytes` (default 3.5MB) for Supabase Storage (`imaps_assets`, 5MB bucket limit).
+ * `maxBytes` (default 3.5MB) for Supabase Storage (`imaps_assets`, 12MB bucket limit).
  * Never falls back to Base64 data URIs.
  */
 export async function compressPanoramaBlobForUpload(

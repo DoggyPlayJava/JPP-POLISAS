@@ -561,7 +561,7 @@ export function JppPolyMapsAdmin() {
         fileToUpload = new File([blobArray], file.name.replace(/\.[^/.]+$/, ".jpg"), { type: 'image/jpeg' });
       }
 
-      // Compress standard photos via imageCompression, and 360° panoramas via equirectangular-safe compressor (<= 3.5MB JPEG)
+      // Handle compression using the shared helpers (<= 3.5MB equirectangular JPEG for 360 panorama; standard compressImage for others)
       if (fieldName === 'panorama_360_url' && fileToUpload.type.startsWith('image/')) {
         toast.loading(t('services:compressing_image', 'Mengompres imej 360°...'), { id: toastId });
         const compressedBlob = await compressPanoramaBlobForUpload(fileToUpload, {
