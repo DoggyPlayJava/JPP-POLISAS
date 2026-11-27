@@ -1073,5 +1073,10 @@
   "suara_drawer_close": "Close drawer",
   "suara_confirmed_delete_action": "Yes, Delete",
   "suara_confirmed_escalate_action": "Yes, Escalate Now",
-  "suara_official_note_badge": "Official JPP Response"
+  "suara_official_note_badge": "Official JPP Response",
+  "suara_quick_compose_short": "What's on your mind?",
+  "suara_filter_short": "Filters",
+  "suara_open_search": "Search voices",
+  "suara_clear_search": "Clear search",
+  "suara_drawer_preferences": "Appearance & Language"
 }

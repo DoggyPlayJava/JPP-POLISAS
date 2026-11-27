@@ -243,6 +243,15 @@ export function PolySuaraPage({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [focusMode, setFocusMode] = useState(false);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const mobileSearchInputRef = useRef<HTMLInputElement | null>(null);
+  const isMobileSearchVisible = mobileSearchOpen || searchQuery.trim().length > 0;
+
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      mobileSearchInputRef.current?.focus();
+    }
+  }, [mobileSearchOpen]);
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(() => {
     try {
       if (typeof localStorage !== 'undefined') {
@@ -2084,20 +2093,20 @@ export function PolySuaraPage({
 
   return (
     <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] pb-36 md:pb-32 relative overflow-x-clip transition-colors duration-200">
-      {/* Mineral Teal Opaque Sticky Header */}
+      {/* Minimal 1-Row Mobile / Adaptive Desktop Sticky Header */}
       <header className="sticky top-0 z-50 bg-[#F6FBF9] dark:bg-[#090B0E] border-b border-[#B8E4DC]/80 dark:border-[#252B35] pt-[var(--sat,env(safe-area-inset-top,0px))]">
-        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-13 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-12 sm:h-16 flex items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
             <button
               type="button"
               onClick={() => navigate('/portal')}
               aria-label={t('common:back', 'Kembali')}
-              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] flex items-center justify-center transition-colors text-[#0B2420] dark:text-[#F1F5F9] shrink-0 cursor-pointer"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] active:scale-[0.97] flex items-center justify-center transition-colors text-[#0B2420] dark:text-[#F1F5F9] shrink-0 cursor-pointer"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] flex items-center justify-center shrink-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] flex items-center justify-center shrink-0">
                 <Ghost className="w-4 h-4" />
               </div>
               <span className="font-black text-base tracking-tight whitespace-nowrap">
@@ -2106,9 +2115,39 @@ export function PolySuaraPage({
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-            <LanguageToggle />
-            <ThemeToggle />
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+            <div className="hidden lg:flex items-center gap-2">
+              <LanguageToggle />
+              <ThemeToggle />
+            </div>
+
+            {/* Mobile 1/3: Collapsible Search Toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                if (isMobileSearchVisible && !searchQuery.trim()) {
+                  setMobileSearchOpen(false);
+                } else {
+                  setMobileSearchOpen(true);
+                  setTimeout(() => mobileSearchInputRef.current?.focus(), 0);
+                }
+              }}
+              aria-label={t('services:suara_open_search', 'Cari suara')}
+              aria-expanded={isMobileSearchVisible}
+              className={cn(
+                'lg:hidden relative w-9 h-9 rounded-full flex items-center justify-center transition-colors active:scale-[0.97] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] cursor-pointer',
+                isMobileSearchVisible
+                  ? 'text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4]/80 dark:bg-[#1B2028]'
+                  : 'text-[#0B2420] dark:text-[#F1F5F9]'
+              )}
+            >
+              <Search className="w-[18px] h-[18px]" />
+              {searchQuery.trim().length > 0 && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
+              )}
+            </button>
+
+            {/* Mobile 2/3 & Desktop: Notification Toggle */}
             <button
               type="button"
               disabled={notifToggleLoading}
@@ -2141,26 +2180,84 @@ export function PolySuaraPage({
                 }
               }}
               className={cn(
-                "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-colors cursor-pointer",
-                notifToggleLoading && "opacity-50 cursor-wait",
+                'relative w-9 h-9 lg:w-10 lg:h-10 rounded-full flex items-center justify-center transition-colors active:scale-[0.97] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] cursor-pointer',
+                notifToggleLoading && 'opacity-50 cursor-wait',
                 polySuaraNotif
-                  ? "bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/25 dark:border-[#2DD4BF]/30"
-                  : "bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] text-[#3B635C] dark:text-[#94A0B2]"
+                  ? 'text-[#0F766E] dark:text-[#2DD4BF] lg:bg-[#EBF7F4] lg:dark:bg-[#1B2028] lg:border lg:border-[#0F766E]/25 lg:dark:border-[#2DD4BF]/30'
+                  : 'text-[#3B635C] dark:text-[#94A0B2] lg:bg-white lg:dark:bg-[#13171D] lg:border lg:border-[#B8E4DC]/80 lg:dark:border-[#252B35]'
               )}
+              aria-label={polySuaraNotif ? t('services:notifications_active', 'Notifikasi Aktif') : t('services:enable_notifications', 'Aktifkan Notifikasi')}
               title={polySuaraNotif ? t('services:notifications_active', 'Notifikasi Aktif') : t('services:enable_notifications', 'Aktifkan Notifikasi')}
             >
-              {polySuaraNotif ? <BellRing className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
+              {polySuaraNotif ? <BellRing className="w-[18px] h-[18px] lg:w-4 lg:h-4" /> : <Bell className="w-[18px] h-[18px] lg:w-4 lg:h-4" />}
+              {polySuaraNotif && (
+                <span className="lg:hidden absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
+              )}
             </button>
-            <span className="hidden sm:inline-flex text-xs font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] px-3 py-1.5 rounded-full items-center gap-1.5">
+
+            {/* Mobile 3/3: Channels & Filters Drawer Trigger */}
+            <button
+              type="button"
+              onClick={() => setMobileDrawerOpen(true)}
+              aria-label={t('services:suara_channels_filters_btn', 'Saluran & Tapis')}
+              className={cn(
+                'lg:hidden relative w-9 h-9 rounded-full flex items-center justify-center transition-colors active:scale-[0.97] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] cursor-pointer',
+                (activeCategory !== 'SEMUA' || activeFormat !== 'ALL' || focusMode || activeTag || sortBy === 'MINE' || sortBy === 'BOOKMARKS')
+                  ? 'text-[#0F766E] dark:text-[#2DD4BF]'
+                  : 'text-[#0B2420] dark:text-[#F1F5F9]'
+              )}
+            >
+              <SlidersHorizontal className="w-[18px] h-[18px]" />
+              <span className="sr-only">{t('services:suara_channels_filters_btn', 'Saluran & Tapis')}</span>
+              {(activeCategory !== 'SEMUA' || activeFormat !== 'ALL' || focusMode || activeTag || sortBy === 'MINE' || sortBy === 'BOOKMARKS') && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
+              )}
+            </button>
+
+            <span className="hidden lg:inline-flex text-xs font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] px-3 py-1.5 rounded-full items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" />
               <span>Anon Mode</span>
             </span>
           </div>
         </div>
+
+        {/* Collapsible Inline Mobile Search Bar (< lg) */}
+        {isMobileSearchVisible && (
+          <div className="lg:hidden border-t border-[#B8E4DC]/50 dark:border-[#252B35] px-3 py-2 bg-[#F6FBF9] dark:bg-[#090B0E]">
+            <div className="relative flex items-center">
+              <Search className="w-4 h-4 text-[#3B635C] dark:text-[#94A0B2] absolute left-3.5 pointer-events-none" />
+              <input
+                ref={mobileSearchInputRef}
+                type="search"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setSearchQuery('');
+                    setMobileSearchOpen(false);
+                  }
+                }}
+                placeholder={t('services:suara_search_placeholder', 'Cari luahan, lokasi atau #hashtag...')}
+                className="w-full h-9 pl-9 pr-9 rounded-full bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] text-xs text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/35 [&::-webkit-search-cancel-button]:appearance-none"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setMobileSearchOpen(false);
+                }}
+                aria-label={t('services:suara_clear_search', 'Padam carian')}
+                className="absolute right-1.5 w-7 h-7 rounded-full flex items-center justify-center text-[#3B635C] dark:text-[#94A0B2] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* X/Threads-Inspired Adaptive Mineral Teal Shell (2-col on lg, 3-col on xl) */}
-      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 pt-3 sm:pt-6 relative z-10 pb-32">
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 pt-0 sm:pt-6 relative z-10 pb-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           <PolySuaraLeftRail
             sortBy={sortBy}
@@ -2212,21 +2309,7 @@ export function PolySuaraPage({
               </div>
             ) : (
               <>
-                {/* Search Bar for < 1024px (lg+) where RightRail handles desktop search */}
-                <div className="lg:hidden mb-2.5">
-                  <div className="relative">
-                    <Search className="w-4 h-4 text-[#3B635C] dark:text-[#94A0B2] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <input
-                      type="search"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      placeholder={t('services:suara_search_placeholder', 'Cari luahan, lokasi atau #hashtag...')}
-                      className="w-full h-10 pl-10 pr-4 rounded-full bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] text-xs text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/35"
-                    />
-                  </div>
-                </div>
-
-                {/* Quick-compose capsule */}
+                {/* Flat Facebook-Style Mobile Quick-Compose Row / Elevated Desktop Capsule */}
                 <div
                   onClick={() => setComposeModalOpen(true)}
                   onKeyDown={(e) => {
@@ -2235,31 +2318,36 @@ export function PolySuaraPage({
                       setComposeModalOpen(true);
                     }
                   }}
-                  className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] hover:border-[#0F766E]/50 dark:hover:border-[#2DD4BF]/50 rounded-2xl sm:rounded-3xl p-2.5 sm:p-4 mb-3 sm:mb-4 shadow-xs flex items-center justify-between gap-2.5 sm:gap-3 cursor-pointer group transition-colors"
+                  className="bg-transparent sm:bg-white sm:dark:bg-[#13171D] border-b sm:border border-[#B8E4DC]/60 sm:border-[#B8E4DC]/80 dark:border-[#252B35] sm:hover:border-[#0F766E]/50 sm:dark:hover:border-[#2DD4BF]/50 rounded-none sm:rounded-3xl py-2.5 px-1 sm:p-4 mb-0 sm:mb-4 sm:shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-colors"
                   role="button"
                   tabIndex={0}
                   aria-label={t('services:write_new_confession_aria', 'Tulis luahan kampus baharu')}
                 >
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full sm:rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                       <MessageSquare className="w-4 h-4" />
                     </div>
-                    <span className="text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0B2420] dark:group-hover:text-[#F1F5F9] font-medium truncate">
-                      <span className="sm:hidden">{t('services:suara_quick_compose_short', 'Ada luahan kampus? Kongsi rahsia...')}</span>
+                    <span className="text-sm text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0B2420] dark:group-hover:text-[#F1F5F9] font-medium truncate">
+                      <span className="sm:hidden">{t('services:suara_quick_compose_short', 'Ada luahan kampus?')}</span>
                       <span className="hidden sm:inline">{t('services:suara_quick_compose_placeholder', 'Ada luahan atau rahsia kampus? Kongsi secara rahsia...')}</span>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs font-bold text-white dark:text-[#090B0E] bg-[#0F766E] dark:bg-[#2DD4BF] px-3 sm:px-3.5 py-1.5 rounded-full inline-flex items-center gap-1 group-hover:opacity-90 transition-opacity whitespace-nowrap">
-                      <span className="sm:hidden">{t('services:suara_quick_cta_short', 'Luah')}</span>
-                      <span className="hidden sm:inline">{t('suara_post_confession_btn', 'Luahkan')}</span>
+                    <span
+                      aria-hidden="true"
+                      className="sm:hidden w-8 h-8 rounded-full inline-flex items-center justify-center text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0F766E] dark:group-hover:text-[#2DD4BF] transition-colors"
+                    >
+                      <ImageIcon className="w-4 h-4" />
+                    </span>
+                    <span className="hidden sm:inline-flex text-xs font-bold text-white dark:text-[#090B0E] bg-[#0F766E] dark:bg-[#2DD4BF] px-3.5 py-1.5 rounded-full items-center gap-1 group-hover:opacity-90 transition-opacity whitespace-nowrap">
+                      <span>{t('suara_post_confession_btn', 'Luahkan')}</span>
                     </span>
                   </div>
                 </div>
 
                 {/* New Whispers Pill (throttled visibilitychange refresh) */}
                 {hasNewWhispers && (
-                  <div className="flex justify-center mb-3">
+                  <div className="flex justify-center my-2.5">
                     <button
                       type="button"
                       onClick={() => {
@@ -2275,9 +2363,9 @@ export function PolySuaraPage({
                   </div>
                 )}
 
-                {/* X / Threads Clean 3-Tab Underline Navigation + Saluran & Tapis Drawer Trigger */}
-                <div className="flex items-center justify-between gap-1.5 border-b border-[#B8E4DC]/80 dark:border-[#252B35] mb-3 sm:mb-4">
-                  <div className="flex items-center gap-0.5 sm:gap-2 overflow-x-auto scrollbar-none min-w-0">
+                {/* Pure-Text Threads-Style 3-Tab Underline Bar */}
+                <div className="border-b border-[#B8E4DC]/80 dark:border-[#252B35] mb-1 sm:mb-4">
+                  <div className="grid grid-cols-3 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto">
                     {([
                       { id: 'LATEST', label: t('suara_sort_newest', 'Terkini'), icon: Clock },
                       { id: 'TRENDING', label: t('services:suara_sort_trending', 'Hangat'), icon: Flame },
@@ -2291,34 +2379,21 @@ export function PolySuaraPage({
                           type="button"
                           onClick={() => setSortBy(tab.id)}
                           className={cn(
-                            'relative py-2.5 sm:py-3 px-2 sm:px-3.5 text-[11px] sm:text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0',
+                            'relative py-2.5 sm:py-3 px-2 sm:px-3.5 text-xs sm:text-sm font-bold whitespace-nowrap transition-colors flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer',
                             isActive
                               ? 'text-[#0F766E] dark:text-[#2DD4BF]'
                               : 'text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]'
                           )}
                         >
-                          <TabIcon className="w-3.5 h-3.5 shrink-0" />
+                          <TabIcon className="hidden sm:block w-3.5 h-3.5 shrink-0" />
                           <span>{tab.label}</span>
                           {isActive && (
-                            <span className="absolute bottom-0 inset-x-1.5 sm:inset-x-2 h-[3px] rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
+                            <span className="absolute bottom-0 inset-x-4 sm:inset-x-2 h-[2px] rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
                           )}
                         </button>
                       );
                     })}
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setMobileDrawerOpen(true)}
-                    className="lg:hidden inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 mb-1 rounded-full text-xs font-semibold bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] shrink-0 cursor-pointer hover:border-[#0F766E]/50"
-                  >
-                    <SlidersHorizontal className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
-                    <span className="hidden min-[420px]:inline">{t('services:suara_channels_filters_btn', 'Saluran & Tapis')}</span>
-                    <span className="min-[420px]:hidden">{t('services:suara_filter_short', i18n?.language?.startsWith('en') ? 'Filters' : 'Tapis')}</span>
-                    {(activeCategory !== 'SEMUA' || activeFormat !== 'ALL' || focusMode || activeTag || sortBy === 'MINE' || sortBy === 'BOOKMARKS') && (
-                      <span className="w-2 h-2 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
-                    )}
-                  </button>
                 </div>
 
                 {/* Active secondary filter indicator (single clean dismissible strip) */}
@@ -2724,37 +2799,14 @@ export function PolySuaraPage({
                   document.body
                 )}
 
-                {trendingTags.length > 0 && (
-                  <div className="lg:hidden flex gap-2 overflow-x-auto pb-4 scrollbar-none mb-2">
-                    <span className="text-xs font-bold text-[#3B635C] dark:text-[#94A0B2] py-1.5 flex items-center gap-1 shrink-0">
-                      <Flame className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" /> Trending:
-                    </span>
-                    {trendingTags.map((tag, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => { setActiveTag(activeTag === tag.tag ? null : tag.tag); setActiveCategory('SEMUA'); }}
-                        className={cn(
-                          'px-3 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer',
-                          activeTag === tag.tag
-                            ? 'bg-[#0F766E] border-[#0F766E] text-white dark:bg-[#2DD4BF] dark:border-[#2DD4BF] dark:text-[#090B0E]'
-                            : 'bg-white dark:bg-[#13171D] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] border-[#B8E4DC]/80 dark:border-[#252B35] text-[#3B635C] dark:text-[#94A0B2]'
-                        )}
-                      >
-                        {tag.tag} ({tag.count})
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between mb-3">
+                <div className="sr-only lg:not-sr-only lg:flex lg:items-center lg:justify-between lg:mb-3">
                   <h2 className="text-sm font-bold text-[#0B2420] dark:text-[#F1F5F9] uppercase tracking-wider flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
                     {t('services:forum_discussions', 'Topik Perbincangan Pelajar')}
                   </h2>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-0 sm:space-y-4">
                   {loading ? (
                     <div className="space-y-4 py-2">
                       <div className="flex items-center gap-2 text-[#3B635C] dark:text-[#94A0B2] px-1">

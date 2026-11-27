@@ -1073,5 +1073,10 @@
   "suara_drawer_close": "Tutup panel",
   "suara_confirmed_delete_action": "Ya, Padam",
   "suara_confirmed_escalate_action": "Ya, Hantar Kecemasan",
-  "suara_official_note_badge": "Maklum Balas Rasmi JPP"
+  "suara_official_note_badge": "Maklum Balas Rasmi JPP",
+  "suara_quick_compose_short": "Ada luahan kampus?",
+  "suara_filter_short": "Tapis",
+  "suara_open_search": "Cari suara",
+  "suara_clear_search": "Padam carian",
+  "suara_drawer_preferences": "Paparan & Bahasa"
 }

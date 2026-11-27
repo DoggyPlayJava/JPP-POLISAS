@@ -160,8 +160,8 @@ describe('PolySuaraPage Suite', () => {
       // Pelekat sticker trigger should NOT be in the composer
       expect(html).not.toContain('<span>Pelekat</span>');
 
-      // Quick-compose capsule styling
-      expect(html).toContain('rounded-2xl sm:rounded-3xl');
+      // Quick-compose capsule styling (flat hairline row on mobile, rounded capsule on sm+)
+      expect(html).toContain('rounded-none sm:rounded-3xl');
     });
 
     it('defines composeModalOpen state and centered modal dialog structure in PolySuaraPage', () => {

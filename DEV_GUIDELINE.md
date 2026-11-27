@@ -5694,6 +5694,19 @@ Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asa
 - **Sapuan Mikro Sifar `scale: 0` & Sifar `animate-bounce`:**
   - Menggantikan kesemua baki `initial={{ scale: 0 }}` kepada `initial={{ scale: 0.92, opacity: 0 }}` (`KamsisApplicationModal`, `KlkResidencyModal`, `PushPermissionModal`, `KlkResidencyFormPage`) dan membuang kesemua baki `animate-bounce` merentas `src/` (`EmsLuckyDrawModal`, `Pannellum360Viewer`, `PolyMapsModal`, `EmsAudienceScanPage`, `EmsLeaderboardPage`, `KeusahawananPoster`, `PolyMartProductDetail`, `PolyRiderAdminDashboard`, `PolyRiderDashboard`, `AhliPage`).
 
+---
+
+## 47. Penipisan Susun Atur Mudah Alih PolySuara Gaya Threads & Facebook (Nov 2026)
+
+- **Pengepala Mudah Alih 1-Baris Minimal (`PolySuaraPage.tsx`):**
+  - Mengurangkan 6 lapisan krom bertindih mudah alih (`< 1024px`) kepada 3 lapisan rata yang tenang supaya kiriman luahan pertama terus muncul di atas lipatan skrin (`firstPostTop <= 240px` pada `393×852` termasuk offset `--sat: 59px`).
+  - Pengepala mudah alih kini memaparkan butang kembali `<` + tanda jenama `PolySuara` rata di kiri, dan tepat **3 butang ikon bulat seragam tanpa sempadan** (`w-9 h-9 rounded-full active:scale-[0.97]`) di kanan: togol carian boleh lipat (`Search` dengan bar carian sebaris berfokus automatik + butang padam `X`), togol notifikasi (`Bell`/`BellRing`), dan pencetus laci `Saluran & Tapis` (`SlidersHorizontal` dengan titik aktif *teal* apabila penapis sekunder aktif).
+  - `<LanguageToggle />`, `<ThemeToggle />`, dan lencana `Anon Mode` dikekalkan pada pengepala desktop (`hidden lg:flex`), manakala versi mudah alih `<LanguageToggle />` + `<ThemeToggle />` diletakkan di ruang utiliti bahagian bawah `PolySuaraMobileDrawer`.
+- **Bar Karangan Pantas Rata, Tab Teks Tulen & Aliran Garis Halus (`PolySuaraPage.tsx`, `PolySuaraConfessionCard.tsx`, `PolySuaraSideRails.tsx`):**
+  - Pada mudah alih (`< sm`), kotak karangan pantas ditukar kepada baris garis halus rata gaya Facebook (`bg-transparent border-b rounded-none`), tab suapan (`Terkini` / `Hangat` / `Dijawab JPP`) diratakan kepada `grid-cols-3` teks tulen tanpa ikon berulang (`hidden sm:block`) serta garis bawah aktif `2px`, baris `Trending:` mudah alih yang bertindih dibuang (kekal dalam laci mudah alih & rel kanan desktop), tajuk `Topik Perbincangan Pelajar` disembunyikan secara visual pada mudah alih (`sr-only lg:not-sr-only`), dan kad suapan mudah alih diratakan menjadi aliran garis halus penuh (`sm:rounded-[2rem] sm:shadow-surface-sm` dikekalkan pada desktop).
+  - `PolySuaraMobileDrawer` kini menggunakan jarak selamat `pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))]`, `overscroll-contain`, dan lengkung laci gaya Apple/Emil (`[0.32, 0.72, 0, 1]`).
+  - Membaiki kebocoran bahasa Inggeris pada gesaan karangan pantas mudah alih dengan menambah kekunci pariti 100% `suara_quick_compose_short`, `suara_filter_short`, `suara_open_search`, `suara_clear_search`, dan `suara_drawer_preferences` dalam kedua-dua `src/locales/en/services.json` dan `src/locales/ms/services.json`.
+
 
 
 

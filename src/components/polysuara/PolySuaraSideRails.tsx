@@ -18,6 +18,8 @@ import {
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export type FeedSortMode = 'LATEST' | 'TRENDING' | 'JPP_REPLIED' | 'MINE' | 'BOOKMARKS';
 export type FeedFormatFilter = 'ALL' | 'QNA' | 'SHOUTOUT' | 'DEBATE';
@@ -312,9 +314,9 @@ export function PolySuaraMobileDrawer({
             initial={{ x: '-100%' }}
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
-            transition={{ type: 'spring', damping: 28, stiffness: 280 }}
+            transition={{ duration: 0.24, ease: [0.32, 0.72, 0, 1] }}
             aria-label={t('services:suara_channels_filters_btn', 'Saluran & Tapis')}
-            className="fixed inset-y-0 left-0 w-[84vw] max-w-xs bg-white dark:bg-[#13171D] border-r border-[#B8E4DC]/80 dark:border-[#252B35] z-[99955] lg:hidden flex flex-col overflow-y-auto p-5 pb-28 space-y-5 text-[#0B2420] dark:text-[#F1F5F9]"
+            className="fixed inset-y-0 left-0 w-[84vw] max-w-xs bg-white dark:bg-[#13171D] border-r border-[#B8E4DC]/80 dark:border-[#252B35] z-[99955] lg:hidden flex flex-col overflow-y-auto overscroll-contain px-5 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] pb-28 space-y-5 text-[#0B2420] dark:text-[#F1F5F9]"
           >
             <div className="flex items-center justify-between pb-3 border-b border-[#B8E4DC]/60 dark:border-[#252B35]">
               <span className="font-bold text-base text-[#0B2420] dark:text-[#F1F5F9]">
@@ -471,6 +473,16 @@ export function PolySuaraMobileDrawer({
               >
                 <span className="w-5 h-5 rounded-full bg-white dark:bg-[#090B0E] shadow-xs" />
               </button>
+            </div>
+
+            <div className="pt-3 border-t border-[#B8E4DC]/60 dark:border-[#252B35] flex items-center justify-between gap-2">
+              <span className="text-xs font-bold text-[#3B635C] dark:text-[#94A0B2]">
+                {t('services:suara_drawer_preferences', 'Paparan & Bahasa')}
+              </span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <LanguageToggle />
+                <ThemeToggle />
+              </div>
             </div>
           </motion.aside>
         </>
