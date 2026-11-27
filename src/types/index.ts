@@ -815,6 +815,8 @@ export interface KebajikanTicket {
   rating: number | null;
   rating_comment: string | null;
   rating_at: string | null;
+  is_anonymous?: boolean;
+  source_confession_id?: string | null;
   created_at: string;
   updated_at: string;
   // Joined

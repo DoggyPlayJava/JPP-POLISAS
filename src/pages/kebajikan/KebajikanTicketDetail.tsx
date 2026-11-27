@@ -25,6 +25,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { cn, hexToRgba } from '@/lib/utils';
+import { normalizeTicketImageUrls } from '@/lib/polySuaraEscalation';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -412,6 +413,17 @@ export function KebajikanTicketDetail() {
         <div className="lg:col-span-2 space-y-5">
           {/* Submitter info */}
           <Section title={t('kebajikan:submitter_info_title', 'Maklumat Pengadu')}>
+            {(ticket.is_anonymous || Boolean(ticket.source_confession_id) || !ticket.submitter_id) && (
+              <div className="mb-4 px-3.5 py-2.5 rounded-2xl bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#0F766E]/25 dark:border-[#2DD4BF]/25 text-xs flex items-center gap-2 text-[#0F766E] dark:text-[#2DD4BF] font-semibold">
+                <Lock className="w-4 h-4 shrink-0" />
+                <span>
+                  {t(
+                    'kebajikan:anon_polysuara_escalation_notice',
+                    'Eskalasi Anon PolySuara — identiti pelajar dilindungi (tiada No. Matrik atau ID pelajar).'
+                  )}
+                </span>
+              </div>
+            )}
             <Grid2>
               <Info label={t('kebajikan:field_name', 'Nama')} value={ticket.full_name} />
               <Info label={t('kebajikan:field_matric', 'No. Matrik')} value={ticket.matric_no || '—'} />
@@ -425,26 +437,29 @@ export function KebajikanTicketDetail() {
           <Section title={t('kebajikan:complaint_desc_title', 'Penerangan Aduan')}>
             <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{ticket.description}</p>
             {/* Form data */}
-            {Object.keys(ticket.form_data).length > 0 && (
+            {Object.keys(ticket.form_data || {}).length > 0 && (
               <div className="mt-4 pt-3 border-t border-slate-100 dark:border-white/5 space-y-2">
-                {Object.entries(ticket.form_data).map(([k, v]) => v && (
+                {Object.entries(ticket.form_data || {}).map(([k, v]) => v && (
                   <Info key={k} label={k.replace(/_/g, ' ')} value={Array.isArray(v) ? (v as string[]).join(', ') : String(v)} />
                 ))}
               </div>
             )}
-            {/* Images */}
-            {ticket.image_urls.length > 0 && (
-              <div className="mt-6 flex gap-3 flex-wrap">
-                {ticket.image_urls.map((url, i) => (
-                  <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block relative group rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-white/10">
-                    <img src={url} className="w-24 h-24 object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" decoding="async" />
-                    <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <ArrowUpRight className="w-6 h-6 text-white" />
-                    </div>
-                  </a>
-                ))}
-              </div>
-            )}
+            {/* Images (null-safe for anonymous escalated tickets without photos) */}
+            {(() => {
+              const safeImageUrls = normalizeTicketImageUrls(ticket.image_urls);
+              return safeImageUrls.length > 0 ? (
+                <div className="mt-6 flex gap-3 flex-wrap">
+                  {safeImageUrls.map((url, i) => (
+                    <a key={i} href={url} target="_blank" rel="noopener noreferrer" className="block relative group rounded-2xl overflow-hidden shadow-sm border border-slate-200 dark:border-white/10">
+                      <img src={url} className="w-24 h-24 object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" decoding="async" />
+                      <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <ArrowUpRight className="w-6 h-6 text-white" />
+                      </div>
+                    </a>
+                  ))}
+                </div>
+              ) : null;
+            })()}
           </Section>
 
           {/* Resolution note */}

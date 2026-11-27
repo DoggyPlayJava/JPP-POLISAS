@@ -43,6 +43,14 @@ import {
   PolySuaraQuickReportModal,
 } from '@/components/polysuara/PolySuaraOverlays';
 import {
+  PolySuaraEscalationModal,
+  type PolySuaraEscalationResult,
+} from '@/components/polysuara/PolySuaraEscalationModal';
+import {
+  detectComplaintNudge,
+  buildKebajikanPrefillState,
+} from '@/lib/polySuaraEscalation';
+import {
   cleanConfessionText,
   aggregateReactions,
   getFriendlyAnonName,
@@ -58,6 +66,7 @@ const MAX_POLL_OPTIONS = 4;
 const FEED_PAGE_SIZE = 20;
 const BOOKMARKS_STORAGE_KEY = 'polysuara_bookmarks_v1';
 const DRAFT_STORAGE_KEY = 'polysuara_draft_v1';
+let supportsEscalationCols = true;
 
 export interface ConfessionVoteItem {
   id: string;
@@ -300,6 +309,8 @@ export function PolySuaraPage({
   const [composeIntent, setComposeIntent] = useState<'STANDARD' | 'QNA' | 'SHOUTOUT' | 'DEBATE'>('STANDARD');
   const [isSpoilerImage, setIsSpoilerImage] = useState(false);
   const [empathyConfirmed, setEmpathyConfirmed] = useState(false);
+  const [complaintNudgeDismissed, setComplaintNudgeDismissed] = useState(false);
+  const [escalateTarget, setEscalateTarget] = useState<any | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -572,10 +583,11 @@ export function PolySuaraPage({
     }
   };
 
-  const buildFeedQuery = (offset: number) => {
+  const buildFeedQuery = (offset: number, includeEscalation = supportsEscalationCols) => {
+    const baseCols = 'id, content, category, upvotes, downvotes, comments_count, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, vote_count, polysuara_poll_votes(user_id)))';
     let query = supabase
       .from('polysuara_confessions')
-      .select('id, content, category, upvotes, downvotes, comments_count, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, vote_count, polysuara_poll_votes(user_id)))')
+      .select(includeEscalation ? `${baseCols}, escalated_ticket_id, escalated_ticket_no` : baseCols)
       .eq('is_archived', false);
 
     if (activeCategory !== 'SEMUA') {
@@ -639,7 +651,8 @@ export function PolySuaraPage({
     try {
       if (isInitial) setLoading(true);
       
-      const queries: any[] = [buildFeedQuery(offset)];
+      const requestedEscalation = supportsEscalationCols;
+      const queries: any[] = [buildFeedQuery(offset, requestedEscalation)];
 
       // Only fetch metadata on initial load
       if (isInitial) {
@@ -652,7 +665,16 @@ export function PolySuaraPage({
       }
 
       const results = await Promise.all(queries);
-      const confRes = results[0];
+      let confRes = results[0];
+
+      if (
+        confRes.error &&
+        requestedEscalation &&
+        (confRes.error.code === '42703' || confRes.error.message?.includes('escalated_ticket'))
+      ) {
+        supportsEscalationCols = false;
+        confRes = await buildFeedQuery(offset, false);
+      }
 
       if (confRes.error) throw confRes.error;
       
@@ -747,16 +769,28 @@ export function PolySuaraPage({
       setCommentDrawerOpen(true);
       return;
     }
+    const deepLinkBaseCols = 'id, content, category, upvotes, downvotes, comments_count, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, vote_count, polysuara_poll_votes(user_id)))';
+    const requestedDeepLinkEscalation = supportsEscalationCols;
     supabase
       .from('polysuara_confessions')
-      .select('id, content, category, upvotes, downvotes, comments_count, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, vote_count, polysuara_poll_votes(user_id)))')
+      .select(requestedDeepLinkEscalation ? `${deepLinkBaseCols}, escalated_ticket_id, escalated_ticket_no` : deepLinkBaseCols)
       .eq('id', postId)
       .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setConfessions(prev => (prev.some(p => p.id === data.id) ? prev : [data, ...prev]));
-          setActiveConfessionForComments(data);
-          fetchComments(data.id);
+      .then(async ({ data, error }) => {
+        let resolvedData = data;
+        if (error && requestedDeepLinkEscalation && (error.code === '42703' || error.message?.includes('escalated_ticket'))) {
+          supportsEscalationCols = false;
+          const retry = await supabase
+            .from('polysuara_confessions')
+            .select(deepLinkBaseCols)
+            .eq('id', postId)
+            .maybeSingle();
+          resolvedData = retry.data;
+        }
+        if (resolvedData) {
+          setConfessions(prev => (prev.some(p => p.id === resolvedData.id) ? prev : [resolvedData, ...prev]));
+          setActiveConfessionForComments(resolvedData);
+          fetchComments(resolvedData.id);
           setCommentDrawerOpen(true);
         }
       });
@@ -2473,12 +2507,63 @@ export function PolySuaraPage({
                                 onChange={(e) => {
                                   setNewContent(e.target.value);
                                   setEmpathyConfirmed(false);
+                                  setComplaintNudgeDismissed(false);
                                 }}
                                 placeholder={t('services:whisper_input_placeholder', 'Apa yang bermain di fikiran anda?')}
                                 className="w-full bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-4 text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40 resize-none transition-colors text-sm leading-relaxed"
                                 rows={4}
                                 maxLength={500}
                               />
+
+                              {/* Layer 1: Pre-submit e-Kebajikan Complaint Nudge */}
+                              {(() => {
+                                const complaintNudge = detectComplaintNudge(newContent, postCategory);
+                                if (!complaintNudge.triggered || complaintNudgeDismissed) return null;
+                                return (
+                                  <div
+                                    data-testid="polysuara-complaint-nudge"
+                                    className="mt-3 p-3.5 rounded-2xl bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#0F766E]/30 dark:border-[#2DD4BF]/30 text-xs space-y-2.5"
+                                  >
+                                    <div className="flex items-start gap-2">
+                                      <HeartHandshake className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF] shrink-0 mt-0.5" />
+                                      <div className="space-y-0.5 min-w-0">
+                                        <p className="font-bold text-[#0B2420] dark:text-[#F1F5F9]">
+                                          {t('services:suara_nudge_complaint_title', 'Nampak macam aduan rasmi kampus?')}
+                                        </p>
+                                        <p className="text-[#3B635C] dark:text-[#94A0B2] leading-relaxed">
+                                          {t(
+                                            'services:suara_nudge_complaint_desc',
+                                            'Aduan fasiliti, kamsis, atau kafeteria lebih cepat dipantau dengan SLA rasmi di e-Kebajikan. Draf anda akan dibawa terus ke borang.'
+                                          )}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const prefill = buildKebajikanPrefillState(newContent, complaintNudge);
+                                          try {
+                                            localStorage.removeItem(DRAFT_STORAGE_KEY);
+                                          } catch {}
+                                          setComposeModalOpen(false);
+                                          navigate('/kebajikan/buat-aduan', { state: prefill });
+                                        }}
+                                        className="px-3.5 py-1.5 rounded-xl bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] text-white dark:text-[#090B0E] font-bold transition-colors cursor-pointer"
+                                      >
+                                        {t('services:suara_nudge_switch_kebajikan_btn', 'Hantar ke e-Kebajikan')}
+                                      </button>
+                                      <button
+                                        type="button"
+                                        onClick={() => setComplaintNudgeDismissed(true)}
+                                        className="px-3 py-1.5 rounded-xl bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9] font-semibold transition-colors cursor-pointer"
+                                      >
+                                        {t('services:suara_nudge_stay_anon_btn', 'Kekal Rahsia di PolySuara')}
+                                      </button>
+                                    </div>
+                                  </div>
+                                );
+                              })()}
 
                               {/* Pre-submit Empathy & PII Nudge */}
                               {empathyCheck.triggered && (
@@ -2756,6 +2841,8 @@ export function PolySuaraPage({
                               setAuthorReplyTargetId(id);
                               setAuthorReplyModalOpen(true);
                             }}
+                            onOpenEscalate={(item) => setEscalateTarget(item)}
+                            onOpenTicket={(ticketId) => navigate(`/kebajikan/tiket/${ticketId}`)}
                             onTogglePin={handleTogglePin}
                             onSelectTag={(tag) => {
                               setActiveTag(tag);
@@ -2851,6 +2938,35 @@ export function PolySuaraPage({
         }}
         onToggleHeart={(id) => handleToggleReaction(id, 'heart')}
         onCopyLink={handleCopyPostLink}
+      />
+
+      <PolySuaraEscalationModal
+        isOpen={Boolean(escalateTarget)}
+        confession={escalateTarget}
+        onClose={() => setEscalateTarget(null)}
+        onEscalated={(res: PolySuaraEscalationResult) => {
+          queryCache.invalidate('polysuara:');
+          setConfessions((prev) =>
+            prev.map((item) => {
+              if (item.id !== res.confessionId) return item;
+              const addition = `Aduan ini telah dieskalasi secara rasmi ke e-Kebajikan (**${res.ticket_no}**) untuk tindakan lanjut tanpa mendedahkan identiti pengarang.${res.note ? `\n\nNota JPP: ${res.note}` : ''}`;
+              const nextReply = item.official_reply?.includes(res.ticket_no)
+                ? item.official_reply
+                : item.official_reply
+                ? `${item.official_reply}\n\n---\n${addition}`
+                : addition;
+              return {
+                ...item,
+                escalated_ticket_id: res.ticket_id,
+                escalated_ticket_no: res.ticket_no,
+                status: 'INVESTIGATING',
+                official_reply: nextReply,
+                official_reply_at: new Date().toISOString(),
+              };
+            })
+          );
+          fetchImpactSummary(true);
+        }}
       />
 
       <ConfirmDialog

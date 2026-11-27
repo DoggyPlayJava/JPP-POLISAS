@@ -12,6 +12,7 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { JppCommandPalette } from '@/components/jpp/JppCommandPalette';
+import { useEdgeSwipeDrawer } from '@/hooks/useEdgeSwipeDrawer';
 import { useTranslation } from 'react-i18next';
 
 // Auto-calculate current academic session
@@ -27,6 +28,7 @@ export function JppLayout() {
   const { user, isJppMember, isSuperAdmin, isLoading, hasKediamanAccess } = useAuth();
   const location = useLocation();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  useEdgeSwipeDrawer({ isOpen: isMobileOpen, onOpen: () => setIsMobileOpen(true) });
   const [cmdOpen, setCmdOpen] = useState(false);
   const [isFbOfficer, setIsFbOfficer] = useState(false);
   const [checkingFbOfficer, setCheckingFbOfficer] = useState(true);

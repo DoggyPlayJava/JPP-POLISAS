@@ -19,6 +19,7 @@ import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
+import { useEdgeSwipeDrawer } from '@/hooks/useEdgeSwipeDrawer';
 
 
 
@@ -30,6 +31,7 @@ export function AkademikLayout() {
   const navigate   = useNavigate();
   const location   = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useEdgeSwipeDrawer({ isOpen: sidebarOpen, onOpen: () => setSidebarOpen(true) });
   const { runTour, startTour, closeTour } = useTour('akademik_module_tour', false);
 
   const akademikUnitLinks = React.useMemo(() => [

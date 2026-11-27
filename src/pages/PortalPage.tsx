@@ -15,6 +15,7 @@ import { CurtainReveal } from '@/components/portal/CurtainReveal';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { PortalFooter } from '@/components/portal/PortalFooter';
 import { useTour } from '@/hooks/useTour';
+import { useEdgeSwipeDrawer } from '@/hooks/useEdgeSwipeDrawer';
 import { KamsisAppealModal } from '@/components/kamsis/KamsisAppealModal';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { SuperAppHeader } from '@/components/portal/SuperAppHeader';
@@ -47,6 +48,7 @@ export function PortalPage() {
   });
 
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  useEdgeSwipeDrawer({ isOpen: isSidebarOpen, onOpen: () => setIsSidebarOpen(true) });
   const { runTour, startTour, closeTour } = useTour('jpp_has_seen_portal_tour', !!profile);
 
   // Kebajikan live stats & active items

@@ -1273,5 +1273,6 @@
   "wifi_time_evening": "Evening (6pm–12am)",
   "wifi_time_late_night": "Late Night (12am–6am)",
   "wifi_time_morning": "Morning (6am–12pm)",
+  "anon_polysuara_escalation_notice": "Anonymous PolySuara Escalation — student identity is protected (no Matric No. or student ID).",
   "zero_units": "0 units"
 }

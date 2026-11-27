@@ -69,6 +69,8 @@ export interface PolySuaraConfessionCardProps {
   onOpenReport: (confessionId: string) => void;
   onOpenJppReply: (confession: any) => void;
   onOpenAuthorReply: (confessionId: string) => void;
+  onOpenEscalate?: (confession: any) => void;
+  onOpenTicket?: (ticketId: string) => void;
   onTogglePin: (confessionId: string, currentPinned: boolean) => void;
   onSelectTag: (tag: string | null) => void;
   onNavigatePolyMaps: (roomQuery: string) => void;
@@ -99,6 +101,8 @@ export function PolySuaraConfessionCard({
   onOpenReport,
   onOpenJppReply,
   onOpenAuthorReply,
+  onOpenEscalate,
+  onOpenTicket,
   onTogglePin,
   onSelectTag,
   onNavigatePolyMaps,
@@ -251,7 +255,8 @@ export function PolySuaraConfessionCard({
         confession.status === 'INVESTIGATING' ||
         confession.status === 'RESOLVED' ||
         isFactCheck ||
-        isOfficialNote) && (
+        isOfficialNote ||
+        Boolean(confession.escalated_ticket_no)) && (
         <div
           className="flex items-center gap-1.5 flex-wrap mb-2.5"
           data-html2canvas-ignore
@@ -314,6 +319,27 @@ export function PolySuaraConfessionCard({
               <Shield className="w-3 h-3" />
               {t('services:status_official_note', 'Nota JPP')}
             </span>
+          )}
+          {confession.escalated_ticket_no && (
+            canReplyJpp && confession.escalated_ticket_id && onOpenTicket ? (
+              <button
+                type="button"
+                onClick={() => onOpenTicket(confession.escalated_ticket_id)}
+                className="bg-[#0F766E]/15 hover:bg-[#0F766E]/25 dark:bg-[#2DD4BF]/15 dark:hover:bg-[#2DD4BF]/25 text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/25 dark:border-[#2DD4BF]/30 text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0 cursor-pointer transition-colors"
+              >
+                <HeartHandshake className="w-3 h-3" />
+                {t('services:suara_escalate_badge', 'Tiket {{ticketNo}}', {
+                  ticketNo: confession.escalated_ticket_no,
+                })}
+              </button>
+            ) : (
+              <span className="bg-[#0F766E]/15 dark:bg-[#2DD4BF]/15 text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/25 dark:border-[#2DD4BF]/30 text-[11px] font-bold px-2.5 py-0.5 rounded-full flex items-center gap-1 shrink-0">
+                <HeartHandshake className="w-3 h-3" />
+                {t('services:suara_escalate_badge', 'Tiket {{ticketNo}}', {
+                  ticketNo: confession.escalated_ticket_no,
+                })}
+              </span>
+            )
           )}
         </div>
       )}
@@ -697,6 +723,18 @@ export function PolySuaraConfessionCard({
             >
               <MessageSquare className="w-3.5 h-3.5 shrink-0" />
               {t('services:reply_jpp', 'Balas JPP')}
+            </button>
+          )}
+
+          {canReplyJpp && !isConfessionDeleted && !confession.escalated_ticket_id && onOpenEscalate && (
+            <button
+              type="button"
+              onClick={() => onOpenEscalate(confession)}
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/12 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-colors shrink-0 flex-nowrap cursor-pointer flex items-center gap-1"
+              title={t('services:suara_escalate_btn_admin', 'Eskalasi ke e-Kebajikan')}
+            >
+              <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
+              {t('services:suara_escalate_btn', 'Eskalasi')}
             </button>
           )}
 

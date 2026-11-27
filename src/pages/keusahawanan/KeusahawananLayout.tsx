@@ -28,6 +28,7 @@ import {
 import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
+import { useEdgeSwipeDrawer } from '@/hooks/useEdgeSwipeDrawer';
 
 
 const MODULE_ID = 'keusahawanan';
@@ -421,6 +422,7 @@ export function LayoutInner({
   const navigate = useNavigate();
   const { t } = useTranslation(['keusahawanan', 'common']);
   const { isLoading: isSwitcherLoading, canSwitch, allBusinesses } = useBusinessSwitcher();
+  useEdgeSwipeDrawer({ isOpen: isSidebarOpen, onOpen: () => setIsSidebarOpen(true) });
 
   const unitLinks = [
     { label: t('keusahawanan:layout_unit_business_dashboard', 'Dashboard Perniagaan'), path: '/keusahawanan' },

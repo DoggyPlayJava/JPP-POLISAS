@@ -5615,4 +5615,21 @@ Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asa
 - **Dwi-Tema Panel Exco Keusahawanan (`KeusahawananAdminPanel.tsx` & `KeusahawananOnboarding.tsx`):**
   - Menggantikan kesemua teks putih keras (`text-white`, `text-white/40`, `rgba(255,255,255,0.4)`, `bg-white/[0.03]`, `bg-[#0f0f13]`) kepada token Dwi-Tema *Crisp Alabaster* / *Obsidian Carbon* (`bg-white dark:bg-[#13171D]`, `text-[#0B2420] dark:text-[#F1F5F9]`, `text-[#3B635C] dark:text-[#94A0B2]`) supaya paparan Exco Keusahawanan jelas dibaca dalam Mod Cerah mahupun Mod Gelap.
 
+---
+
+## 43. Eskalasi 2-Lapisan Tanpa PII (PolySuara → e-Kebajikan) & *Guarded Edge-Swipe Drawer* (Nov 2026)
+
+- **Migrasi Pangkalan Data (`supabase/migrations/20261127150000_polysuara_kebajikan_escalation.sql`):**
+  - Menambah `is_anonymous BOOLEAN NOT NULL DEFAULT false` dan `source_confession_id UUID UNIQUE` (+ indeks FK separa) pada `public.kebajikan_tickets`, serta `escalated_ticket_id UUID` (+ indeks FK) dan `escalated_ticket_no TEXT` (rujukan awam `#EK-XXXX` tanpa membuka RLS `kebajikan_tickets` kepada pelajar) pada `public.polysuara_confessions`.
+  - Fungsi `SECURITY DEFINER` `public.escalate_polysuara_to_kebajikan(...)` mengesahkan `is_jpp_admin((SELECT auth.uid()))`, mengunci baris `FOR UPDATE` bagi mengelak eskalasi pendua, mencipta tiket e-Kebajikan dengan `submitter_id = NULL` (sifar PII), `full_name = 'Pelajar Anon · ' || codename`, `image_urls` sentiasa tatasusunan sah (`'{}'::text[]`), menghala kategori `KAFETERIA` ke unit `KK` (lain-lain ke `KEBAJIKAN`), serta menghantar notifikasi buta kepada penulis asal melalui `send_polysuara_interaction_notification`.
+  - Trigger `trg_sync_kebajikan_resolution_to_polysuara` (`AFTER UPDATE OF status, resolution_note ON public.kebajikan_tickets`) menyegerakkan status `RESOLVED`/`CLOSED` + nota penyelesaian awam balik ke `polysuara_confessions` dan menghantar notifikasi buta kepada penulis.
+- **Lapisan 1 — Pencegahan Pintar Pra-Hantar (`src/lib/polySuaraEscalation.ts`, `PolySuaraPage.tsx`, `KebajikanSubmitPage.tsx`):**
+  - `detectComplaintNudge()` mengesan aduan fasiliti, kamsis/WiFi, atau kafeteria semasa pelajar menaip dalam modal PolySuara dan memaparkan kad cadangan untuk terus berpindah ke `/kebajikan/buat-aduan` (membawa draf tajuk, kategori, & penerangan terus ke langkah `'FORM'` via `location.state.fromPolySuara`) atau kekal rahsia di PolySuara.
+- **Lapisan 2 — Eskalasi 1-Klik JPP & Pengerasan `KebajikanTicketDetail.tsx`:**
+  - Komponen kongsi `src/components/polysuara/PolySuaraEscalationModal.tsx` dipautkan pada kedua-dua `PolySuaraPage.tsx` (kad suapan) dan `PolyServicesAdmin.tsx` (panel moderasi JPP), dengan auto-cadangan kategori/unit/keutamaan dan sandaran serasi-undur (`42703`) jika migrasi belum diaplikasi.
+  - `KebajikanTicketDetail.tsx` menggunakan `normalizeTicketImageUrls(ticket.image_urls)` dan `ticket.form_data || {}` serta memaparkan lencana *Eskalasi Anon PolySuara* bagi tiket tanpa `submitter_id`.
+- ***Guarded Non-Edge Swipe Drawer* (`src/hooks/useEdgeSwipeDrawer.ts`):**
+  - Hook pasif (`{ passive: true }`, tanpa `preventDefault()`) dengan zon mula ketat `24px–75px` (mengelak konflik *iOS Safari swipe-back* `0–23px`), `dx > 55px`, nisbah mendatar `|dx| > 2.2 × |dy|`, serta pengecualian automatik bagi `.leaflet-container`, bekas skrol melintang, input, dan modal terbuka — dipautkan hanya kepada bar sisi `PortalPage`, `JppLayout`, `AkademikLayout`, `KebajikanLayout`, dan `KeusahawananLayout`.
+
+
 

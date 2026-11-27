@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   HeartHandshake, ChevronRight, ChevronLeft, Building2,
   Dumbbell, Coffee, Wifi, MoreHorizontal, Check, CheckCircle2, Clock,
@@ -132,9 +132,17 @@ const getInitialProfileData = (profile: any, user: any, t: any) => {
 export function KebajikanSubmitPage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation(['kebajikan', 'common']);
 
-  const [step, setStep]             = useState<Step>('STATS');
+  const polySuaraPrefill = (location.state as {
+    fromPolySuara?: boolean;
+    category?: KebajikanTicketCategory;
+    title?: string;
+    description?: string;
+  } | null);
+
+  const [step, setStep]             = useState<Step>(() => (polySuaraPrefill?.fromPolySuara && polySuaraPrefill.category ? 'FORM' : 'STATS'));
   const [submitting, setSubmitting]   = useState(false);
   const [submittedNo, setSubmittedNo] = useState('');
   const [images, setImages]           = useState<File[]>([]);
@@ -153,7 +161,7 @@ export function KebajikanSubmitPage() {
 
   const { runTour, startTour, closeTour } = useTour('KEBAJIKAN_SUBMIT', !!profile);
 
-  // Form State initialized from Profile / Auth metadata
+  // Form State initialized from Profile / Auth metadata (+ optional PolySuara Layer 1 draft handoff)
   const [form, setForm] = useState<FormData>(() => {
     const initial = getInitialProfileData(profile, user, t);
     return {
@@ -162,9 +170,9 @@ export function KebajikanSubmitPage() {
       matric_no:    initial.matric_no,
       phone:        initial.phone,
       class:        initial.class,
-      category:     null,
-      title:        '',
-      description:  '',
+      category:     polySuaraPrefill?.fromPolySuara && polySuaraPrefill.category ? polySuaraPrefill.category : null,
+      title:        polySuaraPrefill?.fromPolySuara && polySuaraPrefill.title ? polySuaraPrefill.title : '',
+      description:  polySuaraPrefill?.fromPolySuara && polySuaraPrefill.description ? polySuaraPrefill.description : '',
       jabatan:      initial.jabatan,
     };
   });

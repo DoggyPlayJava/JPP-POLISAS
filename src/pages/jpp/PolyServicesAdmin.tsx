@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import toast from 'react-hot-toast';
-import { Search, Loader2, Trash2, Users, Home, ShieldAlert, CheckCircle, XCircle, AlertTriangle, MessageSquare, Shield, Clock, UserCircle2, Check, Pin, Share2, BarChart } from 'lucide-react';
+import { Search, Loader2, Trash2, Users, Home, ShieldAlert, CheckCircle, XCircle, AlertTriangle, MessageSquare, Shield, Clock, UserCircle2, Check, Pin, Share2, BarChart, HeartHandshake } from 'lucide-react';
 import { cn, hexToRgba } from '@/lib/utils';
 import html2canvas from 'html2canvas';
 import { useJppConfig } from '@/contexts/JppConfigContext';
@@ -13,21 +13,28 @@ import { useAuth } from '@/contexts/AuthContext';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { IGStoryExportCard } from '@/components/polysuara/IGStoryExportCard';
+import {
+  PolySuaraEscalationModal,
+  type PolySuaraEscalationResult,
+} from '@/components/polysuara/PolySuaraEscalationModal';
 import { cleanConfessionText, hasSpoilerImageToken } from '@/lib/polySuaraHelpers';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 type Tab = 'POLYSUARA' | 'ANALITIK';
+let adminSupportsEscalationCols = true;
 
 import { Settings } from 'lucide-react';
 import { FeatureToggle } from '@/components/ui/FeatureToggle';
 
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 
 export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean }) {
   const { t } = useTranslation(['services', 'jpp', 'common']);
   const { profile } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const [escalateTarget, setEscalateTarget] = useState<any | null>(null);
   
   const [activeTab, setActiveTab] = useState<Tab | 'SETTINGS'>(() => {
     const params = new URLSearchParams(location.search);
@@ -171,14 +178,31 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
     setLoading(true);
     try {
       if (activeTab === 'POLYSUARA' || activeTab === 'ANALITIK') {
-        const [suaraRes, reportsRes, reportedCommentsRes, commentReportsRes, activeCommentsRes] = await Promise.all([
-          supabase.from('polysuara_confessions').select('id, content, category, upvotes, downvotes, created_at, official_reply, official_reply_at, status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, is_approved, is_hidden_by_community, author_id, profiles:author_id(full_name, matric_no)').or('is_archived.is.null,is_archived.eq.false').order('is_pinned', { ascending: false }).order('created_at', { ascending: false }).limit(500),
+        const baseSelect = 'id, content, category, upvotes, downvotes, created_at, official_reply, official_reply_at, status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, is_approved, is_hidden_by_community, author_id, profiles:author_id(full_name, matric_no)';
+        const fetchSuara = (withEscalation: boolean) =>
+          supabase
+            .from('polysuara_confessions')
+            .select(withEscalation ? `${baseSelect}, escalated_ticket_id, escalated_ticket_no` : baseSelect)
+            .or('is_archived.is.null,is_archived.eq.false')
+            .order('is_pinned', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(500);
+
+        const requestedEscalation = adminSupportsEscalationCols;
+        const [initialSuaraRes, reportsRes, reportedCommentsRes, commentReportsRes, activeCommentsRes] = await Promise.all([
+          fetchSuara(requestedEscalation),
           supabase.from('polyservices_reports').select('target_id, reason, created_at, profiles:reporter_id(matric_no)').eq('target_type', 'SUARA'),
           supabase.from('polysuara_comments').select('id, confession_id, content, codename, is_hidden_by_community, upvotes, downvotes, reports_count, created_at, profiles:user_id(matric_no)').or('reports_count.gt.0,is_hidden_by_community.eq.true').order('created_at', { ascending: false }),
           supabase.from('polysuara_comment_reports').select('comment_id, reason, profiles:reporter_id(matric_no)'),
           supabase.from('polysuara_comments').select('content').eq('is_hidden_by_community', false).limit(1000)
         ]);
-        
+
+        let suaraRes = initialSuaraRes;
+        if (suaraRes.error && requestedEscalation && (suaraRes.error.code === '42703' || suaraRes.error.message?.includes('escalated_ticket'))) {
+          adminSupportsEscalationCols = false;
+          suaraRes = await fetchSuara(false);
+        }
+
         if (suaraRes.error) throw suaraRes.error;
         
         const mappedData = (suaraRes.data || []).map(item => ({
@@ -780,6 +804,15 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                            {suara.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-600 dark:text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><CheckCircle className="w-3 h-3"/> {t('services:status_resolved', 'Selesai')}</span>}
                            {suara.status === 'OFFICIAL_NOTE' && <span className="bg-teal-500/15 text-teal-700 dark:text-teal-300 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Shield className="w-3 h-3"/> {t('services:status_official_note', 'Nota Rasmi JPP')}</span>}
                            {suara.status === 'FACT_CHECK' && <span className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><AlertTriangle className="w-3 h-3"/> {t('services:status_fact_check_short', 'Semak Fakta')}</span>}
+                           {suara.escalated_ticket_no && (
+                             <button
+                               type="button"
+                               onClick={() => suara.escalated_ticket_id && navigate(`/kebajikan/tiket/${suara.escalated_ticket_id}`)}
+                               className="bg-[#0F766E]/15 text-[#0F766E] dark:text-[#2DD4BF] text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0 hover:opacity-80 cursor-pointer"
+                             >
+                               <HeartHandshake className="w-3 h-3" /> {t('services:suara_escalate_badge', 'Tiket {{ticketNo}}', { ticketNo: suara.escalated_ticket_no })}
+                             </button>
+                           )}
                            {hasSpoilerImageToken(suara.content) && <span className="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0">{t('services:suara_admin_spoiler_badge', 'Gambar Spoiler')}</span>}
                          </div>
                        </div>
@@ -891,6 +924,15 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                           >
                             <MessageSquare className="w-4 h-4" />
                             <span className="hidden sm:inline">{t('services:reply_btn', 'Balas')}</span>
+                          </button>
+                        )}
+                        {!suara.escalated_ticket_id && (
+                          <button
+                            onClick={() => setEscalateTarget(suara)}
+                            className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 bg-amber-500/10 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
+                          >
+                            <HeartHandshake className="w-4 h-4" />
+                            <span className="hidden sm:inline">{t('services:suara_escalate_btn_admin', 'Eskalasi ke e-Kebajikan')}</span>
                           </button>
                         )}
                         <button
@@ -1103,6 +1145,33 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
         variant="destructive"
         isLoading={deletingRecord}
         onConfirm={executeDeleteSuara}
+      />
+
+      <PolySuaraEscalationModal
+        isOpen={Boolean(escalateTarget)}
+        confession={escalateTarget}
+        onClose={() => setEscalateTarget(null)}
+        onEscalated={(res: PolySuaraEscalationResult) => {
+          setSuaraList((prev) =>
+            prev.map((item) => {
+              if (item.id !== res.confessionId) return item;
+              const addition = `Aduan ini telah dieskalasi secara rasmi ke e-Kebajikan (**${res.ticket_no}**) untuk tindakan lanjut tanpa mendedahkan identiti pengarang.${res.note ? `\n\nNota JPP: ${res.note}` : ''}`;
+              const nextReply = item.official_reply?.includes(res.ticket_no)
+                ? item.official_reply
+                : item.official_reply
+                ? `${item.official_reply}\n\n---\n${addition}`
+                : addition;
+              return {
+                ...item,
+                escalated_ticket_id: res.ticket_id,
+                escalated_ticket_no: res.ticket_no,
+                status: 'INVESTIGATING',
+                official_reply: nextReply,
+                official_reply_at: new Date().toISOString(),
+              };
+            })
+          );
+        }}
       />
     </div>
   );

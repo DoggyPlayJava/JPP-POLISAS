@@ -12,6 +12,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { HelpCircle } from 'lucide-react';
 import { useTour } from '@/hooks/useTour';
+import { useEdgeSwipeDrawer } from '@/hooks/useEdgeSwipeDrawer';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -22,6 +23,7 @@ export function KebajikanLayout() {
   const { t } = useTranslation(['kebajikan', 'common']);
   const { isLoading, hasKebajikanAccess, hasKebajikanKKAccess, profile } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useEdgeSwipeDrawer({ isOpen: sidebarOpen, onOpen: () => setSidebarOpen(true) });
   const location = useLocation();
   const { runTour, startTour, closeTour } = useTour('kebajikan_module_tour', false);
 
