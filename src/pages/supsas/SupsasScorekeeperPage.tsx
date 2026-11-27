@@ -365,7 +365,7 @@ export function SupsasScorekeeperPage() {
   return (
     <div className={cn(`min-h-screen flex flex-col font-sans pb-12 transition-colors`, bgClass, textClass)}>
       {/* Header Bar */}
-      <div className={cn("border-b px-4 py-3 sticky top-0 z-30 flex flex-col gap-2", sunGlareMode ? "bg-white border-gray-200" : "bg-[#060D17]/80  border-white/10")}>
+      <div className={cn("border-b px-4 pb-3 pt-[calc(0.75rem+var(--sat,env(safe-area-inset-top,0px)))] sticky top-0 z-30 flex flex-col gap-2", sunGlareMode ? "bg-white border-gray-200" : "bg-[#060D17]/95 border-white/10")}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={handleLogout} className={cn("p-2 rounded-xl transition-all", sunGlareMode ? "bg-gray-100 text-black hover:bg-gray-200" : "bg-white/5 text-white/40 hover:text-white")}>

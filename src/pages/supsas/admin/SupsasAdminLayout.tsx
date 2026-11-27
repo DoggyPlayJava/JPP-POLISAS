@@ -121,7 +121,7 @@ export function SupsasAdminLayout() {
       {/* Main */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Top bar (mobile) */}
-        <div className="md:hidden flex items-center gap-3 px-4 py-4 border-b border-white/5 bg-[#050A14]/80  sticky top-0 z-30">
+        <div className="md:hidden flex items-center gap-3 px-4 pb-4 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] border-b border-white/5 bg-[#050A14]/95 sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}
             className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white"

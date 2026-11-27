@@ -120,7 +120,7 @@ export function PolyTaskAdmin() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-b border-slate-200 dark:border-white/5 p-4 md:p-6">
+      <div className="sticky top-0 z-40 bg-white/95 dark:bg-[#13171D]/95 border-b border-slate-200 dark:border-white/5 px-4 pb-4 md:px-6 md:pb-6 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] md:pt-[calc(1.5rem+var(--sat,env(safe-area-inset-top,0px)))]">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <button 

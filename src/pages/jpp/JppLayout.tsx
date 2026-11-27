@@ -140,7 +140,7 @@ export function JppLayout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Top header (mobile + tablet) */}
-        <header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-[#B8E4DC]/80 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#13171D] sticky top-0 z-50 text-[#0B2420] dark:text-white">
+        <header className="flex md:hidden items-center justify-between px-4 pb-3 pt-[calc(0.75rem+var(--sat,env(safe-area-inset-top,0px)))] border-b border-[#B8E4DC]/80 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#13171D] sticky top-0 z-50 text-[#0B2420] dark:text-white">
           <button
             onClick={() => setIsMobileOpen(true)}
             className="p-2 -ml-1 rounded-xl text-[#0B2420]/70 dark:text-white/60 hover:text-[#0B2420] dark:hover:text-white hover:bg-[#0B2420]/5 dark:hover:bg-white/10 transition-all"

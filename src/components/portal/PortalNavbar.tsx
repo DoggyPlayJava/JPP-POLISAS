@@ -35,17 +35,17 @@ export function PortalNavbar({ isScrolled, karnivalActive, supsasActive, profile
 
   return (
     <nav className={cn(
-      "fixed top-0 inset-x-0 z-[100] transition-all duration-700 px-4 md:px-8 py-4 flex items-center justify-between",
+      "fixed top-0 inset-x-0 z-[100] transition-all duration-700 px-4 md:px-8 pb-4 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] flex items-center justify-between",
       karnivalActive
         ? isScrolled
-          ? 'bg-[#0a0018]/80  border-b border-pink-500/30 py-3 shadow-[0_4px_40px_rgba(236,72,153,0.3)]'
+          ? 'bg-[#0a0018]/90 border-b border-pink-500/30 pb-3 pt-[calc(0.75rem+var(--sat,env(safe-area-inset-top,0px)))] shadow-[0_4px_40px_rgba(236,72,153,0.3)]'
           : 'bg-transparent '
         : supsasActive
           ? isScrolled
-            ? 'bg-[#0a0500]/80  border-b border-amber-500/30 py-3 shadow-[0_4px_40px_rgba(245,158,11,0.3)]'
+            ? 'bg-[#0a0500]/90 border-b border-amber-500/30 pb-3 pt-[calc(0.75rem+var(--sat,env(safe-area-inset-top,0px)))] shadow-[0_4px_40px_rgba(245,158,11,0.3)]'
             : 'bg-transparent '
           : isScrolled
-            ? 'bg-white/80 dark:bg-slate-950/80  border-b border-black/5 dark:border-white/10 py-3 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]'
+            ? 'bg-white/95 dark:bg-[#13171D]/95 border-b border-black/5 dark:border-white/10 pb-3 pt-[calc(0.75rem+var(--sat,env(safe-area-inset-top,0px)))] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] dark:shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)]'
             : 'bg-transparent'
     )}>
       <div className="flex items-center gap-4">

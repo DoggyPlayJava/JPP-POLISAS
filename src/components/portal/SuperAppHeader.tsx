@@ -98,17 +98,17 @@ export function SuperAppHeader({
           {/* Right Side: Floating Discrete Action Circles */}
           <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             {/* LanguageToggle circular button */}
-            <div className="relative w-10 h-10 sm:w-11 sm:h-11 after:content-[''] after:absolute after:-inset-1 rounded-full bg-white/10 hover:bg-white/15 border border-[#B8E4DC]/30 shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] shrink-0 [&_button]:!h-10 sm:[&_button]:!h-11 [&_button]:!w-10 sm:[&_button]:!w-11 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 hover:bg-white/15 border border-[#B8E4DC]/30 shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] shrink-0 [&>button]:!h-10 sm:[&>button]:!h-11 [&>button]:!w-10 sm:[&>button]:!w-11 [&>button]:!rounded-full [&>button]:!bg-transparent [&>button]:hover:!bg-transparent [&>button]:!p-0">
               <LanguageToggle variant="circular" />
             </div>
 
             {/* 1. ThemeToggle circular button */}
-            <div className="relative w-10 h-10 sm:w-11 sm:h-11 after:content-[''] after:absolute after:-inset-1 rounded-full bg-white/10 hover:bg-white/15 border border-[#B8E4DC]/30 shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] shrink-0 [&_button]:!h-10 sm:[&_button]:!h-11 [&_button]:!w-10 sm:[&_button]:!w-11 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 hover:bg-white/15 border border-[#B8E4DC]/30 shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] shrink-0 [&>button]:!h-10 sm:[&>button]:!h-11 [&>button]:!w-10 sm:[&>button]:!w-11 [&>button]:!rounded-full [&>button]:!bg-transparent [&>button]:hover:!bg-transparent [&>button]:!p-0">
               <ThemeToggle />
             </div>
 
             {/* 2. NotificationBell circular button */}
-            <div className="relative w-10 h-10 sm:w-11 sm:h-11 after:content-[''] after:absolute after:-inset-1 rounded-full bg-white/10 hover:bg-white/15 border border-[#B8E4DC]/30 shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] shrink-0 [&_button]:!h-10 sm:[&_button]:!h-11 [&_button]:!w-10 sm:[&_button]:!w-11 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
+            <div className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white/10 hover:bg-white/15 border border-[#B8E4DC]/30 shadow-sm flex items-center justify-center text-white/90 hover:text-white transition-[transform,background-color] duration-150 ease-out active:scale-[0.96] shrink-0 [&_button]:!h-10 sm:[&_button]:!h-11 [&_button]:!w-10 sm:[&_button]:!w-11 [&_button]:!rounded-full [&_button]:!bg-transparent [&_button]:hover:!bg-transparent [&_button]:!p-0">
               <NotificationBell variant="dark" />
             </div>
 

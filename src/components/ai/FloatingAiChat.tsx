@@ -1818,7 +1818,7 @@ export function FloatingAiChat() {
   };
 
   const content = (
-    <div id="nexus-chat-container" className={`fixed bottom-6 max-md:bottom-[calc(4.75rem+max(0.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))*0.82)))] right-4 md:right-6 ${isOpen ? 'z-[130]' : 'z-[105]'} transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
+    <div id="nexus-chat-container" className={`fixed bottom-6 max-md:bottom-[calc(4rem+max(0.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))*0.82)))] right-3.5 md:right-6 ${isOpen ? 'z-[130]' : 'z-[105]'} transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
       
       {/* ── Floating Notification Popout (New Message Alert) ── */}
       <AnimatePresence>
@@ -1879,17 +1879,17 @@ export function FloatingAiChat() {
         whileHover={{ scale: 1.05, opacity: 1, x: 0 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen((prev) => !prev)}
-        className={cn('w-11 h-11 md:w-14 md:h-14 rounded-full bg-gradient-to-tr flex items-center justify-center shadow-lg text-white relative overflow-hidden group', themeColors.bg)}
+        className={cn('w-10 h-10 md:w-14 md:h-14 rounded-full bg-gradient-to-tr flex items-center justify-center shadow-lg text-white relative overflow-hidden group', themeColors.bg)}
       >
         <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
         <AnimatePresence mode="wait" initial={false}>
           {isOpen ? (
             <motion.span key="x" initial={{ rotate: -90, scale: 0 }} animate={{ rotate: 0, scale: 1 }} exit={{ rotate: 90, scale: 0 }} transition={{ duration: 0.18 }}>
-              <X size={22} />
+              <X className="w-[18px] h-[18px] md:w-[22px] md:h-[22px]" />
             </motion.span>
           ) : (
             <motion.span key="s" className="relative flex items-center justify-center" initial={{ rotate: 90, scale: 0 }} animate={{ rotate: 0, scale: 1 }} exit={{ rotate: -90, scale: 0 }} transition={{ duration: 0.18 }}>
-              <MessageSquare size={22} />
+              <MessageSquare className="w-[18px] h-[18px] md:w-[22px] md:h-[22px]" />
               
               {/* Unread badge on closed FAB */}
               {unreadTotal > 0 && (

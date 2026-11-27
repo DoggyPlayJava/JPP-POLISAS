@@ -708,7 +708,7 @@ export default function MakmpJuryPortalPage() {
 
       <MakmpJppHeader subtitle={t('makmp:jury_portal_subtitle', 'Portal Juri')} />
       {/* Header Bar */}
-      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/80 dark:bg-slate-900/80 sticky top-0 z-30">
+      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/95 dark:bg-[#13171D]/95 pt-[var(--sat,env(safe-area-inset-top,0px))] sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 dark:text-amber-400 font-bold text-xs shadow-inner">

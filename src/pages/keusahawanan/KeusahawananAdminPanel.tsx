@@ -110,25 +110,25 @@ function BusinessDetailModal({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 10 }}
         transition={{ type: 'spring', stiffness: 300, damping: 28 }}
-        className="bg-[#0f0f13] border border-white/10 rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden"
+        className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="relative h-28 bg-gradient-to-br from-emerald-500/80 to-teal-700 p-6 flex items-end gap-3">
+        <div className="relative h-28 bg-gradient-to-br from-[#0F766E] to-[#115E59] p-6 flex items-end gap-3">
           <div className="absolute top-4 right-4">
             <span className={`px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-widest ${sm.badgeCls}`}>
               {t('keusahawanan:admin_status_' + business.status.toLowerCase(), sm.label)}
             </span>
           </div>
           {business.logo_url ? (
-            <img src={business.logo_url} className="w-14 h-14 rounded-2xl border-2 border-white/20 object-cover" alt="" />
+            <img src={business.logo_url} className="w-14 h-14 rounded-2xl border-2 border-white/25 object-cover" alt="" />
           ) : (
-            <div className="w-14 h-14 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center">
-              <Store className="w-7 h-7 text-white/80" />
+            <div className="w-14 h-14 rounded-2xl bg-white/15 border border-white/25 flex items-center justify-center">
+              <Store className="w-7 h-7 text-white/90" />
             </div>
           )}
           <div className="text-white">
-            <p className="text-[9px] font-black uppercase tracking-widest opacity-60">{t('keusahawanan:admin_student_business', 'Perniagaan Pelajar')}</p>
+            <p className="text-[9px] font-black uppercase tracking-widest opacity-80">{t('keusahawanan:admin_student_business', 'Perniagaan Pelajar')}</p>
             <h2 className="text-lg font-black leading-tight text-white">{business.name}</h2>
           </div>
         </div>
@@ -136,44 +136,44 @@ function BusinessDetailModal({
         {/* Body */}
         <div className="p-6 space-y-3">
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_owner', 'Pemilik')}</p>
-              <p className="text-sm font-black text-white truncate">{business.owner_name ?? '—'}</p>
-              <p className="text-[10px] text-white/50">{business.owner_matric ?? ''}</p>
+            <div className="bg-[#F6FBF9] dark:bg-[#1B2028] rounded-2xl p-3 border border-[#B8E4DC]/70 dark:border-[#252B35]">
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-1">{t('keusahawanan:admin_owner', 'Pemilik')}</p>
+              <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9] truncate">{business.owner_name ?? '—'}</p>
+              <p className="text-[10px] text-[#3B635C] dark:text-[#94A0B2]">{business.owner_matric ?? ''}</p>
             </div>
-            <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_email', 'Email')}</p>
-              <p className="text-[11px] font-bold text-white break-all">{business.owner_email ?? '—'}</p>
+            <div className="bg-[#F6FBF9] dark:bg-[#1B2028] rounded-2xl p-3 border border-[#B8E4DC]/70 dark:border-[#252B35]">
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-1">{t('keusahawanan:admin_email', 'Email')}</p>
+              <p className="text-[11px] font-bold text-[#0B2420] dark:text-[#F1F5F9] break-all">{business.owner_email ?? '—'}</p>
             </div>
           </div>
 
           {business.description && (
-            <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_description', 'Penerangan')}</p>
-              <p className="text-sm text-white/70 leading-relaxed">{business.description}</p>
+            <div className="bg-[#F6FBF9] dark:bg-[#1B2028] rounded-2xl p-3 border border-[#B8E4DC]/70 dark:border-[#252B35]">
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-1">{t('keusahawanan:admin_description', 'Penerangan')}</p>
+              <p className="text-sm text-[#0B2420]/85 dark:text-[#F1F5F9]/85 leading-relaxed">{business.description}</p>
             </div>
           )}
 
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/[0.03] rounded-2xl p-3 flex items-center gap-2 border border-white/[0.04]">
-              <Users className="w-4 h-4 text-white/30" />
+            <div className="bg-[#F6FBF9] dark:bg-[#1B2028] rounded-2xl p-3 flex items-center gap-2 border border-[#B8E4DC]/70 dark:border-[#252B35]">
+              <Users className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
               <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/40">{t('keusahawanan:admin_staff_count', 'Bilangan Staf')}</p>
-                <p className="text-sm font-black text-white">{t('keusahawanan:admin_staff_count_val', '{{count}} orang', { count: business.staff_count })}</p>
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{t('keusahawanan:admin_staff_count', 'Bilangan Staf')}</p>
+                <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9]">{t('keusahawanan:admin_staff_count_val', '{{count}} orang', { count: business.staff_count })}</p>
               </div>
             </div>
 
-            <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_registration', 'Pendaftaran')}</p>
-              <p className="text-sm font-black text-white">
+            <div className="bg-[#F6FBF9] dark:bg-[#1B2028] rounded-2xl p-3 border border-[#B8E4DC]/70 dark:border-[#252B35]">
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-1">{t('keusahawanan:admin_registration', 'Pendaftaran')}</p>
+              <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9]">
                 {business.registration_type === 'SSM' ? 'SSM' : business.registration_type === 'EMS' ? 'EMS' : 'PUSKEP'} 
                 {business.ssm_registration_number ? ` - ${business.ssm_registration_number}` : ''}
               </p>
               {business.registration_history && business.registration_history.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-white/10">
-                  <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_past_records', 'Rekod Lampau')}</p>
+                <div className="mt-2 pt-2 border-t border-[#B8E4DC]/70 dark:border-[#252B35]">
+                  <p className="text-[9px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-1">{t('keusahawanan:admin_past_records', 'Rekod Lampau')}</p>
                   {business.registration_history.map((hist: any, i: number) => (
-                    <p key={i} className="text-[10px] text-white/60">
+                    <p key={i} className="text-[10px] text-[#3B635C] dark:text-[#94A0B2]">
                       {hist.type} - {hist.number}
                     </p>
                   ))}
@@ -182,9 +182,9 @@ function BusinessDetailModal({
             </div>
 
             {business.interview_date && (
-              <div className="bg-white/[0.03] rounded-2xl p-3 border border-white/[0.04]">
-                <p className="text-[9px] font-black uppercase tracking-widest text-white/40 mb-1">{t('keusahawanan:admin_interview_date', 'Tarikh Temuduga')}</p>
-                <p className="text-sm font-black text-white">
+              <div className="bg-[#F6FBF9] dark:bg-[#1B2028] rounded-2xl p-3 border border-[#B8E4DC]/70 dark:border-[#252B35]">
+                <p className="text-[9px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-1">{t('keusahawanan:admin_interview_date', 'Tarikh Temuduga')}</p>
+                <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9]">
                   {new Date(business.interview_date).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </p>
               </div>
@@ -192,31 +192,31 @@ function BusinessDetailModal({
           </div>
 
           {business.mentors && business.mentors.length > 0 && (
-            <div className="bg-white/[0.03] rounded-2xl p-4 border border-white/[0.04] mb-6">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3 border-b border-white/10 pb-2">{t('keusahawanan:admin_advisory_mentors', 'Senarai Mentor Penasihat')}</p>
+            <div className="bg-[#F6FBF9] dark:bg-[#1B2028] rounded-2xl p-4 border border-[#B8E4DC]/70 dark:border-[#252B35] mb-6">
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-3 border-b border-[#B8E4DC]/70 dark:border-[#252B35] pb-2">{t('keusahawanan:admin_advisory_mentors', 'Senarai Mentor Penasihat')}</p>
               <div className="space-y-3">
                 {business.mentors.map((m, i) => (
                   <div key={i} className="flex flex-col">
-                    <p className="text-sm font-black text-white">{m.name}</p>
-                    <p className="text-[11px] text-white/60">{m.department}</p>
+                    <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9]">{m.name}</p>
+                    <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2]">{m.department}</p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          <p className="text-[10px] text-white/30 text-right">
+          <p className="text-[10px] text-[#3B635C]/75 dark:text-[#94A0B2]/75 text-right">
             {t('keusahawanan:admin_registered_date', 'Didaftar: {{date}}', { date: new Date(business.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'long', year: 'numeric' }) })}
           </p>
         </div>
 
         {/* Actions */}
-        <div className="border-t border-white/10 bg-white/[0.02] px-6 py-4 space-y-2.5">
+        <div className="border-t border-[#B8E4DC]/80 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#0E1116] px-6 py-4 space-y-2.5">
           <Button
             type="button"
             disabled={acting || certLoading}
             variant="outline"
-            className="w-full rounded-xl border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 hover:text-amber-200 font-black text-xs uppercase"
+            className="w-full rounded-xl border-amber-500/35 bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200 font-black text-xs uppercase"
             onClick={() => onOpenCertificate(business)}
           >
             {certLoading ? (
@@ -232,7 +232,7 @@ function BusinessDetailModal({
             {business.status === 'PENDING_INTERVIEW' && (
               <>
                 <Button disabled={acting} variant="outline"
-                  className="flex-1 rounded-xl border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs uppercase bg-transparent"
+                  className="flex-1 rounded-xl border-rose-500/35 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-black text-xs uppercase bg-transparent"
                   onClick={() => act(() => onReject(business))}>
                   <XCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_reject', 'Tolak')}
                 </Button>
@@ -246,11 +246,11 @@ function BusinessDetailModal({
             {business.status === 'ACTIVE' && (
               <>
                 <Button disabled={acting} variant="outline"
-                  className="flex-1 rounded-xl border-rose-500/30 text-rose-400 hover:bg-rose-500/10 font-black text-xs uppercase bg-transparent"
+                  className="flex-1 rounded-xl border-rose-500/35 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 font-black text-xs uppercase bg-transparent"
                   onClick={() => act(() => onReject(business))}>
                   <XCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_deactivate', 'Tolak / Buang Aktif')}
                 </Button>
-                <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">{t('common:close', 'Tutup')}</Button>
+                <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] text-[#0B2420] dark:text-[#F1F5F9]">{t('common:close', 'Tutup')}</Button>
               </>
             )}
             {business.status === 'REJECTED' && (
@@ -260,7 +260,7 @@ function BusinessDetailModal({
                   onClick={() => act(() => onApprove(business))}>
                   <CheckCircle className="w-3.5 h-3.5 mr-1.5" /> {t('keusahawanan:admin_btn_reactivate', 'Aktifkan Semula')}
                 </Button>
-                <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-white/10 text-white hover:text-white">{t('keusahawanan:close', 'Tutup')}</Button>
+                <Button onClick={onClose} variant="ghost" className="flex-1 rounded-xl font-black text-xs hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] text-[#0B2420] dark:text-[#F1F5F9]">{t('keusahawanan:close', 'Tutup')}</Button>
               </>
             )}
           </div>
@@ -597,15 +597,19 @@ export function KeusahawananAdminPanel() {
       
       {/* Tabs */}
       {isSuperAdmin && (
-        <div className="flex gap-1 bg-white/[0.03] border border-white/[0.05] p-1 rounded-2xl overflow-x-auto">
+        <div className="flex gap-1 bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] p-1 rounded-2xl overflow-x-auto shadow-xs">
           <button onClick={() => setActiveTab('perniagaan')}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
-            style={activeTab === 'perniagaan' ? { background: color, color: '#fff' } : { color: 'rgba(255,255,255,0.4)' }}>
+            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+              activeTab === 'perniagaan' ? 'text-white shadow-sm' : 'text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-[#F1F5F9]'
+            }`}
+            style={activeTab === 'perniagaan' ? { background: color, color: '#fff' } : undefined}>
             <LayoutGrid className="w-3.5 h-3.5" /> {t('keusahawanan:admin_tab_businesses', 'Senarai Perniagaan')}
           </button>
           <button onClick={() => setActiveTab('unit')}
-            className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all"
-            style={activeTab === 'unit' ? { background: color, color: '#fff' } : { color: 'rgba(255,255,255,0.4)' }}>
+            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+              activeTab === 'unit' ? 'text-white shadow-sm' : 'text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-[#F1F5F9]'
+            }`}
+            style={activeTab === 'unit' ? { background: color, color: '#fff' } : undefined}>
             <ShieldCheck className="w-3.5 h-3.5" /> {t('keusahawanan:admin_tab_unit', 'Unit Keusahawanan')}
           </button>
         </div>
@@ -637,14 +641,14 @@ export function KeusahawananAdminPanel() {
         ].map((s, i) => (
           <motion.div key={s.label}
             initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-            className="relative bg-white/[0.03] border border-white/[0.05] rounded-[1.5rem] p-5 overflow-hidden hover:bg-white/[0.06] transition-all"
+            className="relative bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-[1.5rem] p-5 overflow-hidden hover:border-[#0F766E]/40 dark:hover:border-[#2DD4BF]/40 shadow-xs transition-all"
           >
             <div className="w-9 h-9 rounded-2xl flex items-center justify-center mb-3"
               style={{ background: s.color + '22' }}>
               <s.icon className="w-4 h-4" style={{ color: s.color }} />
             </div>
-            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-1">{s.label}</p>
-            <p className="text-2xl font-black text-white">{s.value}</p>
+            <p className="text-[9px] font-black uppercase tracking-[0.2em] text-[#3B635C] dark:text-[#94A0B2] mb-1">{s.label}</p>
+            <p className="text-2xl font-black text-[#0B2420] dark:text-[#F1F5F9]">{s.value}</p>
           </motion.div>
         ))}
       </div>
@@ -652,14 +656,14 @@ export function KeusahawananAdminPanel() {
       {/* Pending alert banner */}
       {pending > 0 && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="flex items-center gap-3 bg-amber-500/[0.03] border border-amber-500/15 rounded-2xl px-4 py-3">
-          <Clock className="w-4 h-4 text-amber-500 shrink-0" />
-          <p className="text-sm font-black text-amber-600 dark:text-amber-400 flex-1">
+          className="flex items-center gap-3 bg-amber-500/10 dark:bg-amber-500/[0.06] border border-amber-500/25 rounded-2xl px-4 py-3">
+          <Clock className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+          <p className="text-sm font-black text-amber-700 dark:text-amber-400 flex-1">
             {t('keusahawanan:admin_pending_alert', '{{count}} permohonan perniagaan menunggu kelulusan.', { count: pending })}
           </p>
           <button
             onClick={() => setFilter('PENDING_INTERVIEW')}
-            className="text-[10px] font-black uppercase tracking-widest text-amber-600 hover:text-amber-800 transition-colors whitespace-nowrap"
+            className="text-[10px] font-black uppercase tracking-widest text-amber-700 dark:text-amber-300 hover:text-amber-900 dark:hover:text-amber-200 transition-colors whitespace-nowrap"
           >
             {t('keusahawanan:admin_check_action', 'Semak →')}
           </button>
@@ -669,22 +673,24 @@ export function KeusahawananAdminPanel() {
       {/* Search + Filter toolbar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
-          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40 pointer-events-none" />
+          <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#3B635C] dark:text-[#94A0B2] pointer-events-none" />
           <Input
             placeholder={t('keusahawanan:admin_search_placeholder', 'Cari nama perniagaan, pemilik, no. matric...')}
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pl-9 h-11 rounded-2xl bg-white/[0.03] border-white/10 text-white placeholder:text-white/40 focus:border-white/20 text-sm"
+            className="pl-9 h-11 rounded-2xl bg-white dark:bg-[#13171D] border-[#B8E4DC]/80 dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/60 dark:placeholder:text-[#94A0B2]/60 focus:border-[#0F766E] dark:focus:border-[#2DD4BF] text-sm"
           />
         </div>
-        <div className="flex gap-1 bg-white/[0.03] p-1 border border-white/[0.05] rounded-2xl shrink-0">
+        <div className="flex gap-1 bg-white dark:bg-[#13171D] p-1 border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl shrink-0 shadow-xs overflow-x-auto">
           {STATUS_FILTERS.map(sf => (
             <button key={sf.id} onClick={() => setFilter(sf.id as any)}
-              className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+              className={`px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all whitespace-nowrap ${
+                filter === sf.id ? 'text-white shadow-xs' : 'text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-[#F1F5F9]'
+              }`}
               style={
                 filter === sf.id
                   ? { background: color, color: '#fff' }
-                  : { color: 'rgba(255,255,255,0.4)' }
+                  : undefined
               }>
               {sf.label}
             </button>
@@ -692,7 +698,7 @@ export function KeusahawananAdminPanel() {
         </div>
         <button
           onClick={fetchBusinesses}
-          className="h-11 px-4 rounded-2xl bg-white/[0.03] hover:bg-white/[0.08] transition-colors flex items-center gap-2 text-xs font-black text-white/60 shrink-0 border border-white/[0.05]"
+          className="h-11 px-4 rounded-2xl bg-white dark:bg-[#13171D] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors flex items-center gap-2 text-xs font-black text-[#0B2420] dark:text-[#F1F5F9] shrink-0 border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-xs"
         >
           <RefreshCw className="w-3.5 h-3.5" /> {t('keusahawanan:admin_refresh_btn', 'Muat Semula')}
         </button>
@@ -704,9 +710,9 @@ export function KeusahawananAdminPanel() {
           <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <Store className="w-12 h-12 text-white/20 mx-auto mb-4" />
-          <p className="text-white/40 font-black text-sm">
+        <div className="text-center py-16 bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-3xl">
+          <Store className="w-12 h-12 text-[#3B635C]/35 dark:text-[#94A0B2]/35 mx-auto mb-4" />
+          <p className="text-[#3B635C] dark:text-[#94A0B2] font-black text-sm">
             {search || filter !== 'ALL' ? t('keusahawanan:admin_empty_match', 'Tiada padanan ditemui.') : t('keusahawanan:admin_empty_biz', 'Belum ada perniagaan didaftarkan.')}
           </p>
         </div>
@@ -720,27 +726,27 @@ export function KeusahawananAdminPanel() {
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.035 }}
-                className="flex items-center gap-4 p-4 bg-white/[0.02] border border-white/[0.05] rounded-2xl hover:bg-white/[0.05] hover:border-white/10 transition-all cursor-pointer group"
+                className="flex items-center gap-4 p-4 bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl hover:bg-[#F6FBF9] dark:hover:bg-[#1B2028] hover:border-[#0F766E]/40 dark:hover:border-[#2DD4BF]/40 shadow-xs transition-all cursor-pointer group"
                 onClick={() => setSelected(b)}
               >
                 {/* Logo */}
                 {b.logo_url ? (
-                  <img src={b.logo_url} className="w-11 h-11 rounded-2xl object-cover border border-white/10 shrink-0" alt="" />
+                  <img src={b.logo_url} className="w-11 h-11 rounded-2xl object-cover border border-[#B8E4DC]/80 dark:border-[#252B35] shrink-0" alt="" />
                 ) : (
-                  <div className="w-11 h-11 rounded-2xl bg-white/[0.05] border border-white/10 flex items-center justify-center shrink-0">
-                    <Store className="w-5 h-5 text-white/30" />
+                  <div className="w-11 h-11 rounded-2xl bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC]/80 dark:border-[#252B35] flex items-center justify-center shrink-0">
+                    <Store className="w-5 h-5 text-[#0F766E] dark:text-[#2DD4BF]" />
                   </div>
                 )}
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-sm font-black text-white truncate">{b.name}</p>
+                    <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9] truncate">{b.name}</p>
                     {b.status === 'PENDING_INTERVIEW' && (
                       <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shrink-0" />
                     )}
                   </div>
-                  <p className="text-[10px] text-white/40 truncate">
+                  <p className="text-[10px] text-[#3B635C] dark:text-[#94A0B2] truncate">
                     {b.owner_name ?? '—'} · {b.owner_matric ?? t('keusahawanan:admin_no_matric', 'Tiada matric')} · {b.staff_count} staf
                   </p>
                 </div>
@@ -751,7 +757,7 @@ export function KeusahawananAdminPanel() {
                 </span>
 
                 {/* Arrow indicator */}
-                <Eye className="w-4 h-4 text-white/20 group-hover:text-white/60 transition-colors shrink-0" />
+                <Eye className="w-4 h-4 text-[#3B635C]/50 dark:text-[#94A0B2]/50 group-hover:text-[#0F766E] dark:group-hover:text-[#2DD4BF] transition-colors shrink-0" />
               </motion.div>
             );
           })}
@@ -763,19 +769,19 @@ export function KeusahawananAdminPanel() {
       {activeTab === 'unit' && isSuperAdmin && (
         <motion.div key="unit" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
           {/* Header info */}
-          <div className="rounded-[2rem] p-5 border border-amber-500/20 bg-amber-500/[0.03] space-y-2">
+          <div className="rounded-[2rem] p-5 border border-amber-500/25 bg-amber-500/10 dark:bg-amber-500/[0.06] space-y-2">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-amber-500" />
-              <p className="text-xs font-black text-amber-500 uppercase tracking-widest">{t('keusahawanan:admin_unit_header_title', 'Unit Keusahawanan — Akses Penuh')}</p>
+              <ShieldCheck className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <p className="text-xs font-black text-amber-700 dark:text-amber-400 uppercase tracking-widest">{t('keusahawanan:admin_unit_header_title', 'Unit Keusahawanan — Akses Penuh')}</p>
             </div>
-            <p className="text-xs text-amber-500/70">
+            <p className="text-xs text-amber-800/80 dark:text-amber-300/80">
               {t('keusahawanan:admin_unit_header_desc', 'Pengguna yang disenaraikan di sini mendapat akses penuh ke semua perniagaan dalam ekosistem e-Keusahawanan tanpa perlu ditetapkan sebagai staf untuk setiap satu perniagaan.')}
             </p>
           </div>
 
           {/* Search + add */}
-          <div className="rounded-[2rem] bg-white/[0.02] border border-white/10 p-6 space-y-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white/40 flex items-center gap-2">
+          <div className="rounded-[2rem] bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] p-6 space-y-4 shadow-xs">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] flex items-center gap-2">
               <UserPlus className="w-3.5 h-3.5" /> {t('keusahawanan:admin_unit_add_officer', 'Tambah Pegawai Unit Keusahawanan')}
             </p>
             <div className="relative">
@@ -783,20 +789,20 @@ export function KeusahawananAdminPanel() {
                 value={searchUser}
                 onChange={e => handleSearchUser(e.target.value)}
                 placeholder={t('keusahawanan:admin_unit_search_placeholder', 'Cari nama pengguna...')}
-                className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-white/30 transition-all"
+                className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-[#F6FBF9] dark:bg-[#1B2028] border border-[#B8E4DC]/80 dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/60 dark:placeholder:text-[#94A0B2]/60 focus:border-[#0F766E] dark:focus:border-[#2DD4BF] transition-all"
               />
               {searchResults.length > 0 && (
-                <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-2xl bg-[#0f0f13] border border-white/10 shadow-xl overflow-hidden">
+                <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-2xl bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-xl overflow-hidden">
                   {searchResults.map(u => (
                      <button key={u.id} onClick={() => handleAddUnitAdmin(u.id, u.full_name)}
-                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-colors text-left border-b border-white/5 last:border-0">
+                      className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors text-left border-b border-[#B8E4DC]/60 dark:border-[#252B35] last:border-0">
                       <div className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white flex-shrink-0"
                         style={{ background: color }}>
                         {u.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                       </div>
                       <div>
-                        <p className="text-xs font-black text-white">{u.full_name}</p>
-                        <p className="text-[10px] text-white/50">{u.matric_no || t('keusahawanan:admin_no_matric_long', 'Tiada No. Matrik')}</p>
+                        <p className="text-xs font-black text-[#0B2420] dark:text-[#F1F5F9]">{u.full_name}</p>
+                        <p className="text-[10px] text-[#3B635C] dark:text-[#94A0B2]">{u.matric_no || t('keusahawanan:admin_no_matric_long', 'Tiada No. Matrik')}</p>
                       </div>
                       <span className="ml-auto text-[10px] font-black uppercase px-2 py-0.5 rounded-full"
                         style={{ background: hexToRgba(color, 0.1), color }}>
@@ -811,17 +817,17 @@ export function KeusahawananAdminPanel() {
             {/* Current unit admins */}
             <div className="space-y-2 pt-2">
               {unitAdmins.length === 0 ? (
-                <p className="text-sm text-white/30 text-center py-6">{t('keusahawanan:admin_unit_no_officers', 'Tiada pegawai unit keusahawanan ditetapkan.')}</p>
+                <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] text-center py-6">{t('keusahawanan:admin_unit_no_officers', 'Tiada pegawai unit keusahawanan ditetapkan.')}</p>
               ) : unitAdmins.map((a, i) => (
                 <motion.div key={a.id} initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.03 * i }}
-                  className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/[0.05]">
+                  className="flex items-center gap-4 p-4 rounded-2xl bg-[#F6FBF9] dark:bg-[#1B2028] border border-[#B8E4DC]/70 dark:border-[#252B35]">
                   <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm text-white flex-shrink-0"
                     style={{ background: color }}>
                     {a.user?.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-black text-white">{a.user?.full_name}</p>
-                    <p className="text-[10px] text-white/50 flex items-center gap-1.5">
+                    <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9]">{a.user?.full_name}</p>
+                    <p className="text-[10px] text-[#3B635C] dark:text-[#94A0B2] flex items-center gap-1.5">
                       <ShieldCheck className="w-3 h-3 text-amber-500" /> {t('keusahawanan:admin_unit_full_access_label', 'Unit Keusahawanan · Akses Penuh')}
                     </p>
                   </div>

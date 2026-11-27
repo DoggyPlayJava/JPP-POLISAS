@@ -86,8 +86,8 @@ export function SupsasLayout() {
 
       {/* ── Navbar ── */}
       <nav className={cn(
-        'fixed top-0 inset-x-0 z-50 transition-all duration-500 px-4 md:px-8 py-4 flex items-center justify-between',
-        scrolled && 'bg-[#050A14]/90  border-b border-white/5 py-3 shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
+        'fixed top-0 inset-x-0 z-50 transition-all duration-500 px-4 md:px-8 pb-4 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] flex items-center justify-between',
+        scrolled && 'bg-[#050A14]/95 border-b border-white/5 pb-3 pt-[calc(0.75rem+var(--sat,env(safe-area-inset-top,0px)))] shadow-[0_4px_30px_rgba(0,0,0,0.5)]'
       )}>
         {/* Logo */}
         <div className="flex items-center gap-3 cursor-pointer" onClick={() => navigate('/supsas')}>

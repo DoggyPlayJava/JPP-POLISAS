@@ -286,7 +286,7 @@ export function KebajikanStudentChat({
     <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 flex flex-col transition-colors">
 
       {/* ── Sticky top bar ── */}
-      <div className="sticky top-0 z-40 flex-shrink-0 border-b border-slate-200 dark:border-white/[0.06] bg-white/80 dark:bg-slate-950/80 transition-colors">
+      <div className="sticky top-0 z-40 flex-shrink-0 pt-[var(--sat,env(safe-area-inset-top,0px))] border-b border-slate-200 dark:border-white/[0.06] bg-white/95 dark:bg-[#13171D]/95 transition-colors">
         <div className="max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
           <button
             onClick={() => navigate('/kebajikan/aduan-saya')}

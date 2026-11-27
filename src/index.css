@@ -4,9 +4,6 @@
 
 @layer base {
   :root {
-    /* iOS Safe Area Insets (overridable in tests via --sat / --sab) */
-    --sat: env(safe-area-inset-top, 0px);
-    --sab: env(safe-area-inset-bottom, 0px);
     /* JPP Polisas - Semambu Mineral Teal & Crisp Alabaster */
     --background: 160 45% 97%;
     --foreground: 170 53% 9%;
@@ -282,5 +279,36 @@ body.supsas-route {
   }
   .pb-safe {
     padding-bottom: var(--sab, env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* ── iOS WebKit Safe-Area Floor & Anti-Auto-Zoom Guard (2026-11) ───────────
+   1. Prevent iOS Safari / Standalone PWA auto-zoom when focusing inputs < 16px
+      while keeping WCAG pinch-to-zoom enabled.
+   2. Keep --sat / --sab unset by default so `var(--sat, env(safe-area-inset-top))`
+      evaluates live `env()` directly on elements (avoiding WebKit's `:root` 0px
+      caching bug), while adding a guaranteed Dynamic Island / Home Indicator
+      floor when launched in iOS Standalone PWA mode. */
+@supports (-webkit-touch-callout: none) {
+  @media (max-width: 767px) {
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+    textarea,
+    select {
+      font-size: 16px !important;
+    }
+  }
+
+  @media (display-mode: standalone) and (max-width: 767px) and (min-height: 780px) {
+    :root {
+      --sat: max(env(safe-area-inset-top, 0px), 59px);
+      --sab: max(env(safe-area-inset-bottom, 0px), 34px);
+    }
+  }
+
+  @media (display-mode: standalone) and (max-width: 767px) and (max-height: 779px) {
+    :root {
+      --sat: max(env(safe-area-inset-top, 0px), 24px);
+      --sab: max(env(safe-area-inset-bottom, 0px), 0px);
+    }
   }
 }

@@ -2052,13 +2052,13 @@ export function PolySuaraPage({
     <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] pb-36 md:pb-32 relative overflow-x-clip transition-colors duration-200">
       {/* Mineral Teal Opaque Sticky Header */}
       <header className="sticky top-0 z-50 bg-[#F6FBF9] dark:bg-[#090B0E] border-b border-[#B8E4DC]/80 dark:border-[#252B35] pt-[var(--sat,env(safe-area-inset-top,0px))]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 h-13 sm:h-16 flex items-center justify-between gap-1.5 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0">
             <button
               type="button"
               onClick={() => navigate('/portal')}
               aria-label={t('common:back', 'Kembali')}
-              className="w-10 h-10 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] flex items-center justify-center transition-colors text-[#0B2420] dark:text-[#F1F5F9] shrink-0 cursor-pointer"
+              className="w-9 h-9 sm:w-10 sm:h-10 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] flex items-center justify-center transition-colors text-[#0B2420] dark:text-[#F1F5F9] shrink-0 cursor-pointer"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
@@ -2066,13 +2066,13 @@ export function PolySuaraPage({
               <div className="w-8 h-8 rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] flex items-center justify-center shrink-0">
                 <Ghost className="w-4 h-4" />
               </div>
-              <span className="font-black text-base tracking-tight truncate">
+              <span className="font-black text-base tracking-tight whitespace-nowrap">
                 Poly<span className="text-[#0F766E] dark:text-[#2DD4BF]">Suara</span>
               </span>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <LanguageToggle />
             <ThemeToggle />
             <button
@@ -2107,7 +2107,7 @@ export function PolySuaraPage({
                 }
               }}
               className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center transition-colors cursor-pointer",
+                "w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center transition-colors cursor-pointer",
                 notifToggleLoading && "opacity-50 cursor-wait",
                 polySuaraNotif
                   ? "bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/25 dark:border-[#2DD4BF]/30"
@@ -2117,16 +2117,16 @@ export function PolySuaraPage({
             >
               {polySuaraNotif ? <BellRing className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
             </button>
-            <span className="text-xs font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] px-3 py-1.5 rounded-full flex items-center gap-1.5">
+            <span className="hidden sm:inline-flex text-xs font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] px-3 py-1.5 rounded-full items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Anon Mode</span>
+              <span>Anon Mode</span>
             </span>
           </div>
         </div>
       </header>
 
       {/* X/Threads-Inspired Adaptive Mineral Teal Shell (2-col on lg, 3-col on xl) */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-5 sm:pt-6 relative z-10 pb-32">
+      <div className="max-w-7xl mx-auto px-3.5 sm:px-6 pt-3 sm:pt-6 relative z-10 pb-32">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-start">
           <PolySuaraLeftRail
             sortBy={sortBy}
@@ -2148,8 +2148,8 @@ export function PolySuaraPage({
           />
 
           <main className="lg:col-span-6 min-w-0">
-            {/* Hero Title Header */}
-            <div className="mb-4 flex flex-col">
+            {/* Hero Title Header (desktop only — avoids redundant chrome above fold on mobile) */}
+            <div className="hidden lg:flex mb-4 flex-col">
               <div className="text-xs font-semibold text-[#0F766E] dark:text-[#2DD4BF] uppercase tracking-wider mb-1">
                 {t('services:moderated_community', 'Komuniti Mahasiswa Politeknik Terkawal')}
               </div>
@@ -2179,7 +2179,7 @@ export function PolySuaraPage({
             ) : (
               <>
                 {/* Search Bar for < 1024px (lg+) where RightRail handles desktop search */}
-                <div className="lg:hidden mb-3">
+                <div className="lg:hidden mb-2.5">
                   <div className="relative">
                     <Search className="w-4 h-4 text-[#3B635C] dark:text-[#94A0B2] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
@@ -2201,13 +2201,13 @@ export function PolySuaraPage({
                       setComposeModalOpen(true);
                     }
                   }}
-                  className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] hover:border-[#0F766E]/50 dark:hover:border-[#2DD4BF]/50 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 mb-4 shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-colors"
+                  className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] hover:border-[#0F766E]/50 dark:hover:border-[#2DD4BF]/50 rounded-2xl sm:rounded-3xl p-2.5 sm:p-4 mb-3 sm:mb-4 shadow-xs flex items-center justify-between gap-2.5 sm:gap-3 cursor-pointer group transition-colors"
                   role="button"
                   tabIndex={0}
                   aria-label={t('services:write_new_confession_aria', 'Tulis luahan kampus baharu')}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-[12px] bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                       <MessageSquare className="w-4 h-4" />
                     </div>
                     <span className="text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0B2420] dark:group-hover:text-[#F1F5F9] font-medium truncate">
@@ -2215,8 +2215,9 @@ export function PolySuaraPage({
                     </span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs font-bold text-white dark:text-[#090B0E] bg-[#0F766E] dark:bg-[#2DD4BF] px-3.5 py-1.5 rounded-full inline-flex items-center gap-1 group-hover:opacity-90 transition-opacity">
-                      {t('suara_post_confession_btn', 'Luahkan')}
+                    <span className="text-xs font-bold text-white dark:text-[#090B0E] bg-[#0F766E] dark:bg-[#2DD4BF] px-3 sm:px-3.5 py-1.5 rounded-full inline-flex items-center gap-1 group-hover:opacity-90 transition-opacity whitespace-nowrap">
+                      <span className="sm:hidden">{t('services:suara_quick_cta_short', 'Luah')}</span>
+                      <span className="hidden sm:inline">{t('suara_post_confession_btn', 'Luahkan')}</span>
                     </span>
                   </div>
                 </div>
@@ -2240,7 +2241,7 @@ export function PolySuaraPage({
                 )}
 
                 {/* X / Threads Clean 3-Tab Underline Navigation + Saluran & Tapis Drawer Trigger */}
-                <div className="flex items-center justify-between gap-1.5 border-b border-[#B8E4DC]/80 dark:border-[#252B35] mb-4">
+                <div className="flex items-center justify-between gap-1.5 border-b border-[#B8E4DC]/80 dark:border-[#252B35] mb-3 sm:mb-4">
                   <div className="flex items-center gap-0.5 sm:gap-2 overflow-x-auto scrollbar-none min-w-0">
                     {([
                       { id: 'LATEST', label: t('suara_sort_newest', 'Terkini'), icon: Clock },
@@ -2255,7 +2256,7 @@ export function PolySuaraPage({
                           type="button"
                           onClick={() => setSortBy(tab.id)}
                           className={cn(
-                            'relative py-3 px-2 sm:px-3.5 text-[11px] sm:text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0',
+                            'relative py-2.5 sm:py-3 px-2 sm:px-3.5 text-[11px] sm:text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0',
                             isActive
                               ? 'text-[#0F766E] dark:text-[#2DD4BF]'
                               : 'text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]'

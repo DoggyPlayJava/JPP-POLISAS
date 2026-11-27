@@ -5599,3 +5599,20 @@ Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asa
 - **Sekatan Regresi Automatik (`scripts/check-design-tokens.mjs`):**
   - `npm run check:design-tokens` kini menolak sebarang kelas `dark:*-#[061714|0B2420|081A17|11322C|11332D|18443C|1E4D45|99CBC2|0C221E]` bagi menghalang kembalinya tona hijau gelap pada kemas kini akan datang.
 
+---
+
+## 42. Pembaikan Interaksi Portal, iOS Standalone Safe-Area, Anti Auto-Zoom Input, PolySuara Mudah Alih & Dwi-Tema Keusahawanan (Nov 2026)
+
+- **Butang Pengepala `/portal` (`SuperAppHeader.tsx`):**
+  - Membuang `after:content-[''] after:absolute after:-inset-1` pada `<div>` pembungkus `LanguageToggle`, `ThemeToggle`, dan `NotificationBell` kerana elemen pseudo `::after` tanpa `pointer-events-none` menutupi `<button>` anak dan menyekat semua klik/sentuhan pada pengepala portal.
+- **iOS Dynamic Island Safe-Area & Anti Auto-Zoom Input (`index.html`, `src/index.css`, + 16 Pengepala Modul):**
+  - Membuang takrifan lalai `--sat: env(safe-area-inset-top, 0px)` / `--sab` daripada `:root` bagi mengelakkan pepijat WebKit iOS yang mengunci `--sat` kepada `0px` pada lukisan awal (memaksa `var(--sat, env(safe-area-inset-top, 0px))` menilai `env()` secara langsung).
+  - Menambah `@supports (-webkit-touch-callout: none)` dalam `src/index.css`: (1) lantai jaminan `--sat: max(env(safe-area-inset-top, 0px), 59px)` & `--sab: max(env(safe-area-inset-bottom, 0px), 34px)` untuk mod PWA Standalone iPhone ber-*Dynamic Island*, dan (2) `font-size: 16px !important` pada `input`/`textarea`/`select` mudah alih iOS bagi menghentikan auto-zum Safari semasa menaip sambil mengekalkan *pinch-to-zoom* WCAG.
+  - Mengemas kini `index.html` (`min-height: 100%`, latar `html` eksplisit cerah/gelap, dan `meta name="theme-color"` dwi-tema) serta menambah `pt-[var(--sat,env(safe-area-inset-top,0px))]` kepada 16 pengepala melekat/tetap yang tertinggal (`JppLayout`, `KeusahawananLayout`, `KebajikanMyTickets`, `KebajikanStudentChat`, `KarnivalLayout`, `KarnivalAdminLayout`, `SupsasLayout`, `SupsasAdminLayout`, `SupsasScorekeeperPage`, `EmsCertificatePage`, `EmsJuryPortalPage`, `MakmpJuryPortalPage`, `MakmpPublicFormPage`, `MakmpStatusTrackingPage`, `PolyTaskAdmin`, `PortalNavbar`).
+- **Kedudukan `FloatingAiChat` & Kekemasan Mudah Alih `PolySuaraPage`:**
+  - Merendahkan FAB `FloatingAiChat.tsx` mudah alih daripada `4.75rem` kepada `4rem` (`~10px` di atas dok `BottomNav`) bersaiz `w-10 h-10` agar tidak menghalang pandangan suapan.
+  - Menyembunyikan blok tajuk hero berganda `PolySuaraPage.tsx` pada mudah alih (`hidden lg:flex`), menyembunyikan lencana ikon `Anon Mode` pada `< sm` agar jenama `PolySuara` tidak terpotong kepada `Poly...`, serta menggunakan CTA ringkas (`suara_quick_cta_short`: `Luah` / `Post`) supaya ruang kapsul karangan pantas lebih lapang.
+- **Dwi-Tema Panel Exco Keusahawanan (`KeusahawananAdminPanel.tsx` & `KeusahawananOnboarding.tsx`):**
+  - Menggantikan kesemua teks putih keras (`text-white`, `text-white/40`, `rgba(255,255,255,0.4)`, `bg-white/[0.03]`, `bg-[#0f0f13]`) kepada token Dwi-Tema *Crisp Alabaster* / *Obsidian Carbon* (`bg-white dark:bg-[#13171D]`, `text-[#0B2420] dark:text-[#F1F5F9]`, `text-[#3B635C] dark:text-[#94A0B2]`) supaya paparan Exco Keusahawanan jelas dibaca dalam Mod Cerah mahupun Mod Gelap.
+
+

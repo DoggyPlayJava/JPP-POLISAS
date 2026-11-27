@@ -974,7 +974,7 @@ export function EmsJuryPortalPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col pb-28 md:pb-8 transition-colors">
       {/* Event Header Banner */}
-      <header className="bg-white/90 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 ">
+      <header className="bg-white/95 dark:bg-[#13171D]/95 border-b border-slate-200 dark:border-slate-800 pt-[var(--sat,env(safe-area-inset-top,0px))] sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             {/* Event Info */}

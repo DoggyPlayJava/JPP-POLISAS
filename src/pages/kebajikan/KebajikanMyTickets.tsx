@@ -175,7 +175,8 @@ export function KebajikanMyTickets({
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 relative overflow-hidden transition-colors">
       {/* Header */}
-      <div className="sticky top-0 z-40 px-4 sm:px-6 h-16 flex items-center justify-between border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/60 transition-colors">
+      <div className="sticky top-0 z-40 pt-[var(--sat,env(safe-area-inset-top,0px))] border-b border-slate-200 dark:border-white/5 bg-white/95 dark:bg-[#13171D]/95 transition-colors">
+        <div className="px-4 sm:px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <HeartHandshake className="w-6 h-6 text-teal-600 dark:text-teal-400" />
           <div>
@@ -191,6 +192,7 @@ export function KebajikanMyTickets({
               <Plus className="w-4 h-4 mr-1.5" /> {t('kebajikan:my_tickets_btn_new', 'Aduan Baru')}
             </Button>
           </Link>
+        </div>
         </div>
       </div>
 
