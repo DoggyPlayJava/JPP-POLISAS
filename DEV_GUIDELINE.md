@@ -5639,9 +5639,9 @@ Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asa
 
 ## 44. Rework PolyMaps Fasa 1 & Fasa 2 — Sumber Tunggal Kebenaran & Pembetulan 11 Bug Segerak (Nov 2026)
 
-- **Fasa 1 — Migrasi SQL Aditif & Idempoten (`supabase/migrations/20261127160000_polymaps_single_source_of_truth.sql`):**
+- **Fasa 1 — Migrasi SQL Aditif & Idempoten (`supabase/migrations/20261127160000_polymaps_single_source_of_truth.sql` & `supabase/migrations/20261127165000_restore_imaps_field_submissions_pending_delete_policy.sql`):**
   - Mengekalkan semua lajur legasi (`imaps_locations.floor_level INTEGER`, `imaps_buildings.panorama_360_url/is_360_enabled`, `imaps_locations.panorama_360_url/is_360_enabled`) untuk keserasian sifar-gangguan bagi `PortalPage`, `AkademikDashboard`, `Timetable`, dan `FoodBank`.
-  - Mewujudkan fungsi pembantu RLS tunggal `public.is_imaps_admin((SELECT auth.uid()))` dan menyeragamkan semua 9 jadual `imaps_*` kepada **tepat 1 polisi bagi setiap operasi (`SELECT`/`INSERT`/`UPDATE`/`DELETE`)** tanpa polisi `FOR ALL` bertindih.
+  - Mewujudkan fungsi pembantu RLS tunggal `public.is_imaps_admin((SELECT auth.uid()))` dan menyeragamkan semua 9 jadual `imaps_*` kepada **tepat 1 polisi bagi setiap operasi (`SELECT`/`INSERT`/`UPDATE`/`DELETE`)** tanpa polisi `FOR ALL` bertindih (termasuk mengekalkan hak sukarelawan memadam sumbangan sendiri berstatus `'pending'` pada `imaps_field_submissions_delete_policy`).
   - Menambah jadual `public.imaps_panoramas` (indeks FK pada `building_id`, `location_id`, `created_by`), backfill idempoten daripada rekod sedia ada tanpa menghidupkan semula URL yang telah dipadam Admin, serta menambah FK `panorama_id` (+ indeks FK) pada `imaps_360_hotspots`.
   - Menambah lajur kanonikal `floor_label TEXT` + `floor_order SMALLINT` bersama trigger penyegerakan `trg_sync_imaps_locations_floor` & `trg_sync_imaps_missing_reports_floor` (`0 <-> 'G'`, `-1 <-> 'B1'`).
   - Mengkodifikasi jadual `public.imaps_walkway_segments` (beserta lajur `is_covered`/`is_blocked` pada `imaps_walkways` dan indeks FK pada `walkway_id`, `created_by`), meningkatkan had baldi storan `imaps_assets` kepada **12MB (`12582912`)**, dan memperkenalkan RPC atomik `SECURITY DEFINER` `public.approve_imaps_field_submission(p_submission_id UUID)`.
