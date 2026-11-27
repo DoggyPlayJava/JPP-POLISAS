@@ -34,7 +34,21 @@ import {
   type PolyMaps360HotspotDraft,
 } from '@/lib/polyMapsSmartEntry';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { buildPolyMaps360Directory, canApplyPanoramaToBuilding, canMarkSubmissionApproved, filterPolyMaps360Directory, findRoomPanoramaConflicts, getPanoramaUsage, normalizePendingPins, type DirectoryStatus } from '@/lib/polymaps360Directory';
+import { buildPolyMaps360Directory, canApplyPanoramaToBuilding, filterPolyMaps360Directory, findRoomPanoramaConflicts, getPanoramaUsage, normalizePendingPins, type DirectoryStatus } from '@/lib/polymaps360Directory';
+import {
+  parseFloorLevel,
+  toDbFloorFields,
+  formatFloorShort,
+} from '@/features/polymaps/domain/floorLevel';
+import { computeAdmin360Coverage } from '@/features/polymaps/domain/campusSearch';
+import {
+  approveFieldSubmissionAtomic,
+  insertLocationsWithFloorFallback,
+  invalidatePolyMapsCache,
+  updateLocationWithFloorFallback,
+  upsertPanoramaRecord,
+} from '@/features/polymaps/api/polymapsRepository';
+import type { CampusPanorama } from '@/features/polymaps/types';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -591,21 +605,23 @@ export function JppPolyMapsAdmin() {
   const [isZoneModalDropdownOpen, setIsZoneModalDropdownOpen] = useState(false);
   
   const { user, profile, isSuperAdmin, isJppMember } = useAuth();
+  const [panoramas, setPanoramas] = useState<CampusPanorama[]>([]);
 
   useEffect(() => {
     fetchData();
     const searchParams = new URLSearchParams(window.location.search);
     const tabParam = searchParams.get('tab');
-    if (tabParam === 'reports') {
-      setActiveTab('reports');
+    const validTabs = ['buildings', 'locations', 'submissions', '360directory', 'reports', 'walkways'] as const;
+    if (tabParam && (validTabs as readonly string[]).includes(tabParam)) {
+      setActiveTab(tabParam as (typeof validTabs)[number]);
     }
   }, []);
 
   const fetchData = async () => {
     setLoading(true);
-    queryCache.invalidate('polymaps:');
+    invalidatePolyMapsCache();
     try {
-      const [buildingsRes, locationsRes, reportsRes, walkwaysRes, segsRes, hotspotsRes, fieldSubRes] = await Promise.all([
+      const [buildingsRes, locationsRes, reportsRes, walkwaysRes, segsRes, hotspotsRes, fieldSubRes, panoramasRes] = await Promise.all([
         supabase.from('imaps_buildings').select('*').order('name'),
         supabase.from('imaps_locations').select('*').order('room_code'),
         supabase.from('imaps_missing_reports').select(`
@@ -620,6 +636,7 @@ export function JppPolyMapsAdmin() {
         supabase.from('imaps_walkway_segments').select('*').order('created_at', { ascending: false }),
         supabase.from('imaps_360_hotspots').select('*').order('created_at', { ascending: true }),
         supabase.from('imaps_field_submissions').select('*').order('created_at', { ascending: false }),
+        supabase.from('imaps_panoramas').select('id, building_id, location_id, floor_label, floor_order, title, image_url, haov, vaov, status, is_primary, created_by, created_at, updated_at').order('floor_order', { ascending: true }),
       ]);
 
       if (buildingsRes.error) throw buildingsRes.error;
@@ -627,18 +644,20 @@ export function JppPolyMapsAdmin() {
       if (reportsRes.error) throw reportsRes.error;
       if (walkwaysRes.error) throw walkwaysRes.error;
 
+      // Preserve strictly DB-stored URLs (never resurrect static URLs or inject building URL into rooms)
       const enhancedBuildings = (buildingsRes.data || []).map((b: any) => ({
         ...b,
-        panorama_360_url: b.panorama_360_url || getBuilding360Url(b),
+        panorama_360_url: b.panorama_360_url?.trim() || null,
       }));
       const enhancedLocations = (locationsRes.data || []).map((l: any) => ({
         ...l,
-        panorama_360_url: l.panorama_360_url || getLocation360Url(l),
+        panorama_360_url: l.panorama_360_url?.trim() || null,
       }));
 
       setBuildings(enhancedBuildings);
       setLocations(enhancedLocations);
       setReports(reportsRes.data || []);
+      setPanoramas(!panoramasRes?.error && Array.isArray(panoramasRes?.data) ? panoramasRes.data : []);
 
       if (!hotspotsRes.error && Array.isArray(hotspotsRes.data)) {
         const grouped: Record<string, PolyMaps360HotspotDraft[]> = {};
@@ -655,7 +674,12 @@ export function JppPolyMapsAdmin() {
         setFieldSubmissions(
           fieldSubRes.data.map((item: any) => ({
             ...item,
-            hotspots_json: Array.isArray(item.hotspots_json) ? item.hotspots_json : [],
+            hotspots_json:
+              Array.isArray(item.hotspots_json) && item.hotspots_json.length > 0
+                ? item.hotspots_json
+                : Array.isArray(item.hotspots_payload)
+                  ? item.hotspots_payload
+                  : [],
           }))
         );
       }
@@ -712,104 +736,16 @@ export function JppPolyMapsAdmin() {
     setIsProcessingReport(prev => ({ ...prev, [sub.id]: true }));
     const toastId = toast.loading(t('services:polymaps_sub_approving_toast', 'Menerbitkan 360° & semua pin bilik sukarelawan...'));
     try {
-      const targetBuildingId = sub.building_id || buildings[0]?.id;
-      if (!targetBuildingId) throw new Error('Bangunan sasaran submission tiada.');
-      const matchedBuilding = buildings.find((b) => b.id === targetBuildingId);
-      if (!matchedBuilding) throw new Error('Bangunan sasaran submission tidak ditemui.');
+      await approveFieldSubmissionAtomic(sub, {
+        buildings,
+        locations,
+        actorUserId: user?.id || null,
+        currentLang,
+        notifyTitle: t('services:polymaps_sub_notif_title', '🎥 Sumbangan 360° PolyMaps Diluluskan!'),
+        notifyMessageBuilder: (count) =>
+          t('services:polymaps_sub_notif_message', 'Rakaman 360° dan {{count}} pin pintu bilik sumbangan anda telah diterbitkan ke dalam PolyMaps. Terima kasih!', { count }),
+      });
 
-      const pins = Array.isArray(sub.hotspots_json) ? sub.hotspots_json : [];
-      const roomPins = pins.filter((pin) => pin.pin_type === 'room' && (pin.room_code || pin.label));
-      const roomCodeToLocationId = new Map<string, string>();
-      const updates: Array<Promise<{ error: any }>> = [];
-      const newLocationsPayload: Array<Record<string, unknown>> = [];
-
-      if (sub.location_id) {
-        updates.push(supabase.from('imaps_locations').update({ panorama_360_url: sub.panorama_360_url, is_360_enabled: true }).eq('id', sub.location_id));
-      } else {
-        updates.push(supabase.from('imaps_buildings').update({ panorama_360_url: sub.panorama_360_url, is_360_enabled: true }).eq('id', targetBuildingId));
-      }
-
-      for (const pin of roomPins) {
-        const codeText = (pin.room_code || pin.label).trim();
-        const inferred = inferRoomMetadata(codeText, matchedBuilding.code, pin.yaw, currentLang);
-        const existingLoc = locations.find((location) => location.building_id === targetBuildingId && location.room_code.trim().toLowerCase() === codeText.toLowerCase());
-        if (existingLoc) {
-          roomCodeToLocationId.set(codeText.toLowerCase(), existingLoc.id);
-          updates.push(supabase.from('imaps_locations').update({
-            panorama_360_url: sub.panorama_360_url,
-            is_360_enabled: true,
-            target_yaw: pin.yaw,
-            target_pitch: pin.pitch,
-            floor_level: pin.floor_level || existingLoc.floor_level || inferred.floor_level,
-            direction_text: pin.description || existingLoc.direction_text || inferred.direction_text,
-          }).eq('id', existingLoc.id));
-        } else {
-          newLocationsPayload.push({
-            building_id: targetBuildingId,
-            room_code: codeText,
-            floor_level: parseInt(pin.floor_level || sub.floor_level || inferred.floor_level) || 1,
-            direction_text: pin.description || inferred.direction_text,
-            search_tags: inferred.search_tags,
-            panorama_360_url: sub.panorama_360_url,
-            is_360_enabled: true,
-            target_yaw: pin.yaw,
-            target_pitch: pin.pitch,
-          });
-        }
-      }
-
-      const updateResults = await Promise.all(updates);
-      const failures = updateResults.map((result) => result.error);
-      let insertedLocations: Array<{ id: string; room_code: string }> = [];
-      if (newLocationsPayload.length) {
-        const { data, error } = await supabase.from('imaps_locations').insert(newLocationsPayload).select('id, room_code');
-        failures.push(error);
-        insertedLocations = data || [];
-      }
-      for (const row of insertedLocations) roomCodeToLocationId.set(row.room_code.trim().toLowerCase(), row.id);
-
-      if (pins.length) {
-        const { error: deleteError } = await supabase.from('imaps_360_hotspots').delete().eq('panorama_url', sub.panorama_360_url);
-        failures.push(deleteError);
-        if (deleteError) throw deleteError;
-        const hsPayload = pins.map((pin) => {
-          const key = (pin.room_code || pin.label || '').trim().toLowerCase();
-          return {
-            panorama_url: sub.panorama_360_url,
-            building_id: targetBuildingId,
-            location_id: roomCodeToLocationId.get(key) || pin.location_id || sub.location_id || null,
-            pin_type: pin.pin_type,
-            label: pin.label,
-            room_code: pin.room_code || null,
-            floor_level: pin.floor_level || sub.floor_level || '1',
-            description: pin.description || null,
-            pitch: pin.pitch,
-            yaw: pin.yaw,
-            target_panorama_url: pin.target_panorama_url || null,
-            created_by: sub.contributor_id || user?.id || null,
-          };
-        });
-        const { error: hotspotError } = await supabase.from('imaps_360_hotspots').insert(hsPayload);
-        failures.push(hotspotError);
-      }
-
-      if (!canMarkSubmissionApproved(failures)) {
-        const failed = failures.find(Boolean);
-        throw failed || new Error('Gagal menerbitkan panorama atau pin.');
-      }
-
-      const { error: statusError } = await supabase.from('imaps_field_submissions').update({ status: 'approved', reviewed_by: user?.id || null, reviewed_at: new Date().toISOString() }).eq('id', sub.id).eq('status', 'pending');
-      if (statusError) throw statusError;
-
-      if (sub.contributor_id) {
-        const { error: notificationError } = await supabase.from('notifications').insert({
-          user_id: sub.contributor_id,
-          title: t('services:polymaps_sub_notif_title', '🎥 Sumbangan 360° PolyMaps Diluluskan!'),
-          message: t('services:polymaps_sub_notif_message', 'Rakaman 360° dan {{count}} pin pintu bilik sumbangan anda telah diterbitkan ke dalam PolyMaps. Terima kasih!', { count: pins.length }),
-          type: 'MAPS_REPORT_APPROVED', module: 'AKADEMIK', link: '/polymaps',
-        });
-        if (notificationError) console.warn('Submission approved; contributor notification failed:', notificationError.message);
-      }
       toast.success(t('services:polymaps_sub_approved_toast', 'Sumbangan 360° & pin bilik berjaya diluluskan dan diterbitkan!'), { id: toastId });
       fetchData();
     } catch (err: any) {
@@ -849,12 +785,35 @@ export function JppPolyMapsAdmin() {
     }
     setSavingUsage(true);
     try {
-      const payload = { building_id: usageDraft.buildingId, floor_level: Number(usageDraft.floor) || 1, room_code: roomCode, panorama_360_url: usagePanoramaUrl, is_360_enabled: true };
+      const floor = toDbFloorFields(usageDraft.floor);
+      const payload = {
+        building_id: usageDraft.buildingId,
+        floor_level: floor.floor_level,
+        floor_label: floor.floor_label,
+        floor_order: floor.floor_order,
+        room_code: roomCode,
+        panorama_360_url: usagePanoramaUrl,
+        is_360_enabled: true,
+      };
       const result = !addingUsage && editingUsageLocationId
-        ? await supabase.from('imaps_locations').update(payload).eq('id', editingUsageLocationId)
-        : await supabase.from('imaps_locations').insert({ ...payload, direction_text: '', search_tags: '' });
+        ? await updateLocationWithFloorFallback(editingUsageLocationId, payload)
+        : await insertLocationsWithFloorFallback([{ ...payload, direction_text: '', search_tags: '' }]);
       const { error } = result;
       if (error) throw error;
+      const resolvedLocId = !addingUsage && editingUsageLocationId
+        ? editingUsageLocationId
+        : (result as any)?.data?.[0]?.id || null;
+      await upsertPanoramaRecord({
+        buildingId: usageDraft.buildingId,
+        locationId: resolvedLocId,
+        floorLevel: floor.floor_label,
+        title: roomCode,
+        imageUrl: usagePanoramaUrl,
+        status: 'published',
+        isPrimary: false,
+        createdBy: user?.id || null,
+      });
+      invalidatePolyMapsCache();
       toast.success('Kaitan panorama bilik dikemas kini. Bilik lain kekal tidak berubah.');
       setEditingUsageLocationId(null);
       setAddingUsage(false);
@@ -879,6 +838,17 @@ export function JppPolyMapsAdmin() {
       onConfirm: async () => {
         const { error } = await supabase.from('imaps_buildings').update({ panorama_360_url: entry.panoramaUrl, is_360_enabled: true }).eq('id', targetBuildingId);
         if (error) { toast.error(error.message); return; }
+        await upsertPanoramaRecord({
+          buildingId: targetBuildingId,
+          locationId: null,
+          floorLevel: '1',
+          title: buildings.find((b) => b.id === targetBuildingId)?.name || entry.label || null,
+          imageUrl: entry.panoramaUrl,
+          status: 'published',
+          isPrimary: true,
+          createdBy: user?.id || null,
+        });
+        invalidatePolyMapsCache();
         toast.success('Panorama bangunan dikemas kini.');
         fetchData();
       },
@@ -1103,18 +1073,52 @@ export function JppPolyMapsAdmin() {
     
     setIsSaving(true);
     try {
+      const cleanedPanoUrl = currentBuilding.panorama_360_url?.trim() || null;
+      const buildingPayload = {
+        ...currentBuilding,
+        panorama_360_url: cleanedPanoUrl,
+        is_360_enabled: cleanedPanoUrl ? Boolean(currentBuilding.is_360_enabled) : false,
+      };
       if (currentBuilding.id) {
         const { error } = await supabase
           .from('imaps_buildings')
-          .update(currentBuilding)
+          .update(buildingPayload)
           .eq('id', currentBuilding.id);
         if (error) throw error;
+        if (cleanedPanoUrl) {
+          await upsertPanoramaRecord({
+            buildingId: currentBuilding.id,
+            locationId: null,
+            floorLevel: '1',
+            title: currentBuilding.name,
+            imageUrl: cleanedPanoUrl,
+            status: buildingPayload.is_360_enabled ? 'published' : 'draft',
+            isPrimary: true,
+            createdBy: user?.id || null,
+          });
+        }
+        invalidatePolyMapsCache();
         toast.success(t('services:building_updated_toast', 'Bangunan dikemaskini'));
       } else {
-        const { error } = await supabase
+        const { data: insertedBld, error } = await supabase
           .from('imaps_buildings')
-          .insert([currentBuilding]);
+          .insert([buildingPayload])
+          .select('id')
+          .single();
         if (error) throw error;
+        if (insertedBld?.id && cleanedPanoUrl) {
+          await upsertPanoramaRecord({
+            buildingId: insertedBld.id,
+            locationId: null,
+            floorLevel: '1',
+            title: currentBuilding.name,
+            imageUrl: cleanedPanoUrl,
+            status: buildingPayload.is_360_enabled ? 'published' : 'draft',
+            isPrimary: true,
+            createdBy: user?.id || null,
+          });
+        }
+        invalidatePolyMapsCache();
         toast.success(t('services:building_added_toast', 'Bangunan ditambah'));
       }
       const userId = (await supabase.auth.getUser()).data.user?.id;
@@ -1161,49 +1165,64 @@ export function JppPolyMapsAdmin() {
     setIsSaving(true);
     try {
       if (currentLocation.id) {
+        const floor = toDbFloorFields(currentLocation.floor_level);
         const payload = {
           building_id: currentLocation.building_id,
           room_code: currentLocation.room_code.trim(),
-          floor_level: currentLocation.floor_level,
+          floor_level: floor.floor_level,
+          floor_label: floor.floor_label,
+          floor_order: floor.floor_order,
           direction_text: currentLocation.direction_text,
           search_tags: currentLocation.search_tags,
           image_url: currentLocation.image_url,
-          panorama_360_url: currentLocation.panorama_360_url || null,
+          panorama_360_url: currentLocation.panorama_360_url?.trim() || null,
+          is_360_enabled: currentLocation.panorama_360_url?.trim() ? Boolean(currentLocation.is_360_enabled) : false,
           op_start: currentLocation.op_start || null,
           op_end: currentLocation.op_end || null
         };
         
-        console.log("SIMPAN PAYLOAD:", payload);
-        
-        const { error } = await supabase
-          .from('imaps_locations')
-          .update(payload)
-          .eq('id', currentLocation.id);
+        const { error } = await updateLocationWithFloorFallback(currentLocation.id, payload);
           
         if (error) {
           console.error("Supabase Update Error:", error);
           throw error;
         }
+        if (payload.panorama_360_url) {
+          await upsertPanoramaRecord({
+            buildingId: currentLocation.building_id,
+            locationId: currentLocation.id,
+            floorLevel: floor.floor_label,
+            title: payload.room_code,
+            imageUrl: payload.panorama_360_url,
+            status: payload.is_360_enabled ? 'published' : 'draft',
+            isPrimary: false,
+            createdBy: user?.id || null,
+          });
+        }
+        invalidatePolyMapsCache();
         toast.success(t('services:location_updated_toast', 'Lokasi dikemaskini'));
       } else {
         // Bulk insert support! Split by comma.
         const roomCodes = currentLocation.room_code.split(',').map(c => c.trim()).filter(Boolean);
+        const floor = toDbFloorFields(currentLocation.floor_level);
         const recordsToInsert = roomCodes.map(code => ({
           building_id: currentLocation.building_id,
           room_code: code,
-          floor_level: currentLocation.floor_level,
+          floor_level: floor.floor_level,
+          floor_label: floor.floor_label,
+          floor_order: floor.floor_order,
           direction_text: currentLocation.direction_text,
           search_tags: currentLocation.search_tags,
           image_url: currentLocation.image_url,
-          panorama_360_url: currentLocation.panorama_360_url || null,
+          panorama_360_url: currentLocation.panorama_360_url?.trim() || null,
+          is_360_enabled: false,
           op_start: currentLocation.op_start || null,
           op_end: currentLocation.op_end || null
         }));
 
-        const { error } = await supabase
-          .from('imaps_locations')
-          .insert(recordsToInsert);
+        const { error } = await insertLocationsWithFloorFallback(recordsToInsert);
         if (error) throw error;
+        invalidatePolyMapsCache();
         
         toast.success(roomCodes.length > 1 ? t('services:locations_added_bulk', '{{count}} Lokasi ditambah serentak', { count: roomCodes.length }) : t('services:location_added_toast', 'Lokasi ditambah'));
 
@@ -1288,6 +1307,7 @@ export function JppPolyMapsAdmin() {
   });
 
   const uniqueZones = Array.from(new Set(buildings.map(b => b.zone_name).filter(Boolean))) as string[];
+  const coverage360 = computeAdmin360Coverage(buildings, locations, panoramas);
 
   if (!isSuperAdmin && !isJppMember) return null;
 
@@ -1306,10 +1326,16 @@ export function JppPolyMapsAdmin() {
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 dark:text-emerald-400 text-xs font-bold">
               <Compass className="w-3.5 h-3.5 text-emerald-500" />
-              <span>{t('jpp:polymaps_coverage_buildings', 'Liputan 360° Bangunan:')} {buildings.filter(b => b.panorama_360_url && b.panorama_360_url.trim() !== '').length}/{buildings.length}</span>
+              <span>
+                {t('jpp:polymaps_coverage_buildings', 'Liputan 360° Aktif:')} {coverage360.activeBuildings}/{coverage360.totalBuildings}
+                {coverage360.availableBuildings > 0 ? ` (+${coverage360.availableBuildings} OFF)` : ''}
+              </span>
             </span>
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/70 text-xs font-bold">
-              <span>{locations.filter(l => l.panorama_360_url && l.panorama_360_url.trim() !== '').length} {t('jpp:polymaps_rooms_360', 'Bilik 360°')}</span>
+              <span>
+                {coverage360.activeLocations} {t('jpp:polymaps_rooms_360', 'Bilik 360° Aktif')}
+                {coverage360.availableLocations > 0 ? ` (+${coverage360.availableLocations} OFF)` : ''}
+              </span>
             </span>
           </div>
         </div>
@@ -1820,7 +1846,7 @@ export function JppPolyMapsAdmin() {
                               )}
                             </div>
                             <p className="text-xs font-semibold text-slate-600 dark:text-white/70">
-                              {(matchedBuilding?.name || t('services:unknown_building', 'Bangunan tidak diketahui')) + ' · ' + t('services:floor_level_prefix', 'Aras') + ' ' + (l.floor_level || 'G')}
+                              {(matchedBuilding?.name || t('services:unknown_building', 'Bangunan tidak diketahui')) + ' · ' + t('services:floor_level_prefix', 'Aras') + ' ' + parseFloorLevel((l as any).floor_label ?? l.floor_level).floor_label}
                             </p>
                           </div>
                           <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -1986,7 +2012,7 @@ export function JppPolyMapsAdmin() {
                             <td className="p-4 text-slate-800 dark:text-white/80">
                               {matchedBuilding?.name || t('services:unknown_building', 'Unknown')}
                             </td>
-                            <td className="p-4">{l.floor_level || 'G'}</td>
+                            <td className="p-4">{formatFloorShort((l as any).floor_label ?? l.floor_level)}</td>
                             <td className="p-4 max-w-xs truncate text-slate-500 dark:text-white/50" title={l.direction_text}>
                               {l.direction_text || '-'}
                             </td>
@@ -2001,6 +2027,7 @@ export function JppPolyMapsAdmin() {
                                         if (panoramaUrl) {
                                           setPreview360Url(panoramaUrl);
                                           setPreview360Title(t('services:preview_360_title', 'Pratonton 360°: {{name}}', { name: l.room_code }));
+                                          setPreview360Hotspots(hotspotsByPanorama[panoramaUrl] || []);
                                         }
                                       }}
                                       className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-sky-600 dark:bg-white/10 dark:hover:bg-white/20 dark:text-sky-400 transition-colors"
@@ -2746,15 +2773,28 @@ export function JppPolyMapsAdmin() {
                       <Compass className="w-4 h-4 text-emerald-500" />
                       {t('services:image_panorama_360_label', 'Imej Panorama 360° (Equirectangular)')}
                     </label>
-                    {currentBuilding.panorama_360_url ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
-                        <Compass className="w-3.5 h-3.5" /> {t('services:label_360_active', '360° AKTIF')}
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-200 dark:bg-white/10">
-                        {t('services:label_no_3d', 'Tiada 3D')}
-                      </span>
-                    )}
+                    {(() => {
+                      const modalStatus = getBuilding360Status(currentBuilding);
+                      if (modalStatus === 'active') {
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                            <Compass className="w-3.5 h-3.5" /> {t('services:label_360_active', '360° AKTIF')}
+                          </span>
+                        );
+                      }
+                      if (modalStatus === 'available') {
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500 text-white shadow-sm">
+                            <Compass className="w-3.5 h-3.5" /> {t('services:label_360_available_off', '360° TERSEDIA (OFF)')}
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-200 dark:bg-white/10">
+                          {t('services:label_no_3d', 'Tiada 3D')}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-white/40 mb-3">
                     {t('services:upload_360_hint', 'Muat naik fail imej 360° (Equirectangular 2:1) atau tampal pautan URL langsung imej 360.')}
@@ -2770,7 +2810,7 @@ export function JppPolyMapsAdmin() {
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <button 
                           type="button"
-                          onClick={() => setCurrentBuilding({...currentBuilding, panorama_360_url: ''})}
+                          onClick={() => setCurrentBuilding({...currentBuilding, panorama_360_url: '', is_360_enabled: false})}
                           className="px-3 py-1.5 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold flex items-center gap-1 shadow-lg"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> {t('services:delete_360', 'Padam 360°')}
@@ -3074,15 +3114,28 @@ export function JppPolyMapsAdmin() {
                       <Compass className="w-4 h-4 text-emerald-500" />
                       {t('services:room_360_panorama_optional_label', 'Imej Panorama 360° Bilik / Ruang Ini (Pilihan)')}
                     </label>
-                    {currentLocation.panorama_360_url ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
-                        <Compass className="w-3.5 h-3.5" /> {t('services:label_360_active', '360° AKTIF')}
-                      </span>
-                    ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-200 dark:bg-white/10">
-                        {t('services:label_no_3d', 'Tiada 3D')}
-                      </span>
-                    )}
+                    {(() => {
+                      const modalStatus = getLocation360Status(currentLocation);
+                      if (modalStatus === 'active') {
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                            <Compass className="w-3.5 h-3.5" /> {t('services:label_360_active', '360° AKTIF')}
+                          </span>
+                        );
+                      }
+                      if (modalStatus === 'available') {
+                        return (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500 text-white shadow-sm">
+                            <Compass className="w-3.5 h-3.5" /> {t('services:label_360_available_off', '360° TERSEDIA (OFF)')}
+                          </span>
+                        );
+                      }
+                      return (
+                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-200 dark:bg-white/10">
+                          {t('services:label_no_3d', 'Tiada 3D')}
+                        </span>
+                      );
+                    })()}
                   </div>
                   <p className="text-[11px] text-slate-500 dark:text-white/40 mb-3">
                     {t('services:room_360_panorama_hint', 'Jika bilik ini mempunyai sudut pandangan 360° khas, muat naik imej atau tampal pautan di sini.')}

@@ -19,6 +19,11 @@ import {
   type MinimalBuildingWithCoords,
   type BulkRoomImportRow,
 } from '@/lib/polyMapsSmartEntry';
+import { toDbFloorFields } from '@/features/polymaps/domain/floorLevel';
+import {
+  insertLocationsWithFloorFallback,
+  invalidatePolyMapsCache,
+} from '@/features/polymaps/api/polymapsRepository';
 
 export interface PolyMapsBulkImportModalProps {
   isOpen: boolean;
@@ -122,17 +127,23 @@ export function PolyMapsBulkImportModal({
 
     setIsImporting(true);
     try {
-      const payload = validRows.map((r) => ({
-        building_id: r.building_id,
-        room_code: r.room_code.trim(),
-        floor_level: r.floor_level.trim() || '1',
-        search_tags: r.search_tags.trim(),
-        direction_text: r.direction_text.trim(),
-        is_360_enabled: false,
-      }));
+      const payload = validRows.map((r) => {
+        const floor = toDbFloorFields(r.floor_level);
+        return {
+          building_id: r.building_id,
+          room_code: r.room_code.trim(),
+          floor_level: floor.floor_level,
+          floor_label: floor.floor_label,
+          floor_order: floor.floor_order,
+          search_tags: r.search_tags.trim(),
+          direction_text: r.direction_text.trim(),
+          is_360_enabled: false,
+        };
+      });
 
-      const { error } = await supabase.from('imaps_locations').insert(payload);
+      const { error } = await insertLocationsWithFloorFallback(payload);
       if (error) throw error;
+      invalidatePolyMapsCache();
 
       toast.success(
         t('services:polymaps_bulk_success_toast', 'Berjaya mengimport {{count}} bilik/lokasi secara pukal!', {

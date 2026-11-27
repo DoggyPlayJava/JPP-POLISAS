@@ -362,12 +362,15 @@ import { supabase } from '@/lib/supabase';
 | `ems_scores` | Modul EMS — Markah penilaian & ulasan juri |
 | `ems_certificates` | Modul EMS — Rekod sijil digital, nombor siri & QR verifikasi |
 | `ems_visitors` | Modul EMS — Kehadiran pengunjung audience & pemenang cabutan bertuah |
-| `imaps_buildings` | Modul PolyMaps — Bangunan, koordinat GPS, zon, pelan lantai & panorama 360° |
-| `imaps_locations` | Modul PolyMaps — Direktori bilik/makmal/ruang berserta `panorama_360_url`, `target_yaw` & `target_pitch` |
-| `imaps_360_hotspots` | Modul PolyMaps — Pin/hotspot interaktif (`room`, `scene`, `info`) di atas imej panorama 360° |
-| `imaps_field_submissions` | Modul PolyMaps — Sumbangan rakaman 360° & pin pintu bilik lapangan oleh sukarelawan untuk kelulusan 1-klik JPP |
-| `imaps_walkways` | Modul PolyMaps — Rangkaian laluan pejalan kaki kampus (berbumbung/terbuka/sekat) |
-| `imaps_missing_reports` | Modul PolyMaps — Laporan lokasi/bilik tiada daripada pelajar |
+| `imaps_buildings` | Modul PolyMaps — Bangunan, koordinat GPS, zon, pelan lantai & panorama 360° (lajur legasi `panorama_360_url`/`is_360_enabled` dikekalkan untuk keserasian sifar-gangguan) |
+| `imaps_locations` | Modul PolyMaps — Direktori bilik/makmal/ruang berserta `floor_level` (`INTEGER`), `floor_label` (`TEXT`), `floor_order` (`SMALLINT`), `panorama_360_url`, `target_yaw` & `target_pitch` |
+| `imaps_panoramas` | Modul PolyMaps — Jadual sumber tunggal adegan 360° berbilang tingkat (`building_id`, `location_id`, `floor_label`, `floor_order`, `haov`, `vaov`, `status: draft/published/archived`, `is_primary`) |
+| `imaps_360_hotspots` | Modul PolyMaps — Pin/hotspot interaktif (`room`, `scene`, `info`) berpaut kunci asing `panorama_id` & `location_id` |
+| `imaps_field_submissions` | Modul PolyMaps — Sumbangan rakaman 360° & pin pintu bilik lapangan oleh sukarelawan untuk kelulusan atomik `approve_imaps_field_submission()` |
+| `imaps_walkways` | Modul PolyMaps — Rangkaian laluan pejalan kaki kampus (`is_covered`, `is_blocked`) |
+| `imaps_walkway_segments` | Modul PolyMaps — Segmen laluan separa berbumbung atau disekat (`walkway_id`, `start_idx`, `end_idx`, `is_blocked`, `is_covered`, `reason`) |
+| `imaps_room_mappings` | Modul PolyMaps & Takwim — Pemetaan corak kod bilik (regex/literal & kelas atas talian) dikongsi antara PolyMaps dan parser jadual kuliah |
+| `imaps_missing_reports` | Modul PolyMaps — Laporan lokasi/bilik tiada daripada pelajar (`floor_level`, `floor_label`, `floor_order`, `report_count`) |
 
 ### Logging:
 ```typescript
@@ -496,7 +499,8 @@ npm run lint:css     # Stylelint sahaja
 | `src/lib/superAppHelpers.ts` | Kontrak pembantu & konfigurasi 8 servis teras, ucapan harian dan pengiraan kempen Super App |
 | `src/components/portal/SuperAppHeader.tsx` | Header pintar Super App berorientasikan gaya hidup pelajar kampus |
 | `src/lib/timetableParser.ts` | Enjin parser PDF jadual waktu berasaskan koordinat grid client-side (`pdfjs-dist`) |
-| `src/lib/polyMapsResolver.ts` | Enjin pemadan bilik PolyMaps pintar (search_tags, alias, prefix normalizer) menghubungkan jadual ke lokasi fizikal |
+| `src/lib/polyMapsResolver.ts` | Fasad serasi-undur kepada enjin pemadan bilik tunggal `src/features/polymaps/domain/roomResolver.ts` (`imaps_room_mappings` + `search_tags` + prefix normalizer) |
+| `src/features/polymaps/` | Teras kongsi PolyMaps Fasa 2 (`types.ts`, `domain/floorLevel.ts`, `domain/roomResolver.ts`, `domain/routingEngine.ts`, `domain/campusSearch.ts`, `api/polymapsRepository.ts`) — satu sumber kebenaran untuk PolyMaps, Admin JPP, Studio 360°, Bulk Import & Jadual Kuliah |
 | `src/components/portal/NextClassBentoCard.tsx` | Kad bento kelas seterusnya pada Portal Siswa; memprioritaskan nama penuh kursus (`course_name`) sebagai tajuk utama, kondensasi akronim bangunan (`JTMK`, `JKA`, dll), bar kemajuan 4px slim, countdown masa nyata client-side (tanpa DB polling), dan deep link PolyMaps |
 | `src/components/takwim/MyTimetableView.tsx` | Paparan jadual kuliah mingguan & harian peribadi pelajar di bawah `/akademik/takwim` |
 | `src/components/takwim/TimetableMatrixGrid.tsx` | Komponen matriks jadual mingguan 5-hari x 9-lajur gaya PDF rasmi POLISAS dengan lajur hari melekat (sticky left column) untuk telefon |
@@ -5630,6 +5634,23 @@ Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asa
   - `KebajikanTicketDetail.tsx` menggunakan `normalizeTicketImageUrls(ticket.image_urls)` dan `ticket.form_data || {}` serta memaparkan lencana *Eskalasi Anon PolySuara* bagi tiket tanpa `submitter_id`.
 - ***Guarded Non-Edge Swipe Drawer* (`src/hooks/useEdgeSwipeDrawer.ts`):**
   - Hook pasif (`{ passive: true }`, tanpa `preventDefault()`) dengan zon mula ketat `24px–75px` (mengelak konflik *iOS Safari swipe-back* `0–23px`), `dx > 55px`, nisbah mendatar `|dx| > 2.2 × |dy|`, serta pengecualian automatik bagi `.leaflet-container`, bekas skrol melintang, input, dan modal terbuka — dipautkan hanya kepada bar sisi `PortalPage`, `JppLayout`, `AkademikLayout`, `KebajikanLayout`, dan `KeusahawananLayout`.
+
+---
+
+## 44. Rework PolyMaps Fasa 1 & Fasa 2 — Sumber Tunggal Kebenaran & Pembetulan 11 Bug Segerak (Nov 2026)
+
+- **Fasa 1 — Migrasi SQL Aditif & Idempoten (`supabase/migrations/20261127160000_polymaps_single_source_of_truth.sql`):**
+  - Mengekalkan semua lajur legasi (`imaps_locations.floor_level INTEGER`, `imaps_buildings.panorama_360_url/is_360_enabled`, `imaps_locations.panorama_360_url/is_360_enabled`) untuk keserasian sifar-gangguan bagi `PortalPage`, `AkademikDashboard`, `Timetable`, dan `FoodBank`.
+  - Mewujudkan fungsi pembantu RLS tunggal `public.is_imaps_admin((SELECT auth.uid()))` dan menyeragamkan semua 9 jadual `imaps_*` kepada **tepat 1 polisi bagi setiap operasi (`SELECT`/`INSERT`/`UPDATE`/`DELETE`)** tanpa polisi `FOR ALL` bertindih.
+  - Menambah jadual `public.imaps_panoramas` (indeks FK pada `building_id`, `location_id`, `created_by`), backfill idempoten daripada rekod sedia ada tanpa menghidupkan semula URL yang telah dipadam Admin, serta menambah FK `panorama_id` (+ indeks FK) pada `imaps_360_hotspots`.
+  - Menambah lajur kanonikal `floor_label TEXT` + `floor_order SMALLINT` bersama trigger penyegerakan `trg_sync_imaps_locations_floor` & `trg_sync_imaps_missing_reports_floor` (`0 <-> 'G'`, `-1 <-> 'B1'`).
+  - Mengkodifikasi jadual `public.imaps_walkway_segments` (beserta lajur `is_covered`/`is_blocked` pada `imaps_walkways` dan indeks FK pada `walkway_id`, `created_by`), meningkatkan had baldi storan `imaps_assets` kepada **12MB (`12582912`)**, dan memperkenalkan RPC atomik `SECURITY DEFINER` `public.approve_imaps_field_submission(p_submission_id UUID)`.
+- **Fasa 2 — Teras Domain & Repositori Kongsi (`src/features/polymaps/`):**
+  - `domain/floorLevel.ts`: penghurai & pemformat tingkat tunggal (`parseFloorLevel`, `toDbFloorFields`, `formatFloorShort`, `formatFloorLong`, `compareFloorOrder`) dipautkan ke `PolyMapsBulkImportModal`, `PolyMaps360CaptureModal`, `JppPolyMapsAdmin`, dan `PolyMapsPage` — menghalang ralat `'G'` pada kolum `INTEGER` dan salah-tukar `'G'` kepada Tingkat 1.
+  - `domain/roomResolver.ts`: penyelesai bilik tunggal menggabungkan `imaps_room_mappings` + `imaps_locations` (`id`, `room_code`, `search_tags`, kod komposit `/`, normalizer awalan) — diguna bersama oleh `PolyMapsPage`, `polyMapsResolver.ts`, dan `timetableParser.ts`.
+  - `domain/routingEngine.ts`: enjin graf & Dijkstra tulen yang mematuhi kedua-dua `walkway.is_blocked` DAN `segment.is_blocked` (serta menyekat jambatan 8m merentasi segmen tersekat).
+  - `domain/campusSearch.ts`: hasil carian kesatuan berdiskriminasi `{ kind: 'building' } | { kind: 'location'; etaMinutes }` (menghapuskan objek sintetik `b-<uuid>` serta rampasan `floor_level = eta`), pemilih `resolveEffectiveLocation360()` untuk sandaran 360° bangunan→bilik yang konsisten, dan `computeAdmin360Coverage()` untuk lencana & kaunter liputan Admin yang tepat.
+  - `api/polymapsRepository.ts`: pemuat `CampusMapBundle` tunggal (`queryCache` `polymaps:campus_bundle:v2` kini menyimpan `segments`, `panoramas`, `roomMappings`), membuang kuiri `ems_events` yang tidak digunakan di `/polymaps`, sandaran serasi-undur pra-migrasi (`42P01`/`PGRST205`/`PGRST204`/`PGRST202`), penghidratan semula `activeBuilding`/`selectedLocation` mengikut ID selepas simpanan, mampatan JPEG klien `< 3.5MB` tanpa fallback Base64 ke DB, dan pembetulan pautan notifikasi sukarelawan ke `/jpp/polymaps?tab=submissions` serta kebocoran hotspot pratonton paparan jadual Admin.
 
 
 

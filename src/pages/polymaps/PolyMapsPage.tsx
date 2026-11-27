@@ -24,18 +24,36 @@ import { useTour } from '@/hooks/useTour';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { Pannellum360Viewer } from '@/components/polymaps/Pannellum360Viewer';
 import { PolyMaps360CaptureModal } from '@/components/polymaps/PolyMaps360CaptureModal';
-import { queryCache, CACHE_TTL } from '@/lib/cache';
+import { queryCache } from '@/lib/cache';
 import {
   computeDeclutteredLabelSet,
-  filterCampusSearchLocally,
   type PolyMaps360HotspotDraft,
 } from '@/lib/polyMapsSmartEntry';
-import { 
-  getBuilding360Url, 
-  getLocation360Url, 
-  isBuilding360Active, 
-  isLocation360Active 
-} from '@/lib/polymaps360Data';
+import {
+  parseFloorLevel,
+  formatFloorShort,
+} from '@/features/polymaps/domain/floorLevel';
+import {
+  calculateDistanceInMeters,
+  buildWalkwayGraph,
+  findShortestPath,
+} from '@/features/polymaps/domain/routingEngine';
+import {
+  searchCampusLocally,
+  filterCampusFacilities,
+  resolveEffectiveLocation360,
+} from '@/features/polymaps/domain/campusSearch';
+import {
+  fetchCampusMapBundle,
+  insertMissingReportWithFloorFallback,
+  invalidatePolyMapsCache,
+  rehydrateSelectionById,
+} from '@/features/polymaps/api/polymapsRepository';
+import type {
+  CampusPanorama,
+  CampusRoomMapping,
+  CampusSearchResult,
+} from '@/features/polymaps/types';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -342,21 +360,6 @@ function calculateWalkingETA(lat1: number, lon1: number, lat2: number, lon2: num
   return timeMinutes + 1;
 }
 
-function calculateDistanceInMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
-  const R = 6371e3; // metres
-  const phi1 = lat1 * Math.PI/180;
-  const phi2 = lat2 * Math.PI/180;
-  const dPhi = (lat2 - lat1) * Math.PI/180;
-  const dLambda = (lon2 - lon1) * Math.PI/180;
-
-  const a = Math.sin(dPhi / 2) * Math.sin(dPhi / 2) +
-          Math.cos(phi1) * Math.cos(phi2) *
-          Math.sin(dLambda / 2) * Math.sin(dLambda / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-  return R * c;
-}
-
 function calculateBearing(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const phi1 = lat1 * Math.PI / 180;
   const phi2 = lat2 * Math.PI / 180;
@@ -386,141 +389,6 @@ interface Building {
   drone_image_url?: string | null;
   panorama_360_url?: string | null;
   is_360_enabled?: boolean;
-}
-
-interface GraphNode {
-  lat: number;
-  lng: number;
-  key: string;
-  neighbors: Map<string, { distance: number; isCovered: boolean } | number>;
-}
-
-function findShortestPath(
-  nodesMap: Map<string, GraphNode>,
-  startLat: number,
-  startLng: number,
-  endLat: number,
-  endLng: number,
-  preferCovered: boolean = false
-): [number, number][] | null {
-  if (nodesMap.size === 0) return null;
-
-  let startKey: string | null = null;
-  let minDistStart = Infinity;
-  let endKey: string | null = null;
-  let minDistEnd = Infinity;
-
-  for (const node of nodesMap.values()) {
-    const dStart = calculateDistanceInMeters(startLat, startLng, node.lat, node.lng);
-    if (dStart < minDistStart) {
-      minDistStart = dStart;
-      startKey = node.key;
-    }
-    const dEnd = calculateDistanceInMeters(endLat, endLng, node.lat, node.lng);
-    if (dEnd < minDistEnd) {
-      minDistEnd = dEnd;
-      endKey = node.key;
-    }
-  }
-
-  if (!startKey || !endKey) return null;
-
-  const tempStartKey = "temp_start";
-  const tempEndKey = "temp_end";
-
-  const neighborsCopy = new Map<string, Map<string, { distance: number; isCovered: boolean } | number>>();
-  for (const [key, node] of nodesMap.entries()) {
-    neighborsCopy.set(key, new Map(node.neighbors));
-  }
-
-  neighborsCopy.set(tempStartKey, new Map([[startKey, minDistStart]]));
-  if (neighborsCopy.has(startKey)) {
-    neighborsCopy.get(startKey)!.set(tempStartKey, minDistStart);
-  }
-
-  neighborsCopy.set(tempEndKey, new Map([[endKey, minDistEnd]]));
-  if (neighborsCopy.has(endKey)) {
-    neighborsCopy.get(endKey)!.set(tempEndKey, minDistEnd);
-  }
-
-  const distances = new Map<string, number>();
-  const previous = new Map<string, string | null>();
-  const visited = new Set<string>();
-
-  for (const key of neighborsCopy.keys()) {
-    distances.set(key, Infinity);
-    previous.set(key, null);
-  }
-  distances.set(tempStartKey, 0);
-
-  const unvisitedKeys = new Set<string>(neighborsCopy.keys());
-
-  while (unvisitedKeys.size > 0) {
-    let currentKey: string | null = null;
-    let minD = Infinity;
-    for (const key of unvisitedKeys) {
-      const d = distances.get(key) ?? Infinity;
-      if (d < minD) {
-        minD = d;
-        currentKey = key;
-      }
-    }
-
-    if (currentKey === null || minD === Infinity) break;
-    if (currentKey === tempEndKey) break;
-
-    unvisitedKeys.delete(currentKey);
-    visited.add(currentKey);
-
-    const neighbors = neighborsCopy.get(currentKey);
-    if (neighbors) {
-      for (const [neighborKey, edgeVal] of neighbors.entries()) {
-        if (visited.has(neighborKey)) continue;
-        
-        let weight = 0;
-        if (typeof edgeVal === 'number') {
-          weight = edgeVal;
-        } else if (edgeVal && typeof edgeVal === 'object') {
-          weight = edgeVal.distance;
-          if (preferCovered && !edgeVal.isCovered) {
-            weight *= 8.0; // Apply 8x penalty to uncovered path segments
-          }
-        }
-        
-        const alt = minD + weight;
-        if (alt < (distances.get(neighborKey) ?? Infinity)) {
-          distances.set(neighborKey, alt);
-          previous.set(neighborKey, currentKey);
-        }
-      }
-    }
-  }
-
-  if (distances.get(tempEndKey) === Infinity) return null;
-
-  const pathKeys: string[] = [];
-  let curr: string | null = tempEndKey;
-  while (curr !== null) {
-    pathKeys.push(curr);
-    curr = previous.get(curr) ?? null;
-  }
-  pathKeys.reverse();
-
-  const pathCoordinates: [number, number][] = [];
-  for (const key of pathKeys) {
-    if (key === tempStartKey) {
-      pathCoordinates.push([startLat, startLng]);
-    } else if (key === tempEndKey) {
-      pathCoordinates.push([endLat, endLng]);
-    } else {
-      const node = nodesMap.get(key);
-      if (node) {
-        pathCoordinates.push([node.lat, node.lng]);
-      }
-    }
-  }
-
-  return pathCoordinates;
 }
 
 const _userIconCache = new Map<string, L.DivIcon>();
@@ -576,6 +444,8 @@ interface Location {
   id: string;
   room_code: string;
   floor_level: number;
+  floor_label?: string | null;
+  floor_order?: number | null;
   direction_text: string;
   search_tags?: string | null;
   image_url?: string;
@@ -589,18 +459,7 @@ interface Location {
   op_end?: string;
 }
 
-const POLYMAPS_BUNDLE_CACHE_KEY = 'polymaps:campus_bundle:v1';
 const POLYMAPS_WEATHER_CACHE_KEY = 'polymaps:weather:v1';
-
-interface PolyMapsCampusBundle {
-  hotspotsByPanorama: Record<string, PolyMaps360HotspotDraft[]>;
-  buildings: Building[];
-  locations: Location[];
-  walkways: { id: string; name: string; coordinates: [number, number][]; is_covered: boolean; is_blocked: boolean }[];
-  emsEvents: EmsEventItem[];
-  segments: { id: string; walkway_id: string; start_idx: number; end_idx: number; is_blocked: boolean; is_covered: boolean }[];
-  useFallbackEmsEvent: boolean;
-}
 
 interface ZoneMarkerInfo {
   zone_name: string;
@@ -617,7 +476,7 @@ export function PolyMapsPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState<Location[]>([]);
+  const [searchResults, setSearchResults] = useState<CampusSearchResult<Building, Location>[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [activeOverlayFilter, setActiveOverlayFilter] = useState<OverlayFilter>('ALL');
@@ -625,10 +484,19 @@ export function PolyMapsPage() {
   
   const [allBuildings, setAllBuildings] = useState<Building[]>([]);
   const [allLocations, setAllLocations] = useState<Location[]>([]);
-  const [emsEvents, setEmsEvents] = useState<EmsEventItem[]>([]);
+  const [allPanoramas, setAllPanoramas] = useState<CampusPanorama[]>([]);
+  const [allRoomMappings, setAllRoomMappings] = useState<CampusRoomMapping[]>([]);
 
   const [activeBuilding, setActiveBuilding] = useState<Building | null>(null);
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
+  const activeBuildingRef = useRef<Building | null>(null);
+  const selectedLocationRef = useRef<Location | null>(null);
+  useEffect(() => {
+    activeBuildingRef.current = activeBuilding;
+  }, [activeBuilding]);
+  useEffect(() => {
+    selectedLocationRef.current = selectedLocation;
+  }, [selectedLocation]);
   const [selectedEmsEvent, setSelectedEmsEvent] = useState<EmsEventItem | null>(null);
   const [selectedPolyMartHub, setSelectedPolyMartHub] = useState<PolyMartHubItem | null>(null);
   const polymartHubs = useMemo(() => getPolyMartHubs(t), [t]);
@@ -661,81 +529,7 @@ export function PolyMapsPage() {
   const [preferCovered, setPreferCovered] = useState(false);
   const [showTbtSteps, setShowTbtSteps] = useState(false);
 
-  const graph = useMemo(() => {
-    const nodesMap = new Map<string, GraphNode>();
-    
-    walkways.forEach(w => {
-      // Build blocked segments lookup for this walkway
-      const blockedSegs = segments.filter(s => s.walkway_id === w.id && s.is_blocked);
-      const coveredSegs = segments.filter(s => s.walkway_id === w.id && s.is_covered);
-
-      // Helper: is edge (i -> i+1) inside any blocked segment?
-      const isBlockedEdge = (idxA: number, idxB: number) => {
-        return blockedSegs.some(seg => {
-          // Edge is blocked if it falls entirely within the segment range
-          return (idxA >= seg.start_idx && idxA < seg.end_idx) ||
-                 (idxB > seg.start_idx && idxB <= seg.end_idx) ||
-                 (idxA <= seg.start_idx && idxB >= seg.end_idx);
-        });
-      };
-
-      // Helper: is this edge part of any covered segment?
-      const isCoveredEdge = (idxA: number, idxB: number) => {
-        return coveredSegs.some(seg => {
-          return (idxA >= seg.start_idx && idxA < seg.end_idx) ||
-                 (idxB > seg.start_idx && idxB <= seg.end_idx) ||
-                 (idxA <= seg.start_idx && idxB >= seg.end_idx);
-        });
-      };
-
-      w.coordinates.forEach((coord, i) => {
-        const lat = coord[0];
-        const lng = coord[1];
-        const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
-        
-        if (!nodesMap.has(key)) {
-          nodesMap.set(key, {
-            lat,
-            lng,
-            key,
-            neighbors: new Map<string, { distance: number; isCovered: boolean } | number>()
-          });
-        }
-        
-        if (i > 0) {
-          const prevCoord = w.coordinates[i-1];
-          const prevLat = prevCoord[0];
-          const prevLng = prevCoord[1];
-          const prevKey = `${prevLat.toFixed(6)},${prevLng.toFixed(6)}`;
-
-          // Skip this edge if it's fully inside a blocked segment
-          if (isBlockedEdge(i-1, i)) return;
-
-          const d = calculateDistanceInMeters(prevLat, prevLng, lat, lng);
-          const isCovered = w.is_covered || isCoveredEdge(i-1, i);
-          
-          nodesMap.get(prevKey)?.neighbors.set(key, { distance: d, isCovered });
-          nodesMap.get(key)?.neighbors.set(prevKey, { distance: d, isCovered });
-        }
-      });
-    });
-    
-    const nodeList = Array.from(nodesMap.values());
-    for (let i = 0; i < nodeList.length; i++) {
-      for (let j = i + 1; j < nodeList.length; j++) {
-        const nodeA = nodeList[i];
-        const nodeB = nodeList[j];
-        
-        const d = calculateDistanceInMeters(nodeA.lat, nodeA.lng, nodeB.lat, nodeB.lng);
-        if (d <= 8.0) {
-          nodeA.neighbors.set(nodeB.key, d); // Junction bridge (uncovered plain distance)
-          nodeB.neighbors.set(nodeA.key, d);
-        }
-      }
-    }
-    
-    return nodesMap;
-  }, [walkways, segments]);
+  const graph = useMemo(() => buildWalkwayGraph(walkways, segments), [walkways, segments]);
 
   const shortestPath = useMemo(() => {
     if (isNavigating && userLocation && activeBuilding?.center_lat) {
@@ -943,12 +737,12 @@ export function PolyMapsPage() {
 
     setIsSubmittingReport(true);
     try {
-      const { error } = await supabase.from('imaps_missing_reports').insert({
+      const { error } = await insertMissingReportWithFloorFallback({
         student_id: user.id,
         room_code: reportForm.room_code,
         building_id: reportForm.building_id && reportForm.building_id !== 'new' ? reportForm.building_id : null,
         building_name_suggestion: reportForm.building_id === 'new' ? reportForm.building_name_suggestion : null,
-        floor_level: parseInt(reportForm.floor_level, 10),
+        floor_level: reportForm.floor_level,
         description: reportForm.description,
         status: 'pending'
       });
@@ -1067,12 +861,12 @@ export function PolyMapsPage() {
     // Handle room deep link (?room=...)
     if (rId) {
       if (!allLocations || allLocations.length === 0) return;
-      const targetRoom = resolveRoomLocation(rId, allLocations);
+      const targetRoom = resolveRoomLocation(rId, allLocations, allRoomMappings);
       if (targetRoom) {
         handledSearchParamRef.current = location.search;
         setSelectedLocation(targetRoom);
         setActiveBuilding(targetRoom.building);
-        const hasActive360 = isLocation360Active(targetRoom) || (targetRoom.building && isBuilding360Active(targetRoom.building));
+        const hasActive360 = Boolean(resolveEffectiveLocation360(targetRoom, targetRoom.building, allPanoramas));
         setActiveImageTab(hasActive360 ? '360' : (targetRoom.image_url ? 'room' : (targetRoom.building?.entrance_image_url ? 'entrance' : 'floorplan')));
         setCardExpanded(true);
         setSheetSnap('HALF');
@@ -1096,7 +890,7 @@ export function PolyMapsPage() {
         handledSearchParamRef.current = location.search;
         setActiveBuilding(targetBuilding);
         setSelectedLocation(null);
-        const hasActive360 = isBuilding360Active(targetBuilding);
+        const hasActive360 = Boolean(resolveEffectiveLocation360(null, targetBuilding, allPanoramas));
         setActiveImageTab(hasActive360 ? '360' : (targetBuilding.entrance_image_url ? 'entrance' : 'floorplan'));
         setCardExpanded(true);
         setSheetSnap('HALF');
@@ -1118,14 +912,14 @@ export function PolyMapsPage() {
         handledSearchParamRef.current = location.search;
         setActiveBuilding(targetBuilding);
         setSelectedLocation(null);
-        const hasActive360 = isBuilding360Active(targetBuilding);
+        const hasActive360 = Boolean(resolveEffectiveLocation360(null, targetBuilding, allPanoramas));
         setActiveImageTab(hasActive360 ? '360' : (targetBuilding.entrance_image_url ? 'entrance' : 'floorplan'));
         setCardExpanded(true);
         setSheetSnap('HALF');
         navigate(location.pathname, { replace: true });
       }
     }
-  }, [location.search, location.pathname, allLocations, allBuildings, navigate]);
+  }, [location.search, location.pathname, allLocations, allBuildings, allPanoramas, allRoomMappings, navigate]);
 
   useEffect(() => {
     const zoneMap: Record<string, Building[]> = {};
@@ -1261,19 +1055,6 @@ export function PolyMapsPage() {
     return null;
   };
 
-  const buildFallbackEmsEvent = (): EmsEventItem => ({
-    id: 'ems-showcase-1',
-    title: t('services:ems_fallback_event_title', 'Karnival Inovasi & TVET POLISAS 2026'),
-    description: t('services:ems_fallback_event_desc', 'Pameran projek inovasi, pertandingan teknikal, dan showcase industri siswa POLISAS.'),
-    category: 'INOVASI',
-    event_type: 'EXHIBITION',
-    event_date: new Date(Date.now() + 86400000 * 2).toISOString(),
-    location: t('services:dewan_jubli_perak', 'Dewan Jubli Perak'),
-    status: 'ACTIVE',
-    lat: 3.8620,
-    lng: 103.3150
-  });
-
   const fetchInitialData = async (forceRefresh = false) => {
     // Check if user is logged in and is an admin/JPP member
     // This is optional: page works fully for unauthenticated users too
@@ -1293,146 +1074,29 @@ export function PolyMapsPage() {
       // Ignore auth errors: page is public, auth is optional
     }
 
-    const cachedBundle = !forceRefresh
-      ? queryCache.get<PolyMapsCampusBundle>(POLYMAPS_BUNDLE_CACHE_KEY)
-      : null;
+    // Single source of truth bundle (caches segments, panoramas, roomMappings; drops unused ems_events)
+    const bundle = await fetchCampusMapBundle({ forceRefresh });
+    setHotspotsByPanorama(bundle.hotspotsByPanorama);
+    setAllBuildings(bundle.buildings as Building[]);
+    setAllLocations(bundle.locations as Location[]);
+    setAllPanoramas(bundle.panoramas);
+    setAllRoomMappings(bundle.roomMappings);
+    setWalkways(bundle.walkways);
+    setSegments(bundle.segments);
 
-    if (cachedBundle) {
-      setHotspotsByPanorama(cachedBundle.hotspotsByPanorama);
-      setAllBuildings(cachedBundle.buildings);
-      if (cachedBundle.locations.length > 0) {
-        setAllLocations(cachedBundle.locations);
-      }
-      setWalkways(cachedBundle.walkways);
-      // Event sebenar mesti dipulihkan dari cache; tanpa ini peta jatuh balik ke event palsu.
-      setEmsEvents(cachedBundle.emsEvents ?? [buildFallbackEmsEvent()]);
-      return;
-    }
-
-    // Fetch buildings, locations, walkways, ems_events, and 360 hotspots in parallel (explicit columns only)
-    const [bRes, lRes, wRes, eRes, hsRes, segRes] = await Promise.all([
-      supabase
-        .from('imaps_buildings')
-        .select('id, name, code, center_lat, center_lng, zone_name, is_facility, facility_type, op_start, op_end, floorplan_image_url, entrance_image_url, drone_image_url, panorama_360_url, is_360_enabled')
-        .order('name'),
-      supabase
-        .from('imaps_locations')
-        .select('id, building_id, room_code, floor_level, direction_text, search_tags, image_url, panorama_360_url, is_360_enabled, target_yaw, target_pitch, op_start, op_end, building:building_id(id, name, code, center_lat, center_lng, zone_name, is_facility, facility_type, op_start, op_end, floorplan_image_url, entrance_image_url, drone_image_url, panorama_360_url, is_360_enabled)')
-        .order('floor_level'),
-      supabase
-        .from('imaps_walkways')
-        .select('id, name, coordinates, is_covered, is_blocked, created_at')
-        .order('created_at', { ascending: false }),
-      supabase
-        .from('ems_events')
-        .select('id, title, description, category, event_type, event_date, location, status')
-        .in('status', ['ACTIVE', 'APPROVED'])
-        .order('event_date', { ascending: true }),
-      supabase
-        .from('imaps_360_hotspots')
-        .select('id, building_id, location_id, panorama_url, pin_type, label, room_code, floor_level, pitch, yaw, description, target_panorama_url, target_location_id')
-        .order('created_at', { ascending: true }),
-      supabase
-        .from('imaps_walkway_segments')
-        .select('*')
-        .order('created_at', { ascending: false }),
-    ]);
-
-    const groupedHotspots: Record<string, PolyMaps360HotspotDraft[]> = {};
-    if (!hsRes.error && Array.isArray(hsRes.data)) {
-      for (const hs of hsRes.data) {
-        if (!hs.panorama_url) continue;
-        if (!groupedHotspots[hs.panorama_url]) groupedHotspots[hs.panorama_url] = [];
-        groupedHotspots[hs.panorama_url].push(hs);
-      }
-      setHotspotsByPanorama(groupedHotspots);
-    }
-
-    if (bRes.error) {
-      console.error('PolyMaps: Failed to load buildings:', bRes.error.message);
-    }
-    const bData = bRes.data;
-    const enhancedBuildings: Building[] = bData
-      ? bData.map((b: any) => ({
-          ...b,
-          panorama_360_url: b.panorama_360_url || getBuilding360Url(b)
-        }))
-      : [];
-    if (bData) {
-      setAllBuildings(enhancedBuildings);
-    }
-
-    if (lRes.error) {
-      console.error('PolyMaps: Failed to load locations:', lRes.error.message);
-    }
-    const lData = lRes.data;
-    const formattedLocations: Location[] = (lData || []).map((item: any) => {
-      const building = Array.isArray(item.building) ? item.building[0] : item.building;
-      const enhancedBuilding = building ? {
-        ...building,
-        panorama_360_url: building.panorama_360_url || getBuilding360Url(building)
-      } : building;
-      return {
-        ...item,
-        building: enhancedBuilding,
-        panorama_360_url: item.panorama_360_url || getLocation360Url({ ...item, building: enhancedBuilding })
-      };
-    });
-    if (formattedLocations.length > 0) {
-      setAllLocations(formattedLocations);
-    }
-
-    if (wRes.error) {
-      console.error('PolyMaps: Failed to load walkways:', wRes.error.message);
-    }
-    const parsedWalkways = wRes.data
-      ? wRes.data.map((w: any) => ({
-          id: w.id,
-          name: w.name,
-          coordinates: Array.isArray(w.coordinates) ? w.coordinates : JSON.parse(w.coordinates),
-          is_covered: Boolean(w.is_covered),
-          is_blocked: Boolean(w.is_blocked),
-        }))
-      : [];
-    if (wRes.data) {
-      setWalkways(parsedWalkways);
-    }
-    if (!segRes?.error && segRes?.data) setSegments(segRes.data);
-
-    if (eRes.error) {
-      console.warn('PolyMaps: Failed to load ems_events:', eRes.error.message);
-    }
-    const rawEvents = eRes.data || [];
-    const mappedEvents: EmsEventItem[] = rawEvents.map((evt: any) => {
-      const coords = mapEventLocationToCoords(evt.location, bData || []);
-      return {
-        ...evt,
-        lat: coords[0],
-        lng: coords[1]
-      };
-    });
-    const useFallbackEmsEvent = mappedEvents.length === 0;
-    if (useFallbackEmsEvent) {
-      setEmsEvents([buildFallbackEmsEvent()]);
-    } else {
-      // Sebelum ini `mappedEvents` dikira tetapi tidak pernah masuk state, jadi peta
-      // sentiasa memaparkan event palsu walaupun DB ada event sebenar.
-      setEmsEvents(mappedEvents);
-    }
-
-    if (!bRes.error && !lRes.error && !wRes.error) {
-      queryCache.set(
-        POLYMAPS_BUNDLE_CACHE_KEY,
-        {
-          hotspotsByPanorama: groupedHotspots,
-          buildings: enhancedBuildings,
-          locations: formattedLocations,
-          walkways: parsedWalkways,
-          emsEvents: useFallbackEmsEvent ? [] : mappedEvents,
-          useFallbackEmsEvent,
-        },
-        CACHE_TTL.ANNOUNCEMENT
+    // Rehydrate any open sheet by ID after saves/refreshes so edits appear live
+    if (activeBuildingRef.current?.id || selectedLocationRef.current?.id) {
+      const hydrated = rehydrateSelectionById(
+        bundle,
+        activeBuildingRef.current?.id,
+        selectedLocationRef.current?.id,
       );
+      if (hydrated.activeBuilding) {
+        setActiveBuilding(hydrated.activeBuilding as Building);
+      }
+      if (selectedLocationRef.current?.id) {
+        setSelectedLocation((hydrated.selectedLocation as Location | null) ?? null);
+      }
     }
   };
 
@@ -1444,7 +1108,7 @@ export function PolyMapsPage() {
 
     // Use already-loaded campus arrays first to eliminate per-keystroke Supabase queries
     if (allBuildings.length > 0 || allLocations.length > 0) {
-      setSearchResults(filterCampusSearchLocally(query, allBuildings, allLocations, 20));
+      setSearchResults(searchCampusLocally(query, allBuildings, allLocations, allRoomMappings, 20));
       setIsSearching(false);
       return;
     }
@@ -1456,20 +1120,17 @@ export function PolyMapsPage() {
         b.name.toLowerCase().includes(q) || b.code.toLowerCase().includes(q)
       );
 
-      const buildingResults = matchedBuildings.map(b => ({
-        id: `b-${b.id}`,
-        room_code: b.name,
-        floor_level: 0,
-        direction_text: '',
-        building: b
-      })) as unknown as Location[];
+      const buildingResults: CampusSearchResult<Building, Location>[] = matchedBuildings.map((building) => ({
+        kind: 'building',
+        building,
+      }));
 
       const { data, error } = await supabase
         .from('imaps_locations')
         .select(`
-          id, room_code, floor_level, direction_text, search_tags, image_url, panorama_360_url, is_360_enabled, target_yaw, target_pitch,
+          id, building_id, room_code, floor_level, direction_text, search_tags, image_url, panorama_360_url, is_360_enabled, target_yaw, target_pitch, op_start, op_end,
           building:building_id (
-            id, name, code, center_lat, center_lng, entrance_image_url, floorplan_image_url, panorama_360_url, is_360_enabled, zone_name
+            id, name, code, center_lat, center_lng, entrance_image_url, floorplan_image_url, panorama_360_url, is_360_enabled, zone_name, is_facility, facility_type, op_start, op_end
           )
         `)
         .or(`room_code.ilike.%${query}%,search_tags.ilike.%${query}%`)
@@ -1477,20 +1138,26 @@ export function PolyMapsPage() {
 
       if (error) throw error;
 
-      const formattedData = (data || []).map((item: any) => {
+      const locationResults: CampusSearchResult<Building, Location>[] = (data || []).map((item: any) => {
         const rawBuilding = Array.isArray(item.building) ? item.building[0] : item.building;
-        const enhancedBuilding = rawBuilding ? {
-          ...rawBuilding,
-          panorama_360_url: rawBuilding.panorama_360_url || getBuilding360Url(rawBuilding)
-        } : rawBuilding;
-        return {
+        const floor = parseFloorLevel(item.floor_label ?? item.floor_level);
+        const formatted: Location = {
           ...item,
-          building: enhancedBuilding,
-          panorama_360_url: item.panorama_360_url || getLocation360Url({ ...item, building: enhancedBuilding })
+          floor_level: floor.floor_level,
+          floor_label: floor.floor_label,
+          floor_order: floor.floor_order,
+          panorama_360_url: item.panorama_360_url?.trim() || null,
+          building: rawBuilding
+            ? {
+                ...rawBuilding,
+                panorama_360_url: rawBuilding.panorama_360_url?.trim() || null,
+              }
+            : rawBuilding,
         };
-      }) as Location[];
+        return { kind: 'location', location: formatted };
+      });
 
-      setSearchResults([...buildingResults, ...formattedData]);
+      setSearchResults([...buildingResults, ...locationResults]);
     } catch (error) {
       console.error('Error fetching locations:', error);
       toast.error(t('services:search_failed', 'Gagal membuat carian.'));
@@ -1504,7 +1171,7 @@ export function PolyMapsPage() {
       if (!searchQuery.trim()) {
         if (!activeFilter) setSearchResults([]);
       } else {
-        setSearchResults(filterCampusSearchLocally(searchQuery, allBuildings, allLocations, 20));
+        setSearchResults(searchCampusLocally(searchQuery, allBuildings, allLocations, allRoomMappings, 20));
       }
       return;
     }
@@ -1512,80 +1179,25 @@ export function PolyMapsPage() {
       fetchLocations(searchQuery);
     }, 500);
     return () => clearTimeout(delayDebounceFn);
-  }, [searchQuery, allBuildings, allLocations, activeFilter]);
+  }, [searchQuery, allBuildings, allLocations, allRoomMappings, activeFilter]);
 
   useEffect(() => {
     if (activeFilter) {
-      const filter = activeFilter.toLowerCase();
-      let filtered = allBuildings.filter(b => {
-        if (!b.is_facility) return false;
-        const bType = b.facility_type?.toLowerCase() || '';
-        return bType === filter || 
-               (filter === 'cafe' && bType === 'kafe') ||
-               (filter === 'kafe' && bType === 'cafe') ||
-               (filter === 'surau' && bType.includes('surau')) ||
-               (filter === 'toilet' && bType === 'tandas') ||
-               (filter === 'tandas' && bType === 'toilet');
-      });
-      
-      const mappedBuildings = filtered.map(b => {
-        let eta = null;
-        if (userLocation && b.center_lat) {
-          eta = getPathDistanceAndETA(userLocation[0], userLocation[1], b.center_lat, b.center_lng).eta;
-        }
-        return {
-          id: `b-${b.id}`,
-          room_code: b.name,
-          floor_level: eta, // We'll hijack floor_level temporarily to store ETA for sorting/display
-          direction_text: '',
-          building: b
-        } as unknown as Location;
-      });
-
-      // Juga cari Lokasi (kelas/bilik) yang sepadan dengan filter (melalui nama atau tag carian)
-      const locationKeywords = {
-        cafe: ['kafe', 'cafe', 'kantin', 'makan'],
-        surau: ['surau', 'masjid', 'solat'],
-        toilet: ['tandas', 'toilet', 'washroom']
-      };
-      
-      const targetKeywords = locationKeywords[filter as keyof typeof locationKeywords] || [filter];
-      
-      const matchedLocations = allLocations.filter(loc => {
-        const textToSearch = `${loc.room_code} ${loc.search_tags || ''}`.toLowerCase();
-        return targetKeywords.some(keyword => textToSearch.includes(keyword));
-      });
-
-      const mappedLocations = matchedLocations.map(loc => {
-        let eta = null;
-        if (userLocation && loc.building?.center_lat) {
-          eta = getPathDistanceAndETA(userLocation[0], userLocation[1], loc.building.center_lat, loc.building.center_lng).eta;
-        }
-        return {
-          ...loc,
-          floor_level: eta // Use the hijacked floor_level for ETA sorting to mix perfectly with buildings
-        };
-      });
-
-      const combined = [...mappedBuildings, ...mappedLocations];
-
-      // Sort by ETA (closest first) if GPS is available
-      if (userLocation) {
-        combined.sort((a, b) => (a.floor_level || 999) - (b.floor_level || 999));
-      }
-
-      setSearchResults(combined);
+      const computeEta = userLocation
+        ? (lat: number, lng: number) => getPathDistanceAndETA(userLocation[0], userLocation[1], lat, lng).eta
+        : undefined;
+      setSearchResults(filterCampusFacilities(activeFilter, allBuildings, allLocations, computeEta));
     } else if (!searchQuery) {
       setSearchResults([]);
     }
-  }, [activeFilter, userLocation, allBuildings]);
+  }, [activeFilter, userLocation, allBuildings, allLocations, searchQuery]);
 
   const handleSelectLocation = (loc: Location) => {
     setSelectedEmsEvent(null);
     setSelectedPolyMartHub(null);
     setSelectedLocation(loc);
     setActiveBuilding(loc.building);
-    const has360 = isLocation360Active(loc) || (loc.building && isBuilding360Active(loc.building));
+    const has360 = Boolean(resolveEffectiveLocation360(loc, loc.building, allPanoramas));
     setActiveImageTab(has360 ? '360' : (loc.image_url ? 'room' : (loc.building?.entrance_image_url ? 'entrance' : 'floorplan')));
     setCurrentStep(0);
     setSearchQuery('');
@@ -1604,12 +1216,24 @@ export function PolyMapsPage() {
     setSelectedPolyMartHub(null);
     setSelectedLocation(null);
     setActiveBuilding(b);
-    const has360 = isBuilding360Active(b);
+    const has360 = Boolean(resolveEffectiveLocation360(null, b, allPanoramas));
     setActiveImageTab(has360 ? '360' : (b.entrance_image_url ? 'entrance' : 'floorplan'));
     setCardExpanded(true);
     setSheetSnap('HALF');
     if (location.search) {
       navigate(location.pathname, { replace: true });
+    }
+  };
+
+  const handleSelectSearchResult = (result: CampusSearchResult<Building, Location>) => {
+    if (result.kind === 'building') {
+      setSearchQuery('');
+      setSearchResults([]);
+      setActiveFilter(null);
+      setIsSidebarOpen(false);
+      handleSelectBuildingMapMarker(result.building);
+    } else {
+      handleSelectLocation(result.location);
     }
   };
 
@@ -1946,48 +1570,65 @@ export function PolyMapsPage() {
                 exit={{ opacity: 0, y: -10 }}
                 className="bg-white dark:bg-[#13171D] rounded-2xl shadow-xl border border-[#B8E4DC]/80 dark:border-[#252B35] overflow-hidden max-h-[40vh] overflow-y-auto"
               >
-                {searchResults.map((loc) => (
-                  <button
-                    key={loc.id}
-                    onClick={() => handleSelectLocation(loc)}
-                    className="w-full text-left px-4 py-3 border-b border-[#B8E4DC]/50 dark:border-[#252B35] last:border-0 hover:bg-[#E6F4F1] dark:hover:bg-[#134E4A]/40 flex items-center gap-4 transition-colors"
-                  >
-                    <div className="w-10 h-10 rounded-full bg-[#0F766E]/15 text-[#0F766E] dark:text-[#94A0B2] flex items-center justify-center shrink-0">
-                      <MapPin className="w-5 h-5" />
-                    </div>
-                    <div>
-                      <div className="font-black text-[#0F172A] dark:text-[#F1F5F9] flex items-center gap-2">
-                        {loc.room_code}
-                        {loc.building?.zone_name && (
-                          <span className="text-[10px] bg-[#0F766E]/15 text-[#0F766E] dark:text-[#94A0B2] px-1.5 py-0.5 rounded-md font-bold tracking-wider uppercase">
-                            {t('services:zone_prefix', 'Zon {{name}}', { name: loc.building.zone_name })}
-                          </span>
-                        )}
-                        {(isLocation360Active(loc) || (loc.building && isBuilding360Active(loc.building))) && (
-                          <span className="inline-flex items-center gap-1 text-[9px] bg-[#0F766E]/15 text-[#0F766E] dark:text-[#94A0B2] border border-[#0F766E]/30 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">
-                            <Compass className="w-2.5 h-2.5" /> {t('services:panorama_360_active', '360 AKTIF')}
-                          </span>
-                        )}
-                        {loc.op_start && loc.op_end && (
-                          <span className={cn(
-                            "text-[9px] px-1.5 py-0.5 rounded-sm font-black tracking-wider uppercase",
-                            checkIsOpen(loc.op_start, loc.op_end) ? "bg-[#0F766E]/15 text-[#0F766E] dark:text-[#94A0B2]" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
-                          )}>
-                            {checkIsOpen(loc.op_start, loc.op_end) ? t('services:facility_open', 'BUKA') : t('services:facility_closed', 'TUTUP')}
-                          </span>
-                        )}
+                {searchResults.map((result) => {
+                  const isBuilding = result.kind === 'building';
+                  const itemKey = isBuilding ? `building:${result.building.id}` : `location:${result.location.id}`;
+                  const title = isBuilding ? result.building.name : result.location.room_code;
+                  const zoneName = isBuilding ? result.building.zone_name : result.location.building?.zone_name;
+                  const has360 = Boolean(
+                    isBuilding
+                      ? resolveEffectiveLocation360(null, result.building, allPanoramas)
+                      : resolveEffectiveLocation360(result.location, result.location.building, allPanoramas),
+                  );
+                  const opStart = isBuilding ? result.building.op_start : result.location.op_start;
+                  const opEnd = isBuilding ? result.building.op_end : result.location.op_end;
+                  const subtitle = isBuilding
+                    ? t('services:building_label', 'Bangunan')
+                    : result.location.building?.name;
+
+                  return (
+                    <button
+                      key={itemKey}
+                      onClick={() => handleSelectSearchResult(result)}
+                      className="w-full text-left px-4 py-3 border-b border-[#B8E4DC]/50 dark:border-[#252B35] last:border-0 hover:bg-[#E6F4F1] dark:hover:bg-[#134E4A]/40 flex items-center gap-4 transition-colors"
+                    >
+                      <div className="w-10 h-10 rounded-full bg-[#0F766E]/15 text-[#0F766E] dark:text-[#94A0B2] flex items-center justify-center shrink-0">
+                        <MapPin className="w-5 h-5" />
                       </div>
-                      <p className="text-xs font-bold text-[#475569] dark:text-[#94A0B2] flex items-center gap-2 mt-0.5">
-                        {loc.id.startsWith('b-') ? t('services:building_label', 'Bangunan') : loc.building?.name}
-                        {activeFilter && loc.floor_level > 0 && (
-                          <span className="text-[#0F766E] dark:text-[#2DD4BF] flex items-center gap-1 bg-[#0F766E]/10 px-1.5 py-0.5 rounded">
-                            <Clock className="w-3 h-3" /> {loc.floor_level} min
-                          </span>
-                        )}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+                      <div>
+                        <div className="font-black text-[#0F172A] dark:text-[#F1F5F9] flex items-center gap-2 flex-wrap">
+                          {title}
+                          {zoneName && (
+                            <span className="text-[10px] bg-[#0F766E]/15 text-[#0F766E] dark:text-[#94A0B2] px-1.5 py-0.5 rounded-md font-bold tracking-wider uppercase">
+                              {t('services:zone_prefix', 'Zon {{name}}', { name: zoneName })}
+                            </span>
+                          )}
+                          {has360 && (
+                            <span className="inline-flex items-center gap-1 text-[9px] bg-[#0F766E]/15 text-[#0F766E] dark:text-[#94A0B2] border border-[#0F766E]/30 px-1.5 py-0.5 rounded font-black tracking-wider uppercase">
+                              <Compass className="w-2.5 h-2.5" /> {t('services:panorama_360_active', '360 AKTIF')}
+                            </span>
+                          )}
+                          {opStart && opEnd && (
+                            <span className={cn(
+                              "text-[9px] px-1.5 py-0.5 rounded-sm font-black tracking-wider uppercase",
+                              checkIsOpen(opStart, opEnd) ? "bg-[#0F766E]/15 text-[#0F766E] dark:text-[#94A0B2]" : "bg-rose-500/10 text-rose-600 dark:text-rose-400"
+                            )}>
+                              {checkIsOpen(opStart, opEnd) ? t('services:facility_open', 'BUKA') : t('services:facility_closed', 'TUTUP')}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs font-bold text-[#475569] dark:text-[#94A0B2] flex items-center gap-2 mt-0.5">
+                          {subtitle}
+                          {activeFilter && typeof result.etaMinutes === 'number' && result.etaMinutes > 0 && (
+                            <span className="text-[#0F766E] dark:text-[#2DD4BF] flex items-center gap-1 bg-[#0F766E]/10 px-1.5 py-0.5 rounded">
+                              <Clock className="w-3 h-3" /> {result.etaMinutes} min
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
               </motion.div>
             )}
 
@@ -3048,7 +2689,7 @@ export function PolyMapsPage() {
                             {selectedLocation && (
                               <p className="text-[10px] font-bold text-[#475569] dark:text-[#94A0B2] truncate flex items-center gap-1">
                                 <Building2 className="w-3 h-3 shrink-0" />
-                                <span className="truncate">{activeBuilding.name} · T{selectedLocation.floor_level}</span>
+                                <span className="truncate">{activeBuilding.name} · {formatFloorShort(selectedLocation.floor_label ?? selectedLocation.floor_level)}</span>
                               </p>
                             )}
                             {!selectedLocation && (
@@ -3059,23 +2700,24 @@ export function PolyMapsPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 shrink-0 ml-3">
-                          {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) && (
-                            <button
-                              onClick={(e) => { 
-                                e.stopPropagation(); 
-                                const pano = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
-                                if (pano) {
-                                  setFullscreen360Url(pano);
+                          {(() => {
+                            const effectivePeek360 = resolveEffectiveLocation360(selectedLocation, activeBuilding, allPanoramas);
+                            if (!effectivePeek360) return null;
+                            return (
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setFullscreen360Url(effectivePeek360.imageUrl);
                                   setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
-                                }
-                              }}
-                              className="flex items-center gap-1.5 bg-[#0F766E]/15 hover:bg-[#0F766E]/25 text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/30 px-3 py-2 rounded-xl font-black text-xs transition-all shadow-sm active:scale-95"
-                              title={t('services:open_360_panorama', 'Buka 360 Panorama')}
-                            >
-                              <Compass className="w-3.5 h-3.5" />
-                              <span className="hidden sm:inline">{t('services:panorama_360_active', '360 AKTIF')}</span>
-                            </button>
-                          )}
+                                }}
+                                className="flex items-center gap-1.5 bg-[#0F766E]/15 hover:bg-[#0F766E]/25 text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/30 px-3 py-2 rounded-xl font-black text-xs transition-all shadow-sm active:scale-95"
+                                title={t('services:open_360_panorama', 'Buka 360 Panorama')}
+                              >
+                                <Compass className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">{t('services:panorama_360_active', '360 AKTIF')}</span>
+                              </button>
+                            );
+                          })()}
                           <button
                             onClick={(e) => { e.stopPropagation(); setShowVolunteer360Studio(true); }}
                             className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-500 text-white px-2.5 py-2 rounded-xl font-black text-xs transition-colors shadow-md active:scale-95"
@@ -3132,8 +2774,8 @@ export function PolyMapsPage() {
 
                         {/* Media Area */}
                         {(() => {
-                          const is360Permitted = selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding);
-                          const activePanoUrl = is360Permitted ? (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url) : null;
+                          const effective360 = resolveEffectiveLocation360(selectedLocation, activeBuilding, allPanoramas);
+                          const activePanoUrl = effective360?.imageUrl ?? null;
                           const hasMultipleMedia = ((activeBuilding.entrance_image_url ? 1 : 0) + (activeBuilding.floorplan_image_url ? 1 : 0) + ((selectedLocation && selectedLocation.image_url) ? 1 : 0) + (activePanoUrl ? 1 : 0)) > 1;
 
                           return (
@@ -3257,27 +2899,30 @@ export function PolyMapsPage() {
                                 <h2 className="text-2xl font-black text-[#0F172A] dark:text-[#F1F5F9] leading-tight">
                                   {selectedLocation ? selectedLocation.room_code : activeBuilding.name}
                                 </h2>
-                                {((selectedLocation ? isLocation360Active(selectedLocation) : isBuilding360Active(activeBuilding)) && (selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url)) ? (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const pano = selectedLocation?.panorama_360_url || activeBuilding.panorama_360_url;
-                                      if (pano) {
-                                        setFullscreen360Url(pano);
-                                        setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
-                                      }
-                                    }}
-                                    className="inline-flex items-center gap-1 text-[10px] bg-[#0F766E]/15 hover:bg-[#0F766E]/25 text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/30 px-2 py-0.5 rounded-full font-black tracking-wider uppercase transition-colors cursor-pointer active:scale-95"
-                                    title={t('services:open_360_panorama', 'Buka 360 Panorama Penuh')}
-                                  >
-                                    <Compass className="w-3 h-3" /> {t('services:panorama_360_active', '360 AKTIF')}
-                                  </button>
-                                ) : (
-                                  <span className="inline-flex items-center gap-1 text-[10px] bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-black tracking-wider uppercase">
-                                    <Camera className="w-3 h-3" /> {t('services:polymaps_needs_360_badge', 'Perlu Bantuan 360°')}
-                                  </span>
-                                )}
+                                {(() => {
+                                  const effectiveHeader360 = resolveEffectiveLocation360(selectedLocation, activeBuilding, allPanoramas);
+                                  if (effectiveHeader360) {
+                                    return (
+                                      <button
+                                        type="button"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setFullscreen360Url(effectiveHeader360.imageUrl);
+                                          setFullscreen360Title(selectedLocation ? `${selectedLocation.room_code} (${activeBuilding.name})` : activeBuilding.name);
+                                        }}
+                                        className="inline-flex items-center gap-1 text-[10px] bg-[#0F766E]/15 hover:bg-[#0F766E]/25 text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/30 px-2 py-0.5 rounded-full font-black tracking-wider uppercase transition-colors cursor-pointer active:scale-95"
+                                        title={t('services:open_360_panorama', 'Buka 360 Panorama Penuh')}
+                                      >
+                                        <Compass className="w-3 h-3" /> {t('services:panorama_360_active', '360 AKTIF')}
+                                      </button>
+                                    );
+                                  }
+                                  return (
+                                    <span className="inline-flex items-center gap-1 text-[10px] bg-amber-500/15 text-amber-800 dark:text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-black tracking-wider uppercase">
+                                      <Camera className="w-3 h-3" /> {t('services:polymaps_needs_360_badge', 'Perlu Bantuan 360°')}
+                                    </span>
+                                  );
+                                })()}
                               </div>
                               
                               {/* Facility Live Status */}
@@ -3310,7 +2955,7 @@ export function PolyMapsPage() {
                               {selectedLocation && (
                                 <div className="w-12 h-12 rounded-2xl bg-[#0F766E]/15 text-[#0F766E] dark:text-[#94A0B2] flex flex-col items-center justify-center shrink-0 ml-3">
                                   <Layers className="w-4 h-4" />
-                                  <span className="text-[10px] font-black">{t('services:floor_short', 'T{{level}}', { level: selectedLocation.floor_level })}</span>
+                                  <span className="text-[10px] font-black">{formatFloorShort(selectedLocation.floor_label ?? selectedLocation.floor_level)}</span>
                                 </div>
                               )}
                               <button 
@@ -3687,7 +3332,7 @@ export function PolyMapsPage() {
           id: l.id,
           building_id: l.building_id,
           room_code: l.room_code,
-          floor_level: String(l.floor_level ?? '1'),
+          floor_level: parseFloorLevel(l.floor_label ?? l.floor_level).floor_label,
           panorama_360_url: l.panorama_360_url,
           target_yaw: l.target_yaw,
           target_pitch: l.target_pitch,
@@ -3695,9 +3340,12 @@ export function PolyMapsPage() {
         initialBuildingId={activeBuilding?.id || allBuildings[0]?.id}
         initialLocationId={selectedLocation?.id}
         initialPanoramaUrl={
-          selectedLocation?.panorama_360_url || activeBuilding?.panorama_360_url || ''
+          resolveEffectiveLocation360(selectedLocation, activeBuilding, allPanoramas)?.imageUrl ||
+          selectedLocation?.panorama_360_url ||
+          activeBuilding?.panorama_360_url ||
+          ''
         }
-        initialFloorLevel={String(selectedLocation?.floor_level ?? '1')}
+        initialFloorLevel={parseFloorLevel(selectedLocation?.floor_label ?? selectedLocation?.floor_level).floor_label}
         initialHotspots={
           (selectedLocation?.panorama_360_url &&
             hotspotsByPanorama[selectedLocation.panorama_360_url]) ||
@@ -3710,7 +3358,7 @@ export function PolyMapsPage() {
         currentUserId={user?.id}
         currentUserName={profile?.full_name || 'Sukarelawan Kampus'}
         onSaved={() => {
-          queryCache.invalidate('polymaps:');
+          invalidatePolyMapsCache();
           fetchInitialData(true);
         }}
       />

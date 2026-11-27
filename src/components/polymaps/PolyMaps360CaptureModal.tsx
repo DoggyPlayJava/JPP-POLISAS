@@ -44,6 +44,14 @@ import {
   computeDeviceLevelAngles,
 } from '@/lib/panoStitcher';
 import { sendNotificationToJppAndSuperAdmin } from '@/lib/notifications';
+import { parseFloorLevel, toDbFloorFields } from '@/features/polymaps/domain/floorLevel';
+import {
+  compressPanoramaBlobForUpload,
+  insertLocationsWithFloorFallback,
+  invalidatePolyMapsCache,
+  updateLocationWithFloorFallback,
+  upsertPanoramaRecord,
+} from '@/features/polymaps/api/polymapsRepository';
 
 function readImageDimensions(file: File): Promise<{ w: number; h: number }> {
   const objectUrl = URL.createObjectURL(file);
@@ -360,52 +368,38 @@ export function PolyMaps360CaptureModal({
     }
   };
 
-  const blobToCompactDataUrl = async (blob: Blob, maxW = 2048): Promise<string> => {
-    const tempUrl = URL.createObjectURL(blob);
-    try {
-      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
-        const el = new Image();
-        el.onload = () => resolve(el);
-        el.onerror = reject;
-        el.src = tempUrl;
-      });
-      const w = Math.min(maxW, img.width || maxW);
-      const h = Math.max(1, Math.round((img.height / Math.max(1, img.width)) * w));
-      const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas context unavailable');
-      ctx.drawImage(img, 0, 0, w, h);
-      return canvas.toDataURL('image/jpeg', 0.82);
-    } finally {
-      URL.revokeObjectURL(tempUrl);
-    }
-  };
-
   const uploadBlobToImapsAssets = async (blob: Blob, prefix = 'pano360'): Promise<string> => {
+    // Compress stitched/phone panorama JPEG client-side (< 3.5MB) and NEVER fall back to Base64 in DB
+    const compressedBlob = await compressPanoramaBlobForUpload(blob, {
+      maxBytes: 3_500_000,
+      maxWidth: 4096,
+    });
+
     const fileName = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.jpg`;
     const filePath = `polymaps/${fileName}`;
 
-    try {
-      const { error: uploadError } = await supabase.storage
-        .from('imaps_assets')
-        .upload(filePath, blob, {
-          contentType: 'image/jpeg',
-          upsert: false,
-        });
+    const { error: uploadError } = await supabase.storage
+      .from('imaps_assets')
+      .upload(filePath, compressedBlob, {
+        contentType: 'image/jpeg',
+        upsert: false,
+      });
 
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from('imaps_assets').getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (storageErr) {
-      console.warn('Muat naik storan terus tidak tersedia (mod sukarelawan awam), menggunakan imej terbenam:', storageErr);
-      return await blobToCompactDataUrl(blob, 2048);
+    if (uploadError) {
+      throw new Error(
+        t(
+          'services:polymaps_studio_upload_storage_failed',
+          'Muat naik imej 360° ke storan gagal ({{reason}}). Pastikan anda log masuk dan saiz fail sah.',
+          { reason: uploadError.message },
+        ),
+      );
     }
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from('imaps_assets').getPublicUrl(filePath);
+
+    return publicUrl;
   };
 
   const handleStitchCapturedFrames = async (
@@ -714,6 +708,17 @@ export function PolyMaps360CaptureModal({
 
     setIsSavingAll(true);
     try {
+      if (panoramaUrl.trim().startsWith('data:')) {
+        throw new Error(
+          t(
+            'services:polymaps_studio_base64_blocked',
+            'Imej Base64 tidak dibenarkan. Sila muat naik semula imej 360° ke storan.',
+          ),
+        );
+      }
+
+      const canonicalSceneFloor = parseFloorLevel(floorLevel);
+
       if (isAdminMode) {
         // 1. Jika lokasi spesifik dipilih, kemas kini lokasi tersebut; jika tidak, kemas kini bangunan
         if (selectedLocationId) {
@@ -740,7 +745,21 @@ export function PolyMaps360CaptureModal({
           if (error) throw error;
         }
 
-        // 2. Auto-Cipta / Kemas Kini semua Pin Bilik dalam imaps_locations (1-Koridor Multi-Pin Batch Creator)
+        // 1b. Segerakkan ke jadual imaps_panoramas (selamat pra-migrasi)
+        const { panoramaId } = await upsertPanoramaRecord({
+          buildingId: selectedBuildingId,
+          locationId: selectedLocationId || null,
+          floorLevel: canonicalSceneFloor.floor_label,
+          title: selectedLocationId
+            ? buildingLocations.find((l) => l.id === selectedLocationId)?.room_code
+            : selectedBuilding?.name,
+          imageUrl: panoramaUrl,
+          status: 'published',
+          isPrimary: !selectedLocationId,
+          createdBy: currentUserId || null,
+        });
+
+        // 2. Auto-Cipta / Kemas Kini semua Pin Bilik dalam imaps_locations (guna kanonikal floorLevel)
         const roomPins = hotspots.filter((h) => h.pin_type === 'room' && (h.room_code || h.label));
         const roomCodeToLocationId = new Map<string, string>();
 
@@ -751,31 +770,34 @@ export function PolyMaps360CaptureModal({
           for (const pin of roomPins) {
             const codeText = (pin.room_code || pin.label).trim();
             const inferred = inferRoomMetadata(codeText, selectedBuilding?.code, pin.yaw, currentLang);
-
             const existingLoc = buildingLocations.find(
-              (l) => l.room_code.trim().toLowerCase() === codeText.toLowerCase()
+              (l) => l.room_code.trim().toLowerCase() === codeText.toLowerCase(),
+            );
+            const pinFloor = toDbFloorFields(
+              pin.floor_level ?? existingLoc?.floor_level ?? floorLevel ?? inferred.floor_level,
             );
 
             if (existingLoc) {
               roomCodeToLocationId.set(codeText.toLowerCase(), existingLoc.id);
               updatePromises.push(
-                supabase
-                  .from('imaps_locations')
-                    .update({
-                      panorama_360_url: panoramaUrl,
-                      is_360_enabled: true,
-                      target_yaw: pin.yaw,
-                      target_pitch: pin.pitch,
-                      floor_level: pin.floor_level || existingLoc.floor_level || inferred.floor_level,
-                      direction_text: pin.description || inferred.direction_text,
-                  })
-                  .eq('id', existingLoc.id)
+                updateLocationWithFloorFallback(existingLoc.id, {
+                  panorama_360_url: panoramaUrl,
+                  is_360_enabled: true,
+                  target_yaw: pin.yaw,
+                  target_pitch: pin.pitch,
+                  floor_level: pinFloor.floor_level,
+                  floor_label: pinFloor.floor_label,
+                  floor_order: pinFloor.floor_order,
+                  direction_text: pin.description || inferred.direction_text,
+                }),
               );
             } else {
               newLocationsPayload.push({
                 building_id: selectedBuildingId,
                 room_code: codeText,
-                floor_level: pin.floor_level || floorLevel || inferred.floor_level,
+                floor_level: pinFloor.floor_level,
+                floor_label: pinFloor.floor_label,
+                floor_order: pinFloor.floor_order,
                 direction_text: pin.description || inferred.direction_text,
                 search_tags: inferred.search_tags,
                 panorama_360_url: panoramaUrl,
@@ -789,7 +811,7 @@ export function PolyMaps360CaptureModal({
           const [updatedResults, insertedRes] = await Promise.all([
             Promise.all(updatePromises),
             newLocationsPayload.length > 0
-              ? supabase.from('imaps_locations').insert(newLocationsPayload).select('id, room_code')
+              ? insertLocationsWithFloorFallback(newLocationsPayload)
               : Promise.resolve({ data: [] as Array<{ id: string; room_code: string }>, error: null }),
           ]);
 
@@ -808,21 +830,25 @@ export function PolyMaps360CaptureModal({
 
         // 3. Simpan semua hotspot ke dalam jadual imaps_360_hotspots
         const { error: deleteHotspotsError } = await supabase
-          .from('imaps_360_hotspots').delete().eq('panorama_url', panoramaUrl);
+          .from('imaps_360_hotspots')
+          .delete()
+          .eq('panorama_url', panoramaUrl);
         if (deleteHotspotsError) throw deleteHotspotsError;
 
         if (hotspots.length > 0) {
           const rowsToInsert = hotspots.map((h) => {
             const lookupKey = (h.room_code || h.label || '').trim().toLowerCase();
             const matchedLocId = roomCodeToLocationId.get(lookupKey) || h.location_id || selectedLocationId || null;
+            const pinFloor = parseFloorLevel(h.floor_level ?? canonicalSceneFloor.floor_label);
             return {
+              ...(panoramaId ? { panorama_id: panoramaId } : {}),
               panorama_url: panoramaUrl,
               building_id: selectedBuildingId,
               location_id: matchedLocId,
               pin_type: h.pin_type,
               label: h.label,
               room_code: h.room_code || null,
-              floor_level: h.floor_level || floorLevel || '1',
+              floor_level: pinFloor.floor_label,
               description: h.description || null,
               pitch: h.pitch,
               yaw: h.yaw,
@@ -834,6 +860,8 @@ export function PolyMaps360CaptureModal({
           const { error: hsError } = await supabase.from('imaps_360_hotspots').insert(rowsToInsert);
           if (hsError) throw hsError;
         }
+
+        invalidatePolyMapsCache();
 
         toast.success(
           t('services:polymaps_studio_published_toast', 'Berjaya diterbitkan! {{pins}} pin 360° & {{rooms}} bilik telah disegerakkan.', {
@@ -852,8 +880,8 @@ export function PolyMaps360CaptureModal({
           p_building_id: selectedBuildingId,
           p_location_id: selectedLocationId || null,
           p_contributor_name: currentUserName || t('services:polymaps_studio_default_volunteer', 'Sukarelawan Kampus'),
-          p_floor_level: floorLevel || '1',
-          p_corridor_label: roomCodesHint || `Aras ${floorLevel || '1'}`,
+          p_floor_level: canonicalSceneFloor.floor_label,
+          p_corridor_label: roomCodesHint || `Aras ${canonicalSceneFloor.floor_label}`,
           p_room_code_hint: roomCodesHint || null,
           p_panorama_360_url: panoramaUrl,
           p_hotspots_json: hotspots,
@@ -871,7 +899,7 @@ export function PolyMaps360CaptureModal({
           }),
           type: 'MAPS_MISSING_REPORT',
           module: 'JPP',
-          link: '/jpp/polymaps?tab=reports',
+          link: '/jpp/polymaps?tab=submissions',
         });
 
         toast.success(

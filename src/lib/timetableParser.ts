@@ -1,5 +1,9 @@
 import type { ClassType, StudentTimetableEntry, ImapsRoomMapping } from '@/types';
 import { ensurePdfPolyfills } from '@/lib/polyfills';
+import {
+  isOnlineRoomToken,
+  matchRoomToLocationUnified,
+} from '@/features/polymaps/domain/roomResolver';
 
 // Ensure polyfills are active for PDF.js execution (ReadableStream, Promise.withResolvers)
 ensurePdfPolyfills();
@@ -516,17 +520,7 @@ export async function parseTimetablePage(
 }
 
 export function isOnlineKeyword(token: string): boolean {
-  if (!token) return false;
-  const clean = token.replace(/[\s_\/-]+/g, '').toUpperCase();
-  return (
-    clean.includes('STEAM') ||
-    clean.includes('TEAMS') ||
-    clean === 'ONLINE' ||
-    clean === 'ZOOM' ||
-    clean === 'GOOGLEMEET' ||
-    clean === 'MEET' ||
-    clean === 'DALAMTALIAN'
-  );
+  return isOnlineRoomToken(token);
 }
 
 export function matchRoomToLocation(
@@ -534,91 +528,7 @@ export function matchRoomToLocation(
   locations: RoomLocationLookup[] = [],
   roomMappings: ImapsRoomMapping[] = []
 ): { location_id: string | null; is_online: boolean } {
-  const trimmed = (roomRaw || '').trim();
-  if (!trimmed) {
-    return { location_id: null, is_online: false };
-  }
-
-  // Handle composite rooms (e.g. "EA301/EA302" or "EA301 / EA302") -> match primary room
-  const cleanRoom = trimmed.replace(/\s*[\/,]\s*/g, '/');
-  const primaryRoom = cleanRoom.includes('/') ? cleanRoom.split('/')[0].trim() : cleanRoom;
-
-  // 1. Check for online/virtual classes
-  if (isOnlineKeyword(primaryRoom)) {
-    return { location_id: null, is_online: true };
-  }
-
-  const rClean = primaryRoom.toLowerCase();
-
-  // 2. Primary source: match against imaps_locations (room_code + search_tags)
-  if (locations && locations.length > 0) {
-    // 2a. Exact room_code match
-    const exactRoom = locations.find(
-      (loc) => loc.room_code && loc.room_code.toLowerCase().trim() === rClean
-    );
-    if (exactRoom) {
-      return { location_id: exactRoom.id, is_online: false };
-    }
-
-    // 2b. Match within search_tags (e.g. EA301 has search_tags: "JKE, A301")
-    const tagMatch = locations.find((loc) => {
-      if (!loc.search_tags) return false;
-      const tags = loc.search_tags.toLowerCase();
-      const tokens = tags.split(/[,;\n]+/).map((t) => t.trim()).filter(Boolean);
-      return tokens.includes(rClean) || tags.includes(rClean);
-    });
-    if (tagMatch) {
-      return { location_id: tagMatch.id, is_online: false };
-    }
-
-    // 2c. Substring on room_code (e.g. room_code "EA301" includes "A301")
-    const subMatch = locations.find(
-      (loc) =>
-        loc.room_code &&
-        (loc.room_code.toLowerCase().includes(rClean) || rClean.includes(loc.room_code.toLowerCase()))
-    );
-    if (subMatch) {
-      return { location_id: subMatch.id, is_online: false };
-    }
-  }
-
-  // 3. Fallback: match against imaps_room_mappings (if any rows configured)
-  if (roomMappings && roomMappings.length > 0) {
-    const mapping = roomMappings.find((m) => {
-      try {
-        return (
-          new RegExp(m.room_code_pattern, 'i').test(primaryRoom) ||
-          m.room_code_pattern.toLowerCase() === rClean
-        );
-      } catch {
-        return m.room_code_pattern.toLowerCase() === rClean;
-      }
-    });
-    if (mapping) {
-      return {
-        location_id: mapping.location_id ?? null,
-        is_online: mapping.is_online ?? false,
-      };
-    }
-  }
-
-  // 4. Fallback: prefix-stripping normalizer (e.g. EA301 vs A301, BF107 vs F107)
-  if (locations && locations.length > 0) {
-    const stripPrefix = (str: string) =>
-      str.replace(/^(jke|jkm|jka|jp|jmsk|e|b|m|ka)[\s_-]*/i, '').trim().toLowerCase();
-    const rStripped = stripPrefix(rClean);
-    if (rStripped.length >= 3) {
-      const prefixMatch = locations.find((loc) => {
-        if (!loc.room_code) return false;
-        return stripPrefix(loc.room_code) === rStripped;
-      });
-      if (prefixMatch) {
-        return { location_id: prefixMatch.id, is_online: false };
-      }
-    }
-  }
-
-  return { location_id: null, is_online: false };
+  return matchRoomToLocationUnified(roomRaw, locations, roomMappings);
 }
 
 export function parseCell(

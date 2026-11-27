@@ -294,7 +294,8 @@ function cleanStr(s?: string | null): string {
 }
 
 /**
- * Mendapatkan URL 360 Panorama untuk sesebuah bangunan
+ * Mendapatkan URL 360 Panorama untuk sesebuah bangunan secara ketat daripada DB.
+ * Tidak lagi menghidupkan semula URL statik yang telah dipadam oleh Admin.
  */
 export function getBuilding360Url(building?: {
   id?: string;
@@ -306,37 +307,12 @@ export function getBuilding360Url(building?: {
   if (building.panorama_360_url && building.panorama_360_url.trim().length > 0) {
     return building.panorama_360_url.trim();
   }
-
-  const cleanName = cleanStr(building.name);
-  const cleanCode = cleanStr(building.code);
-
-  for (const entry of POLYMAPS_360_REGISTRY) {
-    if (cleanName && cleanStr(entry.name) === cleanName) return entry.panorama_360_url;
-    if (cleanCode && cleanStr(entry.code) === cleanCode) return entry.panorama_360_url;
-    if (entry.aliases.some((alias) => cleanStr(alias) === cleanName || cleanStr(alias) === cleanCode)) {
-      return entry.panorama_360_url;
-    }
-  }
-
-  // Partial substring matches
-  for (const entry of POLYMAPS_360_REGISTRY) {
-    const entryClean = cleanStr(entry.name);
-    if (cleanName && (cleanName.includes(entryClean) || entryClean.includes(cleanName))) {
-      return entry.panorama_360_url;
-    }
-    for (const alias of entry.aliases) {
-      const aliasClean = cleanStr(alias);
-      if (cleanName && (cleanName.includes(aliasClean) || aliasClean.includes(cleanName))) {
-        return entry.panorama_360_url;
-      }
-    }
-  }
-
   return null;
 }
 
 /**
- * Mendapatkan URL 360 Panorama untuk bilik atau lokasi tertentu
+ * Mendapatkan URL 360 Panorama milik bilik/lokasi itu sendiri daripada DB.
+ * (Pewarisan 360° bangunan -> bilik diuruskan secara read-only oleh resolveEffectiveLocation360.)
  */
 export function getLocation360Url(location?: {
   room_code?: string;
@@ -347,25 +323,7 @@ export function getLocation360Url(location?: {
   if (location.panorama_360_url && location.panorama_360_url.trim().length > 0) {
     return location.panorama_360_url.trim();
   }
-
-  const cleanRoom = cleanStr(location.room_code);
-  if (!cleanRoom) {
-    return getBuilding360Url(location.building);
-  }
-
-  // Cari dalam registry bilik setiap bangunan
-  for (const entry of POLYMAPS_360_REGISTRY) {
-    if (entry.rooms) {
-      for (const [rCode, rUrl] of Object.entries(entry.rooms)) {
-        if (cleanStr(rCode) === cleanRoom || cleanRoom.includes(cleanStr(rCode))) {
-          return rUrl;
-        }
-      }
-    }
-  }
-
-  // Fallback kepada panorama bangunan jika ada
-  return getBuilding360Url(location.building);
+  return null;
 }
 
 /**
@@ -381,8 +339,7 @@ export function hasBuilding360(building?: {
 
 // ─── PENGURUSAN STATUS 360 PENTADBIR (DB-BACKED) ─────────────────────────────
 // Status 360 disimpan dalam kolum is_360_enabled di pangkalan data (imaps_buildings /
-// imaps_locations), BUKAN localStorage. Ini memastikan toggle pentadbir kelihatan
-// pada SEMUA peranti (elak bug "phone A nampak 360, phone B tak nampak").
+// imaps_locations) DAN disegerakkan ke imaps_panoramas.status supaya satu sumber kebenaran.
 
 /**
  * Semak sama ada 360 bagi sesebuah bangunan AKTIF (berdasarkan kolum DB is_360_enabled)
@@ -404,7 +361,7 @@ export function isLocation360Active(location?: any): boolean {
 }
 
 /**
- * Togol status 360 bangunan — tulis ke DB supaya semua peranti nampak perubahan.
+ * Togol status 360 bangunan — tulis ke DB (imaps_buildings + imaps_panoramas) supaya semua peranti segerak.
  */
 export async function toggleBuilding360(building: any, forceState?: boolean): Promise<boolean> {
   if (!building?.id) return false;
@@ -418,15 +375,24 @@ export async function toggleBuilding360(building: any, forceState?: boolean): Pr
 
   if (error) {
     console.error('Failed to toggle building 360 in DB:', error.message);
-    return current; // kekalkan status sedia ada jika gagal
+    return current;
   }
-  building.is_360_enabled = next; // mutasi objek lokal supaya UI refresh serta-merta
+
+  // Best-effort sync to imaps_panoramas when Phase 1 SQL is deployed
+  await supabase
+    .from('imaps_panoramas')
+    .update({ status: next ? 'published' : 'draft', updated_at: new Date().toISOString() })
+    .eq('building_id', building.id)
+    .is('location_id', null)
+    .then(() => undefined, () => undefined);
+
+  building.is_360_enabled = next;
   queryCache.invalidate('polymaps:');
   return next;
 }
 
 /**
- * Togol status 360 bilik/lokasi — tulis ke DB supaya semua peranti nampak perubahan.
+ * Togol status 360 bilik/lokasi — tulis ke DB (imaps_locations + imaps_panoramas) supaya semua peranti segerak.
  */
 export async function toggleLocation360(location: any, forceState?: boolean): Promise<boolean> {
   if (!location?.id) return false;
@@ -442,6 +408,14 @@ export async function toggleLocation360(location: any, forceState?: boolean): Pr
     console.error('Failed to toggle location 360 in DB:', error.message);
     return current;
   }
+
+  // Best-effort sync to imaps_panoramas when Phase 1 SQL is deployed
+  await supabase
+    .from('imaps_panoramas')
+    .update({ status: next ? 'published' : 'draft', updated_at: new Date().toISOString() })
+    .eq('location_id', location.id)
+    .then(() => undefined, () => undefined);
+
   location.is_360_enabled = next;
   queryCache.invalidate('polymaps:');
   return next;
