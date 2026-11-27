@@ -92,7 +92,7 @@ export function AkademikLayout() {
   ];
 
   return (
-    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] font-sans overflow-x-hidden transition-colors duration-200">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] font-sans overflow-x-hidden transition-colors duration-200">
       <SystemTour
         run={runTour}
         onClose={closeTour}
@@ -145,7 +145,7 @@ export function AkademikLayout() {
 
         {/* Top Bar */}
         <header
-          className="sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420]"
+          className="sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D]"
           style={{ paddingTop: 'calc(0.875rem + var(--sat, env(safe-area-inset-top, 0px)))' }}
         >
           <button
@@ -162,7 +162,7 @@ export function AkademikLayout() {
             >
               <GraduationCap className="w-3.5 h-3.5" />
             </div>
-            <span className="text-xs font-black uppercase tracking-widest text-[#3B635C] dark:text-[#99CBC2]">
+            <span className="text-xs font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">
               e-Akademik
             </span>
           </div>
@@ -219,12 +219,12 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
   const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
 
   return (
-    <div className="w-full flex flex-col h-full bg-gradient-to-b from-[#0B2420] to-[#061714] border-r border-teal-400/15 text-[#F6FBF9] overflow-hidden">
+    <div className="w-full flex flex-col h-full bg-gradient-to-b from-[#0B2420] to-[#061714] dark:from-[#0E1116] dark:to-[#090B0E] border-r border-teal-400/15 dark:border-[#252B35] text-[#F6FBF9] dark:text-[#F1F5F9] overflow-hidden">
       {/* Header */}
       <div className="flex flex-col border-b border-white/10">
         <button
           onClick={() => navigate('/portal')}
-          className="flex items-center gap-2 px-5 pt-4 pb-2 transition-all duration-200 group text-[#99CBC2] hover:text-white w-max"
+          className="flex items-center gap-2 px-5 pt-4 pb-2 transition-all duration-200 group text-[#99CBC2] dark:text-[#94A0B2] hover:text-white w-max"
         >
           <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
           <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
@@ -239,12 +239,12 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
             </div>
             <div>
               <p className="text-sm font-black text-white">e-Akademik</p>
-              <p className="text-[9px] font-black uppercase tracking-widest text-[#99CBC2]/80">{t('akademik:exco_academic', 'Exco Akademik')}</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#99CBC2]/80 dark:text-[#94A0B2]">{t('akademik:exco_academic', 'Exco Akademik')}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="md:hidden p-1.5 rounded-xl text-[#99CBC2] hover:text-white hover:bg-white/10 transition-all"
+            className="md:hidden p-1.5 rounded-xl text-[#99CBC2] dark:text-[#94A0B2] hover:text-white hover:bg-white/10 transition-all"
           >
             <X className="w-4 h-4" />
           </button>
@@ -274,7 +274,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-left transition-all duration-200 group',
                 active
                   ? 'bg-teal-500/20 text-white border border-teal-400/25'
-                  : 'text-[#99CBC2] hover:text-white hover:bg-white/[0.06]'
+                  : 'text-[#99CBC2] hover:text-white hover:bg-white/[0.06] dark:text-[#94A0B2]'
               )}
             >
               <div

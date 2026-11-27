@@ -109,7 +109,7 @@ export function PolySuaraMediaViewer({
       role="dialog"
       aria-modal="true"
       aria-label={altText || t('services:attachment_proof', 'Bukti Lampiran')}
-      className="fixed inset-0 z-[99995] bg-[#040F0D] text-white flex flex-col lg:flex-row overflow-hidden"
+      className="fixed inset-0 z-[99995] bg-[#050709] text-white flex flex-col lg:flex-row overflow-hidden"
     >
       {/* Main Media Stage */}
       <div
@@ -120,7 +120,7 @@ export function PolySuaraMediaViewer({
           e.preventDefault();
           adjustZoom(e.deltaY < 0 ? 0.25 : -0.25);
         }}
-        className="relative flex-1 flex items-center justify-center overflow-hidden bg-[#040F0D] select-none p-4 sm:p-8"
+        className="relative flex-1 flex items-center justify-center overflow-hidden bg-[#050709] select-none p-4 sm:p-8"
       >
         {/* Top Floating Controls */}
         <div
@@ -131,13 +131,13 @@ export function PolySuaraMediaViewer({
             type="button"
             onClick={onClose}
             aria-label={t('common:close', 'Tutup')}
-            className="pointer-events-auto h-10 px-3.5 rounded-full bg-[#0B2420] border border-white/15 hover:bg-[#11322C] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
+            className="pointer-events-auto h-10 px-3.5 rounded-full bg-[#13171D] border border-white/15 hover:bg-[#1B2028] text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
             <span className="hidden sm:inline">{t('common:close', 'Tutup')}</span>
           </button>
 
-          <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-[#0B2420] border border-white/15 p-1">
+          <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-[#13171D] border border-white/15 p-1">
             <button
               type="button"
               onClick={() => adjustZoom(-0.5)}
@@ -206,10 +206,10 @@ export function PolySuaraMediaViewer({
 
       {/* Desktop Context Split Panel (X / Instagram Style) */}
       {confession && (
-        <aside className="hidden lg:flex w-[360px] shrink-0 flex-col bg-white dark:bg-[#0B2420] text-[#0B2420] dark:text-[#F6FBF9] border-l border-[#B8E4DC]/30 dark:border-[#1E4D45] h-[100dvh]">
-          <div className="p-4 border-b border-[#B8E4DC]/60 dark:border-[#1E4D45] flex items-center justify-between gap-2">
+        <aside className="hidden lg:flex w-[360px] shrink-0 flex-col bg-white dark:bg-[#13171D] text-[#0B2420] dark:text-[#F1F5F9] border-l border-[#B8E4DC]/30 dark:border-[#252B35] h-[100dvh]">
+          <div className="p-4 border-b border-[#B8E4DC]/60 dark:border-[#252B35] flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-full bg-[#EBF7F4] dark:bg-[#11322C] flex items-center justify-center text-base shrink-0">
+              <div className="w-9 h-9 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028] flex items-center justify-center text-base shrink-0">
                 {avatar?.emoji || '👻'}
               </div>
               <div className="min-w-0">
@@ -217,44 +217,44 @@ export function PolySuaraMediaViewer({
                   {confession.codename || t('services:anon_student', 'Pelajar Anon')}
                 </p>
                 {confession.created_at && (
-                  <p className="text-[11px] text-[#3B635C] dark:text-[#99CBC2]">
+                  <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2]">
                     {formatDistanceToNow(new Date(confession.created_at), { addSuffix: true, locale: ms })}
                   </p>
                 )}
               </div>
             </div>
-            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC]/70 dark:border-[#1E4D45] shrink-0">
+            <span className="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC]/70 dark:border-[#252B35] shrink-0">
               {confession.category}
             </span>
           </div>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {cleanText && (
-              <p className="text-sm leading-relaxed whitespace-pre-wrap text-[#0B2420] dark:text-[#F6FBF9]">
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-[#0B2420] dark:text-[#F1F5F9]">
                 {cleanText}
               </p>
             )}
 
             {confession.official_reply && (
-              <div className="rounded-2xl border border-[#0F766E]/25 dark:border-[#2DD4BF]/25 bg-[#EBF7F4]/70 dark:bg-[#11322C]/70 p-3.5 space-y-1.5">
+              <div className="rounded-2xl border border-[#0F766E]/25 dark:border-[#2DD4BF]/25 bg-[#EBF7F4]/70 dark:bg-[#1B2028]/70 p-3.5 space-y-1.5">
                 <div className="flex items-center gap-1.5 text-xs font-bold text-[#0F766E] dark:text-[#2DD4BF]">
                   <Shield className="w-3.5 h-3.5" />
                   <span>{t('services:suara_official_note_banner', 'Maklum Balas Rasmi JPP')}</span>
                 </div>
-                <p className="text-xs leading-relaxed text-[#0B2420] dark:text-[#EBF7F4] whitespace-pre-wrap">
+                <p className="text-xs leading-relaxed text-[#0B2420] dark:text-[#F1F5F9] whitespace-pre-wrap">
                   {confession.official_reply}
                 </p>
               </div>
             )}
           </div>
 
-          <div className="p-3.5 border-t border-[#B8E4DC]/60 dark:border-[#1E4D45] flex items-center justify-between gap-2">
+          <div className="p-3.5 border-t border-[#B8E4DC]/60 dark:border-[#252B35] flex items-center justify-between gap-2">
             <div className="flex items-center gap-2">
               {onToggleHeart && (
                 <button
                   type="button"
                   onClick={() => onToggleHeart(confession.id)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] hover:opacity-90 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] hover:opacity-90 cursor-pointer"
                 >
                   <Heart className="w-3.5 h-3.5" />
                   <span className="font-mono tabular-nums">{confession.upvotes || 0}</span>
@@ -267,7 +267,7 @@ export function PolySuaraMediaViewer({
                     onClose();
                     onOpenComments(confession);
                   }}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9] cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] cursor-pointer"
                 >
                   <MessageCircle className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
                   <span>{t('services:student_comments', 'Ulasan Pelajar')} ({confession.comments_count || 0})</span>
@@ -279,7 +279,7 @@ export function PolySuaraMediaViewer({
                 type="button"
                 onClick={() => onCopyLink(confession.id)}
                 aria-label={t('services:suara_copy_link_tooltip', 'Salin pautan post')}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-[#3B635C] dark:text-[#99CBC2] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] cursor-pointer"
+                className="w-9 h-9 rounded-full flex items-center justify-center text-[#3B635C] dark:text-[#94A0B2] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] cursor-pointer"
               >
                 <Link2 className="w-4 h-4" />
               </button>

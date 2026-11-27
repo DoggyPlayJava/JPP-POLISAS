@@ -67,41 +67,43 @@
   }
 
   .dark {
-    --background: 170 58% 6%;
-    --foreground: 160 45% 97%;
+    /* JPP Polisas - Obsidian Carbon & Mineral Teal (Dark Mode v2: zero green cast) */
+    --background: 216 22% 4.5%;
+    --foreground: 210 40% 96%;
 
-    --card: 170 53% 9%;
-    --card-foreground: 160 45% 97%;
+    --card: 216 21% 9.4%;
+    --card-foreground: 210 40% 96%;
 
-    --popover: 170 53% 9%;
-    --popover-foreground: 160 45% 97%;
+    --popover: 216 21% 9.4%;
+    --popover-foreground: 210 40% 96%;
 
     --primary: 171 77% 50%;
-    --primary-foreground: 170 58% 6%;
+    --primary-foreground: 216 22% 4.5%;
 
-    --secondary: 169 49% 13%;
-    --secondary-foreground: 160 45% 97%;
+    --secondary: 217 19% 13.1%;
+    --secondary-foreground: 210 40% 96%;
 
-    --muted: 169 42% 12%;
-    --muted-foreground: 169 32% 70%;
+    --muted: 218 22% 7%;
+    --muted-foreground: 216 16% 64%;
 
     --accent: 173 80% 40%;
-    --accent-foreground: 170 58% 6%;
+    --accent-foreground: 216 22% 4.5%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 170 44% 21%;
-    --input: 170 44% 21%;
+    --border: 218 18% 17.6%;
+    --input: 218 18% 17.6%;
     --ring: 171 77% 50%;
 
-    --sidebar-background: 170 58% 6%;
-    --sidebar-accent: 169 49% 13%;
-    --sidebar-border: 170 44% 21%;
+    --sidebar-background: 218 22% 7%;
+    --sidebar-foreground: 210 40% 96%;
+    --sidebar-accent: 217 19% 13.1%;
+    --sidebar-border: 218 18% 17.6%;
 
-    --glass-background: rgba(6, 23, 20, 0.92);
-    --glass-border: rgba(45, 212, 191, 0.14);
-    --glass-edge: rgba(45, 212, 191, 0.18);
+    --glass-background: rgba(19, 23, 29, 0.96);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --glass-edge: rgba(255, 255, 255, 0.12);
   }
 }
 
@@ -178,6 +180,10 @@
   .sidebar-jpp {
     background: linear-gradient(180deg, #0B2420 0%, #061714 100%);
     @apply shadow-[0_20px_50px_rgba(0,0,0,0.3)];
+  }
+  .dark .sidebar-jpp {
+    background: linear-gradient(180deg, #0E1116 0%, #090B0E 100%);
+    border-right: 1px solid #252B35;
   }
 
   .tab-glow {

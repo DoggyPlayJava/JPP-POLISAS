@@ -192,14 +192,14 @@ export function BottomNav({ onOpenSidebar, customLinks, forceShowDesktop = false
                 scale: 0.94,
                 transition: { duration: 0.18 },
               }}
-              className={cn("quick-actions-menu touch-none fixed bottom-[calc(4.75rem+max(0.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))*0.82)))] left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[calc(100%-2rem)] md:max-w-[392px] z-[111] bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-[24px] p-4 sm:p-5 shadow-2xl", !forceShowDesktop && "md:hidden")}
+              className={cn("quick-actions-menu touch-none fixed bottom-[calc(4.75rem+max(0.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))*0.82)))] left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[calc(100%-2rem)] md:max-w-[392px] z-[111] bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-[24px] p-4 sm:p-5 shadow-2xl", !forceShowDesktop && "md:hidden")}
             >
               {/* Drag Handle Indicator */}
               <div
                 onPointerDown={(e) => quickActionsDragControls.start(e)}
                 className="w-10 h-1 bg-[#B8E4DC] dark:bg-white/20 rounded-full mx-auto mb-4 cursor-grab active:cursor-grabbing"
               />
-              <h3 className="text-xs font-semibold text-[#3B635C] dark:text-[#99CBC2] mb-4 text-center">
+              <h3 className="text-xs font-semibold text-[#3B635C] dark:text-[#94A0B2] mb-4 text-center">
                 {t('nav:quick_actions', 'Tindakan Pantas')}
               </h3>
               <motion.div
@@ -256,7 +256,7 @@ export function BottomNav({ onOpenSidebar, customLinks, forceShowDesktop = false
       >
         <nav
           aria-label={t('nav:navigation', 'Navigasi')}
-          className="bg-white dark:bg-[#081A17] border border-[#B8E4DC]/90 dark:border-[#1E4D45] shadow-[0_12px_32px_rgba(6,23,20,0.16)] rounded-[20px] px-1.5 py-0.5 grid grid-cols-5 items-center gap-0.5 relative transition-[padding,border-radius,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] group-data-[compact=true]/dock:px-2 group-data-[compact=true]/dock:py-0.5 group-data-[compact=true]/dock:rounded-full"
+          className="bg-white dark:bg-[#0E1116] border border-[#B8E4DC]/90 dark:border-[#252B35] shadow-[0_12px_32px_rgba(6,23,20,0.16)] rounded-[20px] px-1.5 py-0.5 grid grid-cols-5 items-center gap-0.5 relative transition-[padding,border-radius,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] group-data-[compact=true]/dock:px-2 group-data-[compact=true]/dock:py-0.5 group-data-[compact=true]/dock:rounded-full"
         >
           {leftLinks.slice(0, 2).map((link, i) => (
             <NavIconButton key={`left-${i}`} {...link} theme={theme} />
@@ -274,7 +274,7 @@ export function BottomNav({ onOpenSidebar, customLinks, forceShowDesktop = false
               className={cn(
                 "w-8 h-8 rounded-[12px] flex items-center justify-center transition-[transform,background-color,color,border-radius] duration-200 ease-out group-data-[compact=true]/dock:rounded-full",
                 isActionsOpen
-                  ? "bg-slate-200 dark:bg-[#1E4D45] text-[#0B2420] dark:text-white"
+                  ? "bg-slate-200 dark:bg-[#252B35] text-[#0B2420] dark:text-white"
                   : cn(theme.fabBg, "text-white shadow-md")
               )}
             >
@@ -284,7 +284,7 @@ export function BottomNav({ onOpenSidebar, customLinks, forceShowDesktop = false
                 <LayoutGrid className="w-4 h-4" strokeWidth={2.25} />
               )}
             </span>
-            <span className="text-[10px] font-semibold leading-none tracking-tight text-[#0B2420] dark:text-[#F6FBF9] truncate max-w-[64px] max-h-4 opacity-100 overflow-hidden transition-[opacity,max-height,transform] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] group-data-[compact=true]/dock:opacity-0 group-data-[compact=true]/dock:max-h-0 group-data-[compact=true]/dock:scale-90">
+            <span className="text-[10px] font-semibold leading-none tracking-tight text-[#0B2420] dark:text-[#F1F5F9] truncate max-w-[64px] max-h-4 opacity-100 overflow-hidden transition-[opacity,max-height,transform] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] group-data-[compact=true]/dock:opacity-0 group-data-[compact=true]/dock:max-h-0 group-data-[compact=true]/dock:scale-90">
               {t('nav:hub_short', 'Pintasan')}
             </span>
           </button>
@@ -327,7 +327,7 @@ function QuickActionButton({ icon: Icon, label, color, onClick }: { icon: any, l
         <div className="absolute inset-0 rounded-[16px] border border-white/30 dark:border-white/20 pointer-events-none" />
         <Icon className="w-5 h-5 relative z-10" strokeWidth={2.5} />
       </div>
-      <span className="text-[11px] font-semibold text-[#0B2420] dark:text-[#F6FBF9] text-center leading-tight max-w-[72px]">
+      <span className="text-[11px] font-semibold text-[#0B2420] dark:text-[#F1F5F9] text-center leading-tight max-w-[72px]">
         {label}
       </span>
     </motion.button>
@@ -349,7 +349,7 @@ function NavIconButton({ icon: Icon, label, isActive, onClick, badge, theme }: N
         "flex flex-col items-center justify-center gap-0.5 min-h-[48px] group-data-[compact=true]/dock:min-h-[38px] group-data-[compact=true]/dock:gap-0 w-full px-1 py-0.5 rounded-[14px] group-data-[compact=true]/dock:rounded-full transition-[transform,color,background-color,min-height,gap] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] active:scale-[0.96] relative cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E]",
         isActive
           ? cn(t.pillBg, t.color)
-          : "text-[#3B635C] hover:text-[#0B2420] dark:text-[#99CBC2] dark:hover:text-white"
+          : "text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-white"
       )}
     >
       <Icon className="w-5 h-5 shrink-0" strokeWidth={isActive ? 2.4 : 2} />
@@ -358,7 +358,7 @@ function NavIconButton({ icon: Icon, label, isActive, onClick, badge, theme }: N
       </span>
 
       {(badge ?? 0) > 0 && (
-        <span className="absolute top-0.5 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold font-mono tabular-nums flex items-center justify-center shadow-xs border border-white dark:border-[#081A17]">
+        <span className="absolute top-0.5 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold font-mono tabular-nums flex items-center justify-center shadow-xs border border-white dark:border-[#0E1116]">
           {(badge ?? 0) > 9 ? '9+' : badge}
         </span>
       )}

@@ -5579,3 +5579,23 @@ Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asa
   - `PolySuaraPage.tsx` menggunakan ikon `MessageSquare` (tiada emoji mentah `✍️`) dan label kompak mudah alih `Tapis` (`< 420px`) sambil mengekalkan teks `Saluran & Tapis` dalam DOM supaya ketiga-tiga tab suapan bebas daripada pemotongan.
   - `NextClassBentoCard.tsx` dan `CampusServicesGrid.tsx` memaparkan baris metadata masa/lokasi sebaris dan sudut skirikel `rounded-[14px]` / `rounded-[18px]`.
 
+---
+
+## 41. Mod Gelap v2 — *Obsidian Carbon & Mineral Teal* & Skala Kelegapan Tailwind (Nov 2026)
+
+- **Menghapuskan Kesan "Penapis Hijau / Inverted Filter" (Zero Green-Cast):**
+  - Menggantikan permukaan mod gelap lama yang tepu hijau (`#061714`, `#0B2420`, `#081A17`, `#11322C`, `#1E4D45`, `#99CBC2`) kepada tangga ketinggian neutral **Obsidian Carbon** berteraskan sistem Linear / Apple HIG / Material 3 di `src/index.css`, `DESIGN.md`, dan 55+ komponen/halaman merentas semua modul:
+    - Aras 0 (Kanvas): `#090B0E` (`--background: 216 22% 4.5%`)
+    - Aras 1 (Dok, Sidebar Gelap, Medan Input): `#0E1116` (`--muted`, `--sidebar-background`)
+    - Aras 2 (Kad, Modal, Pengepala Melekat): `#13171D` (`--card`, `--popover`)
+    - Aras 3 (Cip, Petak Maklum Balas JPP, Hover): `#1B2028` (`--secondary`)
+    - Aras 4 (Hover Aktif): `#232933`
+    - Garis Sempadan Arkitektural: `#252B35` (`--border`, `--input`)
+    - Teks Utama Anti-Halasi: `#F1F5F9` (`--foreground`); Teks Sekunder Neutral: `#94A0B2` (`--muted-foreground`)
+    - Aksen Jenama Pembedahan (<=10%): *Mineral Teal* `#2DD4BF` / `#14B8A6` khusus untuk CTA, tab aktif, ikon fokus, dan lencana rasmi.
+  - `SuperAppHeader.tsx` & `superAppHelpers.ts` menggunakan gradien Obsidian Carbon dalam mod gelap berserta kapsul carian adaptif (`dark:bg-[#1B2028]`), manakala `App.tsx` Toaster, `ThemeToggle.tsx`, `StatusChip.tsx`, `AddTaskModal.tsx`, dan sidebar ruang kerja (`JppSidebar`, `AkademikLayout`, `KebajikanSidebar`, `KlkSidebar`, `PolyTaskLayout`) bertukar lancar kepada Obsidian dalam mod gelap sambil mengekalkan identiti *Pine-Teal* dalam mod cerah.
+- **Pembaikan Sistemik Skala Kelegapan Tailwind CSS v3.3.5 (`tailwind.config.cjs`):**
+  - Menambah `opacity: { 15, 35, 45, 55, 65, 85 }` dalam `tailwind.config.cjs` supaya pengubah suai seperti `/15`, `/35`, `/65`, dan `/85` merentas 137 fail tidak lagi digugurkan secara senyap oleh pengkompil Tailwind v3.3.5 (punca asal kotak *Maklum Balas Tindakan JPP* pada `PolySuaraConfessionCard.tsx` memaparkan latar cerah di bawah teks putih dalam mod gelap).
+- **Sekatan Regresi Automatik (`scripts/check-design-tokens.mjs`):**
+  - `npm run check:design-tokens` kini menolak sebarang kelas `dark:*-#[061714|0B2420|081A17|11322C|11332D|18443C|1E4D45|99CBC2|0C221E]` bagi menghalang kembalinya tona hijau gelap pada kemas kini akan datang.
+

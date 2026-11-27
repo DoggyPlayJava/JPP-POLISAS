@@ -485,7 +485,7 @@ export const BusinessCertVerifyPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0F172A] dark:text-white p-4 sm:p-6 md:p-8 pb-24 flex flex-col justify-between max-w-5xl mx-auto font-sans transition-colors">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0F172A] dark:text-white p-4 sm:p-6 md:p-8 pb-24 flex flex-col justify-between max-w-5xl mx-auto font-sans transition-colors">
       {/* Top Bar */}
       <div className="flex items-center justify-between gap-4">
         <button

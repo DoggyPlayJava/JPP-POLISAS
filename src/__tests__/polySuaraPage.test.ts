@@ -123,9 +123,9 @@ describe('PolySuaraPage Suite', () => {
 
       // Container checks
       expect(html).toContain('bg-[#F6FBF9]');
-      expect(html).toContain('dark:bg-[#061714]');
+      expect(html).toContain('dark:bg-[#090B0E]');
       expect(html).toContain('text-[#0B2420]');
-      expect(html).toContain('dark:text-[#F6FBF9]');
+      expect(html).toContain('dark:text-[#F1F5F9]');
       expect(html).toContain('transition-colors');
     });
 
@@ -134,10 +134,10 @@ describe('PolySuaraPage Suite', () => {
 
       // Header background (opaque surface — no /95 translucency)
       expect(html).toContain('bg-[#F6FBF9]');
-      expect(html).toContain('dark:bg-[#061714]');
+      expect(html).toContain('dark:bg-[#090B0E]');
       expect(html).not.toContain('bg-[#F6FBF9]/95');
       expect(html).toContain('border-[#B8E4DC]/80');
-      expect(html).toContain('dark:border-[#1E4D45]');
+      expect(html).toContain('dark:border-[#252B35]');
 
       // Theme toggle presence in top navigation
       expect(html).toContain('Tukar Tema');
@@ -176,7 +176,7 @@ describe('PolySuaraPage Suite', () => {
       // Modal dialog centered with flexbox viewport wrapper (never colliding translate-x-1/2 with Framer Motion)
       expect(pageContent).toContain('Tulis Luahan Rahsia');
       expect(pageContent).toContain('100% Rahsia');
-      expect(pageContent).toContain('fixed inset-0 bg-[#061714]/70 z-[99990]');
+      expect(pageContent).toContain('fixed inset-0 bg-[#090B0E]/75 z-[99990]');
       expect(pageContent).toContain('flex items-end sm:items-center justify-center');
       expect(pageContent).toContain('max-h-[90dvh]');
       expect(pageContent).not.toContain('sm:-translate-x-1/2');
@@ -348,11 +348,11 @@ describe('PolySuaraPage Suite', () => {
     });
 
     it('renders modern Mineral Teal category badge chip', () => {
-      expect(cardContent).toContain('text-[11px] font-bold px-3 py-1 rounded-full text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#11322C] border border-[#B8E4DC]/80 dark:border-[#1E4D45] shrink-0');
+      expect(cardContent).toContain('text-[11px] font-bold px-3 py-1 rounded-full text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC]/80 dark:border-[#252B35] shrink-0');
     });
 
     it('applies refined editorial typography mb-3.5 to confession card content', () => {
-      expect(cardContent).toContain('text-[15px] sm:text-base leading-relaxed text-[#0B2420] dark:text-[#F6FBF9] whitespace-pre-wrap font-normal mb-3.5');
+      expect(cardContent).toContain('text-[15px] sm:text-base leading-relaxed text-[#0B2420] dark:text-[#F1F5F9] whitespace-pre-wrap font-normal mb-3.5');
     });
 
     it('renders JPP official note and community fact-check callout with full hairline border', () => {
@@ -368,7 +368,7 @@ describe('PolySuaraPage Suite', () => {
       expect(cardContent).toContain('Share2');
       expect(cardContent).toContain('Bookmark');
       expect(cardContent).toContain('onToggleBookmark');
-      expect(cardContent).toContain('border-t border-[#B8E4DC]/50 dark:border-[#1E4D45]');
+      expect(cardContent).toContain('border-t border-[#B8E4DC]/50 dark:border-[#252B35]');
       expect(pageContent).toContain('<PolySuaraQuickReportModal');
       expect(pageContent).toContain('<PolySuaraMediaViewer');
     });
@@ -525,7 +525,7 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('document.body');
 
       // Elevation classes for modal and drawer
-      expect(pageContent).toContain('fixed inset-0 bg-[#061714]/70 z-[99990]');
+      expect(pageContent).toContain('fixed inset-0 bg-[#090B0E]/75 z-[99990]');
       expect(pageContent).toContain('z-[99999]');
 
       // Conditional suppression check
@@ -618,7 +618,7 @@ describe('PolySuaraPage Suite', () => {
 
       // Tombstone message with exact text and styling
       expect(html).toContain('Musang Cerdik telah memadamkan ruangan ini');
-      expect(html).toContain('text-[#3B635C] dark:text-[#99CBC2] italic text-sm');
+      expect(html).toContain('text-[#3B635C] dark:text-[#94A0B2] italic text-sm');
 
       // Actions are disabled on deleted confessions
       expect(html).toContain('aria-label="Suka (Dinyahdayakan)"');

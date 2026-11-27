@@ -66,7 +66,7 @@ function SubTabBtn({ id, label, active, badge, onClick }: {
       onClick={onClick}
       className={cn(
         'relative px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all shrink-0 flex items-center gap-1.5',
-        active ? 'text-slate-900 dark:text-[#061714] shadow-sm' : 'bg-white dark:bg-white/[0.04] text-slate-600 dark:text-white/40 border border-slate-200 dark:border-transparent hover:bg-slate-100 dark:hover:bg-white/[0.08] hover:text-slate-900 dark:hover:text-white/70 shadow-sm'
+        active ? 'text-slate-900 dark:text-[#090B0E] shadow-sm' : 'bg-white dark:bg-white/[0.04] text-slate-600 dark:text-white/40 border border-slate-200 dark:border-transparent hover:bg-slate-100 dark:hover:bg-white/[0.08] hover:text-slate-900 dark:hover:text-white/70 shadow-sm'
       )}
       style={active ? { backgroundColor: TEAL } : {}}
     >

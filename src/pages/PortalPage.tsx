@@ -392,7 +392,7 @@ export function PortalPage() {
   ], [t]);
 
   return (
-    <div className="relative min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] flex flex-col font-sans transition-colors duration-300">
+    <div className="relative min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] flex flex-col font-sans transition-colors duration-300">
       {/* Joyride Tour */}
       {runTour && (
         <React.Suspense fallback={null}>
@@ -475,10 +475,10 @@ export function PortalPage() {
               <span className="text-xs font-semibold text-[#0F766E] dark:text-[#2DD4BF] block mb-0.5">
                 {t('portal:portal_welcome', 'Selamat Datang ke Kampus Digital')}
               </span>
-              <h2 className="text-base sm:text-lg font-bold text-[#0B2420] dark:text-[#F6FBF9] tracking-tight [text-wrap:balance]">
+              <h2 className="text-base sm:text-lg font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight [text-wrap:balance]">
                 {t('portal:portal_title', 'Hab Portal Pelajar POLISAS')}
               </h2>
-              <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#99CBC2] [text-wrap:balance]">
+              <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] [text-wrap:balance]">
                 {t('portal:portal_select_module', 'Pilih unit exco atau perkhidmatan kampus di bawah untuk meneruskan:')}
               </p>
             </div>
@@ -566,7 +566,7 @@ function AdminStatusIndicator({ color, label }: { color: string; label: string }
   return (
     <div className="flex items-center gap-3">
       <div className={cn("w-2 h-2 rounded-full", color, "shadow-[0_0_10px_rgba(0,0,0,0.1)] dark:shadow-[0_0_10px_rgba(255,255,255,0.2)]")} />
-      <span className="text-[11px] font-medium text-[#3B635C] dark:text-[#99CBC2]">{label}</span>
+      <span className="text-[11px] font-medium text-[#3B635C] dark:text-[#94A0B2]">{label}</span>
     </div>
   );
 }

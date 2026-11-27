@@ -722,7 +722,7 @@ function App() {
                               }}
                               className={cn(
                                 "flex items-center gap-3 px-4 py-2.5 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] pointer-events-auto overflow-hidden",
-                                "bg-[#0B2420] dark:bg-[#0C221E] border border-teal-400/20",
+                                "bg-[#13171D] dark:bg-[#1B2028] border border-white/10 dark:border-[#252B35]",
                                 "rounded-full min-w-[160px] max-w-[90vw] justify-center mt-[env(safe-area-inset-top,0px)]"
                               )}
                             >

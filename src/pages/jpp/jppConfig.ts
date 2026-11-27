@@ -121,8 +121,19 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
   },
 };
 
-/** Returns hex sidebar gradient background based on theme color */
-export function getJppSidebarBg(_hex: string, _isDark: boolean = true) {
+/** Returns hex sidebar gradient background based on theme mode */
+export function getJppSidebarBg(_hex: string, isDark: boolean = true) {
+  if (isDark) {
+    return {
+      top: '#0E1116',
+      bottom: '#090B0E',
+      border: 'rgba(255, 255, 255, 0.08)',
+      textPrimary: '#F1F5F9',
+      textSecondary: '#94A0B2',
+      hoverBg: 'rgba(255, 255, 255, 0.06)',
+      activeBg: 'rgba(45, 212, 191, 0.14)',
+    };
+  }
   return {
     top: '#0B2420',
     bottom: '#061714',

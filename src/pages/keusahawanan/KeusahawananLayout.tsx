@@ -437,7 +437,7 @@ export function LayoutInner({
 
   return (
     <ExcoThemeProvider color={themeColor} moduleId={MODULE_ID}>
-      <div className="flex h-[100dvh] overflow-hidden bg-[#F6FBF9] dark:bg-[#061714]">
+      <div className="flex h-[100dvh] overflow-hidden bg-[#F6FBF9] dark:bg-[#090B0E]">
 
         {/* Backdrop mobile */}
         <AnimatePresence>
@@ -466,7 +466,7 @@ export function LayoutInner({
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
           {/* Global header shared on mobile and desktop */}
-          <header className="flex items-center justify-between px-6 py-4 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] sticky top-0 z-50">
+          <header className="flex items-center justify-between px-6 py-4 border-b border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] sticky top-0 z-50">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsSidebarOpen(true)}

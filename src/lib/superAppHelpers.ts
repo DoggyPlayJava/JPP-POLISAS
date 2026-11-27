@@ -145,7 +145,7 @@ export function getHeaderGradientClass(karnivalActive?: boolean, supsasActive?: 
   if (supsasActive) {
     return 'from-amber-950 via-slate-900 to-sky-950';
   }
-  return 'from-[#061714] via-emerald-950 to-slate-950 text-white border-b border-emerald-500/20';
+  return 'from-[#0B2420] via-[#0F2D28] to-slate-900 dark:from-[#12161E] dark:via-[#141A24] dark:to-[#0C0F14] text-white border-b border-emerald-500/20 dark:border-[#252B35]';
 }
 
 export type CampusServiceId =

@@ -17,7 +17,7 @@ describe('FloatingActionDock', () => {
 
   it('anchors to dark background palette with rounded floating dock styling', () => {
     const sourceCode = fs.readFileSync(dockPath, 'utf8');
-    expect(sourceCode).toContain('dark:bg-[#0B2420]');
+    expect(sourceCode).toContain('dark:bg-[#13171D]');
     expect(sourceCode).toContain('fixed bottom-6');
   });
 });

@@ -130,7 +130,7 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onToggleWishlist(product.id); }}
-          className="absolute top-2 right-2 w-9 h-9 sm:w-10 sm:h-10 after:content-[''] after:absolute after:-inset-1.5 rounded-full bg-white/95 dark:bg-[#0B2420]/95 border border-[#B8E4DC]/70 dark:border-[#1E4D45] shadow-xs flex items-center justify-center z-10 transition-transform duration-150 ease-out active:scale-90 cursor-pointer"
+          className="absolute top-2 right-2 w-9 h-9 sm:w-10 sm:h-10 after:content-[''] after:absolute after:-inset-1.5 rounded-full bg-white/95 dark:bg-[#13171D]/95 border border-[#B8E4DC]/70 dark:border-[#252B35] shadow-xs flex items-center justify-center z-10 transition-transform duration-150 ease-out active:scale-90 cursor-pointer"
           aria-label="Wishlist"
         >
           <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? 'text-rose-500 fill-rose-500' : 'text-muted-foreground/70'}`} />

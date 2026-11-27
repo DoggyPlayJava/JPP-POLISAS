@@ -239,7 +239,7 @@ export function GlobalAnnouncementModal() {
         {f.type === 'select' && f.options ? (
           <Select value={formData[f.id] || ''} onValueChange={v => setFormData({ ...formData, [f.id]: v })}>
             <SelectTrigger className="bg-[#F6FBF9] dark:bg-white/5 border-[#B8E4DC] dark:border-white/10 text-[#0B2420] dark:text-white h-12 rounded-xl focus:ring-1 focus:ring-[#0D9488]/30"><SelectValue /></SelectTrigger>
-            <SelectContent className="bg-white dark:bg-[#0B2420] border-[#B8E4DC] dark:border-white/10 text-[#0B2420] dark:text-white">
+            <SelectContent className="bg-white dark:bg-[#13171D] border-[#B8E4DC] dark:border-white/10 text-[#0B2420] dark:text-white">
               {f.options.map(opt => <SelectItem key={opt} value={opt} className="focus:bg-[#EBF7F4] dark:focus:bg-white/10">{opt}</SelectItem>)}
             </SelectContent>
           </Select>
@@ -293,7 +293,7 @@ export function GlobalAnnouncementModal() {
       <motion.div
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        className="relative w-full max-w-[480px] bg-white dark:bg-[#0B2420] text-[#0B2420] dark:text-[#F6FBF9] rounded-[2.5rem] shadow-2xl border border-[#B8E4DC]/80 dark:border-[#1E4D45] overflow-hidden flex flex-col max-h-[85dvh]"
+        className="relative w-full max-w-[480px] bg-white dark:bg-[#13171D] text-[#0B2420] dark:text-[#F1F5F9] rounded-[2.5rem] shadow-2xl border border-[#B8E4DC]/80 dark:border-[#252B35] overflow-hidden flex flex-col max-h-[85dvh]"
       >
         {/* Progress bar — fixed at top */}
         {announcements.length > 1 && !isHigh && currentIdx < announcements.length - 1 && (
@@ -318,7 +318,7 @@ export function GlobalAnnouncementModal() {
           <div className={`p-3 rounded-full flex-shrink-0 z-10 mb-3 ${getIconColor(current.icon_type, isHigh)}`}>
             {getIcon(current.icon_type, isHigh)}
           </div>
-          <h2 className="text-xl font-black tracking-tighter leading-tight mb-1 text-[#0B2420] dark:text-[#F6FBF9]">
+          <h2 className="text-xl font-black tracking-tighter leading-tight mb-1 text-[#0B2420] dark:text-[#F1F5F9]">
             {current.title}
           </h2>
           {isHigh && (
@@ -340,7 +340,7 @@ export function GlobalAnnouncementModal() {
                     handleNext();
                     navigate(internalPath);
                   }}
-                  className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-2xl bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#061714] font-black tracking-wide text-[12px] uppercase shadow-lg shadow-teal-600/20 transition-all group cursor-pointer"
+                  className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-2xl bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#090B0E] font-black tracking-wide text-[12px] uppercase shadow-lg shadow-teal-600/20 transition-all group cursor-pointer"
                 >
                   <ExternalLink size={16} className="group-hover:scale-110 transition-transform" />
                   <span>{t('portal:open_link', 'Buka Pautan')}</span>
@@ -354,7 +354,7 @@ export function GlobalAnnouncementModal() {
                 href={externalUrl || '#'}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-2xl bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#061714] font-black tracking-wide text-[12px] uppercase shadow-lg shadow-teal-600/20 transition-all group"
+                className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-2xl bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#090B0E] font-black tracking-wide text-[12px] uppercase shadow-lg shadow-teal-600/20 transition-all group"
               >
                 <ExternalLink size={16} className="group-hover:scale-110 transition-transform" />
                 <span>{t('portal:open_link', 'Buka Pautan')}</span>
@@ -370,7 +370,7 @@ export function GlobalAnnouncementModal() {
             <div className="w-full relative overflow-hidden bg-black/5 dark:bg-black flex items-center justify-center group mb-4">
               <img src={current.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 scale-125" />
               <img src={current.image_url} alt="Poster" className="relative w-full max-h-[35vh] object-contain cursor-zoom-in" onClick={() => setFullScreenImage(current.image_url)} />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white dark:to-[#0B2420] pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white dark:to-[#13171D] pointer-events-none" />
               <button
                 onClick={(e) => { e.stopPropagation(); setFullScreenImage(current.image_url); }}
                 className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/55 border border-white/15 text-white hover:bg-black/75 text-[10px] font-bold tracking-widest uppercase flex items-center gap-1.5 transition-all z-20"
@@ -382,7 +382,7 @@ export function GlobalAnnouncementModal() {
           )}
 
           <div className="px-6 sm:px-8 pb-6 space-y-4">
-            <div className="text-[#3B635C] dark:text-[#99CBC2] text-[13px] leading-relaxed text-center font-medium whitespace-pre-wrap">
+            <div className="text-[#3B635C] dark:text-[#94A0B2] text-[13px] leading-relaxed text-center font-medium whitespace-pre-wrap">
               {current.content_body}
             </div>
 

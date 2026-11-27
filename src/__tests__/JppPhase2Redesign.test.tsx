@@ -15,7 +15,7 @@ describe('JPP Phase 2 Redesign Verifications', () => {
     expect(source).not.toContain('dark:from-violet-900/10');
     expect(source).not.toContain('dark:from-rose-900/10');
     expect(source).not.toContain('<div className="fixed inset-0 pointer-events-none z-0">');
-    expect(source).toContain('dark:bg-[#0B2420]');
+    expect(source).toContain('dark:bg-[#13171D]');
   });
 
   it('verifies AnnouncementsPage uses SlideOverSheet and card skeletons', () => {
@@ -47,7 +47,7 @@ describe('JPP Phase 2 Redesign Verifications', () => {
 
     // Purged #0f0f13 cool navy from dropdowns
     expect(source).not.toContain('dark:bg-[#0f0f13]');
-    expect(source).toContain('dark:bg-[#0B2420]');
+    expect(source).toContain('dark:bg-[#13171D]');
 
     // Monospace tabular nums for token counts
     expect(source).toContain('font-mono text-sm text-slate-900 dark:text-white/80 tabular-nums');

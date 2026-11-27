@@ -46,7 +46,7 @@ export function KlkLayout() {
 
   if (isLoading) {
     return (
-      <div className={cn("min-h-[100dvh] w-full flex items-center justify-center", isDark ? "bg-[#061714]" : "bg-[#F6FBF9]")}>
+      <div className={cn("min-h-[100dvh] w-full flex items-center justify-center", isDark ? "bg-[#090B0E]" : "bg-[#F6FBF9]")}>
         <div className={cn("animate-pulse font-black text-xs uppercase tracking-[0.3em] opacity-40", isDark ? "text-white" : "text-[#0B2420]")}>
           {t('housing:loading_klk', 'Memuatkan Kediaman Luar Kampus...')}
         </div>
@@ -65,7 +65,7 @@ export function KlkLayout() {
   return (
     <div className={cn(
       "flex h-[100dvh] overflow-hidden relative transition-colors duration-300",
-      isDark ? "bg-[#061714] text-[#F6FBF9]" : "bg-[#F6FBF9] text-[#0B2420]"
+      isDark ? "bg-[#090B0E] text-[#F1F5F9]" : "bg-[#F6FBF9] text-[#0B2420]"
     )}>
       {/* Mobile Overlay */}
       {sidebarOpen && (
@@ -88,17 +88,17 @@ export function KlkLayout() {
       {/* Main content */}
       <main className={cn(
         "flex-1 flex flex-col h-[100dvh] overflow-hidden relative min-w-0 transition-colors duration-300",
-        isDark ? "bg-[#061714] text-[#F6FBF9]" : "bg-[#F6FBF9] text-[#0B2420]"
+        isDark ? "bg-[#090B0E] text-[#F1F5F9]" : "bg-[#F6FBF9] text-[#0B2420]"
       )}>
         {/* Mobile topbar */}
         <div className={cn(
-          "lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b relative z-30 transition-colors duration-300",
-          isDark ? "border-[#1E4D45] bg-[#0B2420]" : "border-[#B8E4DC]/80 bg-white"
+          "lg:hidden flex-shrink-0 flex items-center justify-between px-4 min-h-[calc(3.5rem+var(--sat,env(safe-area-inset-top,0px)))] pt-[var(--sat,env(safe-area-inset-top,0px))] border-b relative z-30 transition-colors duration-300",
+          isDark ? "border-[#252B35] bg-[#13171D]" : "border-[#B8E4DC]/80 bg-white"
         )}>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSidebarOpen(true)}
-              className={cn("p-2 -ml-2 transition-colors", isDark ? "text-[#99CBC2] hover:text-white" : "text-[#3B635C] hover:text-[#0B2420]")}
+              className={cn("p-2 -ml-2 transition-colors", isDark ? "text-[#94A0B2] hover:text-white" : "text-[#3B635C] hover:text-[#0B2420]")}
             >
               <Menu className="w-5 h-5" />
             </button>

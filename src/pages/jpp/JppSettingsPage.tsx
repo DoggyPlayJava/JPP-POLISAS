@@ -161,7 +161,7 @@ export function JppSettingsPage() {
                     {/* Section 1 Skeleton */}
                     <div className="space-y-4">
                         <div className="h-4 w-36 bg-slate-200/70 dark:bg-white/5 rounded-md" />
-                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#0B2420] border border-slate-200 dark:border-white/10 space-y-4">
+                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#13171D] border border-slate-200 dark:border-white/10 space-y-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-white/10" />
@@ -173,7 +173,7 @@ export function JppSettingsPage() {
                                 <div className="w-14 h-8 bg-slate-200 dark:bg-white/10 rounded-full" />
                             </div>
                         </div>
-                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#0B2420] border border-slate-200 dark:border-white/10 space-y-4">
+                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#13171D] border border-slate-200 dark:border-white/10 space-y-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-2xl bg-slate-200 dark:bg-white/10" />
@@ -217,7 +217,7 @@ export function JppSettingsPage() {
 
                         {/* Traditional Registration Toggle */}
                         {isSuperAdmin && (
-                            <div className="p-6 rounded-[2rem] bg-white dark:bg-[#0B2420] border border-slate-200 dark:border-[#1E4D45] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-slate-300 dark:hover:border-teal-400/40 transition-all">
+                            <div className="p-6 rounded-[2rem] bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-slate-300 dark:hover:border-teal-400/40 transition-all">
                                 <div className="flex items-center gap-4 w-full sm:w-auto flex-col sm:flex-row text-center sm:text-left">
                                     <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center border border-emerald-500/20">
                                         <KeyRound className="w-6 h-6" />
@@ -246,7 +246,7 @@ export function JppSettingsPage() {
 
                         {/* Kod Pendaftaran Staf - Hanya untuk SUPER ADMIN */}
                         {isSuperAdmin && (
-                            <div className="p-6 rounded-[2rem] bg-white dark:bg-[#0B2420] border border-slate-200 dark:border-[#1E4D45] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-slate-300 dark:hover:border-teal-400/40 transition-all">
+                            <div className="p-6 rounded-[2rem] bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-6 md:col-span-2 group hover:border-slate-300 dark:hover:border-teal-400/40 transition-all">
                                 <div className="flex items-center gap-4 w-full sm:w-auto flex-col sm:flex-row text-center sm:text-left">
                                     <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center border border-rose-500/20">
                                         <KeyRound className="w-6 h-6" />
@@ -276,7 +276,7 @@ export function JppSettingsPage() {
                             <Calendar className="w-5 h-5 text-amber-500" />
                             <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:settings_intake_config_title', 'Konfigurasi Takwim Pengambilan')}</h3>
                         </div>
-                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#0B2420] border border-slate-200 dark:border-[#1E4D45] shadow-2xs space-y-6 md:col-span-2 group hover:border-slate-300 dark:hover:border-teal-400/40 transition-all">
+                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] shadow-2xs space-y-6 md:col-span-2 group hover:border-slate-300 dark:hover:border-teal-400/40 transition-all">
                             <div className="flex items-start gap-4">
                                 <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center border border-amber-500/20 shrink-0">
                                     <Calendar className="w-6 h-6" />
@@ -298,7 +298,7 @@ export function JppSettingsPage() {
                                             className="flex-1 h-11 bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white/90 font-bold px-3 focus:outline-none focus:border-amber-500/50"
                                         >
                                             {monthNames.slice(1).map((m, i) => (
-                                                <option key={i + 1} value={i + 1} className="bg-white dark:bg-[#061714] text-slate-900 dark:text-white">{m} ({i + 1})</option>
+                                                <option key={i + 1} value={i + 1} className="bg-white dark:bg-[#090B0E] text-slate-900 dark:text-white">{m} ({i + 1})</option>
                                             ))}
                                         </select>
                                         <button
@@ -329,7 +329,7 @@ export function JppSettingsPage() {
                                             className="flex-1 h-11 bg-slate-50 dark:bg-black/30 border border-slate-200 dark:border-white/10 rounded-xl text-sm text-slate-900 dark:text-white/90 font-bold px-3 focus:outline-none focus:border-amber-500/50"
                                         >
                                             {monthNames.slice(1).map((m, i) => (
-                                                <option key={i + 1} value={i + 1} className="bg-white dark:bg-[#061714] text-slate-900 dark:text-white">{m} ({i + 1})</option>
+                                                <option key={i + 1} value={i + 1} className="bg-white dark:bg-[#090B0E] text-slate-900 dark:text-white">{m} ({i + 1})</option>
                                             ))}
                                         </select>
                                         <button
@@ -365,7 +365,7 @@ export function JppSettingsPage() {
                             <QrCode className="w-5 h-5 text-emerald-500" />
                             <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:settings_qr_generator_title', 'Penjana QR Link')}</h3>
                         </div>
-                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#0B2420] border border-slate-200 dark:border-[#1E4D45] shadow-2xs hover:border-slate-300 dark:hover:border-teal-400/40 transition-all">
+                        <div className="p-6 rounded-[2rem] bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] shadow-2xs hover:border-slate-300 dark:hover:border-teal-400/40 transition-all">
                             <QrLinkManager showHeader={false} />
                         </div>
                     </motion.div>

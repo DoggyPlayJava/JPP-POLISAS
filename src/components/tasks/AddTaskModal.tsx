@@ -239,7 +239,7 @@ export function AddTaskModal({ onTaskAdded }: { onTaskAdded: () => void }) {
 
                             {aiGeneratedTasks.length > 0 && (
                                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-3">
-                                    <div className="flex justify-between items-center bg-card sticky top-0 bg-white z-10 p-2">
+                                    <div className="flex justify-between items-center bg-card sticky top-0 z-10 p-2">
                                         <label className="text-[10px] font-black uppercase text-foreground/50 tracking-widest">
                                             {t('kpp:subtask_delegation', 'Penyerahan Sub-Tugasan')} ({aiGeneratedTasks.length})
                                         </label>

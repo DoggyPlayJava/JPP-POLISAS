@@ -233,10 +233,10 @@ export function PolyMartLayout() {
         onClose={closeTour}
         tourKey="POLYMART_LAYOUT"
       />
-      <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714]">
+      <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E]">
 
         {/* Top Navbar */}
-        <header className="sticky top-0 z-40 bg-white dark:bg-[#0B2420] border-b border-amber-500/20 shadow-[0_4px_20px_rgba(11,36,32,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)] pt-[var(--sat,env(safe-area-inset-top,0px))]">
+        <header className="sticky top-0 z-40 bg-white dark:bg-[#13171D] border-b border-amber-500/20 shadow-[0_4px_20px_rgba(11,36,32,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)] pt-[var(--sat,env(safe-area-inset-top,0px))]">
           <div className="max-w-5xl mx-auto px-3 sm:px-5">
 
             {/* Main row */}

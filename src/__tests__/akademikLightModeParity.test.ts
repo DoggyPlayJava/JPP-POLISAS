@@ -33,11 +33,11 @@ describe('E-Akademik Light Mode Parity — AkademikLayout.tsx', () => {
   const source = fs.readFileSync(layoutPath, 'utf-8');
 
   it('contains dual-mode root container classes for porcelain light and obsidian dark', () => {
-    expect(source).toContain('min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] font-sans overflow-x-hidden transition-colors duration-200');
+    expect(source).toContain('min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] font-sans overflow-x-hidden transition-colors duration-200');
   });
 
   it('contains dual-mode top header styles (solid, no backdrop-blur)', () => {
-    expect(source).toContain('sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420]');
+    expect(source).toContain('sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D]');
     expect(source).not.toContain('backdrop-blur');
   });
 

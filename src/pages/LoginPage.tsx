@@ -54,7 +54,7 @@ function BrandPanel({ stats }: { stats: { clubCount: number; unitCount: number; 
   ];
 
   return (
-    <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-[#0B2420] dark:bg-[#061714] px-14 py-12">
+    <div className="relative hidden lg:flex flex-col justify-between overflow-hidden bg-[#0B2420] dark:bg-[#090B0E] px-14 py-12">
       {/* Ambient glows + hairline grid (cheap CSS paint, no filters) */}
       <div className="absolute -top-32 -left-24 w-[540px] h-[540px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(13,148,136,0.42)_0%,transparent_65%)]" />
       <div className="absolute -bottom-32 -right-20 w-[460px] h-[460px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(20,184,166,0.26)_0%,transparent_65%)]" />
@@ -443,9 +443,9 @@ export function LoginPage() {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] font-sans antialiased selection:bg-[#0D9488]/20 relative overflow-x-hidden">
+    <div className="min-h-[100dvh] flex flex-col lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] font-sans antialiased selection:bg-[#0D9488]/20 relative overflow-x-hidden">
       {/* ── Mobile / tablet header: compact dark banner, form sheet floats over it ── */}
-      <header className="lg:hidden relative overflow-hidden bg-[#0B2420] dark:bg-[#061714] px-6 pt-6 pb-16 sm:px-10">
+      <header className="lg:hidden relative overflow-hidden bg-[#0B2420] dark:bg-[#090B0E] px-6 pt-6 pb-16 sm:px-10">
         <div className="absolute -top-24 -left-16 w-[320px] h-[320px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(13,148,136,0.45)_0%,transparent_65%)]" />
         <div className="absolute -bottom-20 -right-10 w-[260px] h-[260px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(20,184,166,0.28)_0%,transparent_65%)]" />
         <div
@@ -493,18 +493,18 @@ export function LoginPage() {
 
       <div className="relative z-10 flex flex-1 lg:flex-none flex-col lg:h-[100dvh] lg:overflow-y-auto">
         {/* Form sheet: lifts over the dark header on mobile, plain column on desktop */}
-        <div className="flex-1 flex flex-col items-center justify-between -mt-10 sm:-mt-12 lg:mt-0 rounded-t-[26px] bg-[#F6FBF9] dark:bg-[#061714] shadow-[0_-10px_34px_rgba(6,23,20,0.16)] lg:rounded-none lg:shadow-none px-6 pt-9 pb-7 sm:px-10 sm:pt-10 lg:pt-10 lg:pb-6 lg:px-10">
+        <div className="flex-1 flex flex-col items-center justify-between -mt-10 sm:-mt-12 lg:mt-0 rounded-t-[26px] bg-[#F6FBF9] dark:bg-[#090B0E] shadow-[0_-10px_34px_rgba(6,23,20,0.16)] lg:rounded-none lg:shadow-none px-6 pt-9 pb-7 sm:px-10 sm:pt-10 lg:pt-10 lg:pb-6 lg:px-10">
           {/* Ambient background glows (radial-gradient = cheap CSS paint, no backdrop filter) */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[280px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(107,127,91,0.08)_0%,transparent_70%)]" />
           <div className="absolute bottom-0 right-1/4 w-[350px] h-[220px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(201,111,79,0.06)_0%,transparent_70%)]" />
 
           {/* Desktop top bar (mobile keeps these inside the header) */}
           <div className="hidden lg:flex w-full max-w-[420px] items-center justify-between relative z-10">
-            <span className="text-[11px] font-bold tracking-widest uppercase text-[#3B635C] dark:text-[#99CBC2]">
+            <span className="text-[11px] font-bold tracking-widest uppercase text-[#3B635C] dark:text-[#94A0B2]">
               {t('auth:login_title')}
             </span>
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-medium text-[#3B635C]/80 dark:text-[#99CBC2]/80">
+              <span className="text-[10px] font-medium text-[#3B635C]/80 dark:text-[#94A0B2]/80">
                 Sesi 2026/2027
               </span>
               <ThemeToggle />
@@ -530,14 +530,14 @@ export function LoginPage() {
 
         {/* Dynamic Headings */}
         <div className="text-left mb-6 lg:mb-7">
-          <h1 className="text-3xl sm:text-[34px] font-black tracking-tight leading-[1.15] text-[#0B2420] dark:text-[#F6FBF9]">
+          <h1 className="text-3xl sm:text-[34px] font-black tracking-tight leading-[1.15] text-[#0B2420] dark:text-[#F1F5F9]">
             {isForgotPassword
               ? t('auth:reset_password', 'Tetapkan Semula Kata Laluan')
               : isSignUp
               ? (step === 1 ? t('auth:register_title', 'Daftar Akaun Baharu') : t('auth:membership_info', 'Maklumat Keahlian'))
               : t('auth:login_title')}
           </h1>
-          <p className="text-sm sm:text-[15px] text-[#3B635C] dark:text-[#99CBC2] font-normal leading-relaxed mt-2.5">
+          <p className="text-sm sm:text-[15px] text-[#3B635C] dark:text-[#94A0B2] font-normal leading-relaxed mt-2.5">
             {isForgotPassword
               ? t('auth:reset_password_desc', 'Masukkan emel anda untuk menerima pautan tetapan semula kata laluan.')
               : isSignUp && step === 1
@@ -557,7 +557,7 @@ export function LoginPage() {
                 className="mt-3.5 flex items-center gap-2 p-3 rounded-2xl bg-[#0D9488]/10 border border-[#0D9488]/25"
               >
                 <Link2 className="w-4 h-4 text-[#0D9488] shrink-0" />
-                <p className="text-xs font-semibold text-[#0B2420] dark:text-[#F6FBF9]">
+                <p className="text-xs font-semibold text-[#0B2420] dark:text-[#F1F5F9]">
                   {t('auth:qr_redirect_notice', 'Log masuk untuk meneruskan ke destinasi QR anda.')}
                 </p>
               </motion.div>
@@ -572,17 +572,17 @@ export function LoginPage() {
               <Mail className="w-8 h-8" />
             </div>
             <div>
-              <p className="font-black text-lg text-[#0B2420] dark:text-[#F6FBF9]">{t('auth:verify_your_email', 'Sahkan Emel Anda')}</p>
-              <p className="text-xs text-[#3B635C] dark:text-[#99CBC2] leading-relaxed mt-1">
+              <p className="font-black text-lg text-[#0B2420] dark:text-[#F1F5F9]">{t('auth:verify_your_email', 'Sahkan Emel Anda')}</p>
+              <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] leading-relaxed mt-1">
                 {t('auth:check_email_verification')}{' '}
-                <span className="font-bold text-[#0B2420] dark:text-[#F6FBF9]">{registeredEmail}</span>.
+                <span className="font-bold text-[#0B2420] dark:text-[#F1F5F9]">{registeredEmail}</span>.
               </p>
             </div>
             <div className="flex flex-col gap-2.5 pt-2">
               <Button
                 variant="outline"
                 disabled={resendLoading}
-                className="rounded-2xl h-14 font-bold text-xs uppercase tracking-wider border-[#B8E4DC] text-[#0B2420] dark:text-[#F6FBF9] hover:bg-[#F6FBF9]"
+                className="rounded-2xl h-14 font-bold text-xs uppercase tracking-wider border-[#B8E4DC] text-[#0B2420] dark:text-[#F1F5F9] hover:bg-[#F6FBF9]"
                 onClick={async () => {
                   setResendLoading(true);
                   try {
@@ -622,7 +622,7 @@ export function LoginPage() {
               )}
               <Button
                 variant="ghost"
-                className="rounded-xl h-11 font-bold text-xs uppercase tracking-wider text-[#3B635C] dark:text-[#99CBC2]"
+                className="rounded-xl h-11 font-bold text-xs uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]"
                 onClick={() => { setVerificationSent(false); setIsSignUp(false); resetForm(); }}
               >
                 {t('auth:back_to_login')}
@@ -635,14 +635,14 @@ export function LoginPage() {
               <Mail className="w-8 h-8" />
             </div>
             <div>
-              <p className="font-black text-lg text-[#0B2420] dark:text-[#F6FBF9]">{t('auth:check_your_email', 'Semak Emel Anda')}</p>
-              <p className="text-xs text-[#3B635C] dark:text-[#99CBC2] leading-relaxed mt-1">
-                {t('auth:password_reset_sent')} (<span className="font-bold text-[#0B2420] dark:text-[#F6FBF9]">{email}</span>).
+              <p className="font-black text-lg text-[#0B2420] dark:text-[#F1F5F9]">{t('auth:check_your_email', 'Semak Emel Anda')}</p>
+              <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] leading-relaxed mt-1">
+                {t('auth:password_reset_sent')} (<span className="font-bold text-[#0B2420] dark:text-[#F1F5F9]">{email}</span>).
               </p>
             </div>
             <Button
               variant="outline"
-              className="rounded-2xl h-14 font-bold text-xs uppercase tracking-wider border-[#B8E4DC] text-[#0B2420] dark:text-[#F6FBF9] hover:bg-[#F6FBF9]"
+              className="rounded-2xl h-14 font-bold text-xs uppercase tracking-wider border-[#B8E4DC] text-[#0B2420] dark:text-[#F1F5F9] hover:bg-[#F6FBF9]"
               onClick={() => { setResetSent(false); setIsForgotPassword(false); }}
             >
               {t('auth:back_to_login')}
@@ -669,15 +669,15 @@ export function LoginPage() {
               >
                 {/* Toggle: Pelajar vs Staf */}
                 <div className="space-y-2 mb-2">
-                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#EBF7F4]/80 dark:bg-[#0B2420] rounded-2xl border border-[#B8E4DC]/60 dark:border-[#1E4D45]">
+                  <div className="grid grid-cols-2 gap-1.5 p-1 bg-[#EBF7F4]/80 dark:bg-[#13171D] rounded-2xl border border-[#B8E4DC]/60 dark:border-[#252B35]">
                     <button
                       type="button"
                       onClick={() => setRegisterMode('student')}
                       className={cn(
                         "flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
                         registerMode === 'student'
-                          ? "bg-white dark:bg-[#11322C] shadow-xs text-[#0B2420] dark:text-[#F6FBF9]"
-                          : "text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420]"
+                          ? "bg-white dark:bg-[#1B2028] shadow-xs text-[#0B2420] dark:text-[#F1F5F9]"
+                          : "text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420]"
                       )}
                     >
                       <Sparkles className="w-3.5 h-3.5 text-[#0D9488]" />
@@ -689,8 +689,8 @@ export function LoginPage() {
                       className={cn(
                         "flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer",
                         registerMode === 'staff'
-                          ? "bg-white dark:bg-[#11322C] shadow-xs text-[#0B2420] dark:text-[#F6FBF9]"
-                          : "text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420]"
+                          ? "bg-white dark:bg-[#1B2028] shadow-xs text-[#0B2420] dark:text-[#F1F5F9]"
+                          : "text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420]"
                       )}
                     >
                       <Building2 className="w-3.5 h-3.5 text-[#0D9488]" />
@@ -704,7 +704,7 @@ export function LoginPage() {
                     <button
                       type="button"
                       onClick={handleGoogleLogin}
-                      className="w-full h-14 rounded-2xl bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9] font-bold text-sm flex items-center justify-center gap-3 transition-all shadow-xs active:scale-[0.98] cursor-pointer"
+                      className="w-full h-14 rounded-2xl bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] font-bold text-sm flex items-center justify-center gap-3 transition-all shadow-xs active:scale-[0.98] cursor-pointer"
                     >
                       <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                         <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z" />
@@ -716,16 +716,16 @@ export function LoginPage() {
                     </button>
 
                     <div className="flex items-center gap-3 my-2">
-                      <div className="flex-1 h-[1px] bg-[#B8E4DC]/60 dark:bg-[#1E4D45]"></div>
-                      <span className="text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2] uppercase tracking-widest">{t('common:or', 'atau')}</span>
-                      <div className="flex-1 h-[1px] bg-[#B8E4DC]/60 dark:bg-[#1E4D45]"></div>
+                      <div className="flex-1 h-[1px] bg-[#B8E4DC]/60 dark:bg-[#252B35]"></div>
+                      <span className="text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2] uppercase tracking-widest">{t('common:or', 'atau')}</span>
+                      <div className="flex-1 h-[1px] bg-[#B8E4DC]/60 dark:bg-[#252B35]"></div>
                     </div>
 
                     {traditionalRegistrationEnabled && (
                       <button
                         type="button"
                         onClick={() => setShowManualRegister(!showManualRegister)}
-                        className="w-full py-2.5 text-xs font-bold text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                        className="w-full py-2.5 text-xs font-bold text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                       >
                         <span>{showManualRegister ? t('auth:close_manual_register', 'Tutup Pendaftaran Manual') : t('auth:fill_manual_form', 'Isi Borang Manual')}</span>
                         <ChevronDown className={cn("w-3.5 h-3.5 transition-transform duration-300", showManualRegister && "rotate-180")} />
@@ -743,18 +743,18 @@ export function LoginPage() {
                       className="space-y-3 pt-1"
                     >
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2]">{t('common:name', 'Nama Penuh')}</Label>
+                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2]">{t('common:name', 'Nama Penuh')}</Label>
                         <Input
                           placeholder="CTH: MUHAMMAD BIN AHMAD ALI"
                           required
                           value={fullName}
                           onChange={e => setFullName(e.target.value.toUpperCase())}
-                          className="h-12 rounded-xl bg-white dark:bg-[#0B2420] border-[#B8E4DC] dark:border-[#1E4D45] font-medium uppercase text-xs"
+                          className="h-12 rounded-xl bg-white dark:bg-[#13171D] border-[#B8E4DC] dark:border-[#252B35] font-medium uppercase text-xs"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2]">
+                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2]">
                           {registerMode === 'staff' ? t('auth:staff_id_label', 'No. Pekerja (Staf ID)') : t('auth:matric_no_label', 'No. Matrik')}
                         </Label>
                         <Input
@@ -763,47 +763,47 @@ export function LoginPage() {
                           pattern={registerMode === 'staff' ? undefined : "^02.*"}
                           value={matricNo}
                           onChange={e => setMatricNo(e.target.value.toUpperCase())}
-                          className="h-12 rounded-xl bg-white dark:bg-[#0B2420] border-[#B8E4DC] dark:border-[#1E4D45] font-medium uppercase text-xs"
+                          className="h-12 rounded-xl bg-white dark:bg-[#13171D] border-[#B8E4DC] dark:border-[#252B35] font-medium uppercase text-xs"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2]">{t('auth:personal_email', 'Emel Peribadi')}</Label>
+                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2]">{t('auth:personal_email', 'Emel Peribadi')}</Label>
                         <Input
                           type="email"
                           placeholder={t('auth:email_placeholder_sample', 'emel@gmail.com')}
                           required
                           value={email}
                           onChange={e => setEmail(e.target.value)}
-                          className="h-12 rounded-xl bg-white dark:bg-[#0B2420] border-[#B8E4DC] dark:border-[#1E4D45] font-medium text-xs"
+                          className="h-12 rounded-xl bg-white dark:bg-[#13171D] border-[#B8E4DC] dark:border-[#252B35] font-medium text-xs"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2]">{t('auth:phone', 'No Telefon Bimbit')}</Label>
+                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2]">{t('auth:phone', 'No Telefon Bimbit')}</Label>
                         <Input
                           placeholder="CTH: 0123456789"
                           required
                           value={phone}
                           onChange={e => setPhone(e.target.value)}
-                          className="h-12 rounded-xl bg-white dark:bg-[#0B2420] border-[#B8E4DC] dark:border-[#1E4D45] font-medium text-xs"
+                          className="h-12 rounded-xl bg-white dark:bg-[#13171D] border-[#B8E4DC] dark:border-[#252B35] font-medium text-xs"
                         />
                       </div>
 
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2]">{t('auth:password', 'Kata Laluan')}</Label>
+                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2]">{t('auth:password', 'Kata Laluan')}</Label>
                         <Input
                           type="password"
                           required
                           value={password}
                           onChange={e => setPassword(e.target.value)}
-                          className="h-12 rounded-xl bg-white dark:bg-[#0B2420] border-[#B8E4DC] dark:border-[#1E4D45] font-bold tracking-widest text-xs"
+                          className="h-12 rounded-xl bg-white dark:bg-[#13171D] border-[#B8E4DC] dark:border-[#252B35] font-bold tracking-widest text-xs"
                         />
                       </div>
 
                       <Button
                         type="submit"
-                        className="w-full h-12 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#061714] transition-all shadow-sm active:scale-[0.98] cursor-pointer mt-2"
+                        className="w-full h-12 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#090B0E] transition-all shadow-sm active:scale-[0.98] cursor-pointer mt-2"
                       >
                         <span>Seterusnya</span>
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -825,7 +825,7 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] mb-1"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] mb-1"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   <span>{t('auth:back_to_step_1', 'Kembali ke Langkah 1')}</span>
@@ -834,14 +834,14 @@ export function LoginPage() {
                 {registerMode !== 'staff' && (
                   <div className="space-y-3">
                     <div className="space-y-1">
-                      <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2]">
+                      <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2]">
                         {t('auth:your_academic_dept', 'Jabatan Akademik Anda')}
                       </Label>
                       <Select value={jabatan} onValueChange={v => setJabatan(v as JabatanValue)} required>
-                        <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#0B2420] border-[#B8E4DC] dark:border-[#1E4D45] text-xs">
+                        <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#13171D] border-[#B8E4DC] dark:border-[#252B35] text-xs">
                           <SelectValue placeholder={t('auth:select_academic_dept_placeholder', 'Pilih jabatan akademik...')} />
                         </SelectTrigger>
-                        <SelectContent className="rounded-xl border-[#B8E4DC] dark:border-[#1E4D45] shadow-xl">
+                        <SelectContent className="rounded-xl border-[#B8E4DC] dark:border-[#252B35] shadow-xl">
                           {JABATAN_LIST.map(j => (
                             <SelectItem key={j.value} value={j.value} className="text-xs py-2.5">
                               {j.label}
@@ -855,20 +855,20 @@ export function LoginPage() {
 
                 <AnimatePresence mode="wait">
                   {registerMode !== 'staff' && (
-                    <div className="p-3.5 rounded-2xl bg-[#0D9488]/10 border border-[#0D9488]/25 text-xs text-[#0B2420] dark:text-[#F6FBF9] leading-relaxed">
+                    <div className="p-3.5 rounded-2xl bg-[#0D9488]/10 border border-[#0D9488]/25 text-xs text-[#0B2420] dark:text-[#F1F5F9] leading-relaxed">
                       <span className="font-bold">{t('common:info', 'Info')}:</span> {t('auth:academic_club_reg_info', 'Anda akan didaftarkan ke Kelab Akademik secara rasmi. Selepas log masuk, layari modul kelab untuk menyertai persatuan sukan atau beruniform yang lain.')}
                     </div>
                   )}
 
                   {registerMode === 'staff' && (
                     <div className="space-y-3">
-                      <div className="p-3.5 rounded-2xl bg-[#0D9488]/10 border border-[#0D9488]/25 text-xs text-[#0B2420] dark:text-[#F6FBF9] leading-relaxed">
+                      <div className="p-3.5 rounded-2xl bg-[#0D9488]/10 border border-[#0D9488]/25 text-xs text-[#0B2420] dark:text-[#F1F5F9] leading-relaxed">
                         {t('auth:staff_reg_service_desc', 'Mod Pendaftaran Staf membolehkan anda untuk menggunakan perkhidmatan institusi POLISAS.')}
                       </div>
                       <div className="space-y-1">
-                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2]">{t('auth:purpose_label', 'Tujuan Pendaftaran')}</Label>
+                        <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2]">{t('auth:purpose_label', 'Tujuan Pendaftaran')}</Label>
                         <Select value={staffRole} onValueChange={v => setStaffRole(v as UserRole)}>
-                          <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#0B2420] border-[#B8E4DC] text-xs font-bold text-[#0B2420] dark:text-white">
+                          <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#13171D] border-[#B8E4DC] text-xs font-bold text-[#0B2420] dark:text-white">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="rounded-xl border-[#B8E4DC]">
@@ -883,16 +883,16 @@ export function LoginPage() {
 
                       {staffRole === 'CLUB_ADVISOR' && (
                         <div className="space-y-1">
-                          <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2]">{t('auth:advised_club_label', 'Kelab Yang Dinasihati')}</Label>
+                          <Label className="text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2]">{t('auth:advised_club_label', 'Kelab Yang Dinasihati')}</Label>
                           <Select value={leaderClubId} onValueChange={setLeaderClubId} required>
-                            <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#0B2420] border-[#B8E4DC] text-xs">
+                            <SelectTrigger className="h-12 rounded-xl bg-white dark:bg-[#13171D] border-[#B8E4DC] text-xs">
                               <SelectValue placeholder={t('auth:select_club_placeholder', 'Sila pilih kelab anda...')} />
                             </SelectTrigger>
                             <SelectContent className="rounded-xl border-[#B8E4DC] max-h-60">
                               {ALL_CLUBS.map(c => (
                                 <SelectItem key={c.id} value={c.id} className="text-xs py-2.5">
                                   <span className="font-bold">{c.name}</span>
-                                  <span className="ml-2 text-[10px] text-[#3B635C] dark:text-[#99CBC2]">&middot; {c.category}</span>
+                                  <span className="ml-2 text-[10px] text-[#3B635C] dark:text-[#94A0B2]">&middot; {c.category}</span>
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -918,7 +918,7 @@ export function LoginPage() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-12 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#061714] transition-all shadow-sm active:scale-[0.98] cursor-pointer mt-2"
+                  className="w-full h-12 rounded-xl font-bold text-xs uppercase tracking-wider bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#090B0E] transition-all shadow-sm active:scale-[0.98] cursor-pointer mt-2"
                 >
                   <span>{isLoading ? t('auth:registering', 'Mendaftar...') : t('auth:register_now', 'Daftar Sekarang')}</span>
                   {!isLoading && <ArrowRight className="ml-2 h-4 w-4" />}
@@ -941,7 +941,7 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={handleGoogleLogin}
-                  className="w-full h-14 rounded-2xl bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9] font-bold text-[15px] flex items-center justify-center gap-3 transition-all shadow-xs hover:shadow-md active:scale-[0.98] cursor-pointer"
+                  className="w-full h-14 rounded-2xl bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] font-bold text-[15px] flex items-center justify-center gap-3 transition-all shadow-xs hover:shadow-md active:scale-[0.98] cursor-pointer"
                 >
                   <svg className="w-5 h-5 shrink-0" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.66v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.15z" />
@@ -954,16 +954,16 @@ export function LoginPage() {
 
                 {/* 2. Microscopic Clean Divider */}
                 <div className="flex items-center gap-3 py-1">
-                  <div className="flex-1 h-[1px] bg-[#B8E4DC]/60 dark:bg-[#1E4D45]"></div>
-                  <span className="text-xs font-medium text-[#3B635C]/70 dark:text-[#99CBC2]/70">{t('common:or', 'atau')}</span>
-                  <div className="flex-1 h-[1px] bg-[#B8E4DC]/60 dark:bg-[#1E4D45]"></div>
+                  <div className="flex-1 h-[1px] bg-[#B8E4DC]/60 dark:bg-[#252B35]"></div>
+                  <span className="text-xs font-medium text-[#3B635C]/70 dark:text-[#94A0B2]/70">{t('common:or', 'atau')}</span>
+                  <div className="flex-1 h-[1px] bg-[#B8E4DC]/60 dark:bg-[#252B35]"></div>
                 </div>
 
                 {/* 3. Secondary Hero: Solid Button for Manual Login */}
                 <button
                   type="button"
                   onClick={() => setShowManualLogin(true)}
-                  className="w-full h-14 rounded-2xl bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#061714] font-bold text-[15px] flex items-center justify-center gap-2.5 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+                  className="w-full h-14 rounded-2xl bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#090B0E] font-bold text-[15px] flex items-center justify-center gap-2.5 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
                 >
                   <Mail className="w-4 h-4 opacity-90" />
                   <span>{t('auth:login_with_email_matric', 'Log masuk menggunakan Emel / No Matrik')}</span>
@@ -982,7 +982,7 @@ export function LoginPage() {
                   <button
                     type="button"
                     onClick={() => setShowManualLogin(false)}
-                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-[#F6FBF9] transition-colors cursor-pointer mb-1"
+                    className="inline-flex items-center gap-1.5 text-xs font-bold text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9] transition-colors cursor-pointer mb-1"
                   >
                     <ArrowLeft className="w-3.5 h-3.5" />
                     <span>{t('auth:back_to_login_options', 'Kembali ke Pilihan Log Masuk')}</span>
@@ -990,7 +990,7 @@ export function LoginPage() {
 
                   <form onSubmit={handleLogin} className="space-y-3.5">
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-[#3B635C] dark:text-[#99CBC2]">
+                      <Label className="text-xs font-bold text-[#3B635C] dark:text-[#94A0B2]">
                         {isForgotPassword ? t('auth:email') : t('auth:matrix_no')}
                       </Label>
                       <Input
@@ -999,14 +999,14 @@ export function LoginPage() {
                         required
                         value={email}
                         onChange={e => setEmail(e.target.value)}
-                        className="h-13 rounded-2xl bg-white dark:bg-[#0B2420] border-[#B8E4DC] dark:border-[#1E4D45] text-sm font-medium px-4 shadow-2xs"
+                        className="h-13 rounded-2xl bg-white dark:bg-[#13171D] border-[#B8E4DC] dark:border-[#252B35] text-sm font-medium px-4 shadow-2xs"
                       />
                     </div>
 
                     {!isForgotPassword && (
                       <div className="space-y-1">
                         <div className="flex items-center justify-between">
-                          <Label className="text-xs font-bold text-[#3B635C] dark:text-[#99CBC2]">
+                          <Label className="text-xs font-bold text-[#3B635C] dark:text-[#94A0B2]">
                             {t('auth:password')}
                           </Label>
                           <button
@@ -1023,7 +1023,7 @@ export function LoginPage() {
                           required
                           value={password}
                           onChange={e => setPassword(e.target.value)}
-                          className="h-13 rounded-2xl bg-white dark:bg-[#0B2420] border-[#B8E4DC] dark:border-[#1E4D45] text-sm font-bold tracking-widest px-4 shadow-2xs"
+                          className="h-13 rounded-2xl bg-white dark:bg-[#13171D] border-[#B8E4DC] dark:border-[#252B35] text-sm font-bold tracking-widest px-4 shadow-2xs"
                         />
                       </div>
                     )}
@@ -1031,7 +1031,7 @@ export function LoginPage() {
                     <Button
                       type="submit"
                       disabled={isLoading}
-                      className="w-full h-14 rounded-2xl bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#061714] font-bold text-[15px] shadow-sm transition-all active:scale-[0.98] cursor-pointer mt-1"
+                      className="w-full h-14 rounded-2xl bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#090B0E] font-bold text-[15px] shadow-sm transition-all active:scale-[0.98] cursor-pointer mt-1"
                     >
                       {isLoading ? t('auth:logging_in') : isForgotPassword ? t('auth:reset_password') : t('auth:login_button')}
                     </Button>
@@ -1043,7 +1043,7 @@ export function LoginPage() {
               {/* Dev Mode Bypass Persona Switcher (Visible in development on localhost) */}
               {import.meta.env.DEV && !isForgotPassword && (
                 <div className="pt-2 space-y-2">
-                  <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2]">
+                  <div className="flex items-center justify-center gap-1.5 text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2]">
                     <Sparkles className="w-3.5 h-3.5 text-[#0D9488]" />
                     <span>{t('auth:bypass_login_dev', 'Pintas Log Masuk (Dev Mode)')}</span>
                   </div>
@@ -1057,7 +1057,7 @@ export function LoginPage() {
                         toast.success(t('auth:dev_shortcut_activated', 'Pintasan Developer diaktifkan!'));
                         setTimeout(() => { window.location.href = '/portal'; }, 350);
                       }}
-                      className="h-11 rounded-xl border border-dashed border-[#0D9488] bg-[#0D9488]/10 hover:bg-[#0D9488]/20 text-[#0B2420] dark:text-[#F6FBF9] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="h-11 rounded-xl border border-dashed border-[#0D9488] bg-[#0D9488]/10 hover:bg-[#0D9488]/20 text-[#0B2420] dark:text-[#F1F5F9] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <GraduationCap className="w-3.5 h-3.5 text-[#0D9488]" />
                       <span>{t('auth:dev_role_student', 'Pelajar')}</span>
@@ -1071,7 +1071,7 @@ export function LoginPage() {
                         toast.success(t('auth:dev_shortcut_activated', 'Pintasan Developer diaktifkan!'));
                         setTimeout(() => { window.location.href = '/portal'; }, 350);
                       }}
-                      className="h-11 rounded-xl border border-dashed border-[#B8E4DC] dark:border-[#1E4D45] bg-white/70 dark:bg-[#0B2420] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] text-[#0B2420] dark:text-[#F6FBF9] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                      className="h-11 rounded-xl border border-dashed border-[#B8E4DC] dark:border-[#252B35] bg-white/70 dark:bg-[#13171D] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] text-[#0B2420] dark:text-[#F1F5F9] font-bold text-xs flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                     >
                       <ShieldCheck className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
                       <span>{t('auth:dev_role_admin', 'Admin JPP')}</span>
@@ -1084,7 +1084,7 @@ export function LoginPage() {
 
         {/* Bottom Switcher: Clean Unboxed Links */}
         {!resetSent && !verificationSent && (
-          <div className="mt-6 text-center text-sm font-medium text-[#3B635C] dark:text-[#99CBC2]">
+          <div className="mt-6 text-center text-sm font-medium text-[#3B635C] dark:text-[#94A0B2]">
             {isForgotPassword ? (
               <button
                 type="button"
@@ -1103,7 +1103,7 @@ export function LoginPage() {
                     setIsForgotPassword(false);
                     resetForm();
                   }}
-                  className="font-bold text-[#0B2420] dark:text-[#F6FBF9] underline underline-offset-4 hover:text-[#0D9488] cursor-pointer"
+                  className="font-bold text-[#0B2420] dark:text-[#F1F5F9] underline underline-offset-4 hover:text-[#0D9488] cursor-pointer"
                 >
                   {isSignUp ? t('auth:login_button') : t('auth:register_now')}
                 </button>
@@ -1118,7 +1118,7 @@ export function LoginPage() {
             href="https://wa.me/601139413699"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-white transition-colors"
           >
             <PhoneCall className="w-3 h-3 text-[#0D9488]" />
             <span>{t('auth:contact_support', 'Hubungi JPP jika ada masalah')}</span>
@@ -1127,14 +1127,14 @@ export function LoginPage() {
       </motion.div>
 
           {/* Institutional Micro-Footer (Airy, dignified, calm) */}
-          <footer className="w-full max-w-sm lg:max-w-[420px] pb-1 pt-6 text-center border-t border-[#B8E4DC]/40 dark:border-[#1E4D45]/40 space-y-1 relative z-10">
-            <p className="text-[10px] font-bold text-[#0B2420]/80 dark:text-[#F6FBF9]/80 uppercase tracking-widest">
+          <footer className="w-full max-w-sm lg:max-w-[420px] pb-1 pt-6 text-center border-t border-[#B8E4DC]/40 dark:border-[#252B35]/40 space-y-1 relative z-10">
+            <p className="text-[10px] font-bold text-[#0B2420]/80 dark:text-[#F1F5F9]/80 uppercase tracking-widest">
               {t('auth:motto', 'Perpaduan Progresif Demi Mahasiswa')}
             </p>
-            <p className="text-[10px] text-[#3B635C]/70 dark:text-[#99CBC2]/60">
+            <p className="text-[10px] text-[#3B635C]/70 dark:text-[#94A0B2]/60">
               {t('auth:footer_org_name', 'Jawatankuasa Perwakilan Pelajar · Politeknik Sultan Haji Ahmad Shah')}
             </p>
-            <p className="text-[9px] text-[#3B635C]/50 dark:text-[#99CBC2]/40 font-mono">
+            <p className="text-[9px] text-[#3B635C]/75 dark:text-[#94A0B2]/80 font-mono">
               {t('auth:footer_stats', '{{clubCount}} Kelab · {{unitCount}} Unit Exco JPP · {{deptCount}} Jabatan Akademik', {
                 clubCount: realStats.clubCount,
                 unitCount: realStats.unitCount,

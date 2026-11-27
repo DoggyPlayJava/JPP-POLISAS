@@ -79,14 +79,14 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h2 className="text-sm sm:text-base font-bold text-[#0B2420] dark:text-[#F6FBF9] tracking-tight">
+              <h2 className="text-sm sm:text-base font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
                 {t('portal:campus_events_title', 'Acara Kampus')}
               </h2>
               <span className="text-[11px] font-semibold px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
                 EMS
               </span>
             </div>
-            <p className="text-[11px] text-[#3B635C] dark:text-[#99CBC2] hidden sm:block">
+            <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2] hidden sm:block">
               {t('portal:campus_events_subtitle', 'Pertandingan & program siswa terkini')}
             </p>
           </div>
@@ -108,12 +108,12 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="snap-start shrink-0 w-[230px] sm:w-[270px] h-[190px] rounded-2xl border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] p-3 flex flex-col justify-between"
+              className="snap-start shrink-0 w-[230px] sm:w-[270px] h-[190px] rounded-2xl border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] p-3 flex flex-col justify-between"
             >
-              <div className="w-full h-24 rounded-xl bg-[#EBF7F4] dark:bg-[#11322C]" />
+              <div className="w-full h-24 rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028]" />
               <div className="space-y-2 mt-2">
-                <div className="w-3/4 h-3 rounded bg-[#EBF7F4] dark:bg-[#11322C]" />
-                <div className="w-1/2 h-2.5 rounded bg-[#EBF7F4] dark:bg-[#11322C]" />
+                <div className="w-3/4 h-3 rounded bg-[#EBF7F4] dark:bg-[#1B2028]" />
+                <div className="w-1/2 h-2.5 rounded bg-[#EBF7F4] dark:bg-[#1B2028]" />
               </div>
             </div>
           ))}
@@ -135,7 +135,7 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
               <div
                 key={evt.id}
                 onClick={() => handleCardClick(evt.id)}
-                className="snap-start shrink-0 w-[230px] sm:w-[270px] bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] hover:border-[#0F766E]/40 dark:hover:border-[#2DD4BF]/40 shadow-sm hover:shadow-md transition-[transform,border-color,box-shadow] duration-150 ease-out active:scale-[0.98] rounded-2xl overflow-hidden cursor-pointer flex flex-col group"
+                className="snap-start shrink-0 w-[230px] sm:w-[270px] bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] hover:border-[#0F766E]/40 dark:hover:border-[#2DD4BF]/40 shadow-sm hover:shadow-md transition-[transform,border-color,box-shadow] duration-150 ease-out active:scale-[0.98] rounded-2xl overflow-hidden cursor-pointer flex flex-col group"
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
@@ -146,7 +146,7 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
                 }}
               >
                 {/* Banner / Poster Header */}
-                <div className="relative h-28 w-full overflow-hidden bg-[#EBF7F4] dark:bg-[#081A17] flex items-center justify-center">
+                <div className="relative h-28 w-full overflow-hidden bg-[#EBF7F4] dark:bg-[#0E1116] flex items-center justify-center">
                   {bannerUrl ? (
                     <img
                       src={bannerUrl}
@@ -155,9 +155,9 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
                       loading="lazy"
                     />
                   ) : (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#EBF7F4] dark:bg-[#081A17] p-2 text-center">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#EBF7F4] dark:bg-[#0E1116] p-2 text-center">
                       <Trophy className="w-8 h-8 text-amber-500/60 mb-1" />
-                      <span className="text-[11px] font-semibold text-[#3B635C] dark:text-[#99CBC2] line-clamp-1">
+                      <span className="text-[11px] font-semibold text-[#3B635C] dark:text-[#94A0B2] line-clamp-1">
                         {evt.category || t('portal:polisas_event', 'Acara POLISAS')}
                       </span>
                     </div>
@@ -174,18 +174,18 @@ export function EmsEventsFeed({ events: initialEvents, className }: EmsEventsFee
                 {/* Body Content */}
                 <div className="p-3 flex-1 flex flex-col justify-between space-y-2">
                   <div>
-                    <h3 className="text-xs sm:text-sm font-bold text-[#0B2420] dark:text-[#F6FBF9] line-clamp-1 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                    <h3 className="text-xs sm:text-sm font-bold text-[#0B2420] dark:text-[#F1F5F9] line-clamp-1 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
                       {evt.title}
                     </h3>
                   </div>
 
-                  <div className="space-y-1 pt-1 border-t border-[#EBF7F4] dark:border-[#1E4D45]">
-                    <div className="flex items-center gap-1.5 text-[11px] text-[#3B635C] dark:text-[#99CBC2]">
+                  <div className="space-y-1 pt-1 border-t border-[#EBF7F4] dark:border-[#252B35]">
+                    <div className="flex items-center gap-1.5 text-[11px] text-[#3B635C] dark:text-[#94A0B2]">
                       <Calendar className="w-3.5 h-3.5 shrink-0 text-[#0D9488] dark:text-[#2DD4BF]" />
                       <span className="truncate font-medium font-mono tabular-nums">{dateStr}</span>
                     </div>
 
-                    <div className="flex items-center gap-1.5 text-[11px] text-[#3B635C] dark:text-[#99CBC2]">
+                    <div className="flex items-center gap-1.5 text-[11px] text-[#3B635C] dark:text-[#94A0B2]">
                       <MapPin className="w-3.5 h-3.5 shrink-0 text-[#0D9488] dark:text-[#2DD4BF]" />
                       <span className="truncate font-medium">{evt.location || t('portal:campus_polisas', 'Kampus POLISAS')}</span>
                     </div>

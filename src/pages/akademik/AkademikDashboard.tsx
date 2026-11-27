@@ -77,7 +77,7 @@ function QrScanCta({ onClick }: { onClick: () => void }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.05, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       onClick={onClick}
-      className="w-full relative overflow-hidden rounded-[2rem] p-5 border border-[#B8E4DC] dark:border-teal-500/25 text-left group transition-all hover:border-[#0F766E]/50 active:scale-[0.99] min-h-[48px] bg-gradient-to-br from-[#EBF7F4] via-[#F6FBF9] to-white dark:from-[#0B2420] dark:via-[#081A17] dark:to-[#061714]"
+      className="w-full relative overflow-hidden rounded-[2rem] p-5 border border-[#B8E4DC] dark:border-teal-500/25 text-left group transition-all hover:border-[#0F766E]/50 active:scale-[0.99] min-h-[48px] bg-gradient-to-br from-[#EBF7F4] via-[#F6FBF9] to-white dark:from-[#13171D] dark:via-[#0E1116] dark:to-[#090B0E]"
     >
       {/* Pulse ring around QR icon */}
       <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">

@@ -242,7 +242,7 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0F172A] dark:text-white transition-colors duration-300">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0F172A] dark:text-white transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
         {/* Header */}
@@ -376,7 +376,7 @@ export function ExcoAktivitiPage({ excoUnit, themeColor, excoLabel }: Props) {
 
         {/* Dialog Form */}
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogContent className="sm:max-w-[560px] rounded-[2.5rem] p-0 border border-[#B8E4DC]/80 dark:border-[#1E4D45] overflow-hidden flex flex-col max-h-[95dvh] bg-white dark:bg-[#0B2420] text-[#0F172A] dark:text-white shadow-xl">
+          <DialogContent className="sm:max-w-[560px] rounded-[2.5rem] p-0 border border-[#B8E4DC]/80 dark:border-[#252B35] overflow-hidden flex flex-col max-h-[95dvh] bg-white dark:bg-[#13171D] text-[#0F172A] dark:text-white shadow-xl">
             <div className="p-8 space-y-6 overflow-y-auto flex-1">
               <DialogHeader>
                 <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">

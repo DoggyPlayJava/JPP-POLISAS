@@ -98,9 +98,9 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
       });
 
       expect(tree.props.className).toContain('bg-[#F6FBF9]');
-      expect(tree.props.className).toContain('dark:bg-[#081A17]');
+      expect(tree.props.className).toContain('dark:bg-[#0E1116]');
       expect(tree.props.className).toContain('border-[#B8E4DC]/80');
-      expect(tree.props.className).toContain('dark:border-[#1E4D45]');
+      expect(tree.props.className).toContain('dark:border-[#252B35]');
       expect(tree.props.className).toContain('shadow-2xs');
       expect(html).toContain('bg-[#F6FBF9]');
     });
@@ -114,7 +114,7 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
       const header = findElements(tree, el => el.props?.className?.includes('tracking-wider'))[0];
       expect(header).toBeDefined();
       expect(header.props.className).toContain('text-[#3B635C]');
-      expect(header.props.className).toContain('dark:text-[#99CBC2]');
+      expect(header.props.className).toContain('dark:text-[#94A0B2]');
       expect(header.props.className).toContain('text-xs');
       expect(header.props.className).toContain('font-bold');
       expect(header.props.className).toContain('uppercase');
@@ -148,7 +148,7 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
       expect(votedBtn.props.className).toContain('border-[#0F766E]/60');
       expect(votedBtn.props.className).toContain('dark:border-[#2DD4BF]/50');
       expect(votedBtn.props.className).toContain('bg-[#EBF7F4]/80');
-      expect(votedBtn.props.className).toContain('dark:bg-[#11322C]/70');
+      expect(votedBtn.props.className).toContain('dark:bg-[#1B2028]/70');
       expect(votedBtn.props.className).toContain('shadow-xs');
       expect(votedBtn.props.className).toContain('ring-1');
       expect(votedBtn.props.className).toContain('ring-[#0F766E]/20');
@@ -157,9 +157,9 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
       // Second button is not voted
       const unvotedBtn = buttons[1];
       expect(unvotedBtn.props.className).toContain('border-[#B8E4DC]/80');
-      expect(unvotedBtn.props.className).toContain('dark:border-[#1E4D45]');
+      expect(unvotedBtn.props.className).toContain('dark:border-[#252B35]');
       expect(unvotedBtn.props.className).toContain('bg-white');
-      expect(unvotedBtn.props.className).toContain('dark:bg-[#0B2420]');
+      expect(unvotedBtn.props.className).toContain('dark:bg-[#13171D]');
       expect(unvotedBtn.props.className).toContain('hover:border-[#0F766E]/40');
       expect(unvotedBtn.props.className).toContain('dark:hover:border-[#2DD4BF]/40');
       expect(unvotedBtn.props.className).toContain('shadow-2xs');
@@ -179,7 +179,7 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
 
       const unvotedBar = findElements(buttons[1], el => el.props?.className?.includes('absolute inset-y-0'))[0];
       expect(unvotedBar.props.className).toContain('bg-[#EBF7F4]/70');
-      expect(unvotedBar.props.className).toContain('dark:bg-[#11322C]/50');
+      expect(unvotedBar.props.className).toContain('dark:bg-[#1B2028]/50');
     });
 
     it('renders option text with Mineral Teal deep pine contrast', () => {
@@ -192,12 +192,12 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
 
       const votedText = findElements(buttons[0], el => el.props?.children === 'Menu Kafeteria Baru')[0];
       expect(votedText.props.className).toContain('text-[#0B2420]');
-      expect(votedText.props.className).toContain('dark:text-[#F6FBF9]');
+      expect(votedText.props.className).toContain('dark:text-[#F1F5F9]');
       expect(votedText.props.className).toContain('font-semibold');
 
       const unvotedText = findElements(buttons[1], el => el.props?.children === 'Kekalkan Menu Sekarang')[0];
       expect(unvotedText.props.className).toContain('text-[#0B2420]');
-      expect(unvotedText.props.className).toContain('dark:text-[#EBF7F4]');
+      expect(unvotedText.props.className).toContain('dark:text-[#F1F5F9]');
       expect(unvotedText.props.className).toContain('font-medium');
     });
 
@@ -217,7 +217,7 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
 
       const unvotedStat = findElements(buttons[1], el => el.props?.className?.includes('font-mono'))[0];
       expect(unvotedStat.props.className).toContain('text-[#3B635C]');
-      expect(unvotedStat.props.className).toContain('dark:text-[#99CBC2]');
+      expect(unvotedStat.props.className).toContain('dark:text-[#94A0B2]');
       expect(unvotedStat.props.className).toContain('font-bold');
 
       const cleanHtml = html.replace(/<!--.*?-->/g, '');
@@ -237,7 +237,7 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
 
       expect(totalFooter).toBeDefined();
       expect(totalFooter.props.className).toContain('text-[#3B635C]');
-      expect(totalFooter.props.className).toContain('dark:text-[#99CBC2]');
+      expect(totalFooter.props.className).toContain('dark:text-[#94A0B2]');
       expect(totalFooter.props.className).toContain('text-[10px]');
       const cleanHtml = html.replace(/<!--.*?-->/g, '');
       expect(cleanHtml).toContain('JUMLAH UNDIAN: 15');

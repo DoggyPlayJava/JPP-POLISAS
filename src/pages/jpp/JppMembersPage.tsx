@@ -512,9 +512,9 @@ function AddMemberModal({
                   }}
                   className="w-full text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/50 dark:focus:border-emerald-500/30 transition-colors"
                 >
-                  <option value="" className="bg-white dark:bg-[#061714] text-slate-900 dark:text-white">{t('jpp:members_select_position_opt', '— Pilih Jawatan —')}</option>
+                  <option value="" className="bg-white dark:bg-[#090B0E] text-slate-900 dark:text-white">{t('jpp:members_select_position_opt', '— Pilih Jawatan —')}</option>
                   {Object.entries(positionLabels).map(([k, v]) => (
-                    <option key={k} value={k} className="bg-white dark:bg-[#061714] text-slate-900 dark:text-white">{v}</option>
+                    <option key={k} value={k} className="bg-white dark:bg-[#090B0E] text-slate-900 dark:text-white">{v}</option>
                   ))}
                 </select>
               </div>
@@ -527,9 +527,9 @@ function AddMemberModal({
                     onChange={e => setUnit(e.target.value)}
                     className="w-full text-xs font-semibold bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white rounded-xl px-3 py-3 outline-none custom-scrollbar focus:border-emerald-500/50 dark:focus:border-emerald-500/30 transition-colors"
                   >
-                    <option value="" className="bg-white dark:bg-[#061714] text-slate-900 dark:text-white">{t('jpp:members_select_exco_unit_opt', '— Pilih Unit Exco —')}</option>
+                    <option value="" className="bg-white dark:bg-[#090B0E] text-slate-900 dark:text-white">{t('jpp:members_select_exco_unit_opt', '— Pilih Unit Exco —')}</option>
                     {Object.keys(unitLabels).map(u => (
-                      <option key={u} value={u} className="bg-white dark:bg-[#061714] text-slate-900 dark:text-white">{unitLabels[u] ?? u}</option>
+                      <option key={u} value={u} className="bg-white dark:bg-[#090B0E] text-slate-900 dark:text-white">{unitLabels[u] ?? u}</option>
                     ))}
                   </select>
                 </div>
@@ -619,7 +619,7 @@ function ResetKohortModal({
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-sm bg-white dark:bg-[#0B2420] border border-rose-500/30 shadow-2xl shadow-rose-500/10 rounded-[2rem] p-6 relative flex flex-col text-slate-900 dark:text-white"
+        className="w-full max-w-sm bg-white dark:bg-[#13171D] border border-rose-500/30 shadow-2xl shadow-rose-500/10 rounded-[2rem] p-6 relative flex flex-col text-slate-900 dark:text-white"
       >
         <button
           onClick={onClose}

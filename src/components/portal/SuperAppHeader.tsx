@@ -171,23 +171,23 @@ export function SuperAppHeader({
           </p>
         </div>
 
-        {/* Pure White Stadium Capsule Search Button */}
+        {/* Adaptive Stadium Capsule Search Button */}
         <div>
           <button
             type="button"
             onClick={() => triggerCommandPalette(true)}
-            className="w-full h-11 sm:h-12 px-3.5 sm:px-4 rounded-full bg-white hover:bg-[#F6FBF9] text-[#0B2420] shadow-[0_8px_30px_rgba(0,0,0,0.18)] hover:shadow-[0_10px_35px_rgba(0,0,0,0.22)] border border-[#B8E4DC]/60 flex items-center justify-between gap-3 text-left transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.99] group cursor-pointer"
+            className="w-full h-11 sm:h-12 px-3.5 sm:px-4 rounded-full bg-white hover:bg-[#F6FBF9] dark:bg-[#1B2028] dark:hover:bg-[#232933] text-[#0B2420] dark:text-[#F1F5F9] shadow-[0_8px_30px_rgba(0,0,0,0.18)] hover:shadow-[0_10px_35px_rgba(0,0,0,0.22)] border border-[#B8E4DC]/60 dark:border-[#252B35] flex items-center justify-between gap-3 text-left transition-[transform,background-color,box-shadow] duration-150 ease-out active:scale-[0.99] group cursor-pointer"
             aria-label={t('portal:search_placeholder', 'Cari makanan, runner, servis, acara, merit...')}
           >
             <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-              <div className="w-7 h-7 rounded-full bg-[#0D9488]/15 text-[#0F766E] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+              <div className="w-7 h-7 rounded-full bg-[#0D9488]/15 dark:bg-[#2DD4BF]/15 text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                 <Search className="w-3.5 h-3.5" />
               </div>
-              <span className="text-xs sm:text-sm text-[#3B635C] group-hover:text-[#0B2420] font-medium truncate">
+              <span className="text-xs sm:text-sm text-[#3B635C] group-hover:text-[#0B2420] dark:text-[#94A0B2] dark:group-hover:text-[#F1F5F9] font-medium truncate">
                 {t('portal:search_placeholder', 'Cari makanan, runner, servis, acara, merit...')}
               </span>
             </div>
-            <kbd className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-mono text-[#3B635C] bg-[#F6FBF9] rounded-full border border-[#B8E4DC]/80">
+            <kbd className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-mono text-[#3B635C] dark:text-[#94A0B2] bg-[#F6FBF9] dark:bg-[#13171D] rounded-full border border-[#B8E4DC]/80 dark:border-[#252B35]">
               <span>Ctrl</span>+<span>K</span>
             </kbd>
           </button>

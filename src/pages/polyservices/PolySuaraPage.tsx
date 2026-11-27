@@ -1642,13 +1642,13 @@ export function PolySuaraPage({
       <div
         key={comment.id}
         className={cn(
-          "border-b border-[#B8E4DC]/50 dark:border-[#1E4D45] py-3.5 px-4 transition-colors",
-          isBestAnswer && "bg-[#EBF7F4]/70 dark:bg-[#11322C]/50",
+          "border-b border-[#B8E4DC]/50 dark:border-[#252B35] py-3.5 px-4 transition-colors",
+          isBestAnswer && "bg-[#EBF7F4]/70 dark:bg-[#1B2028]/50",
           depth > 1 && "border-b-0 py-1.5 px-0 bg-transparent dark:bg-transparent"
         )}
       >
         {isBestAnswer && (
-          <div className="mb-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#0F766E] text-white dark:bg-[#2DD4BF] dark:text-[#061714]">
+          <div className="mb-2 inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-[#0F766E] text-white dark:bg-[#2DD4BF] dark:text-[#090B0E]">
             <CheckCircle2 className="w-3 h-3 shrink-0" />
             <span>{t('services:suara_best_answer_badge', 'Jawapan Paling Membantu')}</span>
           </div>
@@ -1659,7 +1659,7 @@ export function PolySuaraPage({
             className={cn(
               "w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 text-sm shadow-xs select-none",
               comment.is_jpp_official
-                ? "bg-[#EBF7F4] text-[#0F766E] dark:bg-[#11322C] dark:text-[#2DD4BF]"
+                ? "bg-[#EBF7F4] text-[#0F766E] dark:bg-[#1B2028] dark:text-[#2DD4BF]"
                 : persona.bgClass
             )}
           >
@@ -1672,12 +1672,12 @@ export function PolySuaraPage({
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className={cn(
                   "text-xs sm:text-sm font-bold flex items-center gap-1",
-                  comment.is_jpp_official ? "text-[#0F766E] dark:text-[#2DD4BF]" : "text-[#0B2420] dark:text-[#F6FBF9]"
+                  comment.is_jpp_official ? "text-[#0F766E] dark:text-[#2DD4BF]" : "text-[#0B2420] dark:text-[#F1F5F9]"
                 )}>
                   {displayName}
                 </span>
                 {isOP && (
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/25 flex items-center gap-1">
+                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/25 flex items-center gap-1">
                     <UserCircle2 className="w-2.5 h-2.5" />
                     OP
                   </span>
@@ -1688,8 +1688,8 @@ export function PolySuaraPage({
                     {t('services:jpp_official_badge', 'JPP RASMI')}
                   </span>
                 )}
-                <span className="text-[10px] text-[#B8E4DC] dark:text-[#1E4D45] select-none">•</span>
-                <span className="text-[11px] text-[#3B635C] dark:text-[#99CBC2]">
+                <span className="text-[10px] text-[#B8E4DC] dark:text-[#252B35] select-none">•</span>
+                <span className="text-[11px] text-[#3B635C] dark:text-[#94A0B2]">
                   {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ms })}
                 </span>
               </div>
@@ -1697,24 +1697,24 @@ export function PolySuaraPage({
 
             {/* Comment Content (With Sensitive Content Blur) */}
             {comment.is_deleted_by_moderator ? (
-              <div className="bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/70 dark:border-[#1E4D45] p-3 rounded-xl flex items-center gap-2 text-xs text-[#3B635C] dark:text-[#99CBC2] italic select-none">
-                <ShieldAlert className="w-4 h-4 text-[#3B635C] dark:text-[#99CBC2] shrink-0" />
+              <div className="bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/70 dark:border-[#252B35] p-3 rounded-xl flex items-center gap-2 text-xs text-[#3B635C] dark:text-[#94A0B2] italic select-none">
+                <ShieldAlert className="w-4 h-4 text-[#3B635C] dark:text-[#94A0B2] shrink-0" />
                 {cleanCommContent}
               </div>
             ) : isCommentDeletedByAuthor ? (
               <div className="py-1">
-                <span className="text-[#3B635C] dark:text-[#99CBC2] italic text-xs flex items-center gap-1">
+                <span className="text-[#3B635C] dark:text-[#94A0B2] italic text-xs flex items-center gap-1">
                   <Trash2 className="w-3.5 h-3.5 opacity-70" /> {t('services:author_deleted_comment', '{{author}} telah memadamkan ruangan ini', { author: displayName }).replace('{{author}}', displayName)}
                 </span>
               </div>
             ) : comment.is_sensitive ? (
               <SensitiveCommentContent content={cleanCommContent} />
             ) : (
-              <p className="leading-relaxed text-sm text-[#0B2420] dark:text-[#F6FBF9] break-words">{cleanCommContent}</p>
+              <p className="leading-relaxed text-sm text-[#0B2420] dark:text-[#F1F5F9] break-words">{cleanCommContent}</p>
             )}
 
             {comment.image_url && !comment.is_deleted_by_moderator && !isCommentDeletedByAuthor && (
-              <div className="mt-2 rounded-xl overflow-hidden border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-[#EBF7F4] dark:bg-[#081A17] max-w-xs">
+              <div className="mt-2 rounded-xl overflow-hidden border border-[#B8E4DC]/80 dark:border-[#252B35] bg-[#EBF7F4] dark:bg-[#0E1116] max-w-xs">
                 <img
                   src={comment.image_url}
                   alt={t('services:attachment_proof', 'Bukti Lampiran')}
@@ -1735,11 +1735,11 @@ export function PolySuaraPage({
 
             {/* Threads-Style Micro-Actions */}
             {isCommentDeletedByAuthor ? (
-              <div className="flex items-center gap-3 mt-1.5 pt-0.5 text-xs text-[#3B635C]/50 dark:text-[#99CBC2]/40">
+              <div className="flex items-center gap-3 mt-1.5 pt-0.5 text-xs text-[#3B635C]/50 dark:text-[#94A0B2]/40">
                 <button
                   type="button"
                   disabled
-                  className="text-[11px] font-semibold text-[#3B635C]/40 dark:text-[#99CBC2]/40 cursor-not-allowed flex items-center gap-1 select-none"
+                  className="text-[11px] font-semibold text-[#3B635C]/40 dark:text-[#94A0B2]/40 cursor-not-allowed flex items-center gap-1 select-none"
                   aria-label={t('services:reply_comment', 'Balas komen')}
                 >
                   <MessageCircle className="w-3.5 h-3.5" />
@@ -1748,7 +1748,7 @@ export function PolySuaraPage({
                 <button
                   type="button"
                   disabled
-                  className="flex items-center gap-1 text-[11px] font-medium text-[#3B635C]/40 dark:text-[#99CBC2]/40 cursor-not-allowed select-none"
+                  className="flex items-center gap-1 text-[11px] font-medium text-[#3B635C]/40 dark:text-[#94A0B2]/40 cursor-not-allowed select-none"
                   aria-label={t('services:like_comment', 'Suka ulasan')}
                 >
                   <Heart className="w-3.5 h-3.5" />
@@ -1765,7 +1765,7 @@ export function PolySuaraPage({
                       setReplyingToCommentId(comment.id);
                       setReplyCommentText(`@${displayName} `);
                     }}
-                    className="text-[11px] font-semibold text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0F766E] dark:hover:text-[#2DD4BF] px-2 py-0.5 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] transition-colors flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] font-semibold text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0F766E] dark:hover:text-[#2DD4BF] px-2 py-0.5 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors flex items-center gap-1 cursor-pointer"
                     aria-label={t('services:reply_comment', 'Balas komen')}
                   >
                     <MessageCircle className="w-3.5 h-3.5" />
@@ -1795,7 +1795,7 @@ export function PolySuaraPage({
                       "flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium transition-colors cursor-pointer",
                       isCommUpvoted
                         ? "text-[#0F766E] dark:text-[#2DD4BF] font-semibold"
-                        : "text-[#3B635C] hover:text-[#0F766E] dark:text-[#99CBC2] dark:hover:text-[#2DD4BF]"
+                        : "text-[#3B635C] hover:text-[#0F766E] dark:text-[#94A0B2] dark:hover:text-[#2DD4BF]"
                     )}
                     aria-label={t('services:like_comment', 'Suka ulasan')}
                   >
@@ -1807,7 +1807,7 @@ export function PolySuaraPage({
                     <button
                       type="button"
                       onClick={() => setCommentMenuOpenId(commentMenuOpenId === comment.id ? null : comment.id)}
-                      className="text-[#3B635C] hover:text-[#0B2420] dark:text-[#99CBC2] dark:hover:text-[#F6FBF9] p-1 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] transition-colors font-bold tracking-widest text-xs flex items-center justify-center w-7 h-7 leading-none cursor-pointer"
+                      className="text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-[#F1F5F9] p-1 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors font-bold tracking-widest text-xs flex items-center justify-center w-7 h-7 leading-none cursor-pointer"
                       title={t('services:comment_options', 'Pilihan ulasan')}
                       aria-label={t('services:comment_options', 'Pilihan ulasan')}
                     >
@@ -1820,7 +1820,7 @@ export function PolySuaraPage({
                           className="fixed inset-0 z-40"
                           onClick={() => setCommentMenuOpenId(null)}
                         />
-                        <div className="absolute right-0 bottom-full mb-1 z-50 w-44 bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-xl shadow-lg p-1 text-xs animate-in fade-in zoom-in-95 duration-150">
+                        <div className="absolute right-0 bottom-full mb-1 z-50 w-44 bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-xl shadow-lg p-1 text-xs animate-in fade-in zoom-in-95 duration-150">
                           {canDeleteComment && (
                             <button
                               type="button"
@@ -1877,13 +1877,13 @@ export function PolySuaraPage({
 
             {/* Reply Input Form */}
             {replyingToCommentId === comment.id && !isCommentDeletedByAuthor && (
-              <form onSubmit={(e) => handleAddComment(e, comment.id)} className="mt-2.5 p-2 bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-2xl flex items-center gap-2 animate-in fade-in duration-200">
+              <form onSubmit={(e) => handleAddComment(e, comment.id)} className="mt-2.5 p-2 bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl flex items-center gap-2 animate-in fade-in duration-200">
                 <input
                   type="text"
                   placeholder={t('services:reply_to_user', 'Balas kepada {{name}}...', { name: displayName })}
                   value={replyCommentText}
                   onChange={(e) => setReplyCommentText(e.target.value)}
-                  className="flex-1 bg-transparent px-3 py-1 text-xs text-[#0B2420] dark:text-[#F6FBF9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#99CBC2]/60 focus:outline-none"
+                  className="flex-1 bg-transparent px-3 py-1 text-xs text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/60 focus:outline-none"
                   maxLength={300}
                   autoFocus
                   required
@@ -1891,7 +1891,7 @@ export function PolySuaraPage({
                 <button
                   type="submit"
                   disabled={!replyCommentText.trim() || submittingComment}
-                  className="bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] disabled:bg-[#EBF7F4] dark:disabled:bg-[#11322C] text-white dark:text-[#061714] disabled:text-[#3B635C]/50 dark:disabled:text-[#99CBC2]/40 px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors shrink-0 cursor-pointer"
+                  className="bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] disabled:bg-[#EBF7F4] dark:disabled:bg-[#1B2028] text-white dark:text-[#090B0E] disabled:text-[#3B635C]/50 dark:disabled:text-[#94A0B2]/40 px-3 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors shrink-0 cursor-pointer"
                 >
                   {submittingComment ? <Loader2 className="w-3 h-3 animate-spin" /> : <Send className="w-3 h-3" />}
                   {t('services:reply', 'Balas')}
@@ -1902,7 +1902,7 @@ export function PolySuaraPage({
                     setReplyingToCommentId(null);
                     setReplyCommentText('');
                   }}
-                  className="text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-[#F6FBF9] px-2 py-1 text-xs font-bold transition-colors shrink-0 cursor-pointer"
+                  className="text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9] px-2 py-1 text-xs font-bold transition-colors shrink-0 cursor-pointer"
                 >
                   {t('common:cancel', 'Batal')}
                 </button>
@@ -1911,7 +1911,7 @@ export function PolySuaraPage({
 
             {/* Hierarchical 4-Depth Nested Replies */}
             {childReplies.length > 0 && (
-              <div className="border-l-2 border-[#B8E4DC] dark:border-[#1E4D45] pl-3 ml-2 mt-2 space-y-2.5">
+              <div className="border-l-2 border-[#B8E4DC] dark:border-[#252B35] pl-3 ml-2 mt-2 space-y-2.5">
                 {childReplies.map(reply => renderCommentThread(reply, Math.min(depth + 1, 4)))}
               </div>
             )}
@@ -2049,21 +2049,21 @@ export function PolySuaraPage({
   }, [comments, commentSortBy, isActiveQna]);
 
   return (
-    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] pb-36 md:pb-32 relative overflow-x-clip transition-colors duration-200">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] pb-36 md:pb-32 relative overflow-x-clip transition-colors duration-200">
       {/* Mineral Teal Opaque Sticky Header */}
-      <header className="sticky top-0 z-50 bg-[#F6FBF9] dark:bg-[#061714] border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] pt-[var(--sat,env(safe-area-inset-top,0px))]">
+      <header className="sticky top-0 z-50 bg-[#F6FBF9] dark:bg-[#090B0E] border-b border-[#B8E4DC]/80 dark:border-[#252B35] pt-[var(--sat,env(safe-area-inset-top,0px))]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 sm:h-16 flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
             <button
               type="button"
               onClick={() => navigate('/portal')}
               aria-label={t('common:back', 'Kembali')}
-              className="w-10 h-10 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] flex items-center justify-center transition-colors text-[#0B2420] dark:text-[#F6FBF9] shrink-0 cursor-pointer"
+              className="w-10 h-10 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] flex items-center justify-center transition-colors text-[#0B2420] dark:text-[#F1F5F9] shrink-0 cursor-pointer"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <div className="flex items-center gap-2 min-w-0">
-              <div className="w-8 h-8 rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#061714] flex items-center justify-center shrink-0">
+              <div className="w-8 h-8 rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] flex items-center justify-center shrink-0">
                 <Ghost className="w-4 h-4" />
               </div>
               <span className="font-black text-base tracking-tight truncate">
@@ -2110,14 +2110,14 @@ export function PolySuaraPage({
                 "w-10 h-10 rounded-full flex items-center justify-center transition-colors cursor-pointer",
                 notifToggleLoading && "opacity-50 cursor-wait",
                 polySuaraNotif
-                  ? "bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/25 dark:border-[#2DD4BF]/30"
-                  : "bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#3B635C] dark:text-[#99CBC2]"
+                  ? "bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/25 dark:border-[#2DD4BF]/30"
+                  : "bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] text-[#3B635C] dark:text-[#94A0B2]"
               )}
               title={polySuaraNotif ? t('services:notifications_active', 'Notifikasi Aktif') : t('services:enable_notifications', 'Aktifkan Notifikasi')}
             >
               {polySuaraNotif ? <BellRing className="w-4 h-4" /> : <Bell className="w-4 h-4" />}
             </button>
-            <span className="text-xs font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#11322C] border border-[#B8E4DC] dark:border-[#1E4D45] px-3 py-1.5 rounded-full flex items-center gap-1.5">
+            <span className="text-xs font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] px-3 py-1.5 rounded-full flex items-center gap-1.5">
               <Shield className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Anon Mode</span>
             </span>
@@ -2153,26 +2153,26 @@ export function PolySuaraPage({
               <div className="text-xs font-semibold text-[#0F766E] dark:text-[#2DD4BF] uppercase tracking-wider mb-1">
                 {t('services:moderated_community', 'Komuniti Mahasiswa Politeknik Terkawal')}
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-[#0B2420] dark:text-[#F6FBF9] flex items-center gap-2 tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-black text-[#0B2420] dark:text-[#F1F5F9] flex items-center gap-2 tracking-tight">
                 <span>
                   Poly<span className="text-[#0F766E] dark:text-[#2DD4BF]">Suara</span>
                 </span>
                 <Ghost className="w-6 h-6 sm:w-7 sm:h-7 text-[#0F766E] dark:text-[#2DD4BF]" />
               </h1>
-              <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#99CBC2] mt-1 font-medium">
+              <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] mt-1 font-medium">
                 {t('services:polysuara_title', 'PolySuara: Suara Siswa & Forum Wacana')} • {t('services:safe_space_subtitle', 'Ruang selamat untuk meluahkan perasaan. 100% Rahsia.')}
               </p>
             </div>
 
             {!moduleEnabled ? (
-              <div className="bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-[2rem] p-14 text-center flex flex-col items-center mt-6 mb-16">
-                <div className="w-16 h-16 bg-[#EBF7F4] dark:bg-[#11322C] rounded-full flex items-center justify-center mb-5 border border-[#B8E4DC] dark:border-[#1E4D45]">
+              <div className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-[2rem] p-14 text-center flex flex-col items-center mt-6 mb-16">
+                <div className="w-16 h-16 bg-[#EBF7F4] dark:bg-[#1B2028] rounded-full flex items-center justify-center mb-5 border border-[#B8E4DC] dark:border-[#252B35]">
                   <Shield className="w-8 h-8 text-[#0F766E] dark:text-[#2DD4BF]" />
                 </div>
-                <h3 className="text-xl font-black text-[#0B2420] dark:text-[#F6FBF9] mb-2">
+                <h3 className="text-xl font-black text-[#0B2420] dark:text-[#F1F5F9] mb-2">
                   {t('services:polysuara_module_closed_title', 'Modul Ditutup Sementara')}
                 </h3>
-                <p className="text-sm text-[#3B635C] dark:text-[#99CBC2] max-w-md">
+                <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] max-w-md">
                   {t('services:polysuara_maintenance_notice', 'Modul PolySuara sedang ditutup sementara oleh pihak Exco Kebajikan. Sila kembali semula nanti.')}
                 </p>
               </div>
@@ -2181,13 +2181,13 @@ export function PolySuaraPage({
                 {/* Search Bar for < 1024px (lg+) where RightRail handles desktop search */}
                 <div className="lg:hidden mb-3">
                   <div className="relative">
-                    <Search className="w-4 h-4 text-[#3B635C] dark:text-[#99CBC2] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <Search className="w-4 h-4 text-[#3B635C] dark:text-[#94A0B2] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <input
                       type="search"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder={t('services:suara_search_placeholder', 'Cari luahan, lokasi atau #hashtag...')}
-                      className="w-full h-10 pl-10 pr-4 rounded-full bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] text-xs text-[#0B2420] dark:text-[#F6FBF9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#99CBC2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/35"
+                      className="w-full h-10 pl-10 pr-4 rounded-full bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] text-xs text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/35"
                     />
                   </div>
                 </div>
@@ -2201,21 +2201,21 @@ export function PolySuaraPage({
                       setComposeModalOpen(true);
                     }
                   }}
-                  className="bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] hover:border-[#0F766E]/50 dark:hover:border-[#2DD4BF]/50 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 mb-4 shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-colors"
+                  className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] hover:border-[#0F766E]/50 dark:hover:border-[#2DD4BF]/50 rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 mb-4 shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-colors"
                   role="button"
                   tabIndex={0}
                   aria-label={t('services:write_new_confession_aria', 'Tulis luahan kampus baharu')}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-9 h-9 rounded-[12px] bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="w-9 h-9 rounded-[12px] bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                       <MessageSquare className="w-4 h-4" />
                     </div>
-                    <span className="text-xs sm:text-sm text-[#3B635C] dark:text-[#99CBC2] group-hover:text-[#0B2420] dark:group-hover:text-[#F6FBF9] font-medium truncate">
+                    <span className="text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0B2420] dark:group-hover:text-[#F1F5F9] font-medium truncate">
                       {t('services:suara_quick_compose_placeholder', 'Ada luahan atau rahsia kampus? Kongsi secara rahsia...')}
                     </span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs font-bold text-white dark:text-[#061714] bg-[#0F766E] dark:bg-[#2DD4BF] px-3.5 py-1.5 rounded-full inline-flex items-center gap-1 group-hover:opacity-90 transition-opacity">
+                    <span className="text-xs font-bold text-white dark:text-[#090B0E] bg-[#0F766E] dark:bg-[#2DD4BF] px-3.5 py-1.5 rounded-full inline-flex items-center gap-1 group-hover:opacity-90 transition-opacity">
                       {t('suara_post_confession_btn', 'Luahkan')}
                     </span>
                   </div>
@@ -2231,7 +2231,7 @@ export function PolySuaraPage({
                         fetchConfessions(0, true);
                         if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
                       }}
-                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#061714] text-xs font-bold shadow-md cursor-pointer"
+                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] text-xs font-bold shadow-md cursor-pointer"
                     >
                       <ArrowUp className="w-3.5 h-3.5" />
                       <span>{t('services:suara_new_whispers_pill', 'Muat semula suapan baharu')}</span>
@@ -2240,7 +2240,7 @@ export function PolySuaraPage({
                 )}
 
                 {/* X / Threads Clean 3-Tab Underline Navigation + Saluran & Tapis Drawer Trigger */}
-                <div className="flex items-center justify-between gap-1.5 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] mb-4">
+                <div className="flex items-center justify-between gap-1.5 border-b border-[#B8E4DC]/80 dark:border-[#252B35] mb-4">
                   <div className="flex items-center gap-0.5 sm:gap-2 overflow-x-auto scrollbar-none min-w-0">
                     {([
                       { id: 'LATEST', label: t('suara_sort_newest', 'Terkini'), icon: Clock },
@@ -2258,7 +2258,7 @@ export function PolySuaraPage({
                             'relative py-3 px-2 sm:px-3.5 text-[11px] sm:text-sm font-bold whitespace-nowrap transition-colors flex items-center gap-1 sm:gap-1.5 cursor-pointer shrink-0',
                             isActive
                               ? 'text-[#0F766E] dark:text-[#2DD4BF]'
-                              : 'text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-[#F6FBF9]'
+                              : 'text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]'
                           )}
                         >
                           <TabIcon className="w-3.5 h-3.5 shrink-0" />
@@ -2274,7 +2274,7 @@ export function PolySuaraPage({
                   <button
                     type="button"
                     onClick={() => setMobileDrawerOpen(true)}
-                    className="lg:hidden inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 mb-1 rounded-full text-xs font-semibold bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9] shrink-0 cursor-pointer hover:border-[#0F766E]/50"
+                    className="lg:hidden inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 mb-1 rounded-full text-xs font-semibold bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] shrink-0 cursor-pointer hover:border-[#0F766E]/50"
                   >
                     <SlidersHorizontal className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
                     <span className="hidden min-[420px]:inline">{t('services:suara_channels_filters_btn', 'Saluran & Tapis')}</span>
@@ -2292,7 +2292,7 @@ export function PolySuaraPage({
                       <button
                         type="button"
                         onClick={() => setActiveCategory('SEMUA')}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#0F766E] text-white dark:bg-[#2DD4BF] dark:text-[#061714] cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#0F766E] text-white dark:bg-[#2DD4BF] dark:text-[#090B0E] cursor-pointer"
                       >
                         <span>{categoryOptions.find((c) => c.key === activeCategory)?.label || activeCategory}</span>
                         <X className="w-3 h-3" />
@@ -2302,7 +2302,7 @@ export function PolySuaraPage({
                       <button
                         type="button"
                         onClick={() => setActiveFormat('ALL')}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#1E4D45] cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#252B35] cursor-pointer"
                       >
                         <span>{activeFormat}</span>
                         <X className="w-3 h-3" />
@@ -2312,7 +2312,7 @@ export function PolySuaraPage({
                       <button
                         type="button"
                         onClick={() => setFocusMode(false)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#1E4D45] cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#252B35] cursor-pointer"
                       >
                         <Focus className="w-3 h-3" />
                         <span>{t('services:suara_focus_mode_title', 'Mod Fokus')}</span>
@@ -2323,7 +2323,7 @@ export function PolySuaraPage({
                       <button
                         type="button"
                         onClick={() => setActiveTag(null)}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#0F766E] text-white dark:bg-[#2DD4BF] dark:text-[#061714] cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#0F766E] text-white dark:bg-[#2DD4BF] dark:text-[#090B0E] cursor-pointer"
                       >
                         <span>{activeTag.startsWith('#') ? activeTag : `#${activeTag}`}</span>
                         <X className="w-3 h-3" />
@@ -2333,7 +2333,7 @@ export function PolySuaraPage({
                       <button
                         type="button"
                         onClick={() => setSortBy('LATEST')}
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#1E4D45] cursor-pointer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#252B35] cursor-pointer"
                       >
                         <span>
                           {sortBy === 'MINE'
@@ -2348,16 +2348,16 @@ export function PolySuaraPage({
 
                 {/* Safe Space Support Banner for KAUNSELING */}
                 {activeCategory === 'KAUNSELING' && (
-                  <div className="mb-4 rounded-3xl bg-[#EBF7F4] dark:bg-[#0B2420] border border-[#0F766E]/30 dark:border-[#2DD4BF]/30 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="mb-4 rounded-3xl bg-[#EBF7F4] dark:bg-[#13171D] border border-[#0F766E]/30 dark:border-[#2DD4BF]/30 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex items-start gap-3">
-                      <div className="w-9 h-9 rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#061714] flex items-center justify-center shrink-0">
+                      <div className="w-9 h-9 rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] flex items-center justify-center shrink-0">
                         <HeartHandshake className="w-5 h-5" />
                       </div>
                       <div className="space-y-0.5">
-                        <h3 className="text-xs sm:text-sm font-bold text-[#0B2420] dark:text-[#F6FBF9]">
+                        <h3 className="text-xs sm:text-sm font-bold text-[#0B2420] dark:text-[#F1F5F9]">
                           {t('services:suara_counseling_banner_title', 'Ruang Selamat & Sokongan Kaunseling POLISAS')}
                         </h3>
-                        <p className="text-xs text-[#3B635C] dark:text-[#99CBC2]">
+                        <p className="text-xs text-[#3B635C] dark:text-[#94A0B2]">
                           {t('services:suara_counseling_banner_desc', 'Jika anda sedang melalui tekanan emosi atau perlukan bantuan sulit segera, pasukan e-Kebajikan & kaunseling bersedia mendengar.')}
                         </p>
                       </div>
@@ -2365,7 +2365,7 @@ export function PolySuaraPage({
                     <button
                       type="button"
                       onClick={() => navigate('/kebajikan/buat-aduan')}
-                      className="px-3.5 py-2 rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#061714] text-xs font-bold shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
+                      className="px-3.5 py-2 rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] text-xs font-bold shrink-0 cursor-pointer hover:opacity-90 transition-opacity"
                     >
                       {t('services:suara_counseling_banner_cta', 'Hubungi Bantuan Sulit')}
                     </button>
@@ -2383,7 +2383,7 @@ export function PolySuaraPage({
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
                           onClick={() => setComposeModalOpen(false)}
-                          className="fixed inset-0 bg-[#061714]/70 z-[99990]"
+                          className="fixed inset-0 bg-[#090B0E]/75 z-[99990]"
                         />
                         <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
                           <motion.div
@@ -2392,19 +2392,19 @@ export function PolySuaraPage({
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 24, scale: 0.96 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                            className="pointer-events-auto relative w-full sm:max-w-lg bg-white dark:bg-[#0B2420] border-t sm:border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-t-[2.5rem] sm:rounded-3xl p-5 sm:p-6 shadow-2xl max-h-[90dvh] overflow-y-auto pb-28 sm:pb-6 text-[#0B2420] dark:text-[#F6FBF9]"
+                            className="pointer-events-auto relative w-full sm:max-w-lg bg-white dark:bg-[#13171D] border-t sm:border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-t-[2.5rem] sm:rounded-3xl p-5 sm:p-6 shadow-2xl max-h-[90dvh] overflow-y-auto pb-28 sm:pb-6 text-[#0B2420] dark:text-[#F1F5F9]"
                           >
                             {/* Modal Header */}
-                            <div className="flex items-center justify-between pb-4 border-b border-[#B8E4DC]/60 dark:border-[#1E4D45] mb-4">
+                            <div className="flex items-center justify-between pb-4 border-b border-[#B8E4DC]/60 dark:border-[#252B35] mb-4">
                               <div className="flex items-center gap-2.5">
-                                <div className="w-8 h-8 rounded-full bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center">
+                                <div className="w-8 h-8 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center">
                                   <Shield className="w-4 h-4" />
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <h3 className="font-bold text-base">
                                     {t('services:write_secret_whisper', 'Tulis Luahan Rahsia')}
                                   </h3>
-                                  <span className="text-[11px] font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#11322C] border border-[#B8E4DC] dark:border-[#1E4D45] px-2 py-0.5 rounded-full">
+                                  <span className="text-[11px] font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] px-2 py-0.5 rounded-full">
                                     {t('services:hundred_percent_secret', '100% Rahsia')}
                                   </span>
                                 </div>
@@ -2412,7 +2412,7 @@ export function PolySuaraPage({
                               <button
                                 type="button"
                                 onClick={() => setComposeModalOpen(false)}
-                                className="p-1.5 rounded-full text-[#3B635C] dark:text-[#99CBC2] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] transition-colors cursor-pointer"
+                                className="p-1.5 rounded-full text-[#3B635C] dark:text-[#94A0B2] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors cursor-pointer"
                                 aria-label={t('common:close', 'Tutup')}
                               >
                                 <X className="w-5 h-5" />
@@ -2421,7 +2421,7 @@ export function PolySuaraPage({
 
                             {/* Intent Format Chips */}
                             <div className="mb-3 space-y-1.5">
-                              <span className="text-[11px] font-semibold text-[#3B635C] dark:text-[#99CBC2] block">
+                              <span className="text-[11px] font-semibold text-[#3B635C] dark:text-[#94A0B2] block">
                                 {t('services:suara_intent_label', 'Format Kiriman')}
                               </span>
                               <div className="flex items-center gap-1.5 flex-wrap">
@@ -2438,8 +2438,8 @@ export function PolySuaraPage({
                                     className={cn(
                                       'px-3 py-1 rounded-full text-xs font-semibold border transition-colors cursor-pointer',
                                       composeIntent === item.id
-                                        ? 'bg-[#0F766E] border-[#0F766E] text-white dark:bg-[#2DD4BF] dark:border-[#2DD4BF] dark:text-[#061714]'
-                                        : 'bg-[#F6FBF9] dark:bg-[#081A17] border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#3B635C] dark:text-[#99CBC2]'
+                                        ? 'bg-[#0F766E] border-[#0F766E] text-white dark:bg-[#2DD4BF] dark:border-[#2DD4BF] dark:text-[#090B0E]'
+                                        : 'bg-[#F6FBF9] dark:bg-[#0E1116] border-[#B8E4DC]/80 dark:border-[#252B35] text-[#3B635C] dark:text-[#94A0B2]'
                                     )}
                                   >
                                     {item.label}
@@ -2449,7 +2449,7 @@ export function PolySuaraPage({
                             </div>
 
                             {draftRestoredNotice && newContent.trim() && (
-                              <div className="mb-3 px-3 py-1.5 rounded-xl bg-[#EBF7F4] dark:bg-[#11322C] border border-[#B8E4DC] dark:border-[#1E4D45] flex items-center justify-between text-xs text-[#0F766E] dark:text-[#2DD4BF]">
+                              <div className="mb-3 px-3 py-1.5 rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] flex items-center justify-between text-xs text-[#0F766E] dark:text-[#2DD4BF]">
                                 <span>{t('services:suara_draft_restored', 'Draf terakhir anda dipulihkan')}</span>
                                 <button
                                   type="button"
@@ -2474,7 +2474,7 @@ export function PolySuaraPage({
                                   setEmpathyConfirmed(false);
                                 }}
                                 placeholder={t('services:whisper_input_placeholder', 'Apa yang bermain di fikiran anda?')}
-                                className="w-full bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-2xl p-4 text-[#0B2420] dark:text-[#F6FBF9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#99CBC2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40 resize-none transition-colors text-sm leading-relaxed"
+                                className="w-full bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-4 text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40 resize-none transition-colors text-sm leading-relaxed"
                                 rows={4}
                                 maxLength={500}
                               />
@@ -2498,7 +2498,7 @@ export function PolySuaraPage({
 
                               {imagePreview && (
                                 <div className="mt-3 space-y-2">
-                                  <div className="relative w-full rounded-2xl overflow-hidden border border-[#B8E4DC] dark:border-[#1E4D45] bg-[#F6FBF9] dark:bg-[#081A17] group">
+                                  <div className="relative w-full rounded-2xl overflow-hidden border border-[#B8E4DC] dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#0E1116] group">
                                     <img
                                       src={imagePreview}
                                       alt="Preview"
@@ -2512,12 +2512,12 @@ export function PolySuaraPage({
                                       <XCircle className="w-4 h-4" />
                                     </button>
                                   </div>
-                                  <label className="inline-flex items-center gap-2 text-xs text-[#3B635C] dark:text-[#99CBC2] cursor-pointer">
+                                  <label className="inline-flex items-center gap-2 text-xs text-[#3B635C] dark:text-[#94A0B2] cursor-pointer">
                                     <input
                                       type="checkbox"
                                       checked={isSpoilerImage}
                                       onChange={(e) => setIsSpoilerImage(e.target.checked)}
-                                      className="rounded border-[#B8E4DC] dark:border-[#1E4D45] text-[#0F766E]"
+                                      className="rounded border-[#B8E4DC] dark:border-[#252B35] text-[#0F766E]"
                                     />
                                     <span>{t('services:suara_spoiler_image_toggle', 'Kaburkan gambar (Spoiler)')}</span>
                                   </label>
@@ -2525,13 +2525,13 @@ export function PolySuaraPage({
                               )}
 
                               {composeIntent === 'DEBATE' ? (
-                                <div className="mt-4 p-3.5 bg-[#EBF7F4] dark:bg-[#081A17] rounded-2xl border border-[#B8E4DC] dark:border-[#1E4D45] text-xs text-[#0F766E] dark:text-[#2DD4BF] font-medium">
+                                <div className="mt-4 p-3.5 bg-[#EBF7F4] dark:bg-[#0E1116] rounded-2xl border border-[#B8E4DC] dark:border-[#252B35] text-xs text-[#0F766E] dark:text-[#2DD4BF] font-medium">
                                   {t('services:suara_debate_note', 'Undian tarik-tali Setuju lwn Tidak akan dilampirkan secara automatik.')}
                                 </div>
                               ) : showPoll && (
-                                <div className="mt-4 p-4 bg-[#F6FBF9] dark:bg-[#081A17] rounded-2xl border border-[#B8E4DC]/80 dark:border-[#1E4D45]">
+                                <div className="mt-4 p-4 bg-[#F6FBF9] dark:bg-[#0E1116] rounded-2xl border border-[#B8E4DC]/80 dark:border-[#252B35]">
                                   <div className="flex justify-between items-center mb-3">
-                                    <span className="text-xs font-bold text-[#3B635C] dark:text-[#99CBC2] uppercase">
+                                    <span className="text-xs font-bold text-[#3B635C] dark:text-[#94A0B2] uppercase">
                                       {t('services:poll_question', 'Undian Pendapat Mahasiswa')}
                                     </span>
                                     <button
@@ -2541,7 +2541,7 @@ export function PolySuaraPage({
                                         "text-[11px] font-bold px-2.5 py-1 rounded-md transition-colors cursor-pointer",
                                         isMultipleChoice
                                           ? "bg-[#0F766E]/15 text-[#0F766E] dark:bg-[#2DD4BF]/20 dark:text-[#2DD4BF]"
-                                          : "bg-[#EBF7F4] dark:bg-[#11322C] text-[#3B635C] dark:text-[#99CBC2]"
+                                          : "bg-[#EBF7F4] dark:bg-[#1B2028] text-[#3B635C] dark:text-[#94A0B2]"
                                       )}
                                     >
                                       {isMultipleChoice ? t('services:poll_multiple_choice', 'Pilihan Pelbagai') : t('services:poll_single_choice', 'Pilihan Tunggal')}
@@ -2557,7 +2557,7 @@ export function PolySuaraPage({
                                         next[idx] = e.target.value;
                                         setPollOptions(next);
                                       }}
-                                      className="w-full bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-xl px-3 py-2 text-sm text-[#0B2420] dark:text-[#F6FBF9] mb-2 focus:outline-none focus:ring-1 focus:ring-[#0F766E]/40"
+                                      className="w-full bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-xl px-3 py-2 text-sm text-[#0B2420] dark:text-[#F1F5F9] mb-2 focus:outline-none focus:ring-1 focus:ring-[#0F766E]/40"
                                     />
                                   ))}
                                   {pollOptions.length < MAX_POLL_OPTIONS && (
@@ -2577,14 +2577,14 @@ export function PolySuaraPage({
                                   <select
                                     value={postCategory}
                                     onChange={(e) => setPostCategory(e.target.value)}
-                                    className="bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9] text-xs rounded-xl px-3 py-2 outline-none focus:border-[#0F766E] font-medium"
+                                    className="bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] text-xs rounded-xl px-3 py-2 outline-none focus:border-[#0F766E] font-medium"
                                   >
                                     {CATEGORIES.map(cat => (
                                       <option key={cat} value={cat}>{cat}</option>
                                     ))}
                                   </select>
 
-                                  <label className="cursor-pointer bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] hover:border-[#0F766E]/40 text-[#0B2420] dark:text-[#F6FBF9] text-xs rounded-xl px-3 py-2 outline-none transition-colors flex items-center gap-2 font-medium">
+                                  <label className="cursor-pointer bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] hover:border-[#0F766E]/40 text-[#0B2420] dark:text-[#F1F5F9] text-xs rounded-xl px-3 py-2 outline-none transition-colors flex items-center gap-2 font-medium">
                                     <ImageIcon className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
                                     <span>{t('services:whisper_image', 'Imej')}</span>
                                     <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
@@ -2598,7 +2598,7 @@ export function PolySuaraPage({
                                         "px-3 py-2 rounded-xl text-xs font-medium transition-colors flex items-center gap-1.5 cursor-pointer border",
                                         showPoll
                                           ? "bg-[#0F766E]/15 text-[#0F766E] dark:bg-[#2DD4BF]/20 dark:text-[#2DD4BF] border-[#0F766E]/30"
-                                          : "bg-[#F6FBF9] dark:bg-[#081A17] border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9]"
+                                          : "bg-[#F6FBF9] dark:bg-[#0E1116] border-[#B8E4DC]/80 dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9]"
                                       )}
                                     >
                                       <BarChart className="w-4 h-4" />
@@ -2606,7 +2606,7 @@ export function PolySuaraPage({
                                     </button>
                                   )}
 
-                                  <span className="text-xs text-[#3B635C] dark:text-[#99CBC2] font-medium ml-1 font-mono tabular-nums">
+                                  <span className="text-xs text-[#3B635C] dark:text-[#94A0B2] font-medium ml-1 font-mono tabular-nums">
                                     {t('services:chars_remaining', '{{count}} aksara baki', { count: 500 - newContent.length })}
                                   </span>
                                 </div>
@@ -2614,7 +2614,7 @@ export function PolySuaraPage({
                                 <button
                                   type="submit"
                                   disabled={!newContent.trim() || isSubmitting}
-                                  className="bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] disabled:bg-[#EBF7F4] dark:disabled:bg-[#11322C] disabled:text-[#3B635C]/50 dark:disabled:text-[#99CBC2]/40 text-white dark:text-[#061714] px-5 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-xs shrink-0 cursor-pointer"
+                                  className="bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] disabled:bg-[#EBF7F4] dark:disabled:bg-[#1B2028] disabled:text-[#3B635C]/50 dark:disabled:text-[#94A0B2]/40 text-white dark:text-[#090B0E] px-5 py-2.5 rounded-xl font-bold text-sm transition-colors flex items-center justify-center gap-2 shadow-xs shrink-0 cursor-pointer"
                                 >
                                   {isSubmitting ? (
                                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -2639,7 +2639,7 @@ export function PolySuaraPage({
 
                 {trendingTags.length > 0 && (
                   <div className="lg:hidden flex gap-2 overflow-x-auto pb-4 scrollbar-none mb-2">
-                    <span className="text-xs font-bold text-[#3B635C] dark:text-[#99CBC2] py-1.5 flex items-center gap-1 shrink-0">
+                    <span className="text-xs font-bold text-[#3B635C] dark:text-[#94A0B2] py-1.5 flex items-center gap-1 shrink-0">
                       <Flame className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" /> Trending:
                     </span>
                     {trendingTags.map((tag, i) => (
@@ -2650,8 +2650,8 @@ export function PolySuaraPage({
                         className={cn(
                           'px-3 py-1.5 rounded-full border text-xs font-semibold whitespace-nowrap transition-colors cursor-pointer',
                           activeTag === tag.tag
-                            ? 'bg-[#0F766E] border-[#0F766E] text-white dark:bg-[#2DD4BF] dark:border-[#2DD4BF] dark:text-[#061714]'
-                            : 'bg-white dark:bg-[#0B2420] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#3B635C] dark:text-[#99CBC2]'
+                            ? 'bg-[#0F766E] border-[#0F766E] text-white dark:bg-[#2DD4BF] dark:border-[#2DD4BF] dark:text-[#090B0E]'
+                            : 'bg-white dark:bg-[#13171D] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] border-[#B8E4DC]/80 dark:border-[#252B35] text-[#3B635C] dark:text-[#94A0B2]'
                         )}
                       >
                         {tag.tag} ({tag.count})
@@ -2661,7 +2661,7 @@ export function PolySuaraPage({
                 )}
 
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-sm font-bold text-[#0B2420] dark:text-[#F6FBF9] uppercase tracking-wider flex items-center gap-2">
+                  <h2 className="text-sm font-bold text-[#0B2420] dark:text-[#F1F5F9] uppercase tracking-wider flex items-center gap-2">
                     <MessageSquare className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
                     {t('services:forum_discussions', 'Topik Perbincangan Pelajar')}
                   </h2>
@@ -2670,34 +2670,34 @@ export function PolySuaraPage({
                 <div className="space-y-4">
                   {loading ? (
                     <div className="space-y-4 py-2">
-                      <div className="flex items-center gap-2 text-[#3B635C] dark:text-[#99CBC2] px-1">
+                      <div className="flex items-center gap-2 text-[#3B635C] dark:text-[#94A0B2] px-1">
                         <Loader2 className="w-4 h-4 animate-spin text-[#0F766E] dark:text-[#2DD4BF]" />
                         <p className="text-xs sm:text-sm font-bold tracking-wide">{t('services:loading_whispers', 'Membaca minda pelajar...')}</p>
                       </div>
                       {[1, 2, 3].map((sk) => (
                         <div
                           key={sk}
-                          className="bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-[2rem] p-5 space-y-3"
+                          className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-[2rem] p-5 space-y-3"
                         >
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-[#EBF7F4] dark:bg-[#11322C]" />
+                            <div className="w-10 h-10 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028]" />
                             <div className="space-y-1.5 flex-1">
-                              <div className="w-32 h-3.5 rounded bg-[#EBF7F4] dark:bg-[#11322C]" />
-                              <div className="w-20 h-2.5 rounded bg-[#EBF7F4] dark:bg-[#11322C]" />
+                              <div className="w-32 h-3.5 rounded bg-[#EBF7F4] dark:bg-[#1B2028]" />
+                              <div className="w-20 h-2.5 rounded bg-[#EBF7F4] dark:bg-[#1B2028]" />
                             </div>
                           </div>
-                          <div className="w-full h-3.5 rounded bg-[#EBF7F4] dark:bg-[#11322C]" />
-                          <div className="w-4/5 h-3.5 rounded bg-[#EBF7F4] dark:bg-[#11322C]" />
+                          <div className="w-full h-3.5 rounded bg-[#EBF7F4] dark:bg-[#1B2028]" />
+                          <div className="w-4/5 h-3.5 rounded bg-[#EBF7F4] dark:bg-[#1B2028]" />
                         </div>
                       ))}
                     </div>
                   ) : displayedConfessions.length === 0 ? (
-                    <div className="text-center py-16 px-4 bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-3xl">
+                    <div className="text-center py-16 px-4 bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-3xl">
                       <Ghost className="w-12 h-12 text-[#0F766E]/40 dark:text-[#2DD4BF]/40 mx-auto mb-3" />
-                      <h3 className="text-lg font-bold text-[#0B2420] dark:text-[#F6FBF9]">
+                      <h3 className="text-lg font-bold text-[#0B2420] dark:text-[#F1F5F9]">
                         {t('services:no_whispers_title', 'Tiada Luahan Buat Masa Ini')}
                       </h3>
-                      <p className="text-sm text-[#3B635C] dark:text-[#99CBC2] mt-1">
+                      <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] mt-1">
                         {sortBy === 'BOOKMARKS'
                           ? t('services:suara_empty_saved', 'Belum ada kiriman yang anda simpan dalam penanda buku.')
                           : sortBy === 'MINE'
@@ -2776,7 +2776,7 @@ export function PolySuaraPage({
                   {!loading && hasMore && (
                     <div ref={loadMoreRef} className="flex items-center justify-center py-8">
                       {loadingMore && (
-                        <div className="flex items-center gap-3 text-[#3B635C] dark:text-[#99CBC2]">
+                        <div className="flex items-center gap-3 text-[#3B635C] dark:text-[#94A0B2]">
                           <Loader2 className="w-5 h-5 animate-spin text-[#0F766E] dark:text-[#2DD4BF]" />
                           <span className="text-xs font-bold uppercase tracking-wider">{t('services:loading_more', 'Memuatkan lagi...')}</span>
                         </div>
@@ -2786,7 +2786,7 @@ export function PolySuaraPage({
 
                   {!loading && !hasMore && confessions.length > FEED_PAGE_SIZE && (
                     <div className="text-center py-6">
-                      <span className="text-xs text-[#3B635C] dark:text-[#99CBC2] font-bold">{t('services:all_whispers_seen', 'Anda telah melihat semua luahan 🎉')}</span>
+                      <span className="text-xs text-[#3B635C] dark:text-[#94A0B2] font-bold">{t('services:all_whispers_seen', 'Anda telah melihat semua luahan 🎉')}</span>
                     </div>
                   )}
                 </div>
@@ -2884,25 +2884,25 @@ export function PolySuaraPage({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setLimitReachedModalOpen(false)}
-              className="fixed inset-0 bg-[#061714]/75 z-[200]"
+              className="fixed inset-0 bg-[#090B0E]/75 z-[200]"
             />
             <div className="fixed inset-0 flex items-center justify-center p-4 z-[201] pointer-events-none">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="w-full max-w-sm bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-[2rem] shadow-2xl p-8 pointer-events-auto relative overflow-hidden text-[#0B2420] dark:text-[#F6FBF9]"
+                className="w-full max-w-sm bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-[2rem] shadow-2xl p-8 pointer-events-auto relative overflow-hidden text-[#0B2420] dark:text-[#F1F5F9]"
               >
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#0F766E] to-[#2DD4BF]" />
                 <div className="flex justify-center mb-6">
-                  <div className="w-16 h-16 bg-[#EBF7F4] dark:bg-[#11322C] rounded-2xl flex items-center justify-center rotate-3 border border-[#B8E4DC] dark:border-[#1E4D45]">
+                  <div className="w-16 h-16 bg-[#EBF7F4] dark:bg-[#1B2028] rounded-2xl flex items-center justify-center rotate-3 border border-[#B8E4DC] dark:border-[#252B35]">
                     <Clock className="w-8 h-8 text-[#0F766E] dark:text-[#2DD4BF] -rotate-3" />
                   </div>
                 </div>
                 <h3 className="text-2xl font-black mb-3 text-center tracking-tight">
                   {t('services:limit_reached_title', 'Rehat Sekejap! 🛑')}
                 </h3>
-                <p className="text-sm text-[#3B635C] dark:text-[#99CBC2] mb-8 text-center leading-relaxed">
+                <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] mb-8 text-center leading-relaxed">
                   {t('services:limit_reached_desc', 'Anda telah mencapai had maksimum 5 luahan sejam. Kami menetapkan had ini untuk menjaga kualiti komuniti dan mengelakkan spam. Cuba lagi selepas 1 jam!')}
                 </p>
                 <div className="flex justify-center">
@@ -2929,38 +2929,38 @@ export function PolySuaraPage({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setReplyModalOpen(false)}
-              className="fixed inset-0 bg-[#061714]/70 z-[200]"
+              className="fixed inset-0 bg-[#090B0E]/75 z-[200]"
             />
             <div className="fixed inset-0 flex items-center justify-center p-4 z-[201] pointer-events-none">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="w-full max-w-sm bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-[2rem] shadow-2xl p-6 pointer-events-auto text-[#0B2420] dark:text-[#F6FBF9]"
+                className="w-full max-w-sm bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-[2rem] shadow-2xl p-6 pointer-events-auto text-[#0B2420] dark:text-[#F1F5F9]"
               >
                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
                   <Shield className="w-5 h-5 text-[#0F766E] dark:text-[#2DD4BF]" />
                   {t('services:jpp_feedback', 'Maklum Balas JPP')}
                 </h3>
-                <p className="text-sm text-[#3B635C] dark:text-[#99CBC2] mb-4">
+                <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] mb-4">
                   {t('services:jpp_reply_desc', 'Berikan maklum balas rasmi dari pihak pengurusan/JPP untuk luahan ini.')}
                 </p>
                 <textarea
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder={t('services:jpp_reply_placeholder', 'Taip jawapan rasmi di sini...')}
-                  className="w-full bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-2xl p-4 text-sm text-[#0B2420] dark:text-[#F6FBF9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#99CBC2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40 resize-none transition-all mb-4"
+                  className="w-full bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-4 text-sm text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40 resize-none transition-all mb-4"
                   rows={4}
                 />
 
                 <div className="mb-6">
-                  <label className="text-xs font-bold text-[#3B635C] dark:text-[#99CBC2] uppercase tracking-wider mb-2 block">
+                  <label className="text-xs font-bold text-[#3B635C] dark:text-[#94A0B2] uppercase tracking-wider mb-2 block">
                     {t('services:report_status', 'Status Laporan')}
                   </label>
                   <select
                     value={replyStatus}
                     onChange={(e) => setReplyStatus(e.target.value)}
-                    className="w-full bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-xl p-3 text-sm font-medium text-[#0B2420] dark:text-[#F6FBF9] outline-none focus:border-[#0F766E]"
+                    className="w-full bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-xl p-3 text-sm font-medium text-[#0B2420] dark:text-[#F1F5F9] outline-none focus:border-[#0F766E]"
                   >
                     <option value="OFFICIAL_NOTE">{t('services:status_official_note_opt', 'Maklum Balas Rasmi JPP (Nota Tanpa Penjejak)')}</option>
                     <option value="ACKNOWLEDGED">{t('services:status_acknowledged_full', 'Maklumat Diterima (Acknowledged)')}</option>
@@ -2974,7 +2974,7 @@ export function PolySuaraPage({
                   <button
                     type="button"
                     onClick={() => setReplyModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-[#3B635C] dark:text-[#99CBC2] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] transition-colors text-sm font-medium cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-[#3B635C] dark:text-[#94A0B2] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors text-sm font-medium cursor-pointer"
                   >
                     {t('common:cancel', 'Batal')}
                   </button>
@@ -2982,7 +2982,7 @@ export function PolySuaraPage({
                     type="button"
                     disabled={!replyText.trim() || isReplying}
                     onClick={submitReply}
-                    className="px-4 py-2 bg-[#0F766E] hover:bg-[#0D9488] disabled:bg-[#EBF7F4] dark:disabled:bg-[#11322C] disabled:text-[#3B635C]/50 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2 bg-[#0F766E] hover:bg-[#0D9488] disabled:bg-[#EBF7F4] dark:disabled:bg-[#1B2028] disabled:text-[#3B635C]/50 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2 cursor-pointer"
                   >
                     {isReplying ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     {t('services:submit_reply', 'Hantar Jawapan')}
@@ -3003,27 +3003,27 @@ export function PolySuaraPage({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setAuthorReplyModalOpen(false)}
-              className="fixed inset-0 bg-[#061714]/70 z-[200]"
+              className="fixed inset-0 bg-[#090B0E]/75 z-[200]"
             />
             <div className="fixed inset-0 flex items-center justify-center p-4 z-[201] pointer-events-none">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                className="w-full max-w-sm bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-[2rem] shadow-2xl p-6 pointer-events-auto text-[#0B2420] dark:text-[#F6FBF9]"
+                className="w-full max-w-sm bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-[2rem] shadow-2xl p-6 pointer-events-auto text-[#0B2420] dark:text-[#F1F5F9]"
               >
                 <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
                   <UserCircle2 className="w-5 h-5 text-[#0F766E] dark:text-[#2DD4BF]" />
                   {t('services:reply_to_jpp', 'Balas Kepada JPP')}
                 </h3>
-                <p className="text-sm text-[#3B635C] dark:text-[#99CBC2] mb-4">
+                <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] mb-4">
                   {t('services:author_reply_desc', 'Berikan maklum balas tambahan kepada wakil JPP secara rahsia.')}
                 </p>
                 <textarea
                   value={authorReplyText}
                   onChange={(e) => setAuthorReplyText(e.target.value)}
                   placeholder={t('services:author_reply_placeholder', 'Taip balasan anda di sini...')}
-                  className="w-full bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-2xl p-4 text-sm text-[#0B2420] dark:text-[#F6FBF9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#99CBC2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40 resize-none transition-all mb-4"
+                  className="w-full bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-4 text-sm text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40 resize-none transition-all mb-4"
                   rows={4}
                 />
 
@@ -3031,7 +3031,7 @@ export function PolySuaraPage({
                   <button
                     type="button"
                     onClick={() => setAuthorReplyModalOpen(false)}
-                    className="px-4 py-2 rounded-xl text-[#3B635C] dark:text-[#99CBC2] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] transition-colors text-sm font-medium cursor-pointer"
+                    className="px-4 py-2 rounded-xl text-[#3B635C] dark:text-[#94A0B2] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors text-sm font-medium cursor-pointer"
                   >
                     {t('common:cancel', 'Batal')}
                   </button>
@@ -3039,7 +3039,7 @@ export function PolySuaraPage({
                     type="button"
                     disabled={!authorReplyText.trim() || isAuthorReplying}
                     onClick={submitAuthorReply}
-                    className="px-4 py-2 bg-[#0F766E] hover:bg-[#0D9488] disabled:bg-[#EBF7F4] dark:disabled:bg-[#11322C] disabled:text-[#3B635C]/50 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2 bg-[#0F766E] hover:bg-[#0D9488] disabled:bg-[#EBF7F4] dark:disabled:bg-[#1B2028] disabled:text-[#3B635C]/50 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-2 cursor-pointer"
                   >
                     {isAuthorReplying ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                     {t('services:submit_author_reply', 'Hantar Balasan')}
@@ -3061,37 +3061,37 @@ export function PolySuaraPage({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setCommentDrawerOpen(false)}
-                className="fixed inset-0 bg-[#061714]/70 z-[990]"
+                className="fixed inset-0 bg-[#090B0E]/75 z-[990]"
               />
               <motion.div
                 initial={{ y: '100%' }}
                 animate={{ y: 0 }}
                 exit={{ y: '100%' }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white dark:bg-[#0B2420] border-t sm:border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-t-[2.5rem] shadow-2xl z-[999] flex flex-col max-h-[85dvh] overflow-hidden pointer-events-auto pb-8 sm:pb-4 text-[#0B2420] dark:text-[#F6FBF9]"
+                className="fixed bottom-0 left-0 right-0 max-w-2xl mx-auto bg-white dark:bg-[#13171D] border-t sm:border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-t-[2.5rem] shadow-2xl z-[999] flex flex-col max-h-[85dvh] overflow-hidden pointer-events-auto pb-8 sm:pb-4 text-[#0B2420] dark:text-[#F1F5F9]"
               >
               {/* Drawer drag indicator/Header */}
-              <div className="flex flex-col items-center py-3.5 border-b border-[#B8E4DC]/60 dark:border-[#1E4D45] shrink-0">
-                <div className="w-12 h-1 bg-[#B8E4DC] dark:bg-[#1E4D45] rounded-full mb-3 cursor-pointer" onClick={() => setCommentDrawerOpen(false)} />
+              <div className="flex flex-col items-center py-3.5 border-b border-[#B8E4DC]/60 dark:border-[#252B35] shrink-0">
+                <div className="w-12 h-1 bg-[#B8E4DC] dark:bg-[#252B35] rounded-full mb-3 cursor-pointer" onClick={() => setCommentDrawerOpen(false)} />
                 <div className="flex items-center justify-between w-full px-5 sm:px-6">
-                  <h3 className="text-base sm:text-lg font-bold text-[#0B2420] dark:text-[#F6FBF9] flex items-center gap-2">
+                  <h3 className="text-base sm:text-lg font-bold text-[#0B2420] dark:text-[#F1F5F9] flex items-center gap-2">
                     <MessageCircle className="w-5 h-5 text-[#0F766E] dark:text-[#2DD4BF]" />
                     <span>{t('services:student_comments', 'Ulasan Pelajar')}</span>
-                    <span className="text-xs font-semibold text-[#3B635C] dark:text-[#99CBC2] font-mono">
+                    <span className="text-xs font-semibold text-[#3B635C] dark:text-[#94A0B2] font-mono">
                       ({comments.length})
                     </span>
                   </h3>
                   <div className="flex items-center gap-2">
                     {/* Sort Toggle */}
-                    <div className="flex bg-[#F6FBF9] dark:bg-[#081A17] rounded-xl p-0.5 border border-[#B8E4DC]/80 dark:border-[#1E4D45]">
+                    <div className="flex bg-[#F6FBF9] dark:bg-[#0E1116] rounded-xl p-0.5 border border-[#B8E4DC]/80 dark:border-[#252B35]">
                       <button
                         type="button"
                         onClick={() => setCommentSortBy('LATEST')}
                         className={cn(
                           "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer",
                           commentSortBy === 'LATEST'
-                            ? "bg-white dark:bg-[#11322C] text-[#0B2420] dark:text-[#F6FBF9] shadow-xs"
-                            : "text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-white"
+                            ? "bg-white dark:bg-[#1B2028] text-[#0B2420] dark:text-[#F1F5F9] shadow-xs"
+                            : "text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-white"
                         )}
                       >
                         {t('services:sort_latest', 'Terkini')}
@@ -3102,8 +3102,8 @@ export function PolySuaraPage({
                         className={cn(
                           "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all flex items-center gap-1 cursor-pointer",
                           commentSortBy === 'TOP'
-                            ? "bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF]"
-                            : "text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-white"
+                            ? "bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF]"
+                            : "text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-white"
                         )}
                       >
                         {t('services:sort_top', 'Terbaik')}
@@ -3113,7 +3113,7 @@ export function PolySuaraPage({
                     <button
                       type="button"
                       onClick={() => setCommentDrawerOpen(false)}
-                      className="w-8 h-8 rounded-full bg-[#F6FBF9] dark:bg-[#081A17] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-white flex items-center justify-center transition-colors text-xs font-bold cursor-pointer"
+                      className="w-8 h-8 rounded-full bg-[#F6FBF9] dark:bg-[#0E1116] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-white flex items-center justify-center transition-colors text-xs font-bold cursor-pointer"
                       aria-label={t('services:close_comments', 'Tutup ulasan')}
                     >
                       <X className="w-4 h-4" />
@@ -3123,30 +3123,30 @@ export function PolySuaraPage({
               </div>
 
               {/* Confession Preview */}
-              <div className="bg-[#F6FBF9] dark:bg-[#081A17] border-b border-[#B8E4DC]/60 dark:border-[#1E4D45] p-4 text-xs px-5 sm:px-6 text-[#0B2420] dark:text-[#F6FBF9] shrink-0">
+              <div className="bg-[#F6FBF9] dark:bg-[#0E1116] border-b border-[#B8E4DC]/60 dark:border-[#252B35] p-4 text-xs px-5 sm:px-6 text-[#0B2420] dark:text-[#F1F5F9] shrink-0">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Ghost className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
-                  <span className="font-bold text-[#0B2420] dark:text-[#F6FBF9]">
+                  <span className="font-bold text-[#0B2420] dark:text-[#F1F5F9]">
                     {getFriendlyAnonName(activeConfessionForComments.codename).displayName}
                   </span>
-                  <span className="bg-[#EBF7F4] dark:bg-[#11322C] border border-[#B8E4DC]/70 dark:border-[#1E4D45] text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-[#0F766E] dark:text-[#2DD4BF]">
+                  <span className="bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC]/70 dark:border-[#252B35] text-[10px] font-bold uppercase px-2 py-0.5 rounded-full text-[#0F766E] dark:text-[#2DD4BF]">
                     {activeConfessionForComments.category}
                   </span>
                 </div>
-                <p className="text-[#3B635C] dark:text-[#99CBC2] italic line-clamp-2">"{cleanConfessionText(activeConfessionForComments.content)}"</p>
+                <p className="text-[#3B635C] dark:text-[#94A0B2] italic line-clamp-2">"{cleanConfessionText(activeConfessionForComments.content)}"</p>
               </div>
 
               {/* Comments Scrollable Feed */}
               <div className="flex-1 overflow-y-auto">
                 {commentsLoading ? (
-                  <div className="flex flex-col items-center justify-center py-12 text-[#3B635C] dark:text-[#99CBC2] gap-2">
+                  <div className="flex flex-col items-center justify-center py-12 text-[#3B635C] dark:text-[#94A0B2] gap-2">
                     <Loader2 className="w-5 h-5 animate-spin text-[#0F766E] dark:text-[#2DD4BF]" />
                     <p className="text-xs font-bold uppercase tracking-wider">{t('services:reading_comments', 'Membaca maklum balas...')}</p>
                   </div>
                 ) : comments.length === 0 ? (
-                  <div className="text-center py-12 text-[#3B635C] dark:text-[#99CBC2] px-4">
+                  <div className="text-center py-12 text-[#3B635C] dark:text-[#94A0B2] px-4">
                     <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-30" />
-                    <p className="text-sm font-bold text-[#0B2420] dark:text-[#F6FBF9]">{t('services:no_comments_title', 'Tiada Ulasan Lagi')}</p>
+                    <p className="text-sm font-bold text-[#0B2420] dark:text-[#F1F5F9]">{t('services:no_comments_title', 'Tiada Ulasan Lagi')}</p>
                     <p className="text-xs mt-0.5">{t('services:no_comments_desc', 'Jadilah yang pertama menulis pendapat anda.')}</p>
                   </div>
                 ) : (
@@ -3159,10 +3159,10 @@ export function PolySuaraPage({
               </div>
 
               {/* Comments Input Form Footer */}
-              <div className="bg-white dark:bg-[#0B2420] border-t border-[#B8E4DC]/60 dark:border-[#1E4D45] p-3 sm:p-4 shrink-0 px-4 sm:px-6">
+              <div className="bg-white dark:bg-[#13171D] border-t border-[#B8E4DC]/60 dark:border-[#252B35] p-3 sm:p-4 shrink-0 px-4 sm:px-6">
                 <form onSubmit={(e) => handleAddComment(e, null)} className="space-y-2">
                   {commentImagePreview && (
-                    <div className="relative mb-2 w-16 h-16 rounded-xl overflow-hidden border border-[#B8E4DC] dark:border-[#1E4D45] group animate-in fade-in zoom-in duration-200">
+                    <div className="relative mb-2 w-16 h-16 rounded-xl overflow-hidden border border-[#B8E4DC] dark:border-[#252B35] group animate-in fade-in zoom-in duration-200">
                       <img src={commentImagePreview} alt={t('services:preview', 'Pratonton')} className="w-full h-full object-cover" />
                       <button
                         type="button"
@@ -3175,9 +3175,9 @@ export function PolySuaraPage({
                   )}
 
                   {/* Rounded-full floating capsule pill */}
-                  <div className="rounded-full bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] p-1.5 flex items-center gap-2">
+                  <div className="rounded-full bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] p-1.5 flex items-center gap-2">
                     {/* Camera/Image Selector Button */}
-                    <label className="cursor-pointer text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0F766E] dark:hover:text-[#2DD4BF] p-2 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] transition-all flex items-center justify-center shrink-0 w-8 h-8" title={t('services:attach_image', 'Lampirkan Imej')}>
+                    <label className="cursor-pointer text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0F766E] dark:hover:text-[#2DD4BF] p-2 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-all flex items-center justify-center shrink-0 w-8 h-8" title={t('services:attach_image', 'Lampirkan Imej')}>
                       <ImageIcon className="w-4 h-4" />
                       <input type="file" accept="image/*" onChange={handleCommentImageSelect} className="hidden" />
                     </label>
@@ -3187,7 +3187,7 @@ export function PolySuaraPage({
                       placeholder={t('services:write_confidential_comment', 'Tulis ulasan sulit anda...')}
                       value={newCommentText}
                       onChange={(e) => setNewCommentText(e.target.value)}
-                      className="flex-1 bg-transparent px-2 py-1 text-sm text-[#0B2420] dark:text-[#F6FBF9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#99CBC2]/60 focus:outline-none"
+                      className="flex-1 bg-transparent px-2 py-1 text-sm text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/60 focus:outline-none"
                       maxLength={300}
                     />
 
@@ -3195,7 +3195,7 @@ export function PolySuaraPage({
                     <button
                       type="submit"
                       disabled={!newCommentText.trim() || submittingComment}
-                      className="bg-[#0F766E] hover:bg-[#0D9488] disabled:bg-[#EBF7F4] dark:disabled:bg-[#11322C] text-white disabled:text-[#3B635C]/40 dark:disabled:text-[#99CBC2]/40 w-8 h-8 rounded-full font-bold transition-all shrink-0 flex items-center justify-center shadow-xs cursor-pointer"
+                      className="bg-[#0F766E] hover:bg-[#0D9488] disabled:bg-[#EBF7F4] dark:disabled:bg-[#1B2028] text-white disabled:text-[#3B635C]/40 dark:disabled:text-[#94A0B2]/40 w-8 h-8 rounded-full font-bold transition-all shrink-0 flex items-center justify-center shadow-xs cursor-pointer"
                       aria-label={t('services:post_comment', 'Hantar Pandangan')}
                       title={t('services:post_comment', 'Hantar Pandangan')}
                     >
@@ -3210,14 +3210,14 @@ export function PolySuaraPage({
                         type="checkbox"
                         checked={isSensitiveComment}
                         onChange={(e) => setIsSensitiveComment(e.target.checked)}
-                        className="rounded border-[#B8E4DC] dark:border-[#1E4D45] bg-white dark:bg-[#081A17] text-[#0F766E] focus:ring-[#0F766E]/30"
+                        className="rounded border-[#B8E4DC] dark:border-[#252B35] bg-white dark:bg-[#0E1116] text-[#0F766E] focus:ring-[#0F766E]/30"
                       />
-                      <span className="text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2] group-hover:text-[#0B2420] dark:group-hover:text-[#F6FBF9] transition-colors flex items-center gap-1">
+                      <span className="text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0B2420] dark:group-hover:text-[#F1F5F9] transition-colors flex items-center gap-1">
                         <EyeOff className="w-3.5 h-3.5" />
                         {t('services:mark_sensitive', 'Tanda sebagai Sensitif (Blur)')}
                       </span>
                     </label>
-                    <span className="text-[11px] text-[#3B635C] dark:text-[#99CBC2] font-medium">
+                    <span className="text-[11px] text-[#3B635C] dark:text-[#94A0B2] font-medium">
                       {t('services:chars_remaining_short', '{{count}} baki', { count: 300 - newCommentText.length })}
                     </span>
                   </div>
@@ -3268,16 +3268,16 @@ function SensitiveCommentContent({ content }: { content: string }) {
   const [revealed, setRevealed] = React.useState(false);
 
   if (revealed) {
-    return <p className="text-xs sm:text-sm text-[#0B2420] dark:text-[#F6FBF9] leading-relaxed break-words animate-in fade-in duration-300">{content}</p>;
+    return <p className="text-xs sm:text-sm text-[#0B2420] dark:text-[#F1F5F9] leading-relaxed break-words animate-in fade-in duration-300">{content}</p>;
   }
 
   return (
     <div
       onClick={() => setRevealed(true)}
-      className="bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] p-3.5 rounded-xl cursor-pointer hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] transition-colors flex items-center gap-2 group"
+      className="bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] p-3.5 rounded-xl cursor-pointer hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors flex items-center gap-2 group"
     >
       <EyeOff className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF] shrink-0 group-hover:scale-105 transition-transform" />
-      <span className="text-xs font-bold text-[#3B635C] dark:text-[#99CBC2] group-hover:text-[#0B2420] dark:group-hover:text-[#F6FBF9] transition-colors select-none">
+      <span className="text-xs font-bold text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0B2420] dark:group-hover:text-[#F1F5F9] transition-colors select-none">
         {t('services:sensitive_comment_notice', 'Ulasan ini mengandungi kandungan sensitif. Klik untuk baca.')}
       </span>
     </div>

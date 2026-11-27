@@ -124,7 +124,7 @@ function SubModuleCard({
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-slate-900 text-white dark:bg-[#061714] border border-white/10 rounded-xl p-3 shadow-xl text-xs">
+    <div className="bg-slate-900 text-white dark:bg-[#090B0E] border border-white/10 rounded-xl p-3 shadow-xl text-xs">
       <p className="text-white/50 text-[10px] font-bold mb-1">{label}</p>
       {payload.map((p: any, i: number) => (
         <p key={i} className="font-black text-sm">

@@ -45,7 +45,9 @@ export function KebajikanSidebar() {
   const isStaffOrAbove = isKebajikanExco || isKediamanExco || isUnitKebajikanStaff || isSuperAdmin || isYdp;
   const isJpp = isSuperAdmin || profile?.role === 'JPP';
 
-  const bgGradient = 'linear-gradient(180deg, #0B2420 0%, #061714 100%)';
+  const bgGradient = isDark
+    ? 'linear-gradient(180deg, #0E1116 0%, #090B0E 100%)'
+    : 'linear-gradient(180deg, #0B2420 0%, #061714 100%)';
 
   const navItem = (href: string, icon: React.ElementType, label: string, end = false, badge?: number) => (
     <NavLink
@@ -56,7 +58,9 @@ export function KebajikanSidebar() {
         'flex items-center gap-3 px-3 py-3 rounded-2xl transition-all duration-300 relative group overflow-hidden',
         isActive
           ? 'text-white font-bold shadow-lg bg-teal-500/20 border border-teal-400/25'
-          : 'text-[#99CBC2] hover:text-white hover:bg-white/[0.06] border border-transparent'
+          : isDark
+            ? 'text-[#94A0B2] hover:text-white hover:bg-white/[0.06] border border-transparent'
+            : 'text-[#99CBC2] hover:text-white hover:bg-white/[0.06] border border-transparent'
       )}
     >
       {({ isActive }) => (
@@ -74,14 +78,16 @@ export function KebajikanSidebar() {
           >
             {React.createElement(icon, {
               className: 'w-4 h-4',
-              style: { color: isActive ? '#5EEAD4' : '#99CBC2' }
+              style: { color: isActive ? '#5EEAD4' : (isDark ? '#94A0B2' : '#99CBC2') }
             })}
           </div>
           <span className={cn(
             "text-xs font-bold tracking-wide flex-1 transition-colors duration-300",
             isActive
               ? "text-white"
-              : "text-[#99CBC2] group-hover:text-white"
+              : isDark
+                ? "text-[#94A0B2] group-hover:text-white"
+                : "text-[#99CBC2] group-hover:text-white"
           )}>
             {label}
           </span>
@@ -105,7 +111,7 @@ export function KebajikanSidebar() {
 
   return (
     <aside
-      className="tour-kebajikan-sidebar w-[280px] h-[100dvh] flex flex-col select-none overflow-hidden flex-shrink-0 z-[140] relative border-r border-teal-400/15 transition-colors duration-300"
+      className="tour-kebajikan-sidebar w-[280px] h-[100dvh] flex flex-col select-none overflow-hidden flex-shrink-0 z-[140] relative border-r border-teal-400/15 dark:border-[#252B35] transition-colors duration-300"
       style={{ background: bgGradient }}
     >
       {/* Decorative Glow */}

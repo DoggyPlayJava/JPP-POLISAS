@@ -58,7 +58,7 @@ describe('NextClassBentoCard Empty-State Suite', () => {
     expect(html).not.toContain('Muat naik fail jadual kelas (PDF) anda di modul e-Akademik');
 
     // Requirement 2: Paragraph styling with leading-relaxed
-    expect(html).toContain('text-xs sm:text-sm text-[#3B635C] dark:text-[#99CBC2] max-w-xl leading-relaxed');
+    expect(html).toContain('text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] max-w-xl leading-relaxed');
 
     // Requirement 3: Retain "Muat Naik Jadual" button linking to /akademik/takwim
     expect(html).toContain('href="/akademik/takwim"');

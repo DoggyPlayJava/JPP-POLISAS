@@ -196,7 +196,7 @@ export function ExcoCard({
               karnivalActive ? "bg-black/80 border-violet-500/20" : "bg-black/20 border-white/10",
               karnivalActive ? "hover:border-transparent hover:bg-violet-950/30 hover:shadow-[inset_0_0_30px_rgba(192,132,252,0.15),0_10px_50px_rgba(192,132,252,0.25)]" : "hover:border-amber-500/40 hover:bg-amber-500/10 hover:shadow-[0_8px_40px_rgba(245,158,11,0.15)]"
             )
-          : "bg-white dark:bg-[#0B2420] border-[#B8E4DC]/80 dark:border-[#1E4D45] hover:border-[#0D9488]/50 hover:bg-white dark:hover:bg-[#11322C] md:hover:-translate-y-0.5 shadow-[0_4px_20px_rgba(11,36,32,0.05)]",
+          : "bg-white dark:bg-[#13171D] border-[#B8E4DC]/80 dark:border-[#252B35] hover:border-[#0D9488]/50 hover:bg-white dark:hover:bg-[#1B2028] md:hover:-translate-y-0.5 shadow-[0_4px_20px_rgba(11,36,32,0.05)]",
         className
       )}
       style={!isEventMode ? {
@@ -229,7 +229,7 @@ export function ExcoCard({
             style={{ border: `1px solid ${hexToRgba(color, 0.14)}` }}
           >
             {notificationCount !== undefined && notificationCount > 0 && (
-              <div className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full bg-rose-500 border-2 border-white dark:border-[#0B2420] flex items-center justify-center text-white text-[11px] font-bold font-mono tabular-nums shadow-xs z-20">
+              <div className="absolute -top-2 -right-2 min-w-[20px] h-5 px-1 rounded-full bg-rose-500 border-2 border-white dark:border-[#13171D] flex items-center justify-center text-white text-[11px] font-bold font-mono tabular-nums shadow-xs z-20">
                 {notificationCount}
               </div>
             )}
@@ -278,7 +278,7 @@ export function ExcoCard({
                       type="button"
                       className={cn(
                         "w-9 h-9 rounded-xl flex items-center justify-center border transition-colors duration-150 cursor-pointer",
-                        isEventMode ? "border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" : "border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-[#F6FBF9] dark:bg-white/5 hover:bg-[#EBF7F4] dark:hover:bg-white/10 text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-white"
+                        isEventMode ? "border-white/10 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white" : "border-[#B8E4DC]/80 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-white/5 hover:bg-[#EBF7F4] dark:hover:bg-white/10 text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-white"
                       )}
                     >
                       <Palette className="w-4 h-4" />
@@ -287,7 +287,7 @@ export function ExcoCard({
                   <PopoverContent
                     align="end"
                     sideOffset={8}
-                    className="w-72 rounded-2xl shadow-xl border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] p-0 overflow-hidden"
+                    className="w-72 rounded-2xl shadow-xl border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] p-0 overflow-hidden"
                   >
                     <ColorPickerPopover
                       moduleId={module.id}
@@ -321,13 +321,13 @@ export function ExcoCard({
           <h2 className={cn(
             "text-base sm:text-lg font-bold tracking-tight mb-1 transition-colors [text-wrap:balance]", 
             !canAccess && "opacity-70",
-            isEventMode ? "text-white" : "text-[#0B2420] dark:text-[#F6FBF9]"
+            isEventMode ? "text-white" : "text-[#0B2420] dark:text-[#F1F5F9]"
           )}>
             {moduleName}
           </h2>
           <p className={cn(
             "text-xs sm:text-sm leading-relaxed font-normal line-clamp-2 transition-colors",
-            isEventMode ? "text-white/70" : "text-[#3B635C] dark:text-[#99CBC2]"
+            isEventMode ? "text-white/70" : "text-[#3B635C] dark:text-[#94A0B2]"
           )}>
             {moduleDesc}
           </p>
@@ -339,7 +339,7 @@ export function ExcoCard({
           "flex items-center gap-1.5 text-xs font-semibold transition-all duration-200 shrink-0",
           !canAccess && "opacity-50",
           canAccess && "group-hover:gap-2.5",
-          isEventMode ? "text-white/80 group-hover:text-white" : "text-[#0B2420] dark:text-[#F6FBF9]/90 group-hover:text-[#0B2420] dark:group-hover:text-white"
+          isEventMode ? "text-white/80 group-hover:text-white" : "text-[#0B2420] dark:text-[#F1F5F9]/90 group-hover:text-[#0B2420] dark:group-hover:text-white"
         )}
         style={canAccess ? { '--hover-color': color } as React.CSSProperties : {}}>
           <span className="group-hover:text-[var(--hover-color)] transition-colors">
@@ -350,7 +350,7 @@ export function ExcoCard({
 
         <div className={cn(
           "text-[11px] font-medium px-2 py-0.5 rounded-lg truncate max-w-[160px]",
-          isEventMode ? "bg-white/10 text-white/60" : "bg-[#F6FBF9] dark:bg-[#061714] text-[#3B635C] dark:text-[#99CBC2] border border-[#B8E4DC]/60 dark:border-[#1E4D45]"
+          isEventMode ? "bg-white/10 text-white/60" : "bg-[#F6FBF9] dark:bg-[#090B0E] text-[#3B635C] dark:text-[#94A0B2] border border-[#B8E4DC]/60 dark:border-[#252B35]"
         )}>
           {moduleTagline}
         </div>

@@ -131,31 +131,31 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl text-[#0B2420] dark:text-[#F6FBF9]"
+          className="relative bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl text-[#0B2420] dark:text-[#F1F5F9]"
         >
           {/* Header */}
-          <div className="p-6 border-b border-[#B8E4DC]/60 dark:border-[#1E4D45] bg-[#F6FBF9] dark:bg-[#081A17]">
+          <div className="p-6 border-b border-[#B8E4DC]/60 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#0E1116]">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-teal-500/15 text-[#0F766E] dark:text-[#2DD4BF] rounded-xl flex items-center justify-center">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-[#0B2420] dark:text-[#F6FBF9]">{t('gig:create_job_modal_title', 'Cipta Tugasan Baharu')}</h2>
-                  <p className="text-xs text-[#3B635C] dark:text-[#99CBC2]">{t('gig:create_job_modal_desc', 'Iklankan tugasan anda kepada rakan pelajar.')}</p>
+                  <h2 className="text-xl font-bold text-[#0B2420] dark:text-[#F1F5F9]">{t('gig:create_job_modal_title', 'Cipta Tugasan Baharu')}</h2>
+                  <p className="text-xs text-[#3B635C] dark:text-[#94A0B2]">{t('gig:create_job_modal_desc', 'Iklankan tugasan anda kepada rakan pelajar.')}</p>
                 </div>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] rounded-full text-[#3B635C] hover:text-[#0B2420] dark:text-[#99CBC2] dark:hover:text-white transition-colors">
+              <button onClick={onClose} className="p-2 hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] rounded-full text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Progress Bar */}
             <div className="flex items-center gap-2 mt-4">
-              <div className={`h-1.5 flex-1 rounded-full ${step >= 1 ? 'bg-[#0F766E] dark:bg-[#2DD4BF] shadow-[0_0_10px_rgba(13,148,136,0.35)]' : 'bg-[#EBF7F4] dark:bg-[#11322C]'}`} />
-              <div className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-[#0F766E] dark:bg-[#2DD4BF] shadow-[0_0_10px_rgba(13,148,136,0.35)]' : 'bg-[#EBF7F4] dark:bg-[#11322C]'}`} />
+              <div className={`h-1.5 flex-1 rounded-full ${step >= 1 ? 'bg-[#0F766E] dark:bg-[#2DD4BF] shadow-[0_0_10px_rgba(13,148,136,0.35)]' : 'bg-[#EBF7F4] dark:bg-[#1B2028]'}`} />
+              <div className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-[#0F766E] dark:bg-[#2DD4BF] shadow-[0_0_10px_rgba(13,148,136,0.35)]' : 'bg-[#EBF7F4] dark:bg-[#1B2028]'}`} />
             </div>
-            <div className="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#99CBC2]">
+            <div className="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
               <span className={step >= 1 ? 'text-[#0F766E] dark:text-[#2DD4BF]' : ''}>{t('gig:step_details', 'Langkah 1: Butiran')}</span>
               <span className={step >= 2 ? 'text-[#0F766E] dark:text-[#2DD4BF]' : ''}>{t('gig:step_logistics', 'Langkah 2: Logistik & Upah')}</span>
             </div>
@@ -296,7 +296,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-[#B8E4DC]/60 dark:border-[#1E4D45] bg-[#F6FBF9] dark:bg-[#081A17] flex items-center justify-between mt-auto">
+          <div className="p-6 border-t border-[#B8E4DC]/60 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#0E1116] flex items-center justify-between mt-auto">
             {step === 1 ? (
               <Button variant="ghost" type="button" onClick={onClose} disabled={loading} className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
                 {t('gig:cancel', 'Batal')}

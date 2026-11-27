@@ -38,7 +38,7 @@ export function PolyRiderLayout() {
 
   if (loading || isActive === null) {
     return (
-      <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] flex flex-col items-center justify-center">
+      <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin mb-4" />
         <p className="text-xs font-bold uppercase tracking-widest text-slate-500">{t('gig:checking_system', 'Menyemak Sistem...')}</p>
       </div>
@@ -47,9 +47,9 @@ export function PolyRiderLayout() {
 
   if (!isActive) {
     return (
-      <div className="flex flex-col min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] after:content-[''] after:block after:h-40 after:shrink-0">
+      <div className="flex flex-col min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] after:content-[''] after:block after:h-40 after:shrink-0">
         <div className="flex-1 w-full flex items-center justify-center p-6">
-          <div className="bg-white dark:bg-[#0B2420] rounded-[2rem] p-8 text-center max-w-sm shadow-xl border border-[#B8E4DC]/80 dark:border-[#1E4D45]">
+          <div className="bg-white dark:bg-[#13171D] rounded-[2rem] p-8 text-center max-w-sm shadow-xl border border-[#B8E4DC]/80 dark:border-[#252B35]">
             <div className="w-20 h-20 bg-red-50 dark:bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
               <ShieldAlert className="w-10 h-10 text-red-500" />
             </div>
@@ -72,7 +72,7 @@ export function PolyRiderLayout() {
   }
 
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] after:content-[''] after:block after:h-40 after:shrink-0">
+    <div className="flex flex-col min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] after:content-[''] after:block after:h-40 after:shrink-0">
       <div className="flex-1 w-full">
         <Outlet />
       </div>

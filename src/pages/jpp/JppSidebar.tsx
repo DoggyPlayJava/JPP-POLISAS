@@ -322,7 +322,7 @@ export function JppSidebar() {
       <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
 
         {/* Main nav */}
-        <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
+        <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#94A0B2]/60">
           {t('nav:navigation', 'Navigasi')}
         </p>
         {[
@@ -384,7 +384,7 @@ export function JppSidebar() {
         {(canAccessDemerit || canAccessFoodBank) && (
           <>
             <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#94A0B2]/60">
                 {t('jpp:nav_student_mgmt', 'Pengurusan Pelajar')}
               </p>
             </div>
@@ -432,7 +432,7 @@ export function JppSidebar() {
         {(isYDP || isSuperAdmin) && (
           <>
             <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#94A0B2]/60">
                 {t('jpp:nav_portal_admin', 'Pentadbiran Portal')}
               </p>
             </div>
@@ -489,7 +489,7 @@ export function JppSidebar() {
         {isUnitAsramaOnly && (
           <>
             <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#94A0B2]/60">
                 {t('jpp:nav_asrama_mgmt', 'Pengurusan Asrama')}
               </p>
             </div>
@@ -530,7 +530,7 @@ export function JppSidebar() {
         {visibleUnits.length > 0 && (
           <>
             <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#94A0B2]/60">
                 {t('jpp:nav_unit_exco', 'Unit Exco')}
                 {isMT && <span className="ml-1.5 opacity-60">{t('jpp:assigned_tag', '(Assigned)')}</span>}
               </p>
@@ -736,7 +736,7 @@ export function JppSidebar() {
         {(isSuperAdmin || isYDP || profile?.jpp_unit === 'MULTIMEDIA') && (
           <>
             <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#94A0B2]/60">
                 {t('jpp:nav_announcements_misc', 'Hebahan / Lain-Lain')}
               </p>
             </div>

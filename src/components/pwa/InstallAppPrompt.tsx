@@ -104,7 +104,7 @@ export function InstallAppPrompt() {
         if (!open) handleDismiss();
       }}
     >
-      <DrawerContent className="bg-white dark:bg-[#0B2420] border-t border-[#B8E4DC]/80 dark:border-[#1E4D45] shadow-2xl rounded-t-[2rem]">
+      <DrawerContent className="bg-white dark:bg-[#13171D] border-t border-[#B8E4DC]/80 dark:border-[#252B35] shadow-2xl rounded-t-[2rem]">
         <div className="mx-auto mt-4 h-1.5 w-12 rounded-full bg-slate-300 dark:bg-white/20" />
 
         <DrawerHeader className="text-left pt-6 pb-2 px-6">

@@ -145,7 +145,7 @@ export function CampusServicesGrid({
               className={cn(
                 'relative flex flex-col items-center justify-start text-center group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E] focus-visible:ring-offset-2 px-1.5 py-2.5 sm:p-3.5 min-h-[84px] sm:min-h-[96px] rounded-[18px] transition-[transform,background-color,border-color,box-shadow] duration-150 ease-out active:scale-[0.97]',
                 'bg-white hover:bg-[#F6FBF9] border border-[#B8E4DC]/80 hover:border-[#0F766E]/40 shadow-xs hover:shadow-md',
-                'dark:bg-[#0B2420] dark:hover:bg-[#11332D] dark:border-[#1E4D45] dark:hover:border-[#2DD4BF]/40',
+                'dark:bg-[#13171D] dark:hover:bg-[#1B2028] dark:border-[#252B35] dark:hover:border-[#2DD4BF]/40',
                 service.tourClass,
                 !isEnabled && !isSuperAdmin && 'opacity-50 grayscale cursor-not-allowed'
               )}
@@ -154,7 +154,7 @@ export function CampusServicesGrid({
               {service.badge && (
                 <span
                   className={cn(
-                    'absolute top-1.5 right-1.5 z-10 px-1.5 py-0.5 text-[9px] font-bold rounded-full shadow-xs leading-none border border-white dark:border-[#0B2420]',
+                    'absolute top-1.5 right-1.5 z-10 px-1.5 py-0.5 text-[9px] font-bold rounded-full shadow-xs leading-none border border-white dark:border-[#13171D]',
                     service.badge === 'MERIT' || service.badge === 'KELAB' || service.badge === 'CLUB'
                       ? 'bg-[#0F766E] text-white'
                       : 'bg-rose-600 text-white font-mono tabular-nums'
@@ -173,12 +173,12 @@ export function CampusServicesGrid({
                 <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
 
-              <span className="text-[11px] sm:text-xs font-semibold text-[#0B2420] dark:text-[#F6FBF9] group-hover:text-[#0F766E] dark:group-hover:text-[#2DD4BF] transition-colors leading-tight break-words line-clamp-2 w-full text-center">
+              <span className="text-[11px] sm:text-xs font-semibold text-[#0B2420] dark:text-[#F1F5F9] group-hover:text-[#0F766E] dark:group-hover:text-[#2DD4BF] transition-colors leading-tight break-words line-clamp-2 w-full text-center">
                 {service.label}
               </span>
 
               {(service.sublabel || service.description) && (
-                <span className="hidden sm:block text-[11px] text-[#3B635C] dark:text-[#99CBC2] truncate w-full mt-0.5">
+                <span className="hidden sm:block text-[11px] text-[#3B635C] dark:text-[#94A0B2] truncate w-full mt-0.5">
                   {service.sublabel || service.description}
                 </span>
               )}

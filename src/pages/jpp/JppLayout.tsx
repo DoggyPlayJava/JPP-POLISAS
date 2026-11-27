@@ -87,9 +87,9 @@ export function JppLayout() {
 
   if (isLoading || (checkingFbOfficer && !isJppMember && !isSuperAdmin && !hasKediamanAccess && location.pathname.startsWith('/jpp/foodbank'))) {
     return (
-      <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#F6FBF9] dark:bg-[#061714]">
+      <div className="min-h-[100dvh] w-full flex items-center justify-center bg-[#F6FBF9] dark:bg-[#090B0E]">
         <div className="relative w-10 h-10">
-          <div className="absolute inset-0 border-4 rounded-full border-[#B8E4DC]/60 dark:border-[#1E4D45]/60" />
+          <div className="absolute inset-0 border-4 rounded-full border-[#B8E4DC]/60 dark:border-[#252B35]/60" />
           <div className="absolute inset-0 border-4 border-t-transparent rounded-full animate-spin border-[#0F766E] dark:border-[#2DD4BF]" />
         </div>
       </div>
@@ -103,7 +103,7 @@ export function JppLayout() {
   }
 
   return (
-    <div className="flex h-[100dvh] overflow-hidden bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] transition-colors jpp-canvas-texture">
+    <div className="flex h-[100dvh] overflow-hidden bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] transition-colors jpp-canvas-texture">
 
       {/* Mobile backdrop */}
       <AnimatePresence>
@@ -140,7 +140,7 @@ export function JppLayout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
         {/* Top header (mobile + tablet) */}
-        <header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-[#F6FBF9] dark:bg-[#0B2420] sticky top-0 z-50 text-[#0B2420] dark:text-white">
+        <header className="flex md:hidden items-center justify-between px-4 py-3 border-b border-[#B8E4DC]/80 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#13171D] sticky top-0 z-50 text-[#0B2420] dark:text-white">
           <button
             onClick={() => setIsMobileOpen(true)}
             className="p-2 -ml-1 rounded-xl text-[#0B2420]/70 dark:text-white/60 hover:text-[#0B2420] dark:hover:text-white hover:bg-[#0B2420]/5 dark:hover:bg-white/10 transition-all"
@@ -152,7 +152,7 @@ export function JppLayout() {
               <img src="/jpp-logo.png" alt="JPP" className="h-7 object-contain" />
               <span className="text-sm font-black tracking-tight text-[#0B2420] dark:text-white">JPP HQ</span>
             </div>
-            <span className="text-[8px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#99CBC2] mt-0.5">
+            <span className="text-[8px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mt-0.5">
               {getCurrentAcademicSession()}
             </span>
           </div>
@@ -171,7 +171,7 @@ export function JppLayout() {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 overflow-y-auto scrollbar-hide after:content-[''] after:block after:h-40 after:shrink-0 bg-[#F6FBF9] dark:bg-[#061714]">
+        <main className="flex-1 overflow-y-auto scrollbar-hide after:content-[''] after:block after:h-40 after:shrink-0 bg-[#F6FBF9] dark:bg-[#090B0E]">
           <motion.div
             key={location.pathname}
             initial={{ opacity: 0 }}

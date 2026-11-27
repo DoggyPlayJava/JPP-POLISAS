@@ -136,10 +136,10 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               <ShoppingBag className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <h2 className="text-sm sm:text-base font-bold text-[#0B2420] dark:text-[#F6FBF9] tracking-tight truncate">
+              <h2 className="text-sm sm:text-base font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight truncate">
                 {t('portal:polymart_title', 'PolyMart Siswa')}
               </h2>
-              <p className="text-[11px] text-[#3B635C] dark:text-[#99CBC2] hidden sm:block truncate">
+              <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2] hidden sm:block truncate">
                 {t('portal:polymart_subtitle', 'Produk & makanan usahawan siswa POLISAS')}
               </p>
             </div>
@@ -157,7 +157,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
 
         {/* Row 2: Filter Chips */}
         <div className="flex items-center gap-2">
-          <div className="inline-flex items-center gap-1 p-0.5 rounded-xl bg-[#EBF7F4] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45]">
+          <div className="inline-flex items-center gap-1 p-0.5 rounded-xl bg-[#EBF7F4] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35]">
             <button
               type="button"
               onClick={() => setActiveFilter('hot')}
@@ -165,7 +165,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
                 "inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-[transform,background-color,color] duration-150 ease-out cursor-pointer active:scale-95",
                 activeFilter === 'hot'
                   ? "bg-amber-500 text-slate-950 shadow-xs"
-                  : "text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-white"
+                  : "text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-white"
               )}
             >
               <Flame className={cn("w-3.5 h-3.5", activeFilter === 'hot' ? "text-slate-950" : "text-amber-600 dark:text-amber-400")} />
@@ -178,7 +178,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
                 "inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold tracking-tight transition-[transform,background-color,color] duration-150 ease-out cursor-pointer active:scale-95",
                 activeFilter === 'latest'
                   ? "bg-amber-500 text-slate-950 shadow-xs"
-                  : "text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-white"
+                  : "text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-white"
               )}
             >
               <Sparkles className={cn("w-3.5 h-3.5", activeFilter === 'latest' ? "text-slate-950" : "text-amber-600 dark:text-amber-400")} />
@@ -194,12 +194,12 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
           {[1, 2, 3, 4].map((i) => (
             <div
               key={i}
-              className="snap-start shrink-0 w-[145px] sm:w-[180px] h-[210px] rounded-2xl border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] p-2.5 flex flex-col justify-between"
+              className="snap-start shrink-0 w-[145px] sm:w-[180px] h-[210px] rounded-2xl border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] p-2.5 flex flex-col justify-between"
             >
-              <div className="w-full h-24 sm:h-28 rounded-xl bg-[#EBF7F4] dark:bg-[#11322C]" />
+              <div className="w-full h-24 sm:h-28 rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028]" />
               <div className="space-y-2 mt-2">
-                <div className="w-3/4 h-3 rounded bg-[#EBF7F4] dark:bg-[#11322C]" />
-                <div className="w-1/2 h-2.5 rounded bg-[#EBF7F4] dark:bg-[#11322C]" />
+                <div className="w-3/4 h-3 rounded bg-[#EBF7F4] dark:bg-[#1B2028]" />
+                <div className="w-1/2 h-2.5 rounded bg-[#EBF7F4] dark:bg-[#1B2028]" />
               </div>
             </div>
           ))}
@@ -214,7 +214,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
               <div
                 key={item.id}
                 onClick={() => handleCardClick(item.id)}
-                className="snap-start shrink-0 w-[145px] sm:w-[180px] bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] hover:border-amber-500/40 dark:hover:border-amber-500/40 rounded-2xl overflow-hidden transition-[transform,border-color,box-shadow] duration-150 ease-out active:scale-[0.98] shadow-sm hover:shadow-md cursor-pointer flex flex-col group p-2 sm:p-2.5"
+                className="snap-start shrink-0 w-[145px] sm:w-[180px] bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] hover:border-amber-500/40 dark:hover:border-amber-500/40 rounded-2xl overflow-hidden transition-[transform,border-color,box-shadow] duration-150 ease-out active:scale-[0.98] shadow-sm hover:shadow-md cursor-pointer flex flex-col group p-2 sm:p-2.5"
                 role="button"
                 tabIndex={0}
                 onKeyDown={(e) => {
@@ -225,7 +225,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
                 }}
               >
                 {/* Photo & Pesan Tag */}
-                <div className="relative h-24 sm:h-28 w-full overflow-hidden rounded-xl bg-[#EBF7F4] dark:bg-[#081A17] flex items-center justify-center">
+                <div className="relative h-24 sm:h-28 w-full overflow-hidden rounded-xl bg-[#EBF7F4] dark:bg-[#0E1116] flex items-center justify-center">
                   {item.image_url ? (
                     <img
                       src={item.image_url}
@@ -234,7 +234,7 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
                       loading="lazy"
                     />
                   ) : (
-                    <div className="flex flex-col items-center justify-center text-[#3B635C] dark:text-[#99CBC2] p-2">
+                    <div className="flex flex-col items-center justify-center text-[#3B635C] dark:text-[#94A0B2] p-2">
                       <ShoppingBag className="w-7 h-7 mb-1 stroke-1" />
                       <span className="text-[11px] text-center line-clamp-1">
                         {item.category || t('portal:product_fallback', 'Produk')}
@@ -253,16 +253,16 @@ export function PolyMartFeed({ products: initialProducts, className }: PolyMartF
 
                 {/* Product Info */}
                 <div className="pt-2 flex-1 flex flex-col justify-between space-y-1.5 min-w-0">
-                  <h3 className="text-xs sm:text-sm font-bold text-[#0B2420] dark:text-[#F6FBF9] truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" title={item.name}>
+                  <h3 className="text-xs sm:text-sm font-bold text-[#0B2420] dark:text-[#F1F5F9] truncate group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors" title={item.name}>
                     {item.name}
                   </h3>
 
-                  <div className="flex items-baseline gap-1.5 pt-1 border-t border-[#EBF7F4] dark:border-[#1E4D45]">
+                  <div className="flex items-baseline gap-1.5 pt-1 border-t border-[#EBF7F4] dark:border-[#252B35]">
                     <span className="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 font-mono tabular-nums">
                       {formatProductPrice(displayPrice)}
                     </span>
                     {hasSale && (
-                      <span className="text-[11px] text-[#3B635C]/70 dark:text-[#99CBC2]/60 line-through font-mono tabular-nums">
+                      <span className="text-[11px] text-[#3B635C]/70 dark:text-[#94A0B2]/60 line-through font-mono tabular-nums">
                         {formatProductPrice(item.price)}
                       </span>
                     )}

@@ -106,7 +106,7 @@ export function CampusCampaignCarousel({
 
   return (
     <div className={cn('w-full max-w-full overflow-hidden', className)}>
-      <div className="relative overflow-hidden rounded-3xl border border-[#B8E4DC]/80 dark:border-[#1E4D45] shadow-sm bg-white dark:bg-[#0B2420] transition-all duration-300">
+      <div className="relative overflow-hidden rounded-3xl border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-sm bg-white dark:bg-[#13171D] transition-all duration-300">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentSlide.id || safeIndex}
@@ -141,11 +141,11 @@ export function CampusCampaignCarousel({
                   </span>
                 </div>
 
-                <h3 className="text-sm sm:text-base md:text-lg font-black text-[#0B2420] dark:text-[#F6FBF9] tracking-tight line-clamp-1">
+                <h3 className="text-sm sm:text-base md:text-lg font-black text-[#0B2420] dark:text-[#F1F5F9] tracking-tight line-clamp-1">
                   {currentSlide.title}
                 </h3>
 
-                <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#99CBC2] font-medium line-clamp-2 leading-relaxed">
+                <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] font-medium line-clamp-2 leading-relaxed">
                   {currentSlide.description}
                 </p>
               </div>
@@ -186,7 +186,7 @@ export function CampusCampaignCarousel({
                 'h-1.5 rounded-full transition-all duration-300 cursor-pointer',
                 idx === safeIndex
                   ? 'w-6 bg-[#0F766E] dark:bg-[#2DD4BF]'
-                  : 'w-1.5 bg-[#B8E4DC] dark:bg-[#1E4D45] hover:bg-[#0D9488]'
+                  : 'w-1.5 bg-[#B8E4DC] dark:bg-[#252B35] hover:bg-[#0D9488]'
               )}
             />
           ))}

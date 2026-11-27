@@ -32,24 +32,24 @@ export function ThemeToggle() {
               transition={{ duration: 0.2 }}
             >
               {theme === 'light' && <Sun className="h-5 w-5 text-amber-500" />}
-              {theme === 'dark' && <Moon className="h-5 w-5 text-blue-400" />}
+              {theme === 'dark' && <Moon className="h-5 w-5 text-[#2DD4BF]" />}
             </motion.div>
           </AnimatePresence>
           <span className="sr-only">{t('common:change_theme', 'Tukar Tema')}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="rounded-2xl p-2 border-none shadow-2xl glass min-w-[140px]">
+      <DropdownMenuContent align="end" className="rounded-2xl p-2 bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-2xl min-w-[140px]">
         <DropdownMenuItem 
           onClick={() => setTheme('light')}
-          className="rounded-xl gap-3 font-black text-[10px] uppercase tracking-widest cursor-pointer focus:bg-primary/5"
+          className="rounded-xl gap-3 font-black text-[10px] uppercase tracking-widest cursor-pointer focus:bg-[#EBF7F4] dark:focus:bg-[#1B2028]"
         >
           <Sun size={14} className="text-amber-500" /> Light Mode
         </DropdownMenuItem>
         <DropdownMenuItem 
           onClick={() => setTheme('dark')}
-          className="rounded-xl gap-3 font-black text-[10px] uppercase tracking-widest cursor-pointer focus:bg-primary/5"
+          className="rounded-xl gap-3 font-black text-[10px] uppercase tracking-widest cursor-pointer focus:bg-[#EBF7F4] dark:focus:bg-[#1B2028]"
         >
-          <Moon size={14} className="text-blue-500" /> Dark Mode
+          <Moon size={14} className="text-[#0F766E] dark:text-[#2DD4BF]" /> Dark Mode
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

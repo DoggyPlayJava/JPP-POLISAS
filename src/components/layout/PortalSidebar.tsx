@@ -90,7 +90,7 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartT
       <aside
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "fixed inset-y-0 left-0 w-80 z-[200] bg-white dark:bg-[#081A17] border-r border-[#B8E4DC]/60 dark:border-[#1E4D45] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out will-change-transform",
+          "fixed inset-y-0 left-0 w-80 z-[200] bg-white dark:bg-[#0E1116] border-r border-[#B8E4DC]/60 dark:border-[#252B35] shadow-2xl flex flex-col transition-transform duration-300 ease-in-out will-change-transform",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
@@ -101,7 +101,7 @@ export function PortalSidebar({ isOpen, onClose, onOpen, settings = [], onStartT
               <img src="/jpp-logo.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div>
-              <h3 className="font-black text-xs tracking-[0.2em] uppercase text-[#3B635C] dark:text-[#99CBC2]">Portal Hub</h3>
+              <h3 className="font-black text-xs tracking-[0.2em] uppercase text-[#3B635C] dark:text-[#94A0B2]">Portal Hub</h3>
               <p className="font-black text-sm tracking-tighter dark:text-white">JPP POLISAS</p>
             </div>
           </div>

@@ -60,9 +60,9 @@ function NotifRow({
       onClick={onRead}
       className={cn(
         'group relative flex items-start gap-4 px-5 py-4 cursor-pointer',
-        'border-b border-[#B8E4DC]/50 dark:border-[#1E4D45]/70 last:border-0 transition-colors',
-        'hover:bg-[#EBF7F4]/60 dark:hover:bg-[#0B2420]/80',
-        isUnread && 'bg-[#EBF7F4]/40 dark:bg-[#0B2420]/60'
+        'border-b border-[#B8E4DC]/50 dark:border-[#252B35]/70 last:border-0 transition-colors',
+        'hover:bg-[#EBF7F4]/60 dark:hover:bg-[#13171D]/80',
+        isUnread && 'bg-[#EBF7F4]/40 dark:bg-[#13171D]/60'
       )}
     >
       {/* Module icon */}
@@ -88,21 +88,21 @@ function NotifRow({
         </div>
         <p className={cn(
           'text-sm leading-snug mb-1',
-          isUnread ? 'font-bold text-[#0B2420] dark:text-[#F6FBF9]' : 'font-medium text-[#3B635C] dark:text-[#99CBC2]'
+          isUnread ? 'font-bold text-[#0B2420] dark:text-[#F1F5F9]' : 'font-medium text-[#3B635C] dark:text-[#94A0B2]'
         )}>
           {notif.title}
         </p>
-        <p className="text-xs text-[#3B635C] dark:text-[#99CBC2] leading-relaxed line-clamp-2 mb-1.5">
+        <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] leading-relaxed line-clamp-2 mb-1.5">
           {notif.message}
         </p>
-        <p className="text-[11px] text-[#3B635C]/75 dark:text-[#99CBC2]/65 font-medium">
+        <p className="text-[11px] text-[#3B635C]/75 dark:text-[#94A0B2]/65 font-medium">
           {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: dateLocale })}
         </p>
       </div>
 
       {/* Arrow */}
       {hasLink && (
-        <ChevronRight className="w-4 h-4 text-[#3B635C]/70 dark:text-[#99CBC2]/70 group-hover:text-[#0F766E] dark:group-hover:text-[#2DD4BF] transition-colors flex-shrink-0 mt-3" />
+        <ChevronRight className="w-4 h-4 text-[#3B635C]/70 dark:text-[#94A0B2]/70 group-hover:text-[#0F766E] dark:group-hover:text-[#2DD4BF] transition-colors flex-shrink-0 mt-3" />
       )}
 
       {/* Read indicator */}
@@ -139,8 +139,8 @@ function FilterChip({
       className={cn(
         'flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] rounded-full text-[11px] font-bold transition-all border cursor-pointer',
         active
-          ? 'bg-[#0F766E] text-white border-[#0F766E] dark:bg-[#2DD4BF] dark:text-[#061714] dark:border-[#2DD4BF] shadow-xs'
-          : 'bg-white dark:bg-[#0B2420] text-[#3B635C] dark:text-[#99CBC2] border-[#B8E4DC]/80 dark:border-[#1E4D45] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C]'
+          ? 'bg-[#0F766E] text-white border-[#0F766E] dark:bg-[#2DD4BF] dark:text-[#090B0E] dark:border-[#2DD4BF] shadow-xs'
+          : 'bg-white dark:bg-[#13171D] text-[#3B635C] dark:text-[#94A0B2] border-[#B8E4DC]/80 dark:border-[#252B35] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028]'
       )}
       style={active && cfg ? { background: cfg.bg, color: cfg.color, borderColor: `${cfg.color}35` } : {}}
     >
@@ -232,24 +232,24 @@ export function NotifikasiPage() {
   const activeModules = ALL_MODULES.filter(m => (moduleCount[m] ?? 0) > 0);
 
   return (
-    <div className="min-h-screen bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] transition-colors">
+    <div className="min-h-screen bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] transition-colors">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-[#0B2420]/95 backdrop-blur-md border-b border-[#B8E4DC]/60 dark:border-[#1E4D45] pt-[var(--sat,env(safe-area-inset-top,0px))]">
+      <div className="sticky top-0 z-30 bg-white/95 dark:bg-[#13171D]/95 backdrop-blur-md border-b border-[#B8E4DC]/60 dark:border-[#252B35] pt-[var(--sat,env(safe-area-inset-top,0px))]">
         <div className="max-w-2xl mx-auto px-4 pt-4 pb-3">
           <div className="flex items-center gap-3 mb-3">
             <button
               onClick={() => navigate(-1)}
               aria-label={t('common:back', 'Kembali')}
-              className="w-9 h-9 rounded-xl bg-[#EBF7F4] dark:bg-[#11322C] hover:bg-[#D5EFEA] dark:hover:bg-[#18443C] flex items-center justify-center transition-colors cursor-pointer"
+              className="w-9 h-9 rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028] hover:bg-[#D5EFEA] dark:hover:bg-[#232933] flex items-center justify-center transition-colors cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
             </button>
 
             <div className="flex-1">
-              <h1 className="text-base font-black text-[#0B2420] dark:text-[#F6FBF9] tracking-tight">
+              <h1 className="text-base font-black text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
                 {t('portal:notifications_title', 'Notifikasi')}
               </h1>
-              <p className="text-xs text-[#3B635C] dark:text-[#99CBC2] font-medium">
+              <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] font-medium">
                 {t('portal:notifications_count', { count: notifs.length, defaultValue: `${notifs.length} notifikasi` })}
                 {unreadCount > 0 && t('portal:notifications_unread_count', { count: unreadCount, defaultValue: ` · ${unreadCount} belum dibaca` })}
               </p>
@@ -261,7 +261,7 @@ export function NotifikasiPage() {
                 size="sm"
                 disabled={isMarkingAll}
                 onClick={markAllRead}
-                className="h-9 gap-1.5 text-[11px] font-bold bg-[#EBF7F4] hover:bg-[#D5EFEA] dark:bg-[#11322C] dark:hover:bg-[#18443C] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#1E4D45] rounded-xl shadow-none px-3.5"
+                className="h-9 gap-1.5 text-[11px] font-bold bg-[#EBF7F4] hover:bg-[#D5EFEA] dark:bg-[#1B2028] dark:hover:bg-[#232933] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#252B35] rounded-xl shadow-none px-3.5"
               >
                 {isMarkingAll ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -302,7 +302,7 @@ export function NotifikasiPage() {
                 'flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] rounded-full text-[11px] font-bold transition-all border cursor-pointer',
                 showUnreadOnly
                   ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
-                  : 'bg-white dark:bg-[#0B2420] text-[#3B635C] dark:text-[#99CBC2] border-[#B8E4DC]/80 dark:border-[#1E4D45] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C]'
+                  : 'bg-white dark:bg-[#13171D] text-[#3B635C] dark:text-[#94A0B2] border-[#B8E4DC]/80 dark:border-[#252B35] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028]'
               )}
             >
               <Filter className="w-3 h-3" />
@@ -319,14 +319,14 @@ export function NotifikasiPage() {
       <div className="max-w-2xl mx-auto">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4 px-4">
-            <div className="w-16 h-16 rounded-2xl bg-[#EBF7F4] dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] flex items-center justify-center">
+            <div className="w-16 h-16 rounded-2xl bg-[#EBF7F4] dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] flex items-center justify-center">
               <Bell className="w-8 h-8 text-[#0F766E] dark:text-[#2DD4BF]" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-black text-[#0B2420] dark:text-[#F6FBF9]">
+              <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9]">
                 {showUnreadOnly ? t('portal:no_unread_notifications', 'Tiada notifikasi belum dibaca') : t('portal:no_notifications', 'Tiada notifikasi')}
               </p>
-              <p className="text-xs text-[#3B635C] dark:text-[#99CBC2] mt-1">
+              <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-1">
                 {showUnreadOnly ? t('portal:all_notifications_read', 'Semua notifikasi sudah dibaca') : t('portal:will_receive_notifications_here', 'Anda akan menerima notifikasi di sini')}
               </p>
             </div>
@@ -349,7 +349,7 @@ export function NotifikasiPage() {
               >
                 {/* Date group label */}
                 <div className="px-5 py-2.5 mt-2">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#99CBC2]">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
                     {group.label}
                   </p>
                 </div>

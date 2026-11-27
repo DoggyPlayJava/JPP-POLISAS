@@ -36,7 +36,7 @@ export function FloatingActionDock({
           exit={{ opacity: 0, y: 30, scale: 0.95 }}
           transition={{ type: 'spring', damping: 25, stiffness: 350 }}
           className={cn(
-            'fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl bg-[#0B2420] dark:bg-[#0B2420] text-white shadow-2xl border border-teal-400/20',
+            'fixed bottom-6 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 px-5 py-3 rounded-2xl bg-[#0B2420] dark:bg-[#13171D] text-white shadow-2xl border border-teal-400/20',
             className
           )}
         >

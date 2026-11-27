@@ -37,15 +37,15 @@ describe('JPP HQ Leadership Cockpit & Exco Sidebar - Semambu Mineral Teal Theme'
       expect(lightBg.activeBg).toBe('rgba(45, 212, 191, 0.16)');
     });
 
-    it('returns Unified Deep Pine-Teal tokens for dark mode sidebar', () => {
+    it('returns Obsidian Carbon tokens for dark mode sidebar (zero green cast)', () => {
       const darkBg = getJppSidebarBg('#0F766E', true);
-      expect(darkBg.top).toBe('#0B2420');
-      expect(darkBg.bottom).toBe('#061714');
-      expect(darkBg.border).toBe('rgba(45, 212, 191, 0.16)');
-      expect(darkBg.textPrimary).toBe('#F6FBF9');
-      expect(darkBg.textSecondary).toBe('#99CBC2');
+      expect(darkBg.top).toBe('#0E1116');
+      expect(darkBg.bottom).toBe('#090B0E');
+      expect(darkBg.border).toBe('rgba(255, 255, 255, 0.08)');
+      expect(darkBg.textPrimary).toBe('#F1F5F9');
+      expect(darkBg.textSecondary).toBe('#94A0B2');
       expect(darkBg.hoverBg).toBe('rgba(255, 255, 255, 0.06)');
-      expect(darkBg.activeBg).toBe('rgba(45, 212, 191, 0.16)');
+      expect(darkBg.activeBg).toBe('rgba(45, 212, 191, 0.14)');
     });
   });
 
@@ -73,10 +73,10 @@ describe('JPP HQ Leadership Cockpit & Exco Sidebar - Semambu Mineral Teal Theme'
       });
     });
 
-    it('ensures JppLayout.tsx uses Mineral Teal and Alabaster canvas classes', () => {
+    it('ensures JppLayout.tsx uses Alabaster light and Obsidian dark canvas classes', () => {
       const layoutContent = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/jpp/JppLayout.tsx'), 'utf-8');
       expect(layoutContent).toContain('bg-[#F6FBF9]');
-      expect(layoutContent).toContain('dark:bg-[#061714]');
+      expect(layoutContent).toContain('dark:bg-[#090B0E]');
     });
 
     it('ensures complete elimination of legacy text-rose-950 and border-rose-200 in JppSidebar.tsx', () => {

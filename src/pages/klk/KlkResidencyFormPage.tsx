@@ -137,7 +137,7 @@ export function KlkResidencyFormPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] flex items-center justify-center px-4 pb-4 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] transition-colors">
+    <div className="min-h-screen bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] flex items-center justify-center px-4 pb-4 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] transition-colors">
       {/* BG Glow */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full opacity-15 dark:opacity-10"
@@ -156,13 +156,13 @@ export function KlkResidencyFormPage() {
           <button
             onClick={() => navigate(-1)}
             aria-label={t('common:back', 'Kembali')}
-            className="w-10 h-10 rounded-2xl bg-white dark:bg-[#0B2420] border border-[#B8E4DC] dark:border-[#1E4D45] flex items-center justify-center hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] transition-colors shadow-xs"
+            className="w-10 h-10 rounded-2xl bg-white dark:bg-[#13171D] border border-[#B8E4DC] dark:border-[#252B35] flex items-center justify-center hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors shadow-xs"
           >
             <ArrowLeft className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
           </button>
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider text-[#0F766E] dark:text-[#2DD4BF]">{t('klk:exco_klk_title', 'Exco Kediaman Luar Kampus')}</p>
-            <h1 className="text-lg font-black text-[#0B2420] dark:text-[#F6FBF9] leading-tight">
+            <h1 className="text-lg font-black text-[#0B2420] dark:text-[#F1F5F9] leading-tight">
               {t('housing:declare_residence', 'Hantar Deklarasi Kediaman Luar Kampus')}
             </h1>
           </div>
@@ -173,20 +173,20 @@ export function KlkResidencyFormPage() {
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="mb-4 rounded-2xl p-4 border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] flex items-center gap-4 shadow-xs"
+          className="mb-4 rounded-2xl p-4 border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] flex items-center gap-4 shadow-xs"
         >
-          <div className="w-10 h-10 rounded-xl bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] font-black flex items-center justify-center flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] font-black flex items-center justify-center flex-shrink-0">
             <span className="text-lg">{profile?.full_name?.[0] ?? '?'}</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-black text-[#0B2420] dark:text-[#F6FBF9] truncate">{profile?.full_name}</p>
-            <p className="text-[11px] text-[#3B635C] dark:text-[#99CBC2] font-medium">
+            <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9] truncate">{profile?.full_name}</p>
+            <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2] font-medium">
               {profile?.matric_no?.toUpperCase()} · {jabatanLabel} · {t('common:semester', 'Semester')} {semInfo.semester}
             </p>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#99CBC2]">{t('housing:academic_year', 'Tahun Akademik')}</p>
-            <p className="text-xs font-black text-[#0B2420] dark:text-[#F6FBF9]">{academicYear}</p>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">{t('housing:academic_year', 'Tahun Akademik')}</p>
+            <p className="text-xs font-black text-[#0B2420] dark:text-[#F1F5F9]">{academicYear}</p>
           </div>
         </motion.div>
 
@@ -195,7 +195,7 @@ export function KlkResidencyFormPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="rounded-[2rem] bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] shadow-xl overflow-hidden"
+          className="rounded-[2rem] bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-xl overflow-hidden"
         >
           {/* Top Accent Bar */}
           <div className="h-1.5 w-full" style={{ background: 'linear-gradient(90deg, #0F766E, #14B8A6)' }} />
@@ -205,12 +205,12 @@ export function KlkResidencyFormPage() {
             {step === 'choice' && (
               <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-10 h-10 rounded-xl bg-[#EBF7F4] dark:bg-[#11322C] flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028] flex items-center justify-center">
                     <MapPin className="w-5 h-5 text-[#0F766E] dark:text-[#2DD4BF]" />
                   </div>
                   <div>
-                    <h2 className="text-lg font-black text-[#0B2420] dark:text-[#F6FBF9]">{t('housing:where_do_you_live', 'Di mana anda tinggal?')}</h2>
-                    <p className="text-xs text-[#3B635C] dark:text-[#99CBC2]">Semester {semInfo.semester} - {academicYear}</p>
+                    <h2 className="text-lg font-black text-[#0B2420] dark:text-[#F1F5F9]">{t('housing:where_do_you_live', 'Di mana anda tinggal?')}</h2>
+                    <p className="text-xs text-[#3B635C] dark:text-[#94A0B2]">Semester {semInfo.semester} - {academicYear}</p>
                   </div>
                 </div>
 
@@ -225,27 +225,27 @@ export function KlkResidencyFormPage() {
                     </div>
                     <div className="text-center">
                       <p className="font-black text-emerald-700 dark:text-emerald-300 text-sm">{t('housing:in_kamsis', 'Dalam KAMSIS')}</p>
-                      <p className="text-[11px] text-[#3B635C] dark:text-[#99CBC2] mt-0.5">{t('housing:stay_hostel', 'Tinggal di asrama')}</p>
+                      <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2] mt-0.5">{t('housing:stay_hostel', 'Tinggal di asrama')}</p>
                     </div>
                   </motion.button>
 
                   <motion.button
                     whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
                     onClick={() => setStep('form')}
-                    className="flex flex-col items-center gap-3 p-6 rounded-2xl border border-[#0F766E]/25 bg-[#EBF7F4]/70 dark:bg-[#11322C]/70 hover:bg-[#D5EFEA] dark:hover:bg-[#18443C] transition-all cursor-pointer"
+                    className="flex flex-col items-center gap-3 p-6 rounded-2xl border border-[#0F766E]/25 bg-[#EBF7F4]/70 dark:bg-[#1B2028]/70 hover:bg-[#D5EFEA] dark:hover:bg-[#232933] transition-all cursor-pointer"
                   >
                     <div className="w-14 h-14 rounded-2xl bg-[#0F766E]/15 dark:bg-[#2DD4BF]/15 flex items-center justify-center">
                       <Home className="w-7 h-7 text-[#0F766E] dark:text-[#2DD4BF]" />
                     </div>
                     <div className="text-center">
                       <p className="font-black text-[#0F766E] dark:text-[#2DD4BF] text-sm">{t('housing:off_campus', 'Luar Kampus')}</p>
-                      <p className="text-[11px] text-[#3B635C] dark:text-[#99CBC2] mt-0.5">{t('housing:stay_rental_home', 'Sewa / Rumah sendiri')}</p>
+                      <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2] mt-0.5">{t('housing:stay_rental_home', 'Sewa / Rumah sendiri')}</p>
                     </div>
                   </motion.button>
                 </div>
 
                 {loading && (
-                  <div className="flex items-center justify-center gap-2 text-xs text-[#3B635C] dark:text-[#99CBC2]">
+                  <div className="flex items-center justify-center gap-2 text-xs text-[#3B635C] dark:text-[#94A0B2]">
                     <Loader2 className="w-4 h-4 animate-spin" /> {t('common:saving', 'Menyimpan...')}
                   </div>
                 )}
@@ -258,13 +258,13 @@ export function KlkResidencyFormPage() {
                 <div className="flex items-center gap-3 mb-6">
                   <button
                     onClick={() => setStep('choice')}
-                    className="w-9 h-9 rounded-xl bg-[#EBF7F4] dark:bg-[#11322C] flex items-center justify-center hover:bg-[#D5EFEA] dark:hover:bg-[#18443C] transition-colors"
+                    className="w-9 h-9 rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028] flex items-center justify-center hover:bg-[#D5EFEA] dark:hover:bg-[#232933] transition-colors"
                   >
                     <ArrowLeft className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
                   </button>
                   <div>
-                    <h2 className="text-lg font-black text-[#0B2420] dark:text-[#F6FBF9]">{t('housing:residence_info', 'Maklumat Kediaman')}</h2>
-                    <p className="text-xs text-[#3B635C] dark:text-[#99CBC2]">
+                    <h2 className="text-lg font-black text-[#0B2420] dark:text-[#F1F5F9]">{t('housing:residence_info', 'Maklumat Kediaman')}</h2>
+                    <p className="text-xs text-[#3B635C] dark:text-[#94A0B2]">
                       {existingRecord ? t('housing:update_residence_info', 'Kemaskini maklumat kediaman anda') : t('housing:fill_residence_info', 'Isi maklumat tempat tinggal anda')}
                     </p>
                   </div>
@@ -289,14 +289,14 @@ export function KlkResidencyFormPage() {
                   />
 
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#99CBC2]">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
                       {t('housing:residential_area', 'Kawasan Kediaman')} <span className="text-rose-500">*</span>
                     </label>
                     <KawasanSearchSelect
                       value={kawasan}
                       onChange={setKawasan}
                       kawasanList={kawasanList}
-                      inputClass="bg-[#F6FBF9] dark:bg-[#081A17] border-[#B8E4DC] dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9]"
+                      inputClass="bg-[#F6FBF9] dark:bg-[#0E1116] border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9]"
                       required
                     />
                   </div>
@@ -309,7 +309,7 @@ export function KlkResidencyFormPage() {
                     />
                   )}
 
-                  <div className="p-3.5 rounded-xl bg-[#EBF7F4] dark:bg-[#11322C] border border-[#B8E4DC] dark:border-[#1E4D45] text-xs text-[#0B2420] dark:text-[#B8E4DC]">
+                  <div className="p-3.5 rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] text-xs text-[#0B2420] dark:text-[#B8E4DC]">
                     <span className="font-bold text-[#0F766E] dark:text-[#2DD4BF]">{t('housing:landlord_contact', 'Maklumat Tuan Rumah Sah')}:</span> {t('housing:landlord_agreement_note', 'Sila simpan salinan perjanjian dan nombor telefon pemilik kediaman untuk rujukan kecemasan Exco.')}
                   </div>
 
@@ -322,8 +322,8 @@ export function KlkResidencyFormPage() {
 
                   {/* Soalan Dinamik dari Form Builder */}
                   {dynamicFields.length > 0 && (
-                    <div className="space-y-4 pt-2 border-t border-[#B8E4DC]/60 dark:border-[#1E4D45]">
-                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#99CBC2]">{t('housing:additional_questions', 'Soalan Tambahan')}</p>
+                    <div className="space-y-4 pt-2 border-t border-[#B8E4DC]/60 dark:border-[#252B35]">
+                      <p className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">{t('housing:additional_questions', 'Soalan Tambahan')}</p>
                       <KlkDynamicFieldRenderer
                         fields={dynamicFields}
                         values={extraData}
@@ -359,11 +359,11 @@ export function KlkResidencyFormPage() {
                 >
                   <CheckCircle2 className="w-10 h-10 text-emerald-500" />
                 </motion.div>
-                <h2 className="text-2xl font-black text-[#0B2420] dark:text-[#F6FBF9] mb-2">{t('common:thank_you', 'Terima Kasih!')}</h2>
-                <p className="text-sm text-[#3B635C] dark:text-[#99CBC2] mb-6">{t('housing:residence_saved_desc', 'Maklumat kediaman anda telah disimpan untuk semester ini.')}</p>
+                <h2 className="text-2xl font-black text-[#0B2420] dark:text-[#F1F5F9] mb-2">{t('common:thank_you', 'Terima Kasih!')}</h2>
+                <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] mb-6">{t('housing:residence_saved_desc', 'Maklumat kediaman anda telah disimpan untuk semester ini.')}</p>
                 <Button
                   onClick={() => navigate('/portal')}
-                  className="rounded-xl font-black text-sm uppercase tracking-widest border-[#B8E4DC] dark:border-[#1E4D45]"
+                  className="rounded-xl font-black text-sm uppercase tracking-widest border-[#B8E4DC] dark:border-[#252B35]"
                   variant="outline"
                 >
                   {t('housing:back_to_portal', 'Kembali ke Portal')}
@@ -381,8 +381,8 @@ export function KlkResidencyFormPage() {
 function FieldReadOnly({ label, value }: { label: string; value: string }) {
   return (
     <div className="space-y-1.5">
-      <label className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#99CBC2]">{label}</label>
-      <div className="h-11 px-4 rounded-xl bg-[#EBF7F4]/60 dark:bg-[#081A17] border border-[#B8E4DC]/60 dark:border-[#1E4D45] flex items-center text-[#0B2420] dark:text-[#99CBC2] text-sm font-medium">
+      <label className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">{label}</label>
+      <div className="h-11 px-4 rounded-xl bg-[#EBF7F4]/60 dark:bg-[#0E1116] border border-[#B8E4DC]/60 dark:border-[#252B35] flex items-center text-[#0B2420] dark:text-[#94A0B2] text-sm font-medium">
         {value || '-'}
       </div>
     </div>
@@ -396,15 +396,15 @@ function FieldText({ label, value, onChange, placeholder, required, optional }: 
   const { t } = useTranslation(['housing', 'common']);
   return (
     <div className="space-y-1.5">
-      <label className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#99CBC2]">
+      <label className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
         {label}
         {required && <span className="text-rose-500 ml-1">*</span>}
-        {optional && <span className="ml-1 font-medium normal-case text-[#3B635C]/70 dark:text-[#99CBC2]/70">{t('housing:optional_parenthesized', '(Pilihan)')}</span>}
+        {optional && <span className="ml-1 font-medium normal-case text-[#3B635C]/70 dark:text-[#94A0B2]/70">{t('housing:optional_parenthesized', '(Pilihan)')}</span>}
       </label>
       <input
         type="text" value={value} onChange={e => onChange(e.target.value)}
         placeholder={placeholder} required={required}
-        className="w-full h-11 px-4 rounded-xl bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC] dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9] text-sm font-medium focus:outline-none focus:border-[#0F766E] transition-all placeholder:text-[#3B635C]/50 dark:placeholder:text-[#99CBC2]/40"
+        className="w-full h-11 px-4 rounded-xl bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] text-sm font-medium focus:outline-none focus:border-[#0F766E] transition-all placeholder:text-[#3B635C]/50 dark:placeholder:text-[#94A0B2]/40"
       />
     </div>
   );
@@ -417,15 +417,15 @@ function FieldTextarea({ label, value, onChange, placeholder, required, optional
   const { t } = useTranslation(['housing', 'common']);
   return (
     <div className="space-y-1.5">
-      <label className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#99CBC2]">
+      <label className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
         {label}
         {required && <span className="text-rose-500 ml-1">*</span>}
-        {optional && <span className="ml-1 font-medium normal-case text-[#3B635C]/70 dark:text-[#99CBC2]/70">{t('housing:optional_parenthesized', '(Pilihan)')}</span>}
+        {optional && <span className="ml-1 font-medium normal-case text-[#3B635C]/70 dark:text-[#94A0B2]/70">{t('housing:optional_parenthesized', '(Pilihan)')}</span>}
       </label>
       <textarea
         value={value} onChange={e => onChange(e.target.value)}
         placeholder={placeholder} required={required} rows={2}
-        className="w-full px-4 py-3 rounded-xl bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC] dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9] text-sm font-medium resize-none focus:outline-none focus:border-[#0F766E] transition-all placeholder:text-[#3B635C]/50 dark:placeholder:text-[#99CBC2]/40"
+        className="w-full px-4 py-3 rounded-xl bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] text-sm font-medium resize-none focus:outline-none focus:border-[#0F766E] transition-all placeholder:text-[#3B635C]/50 dark:placeholder:text-[#94A0B2]/40"
       />
     </div>
   );

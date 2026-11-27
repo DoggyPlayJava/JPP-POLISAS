@@ -17,6 +17,6 @@ describe('SlideOverSheet', () => {
 
   it('contains dark background styling adhering to warm institutional palette', () => {
     const sourceCode = fs.readFileSync(sheetPath, 'utf8');
-    expect(sourceCode).toContain('dark:bg-[#0B2420]');
+    expect(sourceCode).toContain('dark:bg-[#13171D]');
   });
 });

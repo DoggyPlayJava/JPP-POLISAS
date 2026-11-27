@@ -334,11 +334,10 @@ export function JppHomePage() {
           {/* Badge */}
           <div className="flex items-center gap-2 flex-wrap">
             <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest shadow-sm dark:shadow-none"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest shadow-sm dark:shadow-none text-[#0F766E] dark:text-[#2DD4BF]"
               style={{
-                background: hexToRgba(themeColor, 0.12),
-                borderColor: hexToRgba(themeColor, 0.25),
-                color: hexToRgba(themeColor, 0.9),
+                background: hexToRgba(themeColor, 0.14),
+                borderColor: hexToRgba(themeColor, 0.3),
               }}
             >
               {isYDP

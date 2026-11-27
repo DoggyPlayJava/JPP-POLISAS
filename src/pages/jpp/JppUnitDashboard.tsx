@@ -184,7 +184,7 @@ export function JppUnitDashboard() {
   // Guard: still checking MT access
   if (checkingAccess) {
     return (
-      <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-teal-600/40 dark:text-teal-400/30" />
       </div>
     );
@@ -193,7 +193,7 @@ export function JppUnitDashboard() {
   // Guard: no access
   if (!hasAccess && !checkingAccess) {
     return (
-      <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] flex flex-col items-center justify-center text-center px-6 space-y-4 text-slate-900 dark:text-white">
+      <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] flex flex-col items-center justify-center text-center px-6 space-y-4 text-slate-900 dark:text-white">
         <div className="w-16 h-16 rounded-2xl bg-slate-200 dark:bg-white/5 flex items-center justify-center">
           <Lock className="w-7 h-7 text-slate-400 dark:text-white/20" />
         </div>
@@ -210,7 +210,7 @@ export function JppUnitDashboard() {
   }
 
   return (
-    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-slate-900 dark:text-white transition-colors">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-slate-900 dark:text-white transition-colors">
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute -top-[10%] -right-[5%] w-[45vw] h-[45vw] rounded-full opacity-5"

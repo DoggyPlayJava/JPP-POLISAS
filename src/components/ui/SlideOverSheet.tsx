@@ -55,7 +55,7 @@ export function SlideOverSheet({
                 exit={{ x: '100%' }}
                 transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                 className={cn(
-                  'fixed inset-y-0 right-0 z-50 w-full sm:max-w-md bg-white dark:bg-[#0B2420] border-l border-[#B8E4DC] dark:border-[#1E4D45] shadow-2xl p-6 flex flex-col focus:outline-none overflow-y-auto text-slate-900 dark:text-white',
+                  'fixed inset-y-0 right-0 z-50 w-full sm:max-w-md bg-white dark:bg-[#13171D] border-l border-[#B8E4DC] dark:border-[#252B35] shadow-2xl p-6 flex flex-col focus:outline-none overflow-y-auto text-slate-900 dark:text-white',
                   className
                 )}
               >

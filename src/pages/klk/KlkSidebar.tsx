@@ -91,9 +91,13 @@ export function KlkSidebar() {
   );
 
   return (
-    <aside
-      className="w-[280px] h-[100dvh] flex flex-col select-none overflow-hidden flex-shrink-0 z-[140] relative border-r border-teal-400/15 text-[#F6FBF9] transition-colors duration-300"
-      style={{ background: 'linear-gradient(180deg, #0B2420 0%, #061714 100%)' }}
+      <aside
+      className="w-[280px] h-[100dvh] flex flex-col select-none overflow-hidden flex-shrink-0 z-[140] relative border-r border-teal-400/15 dark:border-[#252B35] text-[#F1F5F9] transition-colors duration-300"
+      style={{
+        background: isDark
+          ? 'linear-gradient(180deg, #0E1116 0%, #090B0E 100%)'
+          : 'linear-gradient(180deg, #0B2420 0%, #061714 100%)',
+      }}
     >
       {/* Header */}
       <div className="flex-shrink-0 flex flex-col relative z-10 border-b border-white/10 bg-black/15">

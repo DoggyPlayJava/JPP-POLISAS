@@ -196,7 +196,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
               zIndex: 9999,
             } : undefined}
             className={cn(
-              "z-[9999] bg-white dark:bg-[#0B2420] border border-[#B8E4DC] dark:border-[#1E4D45] shadow-xl dark:shadow-2xl rounded-full px-3 py-1.5 flex items-center gap-2 transform-gpu shrink-0 flex-nowrap",
+              "z-[9999] bg-white dark:bg-[#13171D] border border-[#B8E4DC] dark:border-[#252B35] shadow-xl dark:shadow-2xl rounded-full px-3 py-1.5 flex items-center gap-2 transform-gpu shrink-0 flex-nowrap",
               !popoverCoords && "absolute bottom-full mb-2 left-0"
             )}
           >
@@ -219,7 +219,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
                   }}
                   className={cn(
                     'relative text-xl sm:text-2xl p-1 rounded-full transition-transform focus:outline-none select-none cursor-pointer',
-                    hasReacted && 'bg-[#EBF7F4] dark:bg-[#11322C] ring-2 ring-[#0F766E]/40 dark:ring-[#2DD4BF]/40 rounded-full'
+                    hasReacted && 'bg-[#EBF7F4] dark:bg-[#1B2028] ring-2 ring-[#0F766E]/40 dark:ring-[#2DD4BF]/40 rounded-full'
                   )}
                 >
                   <span>{item.emoji}</span>
@@ -261,13 +261,13 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
               zIndex: 9985,
             } : undefined}
             className={cn(
-              "z-[9985] bg-white dark:bg-[#0B2420] border border-[#B8E4DC] dark:border-[#1E4D45] shadow-2xl rounded-2xl p-2.5 flex flex-col gap-1 min-w-[190px] max-w-[240px]",
+              "z-[9985] bg-white dark:bg-[#13171D] border border-[#B8E4DC] dark:border-[#252B35] shadow-2xl rounded-2xl p-2.5 flex flex-col gap-1 min-w-[190px] max-w-[240px]",
               !breakdownCoords && "absolute bottom-full mb-2 left-0"
             )}
           >
-            <div className="flex items-center justify-between text-[11px] font-bold text-[#3B635C] dark:text-[#99CBC2] uppercase tracking-wider px-1.5 pb-1.5 border-b border-[#B8E4DC]/60 dark:border-[#1E4D45]">
+            <div className="flex items-center justify-between text-[11px] font-bold text-[#3B635C] dark:text-[#94A0B2] uppercase tracking-wider px-1.5 pb-1.5 border-b border-[#B8E4DC]/60 dark:border-[#252B35]">
               <span>{t('services:community_reactions', 'Reaksi Komuniti')}</span>
-              <span className="font-mono text-[#0B2420] dark:text-[#F6FBF9] font-bold">{displayLikes}</span>
+              <span className="font-mono text-[#0B2420] dark:text-[#F1F5F9] font-bold">{displayLikes}</span>
             </div>
 
             <div className="flex flex-col gap-0.5 mt-1">
@@ -324,7 +324,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
       {canUsePortal ? createPortal(breakdownContent, document.body) : breakdownContent}
 
       {/* Unified Reaction Cluster Capsule */}
-      <div className="inline-flex items-center rounded-full bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] p-0.5 shadow-xs shrink-0 flex-nowrap">
+      <div className="inline-flex items-center rounded-full bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] p-0.5 shadow-xs shrink-0 flex-nowrap">
         {/* Dynamic User Reaction / Like Button */}
         <button
           data-testid="reaction-heart-btn"
@@ -345,7 +345,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
             isUserReacted
               ? activeType === 'heart'
                 ? isCivicIssue
-                  ? 'bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#061714] shadow-xs'
+                  ? 'bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] shadow-xs'
                   : 'bg-rose-500 text-white shadow-xs'
                 : activeType === 'laugh'
                 ? 'bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 font-bold'
@@ -356,7 +356,7 @@ export const PolySuaraReactions: React.FC<PolySuaraReactionsProps> = ({
                 : activeType === 'shock'
                 ? 'bg-purple-500/15 border border-purple-500/30 text-purple-600 dark:text-purple-400 font-bold'
                 : 'bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-400 font-bold'
-              : 'text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0F766E] dark:hover:text-[#2DD4BF]'
+              : 'text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0F766E] dark:hover:text-[#2DD4BF]'
           )}
         >
           {isUserReacted && activeEmoji && activeType !== 'heart' ? (

@@ -293,9 +293,9 @@ describe('PolySuaraReactions One-Tap Heart & Popover Suite', () => {
       });
 
       expect(html).toContain('bg-white');
-      expect(html).toContain('dark:bg-[#0B2420]');
+      expect(html).toContain('dark:bg-[#13171D]');
       expect(html).toContain('border-[#B8E4DC]');
-      expect(html).toContain('dark:border-[#1E4D45]');
+      expect(html).toContain('dark:border-[#252B35]');
     });
 
     it('renders Saya Juga Alami civic support label and Mineral Teal styling when isCivicIssue is true', () => {

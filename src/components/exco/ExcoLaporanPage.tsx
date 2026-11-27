@@ -330,7 +330,7 @@ export function ExcoLaporanPage({ excoUnit, themeColor, excoLabel }: Props) {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0F172A] dark:text-white transition-colors duration-300">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0F172A] dark:text-white transition-colors duration-300">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
         {/* Header */}

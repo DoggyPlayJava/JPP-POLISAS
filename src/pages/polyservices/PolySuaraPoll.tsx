@@ -113,8 +113,8 @@ export function PolySuaraPoll({ poll, currentUserId }: PollProps) {
   };
 
   return (
-    <div className="mt-3.5 bg-[#F6FBF9] dark:bg-[#081A17] rounded-2xl p-4 border border-[#B8E4DC]/80 dark:border-[#1E4D45] shadow-2xs">
-      <div className="flex items-center gap-2 mb-3 text-[#3B635C] dark:text-[#99CBC2] text-xs font-bold uppercase tracking-wider">
+    <div className="mt-3.5 bg-[#F6FBF9] dark:bg-[#0E1116] rounded-2xl p-4 border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-2xs">
+      <div className="flex items-center gap-2 mb-3 text-[#3B635C] dark:text-[#94A0B2] text-xs font-bold uppercase tracking-wider">
         <BarChart className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
         {t('portal:poll_title', 'Undian')} {poll?.is_multiple_choice && t('portal:poll_multiple_choice', '(Pelbagai Pilihan)')}
       </div>
@@ -128,7 +128,7 @@ export function PolySuaraPoll({ poll, currentUserId }: PollProps) {
               <span className="font-mono tabular-nums">{disagreePct}%</span> · {disagreeOpt.option_text}
             </span>
           </div>
-          <div className="h-2.5 w-full rounded-full overflow-hidden flex bg-[#EBF7F4] dark:bg-[#11322C]">
+          <div className="h-2.5 w-full rounded-full overflow-hidden flex bg-[#EBF7F4] dark:bg-[#1B2028]">
             <div
               className="h-full bg-[#0F766E] dark:bg-[#2DD4BF] transition-all duration-500"
               style={{ width: `${agreePct}%` }}
@@ -154,28 +154,28 @@ export function PolySuaraPoll({ poll, currentUserId }: PollProps) {
               className={cn(
                 "relative w-full text-left overflow-hidden rounded-xl border transition-all duration-300 cursor-pointer",
                 isVoted
-                  ? "border-[#0F766E]/60 dark:border-[#2DD4BF]/50 bg-[#EBF7F4]/80 dark:bg-[#11322C]/70 shadow-xs ring-1 ring-[#0F766E]/20 dark:ring-[#2DD4BF]/20"
-                  : "border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] hover:border-[#0F766E]/40 dark:hover:border-[#2DD4BF]/40 shadow-2xs"
+                  ? "border-[#0F766E]/60 dark:border-[#2DD4BF]/50 bg-[#EBF7F4]/80 dark:bg-[#1B2028]/70 shadow-xs ring-1 ring-[#0F766E]/20 dark:ring-[#2DD4BF]/20"
+                  : "border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] hover:border-[#0F766E]/40 dark:hover:border-[#2DD4BF]/40 shadow-2xs"
               )}
             >
               <div
                 className={cn(
                   "absolute inset-y-0 left-0 transition-all duration-700",
-                  isVoted ? "bg-[#0F766E]/20 dark:bg-[#2DD4BF]/25" : "bg-[#EBF7F4]/70 dark:bg-[#11322C]/50"
+                  isVoted ? "bg-[#0F766E]/20 dark:bg-[#2DD4BF]/25" : "bg-[#EBF7F4]/70 dark:bg-[#1B2028]/50"
                 )}
                 style={{ width: `${percentage}%` }}
               />
               <div className="relative p-3 flex items-start justify-between z-10 gap-2">
                 <span className={cn(
                   "text-sm flex-1 break-words text-left",
-                  isVoted ? "text-[#0B2420] dark:text-[#F6FBF9] font-semibold" : "text-[#0B2420] dark:text-[#EBF7F4] font-medium"
+                  isVoted ? "text-[#0B2420] dark:text-[#F1F5F9] font-semibold" : "text-[#0B2420] dark:text-[#F1F5F9] font-medium"
                 )}>
                   {opt.option_text}
                 </span>
                 <div className="flex items-center gap-2 shrink-0 mt-0.5">
                   <span className={cn(
                     "text-xs whitespace-nowrap font-bold font-mono tabular-nums",
-                    isVoted ? "text-[#0F766E] dark:text-[#2DD4BF]" : "text-[#3B635C] dark:text-[#99CBC2]"
+                    isVoted ? "text-[#0F766E] dark:text-[#2DD4BF]" : "text-[#3B635C] dark:text-[#94A0B2]"
                   )}>
                     {percentage}% ({votes})
                   </span>
@@ -186,7 +186,7 @@ export function PolySuaraPoll({ poll, currentUserId }: PollProps) {
           );
         })}
       </div>
-      <div className="mt-3 text-right text-[#3B635C] dark:text-[#99CBC2] font-bold uppercase tracking-wider text-[10px]">
+      <div className="mt-3 text-right text-[#3B635C] dark:text-[#94A0B2] font-bold uppercase tracking-wider text-[10px]">
         {t('portal:total_votes_label', `JUMLAH UNDIAN: ${totalVotes}`, { count: totalVotes })}
       </div>
     </div>

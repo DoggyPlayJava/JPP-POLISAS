@@ -16,17 +16,18 @@ describe('Semambu Mineral Teal & Crisp Alabaster Design System', () => {
     expect(violations).toEqual([]);
   });
 
-  it('defines Mineral Teal and Crisp Alabaster canonical tokens in DESIGN.md and src/index.css', () => {
+  it('defines Mineral Teal light tokens and Obsidian Carbon dark tokens in DESIGN.md and src/index.css', () => {
     const designMd = read('DESIGN.md');
     const indexCss = read('src/index.css');
 
     expect(designMd).toContain('#0F766E');
     expect(designMd).toContain('#F6FBF9');
-    expect(designMd).toContain('#061714');
-    expect(designMd).toContain('#0B2420');
+    expect(designMd).toContain('#090B0E');
+    expect(designMd).toContain('#13171D');
 
     expect(indexCss).toContain('backdrop-filter: none !important');
     expect(indexCss).toContain('--primary: 175 77% 26%');
+    expect(indexCss).toContain('--background: 216 22% 4.5%');
     expect(indexCss).toContain('#0B2420');
   });
 

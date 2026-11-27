@@ -37,7 +37,7 @@ export function PolyTaskLayout() {
   return (
     <div className={cn(
       "min-h-[100dvh] flex flex-col md:flex-row pb-20 md:pb-0 font-sans transition-colors duration-300",
-      isDark ? "bg-[#061714] text-[#F6FBF9]" : "bg-[#F6FBF9] text-[#0B2420]"
+      isDark ? "bg-[#090B0E] text-[#F1F5F9]" : "bg-[#F6FBF9] text-[#0B2420]"
     )}>
       
       {/* Mobile Backdrop */}
@@ -56,7 +56,7 @@ export function PolyTaskLayout() {
       {/* Mobile Header */}
       <div className={cn(
         "md:hidden sticky top-0 z-50 border-b flex items-center justify-between px-4 pb-4 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] transition-colors",
-        isDark ? "bg-[#0B2420] border-[#1E4D45]" : "bg-white border-[#B8E4DC]/80"
+        isDark ? "bg-[#13171D] border-[#252B35]" : "bg-white border-[#B8E4DC]/80"
       )}>
         <div className="flex items-center gap-3">
           <button onClick={() => navigate('/portal')} className={cn("w-8 h-8 flex items-center justify-center rounded-full transition-colors", isDark ? "bg-white/5 text-slate-400 hover:text-white" : "bg-slate-100 text-slate-600 hover:text-slate-900")}>
@@ -78,11 +78,11 @@ export function PolyTaskLayout() {
       {/* Sidebar (Responsive) */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-[140] md:z-30 w-72 transform transition-transform duration-300 ease-in-out h-[100dvh] flex flex-col border-r border-teal-400/15 text-[#F6FBF9]",
+          "fixed inset-y-0 left-0 z-[140] md:z-30 w-72 transform transition-transform duration-300 ease-in-out h-[100dvh] flex flex-col border-r border-teal-400/15 dark:border-[#252B35] text-[#F1F5F9]",
           "md:relative md:translate-x-0 md:flex-shrink-0 md:w-64 md:sticky md:top-0",
           isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         )}
-        style={{ background: 'linear-gradient(180deg, #0B2420 0%, #061714 100%)' }}
+        style={{ background: isDark ? 'linear-gradient(180deg, #0E1116 0%, #090B0E 100%)' : 'linear-gradient(180deg, #0B2420 0%, #061714 100%)' }}
       >
         {/* Mobile Close Button */}
         <div className="md:hidden absolute right-4 top-5">

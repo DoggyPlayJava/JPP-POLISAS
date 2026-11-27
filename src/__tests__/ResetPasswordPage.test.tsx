@@ -27,8 +27,8 @@ describe('ResetPasswordPage Polish & Dark Mode High Contrast', () => {
   it('provides high-contrast text and Semambu Mineral Teal tokens for dark mode readability', () => {
     expect(source).toContain('#0B2420');
     expect(source).toContain('#F6FBF9');
-    expect(source).toContain('#061714');
-    expect(source).toContain('dark:text-[#F6FBF9]');
+    expect(source).toContain('#090B0E');
+    expect(source).toContain('dark:text-[#F1F5F9]');
   });
 
   it('provides password visibility toggle for both fields', () => {

@@ -2356,7 +2356,7 @@ export function FloatingAiChat() {
                 <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-3 scroll-smooth">
                   {/* Pinned Welcome */}
                   <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex gap-2.5">
-                    <div className="w-7 h-7 rounded-full bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 mt-0.5">
+                    <div className="w-7 h-7 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 mt-0.5">
                       <Sparkles size={14} />
                     </div>
                     <div className="bg-card border border-border/50 p-4 rounded-2xl rounded-tl-sm text-sm text-foreground shadow-sm flex-1">

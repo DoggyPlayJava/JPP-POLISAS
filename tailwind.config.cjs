@@ -65,6 +65,14 @@ module.exports = {
   		boxShadow: {
   			xs: '0 1px 2px 0 rgb(0 0 0 / 0.04)',
   		},
+  		opacity: {
+  			15: '0.15',
+  			35: '0.35',
+  			45: '0.45',
+  			55: '0.55',
+  			65: '0.65',
+  			85: '0.85',
+  		},
 
   		fontFamily: {
   			sans: [

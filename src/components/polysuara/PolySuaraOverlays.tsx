@@ -44,7 +44,7 @@ export function PolySuaraQuickReportModal({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[#061714]/70 z-[99990]"
+            className="fixed inset-0 bg-[#090B0E]/75 z-[99990]"
           />
           <div className="fixed inset-0 flex items-center justify-center p-4 z-[99995] pointer-events-none">
             <motion.div
@@ -54,7 +54,7 @@ export function PolySuaraQuickReportModal({
               initial={{ opacity: 0, scale: 0.96, y: 16 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 16 }}
-              className="w-full max-w-md bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-[2rem] shadow-2xl p-6 pointer-events-auto text-[#0B2420] dark:text-[#F6FBF9]"
+              className="w-full max-w-md bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-[2rem] shadow-2xl p-6 pointer-events-auto text-[#0B2420] dark:text-[#F1F5F9]"
             >
               <div className="flex items-start justify-between gap-3 mb-2">
                 <h3 className="text-lg font-bold flex items-center gap-2">
@@ -69,12 +69,12 @@ export function PolySuaraQuickReportModal({
                   type="button"
                   onClick={onClose}
                   aria-label={t('common:close', 'Tutup')}
-                  className="w-9 h-9 rounded-full flex items-center justify-center text-[#3B635C] dark:text-[#99CBC2] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] transition-colors cursor-pointer"
+                  className="w-9 h-9 rounded-full flex items-center justify-center text-[#3B635C] dark:text-[#94A0B2] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-              <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#99CBC2] mb-3">
+              <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] mb-3">
                 {t('services:report_quick_select_desc', 'Pilih sebab pantas di bawah atau nyatakan butiran untuk semakan Exco Kebajikan.')}
               </p>
 
@@ -89,8 +89,8 @@ export function PolySuaraQuickReportModal({
                       className={cn(
                         'px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors cursor-pointer',
                         selected
-                          ? 'bg-[#0F766E] border-[#0F766E] text-white dark:bg-[#2DD4BF] dark:border-[#2DD4BF] dark:text-[#061714]'
-                          : 'bg-[#F6FBF9] dark:bg-[#081A17] border-[#B8E4DC]/80 dark:border-[#1E4D45] text-[#0B2420] dark:text-[#F6FBF9] hover:border-[#0F766E]/40'
+                          ? 'bg-[#0F766E] border-[#0F766E] text-white dark:bg-[#2DD4BF] dark:border-[#2DD4BF] dark:text-[#090B0E]'
+                          : 'bg-[#F6FBF9] dark:bg-[#0E1116] border-[#B8E4DC]/80 dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] hover:border-[#0F766E]/40'
                       )}
                     >
                       {chip}
@@ -103,7 +103,7 @@ export function PolySuaraQuickReportModal({
                 value={reason}
                 onChange={(e) => onReasonChange(e.target.value)}
                 placeholder={t('services:report_reason_placeholder', 'Sebab laporan...')}
-                className="w-full bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-2xl p-3.5 text-sm text-[#0B2420] dark:text-[#F6FBF9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#99CBC2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40 resize-none transition-colors mb-4"
+                className="w-full bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-3.5 text-sm text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40 resize-none transition-colors mb-4"
                 rows={3}
               />
 
@@ -111,7 +111,7 @@ export function PolySuaraQuickReportModal({
                 <button
                   type="button"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-xl text-[#3B635C] dark:text-[#99CBC2] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] transition-colors text-xs sm:text-sm font-semibold cursor-pointer"
+                  className="px-4 py-2 rounded-xl text-[#3B635C] dark:text-[#94A0B2] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors text-xs sm:text-sm font-semibold cursor-pointer"
                 >
                   {t('common:cancel', 'Batal')}
                 </button>
@@ -119,7 +119,7 @@ export function PolySuaraQuickReportModal({
                   type="button"
                   disabled={reason.trim().length < 3 || isSubmitting}
                   onClick={onSubmit}
-                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-[#EBF7F4] dark:disabled:bg-[#11322C] disabled:text-[#3B635C]/50 dark:disabled:text-[#99CBC2]/40 text-slate-950 rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer"
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 disabled:bg-[#EBF7F4] dark:disabled:bg-[#1B2028] disabled:text-[#3B635C]/50 dark:disabled:text-[#94A0B2]/40 text-slate-950 rounded-xl text-xs sm:text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer"
                 >
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   <span>{t('services:submit_report', 'Hantar Laporan')}</span>
@@ -159,7 +159,7 @@ export function PolySuaraCivicProgress({
   ];
 
   return (
-    <div className="mb-3.5 rounded-2xl bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] px-3.5 py-2.5 space-y-2">
+    <div className="mb-3.5 rounded-2xl bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] px-3.5 py-2.5 space-y-2">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <span className="text-[11px] font-bold text-[#0F766E] dark:text-[#2DD4BF]">
           {t('services:civic_tracker_label', 'Penjejak Tindakan Kampus')}
@@ -182,7 +182,7 @@ export function PolySuaraCivicProgress({
                   'h-1.5 rounded-full transition-colors',
                   active
                     ? 'bg-[#0F766E] dark:bg-[#2DD4BF]'
-                    : 'bg-[#B8E4DC]/50 dark:bg-[#1E4D45]'
+                    : 'bg-[#B8E4DC]/50 dark:bg-[#252B35]'
                 )}
               />
               <div className="flex items-center gap-1">
@@ -191,8 +191,8 @@ export function PolySuaraCivicProgress({
                   className={cn(
                     'text-[10px] font-semibold truncate',
                     active
-                      ? 'text-[#0B2420] dark:text-[#F6FBF9]'
-                      : 'text-[#3B635C]/70 dark:text-[#99CBC2]/60'
+                      ? 'text-[#0B2420] dark:text-[#F1F5F9]'
+                      : 'text-[#3B635C]/70 dark:text-[#94A0B2]/60'
                   )}
                 >
                   {st.label}

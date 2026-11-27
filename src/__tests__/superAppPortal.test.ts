@@ -569,9 +569,9 @@ describe('superAppHelpers', () => {
       expect(html).toContain('bg-white');
       expect(html).toContain('hover:bg-[#F6FBF9]');
       expect(html).toContain('border-[#B8E4DC]/80');
-      expect(html).toContain('dark:bg-[#0B2420]');
-      expect(html).toContain('dark:hover:bg-[#11332D]');
-      expect(html).toContain('dark:border-[#1E4D45]');
+      expect(html).toContain('dark:bg-[#13171D]');
+      expect(html).toContain('dark:hover:bg-[#1B2028]');
+      expect(html).toContain('dark:border-[#252B35]');
 
       // Squircle icon container does NOT contain hardcoded overriding dark classes
       expect(html).not.toContain('dark:bg-white/[0.06]');
@@ -635,10 +635,10 @@ describe('superAppHelpers', () => {
       );
 
       // Unified Pine-Teal card elevation
-      expect(html).toContain('dark:bg-[#0B2420]');
+      expect(html).toContain('dark:bg-[#13171D]');
       expect(html).not.toContain('backdrop-blur');
       expect(html).toContain('border-[#B8E4DC]/80');
-      expect(html).toContain('dark:border-[#1E4D45]');
+      expect(html).toContain('dark:border-[#252B35]');
       expect(html).toContain('dark:hover:border-[#2DD4BF]/40');
 
       // Crisp TERBUKA badge
@@ -646,7 +646,7 @@ describe('superAppHelpers', () => {
       expect(html).toContain('bg-rose-600');
 
       // WCAG AA compliant text contrast
-      expect(html).toContain('dark:text-[#99CBC2]');
+      expect(html).toContain('dark:text-[#94A0B2]');
     });
   });
 
