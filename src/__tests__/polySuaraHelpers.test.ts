@@ -240,44 +240,33 @@ describe('polySuaraHelpers', () => {
   });
 
   describe('FRIENDLY_ANON_PERSONAS constant', () => {
-    it('has at least 16 distinct Malaysian campus animal personas with required fields', () => {
-      expect(FRIENDLY_ANON_PERSONAS).toBeDefined();
-      expect(FRIENDLY_ANON_PERSONAS.length).toBeGreaterThanOrEqual(16);
-
-      const requiredAnimals = [
-        'Kucing Oren',
-        'Tupai Laju',
-        'Panda Comel',
-        'Arnab Pantas',
-        'Musang Cerdik',
-        'Koala Tenang',
-        'Helang Biru',
-        'Rusa Riang',
-        'Singa Santai',
-        'Beruang Madu',
-        'Kancil Bijak',
-        'Otter Ceria',
-        'Harimau Berani',
-        'Zirafah Tinggi',
-        'Kucing Hitam',
-        'Burung Hantu',
-      ];
-
-      const names = FRIENDLY_ANON_PERSONAS.map((p) => p.displayName);
-      requiredAnimals.forEach((requiredName) => {
-        expect(names).toContain(requiredName);
-      });
-
+    it('has 90 unique fictional characters balanced across all nine franchises', () => {
+      expect(FRIENDLY_ANON_PERSONAS).toHaveLength(90);
+      const names = FRIENDLY_ANON_PERSONAS.map((persona) => persona.displayName);
+      expect(new Set(names).size).toBe(90);
+      expect([...new Set(FRIENDLY_ANON_PERSONAS.map((persona) => persona.franchise))]).toEqual([
+        'Avatar: The Last Airbender',
+        'The Legend of Korra',
+        'Harry Potter',
+        'Naruto',
+        'Sword Art Online',
+        'One Piece',
+        'Demon Slayer',
+        'Marvel',
+        'Star Wars',
+      ]);
+      for (const franchise of new Set(FRIENDLY_ANON_PERSONAS.map((persona) => persona.franchise))) {
+        expect(FRIENDLY_ANON_PERSONAS.filter((persona) => persona.franchise === franchise)).toHaveLength(10);
+      }
+      expect(names.some((name) => ['Kucing Oren', 'Tupai Laju', 'Panda Comel'].includes(name))).toBe(false);
       FRIENDLY_ANON_PERSONAS.forEach((persona) => {
-        expect(persona.displayName).toBeTruthy();
-        expect(persona.emoji).toBeTruthy();
+        expect(persona.emoji).toMatch(/^[A-Z]{1,3}$/);
         expect(persona.bgClass).toBeTruthy();
       });
     });
   });
-
   describe('getFriendlyAnonName', () => {
-    it('deterministically maps an Anon hash to a friendly animal persona', () => {
+    it('deterministically maps an Anon hash to a fictional character persona', () => {
       const result1 = getFriendlyAnonName('Anon-eb689');
       const result2 = getFriendlyAnonName('Anon-eb689');
 
@@ -305,6 +294,16 @@ describe('polySuaraHelpers', () => {
       expect(personaNames).toContain(resultB.displayName);
     });
 
+    it('remaps legacy animal codenames to a stable character persona', () => {
+      const legacyCodenames = ['Kucing Oren', 'Tupai Laju', 'Panda Comel', 'Arnab Pantas', 'Musang Cerdik', 'Koala Tenang', 'Helang Biru', 'Rusa Riang', 'Singa Santai', 'Beruang Madu', 'Kancil Bijak', 'Otter Ceria', 'Harimau Berani', 'Zirafah Tinggi', 'Kucing Hitam', 'Burung Hantu'];
+      for (const codename of legacyCodenames) {
+        const result = getFriendlyAnonName(codename);
+        expect(FRIENDLY_ANON_PERSONAS.map((persona) => persona.displayName)).toContain(result.displayName);
+        expect(result.emoji).toMatch(/^[A-Z]{1,3}$/);
+        expect(getFriendlyAnonName(codename)).toEqual(result);
+      }
+    });
+
     it('handles codenames formatted with [Penulis] and preserves OP status', () => {
       const opResult = getFriendlyAnonName('Anon-eb689 [Penulis]');
       const normalResult = getFriendlyAnonName('Anon-eb689');
@@ -316,16 +315,20 @@ describe('polySuaraHelpers', () => {
       expect(normalResult.isOP).toBe(false);
     });
 
-    it('preserves existing named animals and strips [Penulis] while using appropriate emoji', () => {
+    it('preserves custom codenames and strips [Penulis]', () => {
       const namedResult = getFriendlyAnonName('Burung Pantas [Penulis]');
-      expect(namedResult.displayName).toBe('Burung Pantas');
-      expect(namedResult.emoji).toBe('🦜');
+      expect(FRIENDLY_ANON_PERSONAS.map((persona) => persona.displayName)).toContain(namedResult.displayName);
+      expect(namedResult.emoji).toBeTruthy();
       expect(namedResult.isOP).toBe(true);
 
       const namedWithoutOp = getFriendlyAnonName('Harimau Perkasa');
-      expect(namedWithoutOp.displayName).toBe('Harimau Perkasa');
-      expect(namedWithoutOp.emoji).toBe('🐯');
+      expect(FRIENDLY_ANON_PERSONAS.map((persona) => persona.displayName)).toContain(namedWithoutOp.displayName);
+      expect(namedWithoutOp.emoji).toBeTruthy();
       expect(namedWithoutOp.isOP).toBe(false);
+    });
+
+    it('preserves non-animal custom codenames', () => {
+      expect(getFriendlyAnonName('Campus Legend').displayName).toBe('Campus Legend');
     });
 
     it('gracefully handles missing, empty, or undefined codenames', () => {

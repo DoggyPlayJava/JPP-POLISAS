@@ -101,6 +101,7 @@ import {
   extractStickerToken,
   embedStickerToken,
   getAnimalAvatarFromCodename,
+  getFriendlyAnonName,
   aggregateReactions,
   POLISAS_CAMPUS_STICKERS,
   REACTION_EMOJIS,
@@ -174,6 +175,12 @@ describe('PolySuaraPage Suite', () => {
       expect(card).toContain('rounded-2xl sm:rounded-[2rem]');
       expect(card).toContain('moderation-actions');
       expect(card).toContain('border-[#B8E4DC]/30 dark:border-[#252B35]/50');
+      expect(card).toContain('getFriendlyAnonName(confession.codename)');
+      expect(card).toContain('displayName');
+      const media = fs.readFileSync(path.resolve(__dirname, '../components/polysuara/PolySuaraMediaViewer.tsx'), 'utf-8');
+      const story = fs.readFileSync(path.resolve(__dirname, '../components/polysuara/IGStoryExportCard.tsx'), 'utf-8');
+      expect(media).toContain('getFriendlyAnonName(confession.codename)');
+      expect(story).toContain('getFriendlyAnonName(confession.codename)');
     });
 
     it('keeps drawer controls above app chrome and uses direct segmented preferences', () => {
@@ -359,7 +366,7 @@ describe('PolySuaraPage Suite', () => {
 
     it('renders avatar with Mineral Teal gradient ring container', () => {
       expect(cardContent).toContain('bg-gradient-to-tr from-[#0F766E] via-[#14B8A6] to-[#2DD4BF]');
-      expect(cardContent).toContain('avatar.emoji');
+      expect(cardContent).toContain('persona.emoji');
     });
 
     it('renders verified anonymous identity badge (✓) and author name', () => {
@@ -639,7 +646,7 @@ describe('PolySuaraPage Suite', () => {
       }));
 
       // Tombstone message with exact text and styling
-      expect(html).toContain('Musang Cerdik telah memadamkan ruangan ini');
+      expect(html).toContain(`${getFriendlyAnonName('Musang Cerdik').displayName} telah memadamkan ruangan ini`);
       expect(html).toContain('text-[#3B635C] dark:text-[#94A0B2] italic text-sm');
 
       // Actions are disabled on deleted confessions

@@ -458,108 +458,103 @@ export interface FriendlyPersona {
   name: string;
   emoji: string;
   bgClass: string;
+  franchise: string;
 }
 
 /**
- * 16 distinct Malaysian campus animal personas for anonymous student interaction.
+ * Balanced fictional-character roster for anonymous student interaction.
  */
 export const FRIENDLY_ANON_PERSONAS: FriendlyPersona[] = [
-  {
-    displayName: 'Kucing Oren',
-    name: 'Kucing Oren',
-    emoji: '🐱',
-    bgClass: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
-  },
-  {
-    displayName: 'Tupai Laju',
-    name: 'Tupai Laju',
-    emoji: '🐿️',
-    bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-600/20 dark:text-orange-300',
-  },
-  {
-    displayName: 'Panda Comel',
-    name: 'Panda Comel',
-    emoji: '🐼',
-    bgClass: 'bg-zinc-200 text-zinc-800 dark:bg-zinc-700/50 dark:text-zinc-200',
-  },
-  {
-    displayName: 'Arnab Pantas',
-    name: 'Arnab Pantas',
-    emoji: '🐇',
-    bgClass: 'bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-300',
-  },
-  {
-    displayName: 'Musang Cerdik',
-    name: 'Musang Cerdik',
-    emoji: '🦊',
-    bgClass: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
-  },
-  {
-    displayName: 'Koala Tenang',
-    name: 'Koala Tenang',
-    emoji: '🐨',
-    bgClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
-  },
-  {
-    displayName: 'Helang Biru',
-    name: 'Helang Biru',
-    emoji: '🦅',
-    bgClass: 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300',
-  },
-  {
-    displayName: 'Rusa Riang',
-    name: 'Rusa Riang',
-    emoji: '🦌',
-    bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-600/20 dark:text-emerald-300',
-  },
-  {
-    displayName: 'Singa Santai',
-    name: 'Singa Santai',
-    emoji: '🦁',
-    bgClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300',
-  },
-  {
-    displayName: 'Beruang Madu',
-    name: 'Beruang Madu',
-    emoji: '🐻',
-    bgClass: 'bg-amber-200 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-  },
-  {
-    displayName: 'Kancil Bijak',
-    name: 'Kancil Bijak',
-    emoji: '🦌',
-    bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-600/20 dark:text-teal-300',
-  },
-  {
-    displayName: 'Otter Ceria',
-    name: 'Otter Ceria',
-    emoji: '🦦',
-    bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-600/20 dark:text-cyan-300',
-  },
-  {
-    displayName: 'Harimau Berani',
-    name: 'Harimau Berani',
-    emoji: '🐯',
-    bgClass: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300',
-  },
-  {
-    displayName: 'Zirafah Tinggi',
-    name: 'Zirafah Tinggi',
-    emoji: '🦒',
-    bgClass: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/20 dark:text-yellow-300',
-  },
-  {
-    displayName: 'Kucing Hitam',
-    name: 'Kucing Hitam',
-    emoji: '🐈‍⬛',
-    bgClass: 'bg-slate-300 text-slate-900 dark:bg-slate-700 dark:text-slate-100',
-  },
-  {
-    displayName: 'Burung Hantu',
-    name: 'Burung Hantu',
-    emoji: '🦉',
-    bgClass: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
-  },
+  { displayName: 'Aang', name: 'Aang', emoji: 'A', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Katara', name: 'Katara', emoji: 'K', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Sokka', name: 'Sokka', emoji: 'S', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Toph', name: 'Toph', emoji: 'T', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Zuko', name: 'Zuko', emoji: 'Z', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Iroh', name: 'Iroh', emoji: 'I', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Azula', name: 'Azula', emoji: 'A', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Suki', name: 'Suki', emoji: 'S', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Appa', name: 'Appa', emoji: 'A', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Momo', name: 'Momo', emoji: 'M', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Korra', name: 'Korra', emoji: 'K', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', franchise: 'The Legend of Korra' },
+  { displayName: 'Mako', name: 'Mako', emoji: 'M', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', franchise: 'The Legend of Korra' },
+  { displayName: 'Bolin', name: 'Bolin', emoji: 'B', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', franchise: 'The Legend of Korra' },
+  { displayName: 'Asami', name: 'Asami', emoji: 'A', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', franchise: 'The Legend of Korra' },
+  { displayName: 'Tenzin', name: 'Tenzin', emoji: 'T', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', franchise: 'The Legend of Korra' },
+  { displayName: 'Lin Beifong', name: 'Lin Beifong', emoji: 'LB', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', franchise: 'The Legend of Korra' },
+  { displayName: 'Jinora', name: 'Jinora', emoji: 'J', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', franchise: 'The Legend of Korra' },
+  { displayName: 'Kuvira', name: 'Kuvira', emoji: 'K', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', franchise: 'The Legend of Korra' },
+  { displayName: 'Varrick', name: 'Varrick', emoji: 'V', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', franchise: 'The Legend of Korra' },
+  { displayName: 'Zaheer', name: 'Zaheer', emoji: 'Z', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', franchise: 'The Legend of Korra' },
+  { displayName: 'Harry Potter', name: 'Harry Potter', emoji: 'HP', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', franchise: 'Harry Potter' },
+  { displayName: 'Hermione Granger', name: 'Hermione Granger', emoji: 'HG', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', franchise: 'Harry Potter' },
+  { displayName: 'Ron Weasley', name: 'Ron Weasley', emoji: 'RW', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', franchise: 'Harry Potter' },
+  { displayName: 'Albus Dumbledore', name: 'Albus Dumbledore', emoji: 'AD', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', franchise: 'Harry Potter' },
+  { displayName: 'Severus Snape', name: 'Severus Snape', emoji: 'SS', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', franchise: 'Harry Potter' },
+  { displayName: 'Luna Lovegood', name: 'Luna Lovegood', emoji: 'LL', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', franchise: 'Harry Potter' },
+  { displayName: 'Neville Longbottom', name: 'Neville Longbottom', emoji: 'NL', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', franchise: 'Harry Potter' },
+  { displayName: 'Draco Malfoy', name: 'Draco Malfoy', emoji: 'DM', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', franchise: 'Harry Potter' },
+  { displayName: 'Minerva McGonagall', name: 'Minerva McGonagall', emoji: 'MM', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', franchise: 'Harry Potter' },
+  { displayName: 'Sirius Black', name: 'Sirius Black', emoji: 'SB', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', franchise: 'Harry Potter' },
+  { displayName: 'Naruto Uzumaki', name: 'Naruto Uzumaki', emoji: 'NU', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', franchise: 'Naruto' },
+  { displayName: 'Sasuke Uchiha', name: 'Sasuke Uchiha', emoji: 'SU', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', franchise: 'Naruto' },
+  { displayName: 'Sakura Haruno', name: 'Sakura Haruno', emoji: 'SH', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', franchise: 'Naruto' },
+  { displayName: 'Kakashi Hatake', name: 'Kakashi Hatake', emoji: 'KH', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', franchise: 'Naruto' },
+  { displayName: 'Hinata Hyuga', name: 'Hinata Hyuga', emoji: 'HH', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', franchise: 'Naruto' },
+  { displayName: 'Shikamaru Nara', name: 'Shikamaru Nara', emoji: 'SN', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', franchise: 'Naruto' },
+  { displayName: 'Gaara', name: 'Gaara', emoji: 'G', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', franchise: 'Naruto' },
+  { displayName: 'Itachi Uchiha', name: 'Itachi Uchiha', emoji: 'IU', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', franchise: 'Naruto' },
+  { displayName: 'Rock Lee', name: 'Rock Lee', emoji: 'RL', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', franchise: 'Naruto' },
+  { displayName: 'Jiraiya', name: 'Jiraiya', emoji: 'J', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', franchise: 'Naruto' },
+  { displayName: 'Kirito', name: 'Kirito', emoji: 'K', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', franchise: 'Sword Art Online' },
+  { displayName: 'Asuna', name: 'Asuna', emoji: 'A', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', franchise: 'Sword Art Online' },
+  { displayName: 'Yui', name: 'Yui', emoji: 'Y', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', franchise: 'Sword Art Online' },
+  { displayName: 'Sinon', name: 'Sinon', emoji: 'S', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', franchise: 'Sword Art Online' },
+  { displayName: 'Leafa', name: 'Leafa', emoji: 'L', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', franchise: 'Sword Art Online' },
+  { displayName: 'Klein', name: 'Klein', emoji: 'K', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', franchise: 'Sword Art Online' },
+  { displayName: 'Eugeo', name: 'Eugeo', emoji: 'E', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', franchise: 'Sword Art Online' },
+  { displayName: 'Alice Zuberg', name: 'Alice Zuberg', emoji: 'AZ', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', franchise: 'Sword Art Online' },
+  { displayName: 'Yuuki Konno', name: 'Yuuki Konno', emoji: 'YK', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', franchise: 'Sword Art Online' },
+  { displayName: 'Agil', name: 'Agil', emoji: 'A', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', franchise: 'Sword Art Online' },
+  { displayName: 'Monkey D. Luffy', name: 'Monkey D. Luffy', emoji: 'MDL', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', franchise: 'One Piece' },
+  { displayName: 'Roronoa Zoro', name: 'Roronoa Zoro', emoji: 'RZ', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', franchise: 'One Piece' },
+  { displayName: 'Nami', name: 'Nami', emoji: 'N', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', franchise: 'One Piece' },
+  { displayName: 'Usopp', name: 'Usopp', emoji: 'U', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', franchise: 'One Piece' },
+  { displayName: 'Sanji', name: 'Sanji', emoji: 'S', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', franchise: 'One Piece' },
+  { displayName: 'Tony Tony Chopper', name: 'Tony Tony Chopper', emoji: 'TTC', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', franchise: 'One Piece' },
+  { displayName: 'Nico Robin', name: 'Nico Robin', emoji: 'NR', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', franchise: 'One Piece' },
+  { displayName: 'Franky', name: 'Franky', emoji: 'F', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', franchise: 'One Piece' },
+  { displayName: 'Brook', name: 'Brook', emoji: 'B', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', franchise: 'One Piece' },
+  { displayName: 'Jinbe', name: 'Jinbe', emoji: 'J', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', franchise: 'One Piece' },
+  { displayName: 'Tanjiro Kamado', name: 'Tanjiro Kamado', emoji: 'TK', bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200', franchise: 'Demon Slayer' },
+  { displayName: 'Nezuko Kamado', name: 'Nezuko Kamado', emoji: 'NK', bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200', franchise: 'Demon Slayer' },
+  { displayName: 'Zenitsu Agatsuma', name: 'Zenitsu Agatsuma', emoji: 'ZA', bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200', franchise: 'Demon Slayer' },
+  { displayName: 'Inosuke Hashibira', name: 'Inosuke Hashibira', emoji: 'IH', bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200', franchise: 'Demon Slayer' },
+  { displayName: 'Giyu Tomioka', name: 'Giyu Tomioka', emoji: 'GT', bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200', franchise: 'Demon Slayer' },
+  { displayName: 'Shinobu Kocho', name: 'Shinobu Kocho', emoji: 'SK', bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200', franchise: 'Demon Slayer' },
+  { displayName: 'Kyojuro Rengoku', name: 'Kyojuro Rengoku', emoji: 'KR', bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200', franchise: 'Demon Slayer' },
+  { displayName: 'Mitsuri Kanroji', name: 'Mitsuri Kanroji', emoji: 'MK', bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200', franchise: 'Demon Slayer' },
+  { displayName: 'Muichiro Tokito', name: 'Muichiro Tokito', emoji: 'MT', bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200', franchise: 'Demon Slayer' },
+  { displayName: 'Tengen Uzui', name: 'Tengen Uzui', emoji: 'TU', bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/20 dark:text-emerald-200', franchise: 'Demon Slayer' },
+  { displayName: 'Peter Parker', name: 'Peter Parker', emoji: 'PP', bgClass: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200', franchise: 'Marvel' },
+  { displayName: 'Tony Stark', name: 'Tony Stark', emoji: 'TS', bgClass: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200', franchise: 'Marvel' },
+  { displayName: 'Steve Rogers', name: 'Steve Rogers', emoji: 'SR', bgClass: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200', franchise: 'Marvel' },
+  { displayName: 'Natasha Romanoff', name: 'Natasha Romanoff', emoji: 'NR', bgClass: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200', franchise: 'Marvel' },
+  { displayName: 'Bruce Banner', name: 'Bruce Banner', emoji: 'BB', bgClass: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200', franchise: 'Marvel' },
+  { displayName: 'Thor', name: 'Thor', emoji: 'T', bgClass: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200', franchise: 'Marvel' },
+  { displayName: 'Carol Danvers', name: 'Carol Danvers', emoji: 'CD', bgClass: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200', franchise: 'Marvel' },
+  { displayName: 'Shuri', name: 'Shuri', emoji: 'S', bgClass: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200', franchise: 'Marvel' },
+  { displayName: "T'Challa", name: "T'Challa", emoji: 'T', bgClass: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200', franchise: 'Marvel' },
+  { displayName: 'Wanda Maximoff', name: 'Wanda Maximoff', emoji: 'WM', bgClass: 'bg-rose-100 text-rose-800 dark:bg-rose-500/20 dark:text-rose-200', franchise: 'Marvel' },
+  { displayName: 'Luke Skywalker', name: 'Luke Skywalker', emoji: 'LS', bgClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200', franchise: 'Star Wars' },
+  { displayName: 'Leia Organa', name: 'Leia Organa', emoji: 'LO', bgClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200', franchise: 'Star Wars' },
+  { displayName: 'Han Solo', name: 'Han Solo', emoji: 'HS', bgClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200', franchise: 'Star Wars' },
+  { displayName: 'Chewbacca', name: 'Chewbacca', emoji: 'C', bgClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200', franchise: 'Star Wars' },
+  { displayName: 'Obi-Wan Kenobi', name: 'Obi-Wan Kenobi', emoji: 'OK', bgClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200', franchise: 'Star Wars' },
+  { displayName: 'Yoda', name: 'Yoda', emoji: 'Y', bgClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200', franchise: 'Star Wars' },
+  { displayName: 'Rey', name: 'Rey', emoji: 'R', bgClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200', franchise: 'Star Wars' },
+  { displayName: 'Finn', name: 'Finn', emoji: 'F', bgClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200', franchise: 'Star Wars' },
+  { displayName: 'Ahsoka Tano', name: 'Ahsoka Tano', emoji: 'AT', bgClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200', franchise: 'Star Wars' },
+  { displayName: 'Grogu', name: 'Grogu', emoji: 'G', bgClass: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-500/20 dark:text-indigo-200', franchise: 'Star Wars' },
 ];
 
 const DEFAULT_AVATAR: AnimalAvatar = {
@@ -569,7 +564,7 @@ const DEFAULT_AVATAR: AnimalAvatar = {
 };
 
 /**
- * Derives dynamic animal avatar and styling from anonymous codename.
+ * Derives dynamic persona initials and styling from anonymous codename.
  * e.g. "Kucing Misteri" -> 🐱, "Harimau Berani" -> 🐯, "Musang Pantas" -> 🦊
  * Fallback to 👻 if codename is absent or unrecognized.
  */
@@ -590,7 +585,7 @@ export function getAnimalAvatarFromCodename(codename?: string): AnimalAvatar {
 
 /**
  * Deterministically maps anonymous hashes (e.g. "Anon-eb689", "anon-12345", hashes)
- * into friendly Malaysian campus animal personas.
+ * into fictional character personas.
  * Preserves existing animal names (e.g. "Burung Pantas [Penulis]") while stripping [Penulis] tags.
  */
 export function getFriendlyAnonName(
@@ -645,7 +640,25 @@ export function getFriendlyAnonName(
     };
   }
 
-  // Codename is already a named animal or custom identity (e.g. "Burung Pantas")
+  // Legacy confession codenames use an animal prefix plus an adjective.
+  const isLegacyAnimalCodename = /^(kucing|harimau|elang|helang|singa|serigala|kuda|beruang|kancil|gajah|tupai|kura|lumba|burung|panda|musang|landak|arnab|koala|rusa|otter|zirafah)\s+/i.test(cleanName);
+  if (isLegacyAnimalCodename) {
+    let hash = 0;
+    const lower = cleanName.toLowerCase();
+    for (let i = 0; i < lower.length; i++) {
+      hash = (hash * 31 + lower.charCodeAt(i)) >>> 0;
+    }
+    const persona = FRIENDLY_ANON_PERSONAS[hash % FRIENDLY_ANON_PERSONAS.length];
+    return {
+      displayName: persona.displayName,
+      name: persona.displayName,
+      emoji: persona.emoji,
+      bgClass: persona.bgClass,
+      isOP: isOriginalPoster,
+    };
+  }
+
+  // Preserve non-animal custom identities supplied outside generated codenames.
   const avatar = getAnimalAvatarFromCodename(cleanName);
 
   return {

@@ -2,7 +2,7 @@ import React from 'react';
 import { format } from 'date-fns';
 import { ms } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
-import { cleanConfessionText, hasSpoilerImageToken } from '@/lib/polySuaraHelpers';
+import { cleanConfessionText, getFriendlyAnonName, hasSpoilerImageToken } from '@/lib/polySuaraHelpers';
 
 interface ConfessionExport {
   id: string;
@@ -23,6 +23,7 @@ export function IGStoryExportCard({ confession, elementId }: Props) {
   const { t } = useTranslation(['services', 'common']);
   const cleanText = cleanConfessionText(confession.content);
   const isSpoilerImage = hasSpoilerImageToken(confession.content);
+  const persona = getFriendlyAnonName(confession.codename);
 
   return (
     <div
@@ -125,7 +126,7 @@ export function IGStoryExportCard({ confession, elementId }: Props) {
             }}
           >
             <span style={{ fontSize: '18px', fontWeight: 700, color: '#2DD4BF' }}>
-              {confession.codename || t('services:anon_student', 'Pelajar Anon')}
+              {persona.displayName || t('services:anon_student', 'Pelajar Anon')}
             </span>
             <span
               style={{

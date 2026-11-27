@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ms } from 'date-fns/locale';
-import { cleanConfessionText, getAnimalAvatarFromCodename } from '@/lib/polySuaraHelpers';
+import { cleanConfessionText, getFriendlyAnonName } from '@/lib/polySuaraHelpers';
 
 export interface PolySuaraMediaViewerProps {
   imageUrl: string | null;
@@ -101,7 +101,7 @@ export function PolySuaraMediaViewer({
     dragStartRef.current = null;
   };
 
-  const avatar = confession ? getAnimalAvatarFromCodename(confession.codename) : null;
+  const persona = confession ? getFriendlyAnonName(confession.codename) : null;
   const cleanText = confession ? cleanConfessionText(confession.content || '') : '';
 
   return createPortal(
@@ -210,11 +210,11 @@ export function PolySuaraMediaViewer({
           <div className="p-4 border-b border-[#B8E4DC]/60 dark:border-[#252B35] flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-9 h-9 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028] flex items-center justify-center text-base shrink-0">
-                {avatar?.emoji || '👻'}
+                {persona?.emoji || '👻'}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold truncate">
-                  {confession.codename || t('services:anon_student', 'Pelajar Anon')}
+                  {persona?.displayName || t('services:anon_student', 'Pelajar Anon')}
                 </p>
                 {confession.created_at && (
                   <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2]">
@@ -296,7 +296,7 @@ export function PolySuaraMediaViewer({
         >
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-[#2DD4BF] truncate">
-              {confession.codename || t('services:anon_student', 'Pelajar Anon')}
+              {persona?.displayName || t('services:anon_student', 'Pelajar Anon')}
             </p>
             {cleanText && (
               <p className="text-xs text-[#EBF7F4] line-clamp-1">{cleanText}</p>

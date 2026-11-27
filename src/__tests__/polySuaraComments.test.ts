@@ -256,11 +256,11 @@ describe('PolySuara Comments Suite (TDD)', () => {
     });
   });
 
-  describe('Phase 2: Friendly Animal Personas & 4-Depth Nested Comments Layout', () => {
+  describe('Phase 2: Fictional Character Personas & 4-Depth Nested Comments Layout', () => {
     const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
     const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
 
-    it('maps comments and active confession to friendly animal personas', () => {
+    it('maps comments and active confession to fictional character personas', () => {
       expect(pageContent).toContain('getFriendlyAnonName(comment.codename)');
       expect(pageContent).toContain('getFriendlyAnonName(activeConfessionForComments.codename)');
       expect(pageContent).toContain('persona.displayName');
@@ -400,7 +400,7 @@ describe('PolySuara Comments Suite (TDD)', () => {
       }));
 
       // Tombstone message with exact text and styling
-      expect(html).toContain('Tupai Laju telah memadamkan ruangan ini');
+      expect(html).toContain('Thor telah memadamkan ruangan ini');
       expect(html).toContain('text-[#3B635C] dark:text-[#94A0B2] italic text-xs');
 
       // Reply and Like actions are disabled on deleted comment

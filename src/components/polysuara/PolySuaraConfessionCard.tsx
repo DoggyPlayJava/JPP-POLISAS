@@ -38,7 +38,6 @@ import {
   cleanConfessionText,
   detectPostIntent,
   extractCampusLocations,
-  getAnimalAvatarFromCodename,
   getFriendlyAnonName,
   hasSpoilerImageToken,
   isWithin1Hour,
@@ -113,7 +112,7 @@ export function PolySuaraConfessionCard({
   const isTrending =
     (confession.upvotes || 0) > 30 &&
     Date.now() - new Date(confession.created_at).getTime() < 24 * 60 * 60 * 1000;
-  const avatar = getAnimalAvatarFromCodename(confession.codename);
+  const persona = getFriendlyAnonName(confession.codename);
   const isConfessionDeleted = Boolean(
     confession.is_deleted_by_author || confession.content === '[deleted]'
   );
@@ -173,13 +172,13 @@ export function PolySuaraConfessionCard({
             <div
               className={cn(
                 'w-10 h-10 rounded-full flex items-center justify-center text-lg bg-white dark:bg-[#13171D]',
-                isMine ? 'text-[#0F766E] dark:text-[#2DD4BF]' : ''
+                isMine ? 'text-[#0F766E] dark:text-[#2DD4BF]' : persona.bgClass
               )}
             >
               {isMine ? (
                 <UserCircle2 className="w-5 h-5 text-[#0F766E] dark:text-[#2DD4BF]" />
               ) : (
-                avatar.emoji
+                persona.emoji
               )}
             </div>
           </div>
@@ -187,7 +186,7 @@ export function PolySuaraConfessionCard({
           <div className="flex flex-col min-w-0 flex-1">
             <div className="flex items-center gap-1.5 flex-wrap min-w-0">
               <h4 className="text-sm sm:text-base font-bold text-[#0B2420] dark:text-[#F1F5F9] leading-snug break-words">
-                {confession.codename || t('services:anon_student', 'Pelajar Anon')}
+                {persona.displayName || t('services:anon_student', 'Pelajar Anon')}
               </h4>
               <span
                 className="w-4 h-4 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center text-[10px] font-black shrink-0"
@@ -357,10 +356,10 @@ export function PolySuaraConfessionCard({
             {t(
               'services:author_deleted_post',
               '{{author}} telah memadamkan ruangan ini',
-              { author: confession.codename || t('services:author', 'Penulis') }
+              { author: persona.displayName || t('services:author', 'Penulis') }
             ).replace(
               '{{author}}',
-              confession.codename || t('services:author', 'Penulis')
+              persona.displayName || t('services:author', 'Penulis')
             )}
           </span>
         </div>
