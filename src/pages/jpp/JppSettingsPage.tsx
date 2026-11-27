@@ -18,6 +18,7 @@ const MONTH_NAMES_EN = ['', 'January', 'February', 'March', 'April', 'May', 'Jun
 export function JppSettingsPage() {
     const { t, i18n } = useTranslation(['jpp', 'common']);
     const { isSuperAdmin, profile, isJppMember } = useAuth();
+    const { refreshSession } = useAcademicSession();
     const isYDP = profile?.jpp_position === 'YANG_DIPERTUA' || profile?.jpp_position === 'YDP' || isSuperAdmin;
     const [themeColor, setThemeColor] = useState(JPP_THEME_DEFAULT_COLOR);
     const [loading, setLoading] = useState(true);
@@ -307,6 +308,7 @@ export function JppSettingsPage() {
                                                 try {
                                                     const { error } = await supabase.from('system_settings').upsert({ key: 'intake_1_month', value: intake1Month }, { onConflict: 'key' });
                                                     if (error) throw error;
+                                                    await refreshSession();
                                                     toast.success(t('jpp:settings_intake_1_updated', 'Intake 1 dikemaskini: {{month}}', { month: monthNames[intake1Month] }));
                                                 } catch { toast.error(t('jpp:settings_save_failed', 'Gagal simpan.')); }
                                                 finally { setSavingIntake(false); }
@@ -338,6 +340,7 @@ export function JppSettingsPage() {
                                                 try {
                                                     const { error } = await supabase.from('system_settings').upsert({ key: 'intake_2_month', value: intake2Month }, { onConflict: 'key' });
                                                     if (error) throw error;
+                                                    await refreshSession();
                                                     toast.success(t('jpp:settings_intake_2_updated', 'Intake 2 dikemaskini: {{month}}', { month: monthNames[intake2Month] }));
                                                 } catch { toast.error(t('jpp:settings_save_failed', 'Gagal simpan.')); }
                                                 finally { setSavingIntake(false); }

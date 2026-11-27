@@ -718,7 +718,7 @@ export function PolyMaps360CaptureModal({
         // 1. Jika lokasi spesifik dipilih, kemas kini lokasi tersebut; jika tidak, kemas kini bangunan
         if (selectedLocationId) {
           const firstRoomPin = hotspots.find((h) => h.pin_type === 'room');
-          await supabase
+          const { error } = await supabase
             .from('imaps_locations')
             .update({
               panorama_360_url: panoramaUrl,
@@ -728,14 +728,16 @@ export function PolyMaps360CaptureModal({
                 : {}),
             })
             .eq('id', selectedLocationId);
+          if (error) throw error;
         } else {
-          await supabase
+          const { error } = await supabase
             .from('imaps_buildings')
             .update({
               panorama_360_url: panoramaUrl,
               is_360_enabled: true,
             })
             .eq('id', selectedBuildingId);
+          if (error) throw error;
         }
 
         // 2. Auto-Cipta / Kemas Kini semua Pin Bilik dalam imaps_locations (1-Koridor Multi-Pin Batch Creator)
@@ -743,7 +745,7 @@ export function PolyMaps360CaptureModal({
         const roomCodeToLocationId = new Map<string, string>();
 
         if (batchCreateRooms && roomPins.length > 0) {
-          const updatePromises: Promise<unknown>[] = [];
+          const updatePromises: Promise<{ error: { message: string } | null }>[] = [];
           const newLocationsPayload: Array<Record<string, unknown>> = [];
 
           for (const pin of roomPins) {
@@ -757,9 +759,8 @@ export function PolyMaps360CaptureModal({
             if (existingLoc) {
               roomCodeToLocationId.set(codeText.toLowerCase(), existingLoc.id);
               updatePromises.push(
-                Promise.resolve(
-                  supabase
-                    .from('imaps_locations')
+                supabase
+                  .from('imaps_locations')
                     .update({
                       panorama_360_url: panoramaUrl,
                       is_360_enabled: true,
@@ -767,9 +768,8 @@ export function PolyMaps360CaptureModal({
                       target_pitch: pin.pitch,
                       floor_level: pin.floor_level || existingLoc.floor_level || inferred.floor_level,
                       direction_text: pin.description || inferred.direction_text,
-                    })
-                    .eq('id', existingLoc.id)
-                )
+                  })
+                  .eq('id', existingLoc.id)
               );
             } else {
               newLocationsPayload.push({
@@ -786,14 +786,18 @@ export function PolyMaps360CaptureModal({
             }
           }
 
-          const [, insertedRes] = await Promise.all([
+          const [updatedResults, insertedRes] = await Promise.all([
             Promise.all(updatePromises),
             newLocationsPayload.length > 0
               ? supabase.from('imaps_locations').insert(newLocationsPayload).select('id, room_code')
-              : Promise.resolve({ data: [] as Array<{ id: string; room_code: string }> }),
+              : Promise.resolve({ data: [] as Array<{ id: string; room_code: string }>, error: null }),
           ]);
 
-          if (insertedRes?.data) {
+          const failedUpdate = updatedResults.find((result) => result.error);
+          if (failedUpdate?.error) throw failedUpdate.error;
+          if (insertedRes.error) throw insertedRes.error;
+
+          if (insertedRes.data) {
             for (const row of insertedRes.data) {
               if (row.id && row.room_code) {
                 roomCodeToLocationId.set(row.room_code.trim().toLowerCase(), row.id);
@@ -803,7 +807,9 @@ export function PolyMaps360CaptureModal({
         }
 
         // 3. Simpan semua hotspot ke dalam jadual imaps_360_hotspots
-        await supabase.from('imaps_360_hotspots').delete().eq('panorama_url', panoramaUrl);
+        const { error: deleteHotspotsError } = await supabase
+          .from('imaps_360_hotspots').delete().eq('panorama_url', panoramaUrl);
+        if (deleteHotspotsError) throw deleteHotspotsError;
 
         if (hotspots.length > 0) {
           const rowsToInsert = hotspots.map((h) => {
@@ -842,23 +848,18 @@ export function PolyMaps360CaptureModal({
           .map((h) => h.room_code || h.label)
           .join(', ');
 
-        const { error: subError } = await supabase.from('imaps_field_submissions').insert([
-          {
-            building_id: selectedBuildingId,
-            location_id: selectedLocationId || null,
-            contributor_id: currentUserId || null,
-            contributor_name: currentUserName || t('services:polymaps_studio_default_volunteer', 'Sukarelawan Kampus'),
-            floor_level: floorLevel || '1',
-            corridor_label: roomCodesHint || `Aras ${floorLevel || '1'}`,
-            room_code_hint: roomCodesHint || null,
-            panorama_360_url: panoramaUrl,
-            hotspots_json: hotspots,
-            hotspots_payload: hotspots,
-            notes: volunteerNotes.trim() || null,
-            status: 'pending',
-          },
-        ]);
-
+        const { error: subError } = await supabase.rpc('submit_anonymous_polymaps_360', {
+          p_building_id: selectedBuildingId,
+          p_location_id: selectedLocationId || null,
+          p_contributor_name: currentUserName || t('services:polymaps_studio_default_volunteer', 'Sukarelawan Kampus'),
+          p_floor_level: floorLevel || '1',
+          p_corridor_label: roomCodesHint || `Aras ${floorLevel || '1'}`,
+          p_room_code_hint: roomCodesHint || null,
+          p_panorama_360_url: panoramaUrl,
+          p_hotspots_json: hotspots,
+          p_hotspots_payload: hotspots,
+          p_notes: volunteerNotes.trim() || null,
+        });
         if (subError) throw subError;
 
         await sendNotificationToJppAndSuperAdmin({

@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn, hexToRgba } from '@/lib/utils';
-import { getSemesterInfo } from '@/types';
+import { getStudentSemesterInfo } from '@/lib/academicSemester';
+import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import {
   Trophy, Star, BookOpen, Clock, CheckCircle,
   XCircle, ArrowRight, Plus, Zap, Award,
@@ -218,6 +219,7 @@ function TutorialCollapsible() {
 export function AkademikDashboard() {
   const { t } = useTranslation(['akademik', 'common']);
   const { profile } = useAuth();
+  const { intake1Month, intake2Month } = useAcademicSession();
   const navigate    = useNavigate();
 
   const [stats, setStats] = useState({
@@ -297,19 +299,12 @@ export function AkademikDashboard() {
   const totalMerit = (profile?.merit || 0);
 
   // Student semester info
-  const semInfo = profile?.intake_year
-    ? getSemesterInfo(
-        profile.intake_year,
-        (profile.intake_period as 1 | 2) || 1,
-        profile.programme_code === 'FTV',
-        7,
-        1,
-        profile.semester_override
-      )
-    : {
-        semester: profile?.semester_override || 1,
-        level: (profile?.semester_override || 1) <= 3 ? 'Junior' : 'Senior',
-      };
+  const semInfo = profile
+    ? getStudentSemesterInfo(profile, intake1Month, intake2Month) ?? {
+        semester: profile.semester_override || 1,
+        level: (profile.semester_override || 1) <= 3 ? 'Junior' : 'Senior',
+      }
+    : { semester: 1, level: 'Junior' };
 
   // Live Timetable calculations for today
   const now = new Date();

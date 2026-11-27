@@ -34,6 +34,7 @@ import {
   type PolyMaps360HotspotDraft,
 } from '@/lib/polyMapsSmartEntry';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { buildPolyMaps360Directory, canApplyPanoramaToBuilding, canMarkSubmissionApproved, filterPolyMaps360Directory, findRoomPanoramaConflicts, getPanoramaUsage, normalizePendingPins, type DirectoryStatus } from '@/lib/polymaps360Directory';
 
 // Fix for default marker icons in React-Leaflet
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -396,7 +397,7 @@ interface MissingReport {
 export function JppPolyMapsAdmin() {
   const { t, i18n } = useTranslation(['services', 'jpp', 'common']);
   const currentLang: 'en' | 'ms' = i18n.language?.startsWith('en') ? 'en' : 'ms';
-  const [activeTab, setActiveTab] = useState<'buildings' | 'locations' | 'submissions' | 'reports' | 'walkways'>('buildings');
+  const [activeTab, setActiveTab] = useState<'buildings' | 'locations' | '360directory' | 'submissions' | 'reports' | 'walkways'>('buildings');
   const [buildings, setBuildings] = useState<Building[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [reports, setReports] = useState<MissingReport[]>([]);
@@ -438,6 +439,20 @@ export function JppPolyMapsAdmin() {
   // Studio 360° & Pin + Import Pukal Pintar + Sumbangan Sukarelawan State
   const [hotspotsByPanorama, setHotspotsByPanorama] = useState<Record<string, PolyMaps360HotspotDraft[]>>({});
   const [fieldSubmissions, setFieldSubmissions] = useState<FieldSubmission[]>([]);
+  const [storageObjects, setStorageObjects] = useState<any[]>([]);
+  const [disabled360Rows, setDisabled360Rows] = useState<any[]>([]);
+  const [directoryError, setDirectoryError] = useState<string | null>(null);
+  const [directoryFilter, setDirectoryFilter] = useState<DirectoryStatus | 'all'>('all');
+  const [directorySearch, setDirectorySearch] = useState('');
+  const [editingSubmission, setEditingSubmission] = useState<FieldSubmission | null>(null);
+  const [usagePanoramaUrl, setUsagePanoramaUrl] = useState<string | null>(null);
+  const [editingUsageLocationId, setEditingUsageLocationId] = useState<string | null>(null);
+  const [addingUsage, setAddingUsage] = useState(false);
+  const [usageDraft, setUsageDraft] = useState<{ buildingId: string; floor: string; roomCode: string }>({ buildingId: '', floor: '1', roomCode: '' });
+  const [savingUsage, setSavingUsage] = useState(false);
+  const [draftSubmissionPins, setDraftSubmissionPins] = useState<PolyMaps360HotspotDraft[]>([]);
+  const [savingSubmissionPins, setSavingSubmissionPins] = useState(false);
+  const [directoryTargetBuildingId, setDirectoryTargetBuildingId] = useState('');
   const [studioConfig, setStudioConfig] = useState<{
     isOpen: boolean;
     buildingId?: string;
@@ -644,6 +659,37 @@ export function JppPolyMapsAdmin() {
           }))
         );
       }
+
+      // Storage inventory + reversible GitHub-disabled backup feed the 360 directory.
+      setDirectoryError(null);
+      const [disabledRes, firstPage] = await Promise.all([
+        supabase.from('_backup_github_360_disabled_20261121').select('*').order('backed_up_at', { ascending: false }),
+        supabase.storage.from('imaps_assets').list('polymaps', { limit: 100, offset: 0, sortBy: { column: 'created_at', order: 'desc' } }),
+      ]);
+      if (disabledRes.error) setDirectoryError(`Disabled backup: ${disabledRes.error.message}`);
+      else setDisabled360Rows(disabledRes.data || []);
+      if (firstPage.error) {
+        setDirectoryError((prev) => [prev, `Storage inventory: ${firstPage.error.message}`].filter(Boolean).join(' | '));
+        setStorageObjects([]);
+      } else {
+        const objects = [...(firstPage.data || [])];
+        let offset = objects.length;
+        while ((firstPage.data || []).length === 100) {
+          const { data, error } = await supabase.storage.from('imaps_assets').list('polymaps', { limit: 100, offset, sortBy: { column: 'created_at', order: 'desc' } });
+          if (error) {
+            setDirectoryError((prev) => [prev, `Storage inventory: ${error.message}`].filter(Boolean).join(' | '));
+            break;
+          }
+          objects.push(...(data || []));
+          offset += (data || []).length;
+          if ((data || []).length < 100) break;
+        }
+        setStorageObjects(objects.map((item: any) => ({
+          ...item,
+          name: `polymaps/${item.name}`,
+          publicUrl: supabase.storage.from('imaps_assets').getPublicUrl(`polymaps/${item.name}`).data.publicUrl,
+        })));
+      }
       
       const parsedWalkways = (walkwaysRes.data || []).map((w: any) => ({
         id: w.id,
@@ -667,59 +713,37 @@ export function JppPolyMapsAdmin() {
     const toastId = toast.loading(t('services:polymaps_sub_approving_toast', 'Menerbitkan 360° & semua pin bilik sukarelawan...'));
     try {
       const targetBuildingId = sub.building_id || buildings[0]?.id;
-      const matchedBuilding = buildings.find(b => b.id === targetBuildingId);
+      if (!targetBuildingId) throw new Error('Bangunan sasaran submission tiada.');
+      const matchedBuilding = buildings.find((b) => b.id === targetBuildingId);
+      if (!matchedBuilding) throw new Error('Bangunan sasaran submission tidak ditemui.');
+
+      const pins = Array.isArray(sub.hotspots_json) ? sub.hotspots_json : [];
+      const roomPins = pins.filter((pin) => pin.pin_type === 'room' && (pin.room_code || pin.label));
+      const roomCodeToLocationId = new Map<string, string>();
+      const updates: Array<Promise<{ error: any }>> = [];
+      const newLocationsPayload: Array<Record<string, unknown>> = [];
 
       if (sub.location_id) {
-        await supabase
-          .from('imaps_locations')
-          .update({
-            panorama_360_url: sub.panorama_360_url,
-            is_360_enabled: true,
-          })
-          .eq('id', sub.location_id);
-      } else if (targetBuildingId) {
-        await supabase
-          .from('imaps_buildings')
-          .update({
-            panorama_360_url: sub.panorama_360_url,
-            is_360_enabled: true,
-          })
-          .eq('id', targetBuildingId);
+        updates.push(supabase.from('imaps_locations').update({ panorama_360_url: sub.panorama_360_url, is_360_enabled: true }).eq('id', sub.location_id));
+      } else {
+        updates.push(supabase.from('imaps_buildings').update({ panorama_360_url: sub.panorama_360_url, is_360_enabled: true }).eq('id', targetBuildingId));
       }
-
-      const pins = Array.isArray(sub.hotspots_json)
-        ? sub.hotspots_json
-        : Array.isArray((sub as any).hotspots_payload)
-        ? (sub as any).hotspots_payload
-        : [];
-      const roomPins = pins.filter(p => p.pin_type === 'room' && (p.room_code || p.label));
-
-      const updatePromises: Promise<unknown>[] = [];
-      const newLocationsPayload: Array<Record<string, unknown>> = [];
 
       for (const pin of roomPins) {
         const codeText = (pin.room_code || pin.label).trim();
-        const inferred = inferRoomMetadata(codeText, matchedBuilding?.code, pin.yaw, currentLang);
-        const existingLoc = locations.find(
-          l => l.building_id === targetBuildingId && l.room_code.trim().toLowerCase() === codeText.toLowerCase()
-        );
-
+        const inferred = inferRoomMetadata(codeText, matchedBuilding.code, pin.yaw, currentLang);
+        const existingLoc = locations.find((location) => location.building_id === targetBuildingId && location.room_code.trim().toLowerCase() === codeText.toLowerCase());
         if (existingLoc) {
-          updatePromises.push(
-            Promise.resolve(
-              supabase
-                .from('imaps_locations')
-                .update({
-                  panorama_360_url: sub.panorama_360_url,
-                  is_360_enabled: true,
-                  target_yaw: pin.yaw,
-                  target_pitch: pin.pitch,
-                  direction_text: pin.description || existingLoc.direction_text || inferred.direction_text,
-                })
-                .eq('id', existingLoc.id)
-            )
-          );
-        } else if (targetBuildingId) {
+          roomCodeToLocationId.set(codeText.toLowerCase(), existingLoc.id);
+          updates.push(supabase.from('imaps_locations').update({
+            panorama_360_url: sub.panorama_360_url,
+            is_360_enabled: true,
+            target_yaw: pin.yaw,
+            target_pitch: pin.pitch,
+            floor_level: pin.floor_level || existingLoc.floor_level || inferred.floor_level,
+            direction_text: pin.description || existingLoc.direction_text || inferred.direction_text,
+          }).eq('id', existingLoc.id));
+        } else {
           newLocationsPayload.push({
             building_id: targetBuildingId,
             room_code: codeText,
@@ -734,60 +758,131 @@ export function JppPolyMapsAdmin() {
         }
       }
 
-      await Promise.all([
-        Promise.all(updatePromises),
-        newLocationsPayload.length > 0
-          ? supabase.from('imaps_locations').insert(newLocationsPayload)
-          : Promise.resolve(),
-      ]);
+      const updateResults = await Promise.all(updates);
+      const failures = updateResults.map((result) => result.error);
+      let insertedLocations: Array<{ id: string; room_code: string }> = [];
+      if (newLocationsPayload.length) {
+        const { data, error } = await supabase.from('imaps_locations').insert(newLocationsPayload).select('id, room_code');
+        failures.push(error);
+        insertedLocations = data || [];
+      }
+      for (const row of insertedLocations) roomCodeToLocationId.set(row.room_code.trim().toLowerCase(), row.id);
 
-      if (pins.length > 0) {
-        await supabase.from('imaps_360_hotspots').delete().eq('panorama_url', sub.panorama_360_url);
-        const hsPayload = pins.map(p => ({
-          panorama_url: sub.panorama_360_url,
-          building_id: targetBuildingId || null,
-          location_id: sub.location_id || null,
-          pin_type: p.pin_type,
-          label: p.label,
-          room_code: p.room_code || null,
-          floor_level: p.floor_level || sub.floor_level || '1',
-          description: p.description || null,
-          pitch: p.pitch,
-          yaw: p.yaw,
-          target_panorama_url: p.target_panorama_url || null,
-          created_by: sub.contributor_id || user?.id || null,
-        }));
-        await supabase.from('imaps_360_hotspots').insert(hsPayload);
+      if (pins.length) {
+        const { error: deleteError } = await supabase.from('imaps_360_hotspots').delete().eq('panorama_url', sub.panorama_360_url);
+        failures.push(deleteError);
+        if (deleteError) throw deleteError;
+        const hsPayload = pins.map((pin) => {
+          const key = (pin.room_code || pin.label || '').trim().toLowerCase();
+          return {
+            panorama_url: sub.panorama_360_url,
+            building_id: targetBuildingId,
+            location_id: roomCodeToLocationId.get(key) || pin.location_id || sub.location_id || null,
+            pin_type: pin.pin_type,
+            label: pin.label,
+            room_code: pin.room_code || null,
+            floor_level: pin.floor_level || sub.floor_level || '1',
+            description: pin.description || null,
+            pitch: pin.pitch,
+            yaw: pin.yaw,
+            target_panorama_url: pin.target_panorama_url || null,
+            created_by: sub.contributor_id || user?.id || null,
+          };
+        });
+        const { error: hotspotError } = await supabase.from('imaps_360_hotspots').insert(hsPayload);
+        failures.push(hotspotError);
       }
 
-      await supabase
-        .from('imaps_field_submissions')
-        .update({
-          status: 'approved',
-          reviewed_by: user?.id || null,
-          reviewed_at: new Date().toISOString(),
-        })
-        .eq('id', sub.id);
+      if (!canMarkSubmissionApproved(failures)) {
+        const failed = failures.find(Boolean);
+        throw failed || new Error('Gagal menerbitkan panorama atau pin.');
+      }
+
+      const { error: statusError } = await supabase.from('imaps_field_submissions').update({ status: 'approved', reviewed_by: user?.id || null, reviewed_at: new Date().toISOString() }).eq('id', sub.id).eq('status', 'pending');
+      if (statusError) throw statusError;
 
       if (sub.contributor_id) {
-        await supabase.from('notifications').insert({
+        const { error: notificationError } = await supabase.from('notifications').insert({
           user_id: sub.contributor_id,
           title: t('services:polymaps_sub_notif_title', '🎥 Sumbangan 360° PolyMaps Diluluskan!'),
           message: t('services:polymaps_sub_notif_message', 'Rakaman 360° dan {{count}} pin pintu bilik sumbangan anda telah diterbitkan ke dalam PolyMaps. Terima kasih!', { count: pins.length }),
-          type: 'MAPS_REPORT_APPROVED',
-          module: 'AKADEMIK',
-          link: '/polymaps',
+          type: 'MAPS_REPORT_APPROVED', module: 'AKADEMIK', link: '/polymaps',
         });
+        if (notificationError) console.warn('Submission approved; contributor notification failed:', notificationError.message);
       }
-
       toast.success(t('services:polymaps_sub_approved_toast', 'Sumbangan 360° & pin bilik berjaya diluluskan dan diterbitkan!'), { id: toastId });
       fetchData();
     } catch (err: any) {
       console.error('Gagal meluluskan sumbangan 360:', err);
       toast.error(err.message || t('services:polymaps_sub_approve_failed', 'Gagal menerbitkan sumbangan 360°.'), { id: toastId });
     } finally {
-      setIsProcessingReport(prev => ({ ...prev, [sub.id]: false }));
+      setIsProcessingReport((prev) => ({ ...prev, [sub.id]: false }));
     }
+  };
+
+  const savePendingSubmissionPins = async () => {
+    if (!editingSubmission || editingSubmission.status !== 'pending') return;
+    setSavingSubmissionPins(true);
+    try {
+      const pins = normalizePendingPins(draftSubmissionPins) as PolyMaps360HotspotDraft[];
+      const { error } = await supabase.from('imaps_field_submissions').update({ hotspots_json: pins, hotspots_payload: pins }).eq('id', editingSubmission.id).eq('status', 'pending');
+      if (error) throw error;
+      setFieldSubmissions((prev) => prev.map((item) => item.id === editingSubmission.id ? { ...item, hotspots_json: pins } : item));
+      setEditingSubmission(null);
+      toast.success('Pin dikemas kini. Submission masih menunggu kelulusan.');
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal menyimpan pin submission.');
+    } finally {
+      setSavingSubmissionPins(false);
+    }
+  };
+
+  const savePanoramaRoomUsage = async () => {
+    if (!usagePanoramaUrl || (!editingUsageLocationId && !addingUsage)) return;
+    const roomCode = usageDraft.roomCode.trim();
+    if (!roomCode || !usageDraft.buildingId) { toast.error('Pilih bangunan dan masukkan kod bilik.'); return; }
+    const conflicts = findRoomPanoramaConflicts(locations, { ...usageDraft, roomCode, panoramaUrl: usagePanoramaUrl, locationId: editingUsageLocationId || undefined });
+    if (conflicts.length) {
+      const details = conflicts.map((conflict) => { const b = buildings.find((item) => item.id === conflict.building_id); return `• ${b?.code || 'Bangunan'} aras ${conflict.floor_level ?? '1'} · ${conflict.room_code}: ${conflict.panorama_360_url || '(tiada URL)'}`; }).join('\n');
+      const message = `Konflik bilik ditemui (${conflicts.length}):\n${details}\n\nTerus simpan dan ganti kaitan untuk bilik ini sahaja?`;
+      if (!window.confirm(message)) return;
+    }
+    setSavingUsage(true);
+    try {
+      const payload = { building_id: usageDraft.buildingId, floor_level: Number(usageDraft.floor) || 1, room_code: roomCode, panorama_360_url: usagePanoramaUrl, is_360_enabled: true };
+      const result = !addingUsage && editingUsageLocationId
+        ? await supabase.from('imaps_locations').update(payload).eq('id', editingUsageLocationId)
+        : await supabase.from('imaps_locations').insert({ ...payload, direction_text: '', search_tags: '' });
+      const { error } = result;
+      if (error) throw error;
+      toast.success('Kaitan panorama bilik dikemas kini. Bilik lain kekal tidak berubah.');
+      setEditingUsageLocationId(null);
+      setAddingUsage(false);
+      setUsageDraft({ buildingId: '', floor: '1', roomCode: '' });
+      await fetchData();
+    } catch (error: any) {
+      toast.error(error.message || 'Gagal menyimpan kaitan panorama bilik.');
+    } finally {
+      setSavingUsage(false);
+    }
+  };
+
+  const applyPanoramaToBuilding = async (entry: { panoramaUrl: string; buildingId?: string | null; label?: string | null }) => {
+    const targetBuildingId = entry.buildingId || directoryTargetBuildingId;
+    if (!targetBuildingId || !entry.panoramaUrl || !canApplyPanoramaToBuilding(entry)) return;
+    setConfirmConfig({
+      isOpen: true,
+      title: 'Guna panorama untuk bangunan?',
+      description: `Panorama ${entry.label || ''} akan jadi paparan aktif bangunan terpilih. Tindakan ini tidak meluluskan submission.`,
+      confirmLabel: 'Guna panorama',
+      variant: 'default',
+      onConfirm: async () => {
+        const { error } = await supabase.from('imaps_buildings').update({ panorama_360_url: entry.panoramaUrl, is_360_enabled: true }).eq('id', targetBuildingId);
+        if (error) { toast.error(error.message); return; }
+        toast.success('Panorama bangunan dikemas kini.');
+        fetchData();
+      },
+    });
   };
 
   const rejectFieldSubmission = async (subId: string) => {
@@ -1296,6 +1391,15 @@ export function JppPolyMapsAdmin() {
                 {fieldSubmissions.filter(s => s.status === 'pending').length}
               </span>
             )}
+          </button>
+          <button
+            onClick={() => setActiveTab('360directory')}
+            className={cn(
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all",
+              activeTab === '360directory' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
+            )}
+          >
+            <Compass className="w-4 h-4" /> 360 Directory
           </button>
           <button
             onClick={() => setActiveTab('reports')}
@@ -1943,6 +2047,100 @@ export function JppPolyMapsAdmin() {
             </div>
           )}
         </div>
+      ) : activeTab === '360directory' ? (
+        (() => {
+          const entries = buildPolyMaps360Directory(buildings, locations, fieldSubmissions, Object.values(hotspotsByPanorama).flat(), storageObjects, disabled360Rows);
+          const filtered = filterPolyMaps360Directory(entries, directoryFilter, directorySearch);
+          const statusLabels: Record<DirectoryStatus | 'all', string> = {
+            all: 'Semua', active: 'Aktif', pending: 'Menunggu', approved: 'Diluluskan', rejected: 'Ditolak', disabled: 'Disabled', unused: 'Belum digunakan',
+          };
+          return (
+            <section className="space-y-4" aria-label="PolyMaps 360 Directory">
+              <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
+                <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+                  <div>
+                    <h2 className="font-black text-lg">360 Directory</h2>
+                    <p className="text-xs text-slate-500">{filtered.length} / {entries.length} gambar</p>
+                  </div>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <input value={directorySearch} onChange={(e) => setDirectorySearch(e.target.value)} placeholder="Cari nama, bilik, bangunan..." className="w-full sm:max-w-xs rounded-xl border border-slate-200 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
+                    <select value={directoryTargetBuildingId} onChange={(e) => setDirectoryTargetBuildingId(e.target.value)} aria-label="Pilih bangunan sasaran panorama" className="w-full sm:max-w-xs rounded-xl border border-slate-200 dark:border-white/10 bg-white px-3 py-2 text-sm dark:bg-slate-900"><option value="">Pilih bangunan sasaran...</option>{buildings.map((building) => <option key={building.id} value={building.id}>{building.code} · {building.name}</option>)}</select>
+                  </div>
+                </div>
+                <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter status panorama">
+                  {(['all', 'active', 'pending', 'approved', 'rejected', 'disabled', 'unused'] as const).map((status) => (
+                    <button key={status} type="button" onClick={() => setDirectoryFilter(status)} aria-pressed={directoryFilter === status} className={cn('shrink-0 rounded-full px-3 py-1.5 text-xs font-bold', directoryFilter === status ? 'bg-emerald-600 text-white' : 'bg-slate-100 dark:bg-white/10')}>
+                      {statusLabels[status]} ({entries.filter((entry) => status === 'all' || entry.status === status).length})
+                    </button>
+                  ))}
+                </div>
+                {directoryError && <p role="alert" className="text-sm text-amber-700 dark:text-amber-300">Sebahagian senarai mungkin tak lengkap: {directoryError}</p>}
+              </div>
+              {filtered.length === 0 ? (
+                <div className="rounded-2xl border border-dashed border-slate-300 p-8 text-center text-sm text-slate-500">Tiada gambar untuk filter ini.</div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                  {filtered.map((entry) => {
+                    const building = buildings.find((item) => item.id === entry.buildingId);
+                    const statusClass = entry.status === 'active' || entry.status === 'approved' ? 'bg-emerald-100 text-emerald-800' : entry.status === 'pending' ? 'bg-amber-100 text-amber-800' : entry.status === 'unused' ? 'bg-slate-200 text-slate-700' : 'bg-rose-100 text-rose-800';
+                    return (
+                      <article key={entry.id} className="overflow-hidden rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03]">
+                        <button type="button" onClick={() => { setPreview360Url(entry.panoramaUrl); setPreview360Title(entry.label || building?.name || '360 panorama'); setPreview360Hotspots(hotspotsByPanorama[entry.panoramaUrl] || []); }} className="block w-full text-left" aria-label={`Pratonton ${entry.label || entry.id}`}>
+                          {entry.panoramaUrl ? <img src={entry.panoramaUrl.split('#')[0]} alt={entry.label || 'Panorama 360'} loading="lazy" className="h-40 w-full object-cover bg-slate-100" /> : <div className="h-40 flex items-center justify-center bg-slate-100 text-sm text-slate-500">Tiada URL preview</div>}
+                        </button>
+                        <div className="space-y-2 p-3">
+                          <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-bold">{entry.label || entry.id}</p><p className="truncate text-xs text-slate-500">{building ? `${building.code} · ${building.name}` : entry.source}</p></div><span className={cn('shrink-0 rounded-full px-2 py-1 text-[10px] font-black uppercase', statusClass)}>{statusLabels[entry.status]}</span></div>
+                          <div className="flex justify-between text-xs text-slate-500"><span>{entry.pinCount} pin</span><span>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ''}</span></div>
+                          <div className="flex flex-wrap gap-2 pt-1">
+                            <button type="button" onClick={() => setUsagePanoramaUrl(entry.panoramaUrl)} className="rounded-lg border px-3 py-1.5 text-xs font-bold">Penggunaan & Edit</button>
+                            {entry.source === 'submission' && entry.status === 'pending' && (() => {
+                              const submission = fieldSubmissions.find((item) => item.id === entry.id.replace('submission:', ''));
+                              return submission ? <button type="button" onClick={() => { setEditingSubmission(submission); setDraftSubmissionPins([...submission.hotspots_json]); }} className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-bold text-white">Edit pin (pending)</button> : null;
+                            })()}
+                            {canApplyPanoramaToBuilding(entry) && (entry.buildingId || directoryTargetBuildingId) && <button type="button" onClick={() => applyPanoramaToBuilding(entry)} className="rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Guna untuk bangunan</button>}
+                          </div>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              )}
+              {usagePanoramaUrl && (() => {
+                const usages = getPanoramaUsage(locations, Object.values(hotspotsByPanorama).flat(), buildings, usagePanoramaUrl);
+                const selected = locations.find((location) => location.id === editingUsageLocationId);
+                return <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/70 p-3" role="dialog" aria-modal="true" aria-label="Penggunaan dan edit panorama">
+                  <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-4 dark:bg-slate-900">
+                    <div className="mb-4 flex items-center justify-between"><h3 className="font-black">Penggunaan & Edit 360°</h3><button type="button" onClick={() => { setUsagePanoramaUrl(null); setEditingUsageLocationId(null); setAddingUsage(false); }} aria-label="Tutup"><X className="h-5 w-5" /></button></div>
+                    <img src={usagePanoramaUrl.split('#')[0]} alt="Pratonton panorama" className="mb-4 h-44 w-full rounded-xl object-cover bg-slate-100" />
+                    <h4 className="mb-2 text-sm font-bold">Digunakan untuk {usages.length} bilik/kelas</h4>
+                    {usages.length ? <div className="mb-4 space-y-2"><button type="button" onClick={() => { setEditingUsageLocationId(null); setAddingUsage(true); setUsageDraft({ buildingId: directoryTargetBuildingId || buildings[0]?.id || '', floor: '1', roomCode: '' }); }} className="mb-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Tambah bilik/kelas untuk panorama</button>{usages.map((usage) => <article key={usage.locationId} className="rounded-xl border p-3 dark:border-white/10"><div className="flex items-start justify-between gap-2"><div><p className="font-bold">{usage.building} · Aras {usage.floor} · {usage.roomCode}</p><p className="text-xs text-slate-500">{usage.pins.length} pin{usage.pins.length ? `: ${usage.pins.map((pin) => `${pin.label} (yaw ${pin.yaw ?? '—'}, pitch ${pin.pitch ?? '—'})`).join('; ')}` : ''}</p></div><button type="button" onClick={() => { const loc = locations.find((item) => item.id === usage.locationId)!; setEditingUsageLocationId(loc.id); setAddingUsage(false); setUsageDraft({ buildingId: loc.building_id, floor: String(loc.floor_level ?? 1), roomCode: loc.room_code }); }} className="rounded-lg border px-3 py-1.5 text-xs font-bold">Edit bilik ini</button></div></article>)}</div> : <div className="mb-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-white/5"><p>Belum dikaitkan dengan bilik.</p><button type="button" onClick={() => { setEditingUsageLocationId(null); setAddingUsage(true); setUsageDraft({ buildingId: directoryTargetBuildingId || buildings[0]?.id || '', floor: '1', roomCode: '' }); }} className="mt-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Tambah kaitan bilik</button></div>}
+                    {(selected || addingUsage) && <div className="space-y-3 rounded-xl border border-indigo-300 p-3 dark:border-indigo-500/40"><h4 className="font-bold">Edit satu bilik sahaja</h4><label className="block text-xs font-semibold">Bangunan<select value={usageDraft.buildingId} onChange={(e) => setUsageDraft((d) => ({ ...d, buildingId: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-slate-800">{buildings.map((b) => <option key={b.id} value={b.id}>{b.code} · {b.name}</option>)}</select></label><div className="grid grid-cols-2 gap-2"><label className="text-xs font-semibold">Aras<input value={usageDraft.floor} onChange={(e) => setUsageDraft((d) => ({ ...d, floor: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-slate-800" /></label><label className="text-xs font-semibold">Bilik/kelas<input value={usageDraft.roomCode} onChange={(e) => setUsageDraft((d) => ({ ...d, roomCode: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-slate-800" /></label></div><p className="text-xs text-emerald-700 dark:text-emerald-300">Simpan hanya ubah kaitan bilik ini. Bilik lain yang berkongsi panorama kekal.</p><div className="flex justify-end gap-2"><button type="button" onClick={() => { setEditingUsageLocationId(null); setAddingUsage(false); setUsageDraft({ buildingId: '', floor: '1', roomCode: '' }); }} className="rounded-lg border px-3 py-2 text-sm">Batal</button><button type="button" disabled={savingUsage} onClick={savePanoramaRoomUsage} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{savingUsage ? 'Menyimpan…' : 'Simpan bilik'}</button></div></div>}
+                  </div>
+                </div>;
+              })()}
+              {editingSubmission && (
+                <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/70 p-3" role="dialog" aria-modal="true" aria-label="Edit pin submission pending">
+                  <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4 dark:bg-slate-900">
+                    <div className="mb-4 flex items-center justify-between gap-2"><h3 className="font-black">Edit pin submission · kekal pending</h3><button type="button" onClick={() => setEditingSubmission(null)} aria-label="Tutup"><X className="h-5 w-5" /></button></div>
+                    <div className="space-y-3">
+                      {draftSubmissionPins.map((pin, index) => (
+                        <div key={`${index}-${pin.yaw}-${pin.pitch}`} className="grid grid-cols-2 gap-2 rounded-xl border p-3">
+                          <label className="text-xs font-semibold">Kod/nama bilik<input value={pin.room_code || pin.label || ''} onChange={(e) => setDraftSubmissionPins((prev) => prev.map((item, i) => i === index ? { ...item, room_code: e.target.value, label: e.target.value } : item))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-black/20" /></label>
+                          <label className="text-xs font-semibold">Jenis pin<select value={pin.pin_type} onChange={(e) => setDraftSubmissionPins((prev) => prev.map((item, i) => i === index ? { ...item, pin_type: e.target.value as any } : item))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-black/20"><option value="room">Bilik</option><option value="door">Pintu</option><option value="info">Info</option></select></label>
+                          <label className="text-xs font-semibold">Yaw<input type="number" step="0.01" value={pin.yaw} onChange={(e) => setDraftSubmissionPins((prev) => prev.map((item, i) => i === index ? { ...item, yaw: Number(e.target.value) } : item))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-black/20" /></label>
+                          <label className="text-xs font-semibold">Pitch<input type="number" step="0.01" value={pin.pitch} onChange={(e) => setDraftSubmissionPins((prev) => prev.map((item, i) => i === index ? { ...item, pitch: Number(e.target.value) } : item))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-black/20" /></label>
+                          <button type="button" onClick={() => setDraftSubmissionPins((prev) => prev.filter((_, i) => i !== index))} className="justify-self-start rounded-lg border border-rose-300 px-3 py-1 text-xs font-bold text-rose-600">Buang pin</button>
+                        </div>
+                      ))}
+                      <button type="button" onClick={() => setDraftSubmissionPins((prev) => [...prev, { pin_type: 'room', label: '', room_code: '', yaw: 0, pitch: 0 } as PolyMaps360HotspotDraft])} className="rounded-lg border px-3 py-2 text-xs font-bold">Tambah pin</button>
+                    </div>
+                    <div className="mt-4 flex justify-end gap-2"><button type="button" onClick={() => setEditingSubmission(null)} className="rounded-lg border px-4 py-2 text-sm">Batal</button><button type="button" onClick={savePendingSubmissionPins} disabled={savingSubmissionPins} className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{savingSubmissionPins ? 'Simpan...' : 'Simpan sebagai pending'}</button></div>
+                  </div>
+                </div>
+              )}
+            </section>
+          );
+        })()
       ) : activeTab === 'submissions' ? (
         <div className="space-y-6">
           {/* Sumbangan 360° & Pin Pintu Bilik Daripada Sukarelawan */}

@@ -55,6 +55,15 @@ export function AcademicSessionProvider({ children }: { children: React.ReactNod
 
   useEffect(() => {
     fetchSession();
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void fetchSession();
+    };
+    window.addEventListener('focus', refreshWhenVisible);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+    return () => {
+      window.removeEventListener('focus', refreshWhenVisible);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
   }, []);
 
   const activeSession = sessionString;

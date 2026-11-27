@@ -24,7 +24,11 @@ const BASE_URL = 'https://normane176680.github.io/my-map-polisas/';
 const assetUrl = (path: string) => `${BASE_URL}${path.startsWith('/') ? path.slice(1) : path}`;
 const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...(opt || {}) }) as string) : fb);
 
-export const POLYMAPS_360_REGISTRY: PolyMaps360Building[] = [
+// ponytail: external GitHub panorama registry disabled until verified campus imagery is ready.
+export const POLYMAPS_360_REGISTRY: PolyMaps360Building[] = []; // intentionally empty
+
+/* Archived external registry retained below for reversible restore.
+export const POLYMAPS_360_REGISTRY_ARCHIVE: PolyMaps360Building[] = [
   {
     name: t('services:bldg_admin_name', 'BANGUNAN PENTADBIRAN'),
     code: 'ADMIN',
@@ -279,10 +283,8 @@ export const POLYMAPS_360_REGISTRY: PolyMaps360Building[] = [
     description: t('services:bldg_rapid_desc', 'Hentian bas utama pengangkutan awam Rapid Kuantan di hadapan kampus POLISAS.'),
   },
 ];
+*/
 
-/**
- * Normalise string for relaxed fuzzy comparison
- */
 function cleanStr(s?: string | null): string {
   if (!s) return '';
   return s
