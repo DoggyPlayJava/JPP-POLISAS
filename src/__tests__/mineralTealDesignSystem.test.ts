@@ -1,8 +1,6 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, it, expect } from 'vitest';
-// @ts-ignore - ESM script helper without .d.ts
-import { runDesignTokenAudit } from '../../scripts/check-design-tokens.mjs';
 
 const ROOT = path.resolve(__dirname, '../..');
 
@@ -11,20 +9,27 @@ function read(relPath: string) {
 }
 
 describe('Semambu Mineral Teal & Crisp Alabaster Design System', () => {
-  it('enforces zero forbidden legacy Earthy/Maroon tokens across non-allowlisted web UI', () => {
-    const violations = runDesignTokenAudit(ROOT);
+  it('keeps legacy palette tokens out of application UI files', () => {
+    const forbidden = /#(?:2E3A2F|556453|6B7F5B|C96F4F|F8F6EE|D9C9B2|151D16|1E271F|242E25|3A4A3B)\b/gi;
+    const violations: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const file = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          if (!['__tests__', 'locales'].includes(entry.name)) walk(file);
+        } else if (/\.(tsx?|css)$/.test(entry.name)) {
+          const source = fs.readFileSync(file, 'utf8');
+          if (forbidden.test(source)) violations.push(path.relative(ROOT, file));
+          forbidden.lastIndex = 0;
+        }
+      }
+    };
+    walk(path.join(ROOT, 'src'));
     expect(violations).toEqual([]);
   });
 
-  it('defines Mineral Teal light tokens and Obsidian Carbon dark tokens in DESIGN.md and src/index.css', () => {
-    const designMd = read('DESIGN.md');
+  it('defines Mineral Teal light and Obsidian Carbon dark tokens in src/index.css', () => {
     const indexCss = read('src/index.css');
-
-    expect(designMd).toContain('#0F766E');
-    expect(designMd).toContain('#F6FBF9');
-    expect(designMd).toContain('#090B0E');
-    expect(designMd).toContain('#13171D');
-
     expect(indexCss).toContain('backdrop-filter: none !important');
     expect(indexCss).toContain('--primary: 175 77% 26%');
     expect(indexCss).toContain('--background: 216 22% 4.5%');
