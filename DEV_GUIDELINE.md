@@ -5706,8 +5706,9 @@ Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asa
   - Pada mudah alih (`< sm`), kotak karangan pantas ditukar kepada baris garis halus rata gaya Facebook (`bg-transparent border-b rounded-none`), tab suapan (`Terkini` / `Hangat` / `Dijawab JPP`) diratakan kepada `grid-cols-3` teks tulen tanpa ikon berulang (`hidden sm:block`) serta garis bawah aktif `2px`, baris `Trending:` mudah alih yang bertindih dibuang (kekal dalam laci mudah alih & rel kanan desktop), tajuk `Topik Perbincangan Pelajar` disembunyikan secara visual pada mudah alih (`sr-only lg:not-sr-only`), dan kad suapan mudah alih diratakan menjadi aliran garis halus penuh (`sm:rounded-[2rem] sm:shadow-surface-sm` dikekalkan pada desktop).
   - `PolySuaraMobileDrawer` kini menggunakan jarak selamat `pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))]`, `overscroll-contain`, dan lengkung laci gaya Apple/Emil (`[0.32, 0.72, 0, 1]`).
   - Membaiki kebocoran bahasa Inggeris pada gesaan karangan pantas mudah alih dengan menambah kekunci pariti 100% `suara_quick_compose_short`, `suara_filter_short`, `suara_open_search`, `suara_clear_search`, dan `suara_drawer_preferences` dalam kedua-dua `src/locales/en/services.json` dan `src/locales/ms/services.json`.
+## PolySuara Mobile Interaction & Card Hierarchy
 
-
-
-
-
+- Keep the mobile header one row, collapsible search, pure-text 3-column tabs, and hidden redundant mobile Trending/H2 blocks.
+- Drawer backdrop/aside layers stay at `z-[130]`/`z-[140]`; portaled menus must render above them. Prefer direct 1-tap language/theme segmented controls inside the drawer to avoid nested popovers blocking iOS touches.
+- Give mobile composer and confession posts explicit white/Obsidian card surfaces, borders, and breathing gutters; keep moderation actions in a separate wrapping row below student actions so labels never clip on 393px screens.
+- Preserve palette tokens and use compositor-only transitions. Never add `backdrop-blur`/`backdropFilter` or dependencies for these fixes.

@@ -38,7 +38,7 @@ export function ThemeToggle() {
           <span className="sr-only">{t('common:change_theme', 'Tukar Tema')}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="rounded-2xl p-2 bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-2xl min-w-[140px]">
+      <DropdownMenuContent align="end" className="z-[99999] rounded-2xl p-2 bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-2xl min-w-[140px]">
         <DropdownMenuItem 
           onClick={() => setTheme('light')}
           className="rounded-xl gap-3 font-black text-[10px] uppercase tracking-widest cursor-pointer focus:bg-[#EBF7F4] dark:focus:bg-[#1B2028]"

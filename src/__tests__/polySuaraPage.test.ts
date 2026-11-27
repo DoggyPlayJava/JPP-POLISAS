@@ -161,7 +161,29 @@ describe('PolySuaraPage Suite', () => {
       expect(html).not.toContain('<span>Pelekat</span>');
 
       // Quick-compose capsule styling (flat hairline row on mobile, rounded capsule on sm+)
-      expect(html).toContain('rounded-none sm:rounded-3xl');
+      expect(html).toContain('min-h-[60px]');
+      expect(html).toContain('rounded-2xl sm:rounded-3xl');
+    });
+
+    it('keeps mobile composer and confession cards distinct with a separate moderation row', () => {
+      const html = renderToString(React.createElement(PolySuaraPage));
+      const page = fs.readFileSync(path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx'), 'utf-8');
+      const card = fs.readFileSync(path.resolve(__dirname, '../components/polysuara/PolySuaraConfessionCard.tsx'), 'utf-8');
+      expect(page).toContain('space-y-3 sm:space-y-4');
+      expect(html).toContain('min-h-[60px]');
+      expect(card).toContain('rounded-2xl sm:rounded-[2rem]');
+      expect(card).toContain('moderation-actions');
+      expect(card).toContain('border-[#B8E4DC]/30 dark:border-[#252B35]/50');
+    });
+
+    it('keeps drawer controls above app chrome and uses direct segmented preferences', () => {
+      const rails = fs.readFileSync(path.resolve(__dirname, '../components/polysuara/PolySuaraSideRails.tsx'), 'utf-8');
+      const theme = fs.readFileSync(path.resolve(__dirname, '../components/ui/ThemeToggle.tsx'), 'utf-8');
+      expect(rails).toContain('z-[130]');
+      expect(rails).toContain('z-[140]');
+      expect(rails).toContain('changeLanguage(lang)');
+      expect(rails).toContain('setTheme(');
+      expect(theme).toContain('z-[99999]');
     });
 
     it('defines composeModalOpen state and centered modal dialog structure in PolySuaraPage', () => {
@@ -367,7 +389,8 @@ describe('PolySuaraPage Suite', () => {
       expect(cardContent).toContain('Share2');
       expect(cardContent).toContain('Bookmark');
       expect(cardContent).toContain('onToggleBookmark');
-      expect(cardContent).toContain('border-t border-[#B8E4DC]/50 dark:border-[#252B35]');
+      expect(cardContent).toContain('border-[#B8E4DC]/35 dark:border-[#252B35]/60');
+      expect(cardContent).toContain('moderation-actions');
       expect(pageContent).toContain('<PolySuaraQuickReportModal');
       expect(pageContent).toContain('<PolySuaraMediaViewer');
     });

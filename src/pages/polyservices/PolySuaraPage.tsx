@@ -2318,16 +2318,16 @@ export function PolySuaraPage({
                       setComposeModalOpen(true);
                     }
                   }}
-                  className="bg-transparent sm:bg-white sm:dark:bg-[#13171D] border-b sm:border border-[#B8E4DC]/60 sm:border-[#B8E4DC]/80 dark:border-[#252B35] sm:hover:border-[#0F766E]/50 sm:dark:hover:border-[#2DD4BF]/50 rounded-none sm:rounded-3xl py-2.5 px-1 sm:p-4 mb-0 sm:mb-4 sm:shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-colors"
+                  className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl sm:rounded-3xl shadow-surface-sm px-3.5 py-3.5 sm:p-4 mt-3 mb-2 sm:mt-0 sm:mb-4 min-h-[60px] flex items-center justify-between gap-3 active:scale-[0.99] transition-[transform,border-color] duration-150 cursor-pointer group"
                   role="button"
                   tabIndex={0}
                   aria-label={t('services:write_new_confession_aria', 'Tulis luahan kampus baharu')}
                 >
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full sm:rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="w-10 h-10 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                       <MessageSquare className="w-4 h-4" />
                     </div>
-                    <span className="text-sm text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0B2420] dark:group-hover:text-[#F1F5F9] font-medium truncate">
+                    <span className="text-[15px] font-medium text-[#0B2420]/75 dark:text-[#CBD5E1] group-hover:text-[#0B2420] dark:group-hover:text-[#F1F5F9] truncate">
                       <span className="sm:hidden">{t('services:suara_quick_compose_short', 'Ada luahan kampus?')}</span>
                       <span className="hidden sm:inline">{t('services:suara_quick_compose_placeholder', 'Ada luahan atau rahsia kampus? Kongsi secara rahsia...')}</span>
                     </span>
@@ -2335,9 +2335,9 @@ export function PolySuaraPage({
                   <div className="flex items-center gap-2 shrink-0">
                     <span
                       aria-hidden="true"
-                      className="sm:hidden w-8 h-8 rounded-full inline-flex items-center justify-center text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0F766E] dark:group-hover:text-[#2DD4BF] transition-colors"
+                      className="sm:hidden w-9 h-9 rounded-full bg-[#F6FBF9] dark:bg-[#0E1116] inline-flex items-center justify-center text-[#0F766E] dark:text-[#2DD4BF] transition-colors"
                     >
-                      <ImageIcon className="w-4 h-4" />
+                      <ImageIcon className="w-[18px] h-[18px]" />
                     </span>
                     <span className="hidden sm:inline-flex text-xs font-bold text-white dark:text-[#090B0E] bg-[#0F766E] dark:bg-[#2DD4BF] px-3.5 py-1.5 rounded-full items-center gap-1 group-hover:opacity-90 transition-opacity whitespace-nowrap">
                       <span>{t('suara_post_confession_btn', 'Luahkan')}</span>
@@ -2364,7 +2364,7 @@ export function PolySuaraPage({
                 )}
 
                 {/* Pure-Text Threads-Style 3-Tab Underline Bar */}
-                <div className="border-b border-[#B8E4DC]/80 dark:border-[#252B35] mb-1 sm:mb-4">
+                <div className="border-b border-[#B8E4DC]/80 dark:border-[#252B35] mb-3.5 sm:mb-4">
                   <div className="grid grid-cols-3 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto">
                     {([
                       { id: 'LATEST', label: t('suara_sort_newest', 'Terkini'), icon: Clock },
@@ -2806,7 +2806,7 @@ export function PolySuaraPage({
                   </h2>
                 </div>
 
-                <div className="space-y-0 sm:space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {loading ? (
                     <div className="space-y-4 py-2">
                       <div className="flex items-center gap-2 text-[#3B635C] dark:text-[#94A0B2] px-1">

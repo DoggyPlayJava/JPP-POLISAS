@@ -119,6 +119,11 @@ export function PolySuaraConfessionCard({
   );
   const canDeleteConfession =
     isMine && !isConfessionDeleted && isWithin1Hour(confession.created_at);
+  const canShowJppReply = canReplyJpp && !confession.official_reply;
+  const canShowEscalate = canReplyJpp && !isConfessionDeleted && !confession.escalated_ticket_id && Boolean(onOpenEscalate);
+  const canShowAuthorReply = isMine && Boolean(confession.official_reply) && !confession.author_reply;
+  const canShowPin = canReplyJpp;
+  const hasModerationActions = canShowJppReply || canShowEscalate || canShowAuthorReply || canShowPin;
   const intent = detectPostIntent(confession);
   const campusLocations = isConfessionDeleted
     ? []
@@ -157,8 +162,8 @@ export function PolySuaraConfessionCard({
         onToggleReaction(confession.id, 'heart');
       }}
       className={cn(
-        'bg-transparent dark:bg-transparent sm:bg-white sm:dark:bg-[#13171D] border-x-0 border-t-0 border-b sm:border border-[#B8E4DC]/70 sm:border-[#B8E4DC]/80 dark:border-[#252B35] rounded-none sm:rounded-[2rem] shadow-none sm:shadow-surface-sm px-1 py-4 sm:p-6 mb-0 sm:mb-4 transition-[border-color,box-shadow] duration-200 relative overflow-hidden',
-        isTrending && 'sm:border-[#0F766E]/45 sm:dark:border-[#2DD4BF]/40'
+        'bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-surface-sm rounded-2xl sm:rounded-[2rem] p-4 sm:p-6 transition-[border-color,box-shadow] duration-200 relative overflow-hidden',
+        isTrending && 'border-[#0F766E]/45 dark:border-[#2DD4BF]/40'
       )}
     >
       {/* Author & Compact Category/Action Row */}
@@ -588,7 +593,7 @@ export function PolySuaraConfessionCard({
 
       {/* Action Bar */}
       <div
-        className="flex items-center justify-between gap-1.5 sm:gap-2 pt-3 border-t border-[#B8E4DC]/50 dark:border-[#252B35] flex-nowrap overflow-x-auto scrollbar-none"
+        className="flex items-center justify-between gap-1.5 sm:gap-2 pt-3 mt-1 border-t border-[#B8E4DC]/35 dark:border-[#252B35]/60 flex-nowrap overflow-x-auto scrollbar-none"
         data-html2canvas-ignore
       >
         {isConfessionDeleted ? (
@@ -715,22 +720,27 @@ export function PolySuaraConfessionCard({
             <Bookmark className={cn('w-4 h-4', isBookmarked && 'fill-current')} />
           </button>
 
-          {canReplyJpp && !confession.official_reply && (
+
+        </div>
+      </div>
+      {hasModerationActions && (
+        <div data-html2canvas-ignore className="moderation-actions mt-2.5 pt-2.5 border-t border-[#B8E4DC]/30 dark:border-[#252B35]/50 flex items-center gap-2 flex-wrap">
+          {canShowJppReply && (
             <button
               type="button"
               onClick={() => onOpenJppReply(confession)}
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#252B35] hover:bg-[#D5EFEA] dark:hover:bg-[#232933] transition-colors shrink-0 flex-nowrap cursor-pointer flex items-center gap-1"
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#252B35] hover:bg-[#D5EFEA] dark:hover:bg-[#232933] transition-colors shrink-0 flex-nowrap cursor-pointer flex items-center gap-1 whitespace-nowrap"
             >
               <MessageSquare className="w-3.5 h-3.5 shrink-0" />
               {t('services:reply_jpp', 'Balas JPP')}
             </button>
           )}
 
-          {canReplyJpp && !isConfessionDeleted && !confession.escalated_ticket_id && onOpenEscalate && (
+          {canShowEscalate && onOpenEscalate && (
             <button
               type="button"
               onClick={() => onOpenEscalate(confession)}
-              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/12 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-colors shrink-0 flex-nowrap cursor-pointer flex items-center gap-1"
+              className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-amber-500/12 dark:bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-colors shrink-0 flex-nowrap cursor-pointer flex items-center gap-1 whitespace-nowrap"
               title={t('services:suara_escalate_btn_admin', 'Eskalasi ke e-Kebajikan')}
             >
               <HeartHandshake className="w-3.5 h-3.5 shrink-0" />
@@ -738,18 +748,18 @@ export function PolySuaraConfessionCard({
             </button>
           )}
 
-          {isMine && confession.official_reply && !confession.author_reply && (
+          {canShowAuthorReply && (
             <button
               type="button"
               onClick={() => onOpenAuthorReply(confession.id)}
-              className="text-[11px] font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] hover:bg-[#D5EFEA] px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 shrink-0 flex-nowrap cursor-pointer"
+              className="text-[11px] font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] hover:bg-[#D5EFEA] px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 shrink-0 flex-nowrap cursor-pointer whitespace-nowrap"
             >
               <MessageSquare className="w-3.5 h-3.5 shrink-0" />
               {t('services:reply_jpp', 'Balas JPP')}
             </button>
           )}
 
-          {canReplyJpp && (
+          {canShowPin && (
             <button
               type="button"
               onClick={() => onTogglePin(confession.id, !!confession.is_pinned)}
@@ -769,7 +779,7 @@ export function PolySuaraConfessionCard({
             </button>
           )}
         </div>
-      </div>
+      )}
     </motion.div>
   );
 }
