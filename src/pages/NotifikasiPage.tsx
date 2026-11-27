@@ -10,6 +10,7 @@ import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { ms, enUS } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { BottomNav } from '@/components/layout/BottomNav';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
 const MODULE_FALLBACK: Record<NotificationModule, string> = {
@@ -59,9 +60,9 @@ function NotifRow({
       onClick={onRead}
       className={cn(
         'group relative flex items-start gap-4 px-5 py-4 cursor-pointer',
-        'border-b border-white/[0.04] last:border-0 transition-colors',
-        'hover:bg-white/[0.03]',
-        isUnread && 'bg-white/[0.02]'
+        'border-b border-[#B8E4DC]/50 dark:border-[#1E4D45]/70 last:border-0 transition-colors',
+        'hover:bg-[#EBF7F4]/60 dark:hover:bg-[#0B2420]/80',
+        isUnread && 'bg-[#EBF7F4]/40 dark:bg-[#0B2420]/60'
       )}
     >
       {/* Module icon */}
@@ -76,37 +77,37 @@ function NotifRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span
-            className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+            className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full"
             style={{ background: cfg.bg, color: cfg.color }}
           >
             {cfg.label}
           </span>
           {isUnread && (
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-400 flex-shrink-0" />
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-500 flex-shrink-0" />
           )}
         </div>
         <p className={cn(
           'text-sm leading-snug mb-1',
-          isUnread ? 'font-bold text-white' : 'font-medium text-slate-300'
+          isUnread ? 'font-bold text-[#0B2420] dark:text-[#F6FBF9]' : 'font-medium text-[#3B635C] dark:text-[#99CBC2]'
         )}>
           {notif.title}
         </p>
-        <p className="text-xs text-slate-400 leading-relaxed line-clamp-2 mb-1.5">
+        <p className="text-xs text-[#3B635C] dark:text-[#99CBC2] leading-relaxed line-clamp-2 mb-1.5">
           {notif.message}
         </p>
-        <p className="text-[10px] text-slate-600 font-medium uppercase tracking-wider">
+        <p className="text-[11px] text-[#3B635C]/75 dark:text-[#99CBC2]/65 font-medium">
           {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: dateLocale })}
         </p>
       </div>
 
       {/* Arrow */}
       {hasLink && (
-        <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-slate-400 transition-colors flex-shrink-0 mt-3" />
+        <ChevronRight className="w-4 h-4 text-[#3B635C]/70 dark:text-[#99CBC2]/70 group-hover:text-[#0F766E] dark:group-hover:text-[#2DD4BF] transition-colors flex-shrink-0 mt-3" />
       )}
 
       {/* Read indicator */}
       {!isUnread && (
-        <Check className="w-3 h-3 text-slate-700 flex-shrink-0 mt-3.5" />
+        <Check className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF] flex-shrink-0 mt-3.5" />
       )}
     </motion.div>
   );
@@ -136,18 +137,18 @@ function FilterChip({
     <button
       onClick={onClick}
       className={cn(
-        'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border',
+        'flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] rounded-full text-[11px] font-bold transition-all border cursor-pointer',
         active
-          ? 'bg-white text-slate-900 border-white shadow-md'
-          : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'
+          ? 'bg-[#0F766E] text-white border-[#0F766E] dark:bg-[#2DD4BF] dark:text-[#061714] dark:border-[#2DD4BF] shadow-xs'
+          : 'bg-white dark:bg-[#0B2420] text-[#3B635C] dark:text-[#99CBC2] border-[#B8E4DC]/80 dark:border-[#1E4D45] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C]'
       )}
-      style={active && cfg ? { background: cfg.bg, color: cfg.color, borderColor: `${cfg.color}30` } : {}}
+      style={active && cfg ? { background: cfg.bg, color: cfg.color, borderColor: `${cfg.color}35` } : {}}
     >
-      {module === 'ALL' ? '🔔' : cfg?.emoji} {module === 'ALL' ? allLabel : cfg?.label}
+      {module === 'ALL' ? <Bell className="w-3.5 h-3.5 shrink-0" /> : <span>{cfg?.emoji}</span>} {module === 'ALL' ? allLabel : cfg?.label}
       {count > 0 && (
         <span className={cn(
-          'px-1 py-0 rounded-full text-[8px] font-black',
-          active ? 'bg-white/20' : 'bg-white/10'
+          'px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none',
+          active ? 'bg-black/15 dark:bg-white/20' : 'bg-[#EBF7F4] dark:bg-white/10'
         )}>
           {count}
         </span>
@@ -231,24 +232,24 @@ export function NotifikasiPage() {
   const activeModules = ALL_MODULES.filter(m => (moduleCount[m] ?? 0) > 0);
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white">
+    <div className="min-h-screen bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] transition-colors">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 bg-slate-950/90 border-b border-white/[0.06]">
+      <div className="sticky top-0 z-30 bg-white/95 dark:bg-[#0B2420]/95 backdrop-blur-md border-b border-[#B8E4DC]/60 dark:border-[#1E4D45]">
         <div className="max-w-2xl mx-auto px-4 pt-4 pb-3">
           <div className="flex items-center gap-3 mb-3">
             <button
               onClick={() => navigate(-1)}
               aria-label={t('common:back', 'Kembali')}
-              className="w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center transition-colors"
+              className="w-9 h-9 rounded-xl bg-[#EBF7F4] dark:bg-[#11322C] hover:bg-[#D5EFEA] dark:hover:bg-[#18443C] flex items-center justify-center transition-colors cursor-pointer"
             >
-              <ArrowLeft className="w-4 h-4 text-slate-400" />
+              <ArrowLeft className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
             </button>
 
             <div className="flex-1">
-              <h1 className="text-sm font-black text-white tracking-tight">
+              <h1 className="text-base font-black text-[#0B2420] dark:text-[#F6FBF9] tracking-tight">
                 {t('portal:notifications_title', 'Notifikasi')}
               </h1>
-              <p className="text-[10px] text-slate-500 font-medium">
+              <p className="text-xs text-[#3B635C] dark:text-[#99CBC2] font-medium">
                 {t('portal:notifications_count', { count: notifs.length, defaultValue: `${notifs.length} notifikasi` })}
                 {unreadCount > 0 && t('portal:notifications_unread_count', { count: unreadCount, defaultValue: ` · ${unreadCount} belum dibaca` })}
               </p>
@@ -260,12 +261,12 @@ export function NotifikasiPage() {
                 size="sm"
                 disabled={isMarkingAll}
                 onClick={markAllRead}
-                className="h-8 gap-1.5 text-[9px] font-black uppercase tracking-wider bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-400 border border-emerald-500/20 rounded-xl shadow-none px-3"
+                className="h-9 gap-1.5 text-[11px] font-bold bg-[#EBF7F4] hover:bg-[#D5EFEA] dark:bg-[#11322C] dark:hover:bg-[#18443C] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#1E4D45] rounded-xl shadow-none px-3.5"
               >
                 {isMarkingAll ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <CheckCheck className="w-3 h-3" />
+                  <CheckCheck className="w-3.5 h-3.5" />
                 )}
                 {isMarkingAll ? t('common:saving', 'Menyimpan...') : t('portal:mark_all_read', 'Baca Semua')}
               </Button>
@@ -273,7 +274,7 @@ export function NotifikasiPage() {
           </div>
 
           {/* ── Filters ──────────────────────────────────────────────────────── */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
+          <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
             <FilterChip
               module="ALL"
               active={activeModule === 'ALL'}
@@ -298,16 +299,16 @@ export function NotifikasiPage() {
             <button
               onClick={() => setShowUnreadOnly(v => !v)}
               className={cn(
-                'flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest transition-all border',
+                'flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] rounded-full text-[11px] font-bold transition-all border cursor-pointer',
                 showUnreadOnly
-                  ? 'bg-rose-500/20 text-rose-400 border-rose-500/30'
-                  : 'bg-white/5 text-slate-400 border-white/10 hover:bg-white/10 hover:text-white'
+                  ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
+                  : 'bg-white dark:bg-[#0B2420] text-[#3B635C] dark:text-[#99CBC2] border-[#B8E4DC]/80 dark:border-[#1E4D45] hover:bg-[#EBF7F4] dark:hover:bg-[#11322C]'
               )}
             >
-              <Filter className="w-2.5 h-2.5" />
+              <Filter className="w-3 h-3" />
               {t('portal:filter_unread', 'Belum Baca')}
               {unreadCount > 0 && (
-                <span className="bg-rose-500/30 text-rose-300 px-1 rounded-full text-[8px]">{unreadCount}</span>
+                <span className="bg-rose-500/20 text-rose-600 dark:text-rose-300 px-1.5 py-0.5 rounded-full text-[10px] leading-none">{unreadCount}</span>
               )}
             </button>
           </div>
@@ -317,22 +318,22 @@ export function NotifikasiPage() {
       {/* ── Content ──────────────────────────────────────────────────────────── */}
       <div className="max-w-2xl mx-auto">
         {filtered.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-24 gap-4">
-            <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
-              <Bell className="w-8 h-8 text-slate-600" />
+          <div className="flex flex-col items-center justify-center py-24 gap-4 px-4">
+            <div className="w-16 h-16 rounded-2xl bg-[#EBF7F4] dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] flex items-center justify-center">
+              <Bell className="w-8 h-8 text-[#0F766E] dark:text-[#2DD4BF]" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-black text-slate-400">
+              <p className="text-sm font-black text-[#0B2420] dark:text-[#F6FBF9]">
                 {showUnreadOnly ? t('portal:no_unread_notifications', 'Tiada notifikasi belum dibaca') : t('portal:no_notifications', 'Tiada notifikasi')}
               </p>
-              <p className="text-xs text-slate-600 mt-1">
+              <p className="text-xs text-[#3B635C] dark:text-[#99CBC2] mt-1">
                 {showUnreadOnly ? t('portal:all_notifications_read', 'Semua notifikasi sudah dibaca') : t('portal:will_receive_notifications_here', 'Anda akan menerima notifikasi di sini')}
               </p>
             </div>
             {showUnreadOnly && (
               <button
                 onClick={() => setShowUnreadOnly(false)}
-                className="text-xs text-slate-500 hover:text-slate-300 underline underline-offset-2 transition-colors"
+                className="text-xs font-semibold text-[#0F766E] dark:text-[#2DD4BF] hover:underline underline-offset-2 transition-colors cursor-pointer"
               >
                 {t('portal:show_all_notifications', 'Papar semua notifikasi')}
               </button>
@@ -347,8 +348,8 @@ export function NotifikasiPage() {
                 animate={{ opacity: 1 }}
               >
                 {/* Date group label */}
-                <div className="px-5 py-2 mt-2">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-600">
+                <div className="px-5 py-2.5 mt-2">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#99CBC2]">
                     {group.label}
                   </p>
                 </div>
@@ -371,8 +372,9 @@ export function NotifikasiPage() {
         )}
 
         {/* Bottom spacing */}
-        <div className="h-16" />
+        <div className="h-28 md:h-16" aria-hidden="true" />
       </div>
+      <BottomNav />
       <FloatingAiChat />
     </div>
   );

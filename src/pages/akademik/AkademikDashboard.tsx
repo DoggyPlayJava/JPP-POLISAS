@@ -14,7 +14,7 @@ import {
   Building2, CreditCard, Sparkles, User,
 } from 'lucide-react';
 
-const THEME = '#818CF8';
+const THEME = '#0D9488';
 
 // BLANKET low-perf (diputuskan 2026-10): semua device dilayan low-perf.
 
@@ -77,20 +77,20 @@ function QrScanCta({ onClick }: { onClick: () => void }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.05, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       onClick={onClick}
-      className="w-full relative overflow-hidden rounded-[2rem] p-5 border border-indigo-200/80 dark:border-indigo-500/25 text-left group transition-all hover:border-indigo-400/40 active:scale-[0.99] min-h-[48px] bg-gradient-to-br from-indigo-50/90 via-indigo-50/50 to-white dark:from-indigo-950/30 dark:via-purple-950/20 dark:to-blue-950/15"
+      className="w-full relative overflow-hidden rounded-[2rem] p-5 border border-[#B8E4DC] dark:border-teal-500/25 text-left group transition-all hover:border-[#0F766E]/50 active:scale-[0.99] min-h-[48px] bg-gradient-to-br from-[#EBF7F4] via-[#F6FBF9] to-white dark:from-[#0B2420] dark:via-[#081A17] dark:to-[#061714]"
     >
       {/* Pulse ring around QR icon */}
       <div className="absolute right-6 top-1/2 -translate-y-1/2 flex items-center justify-center pointer-events-none">
         <div
           className="relative w-12 h-12 rounded-2xl flex items-center justify-center"
-          style={{ background: hexToRgba(THEME, 0.25), color: THEME }}
+          style={{ background: hexToRgba(THEME, 0.2), color: THEME }}
         >
           <ScanLine className="w-6 h-6" />
         </div>
       </div>
 
       <div className="pr-20 relative">
-        <p className="text-[9px] font-black uppercase tracking-[0.3em] text-indigo-600 dark:text-indigo-300/60 mb-1">{t('akademik:qr_cta_badge', 'Merit Aktiviti')}</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#0F766E] dark:text-[#2DD4BF] mb-1">{t('akademik:qr_cta_badge', 'Merit Aktiviti')}</p>
         <p className="text-lg font-black text-slate-900 dark:text-white">{t('akademik:scan_qr_merit_title', 'Scan QR Merit')}</p>
         <p className="text-[11px] text-slate-600 dark:text-white/40 font-medium mt-1">
           {t('akademik:qr_cta_desc', 'Hadir program & pamer di kaunter aktiviti untuk dapatkan merit')}
@@ -389,17 +389,17 @@ export function AkademikDashboard() {
           {/* Left: Student Identity & Academic Profile */}
           <div className="flex items-start gap-4">
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border border-indigo-400/30 text-indigo-600 dark:text-white font-black text-xl shadow-lg"
-              style={{ background: hexToRgba(THEME, 0.2) }}
+              className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border border-[#B8E4DC] dark:border-teal-400/30 text-[#0F766E] dark:text-[#2DD4BF] font-black text-xl shadow-xs"
+              style={{ background: hexToRgba(THEME, 0.14) }}
             >
-              {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : <GraduationCap className="w-7 h-7 text-indigo-400 dark:text-indigo-300" />}
+              {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : <GraduationCap className="w-7 h-7 text-[#0F766E] dark:text-[#2DD4BF]" />}
             </div>
             <div className="space-y-1.5 min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[9px] font-black uppercase tracking-[0.25em] px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:bg-indigo-500/20 dark:text-indigo-300 border border-indigo-500/20 dark:border-indigo-500/30">
+                <span className="text-[10px] font-bold uppercase tracking-[0.18em] px-2.5 py-0.5 rounded-full bg-teal-500/10 text-[#0F766E] dark:bg-teal-500/20 dark:text-[#2DD4BF] border border-teal-500/20 dark:border-teal-500/30">
                   {t('akademik:module_title', 'Hab Akademik & Matriks Jadual Waktu')}
                 </span>
-                <span className="text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
                   {t('akademik:status_active', 'Aktif')}
                 </span>
@@ -413,15 +413,15 @@ export function AkademikDashboard() {
               {/* Badges row: Matric, Department, Semester */}
               <div className="flex items-center gap-2.5 flex-wrap text-slate-500 dark:text-white/40 text-[11px] font-medium pt-1">
                 <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/[0.04] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06]">
-                  <CreditCard className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+                  <CreditCard className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
                   <span className="font-bold text-slate-700 dark:text-white/70">{profile?.matric_no || profile?.matrix_no || t('akademik:no_matric_no', 'Tiada No. Matrik')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/[0.04] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06]">
-                  <Building2 className="w-3.5 h-3.5 text-blue-500 dark:text-blue-400" />
+                  <Building2 className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
                   <span className="font-bold text-slate-700 dark:text-white/70">{profile?.department || profile?.programme_code || t('akademik:default_department', 'Jabatan POLISAS')}</span>
                 </div>
                 <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/[0.04] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06]">
-                  <GraduationCap className="w-3.5 h-3.5 text-purple-500 dark:text-purple-400" />
+                  <GraduationCap className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
                   <span className="font-bold text-slate-700 dark:text-white/70">{t('akademik:semester_n', 'Sem {{sem}}', { sem: semInfo.semester })} ({semInfo.level})</span>
                 </div>
               </div>
@@ -433,7 +433,7 @@ export function AkademikDashboard() {
             {/* CGPA Card */}
             <div
               onClick={() => navigate('/akademik/cgpa')}
-              className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.07] hover:border-indigo-500/30 transition-all cursor-pointer min-h-[48px] flex flex-col justify-center"
+              className="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/[0.07] hover:border-teal-500/30 transition-all cursor-pointer min-h-[48px] flex flex-col justify-center"
             >
               <div className="flex items-center gap-1.5 mb-1">
                 <BookOpen className="w-3.5 h-3.5 text-sky-500 dark:text-sky-400" />
@@ -467,7 +467,7 @@ export function AkademikDashboard() {
       <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200/80 dark:border-white/[0.05] p-5 shadow-xs space-y-4">
         <div className="flex items-center justify-between flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <Clock className="w-4 h-4 text-indigo-500" />
+            <Clock className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
             <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">
               {t('akademik:timetable_grid', 'Matriks Jadual Waktu Kelas')}
             </h3>
@@ -484,7 +484,7 @@ export function AkademikDashboard() {
             </span>
             <button
               onClick={() => navigate('/akademik/takwim')}
-              className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-0.5 ml-1"
+              className="text-[11px] font-bold text-[#0F766E] dark:text-[#2DD4BF] hover:underline flex items-center gap-0.5 ml-1"
             >
               <span className="hidden sm:inline">{t('akademik:view_full_schedule', 'Jadual Penuh')}</span>
               <ArrowRight className="w-3 h-3" />
@@ -504,7 +504,7 @@ export function AkademikDashboard() {
             </div>
             <button
               onClick={() => navigate('/akademik/takwim')}
-              className="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shrink-0 transition-colors shadow-xs"
+              className="px-3.5 py-2 rounded-xl bg-[#0F766E] hover:bg-[#0D9488] text-white font-bold text-xs shrink-0 transition-colors shadow-xs"
             >
               {t('akademik:upload_timetable_cta', 'Import Jadual')}
             </button>
@@ -546,11 +546,11 @@ export function AkademikDashboard() {
             {/* Slot 2: Next Upcoming Slot */}
             <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/[0.04] space-y-1.5">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-bold text-indigo-500 uppercase">
+                <span className="text-[10px] font-bold text-[#0F766E] dark:text-[#2DD4BF] uppercase">
                   {t('akademik:next_slot', 'Slot Kuliah Seterusnya')}
                 </span>
                 {nextClass ? (
-                  <span className="text-[10px] text-indigo-600 dark:text-indigo-400 font-bold">
+                  <span className="text-[10px] text-[#0F766E] dark:text-[#2DD4BF] font-bold">
                     {formatTimeStr(nextClass.start_time)} - {formatTimeStr(nextClass.end_time)}
                   </span>
                 ) : (

@@ -367,7 +367,7 @@ export function KebajikanTicketDetail() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
+      <div className="flex items-center justify-center h-[100dvh]">
         <Loader2 className="w-6 h-6 animate-spin text-teal-500" />
       </div>
     );
@@ -382,7 +382,7 @@ export function KebajikanTicketDetail() {
     : null;
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto min-h-screen relative transition-colors">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto min-h-[100dvh] relative transition-colors">
       {/* Back */}
       <button onClick={() => navigate('/kebajikan/tiket')} className="relative z-10 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 mb-6 sm:mb-8 transition-colors group">
         <ChevronLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" /> {t('kebajikan:back_to_list', 'Kembali ke Senarai')}
@@ -505,7 +505,7 @@ export function KebajikanTicketDetail() {
                     c.is_delegation_note
                       ? 'border border-indigo-300 dark:border-indigo-500/30 bg-indigo-50 dark:bg-indigo-500/10'
                       : c.is_internal
-                        ? 'border-l-4 border-l-indigo-500 border border-indigo-200 dark:border-indigo-500/20 bg-indigo-50/70 dark:bg-indigo-950/70'
+                        ? 'border border-teal-500/30 bg-teal-50/80 dark:bg-teal-950/60'
                         : c.author_role === 'PELAJAR'
                           ? 'bg-teal-50 dark:bg-indigo-600/20 border border-teal-200 dark:border-indigo-500/10 text-slate-900 dark:text-slate-200'
                           : 'bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/5 text-slate-900 dark:text-slate-200'

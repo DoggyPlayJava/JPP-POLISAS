@@ -40,145 +40,140 @@ export const LandingNexusAI: React.FC = () => {
   ];
 
   return (
-    <section id="nexus" className="py-24 md:py-36 px-4 md:px-6 bg-white border-y border-[#D9C9B2] relative z-20">
+    <section id="nexus" className="py-24 md:py-36 px-4 md:px-6 bg-white border-y border-[#B8E4DC] relative z-20">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-16 items-center">
 
         {/* Left Column: Descriptive Content & Capabilities (6 cols) */}
         <div className="lg:col-span-6 space-y-6 md:space-y-8">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[#F8F6EE] border border-[#D9C9B2]">
-            <BrainCircuit className="w-4 h-4 text-[#C96F4F]" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#2E3A2F]">
-              {t('portal:nexus_engine_tag', 'Enjin AI Generatif Terpadu')}
-            </span>
-          </div>
-
-          <h2 className="text-4xl sm:text-6xl md:text-[4.5rem] font-black tracking-tight text-[#2E3A2F] leading-[0.95]">
+          <h2 className="text-3xl sm:text-5xl md:text-[3.75rem] font-black tracking-[-0.03em] text-[#0B2420] leading-[1.02]">
             {t('portal:nexus_intelligence', 'Kepintaran Nexus')} <br />
-            <span className="text-[#C96F4F]">{t('portal:empowering_operations', 'Memperkasa Operasi.')}</span>
+            <span className="text-[#0F766E]">{t('portal:empowering_operations', 'Memperkasa Operasi.')}</span>
           </h2>
 
-          <p className="text-sm md:text-base text-[#556453] font-medium leading-relaxed max-w-xl">
+          <p className="text-sm md:text-base text-[#3B635C] font-normal leading-relaxed max-w-xl">
             {t(
               'portal:nexus_ai_description',
               'Sistem dipacu LLM untuk menyemak kualiti kertas kerja aktiviti dan merumuskan sentimen mahasiswa secara pintar. Serahkan tugasan analitik kepada kepintaran sistem JPP.'
             )}
           </p>
 
-          <div className="grid grid-cols-2 gap-5 md:gap-6 pt-4 border-t border-[#D9C9B2]/60 mt-6">
+          <div className="grid grid-cols-2 gap-4 md:gap-5 pt-4 border-t border-[#B8E4DC]/60 mt-6">
             {aiFeatures.map((f, i) => (
-              <div key={i} className="flex flex-col gap-2 p-3 rounded-2xl bg-[#F8F6EE]/60 border border-[#D9C9B2]/60">
-                <div className="w-10 h-10 rounded-xl bg-white border border-[#D9C9B2]/80 flex items-center justify-center text-[#2E3A2F] shadow-2xs">
-                  <f.icon className="w-5 h-5 text-[#2E3A2F]" />
+              <div key={i} className="flex flex-col gap-2 p-3.5 rounded-2xl bg-[#F6FBF9] border border-[#B8E4DC]/70">
+                <div className="w-10 h-10 rounded-xl bg-white border border-[#B8E4DC]/80 flex items-center justify-center text-[#0B2420] shadow-2xs">
+                  <f.icon className="w-5 h-5 text-[#0F766E]" />
                 </div>
                 <div>
-                  <h3 className="text-xs font-bold text-[#2E3A2F]">{f.label}</h3>
-                  <p className="text-[9px] font-bold uppercase tracking-wider text-[#556453]">{f.desc}</p>
+                  <h3 className="text-xs sm:text-sm font-semibold text-[#0B2420]">{f.label}</h3>
+                  <p className="text-[11px] font-medium text-[#3B635C]">{f.desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Right Column: Interactive Paperwork Audit Simulation Card (6 cols) */}
+        {/* Right Column: Double-Bezel Interactive Paperwork Audit Simulation Card (6 cols) */}
         <div className="lg:col-span-6">
-          <div className="relative rounded-[2.5rem] bg-[#2E3A2F] p-6 sm:p-8 text-white shadow-[0_20px_50px_rgba(46,58,47,0.2)] border border-[#2E3A2F] overflow-hidden">
-            {/* Top Scanning Bar */}
-            <div className="flex items-center justify-between pb-5 border-b border-white/10 mb-6">
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-[#D9C9B2]">
-                  <SearchCheck className="w-4 h-4 text-[#C96F4F]" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#D9C9B2] block">
-                    {t('portal:nexus_audit_title', 'Audit Kertas Kerja Automatik')}
-                  </span>
-                  <span className="text-xs font-black text-[#F8F6EE]">
-                    Nexus Copilot v2.9
-                  </span>
-                </div>
-              </div>
-              <span className="px-3 py-1 rounded-full bg-[#6B7F5B]/30 border border-[#6B7F5B]/50 text-[10px] font-bold text-[#D9C9B2] flex items-center gap-1.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#6B7F5B] animate-ping" />
-                {t('portal:nexus_live_scan', 'Live Scan')}
-              </span>
-            </div>
-
-            {/* Document Metadata Card */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-6">
-              <span className="text-[9px] font-mono uppercase tracking-wider text-[#D9C9B2] block mb-1">
-                KERTAS_KERJA_2026_FINAL.PDF
-              </span>
-              <p className="text-sm font-black text-[#F8F6EE] leading-tight">
-                {t('portal:nexus_doc_title', 'Karnival Keusahawanan & Kokurikulum POLISAS 2026')}
-              </p>
-              <div className="flex items-center gap-2 mt-2 text-[10px] font-semibold text-[#D9C9B2]">
-                <span>{t('portal:nexus_doc_organizer', 'Anjuran: Kelab Keusahawanan')}</span>
-                <span>•</span>
-                <span>{t('portal:nexus_doc_budget', 'Bajet: RM 4,500')}</span>
-              </div>
-            </div>
-
-            {/* Live Audit Metrics Grid */}
-            <div className="space-y-3 mb-6">
-              {[
-                {
-                  label: t('portal:nexus_hep_compliance', 'Pematuhan Format HEP'),
-                  score: '98%',
-                  status: t('portal:nexus_standards_compliant', 'Patuh Piawaian'),
-                  color: '#6B7F5B',
-                },
-                {
-                  label: t('portal:nexus_budget_syntax', 'Sintaks & Keseimbangan Belanjawan'),
-                  score: '100%',
-                  status: t('portal:nexus_verified_accurate', 'Disahkan Tepat'),
-                  color: '#6B7F5B',
-                },
-                {
-                  label: t('portal:nexus_kpi_objectives', 'Objektif & KPI Mahasiswa'),
-                  score: '94%',
-                  status: t('portal:nexus_aligned_calendar', 'Selaras Takwim'),
-                  color: '#C96F4F',
-                },
-              ].map((item, idx) => (
-                <div
-                  key={idx}
-                  className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <CheckCircle className="w-4 h-4" style={{ color: item.color }} />
-                    <span className="text-xs font-bold text-[#F8F6EE]">{item.label}</span>
+          <div className="rounded-[2.75rem] p-2 bg-[#0B2420]/[0.05] ring-1 ring-[#0B2420]/10">
+            <div className="relative rounded-[2.25rem] bg-[#0B2420] p-6 sm:p-8 text-white shadow-[0_20px_50px_rgba(11,36,32,0.22)] border border-[#1E4D45] overflow-hidden">
+              {/* Top Scanning Bar */}
+              <div className="flex items-center justify-between pb-5 border-b border-white/10 mb-6">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center text-[#B8E4DC]">
+                    <SearchCheck className="w-4 h-4 text-[#2DD4BF]" />
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs font-mono font-black text-[#F8F6EE] block">
-                      {item.score}
+                  <div>
+                    <span className="text-[11px] font-semibold text-[#99CBC2] block">
+                      {t('portal:nexus_audit_title', 'Audit Kertas Kerja Automatik')}
                     </span>
-                    <span className="text-[9px] font-semibold text-[#D9C9B2]">
-                      {item.status}
+                    <span className="text-xs font-bold text-[#F6FBF9]">
+                      Nexus Copilot v2.9
                     </span>
                   </div>
                 </div>
-              ))}
-            </div>
+                <span className="px-3 py-1 rounded-full bg-[#14B8A6]/20 border border-[#14B8A6]/40 text-[11px] font-semibold text-[#99F6E4] flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#2DD4BF]" />
+                  {t('portal:nexus_live_scan', 'Live Scan')}
+                </span>
+              </div>
 
-            {/* Overall Score Banner */}
-            <div className="p-4 rounded-2xl bg-gradient-to-r from-[#6B7F5B]/30 via-[#C96F4F]/20 to-transparent border border-white/10 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                <Sparkles className="w-5 h-5 text-[#C96F4F]" />
-                <div>
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-[#D9C9B2] block">
-                    {t('portal:nexus_ai_recommendation', 'Keputusan Cadangan AI')}
-                  </span>
-                  <span className="text-xs font-black text-[#F8F6EE]">
-                    {t('portal:nexus_recommended_approval', 'Disyorkan untuk Kelulusan HEP')}
-                  </span>
+              {/* Document Metadata Card */}
+              <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-6">
+                <span className="text-[11px] font-mono text-[#99CBC2] block mb-1">
+                  KERTAS_KERJA_2026_FINAL.PDF
+                </span>
+                <p className="text-sm font-bold text-[#F6FBF9] leading-tight">
+                  {t('portal:nexus_doc_title', 'Karnival Keusahawanan & Kokurikulum POLISAS 2026')}
+                </p>
+                <div className="flex items-center gap-2 mt-2 text-[11px] font-medium text-[#B8E4DC]">
+                  <span>{t('portal:nexus_doc_organizer', 'Anjuran: Kelab Keusahawanan')}</span>
+                  <span>•</span>
+                  <span>{t('portal:nexus_doc_budget', 'Bajet: RM 4,500')}</span>
                 </div>
               </div>
-              <div className="text-right">
-                <span className="text-2xl font-black font-mono text-[#F8F6EE]">96</span>
-                <span className="text-xs text-[#D9C9B2]">/100</span>
-              </div>
-            </div>
 
+              {/* Live Audit Metrics Grid */}
+              <div className="space-y-3 mb-6">
+                {[
+                  {
+                    label: t('portal:nexus_hep_compliance', 'Pematuhan Format HEP'),
+                    score: '98%',
+                    status: t('portal:nexus_standards_compliant', 'Patuh Piawaian'),
+                    color: '#2DD4BF',
+                  },
+                  {
+                    label: t('portal:nexus_budget_syntax', 'Sintaks & Keseimbangan Belanjawan'),
+                    score: '100%',
+                    status: t('portal:nexus_verified_accurate', 'Disahkan Tepat'),
+                    color: '#14B8A6',
+                  },
+                  {
+                    label: t('portal:nexus_kpi_objectives', 'Objektif & KPI Mahasiswa'),
+                    score: '94%',
+                    status: t('portal:nexus_aligned_calendar', 'Selaras Takwim'),
+                    color: '#5EEAD4',
+                  },
+                ].map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="p-3.5 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <CheckCircle className="w-4 h-4 shrink-0" style={{ color: item.color }} />
+                      <span className="text-xs font-semibold text-[#F6FBF9]">{item.label}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-xs font-mono font-bold text-[#F6FBF9] block">
+                        {item.score}
+                      </span>
+                      <span className="text-[11px] font-medium text-[#99CBC2]">
+                        {item.status}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Overall Score Banner */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-[#14B8A6]/25 via-[#0D9488]/20 to-transparent border border-white/10 flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <Sparkles className="w-5 h-5 text-[#2DD4BF]" />
+                  <div>
+                    <span className="text-[11px] font-medium text-[#99CBC2] block">
+                      {t('portal:nexus_ai_recommendation', 'Keputusan Cadangan AI')}
+                    </span>
+                    <span className="text-xs font-bold text-[#F6FBF9]">
+                      {t('portal:nexus_recommended_approval', 'Disyorkan untuk Kelulusan HEP')}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="text-2xl font-black font-mono text-[#F6FBF9]">96</span>
+                  <span className="text-xs text-[#B8E4DC]">/100</span>
+                </div>
+              </div>
+
+            </div>
           </div>
         </div>
 

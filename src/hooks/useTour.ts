@@ -22,17 +22,23 @@ export function useTour(tourKey: string, autoStart: boolean = true, delay: numbe
     // Jangan auto-start selagi data belum sedia
     if (!autoStart) return;
 
-    // Jika user dah pernah lihat tour ini, jangan auto-start
+    // Hanya mula secara automatik jika diaktifkan secara eksplisit (mis. "Mulakan Semula Panduan" dari Tetapan).
+    // Untuk kegunaan harian, pengguna boleh klik ikon '?' pada bila-bila masa.
+    const isForcedTour =
+      typeof sessionStorage !== 'undefined' && sessionStorage.getItem('jpp_force_tour') === 'true';
+    if (!isForcedTour) return;
+
+    // Jika user dah pernah lihat tour ini dan tidak memaksa semula, jangan auto-start
     const hasSeenTour = localStorage.getItem(tourKey);
     if (hasSeenTour) return;
 
     // Auto-start selepas delay — beri masa DOM render
     const timer = setTimeout(() => {
       setRunTour(true);
-      // REKOD TERUS APABILA AUTO-START: 
-      // Elak loophole di mana user keluar dari page tanpa tekan X/Selesai
-      // menyebabkan tour berulang pada sesi akan datang.
       localStorage.setItem(tourKey, 'true');
+      try {
+        sessionStorage.removeItem('jpp_force_tour');
+      } catch {}
     }, delay);
 
     return () => clearTimeout(timer);

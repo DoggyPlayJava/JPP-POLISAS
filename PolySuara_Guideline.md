@@ -195,4 +195,25 @@ Kolum `vote_count` (INTEGER DEFAULT 0) ditambah pada `polysuara_poll_options`. D
 3. Sebarang perubahan pada feed query **WAJIB** mengekalkan `.range()` pagination — jangan guna `.limit()` tanpa offset.
 
 ---
-*(Dokumen ini dikemaskini berdasarkan Audit Deep Dive v5 + Karma System + Poll/Pagination v5.1 pada 18 Mei 2026)*
+
+## 9. PolySuara 2.0 — Semambu Mineral Teal Campus Hub
+
+### 9.1 Seni Bina Modular & Komponen Baharu
+- **`src/components/polysuara/PolySuaraSideRails.tsx`:** Susun atur desktop adaptif (`lg:col-span-3` panel kiri gaya X/Threads tanpa kotak bertindan untuk paparan `LATEST`/`TRENDING`/`JPP_REPLIED`/`MINE`/`BOOKMARKS`, saluran kampus termasuk `UMUM`, tapis `activeFormat`, suis `Mod Fokus`, dan butang gubah; `lg:col-span-9 xl:col-span-6` suapan tengah; `xl:col-span-3` panel kanan mengandungi carian global, kaunter `Suara → Tindakan` daripada RPC kampus keseluruhan, topik hangat, dan kad privasi) bersama `PolySuaraMobileDrawer` (`lg:hidden`).
+- **`src/components/polysuara/PolySuaraConfessionCard.tsx`:** Kad suapan bermodul dengan sokongan media sosial menegak penuh (`object-contain` bagi potret), penjejak tindakan `shouldShowCivicTracker()`, butang `"Saya Juga Alami"` bagi `FASILITI`/`KAMSIS`, blok nota `OFFICIAL_NOTE`/`FACT_CHECK` bersudut penuh tanpa side-stripe tebal, dan pengesanan kata lokasi `PolyMaps`.
+- **`src/components/polysuara/PolySuaraMediaViewer.tsx`:** Pembelek gambar sosial 2-panel ala X/Instagram dengan keupayaan zum 1x–3x, klik dua kali, seret pan, muat turun imej, `Escape` tutup, dan panel ulasan sebelah kanan desktop (`PolySuaraImageLightbox` kekal sebagai wrapper keserasian).
+- **`src/components/polysuara/PolySuaraOverlays.tsx`:** `PolySuaraQuickReportModal` (dwi-mod Mineral Teal) & `PolySuaraCivicProgress` (hanya dirender apabila `shouldShowCivicTracker(category, status)` benar — kategori `FASILITI`/`KAMSIS` atau status siasatan/penyelesaian sebenar).
+- **`src/components/polysuara/IGStoryExportCard.tsx`:** Kad eksport 9:16 berjenama `POLYSUARA SEMAMBU` dengan kabur automatik bagi gambar `[spoiler-img]`.
+
+### 9.2 Pengalaman Kampus, Skala 1,500 Pelajar & Keupayaan Baharu
+- **Pelekat Kekal Dinyahaktifkan:** `PolySuaraStickerPicker` dan `PolySuaraStickerBadge` tidak diimport atau dirender di `PolySuaraPage.tsx`; `cleanConfessionText()` menanggalkan token `[sticker:...]` dan `[spoiler-img]` secara bersih.
+- **RPC Skala Besar (`20261127000001_polysuara_campus_stats_and_top_comments_rpc.sql`):**
+  - `get_polysuara_top_comments(p_confession_ids)`: Mengambil maksimum 1 komen utama (`parent_id IS NULL`) per kiriman melalui `DISTINCT ON`.
+  - `get_polysuara_impact_summary()`: Mengira metrik impak seluruh kampus dan 3 item tindakan rasmi terkini, disimpan dalam `queryCache` (`polysuara:impact_summary`, TTL 5 minit) serta dinyahcache secara automatik dalam `submitReply()`.
+- **Format Kiriman & Tapis Server-Side:** `buildFeedQuery()` menapis `activeCategory`, `activeTag` (`contains`), `focusMode` (`or`), dan `activeFormat` (`QNA` / `SHOUTOUT` / `DEBATE`) terus di PostgreSQL; penulisan mengekalkan `#TanyaKampus` / `#Apresiasi` / `#Debat` dalam had 500 aksara tanpa pemotongan.
+- **Status JPP Tanpa Penjejak (`OFFICIAL_NOTE` & `FACT_CHECK`):** Wakil JPP di `/polysuara` dan `/jpp/polyservices` memilih status `OFFICIAL_NOTE` secara lalai untuk kiriman bukan `FASILITI`/`KAMSIS` dan `ACKNOWLEDGED` bagi `FASILITI`/`KAMSIS`.
+- **Keselamatan & Ergonomik Modal:** Semua `window.confirm()` diganti `<ConfirmDialog />`; modal tulis diletakkan dalam pembungkus `flex items-center justify-center` (`max-h-[90dvh]`) dan laci komen menggunakan `max-h-[85dvh]`.
+- **Standardisasi `BottomNav`:** `PolySuaraPage`, `PolyRentPage`, `PolyMapsPage`, dan `NotifikasiPage` menggunakan `<BottomNav />` rasmi 5 slot (`Utama`, `Portal`, `Pintasan`, `Takwim`, `Profil`); `MakmpJppChrome` meletakkan `Utama` dahulu dengan label dwibahasa.
+
+---
+*(Dokumen ini dikemaskini untuk PolySuara 2.0 Semambu Mineral Teal Campus Hub)*

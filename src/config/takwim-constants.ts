@@ -256,7 +256,7 @@ export const SESI_OPTIONS = [
 ];
 
 // ── Institusi Label ──────────────────────────────────────────
-export const INSTITUSI_LABEL = 'Institusi B';
+export const INSTITUSI_LABEL = 'POLISAS';
 export const INSTITUSI_NOTE = 'Perlis, Pulau Pinang, Perak, Selangor, Negeri Sembilan, Melaka, Pahang, Johor, Sabah, Sarawak, WP KL';
 
 // ── Merged item type used across the app ─────────────────────

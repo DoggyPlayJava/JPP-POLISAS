@@ -89,7 +89,7 @@ function ProgramStatusCard({ program, onUnlock }: { key?: any; program: any; onU
   const isRejected = program.status === 'DRAFT' && program.jpp_remarks;
 
   return (
-    <div className="p-5 bg-muted/30 border border-border/50 rounded-[1.5rem] flex flex-col gap-4 group hover:bg-card hover:shadow-xl transition-all border-l-4"
+    <div className="p-5 bg-muted/30 border border-border/50 rounded-[1.5rem] flex flex-col gap-4 group hover:bg-card hover:shadow-xl transition-all"
       style={{ borderLeftColor: isConfirmed ? '#10b981' : isPending ? '#f59e0b' : '#e2e8f0' }}>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -368,7 +368,7 @@ export function DashboardPage() {
       />
 
       {/* ── HEADER ── */}
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card/60 backdrop-blur-md p-6 sm:p-8 rounded-[2rem] border border-border/60 shadow-xs">
+      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-card p-6 sm:p-8 rounded-[2rem] border border-border/60 shadow-xs">
         <div className="space-y-3 max-w-xl">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-primary/10 border border-primary/20 rounded-xl text-primary">

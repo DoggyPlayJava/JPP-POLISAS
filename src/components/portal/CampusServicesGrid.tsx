@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { motion } from 'framer-motion';
 import {
   Megaphone,
   UtensilsCrossed,
@@ -127,9 +126,9 @@ export function CampusServicesGrid({
   return (
     <section
       aria-label={t('portal:campus_services_aria', 'Perkhidmatan Kampus')}
-      className={cn('w-full max-w-4xl mx-auto px-2 sm:px-4', className)}
+      className={cn('w-full', className)}
     >
-      <div className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+      <div className="grid grid-cols-4 gap-2 sm:gap-3 md:gap-3.5">
         {services.map((service) => {
           const Icon = SERVICE_ICONS[service.id] || Landmark;
           const style = SERVICE_STYLES[service.id] || {
@@ -139,56 +138,51 @@ export function CampusServicesGrid({
           const isEnabled = checkEnabled(service.id);
 
           return (
-            <motion.button
+            <button
               key={service.id}
               type="button"
-              whileHover={{ scale: 1.04, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-              transition={{ type: 'spring', stiffness: 400, damping: 22 }}
               onClick={() => handleAction(service)}
               className={cn(
-                'flex flex-col items-center justify-start text-center group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 p-2 sm:p-3 transition-all',
-                'bg-white hover:bg-slate-50 border border-slate-200/70 hover:border-emerald-400/40 shadow-xs hover:shadow-md rounded-2xl sm:rounded-3xl',
-                'dark:bg-slate-900/80 dark:hover:bg-slate-800/90 dark:border-white/[0.08] dark:hover:border-emerald-500/30 dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]',
+                'relative flex flex-col items-center justify-start text-center group cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E] focus-visible:ring-offset-2 px-1.5 py-2.5 sm:p-3.5 min-h-[84px] sm:min-h-[96px] rounded-2xl transition-[transform,background-color,border-color,box-shadow] duration-150 ease-out active:scale-[0.97]',
+                'bg-white hover:bg-[#F6FBF9] border border-[#B8E4DC]/80 hover:border-[#0F766E]/40 shadow-xs hover:shadow-md',
+                'dark:bg-[#0B2420] dark:hover:bg-[#11332D] dark:border-[#1E4D45] dark:hover:border-[#2DD4BF]/40',
                 service.tourClass,
-                !isEnabled && !isSuperAdmin && 'opacity-50 grayscale cursor-not-allowed hover:scale-100'
+                !isEnabled && !isSuperAdmin && 'opacity-50 grayscale cursor-not-allowed'
               )}
               aria-label={service.label}
             >
+              {service.badge && (
+                <span
+                  className={cn(
+                    'absolute top-1.5 right-1.5 z-10 px-1.5 py-0.5 text-[9px] font-bold rounded-full shadow-xs leading-none border border-white dark:border-[#0B2420]',
+                    service.badge === 'MERIT' || service.badge === 'KELAB' || service.badge === 'CLUB'
+                      ? 'bg-[#0F766E] text-white'
+                      : 'bg-rose-600 text-white font-mono tabular-nums'
+                  )}
+                >
+                  {service.badge}
+                </span>
+              )}
+
               <div
                 className={cn(
-                  'w-11 h-11 sm:w-13 sm:h-13 rounded-2xl flex items-center justify-center mb-1.5 relative border transition-all duration-200 group-hover:scale-105',
+                  'w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center mb-1.5 border transition-transform duration-150 ease-out group-hover:scale-105',
                   style.squircleClass
                 )}
               >
-                <Icon className="w-5 h-5 sm:w-6 sm:h-6 transition-transform group-hover:scale-110" />
-
-                {service.badge && (
-                  <span
-                    className={cn(
-                      'absolute -top-1.5 -right-1.5 px-1 sm:px-1.5 py-0.5 text-[8px] sm:text-[9px] font-black uppercase tracking-wider rounded-full shadow-md leading-none border border-white dark:border-slate-900',
-                      service.badge === 'MERIT'
-                        ? 'bg-purple-600 text-white dark:bg-purple-500 dark:shadow-[0_0_10px_rgba(168,85,247,0.5)]'
-                        : service.badge === 'KELAB'
-                        ? 'bg-blue-600 text-white dark:bg-blue-500 dark:shadow-[0_0_10px_rgba(59,130,246,0.5)]'
-                        : 'bg-rose-600 text-white dark:bg-rose-500 dark:shadow-[0_0_10px_rgba(244,63,94,0.5)]'
-                    )}
-                  >
-                    {service.badge}
-                  </span>
-                )}
+                <Icon className="w-5 h-5 sm:w-6 sm:h-6" />
               </div>
 
-              <span className="text-[10px] sm:text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-emerald-700 dark:group-hover:text-white transition-colors truncate w-full text-center">
+              <span className="text-[11px] sm:text-xs font-semibold text-[#0B2420] dark:text-[#F6FBF9] group-hover:text-[#0F766E] dark:group-hover:text-[#2DD4BF] transition-colors leading-tight break-words line-clamp-2 w-full text-center">
                 {service.label}
               </span>
 
               {(service.sublabel || service.description) && (
-                <span className="hidden sm:block text-[9px] text-slate-400 dark:text-slate-400/80 truncate w-full">
+                <span className="hidden sm:block text-[11px] text-[#3B635C] dark:text-[#99CBC2] truncate w-full mt-0.5">
                   {service.sublabel || service.description}
                 </span>
               )}
-            </motion.button>
+            </button>
           );
         })}
       </div>

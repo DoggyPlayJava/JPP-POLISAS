@@ -775,7 +775,7 @@ export function PolyRiderDashboard() {
   // -------------------------------------------------------------
   if (!profile) {
     return (
-      <div className="max-w-xl mx-auto pb-32 pt-8 px-4 flex flex-col min-h-screen">
+      <div className="max-w-xl mx-auto pb-32 pt-8 px-4 flex flex-col min-h-[100dvh]">
         <div className="text-center mb-8">
           <div className="w-20 h-20 bg-amber-100 dark:bg-amber-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <Bike className="w-10 h-10 text-amber-500" />
@@ -896,7 +896,7 @@ export function PolyRiderDashboard() {
   // -------------------------------------------------------------
   const isSuspended = profile.status === 'SUSPENDED';
   return (
-    <div className="max-w-xl mx-auto pb-32 pt-4 px-4 min-h-screen flex flex-col">
+    <div className="max-w-xl mx-auto pb-32 pt-4 px-4 min-h-[100dvh] flex flex-col">
       <EarningsAnalyticsSheet 
         show={showEarningsSheet} 
         onClose={() => setShowEarningsSheet(false)} 

@@ -475,7 +475,7 @@ export function UrusPerniagaanPage() {
               <button
                 type="button"
                 onClick={() => setCertModalOpen(true)}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-2xl border border-[#831010]/30 bg-[#831010]/10 hover:bg-[#831010]/15 text-[#831010] dark:text-amber-300 dark:border-amber-500/30 dark:bg-amber-500/10 dark:hover:bg-amber-500/20 text-xs font-black tracking-wide transition-all cursor-pointer"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-2xl border border-[#0F766E]/30 bg-[#0F766E]/10 hover:bg-[#0F766E]/15 text-[#0F766E] dark:text-teal-300 dark:border-teal-500/30 dark:bg-teal-500/10 dark:hover:bg-teal-500/20 text-xs font-black tracking-wide transition-all cursor-pointer"
               >
                 <Award className="w-4 h-4 shrink-0" />
                 <span>{t('keusahawanan:cert_header_btn', 'Sijil Pendaftaran (PDF)')}</span>
@@ -659,11 +659,11 @@ export function UrusPerniagaanPage() {
               );
               const currentRegNo = resolveRegistrationNumber(businessData || {});
               return (
-                <div className="rounded-[2rem] bg-card border border-[#831010]/25 dark:border-amber-500/25 p-6 shadow-sm">
+                <div className="rounded-[2rem] bg-card border border-[#0F766E]/25 dark:border-teal-500/25 p-6 shadow-sm">
                   <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
                     <div className="space-y-2.5">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#831010]/10 text-[#831010] dark:bg-amber-500/15 dark:text-amber-300 border border-[#831010]/20 dark:border-amber-500/30">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-[#0F766E]/10 text-[#0F766E] dark:bg-teal-500/15 dark:text-teal-300 border border-[#0F766E]/20 dark:border-teal-500/30">
                           <FileBadge className="w-3.5 h-3.5" />
                           {t('keusahawanan:cert_card_badge', 'Borang P-D • Gaya Rasmi SSM')}
                         </span>
@@ -740,7 +740,7 @@ export function UrusPerniagaanPage() {
                         type="button"
                         onClick={() => setCertModalOpen(true)}
                         className="h-11 px-5 rounded-2xl text-white text-xs font-black uppercase tracking-wider shadow-lg flex items-center gap-2 transition-all hover:brightness-110 active:scale-95 cursor-pointer whitespace-nowrap"
-                        style={{ background: '#831010' }}
+                        style={{ background: '#0F766E' }}
                       >
                         <Award className="w-4 h-4" />
                         <span>

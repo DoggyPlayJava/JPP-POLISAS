@@ -23,7 +23,7 @@ export function PolyMartChat() {
   }, [navigate, searchParams]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-[100dvh] flex items-center justify-center p-4">
       <div className="text-center text-sm text-muted-foreground animate-pulse">
         {t('commerce:opening_chat', 'Membuka peti perbualan PolyMart...')}
       </div>

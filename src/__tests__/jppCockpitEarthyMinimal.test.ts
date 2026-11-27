@@ -13,39 +13,39 @@ const EMOJI_REGEX = /[\u{1F300}-\u{1F5FF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\
 // Helper regex to detect em-dash and en-dash (— or –)
 const DASH_REGEX = /[\u2013\u2014]/;
 
-describe('JPP HQ Leadership Cockpit & Exco Sidebar - Earthy Minimal Theme', () => {
+describe('JPP HQ Leadership Cockpit & Exco Sidebar - Semambu Mineral Teal Theme', () => {
   describe('jppConfig.ts Theme Tokens', () => {
-    it('sets JPP_THEME_DEFAULT_COLOR to Deep Forest Moss (#2E3A2F)', () => {
-      expect(JPP_THEME_DEFAULT_COLOR).toBe('#2E3A2F');
+    it('sets JPP_THEME_DEFAULT_COLOR to Mineral Teal (#0F766E)', () => {
+      expect(JPP_THEME_DEFAULT_COLOR).toBe('#0F766E');
     });
 
-    it('sets JPP_COLOR_PRESETS to executive forest war room colors', () => {
-      expect(JPP_COLOR_PRESETS).toContain('#2E3A2F');
+    it('sets JPP_COLOR_PRESETS to unified Pine-Teal colors', () => {
+      expect(JPP_COLOR_PRESETS).toContain('#0F766E');
       expect(JPP_COLOR_PRESETS).toEqual([
-        '#2E3A2F', '#1E271F', '#3B4A3C', '#6B7F5B', '#C96F4F', '#4A584B',
+        '#0F766E', '#0B2420', '#0D9488', '#115E59', '#14B8A6', '#134E4A',
       ]);
     });
 
-    it('returns Earthy Minimal tokens for light mode sidebar', () => {
-      const lightBg = getJppSidebarBg('#2E3A2F', false);
-      expect(lightBg.top).toBe('#F8F6EE');
-      expect(lightBg.bottom).toBe('#F2EDE4');
-      expect(lightBg.border).toBe('rgba(217, 201, 178, 0.8)');
-      expect(lightBg.textPrimary).toBe('#2E3A2F');
-      expect(lightBg.textSecondary).toBe('#556453');
-      expect(lightBg.hoverBg).toBe('rgba(46, 58, 47, 0.06)');
-      expect(lightBg.activeBg).toBe('rgba(46, 58, 47, 0.12)');
+    it('returns Unified Deep Pine-Teal tokens for light mode sidebar', () => {
+      const lightBg = getJppSidebarBg('#0F766E', false);
+      expect(lightBg.top).toBe('#0B2420');
+      expect(lightBg.bottom).toBe('#061714');
+      expect(lightBg.border).toBe('rgba(45, 212, 191, 0.16)');
+      expect(lightBg.textPrimary).toBe('#F6FBF9');
+      expect(lightBg.textSecondary).toBe('#99CBC2');
+      expect(lightBg.hoverBg).toBe('rgba(255, 255, 255, 0.06)');
+      expect(lightBg.activeBg).toBe('rgba(45, 212, 191, 0.16)');
     });
 
-    it('returns Earthy Minimal tokens for dark mode sidebar', () => {
-      const darkBg = getJppSidebarBg('#2E3A2F', true);
-      expect(darkBg.top).toBe('#151D16');
-      expect(darkBg.bottom).toBe('#1B241C');
-      expect(darkBg.border).toBe('rgba(58, 74, 59, 0.5)');
-      expect(darkBg.textPrimary).toBe('#F8F6EE');
-      expect(darkBg.textSecondary).toBe('#A3B39F');
-      expect(darkBg.hoverBg).toBe('rgba(255, 255, 255, 0.05)');
-      expect(darkBg.activeBg).toBe('rgba(107, 127, 91, 0.2)');
+    it('returns Unified Deep Pine-Teal tokens for dark mode sidebar', () => {
+      const darkBg = getJppSidebarBg('#0F766E', true);
+      expect(darkBg.top).toBe('#0B2420');
+      expect(darkBg.bottom).toBe('#061714');
+      expect(darkBg.border).toBe('rgba(45, 212, 191, 0.16)');
+      expect(darkBg.textPrimary).toBe('#F6FBF9');
+      expect(darkBg.textSecondary).toBe('#99CBC2');
+      expect(darkBg.hoverBg).toBe('rgba(255, 255, 255, 0.06)');
+      expect(darkBg.activeBg).toBe('rgba(45, 212, 191, 0.16)');
     });
   });
 
@@ -73,10 +73,10 @@ describe('JPP HQ Leadership Cockpit & Exco Sidebar - Earthy Minimal Theme', () =
       });
     });
 
-    it('ensures JppLayout.tsx uses Earthy Minimal canvas classes', () => {
+    it('ensures JppLayout.tsx uses Mineral Teal and Alabaster canvas classes', () => {
       const layoutContent = fs.readFileSync(path.resolve(process.cwd(), 'src/pages/jpp/JppLayout.tsx'), 'utf-8');
-      expect(layoutContent).toContain('bg-[#F8F6EE]');
-      expect(layoutContent).toContain('dark:bg-[#151D16]');
+      expect(layoutContent).toContain('bg-[#F6FBF9]');
+      expect(layoutContent).toContain('dark:bg-[#061714]');
     });
 
     it('ensures complete elimination of legacy text-rose-950 and border-rose-200 in JppSidebar.tsx', () => {

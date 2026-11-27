@@ -723,6 +723,14 @@ export function FloatingAiChat() {
   // ── Unified Inbox Data Fetcher ──
   const fetchInboxData = useCallback(async () => {
     if (!profile?.id) return;
+    if (localStorage.getItem('use_mock_auth') === 'true') {
+      setAnnouncements([]);
+      setInboxList([]);
+      setUnreadTotal(0);
+      prevUnreadTotalRef.current = 0;
+      setIsInboxLoading(false);
+      return;
+    }
     setIsInboxLoading(true);
     try {
       // 1. Fetch active announcements (select only required columns)
@@ -911,7 +919,7 @@ export function FloatingAiChat() {
 
   // ── Check unread counts and new messages to trigger popout/chime ──
   const checkNewMessages = useCallback(async () => {
-    if (!profile?.id) return;
+    if (!profile?.id || localStorage.getItem('use_mock_auth') === 'true') return;
     try {
       // 1. Fetch unread counts from polymart and polyrent
       const [martRes, rentRes] = await Promise.all([
@@ -1810,7 +1818,7 @@ export function FloatingAiChat() {
   };
 
   const content = (
-    <div id="nexus-chat-container" className={`fixed bottom-6 max-md:bottom-[calc(76px+env(safe-area-inset-bottom,0px))] right-4 md:right-6 z-[120] transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
+    <div id="nexus-chat-container" className={`fixed bottom-6 max-md:bottom-[calc(6.75rem+env(safe-area-inset-bottom,0px))] right-4 md:right-6 z-[120] transition-all duration-300 ease-in-out ${bottomMarginClass}`}>
       
       {/* ── Floating Notification Popout (New Message Alert) ── */}
       <AnimatePresence>
@@ -1871,17 +1879,17 @@ export function FloatingAiChat() {
         whileHover={{ scale: 1.05, opacity: 1, x: 0 }}
         whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen((prev) => !prev)}
-        className={cn('w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-tr flex items-center justify-center shadow-lg text-white relative overflow-hidden group', themeColors.bg)}
+        className={cn('w-11 h-11 md:w-14 md:h-14 rounded-full bg-gradient-to-tr flex items-center justify-center shadow-lg text-white relative overflow-hidden group', themeColors.bg)}
       >
         <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
         <AnimatePresence mode="wait" initial={false}>
           {isOpen ? (
             <motion.span key="x" initial={{ rotate: -90, scale: 0 }} animate={{ rotate: 0, scale: 1 }} exit={{ rotate: 90, scale: 0 }} transition={{ duration: 0.18 }}>
-              <X size={26} />
+              <X size={22} />
             </motion.span>
           ) : (
             <motion.span key="s" className="relative flex items-center justify-center" initial={{ rotate: 90, scale: 0 }} animate={{ rotate: 0, scale: 1 }} exit={{ rotate: -90, scale: 0 }} transition={{ duration: 0.18 }}>
-              <MessageSquare size={26} />
+              <MessageSquare size={22} />
               
               {/* Unread badge on closed FAB */}
               {unreadTotal > 0 && (

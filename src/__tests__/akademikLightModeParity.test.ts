@@ -33,11 +33,11 @@ describe('E-Akademik Light Mode Parity — AkademikLayout.tsx', () => {
   const source = fs.readFileSync(layoutPath, 'utf-8');
 
   it('contains dual-mode root container classes for porcelain light and obsidian dark', () => {
-    expect(source).toContain('min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-sans overflow-x-hidden transition-colors duration-200');
+    expect(source).toContain('min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] font-sans overflow-x-hidden transition-colors duration-200');
   });
 
   it('contains dual-mode top header styles (solid, no backdrop-blur)', () => {
-    expect(source).toContain('sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-slate-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-slate-950/80');
+    expect(source).toContain('sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420]');
     expect(source).not.toContain('backdrop-blur');
   });
 
@@ -46,19 +46,17 @@ describe('E-Akademik Light Mode Parity — AkademikLayout.tsx', () => {
   });
 
   it('provides dual-mode styling for sidebar surface', () => {
-    expect(source).toContain('bg-white/95 dark:bg-slate-900/95');
-    expect(source).toContain('border-r border-slate-200/80 dark:border-white/[0.06]');
+    expect(source).toContain('bg-gradient-to-b from-[#0B2420] to-[#061714]');
+    expect(source).toContain('border-r border-teal-400/15');
   });
 
   it('provides dual-mode styling for nav items', () => {
-    expect(source).toContain('bg-slate-100 dark:bg-white/[0.08] text-slate-900 dark:text-white');
-    expect(source).toContain('text-slate-600 dark:text-white/40');
-    expect(source).toContain('hover:text-slate-900 dark:hover:text-white/70');
-    expect(source).toContain('hover:bg-slate-50 dark:hover:bg-white/[0.04]');
+    expect(source).toContain('bg-teal-500/20 text-white border border-teal-400/25');
+    expect(source).toContain('text-[#99CBC2] hover:text-white hover:bg-white/[0.06]');
   });
 
   it('provides dual-mode styling for user profile and footer', () => {
-    expect(source).toContain('border-slate-200/80 dark:border-white/[0.06]');
+    expect(source).toContain('p-4 border-t border-white/10 text-white space-y-3 shrink-0');
   });
 });
 

@@ -75,8 +75,8 @@ describe('SuperAppHeader Balanced Layout Suite', () => {
     });
 
     expect(html).toContain('PENTADBIR UTAMA');
-    expect(html).toContain('bg-[#6B7F5B]/30');
-    expect(html).toContain('text-[#D9C9B2]');
+    expect(html).toContain('bg-teal-500/20');
+    expect(html).toContain('text-[#B8E4DC]');
   });
 
   it('renders Karnival and SUPSAS badges in greeting overline when active', () => {

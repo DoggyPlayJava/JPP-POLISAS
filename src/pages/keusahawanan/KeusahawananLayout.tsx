@@ -33,15 +33,10 @@ import { useTour } from '@/hooks/useTour';
 const MODULE_ID = 'keusahawanan';
 const DEFAULT_COLOR = '#1B5E20';
 
-function getSidebarBg(hex: string): { top: string; bottom: string } {
-  const r = parseInt(hex.slice(1, 3), 16);
-  const g = parseInt(hex.slice(3, 5), 16);
-  const b = parseInt(hex.slice(5, 7), 16);
-  const f1 = 0.07;
-  const f2 = 0.12;
+function getSidebarBg(_hex: string): { top: string; bottom: string } {
   return {
-    top:    `rgb(${Math.floor(r * f1)}, ${Math.floor(g * f1)}, ${Math.floor(b * f1)})`,
-    bottom: `rgb(${Math.floor(r * f2)}, ${Math.floor(g * f2)}, ${Math.floor(b * f2)})`,
+    top: '#0B2420',
+    bottom: '#061714',
   };
 }
 
@@ -167,7 +162,7 @@ export function KeusahawananSidebar({ color }: { color: string }) {
 
   return (
     <aside
-      className="w-64 h-screen flex flex-col z-[140] select-none"
+      className="w-64 h-[100dvh] flex flex-col z-[140] select-none border-r border-teal-400/15"
       style={{ background: `linear-gradient(180deg, ${bg.top} 0%, ${bg.bottom} 100%)` }}
     >
       {/* Header */}
@@ -376,7 +371,7 @@ export function KeusahawananLayout() {
 
   if (isLoading || moduleEnabled === null) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background">
+      <div className="min-h-[100dvh] w-full flex items-center justify-center bg-background">
         <div className="relative w-10 h-10">
           <div className="absolute inset-0 border-4 rounded-full border-border" />
           <div className="absolute inset-0 border-4 border-t-transparent rounded-full animate-spin" style={{ borderColor: themeColor }} />
@@ -442,7 +437,7 @@ export function LayoutInner({
 
   return (
     <ExcoThemeProvider color={themeColor} moduleId={MODULE_ID}>
-      <div className="flex h-screen overflow-hidden bg-background">
+      <div className="flex h-[100dvh] overflow-hidden bg-[#F6FBF9] dark:bg-[#061714]">
 
         {/* Backdrop mobile */}
         <AnimatePresence>
@@ -471,7 +466,7 @@ export function LayoutInner({
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
           {/* Global header shared on mobile and desktop */}
-          <header className="flex items-center justify-between px-6 py-4 border-b border-border/10 bg-background/60  sticky top-0 z-50">
+          <header className="flex items-center justify-between px-6 py-4 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] sticky top-0 z-50">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => setIsSidebarOpen(true)}

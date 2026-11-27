@@ -299,7 +299,7 @@ export function UrusKelabPage() {
                   style={{ backgroundColor: clubData?.theme_color || '#0f172a' }}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur border border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow">
+                    <div className="w-12 h-12 rounded-xl bg-white/15 border border-white/25 flex items-center justify-center overflow-hidden shrink-0 shadow">
                       {clubData?.logo_url ? (
                         <img src={clubData.logo_url} className="w-full h-full object-cover" alt="Logo" />
                       ) : (
@@ -609,7 +609,7 @@ export function UrusKelabPage() {
 
       {/* ── STICKY ACTION BAR BERKADAR MODEN ── */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-lg px-4 pointer-events-none">
-        <div className="bg-card/90 backdrop-blur-md rounded-2xl p-2.5 flex items-center justify-between gap-3 shadow-xl border border-border/80 pointer-events-auto">
+        <div className="bg-card rounded-2xl p-2.5 flex items-center justify-between gap-3 shadow-xl border border-border/80 pointer-events-auto">
           <div className="flex items-center gap-2.5 pl-2">
             <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
               <Save size={16} />

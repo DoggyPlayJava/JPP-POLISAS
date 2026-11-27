@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { KlkSidebar } from './KlkSidebar';
 import { Menu, MapPin } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -45,8 +46,8 @@ export function KlkLayout() {
 
   if (isLoading) {
     return (
-      <div className={cn("h-screen w-screen flex items-center justify-center", isDark ? "bg-slate-950" : "bg-slate-50")}>
-        <div className={cn("animate-pulse font-black text-xs uppercase tracking-[0.3em] opacity-40", isDark ? "text-white" : "text-slate-700")}>
+      <div className={cn("min-h-[100dvh] w-full flex items-center justify-center", isDark ? "bg-[#061714]" : "bg-[#F6FBF9]")}>
+        <div className={cn("animate-pulse font-black text-xs uppercase tracking-[0.3em] opacity-40", isDark ? "text-white" : "text-[#0B2420]")}>
           {t('housing:loading_klk', 'Memuatkan Kediaman Luar Kampus...')}
         </div>
       </div>
@@ -63,8 +64,8 @@ export function KlkLayout() {
 
   return (
     <div className={cn(
-      "flex h-screen overflow-hidden relative transition-colors duration-300",
-      isDark ? "bg-slate-950 text-slate-50" : "bg-slate-50 text-slate-900"
+      "flex h-[100dvh] overflow-hidden relative transition-colors duration-300",
+      isDark ? "bg-[#061714] text-[#F6FBF9]" : "bg-[#F6FBF9] text-[#0B2420]"
     )}>
       {/* Mobile Overlay */}
       {sidebarOpen && (
@@ -77,7 +78,7 @@ export function KlkLayout() {
       {/* Sidebar */}
       <div
         className={cn(
-          'fixed lg:relative z-[140] h-screen transition-transform duration-300 ease-in-out lg:translate-x-0 w-[280px] flex-shrink-0',
+          'fixed lg:relative z-[140] h-[100dvh] transition-transform duration-300 ease-in-out lg:translate-x-0 w-[280px] flex-shrink-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
@@ -86,18 +87,18 @@ export function KlkLayout() {
 
       {/* Main content */}
       <main className={cn(
-        "flex-1 flex flex-col h-screen overflow-hidden relative min-w-0 transition-colors duration-300",
-        isDark ? "bg-slate-950 text-slate-50" : "bg-slate-50 text-slate-900"
+        "flex-1 flex flex-col h-[100dvh] overflow-hidden relative min-w-0 transition-colors duration-300",
+        isDark ? "bg-[#061714] text-[#F6FBF9]" : "bg-[#F6FBF9] text-[#0B2420]"
       )}>
         {/* Mobile topbar */}
         <div className={cn(
           "lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b relative z-30 transition-colors duration-300",
-          isDark ? "border-white/5 bg-slate-950/80 backdrop-blur-md" : "border-slate-200 bg-white/80 backdrop-blur-md"
+          isDark ? "border-[#1E4D45] bg-[#0B2420]" : "border-[#B8E4DC]/80 bg-white"
         )}>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setSidebarOpen(true)}
-              className={cn("p-2 -ml-2 transition-colors", isDark ? "text-white/50 hover:text-white" : "text-slate-500 hover:text-slate-900")}
+              className={cn("p-2 -ml-2 transition-colors", isDark ? "text-[#99CBC2] hover:text-white" : "text-[#3B635C] hover:text-[#0B2420]")}
             >
               <Menu className="w-5 h-5" />
             </button>
@@ -109,6 +110,7 @@ export function KlkLayout() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <LanguageToggle />
             <ThemeToggle />
             <NotificationBell variant={isDark ? "dark" : "light"} />
           </div>

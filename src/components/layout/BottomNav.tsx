@@ -2,14 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
-  Menu, Bell, User, Plus, X, Search, Sparkles, QrCode, 
-  Ticket, Home, Megaphone, CalendarRange, Flag, Layers,
-  Store, ShieldAlert, Building2, HeartHandshake, Landmark, Lightbulb, Crown,
-  Bike, Map
+import {
+  Menu, User, X, QrCode,
+  Home, CalendarRange, Layers, LayoutGrid,
+  HeartHandshake, Landmark, Lightbulb, Building2, Crown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence, useScroll, useMotionValueEvent, useDragControls } from 'framer-motion';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAcademicSession } from '@/contexts/AcademicSessionContext';
 import { getSemesterInfo } from '@/types';
@@ -33,16 +32,17 @@ interface BottomNavProps {
   forceShowDesktop?: boolean;
 }
 
-export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowDesktop = false }: BottomNavProps) {
+export function BottomNav({ onOpenSidebar, customLinks, forceShowDesktop = false }: BottomNavProps) {
   const { t } = useTranslation(['nav', 'portal', 'common']);
   const [mounted, setMounted] = useState(false);
   const [isActionsOpen, setIsActionsOpen] = useState(false);
-  const [showTooltip, setShowTooltip] = useState(false);
   const { isSuperAdmin, isJppMember, profile } = useAuth();
   const { intake1Month, intake2Month } = useAcademicSession();
   const navigate = useNavigate();
   const location = useLocation();
   const navRef = useRef<HTMLDivElement>(null);
+  const lastScrollYRef = useRef(0);
+  const isActionsOpenRef = useRef(false);
   const [showPolymartModal, setShowPolymartModal] = useState(false);
   // Drag handle-only swipe-to-dismiss (iOS: whole-menu drag was swallowed by native scroll)
   const quickActionsDragControls = useDragControls();
@@ -51,36 +51,56 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
     setMounted(true);
   }, []);
 
-  // -- Auto-hide on Scroll Logic via Framer Motion --
-  const { scrollY } = useScroll();
-  useMotionValueEvent(scrollY, "change", (currentScrollY) => {
-    if (!navRef.current || isActionsOpen) return;
-    const prevScrollY = scrollY.getPrevious() ?? 0;
-
-    if (currentScrollY > prevScrollY && currentScrollY > 50) {
-      navRef.current.classList.add('opacity-75', 'scale-[0.85]', 'translate-y-4');
-    } else if (prevScrollY - currentScrollY > 15 || currentScrollY <= 50) {
-      navRef.current.classList.remove('opacity-75', 'scale-[0.85]', 'translate-y-4');
+  useEffect(() => {
+    isActionsOpenRef.current = isActionsOpen;
+    if (isActionsOpen && navRef.current) {
+      navRef.current.dataset.compact = 'false';
     }
-  });
+  }, [isActionsOpen]);
 
   useEffect(() => {
-    const hideTooltip = localStorage.getItem('hide_bottomnav_tooltip');
-    if (!hideTooltip) {
-      const timer = setTimeout(() => setShowTooltip(true), 2000);
-      return () => clearTimeout(timer);
-    }
-  }, []);
+    if (!mounted || typeof window === 'undefined') return;
+    let ticking = false;
 
-  const handleDismissTooltip = () => {
-    localStorage.setItem('hide_bottomnav_tooltip', 'true');
-    setShowTooltip(false);
-  };
+    const onScroll = (e: Event) => {
+      const target = e.target;
+      let currentY = window.scrollY;
+      if (target && target !== document && target !== window && target instanceof HTMLElement) {
+        if (target.scrollHeight <= target.clientHeight + 48) return;
+        currentY = target.scrollTop;
+      }
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        ticking = false;
+        const el = navRef.current;
+        if (!el) return;
+        if (isActionsOpenRef.current) {
+          el.dataset.compact = 'false';
+          lastScrollYRef.current = currentY;
+          return;
+        }
+        const delta = currentY - lastScrollYRef.current;
+        if (delta > 8 && currentY > 56) {
+          el.dataset.compact = 'true';
+        } else if (delta < -10 || currentY <= 40) {
+          el.dataset.compact = 'false';
+        }
+        lastScrollYRef.current = currentY;
+      });
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    document.addEventListener('scroll', onScroll, { passive: true, capture: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      document.removeEventListener('scroll', onScroll, { capture: true });
+    };
+  }, [mounted]);
 
   const handleFabClick = () => {
     if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(50);
-    if (showTooltip) handleDismissTooltip();
-    setIsActionsOpen(!isActionsOpen);
+    setIsActionsOpen((prev) => !prev);
   };
 
   const semInfo = profile?.intake_year
@@ -97,32 +117,37 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
     }
   };
 
-  // Tutup bila scroll / navigasi
-  React.useEffect(() => {
+  // Close sheet on route change
+  useEffect(() => {
     setIsActionsOpen(false);
   }, [location.pathname]);
 
+  const defaultSecondLeft: NavLinkData = onOpenSidebar
+    ? { icon: Menu, label: t('nav:menu', 'Menu'), onClick: onOpenSidebar }
+    : {
+        icon: CalendarRange,
+        label: t('nav:takwim', 'Takwim'),
+        onClick: () => navigate('/akademik/takwim'),
+        isActive: location.pathname.startsWith('/akademik/takwim'),
+      };
+
   const leftLinks = customLinks?.left || [
-    { icon: Menu, label: t('nav:menu', 'Menu'), onClick: onOpenSidebar || (() => {}) },
-    { icon: Home, label: t('nav:primary_nav', 'Utama'), onClick: () => navigate('/portal'), isActive: location.pathname === '/portal' }
+    { icon: Home, label: t('nav:primary_nav', 'Utama'), onClick: () => navigate('/portal'), isActive: location.pathname === '/portal' },
+    defaultSecondLeft,
   ];
 
   const rightLinks = customLinks?.right || [
     { icon: QrCode, label: t('nav:qr_merit', 'QR Merit'), onClick: () => navigate('/akademik/qr'), isActive: location.pathname === '/akademik/qr' },
-    { icon: User, label: t('nav:profile', 'Profil'), onClick: () => navigate('/tetapan'), isActive: location.pathname === '/tetapan' }
+    { icon: User, label: t('nav:profile', 'Profil'), onClick: () => navigate('/tetapan'), isActive: location.pathname === '/tetapan' },
   ];
 
   // -- Unified Institutional Theme Logic --
-  const getTheme = () => {
-    return {
-      color: 'text-[#2E3A2F] dark:text-[#84A98C]',
-      bg: 'bg-[#2E3A2F] dark:bg-[#6B7F5B]',
-      fabBg: 'bg-gradient-to-tr from-[#2E3A2F] to-[#6B7F5B]',
-      pillBg: 'bg-[#6B7F5B]/10 dark:bg-[#6B7F5B]/20',
-    };
+  const theme = {
+    color: 'text-[#0F766E] dark:text-[#2DD4BF]',
+    bg: 'bg-[#0F766E] dark:bg-[#14B8A6]',
+    fabBg: 'bg-gradient-to-tr from-[#0B2420] to-[#0D9488]',
+    pillBg: 'bg-[#0D9488]/10 dark:bg-[#14B8A6]/20',
   };
-
-  const theme = getTheme();
 
   if (!mounted || typeof document === 'undefined') {
     return null;
@@ -135,11 +160,11 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
       <AnimatePresence>
         {isActionsOpen && (
           <>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.25 }}
               onClick={() => setIsActionsOpen(false)}
               className={cn("fixed inset-0 bg-black/75 z-[110]", !forceShowDesktop && "md:hidden")}
             />
@@ -149,54 +174,56 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
               dragControls={quickActionsDragControls}
               dragConstraints={{ top: 0, bottom: 0 }}
               dragElastic={0.4}
-              onDragEnd={(e, info) => {
+              onDragEnd={(_e, info) => {
                 if (info.offset.y > 50 || info.velocity.y > 200) {
                   setIsActionsOpen(false);
                 }
               }}
-              initial={{ opacity: 0, y: 100, scale: 0.85 }}
-              animate={{ 
-                opacity: 1, 
-                y: 0, 
-                scale: 1, 
-                transition: { type: "spring", stiffness: 350, damping: 22 }
+              initial={{ opacity: 0, y: 80, scale: 0.94 }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
+                transition: { type: "spring", stiffness: 360, damping: 24 },
               }}
-              exit={{ 
-                opacity: 0, 
-                y: 100, 
-                scale: 0.85,
-                transition: { duration: 0.2 }
+              exit={{
+                opacity: 0,
+                y: 80,
+                scale: 0.94,
+                transition: { duration: 0.18 },
               }}
-              className={cn("quick-actions-menu touch-none fixed bottom-28 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[calc(100%-2rem)] md:max-w-[360px] z-[111] bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-2xl", !forceShowDesktop && "md:hidden")}
+              className={cn("quick-actions-menu touch-none fixed bottom-28 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-[calc(100%-2rem)] md:max-w-[392px] z-[111] bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-3xl p-5 shadow-2xl", !forceShowDesktop && "md:hidden")}
             >
               {/* Drag Handle Indicator */}
               <div
                 onPointerDown={(e) => quickActionsDragControls.start(e)}
-                className="w-10 h-1 bg-slate-300 dark:bg-white/20 rounded-full mx-auto mb-4 cursor-grab active:cursor-grabbing"
+                className="w-10 h-1 bg-[#B8E4DC] dark:bg-white/20 rounded-full mx-auto mb-4 cursor-grab active:cursor-grabbing"
               />
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/40 mb-4 text-center">{t('nav:quick_actions', 'Tindakan Pantas')}</h3>
-              <motion.div 
-                className="grid grid-cols-4 gap-y-6 gap-x-2"
+              <h3 className="text-xs font-semibold text-[#3B635C] dark:text-[#99CBC2] mb-4 text-center">
+                {t('nav:quick_actions', 'Tindakan Pantas')}
+              </h3>
+              <motion.div
+                className="grid grid-cols-4 gap-y-5 gap-x-2"
                 initial="hidden"
                 animate="visible"
                 exit="hidden"
                 variants={{
                   hidden: {},
                   visible: {
-                    transition: { staggerChildren: 0.05, delayChildren: 0.05 }
-                  }
+                    transition: { staggerChildren: 0.04, delayChildren: 0.03 },
+                  },
                 }}
               >
                 <QuickActionButton icon={Layers} label="PolyServices" color="bg-amber-500" onClick={() => { setIsActionsOpen(false); setShowPolymartModal(true); }} />
                 <QuickActionButton icon={CalendarRange} label={t('nav:takwim', 'Takwim')} color="bg-blue-500" onClick={() => handleQuickAction('/akademik/takwim')} />
                 <QuickActionButton icon={HeartHandshake} label={t('nav:complaints', 'Aduan')} color="bg-teal-500" onClick={() => handleQuickAction('/kebajikan/buat-aduan')} />
                 <QuickActionButton icon={Landmark} label={t('nav:clubs_short', 'Kelab')} color="bg-red-400" onClick={() => handleQuickAction('/kelab')} />
-                
+
                 <QuickActionButton icon={Lightbulb} label={t('nav:business', 'Bisnes')} color="bg-green-400" onClick={() => handleQuickAction('/keusahawanan/dashboard')} />
                 {isKlkEligible && (
                   <QuickActionButton icon={Building2} label={t('nav:housing_short', 'Kediaman')} color="bg-orange-500" onClick={() => handleQuickAction('/tetapan?tab=kediaman')} />
                 )}
-                
+
                 {(isSuperAdmin || isJppMember) && (
                   <QuickActionButton icon={Crown} label={t('nav:jpp_hq', 'JPP HQ')} color="bg-indigo-500" onClick={() => handleQuickAction('/jpp')} />
                 )}
@@ -206,15 +233,15 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
         )}
       </AnimatePresence>
 
-      {/* 2. Floating Bottom Nav Dock */}
-      <div 
+      {/* 2. Floating Bottom Nav Dock (Always Labeled 5-Slot Grid, Scroll-Compact) */}
+      <div
         ref={navRef}
         id="bottom-nav-dock"
+        data-compact="false"
         onClick={(e) => {
           e.nativeEvent.stopImmediatePropagation();
-          if (navRef.current && navRef.current.classList.contains('scale-[0.85]')) {
-            if (typeof navigator !== 'undefined' && navigator.vibrate) navigator.vibrate(30);
-            navRef.current.classList.remove('opacity-75', 'scale-[0.85]', 'translate-y-4');
+          if (navRef.current) {
+            navRef.current.dataset.compact = 'false';
           }
         }}
         onTouchStart={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
@@ -223,82 +250,56 @@ export function BottomNav({ onOpenSidebar, onOpenSearch, customLinks, forceShowD
         onPointerMove={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         onPointerUp={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         className={cn(
-          "tour-bottom-nav fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-2rem)] max-w-[360px] z-[120] transform-gpu transition-all duration-300 ease-out cursor-pointer",
+          "group/dock tour-bottom-nav fixed bottom-[calc(1.5rem+env(safe-area-inset-bottom,0px))] left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-[392px] z-[120] origin-bottom transform-gpu transition-[transform,opacity] duration-300 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] data-[compact=true]:scale-[0.84] data-[compact=true]:opacity-80 data-[compact=true]:translate-y-2.5 hover:data-[compact=true]:opacity-100",
           !forceShowDesktop && "md:hidden"
         )}
       >
-        <div className="bg-white dark:bg-zinc-950 border border-slate-200/80 dark:border-white/10 shadow-lg rounded-full px-2 py-2 flex items-center justify-between relative">
-          
-          {/* Left Buttons */}
-          <div className="flex items-center justify-around flex-1 pr-8">
-            {leftLinks.map((link, i) => (
-              <NavIconButton key={i} {...link} theme={theme} />
-            ))}
-          </div>
+        <nav
+          aria-label={t('nav:navigation', 'Navigasi')}
+          className="bg-white dark:bg-[#081A17] border border-[#B8E4DC]/90 dark:border-[#1E4D45] shadow-[0_12px_32px_rgba(6,23,20,0.16)] rounded-[22px] px-1.5 py-1.5 grid grid-cols-5 items-center gap-0.5 relative transition-[padding,border-radius,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] group-data-[compact=true]/dock:px-2.5 group-data-[compact=true]/dock:py-1 group-data-[compact=true]/dock:rounded-full"
+        >
+          {leftLinks.slice(0, 2).map((link, i) => (
+            <NavIconButton key={`left-${i}`} {...link} theme={theme} />
+          ))}
 
-          {/* Center Circular FAB */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center">
-            
-            <AnimatePresence>
-              {showTooltip && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.9 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.9 }}
-                  className="absolute bottom-[calc(100%+24px)] z-[100] w-[200px]"
-                >
-                  <motion.div 
-                    animate={{ y: [0, -5, 0] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-                    className="bg-slate-900 text-white p-3 rounded-2xl shadow-2xl border border-slate-700 relative flex flex-col gap-1 items-center text-center"
-                  >
-                    <div className="flex items-start justify-between gap-2 w-full">
-                      <p className="text-xs font-bold leading-tight flex-1 text-left">
-                        {t('nav:quick_actions_tooltip', 'Menu pintas & fungsi utama portal')}
-                      </p>
-                      <button 
-                        onClick={(e) => { e.stopPropagation(); handleDismissTooltip(); }}
-                        className="p-1 hover:bg-white/10 rounded-full transition-colors shrink-0 -mr-1 -mt-1"
-                      >
-                        <X className="w-3 h-3 text-slate-400 hover:text-white" />
-                      </button>
-                    </div>
-                    {/* Arrow down */}
-                    <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 bg-slate-900 border-b border-r border-slate-700 rotate-45" />
-                  </motion.div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            {/* Breathing Glow Background */}
-            <button
-              onClick={handleFabClick}
+          {/* Center Pintasan Hub Trigger */}
+          <button
+            type="button"
+            onClick={handleFabClick}
+            aria-label={t('nav:quick_actions', 'Tindakan Pantas')}
+            aria-expanded={isActionsOpen}
+            className="tour-bottomnav-fab flex flex-col items-center justify-center gap-0.5 min-h-[48px] group-data-[compact=true]/dock:min-h-[38px] group-data-[compact=true]/dock:gap-0 w-full px-1 py-1 rounded-xl transition-[transform,min-height,gap] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] active:scale-[0.96] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E]"
+          >
+            <span
               className={cn(
-                "tour-bottomnav-fab w-14 h-14 rounded-full flex items-center justify-center shadow-lg ring-4 ring-white/60 dark:ring-zinc-950/60 transition-all duration-300 active:scale-95",
-                isActionsOpen 
-                  ? "bg-slate-200 dark:bg-zinc-800 text-slate-600 dark:text-white rotate-45 scale-90" 
-                  : cn(theme.fabBg, "text-white scale-105")
+                "w-9 h-9 rounded-xl flex items-center justify-center transition-[transform,background-color,color,border-radius] duration-200 ease-out group-data-[compact=true]/dock:rounded-full",
+                isActionsOpen
+                  ? "bg-slate-200 dark:bg-[#1E4D45] text-[#0B2420] dark:text-white"
+                  : cn(theme.fabBg, "text-white shadow-md")
               )}
             >
-              <Plus className="w-6 h-6" strokeWidth={2.5} />
-            </button>
-          </div>
+              {isActionsOpen ? (
+                <X className="w-4 h-4" strokeWidth={2.5} />
+              ) : (
+                <LayoutGrid className="w-4 h-4" strokeWidth={2.25} />
+              )}
+            </span>
+            <span className="text-[10px] font-semibold leading-tight tracking-tight text-[#0B2420] dark:text-[#F6FBF9] truncate max-w-[64px] max-h-4 opacity-100 overflow-hidden transition-[opacity,max-height,transform] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] group-data-[compact=true]/dock:opacity-0 group-data-[compact=true]/dock:max-h-0 group-data-[compact=true]/dock:scale-90">
+              {t('nav:hub_short', 'Pintasan')}
+            </span>
+          </button>
 
-          {/* Right Buttons */}
-          <div className="flex items-center justify-around flex-1 pl-8">
-            {rightLinks.map((link, i) => (
-              <NavIconButton key={i} {...link} theme={theme} />
-            ))}
-          </div>
-
-        </div>
+          {rightLinks.slice(0, 2).map((link, i) => (
+            <NavIconButton key={`right-${i}`} {...link} theme={theme} />
+          ))}
+        </nav>
       </div>
     </>,
     document.body
   );
 }
 
-// Komponen Pembantu
+// Helper Components
 const BUTTON_VARIANTS: Record<string, string> = {
   "bg-amber-500": "bg-gradient-to-b from-amber-400 to-amber-500",
   "bg-blue-500": "bg-gradient-to-b from-blue-400 to-blue-600",
@@ -313,65 +314,54 @@ function QuickActionButton({ icon: Icon, label, color, onClick }: { icon: any, l
   const bgClass = BUTTON_VARIANTS[color] || color;
 
   return (
-    <motion.button 
-      onClick={onClick} 
-      className="flex flex-col items-center gap-2 group"
+    <motion.button
+      type="button"
+      onClick={onClick}
+      className="flex flex-col items-center gap-2 group cursor-pointer"
       variants={{
-        hidden: { opacity: 0, y: 20, scale: 0.8 },
-        visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 400, damping: 15 } }
+        hidden: { opacity: 0, y: 16, scale: 0.92 },
+        visible: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 400, damping: 20 } },
       }}
     >
-      <div className={cn("relative w-12 h-12 rounded-[1rem] flex items-center justify-center text-white shadow-md transition-transform duration-200 group-active:scale-90", bgClass)}>
-        <div className="absolute inset-0 rounded-[1rem] border border-white/30 dark:border-white/20 pointer-events-none" />
+      <div className={cn("relative w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-md transition-transform duration-150 ease-out group-active:scale-95", bgClass)}>
+        <div className="absolute inset-0 rounded-2xl border border-white/30 dark:border-white/20 pointer-events-none" />
         <Icon className="w-5 h-5 relative z-10" strokeWidth={2.5} />
       </div>
-      <span className="text-[8px] font-black uppercase tracking-wider text-slate-500 dark:text-white/60 text-center leading-tight max-w-[60px]">{label}</span>
+      <span className="text-[11px] font-semibold text-[#0B2420] dark:text-[#F6FBF9] text-center leading-tight max-w-[72px]">
+        {label}
+      </span>
     </motion.button>
   );
 }
 
 function NavIconButton({ icon: Icon, label, isActive, onClick, badge, theme }: NavLinkData & { theme?: any; key?: React.Key }) {
   const t = theme || {
-    color: 'text-rose-600 dark:text-rose-400',
-    bg: 'bg-rose-400',
-    shadow: 'shadow-[0_0_8px_rgba(244,63,94,0.8)]',
-    pillBg: 'bg-rose-500/15 dark:bg-rose-400/20'
+    color: 'text-[#0F766E] dark:text-[#2DD4BF]',
+    pillBg: 'bg-[#0D9488]/10 dark:bg-[#14B8A6]/20',
   };
 
   return (
-    <motion.button
+    <button
+      type="button"
       onClick={onClick}
-      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      aria-current={isActive ? 'page' : undefined}
       className={cn(
-        "flex items-center justify-center gap-1.5 h-10 rounded-full transition-all duration-300 active:scale-95 relative",
-        isActive 
-          ? cn("px-3.5", t.pillBg, t.color) 
-          : "w-10 text-slate-600 hover:text-slate-900 dark:text-white/50 dark:hover:text-white/90"
+        "flex flex-col items-center justify-center gap-0.5 min-h-[48px] group-data-[compact=true]/dock:min-h-[38px] group-data-[compact=true]/dock:gap-0 w-full px-1 py-1 rounded-xl group-data-[compact=true]/dock:rounded-full transition-[transform,color,background-color,min-height,gap] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] active:scale-[0.96] relative cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E]",
+        isActive
+          ? cn(t.pillBg, t.color)
+          : "text-[#3B635C] hover:text-[#0B2420] dark:text-[#99CBC2] dark:hover:text-white"
       )}
     >
-      <motion.div className="flex items-center justify-center">
-        <Icon className={cn("shrink-0", isActive ? "w-[1.15rem] h-[1.15rem]" : "w-5 h-5")} strokeWidth={isActive ? 2.5 : 2} />
-      </motion.div>
-      
-      <AnimatePresence mode="popLayout">
-        {isActive && (
-          <motion.span
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            className="text-[11px] font-bold overflow-hidden whitespace-nowrap"
-          >
-            {label}
-          </motion.span>
-        )}
-      </AnimatePresence>
+      <Icon className="w-5 h-5 shrink-0" strokeWidth={isActive ? 2.4 : 2} />
+      <span className={cn("text-[10px] leading-tight tracking-tight truncate max-w-[64px] max-h-4 opacity-100 overflow-hidden transition-[opacity,max-height,transform] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] group-data-[compact=true]/dock:opacity-0 group-data-[compact=true]/dock:max-h-0 group-data-[compact=true]/dock:scale-90", isActive ? "font-bold" : "font-medium")}>
+        {label}
+      </span>
 
       {(badge ?? 0) > 0 && (
-        <span className="absolute -top-1 -right-1 w-3.5 h-3.5 rounded-full bg-rose-500 text-white text-[7px] font-black flex items-center justify-center shadow-md border border-zinc-950">
+        <span className="absolute top-0.5 right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold font-mono tabular-nums flex items-center justify-center shadow-xs border border-white dark:border-[#081A17]">
           {(badge ?? 0) > 9 ? '9+' : badge}
         </span>
       )}
-    </motion.button>
+    </button>
   );
 }

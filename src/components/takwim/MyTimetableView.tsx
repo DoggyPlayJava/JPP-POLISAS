@@ -124,6 +124,18 @@ export function MyTimetableView() {
       return;
     }
 
+    if (typeof localStorage !== 'undefined' && localStorage.getItem('use_mock_auth') === 'true') {
+      setEntries([]);
+      setSettings({
+        user_id: userId,
+        notifications_enabled: true,
+        reminder_minutes: 30,
+      });
+      setMetadata(null);
+      setLoading(false);
+      return;
+    }
+
     setLoading(true);
     try {
       const [entriesRes, settingsRes, metaRes] = await Promise.all([

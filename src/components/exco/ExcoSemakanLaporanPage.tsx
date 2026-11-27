@@ -191,7 +191,7 @@ export function ExcoSemakanLaporanPage() {
   // ── Access Guard Render ───────────────────────────────────────────────────
   if (!hasAccess) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F8F6EE] dark:bg-[#0a0a0f] text-slate-900 dark:text-white gap-6 text-center px-6">
+      <div className="flex flex-col items-center justify-center min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0F172A] dark:text-white gap-6 text-center px-6">
         <div className="w-20 h-20 rounded-[2rem] bg-rose-500/10 flex items-center justify-center">
           <Lock className="text-rose-500 dark:text-rose-400 w-9 h-9" />
         </div>
@@ -212,7 +212,7 @@ export function ExcoSemakanLaporanPage() {
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#F8F6EE] dark:bg-[#0a0a0f] text-slate-900 dark:text-white transition-colors duration-300">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0F172A] dark:text-white transition-colors duration-300">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-8">
 
         {/* Header */}
@@ -374,7 +374,7 @@ export function ExcoSemakanLaporanPage() {
 
       {/* Action Dialog */}
       <Dialog open={actionDialog.open} onOpenChange={open => !open && setActionDialog({ open: false, type: null, report: null })}>
-        <DialogContent className="rounded-[2rem] border border-slate-200 dark:border-none bg-[#F8F6EE] dark:bg-[#0f0f17] text-slate-900 dark:text-white max-w-md p-0 overflow-hidden shadow-xl">
+        <DialogContent className="rounded-[2rem] border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] text-[#0F172A] dark:text-white max-w-md p-0 overflow-hidden shadow-xl">
           <DialogHeader
             className="p-6 text-slate-900 dark:text-white"
             style={{ background: actionDialog.type === 'Diluluskan' ? '#10b98120' : '#ef444420' }}

@@ -385,14 +385,14 @@ export function PortalPage() {
     },
     {
       target: '.tour-bottomnav-fab',
-      content: t('portal:tour_fab_content', 'Terakhir dan paling penting! Ini adalah Navigasi Pintar. Jika anda tersesat di halaman mana sekalipun, tekan butang (+) ini untuk menu pintas.'),
-      title: t('portal:tour_fab_title', 'Navigasi Pintar (FAB)'),
+      content: t('portal:tour_fab_content', 'Terakhir dan paling penting! Ini adalah Navigasi Pintas. Jika anda tersesat di halaman mana sekalipun, tekan butang Pintasan di tengah bar navigasi bawah ini untuk menu pantas.'),
+      title: t('portal:tour_fab_title', 'Navigasi Pintar (Pintasan)'),
       placement: 'top' as const,
     }
   ], [t]);
 
   return (
-    <div className="relative min-h-screen bg-[#F8F6EE] dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] flex flex-col font-sans transition-colors duration-300">
+    <div className="relative min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] flex flex-col font-sans transition-colors duration-300">
       {/* Joyride Tour */}
       {runTour && (
         <React.Suspense fallback={null}>
@@ -430,7 +430,7 @@ export function PortalPage() {
       />
 
       {/* Main Content Experience */}
-      <main className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 md:px-8 space-y-6 sm:space-y-7 pt-6 pb-36 sm:pb-32 flex-1 after:content-[''] after:block after:h-28 after:shrink-0 overflow-x-hidden w-full max-w-full">
+      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 md:px-8 space-y-5 sm:space-y-6 pt-5 sm:pt-6 pb-36 sm:pb-28 flex-1 overflow-x-hidden w-full">
         {/* 1. Live Notifications & Campaign Trackers (MAKMP, Kamsis, e-Kebajikan & FoodBank) */}
         <CampusCampaignCarousel
           slides={campaignSlides}
@@ -442,56 +442,61 @@ export function PortalPage() {
           foodbankApp={activeFoodbankApp}
         />
 
-        <NextClassBentoCard entries={userTimetable} />
+        {/* 2. Above-the-Fold 2-Column Desktop Bento (Next Class + 8 Core Micro-Apps) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-stretch">
+          <div className="lg:col-span-5 flex flex-col [&>*]:flex-1">
+            <NextClassBentoCard entries={userTimetable} />
+          </div>
+          <div className="lg:col-span-7 flex flex-col justify-center">
+            <CampusServicesGrid
+              isModuleEnabled={isModuleEnabled}
+              isSuperAdmin={isSuperAdmin}
+              onOpenPolymartModal={() => setShowPolymartModal(true)}
+              onOpenKamsisModal={() => {
+                if (canAppeal) setShowAppealModal(true);
+                else toast(t('portal:hostel_status_toast', { status: displayStatus || t('portal:no_record', 'Tiada Rekod'), defaultValue: 'Status Asrama: {{status}}' }));
+              }}
+              kamsisStatus={kamsisStatus}
+              kbStats={kbStats}
+            />
+          </div>
+        </div>
 
-        {/* 2. Campus Services Grid (8 Core Micro-Apps) */}
-        <CampusServicesGrid
-          isModuleEnabled={isModuleEnabled}
-          isSuperAdmin={isSuperAdmin}
-          onOpenPolymartModal={() => setShowPolymartModal(true)}
-          onOpenKamsisModal={() => {
-            if (canAppeal) setShowAppealModal(true);
-            else toast(t('portal:hostel_status_toast', { status: displayStatus || t('portal:no_record', 'Tiada Rekod'), defaultValue: 'Status Asrama: {{status}}' }));
-          }}
-          kamsisStatus={kamsisStatus}
-          kbStats={kbStats}
-        />
+        {/* 3. Live Campus Feeds Adaptive Row (2-Column when both active, Full 12-Column when only 1 active) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-6 items-start empty:hidden">
+          <EmsEventsFeed className="min-w-0 lg:col-span-6 only:lg:col-span-12" />
+          <PolyMartFeed className="min-w-0 lg:col-span-6 only:lg:col-span-12" />
+        </div>
 
-        {/* 3. EMS Events Feed */}
-        <EmsEventsFeed />
-
-        {/* 4. PolyMart Marketplace Feed */}
-        <PolyMartFeed />
-
-        {/* 5. Official Exco Modules Section */}
-        <section aria-label={t('portal:portal_title', 'Hab Portal Pelajar POLISAS')} className="tour-exco-modules space-y-4">
+        {/* 4. Compact Exco Governance Directory */}
+        <section aria-label={t('portal:portal_title', 'Hab Portal Pelajar POLISAS')} className="tour-exco-modules space-y-3.5 pt-1">
           <div className="flex items-center justify-between">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#6B7F5B] block mb-1">
+              <span className="text-xs font-semibold text-[#0F766E] dark:text-[#2DD4BF] block mb-0.5">
                 {t('portal:portal_welcome', 'Selamat Datang ke Kampus Digital')}
               </span>
-              <h2 className="text-lg sm:text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight [text-wrap:balance]">
+              <h2 className="text-base sm:text-lg font-bold text-[#0B2420] dark:text-[#F6FBF9] tracking-tight [text-wrap:balance]">
                 {t('portal:portal_title', 'Hab Portal Pelajar POLISAS')}
               </h2>
-              <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F] [text-wrap:balance]">
+              <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#99CBC2] [text-wrap:balance]">
                 {t('portal:portal_select_module', 'Pilih unit exco atau perkhidmatan kampus di bawah untuk meneruskan:')}
               </p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
-            {EXCO_MODULES.filter(mod => mod.id !== 'kebajikan').map((mod, i, arr) => {
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
+            {EXCO_MODULES.filter(mod => mod.id !== 'kebajikan').map((mod, i) => {
               let badgeText;
               let notificationCount;
 
               if (mod.id === 'kebajikan' && kbStats?.open) {
                 notificationCount = kbStats.open;
               } else if (mod.id === 'karnival' && karnivalActive) {
-                badgeText = t('portal:ongoing_badge', 'BERLANGSUNG');
+                badgeText = t('portal:ongoing_badge', 'Berlangsung');
               } else if (mod.id === 'supsas' && supsasActive) {
-                badgeText = t('portal:ongoing_badge', 'BERLANGSUNG');
+                badgeText = t('portal:ongoing_badge', 'Berlangsung');
               } else if (mod.id === 'akademik') {
-                badgeText = t('portal:new_badge', 'BAHARU');
+                badgeText = t('portal:new_badge', 'Baharu');
               }
 
               return (
@@ -508,7 +513,6 @@ export function PortalPage() {
                   supsasActive={supsasActive}
                   badgeText={badgeText}
                   notificationCount={notificationCount}
-                  className={arr.length % 2 !== 0 && i === arr.length - 1 ? 'sm:col-span-2' : ''}
                 />
               );
             })}
@@ -562,7 +566,7 @@ function AdminStatusIndicator({ color, label }: { color: string; label: string }
   return (
     <div className="flex items-center gap-3">
       <div className={cn("w-2 h-2 rounded-full", color, "shadow-[0_0_10px_rgba(0,0,0,0.1)] dark:shadow-[0_0_10px_rgba(255,255,255,0.2)]")} />
-      <span className="text-[9px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F]">{label}</span>
+      <span className="text-[11px] font-medium text-[#3B635C] dark:text-[#99CBC2]">{label}</span>
     </div>
   );
 }

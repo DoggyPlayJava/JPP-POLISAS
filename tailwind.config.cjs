@@ -81,7 +81,10 @@ module.exports = {
   				'var(--font-serif)'
   			],
   			mono: [
-  				'Geist Mono',
+  				'JetBrains Mono',
+          'ui-monospace',
+          'SFMono-Regular',
+          'Menlo',
           'monospace'
   			]
   		},

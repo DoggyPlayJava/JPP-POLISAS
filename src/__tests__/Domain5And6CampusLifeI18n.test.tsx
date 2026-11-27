@@ -375,8 +375,8 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
           </I18nextProvider>
         </MemoryRouter>
       );
-      expect(html).toContain('PolyRent — Asset &amp; Equipment Booking');
-      expect(html).toContain('Book Equipment / Venue');
+      expect(html).toContain('PolyRent · Off-Campus Housing &amp; Roommates');
+      expect(html).toContain('Verified Rental Homes');
     });
 
     it('renders PolyMapsPage in English', () => {
@@ -574,8 +574,8 @@ describe('Domain 5 & 6 Campus Life (Commerce, Services, Akademik, Housing, SUPSA
           </I18nextProvider>
         </MemoryRouter>
       );
-      expect(html).toContain('PolyRent — Tempahan Aset &amp; Peralatan');
-      expect(html).toContain('Tempah Peralatan / Ruang');
+      expect(html).toContain('PolyRent · Portal Rumah Sewa &amp; Kawan Sewa');
+      expect(html).toContain('Rumah Sewa Disahkan');
     });
 
     it('renders PolyMapsPage in Bahasa Melayu', () => {

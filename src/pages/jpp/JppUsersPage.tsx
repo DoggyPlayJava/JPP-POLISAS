@@ -608,10 +608,10 @@ export function JppUsersPage() {
                                     onChange={e => setFilterLevel(e.target.value)}
                                     className="h-11 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-xs text-slate-700 dark:text-white/70 font-bold px-3 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 shadow-2xs dark:shadow-none transition-all"
                                 >
-                                    <option value="all" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">{t('jpp:users_all_levels')}</option>
-                                    <option value="Junior" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Junior</option>
-                                    <option value="Senior" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Senior</option>
-                                    <option value="Asasi" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">Asasi</option>
+                                    <option value="all" className="bg-white dark:bg-[#0B2420] text-slate-900 dark:text-white">{t('jpp:users_all_levels')}</option>
+                                    <option value="Junior" className="bg-white dark:bg-[#0B2420] text-slate-900 dark:text-white">Junior</option>
+                                    <option value="Senior" className="bg-white dark:bg-[#0B2420] text-slate-900 dark:text-white">Senior</option>
+                                    <option value="Asasi" className="bg-white dark:bg-[#0B2420] text-slate-900 dark:text-white">Asasi</option>
                                 </select>
                                 {/* Program filter */}
                                 <select
@@ -619,9 +619,9 @@ export function JppUsersPage() {
                                     onChange={e => setFilterProg(e.target.value)}
                                     className="h-11 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl text-xs text-slate-700 dark:text-white/70 font-bold px-3 focus:outline-none focus:border-slate-400 dark:focus:border-white/30 shadow-2xs dark:shadow-none transition-all"
                                 >
-                                    <option value="all" className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">{t('jpp:users_all_programmes')}</option>
+                                    <option value="all" className="bg-white dark:bg-[#0B2420] text-slate-900 dark:text-white">{t('jpp:users_all_programmes')}</option>
                                     {uniqueProgs.map(p => (
-                                        <option key={p} value={p} className="bg-white dark:bg-[#1C261D] text-slate-900 dark:text-white">{p}</option>
+                                        <option key={p} value={p} className="bg-white dark:bg-[#0B2420] text-slate-900 dark:text-white">{p}</option>
                                     ))}
                                 </select>
                             </div>

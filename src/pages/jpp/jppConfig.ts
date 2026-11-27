@@ -11,7 +11,7 @@ import i18n from '@/lib/i18n';
 
 const t = (k: string, fb: string, opt?: any): string => (i18n.isInitialized ? (i18n.t(k, { defaultValue: fb, ...opt }) as string) : fb);
 
-export const JPP_THEME_DEFAULT_COLOR = '#2E3A2F';
+export const JPP_THEME_DEFAULT_COLOR = '#0F766E';
 export const JPP_MODULE_ID = 'jpp';
 
 export interface UnitConfig {
@@ -122,30 +122,19 @@ export const UNIT_CFG: Record<string, UnitConfig> = {
 };
 
 /** Returns hex sidebar gradient background based on theme color */
-export function getJppSidebarBg(hex: string, isDark: boolean = true) {
-  if (!isDark) {
-    return {
-      top: '#F8F6EE',
-      bottom: '#F2EDE4',
-      border: 'rgba(217, 201, 178, 0.8)',
-      textPrimary: '#2E3A2F',
-      textSecondary: '#556453',
-      hoverBg: 'rgba(46, 58, 47, 0.06)',
-      activeBg: 'rgba(46, 58, 47, 0.12)',
-    };
-  }
+export function getJppSidebarBg(_hex: string, _isDark: boolean = true) {
   return {
-    top: '#151D16',
-    bottom: '#1B241C',
-    border: 'rgba(58, 74, 59, 0.5)',
-    textPrimary: '#F8F6EE',
-    textSecondary: '#A3B39F',
-    hoverBg: 'rgba(255, 255, 255, 0.05)',
-    activeBg: 'rgba(107, 127, 91, 0.2)',
+    top: '#0B2420',
+    bottom: '#061714',
+    border: 'rgba(45, 212, 191, 0.16)',
+    textPrimary: '#F6FBF9',
+    textSecondary: '#99CBC2',
+    hoverBg: 'rgba(255, 255, 255, 0.06)',
+    activeBg: 'rgba(45, 212, 191, 0.16)',
   };
 }
 
 /** Preset accent colors for JPP HQ */
 export const JPP_COLOR_PRESETS = [
-  '#2E3A2F', '#1E271F', '#3B4A3C', '#6B7F5B', '#C96F4F', '#4A584B',
+  '#0F766E', '#0B2420', '#0D9488', '#115E59', '#14B8A6', '#134E4A',
 ];

@@ -573,8 +573,8 @@ export function AnnouncementsPage() {
                    <p className="text-muted-foreground whitespace-pre-wrap text-sm">{a.content_body}</p>
                    
                    {a.priority === 'HIGH' && a.form_schema && a.form_schema.length > 0 && (
-                     <div className="p-4 bg-muted/40 rounded-xl rounded-tl-sm text-xs font-bold text-muted-foreground border-l-4 border-indigo-500 flex flex-col gap-2">
-                       <span className="text-indigo-500 uppercase tracking-widest text-[10px]">{t('jpp:announcements_form_task_title', 'Tugasan Berorientasikan Borang (Data Responses)')}</span>
+                     <div className="p-4 bg-teal-500/5 rounded-xl text-xs font-bold text-muted-foreground border border-teal-500/25 flex flex-col gap-2">
+                       <span className="text-teal-700 dark:text-teal-300 uppercase tracking-widest text-[10px]">{t('jpp:announcements_form_task_title', 'Tugasan Berorientasikan Borang (Data Responses)')}</span>
                        {t('jpp:announcements_form_task_desc', 'Mempunyai {{count}} soalan tertanam: {{fields}}.', { count: a.form_schema.length, fields: a.form_schema.map(f => f.label).join(', ') })}
                      </div>
                    )}

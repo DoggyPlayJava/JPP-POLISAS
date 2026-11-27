@@ -175,18 +175,18 @@ export function JppSidebar() {
 
   return (
     <aside
-      className="w-72 h-screen flex flex-col select-none overflow-hidden border-r border-[#D9C9B2]/80 dark:border-[#3A4A3B]/60"
+      className="w-72 h-[100dvh] flex flex-col select-none overflow-hidden border-r border-teal-400/15"
       style={{ background: `linear-gradient(180deg, ${bg.top} 0%, ${bg.bottom} 100%)` }}
     >
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div
-        className="flex-shrink-0 flex flex-col border-b border-[#D9C9B2]/80 dark:border-[#3A4A3B]/60"
+        className="flex-shrink-0 flex flex-col border-b border-white/10"
       >
         {/* Row 1: Utilities & Navigation */}
         <div className="flex items-center justify-between px-5 pt-3.5 pb-1">
           <NavLink
             to="/portal"
-            className="flex items-center gap-2 text-[#556453]/70 hover:text-[#2E3A2F] dark:text-[#A3B39F]/70 dark:hover:text-white transition-colors group"
+            className="flex items-center gap-2 text-[#99CBC2] hover:text-white transition-colors group"
           >
             <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
             <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
@@ -199,7 +199,7 @@ export function JppSidebar() {
             {canCustomize && (
               <button
                 onClick={() => setShowPicker(v => !v)}
-                className="p-2 rounded-xl transition-all hover:bg-[#2E3A2F]/10 dark:hover:bg-white/10 text-[#556453] hover:text-[#2E3A2F] dark:text-[#A3B39F] dark:hover:text-white"
+                className="p-2 rounded-xl transition-all hover:bg-white/10 text-[#99CBC2] hover:text-white"
                 title={t('jpp:change_theme_color', 'Tukar warna tema')}
               >
                 <Palette className="w-3.5 h-3.5" />
@@ -211,25 +211,24 @@ export function JppSidebar() {
         {/* Row 2: Branding */}
         <div className="flex items-center gap-3 px-5 pb-4 pt-1.5">
           <div
-            className="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg bg-[#2E3A2F]/10 border border-[#D9C9B2]/80 dark:bg-white/5 dark:border-[#3A4A3B]/60"
+            className="shrink-0 w-11 h-11 rounded-2xl flex items-center justify-center overflow-hidden shadow-lg bg-white/5 border border-white/10"
             style={{
-              background: isDark ? hexToRgba(themeColor, 0.15) : undefined,
-              borderColor: isDark ? hexToRgba(themeColor, 0.3) : undefined,
+              background: hexToRgba(themeColor, 0.18),
+              borderColor: hexToRgba(themeColor, 0.35),
             }}
           >
             <img src="/jpp-logo.png" alt="JPP" className="w-8 h-8 object-contain" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-black text-sm text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight leading-none truncate">JPP HQ</p>
+            <p className="font-black text-sm text-[#F6FBF9] tracking-tight leading-none truncate">JPP HQ</p>
             <p
-              className="text-[10px] font-black uppercase tracking-[0.2em] mt-0.5 truncate"
-              style={{ color: isDark ? hexToRgba(themeColor, 0.7) : themeColor }}
+              className="text-[10px] font-black uppercase tracking-[0.2em] mt-0.5 truncate text-[#5EEAD4]"
             >
               Politeknik Polisas
             </p>
             <div className="flex items-center gap-1.5 mt-1">
-              <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
-              <span className="truncate text-[9px] font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F]/70">
+              <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
+              <span className="truncate text-[9px] font-black uppercase tracking-widest text-[#99CBC2]">
                 {getCurrentAcademicSession(t)}
               </span>
             </div>
@@ -245,7 +244,7 @@ export function JppSidebar() {
               exit={{ opacity: 0 }}
               className="overflow-hidden px-4 pb-4"
             >
-              <div className="space-y-2 p-3 rounded-2xl bg-white/80 dark:bg-white/5 border border-[#D9C9B2]/80 dark:border-[#3A4A3B]/60 shadow-sm">
+              <div className="space-y-2 p-3 rounded-2xl bg-white/5 border border-white/10 shadow-sm">
                 <div className="flex items-center gap-2">
                   <div className="relative w-8 h-8 rounded-xl overflow-hidden flex-shrink-0">
                     <input
@@ -259,13 +258,13 @@ export function JppSidebar() {
                     value={hexInput}
                     onChange={e => setHexInput(e.target.value)}
                     maxLength={7}
-                    className="flex-1 bg-transparent text-xs font-mono text-[#2E3A2F] dark:text-white/70 outline-none tracking-wider uppercase"
+                    className="flex-1 bg-transparent text-xs font-mono text-white/80 outline-none tracking-wider uppercase"
                   />
                   <button
                     onClick={() => handleColorSave(hexInput)}
                     disabled={saving}
                     className="px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest text-white transition-all active:scale-95"
-                    style={{ background: isDark ? hexToRgba(themeColor, 0.5) : themeColor }}
+                    style={{ background: hexToRgba(themeColor, 0.7) }}
                   >
                     {saving ? '...' : t('common:save', 'Simpan')}
                   </button>
@@ -276,7 +275,7 @@ export function JppSidebar() {
                       key={c}
                       onClick={() => setHexInput(c)}
                       className="w-7 h-7 rounded-lg flex-shrink-0 border-2 transition-all hover:scale-110"
-                      style={{ background: c, borderColor: hexInput === c ? (isDark ? 'white' : '#2E3A2F') : 'transparent' }}
+                      style={{ background: c, borderColor: hexInput === c ? 'white' : 'transparent' }}
                     />
                   ))}
                 </div>
@@ -288,10 +287,10 @@ export function JppSidebar() {
 
       {/* ── User identity ───────────────────────────────────────────────── */}
       <div
-        className="flex-shrink-0 px-4 py-3 border-b border-[#D9C9B2]/80 dark:border-[#3A4A3B]/60"
+        className="flex-shrink-0 px-4 py-3 border-b border-white/10"
       >
-        <div className="flex items-center gap-3 px-3 py-2.5 rounded-2xl bg-white/80 dark:bg-white/[0.04] border border-[#D9C9B2]/80 dark:border-[#3A4A3B]/60 shadow-sm">
-          <Avatar className="h-9 w-9 rounded-xl ring-2 ring-[#D9C9B2]/80 dark:ring-white/10 flex-shrink-0">
+        <div className="flex items-center gap-3 px-3 py-2.5 rounded-2xl bg-white/[0.05] border border-white/10 shadow-sm">
+          <Avatar className="h-9 w-9 rounded-xl ring-2 ring-white/15 flex-shrink-0">
             <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
             <AvatarFallback
               className="font-black text-xs rounded-xl"
@@ -301,15 +300,14 @@ export function JppSidebar() {
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-black text-[#2E3A2F] dark:text-[#F8F6EE] truncate leading-tight">{displayName}</p>
-            <p className="text-[10px] uppercase tracking-widest truncate mt-0.5 text-[#6B7F5B] dark:text-[#A3B39F] font-bold">
+            <p className="text-xs font-black text-[#F6FBF9] truncate leading-tight">{displayName}</p>
+            <p className="text-[10px] uppercase tracking-widest truncate mt-0.5 text-[#5EEAD4] font-bold">
               {posLabel}
             </p>
           </div>
           {isYDP && (
-            <div className="flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center bg-[#2E3A2F]/10 dark:bg-[#6B7F5B]/20"
-              style={{ background: isDark ? hexToRgba(themeColor, 0.3) : undefined }}>
-              <Crown className="w-3 h-3 text-[#2E3A2F] dark:text-[#A3B39F]" style={{ color: isDark ? themeColor : undefined }} />
+            <div className="flex-shrink-0 w-6 h-6 rounded-lg flex items-center justify-center bg-teal-500/20">
+              <Crown className="w-3 h-3 text-[#5EEAD4]" />
             </div>
           )}
           {isSuperAdmin && !isYDP && (
@@ -324,7 +322,7 @@ export function JppSidebar() {
       <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
 
         {/* Main nav */}
-        <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
+        <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
           {t('nav:navigation', 'Navigasi')}
         </p>
         {[
@@ -348,11 +346,11 @@ export function JppSidebar() {
             className={({ isActive }) => cn(
               'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.98] group',
               isActive
-                ? 'text-[#2E3A2F] font-black bg-[#2E3A2F]/15 dark:bg-white/10 dark:text-white shadow-sm'
-                : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/5'
+                ? 'text-white font-black bg-teal-500/20 border border-teal-400/25 shadow-sm'
+                : 'text-[#99CBC2] hover:text-white hover:bg-white/5'
             )}
             style={({ isActive }) => ({
-              background: isActive && isDark ? hexToRgba(themeColor, 0.2) : undefined,
+              background: isActive ? hexToRgba(themeColor, 0.2) : undefined,
             })}
           >
             {({ isActive }) => (
@@ -361,20 +359,20 @@ export function JppSidebar() {
                   className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 transition-all"
                   style={{
                     background: isActive
-                      ? (isDark ? hexToRgba(themeColor, 0.3) : 'rgba(46, 58, 47, 0.12)')
+                      ? hexToRgba(themeColor, 0.3)
                       : 'transparent'
                   }}
                 >
                   <item.icon
                     className="w-3.5 h-3.5"
-                    style={{ color: isActive ? (isDark ? themeColor : '#2E3A2F') : undefined }}
+                    style={{ color: isActive ? '#5EEAD4' : undefined }}
                   />
                 </div>
                 <span className="text-xs font-bold tracking-tight flex-1">{item.label}</span>
                 {isActive && (
                   <div
                     className="w-1 h-4 rounded-full flex-shrink-0"
-                    style={{ background: isDark ? themeColor : '#2E3A2F', boxShadow: isDark ? `0 0 8px 2px ${hexToRgba(themeColor, 0.5)}` : 'none' }}
+                    style={{ background: '#2DD4BF', boxShadow: '0 0 8px 2px rgba(45, 212, 191, 0.5)' }}
                   />
                 )}
               </>
@@ -386,7 +384,7 @@ export function JppSidebar() {
         {(canAccessDemerit || canAccessFoodBank) && (
           <>
             <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
                 {t('jpp:nav_student_mgmt', 'Pengurusan Pelajar')}
               </p>
             </div>
@@ -396,11 +394,11 @@ export function JppSidebar() {
                 className={({ isActive }) => cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.98] group',
                   isActive
-                    ? 'text-[#2E3A2F] font-black bg-[#2E3A2F]/15 dark:bg-[#6B7F5B]/20 dark:text-[#A3B39F] shadow-sm'
-                    : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-[#A3B39F]/70 dark:hover:text-[#A3B39F] dark:hover:bg-[#6B7F5B]/10'
+                    ? 'text-white font-black bg-teal-500/20 border border-teal-400/25 shadow-sm'
+                    : 'text-[#99CBC2] hover:text-white hover:bg-white/5'
                 )}
               >
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#2E3A2F]/15 text-[#2E3A2F] dark:bg-[#6B7F5B]/20 dark:text-[#A3B39F] flex-shrink-0">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-teal-500/20 text-[#5EEAD4] flex-shrink-0">
                   <HeartHandshake className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-xs font-bold tracking-tight flex-1">{t('jpp:nav_foodbank', 'Food Bank JPP')}</span>
@@ -417,11 +415,11 @@ export function JppSidebar() {
                 className={({ isActive }) => cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.98] group',
                   isActive
-                    ? 'text-[#2E3A2F] font-black bg-[#2E3A2F]/15 dark:bg-[#6B7F5B]/20 dark:text-[#A3B39F] shadow-sm'
-                    : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-[#A3B39F]/70 dark:hover:text-[#A3B39F] dark:hover:bg-[#6B7F5B]/10'
+                    ? 'text-white font-black bg-teal-500/20 border border-teal-400/25 shadow-sm'
+                    : 'text-[#99CBC2] hover:text-white hover:bg-white/5'
                 )}
               >
-                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-[#2E3A2F]/15 text-[#2E3A2F] dark:bg-[#6B7F5B]/20 dark:text-[#A3B39F] flex-shrink-0">
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-teal-500/20 text-[#5EEAD4] flex-shrink-0">
                   <ShieldCheck className="w-3.5 h-3.5" />
                 </div>
                 <span className="text-xs font-bold tracking-tight flex-1">{t('jpp:nav_demerit_mgmt', 'Pengurusan Demerit')}</span>
@@ -434,7 +432,7 @@ export function JppSidebar() {
         {(isYDP || isSuperAdmin) && (
           <>
             <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
                 {t('jpp:nav_portal_admin', 'Pentadbiran Portal')}
               </p>
             </div>
@@ -451,8 +449,8 @@ export function JppSidebar() {
                 className={({ isActive }) => cn(
                   'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.98] group',
                   isActive
-                    ? 'text-[#2E3A2F] font-black bg-[#2E3A2F]/15 dark:bg-white/10 dark:text-white shadow-sm'
-                    : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-white/50 dark:hover:text-white dark:hover:bg-white/5'
+                    ? 'text-white font-black bg-teal-500/20 border border-teal-400/25 shadow-sm'
+                    : 'text-[#99CBC2] hover:text-white hover:bg-white/5'
                 )}
                 style={({ isActive }) => ({
                   background: isActive && isDark ? hexToRgba(themeColor, 0.2) : undefined,
@@ -470,14 +468,14 @@ export function JppSidebar() {
                     >
                       <item.icon
                         className="w-3.5 h-3.5"
-                        style={{ color: isActive ? (isDark ? themeColor : '#2E3A2F') : undefined }}
+                        style={{ color: isActive ? '#5EEAD4' : undefined }}
                       />
                     </div>
                     <span className="text-xs font-bold tracking-tight flex-1">{item.label}</span>
                     {isActive && (
                       <div
                         className="w-1 h-4 rounded-full flex-shrink-0"
-                        style={{ background: isDark ? themeColor : '#2E3A2F', boxShadow: isDark ? `0 0 8px 2px ${hexToRgba(themeColor, 0.5)}` : 'none' }}
+                        style={{ background: '#2DD4BF', boxShadow: '0 0 8px 2px rgba(45, 212, 191, 0.5)' }}
                       />
                     )}
                   </>
@@ -491,7 +489,7 @@ export function JppSidebar() {
         {isUnitAsramaOnly && (
           <>
             <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
                 {t('jpp:nav_asrama_mgmt', 'Pengurusan Asrama')}
               </p>
             </div>
@@ -500,8 +498,8 @@ export function JppSidebar() {
               className={({ isActive }) => cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
                 isActive
-                  ? 'text-[#2E3A2F] font-black bg-[#2E3A2F]/15 dark:bg-white/10 dark:text-white shadow-sm'
-                  : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-white/40 dark:hover:text-white/80 dark:hover:bg-white/5'
+                  ? 'text-white font-black bg-teal-500/20 border border-teal-400/25 shadow-sm'
+                  : 'text-[#99CBC2]/80 hover:text-white hover:bg-white/5'
               )}
               style={({ isActive }) => ({
                 background: isActive && isDark ? hexToRgba('#E879F9', 0.18) : undefined,
@@ -532,7 +530,7 @@ export function JppSidebar() {
         {visibleUnits.length > 0 && (
           <>
             <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
                 {t('jpp:nav_unit_exco', 'Unit Exco')}
                 {isMT && <span className="ml-1.5 opacity-60">{t('jpp:assigned_tag', '(Assigned)')}</span>}
               </p>
@@ -637,8 +635,8 @@ export function JppSidebar() {
                         className={({ isActive }) => cn(
                           'flex-1 flex items-center gap-3 px-3 py-2 rounded-xl transition-all duration-200 min-w-0',
                           isActive
-                            ? 'text-[#2E3A2F] font-black bg-[#2E3A2F]/15 dark:bg-white/10 dark:text-white shadow-sm'
-                            : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-white/50 dark:hover:text-white/85 dark:hover:bg-white/5'
+                            ? 'text-white font-black bg-teal-500/20 border border-teal-400/25 shadow-sm'
+                            : 'text-[#99CBC2] hover:text-white hover:bg-white/5'
                         )}
                         style={({ isActive }) => ({
                           background: isActive && isDark ? hexToRgba(cfg.color, 0.15) : undefined,
@@ -667,7 +665,7 @@ export function JppSidebar() {
                       {hasSubNav && (
                         <button
                           onClick={() => toggleUnit(code)}
-                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[#556453] bg-[#2E3A2F]/10 hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/20 dark:text-white/50 dark:bg-white/5 dark:hover:text-white dark:hover:bg-white/20 transition-all mr-1 ml-1"
+                          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-[#99CBC2] bg-white/5 hover:text-white hover:bg-white/20 transition-all mr-1 ml-1"
                           title={isExpanded ? t('common:close', 'Tutup') : t('common:open', 'Buka')}
                         >
                           <ChevronDown
@@ -683,9 +681,9 @@ export function JppSidebar() {
                         className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{ background: hexToRgba(cfg.color, 0.08) }}
                       >
-                        <Lock className="w-3 h-3 text-[#556453]/50 dark:text-white/20" />
+                        <Lock className="w-3 h-3 text-white/30" />
                       </div>
-                      <span className="text-xs font-bold tracking-tight flex-1 truncate text-[#556453]/50 dark:text-white/25">{cfg.shortLabel}</span>
+                      <span className="text-xs font-bold tracking-tight flex-1 truncate text-white/35">{cfg.shortLabel}</span>
                     </div>
                   )}
 
@@ -700,7 +698,7 @@ export function JppSidebar() {
                         transition={{ duration: 0.18, ease: 'easeInOut' }}
                         className="overflow-hidden"
                       >
-                        <div className="ml-4 pl-3 border-l border-[#D9C9B2]/80 dark:border-white/[0.06] space-y-0.5 mt-0.5 mb-1">
+                        <div className="ml-4 pl-3 border-l border-white/10 space-y-0.5 mt-0.5 mb-1">
                           {subItems.map(sub => (
                             <NavLink
                               key={sub.href}
@@ -708,8 +706,8 @@ export function JppSidebar() {
                               className={({ isActive }) => cn(
                                 'flex items-center gap-2 px-2 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all',
                                 isActive
-                                  ? 'text-[#2E3A2F] font-bold dark:text-white'
-                                  : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-white/40 dark:hover:text-white/80'
+                                  ? 'text-white font-bold'
+                                  : 'text-[#99CBC2] hover:text-white hover:bg-white/5'
                               )}
                               style={({ isActive }) => ({
                                 background: isActive ? hexToRgba(cfg.color, 0.12) : undefined,
@@ -738,7 +736,7 @@ export function JppSidebar() {
         {(isSuperAdmin || isYDP || profile?.jpp_unit === 'MULTIMEDIA') && (
           <>
             <div className="pt-4 pb-1.5">
-              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#556453]/60 dark:text-white/20">
+              <p className="px-3 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#99CBC2]/60">
                 {t('jpp:nav_announcements_misc', 'Hebahan / Lain-Lain')}
               </p>
             </div>
@@ -747,12 +745,12 @@ export function JppSidebar() {
               className={({ isActive }) => cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group',
                 isActive
-                  ? 'text-[#2E3A2F] font-black bg-[#2E3A2F]/15 dark:bg-white/10 dark:text-white shadow-sm'
-                  : 'text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-white/35 dark:hover:text-white/80 dark:hover:bg-white/5'
+                  ? 'text-white font-black bg-white/10 shadow-sm'
+                  : 'text-[#99CBC2]/80 hover:text-white hover:bg-white/5'
               )}
             >
               <div className="w-7 h-7 rounded-lg flex items-center justify-center bg-indigo-500/20">
-                <Megaphone className="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" />
+                <Megaphone className="w-3.5 h-3.5 text-indigo-400" />
               </div>
               <span className="text-[10px] font-black uppercase tracking-widest flex-1 leading-tight">
                 {t('jpp:nav_global_announcements', 'Hebahan Global')}
@@ -762,14 +760,14 @@ export function JppSidebar() {
         )}
       </nav>
 
-      {/* ── Footer ──────────────────────────────────────────────────────── */}
+      {/* Footer */}
       <div
-        className="flex-shrink-0 p-4 space-y-1 border-t border-[#D9C9B2]/80 dark:border-[#3A4A3B]/60"
+        className="flex-shrink-0 p-4 space-y-1 border-t border-white/10"
       >
         <Button
           variant="ghost"
           onClick={signOut}
-          className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-[#556453] hover:text-[#2E3A2F] hover:bg-[#2E3A2F]/10 dark:text-white/40 dark:hover:text-white transition-all text-left"
+          className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-[#99CBC2] hover:text-rose-400 hover:bg-rose-500/10 transition-all text-left"
         >
           <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
           {t('nav:logout', 'Log Keluar')}

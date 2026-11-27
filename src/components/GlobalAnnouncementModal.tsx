@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,8 +13,61 @@ import { SystemAnnouncement, AnnouncementFormField } from '@/types';
 import { toast } from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
+const MOCK_DISMISSED_KEY = 'mock_dismissed_announcements';
+const MOCK_SESSION_DISMISSED_KEY = 'mock_session_dismissed_announcements';
+
+function readMockDismissedIds(): string[] {
+  const ids = new Set<string>();
+  try {
+    const raw = localStorage.getItem(MOCK_DISMISSED_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) parsed.forEach((id) => ids.add(String(id)));
+    }
+  } catch {}
+  try {
+    const rawSess = sessionStorage.getItem(MOCK_SESSION_DISMISSED_KEY);
+    if (rawSess) {
+      const parsedSess = JSON.parse(rawSess);
+      if (Array.isArray(parsedSess)) parsedSess.forEach((id) => ids.add(String(id)));
+    }
+  } catch {}
+  return Array.from(ids);
+}
+
+function saveMockDismissedId(id: string, permanent = true) {
+  try {
+    const storage = permanent ? localStorage : sessionStorage;
+    const key = permanent ? MOCK_DISMISSED_KEY : MOCK_SESSION_DISMISSED_KEY;
+    const raw = storage.getItem(key);
+    const existing: string[] = raw ? JSON.parse(raw) : [];
+    if (!existing.includes(id)) {
+      storage.setItem(key, JSON.stringify([...existing, id]));
+    }
+  } catch {}
+}
+
+function normalizeAnnouncementRoute(rawUrl?: string | null): { internalPath: string | null; externalUrl: string | null } {
+  if (!rawUrl) return { internalPath: null, externalUrl: null };
+  const trimmed = rawUrl.trim();
+  if (trimmed.startsWith('/')) {
+    return { internalPath: trimmed, externalUrl: null };
+  }
+  try {
+    const parsed = new URL(trimmed);
+    const host = parsed.hostname.toLowerCase();
+    if (host === 'jpp.cipher-node.org' || host === 'www.jpp.cipher-node.org') {
+      return { internalPath: `${parsed.pathname}${parsed.search}${parsed.hash}` || '/portal', externalUrl: null };
+    }
+    return { internalPath: null, externalUrl: trimmed };
+  } catch {
+    return { internalPath: null, externalUrl: trimmed };
+  }
+}
+
 export function GlobalAnnouncementModal() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const [announcements, setAnnouncements] = useState<SystemAnnouncement[]>([]);
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -42,14 +96,18 @@ export function GlobalAnnouncementModal() {
       if (annError) throw annError;
 
       // 2. Fetch user's prior responses to filter out completed/dismissed
-      const { data: userRes, error: resError } = await supabase
-        .from('user_announcement_responses')
-        .select('announcement_id')
-        .eq('user_id', user!.id);
+      let respondedIds: string[] = [];
+      if (localStorage.getItem('use_mock_auth') === 'true') {
+        respondedIds = readMockDismissedIds();
+      } else {
+        const { data: userRes, error: resError } = await supabase
+          .from('user_announcement_responses')
+          .select('announcement_id')
+          .eq('user_id', user!.id);
 
-      if (resError) throw resError;
-
-      const respondedIds = userRes?.map(r => r.announcement_id) || [];
+        if (resError) throw resError;
+        respondedIds = userRes?.map(r => r.announcement_id) || [];
+      }
 
       // 3. Filter audience & responded
       const filtered = (activeAnns || []).filter(a => {
@@ -80,6 +138,10 @@ export function GlobalAnnouncementModal() {
   };
 
   const handleNext = () => {
+    const cur = announcements[currentIdx];
+    if (cur?.id && localStorage.getItem('use_mock_auth') === 'true') {
+      saveMockDismissedId(cur.id, false);
+    }
     setFormData({}); // reset
     setProgress(0);
     setCurrentIdx(prev => prev + 1);
@@ -118,7 +180,9 @@ export function GlobalAnnouncementModal() {
   const isHigh = current.priority === 'HIGH';
 
   const handleDismiss = async (permanently: boolean) => {
-    if (permanently) {
+    if (localStorage.getItem('use_mock_auth') === 'true') {
+      saveMockDismissedId(current.id, permanently);
+    } else if (permanently) {
       try {
         await supabase.from('user_announcement_responses').insert({
           user_id: user.id,
@@ -145,14 +209,18 @@ export function GlobalAnnouncementModal() {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from('user_announcement_responses').insert({
-        user_id: user.id,
-        announcement_id: current.id,
-        status: 'completed',
-        form_data: Object.keys(formData).length > 0 ? formData : null
-      });
+      if (localStorage.getItem('use_mock_auth') === 'true') {
+        saveMockDismissedId(current.id);
+      } else {
+        const { error } = await supabase.from('user_announcement_responses').insert({
+          user_id: user.id,
+          announcement_id: current.id,
+          status: 'completed',
+          form_data: Object.keys(formData).length > 0 ? formData : null
+        });
 
-      if (error) throw error;
+        if (error) throw error;
+      }
       toast.success(t('portal:feedback_recorded', 'Terima kasih. Maklumbalas direkodkan.'));
       handleNext();
     } catch (err: any) {
@@ -165,14 +233,14 @@ export function GlobalAnnouncementModal() {
   const renderField = (f: AnnouncementFormField) => {
     return (
       <div key={f.id} className="space-y-2 text-left">
-        <Label className="font-bold text-white/90 text-[11px] uppercase tracking-wider block mb-2">
+        <Label className="font-bold text-[#0B2420] dark:text-white/90 text-[11px] uppercase tracking-wider block mb-2">
           {f.label} {f.required && <span className="text-rose-500">*</span>}
         </Label>
         {f.type === 'select' && f.options ? (
           <Select value={formData[f.id] || ''} onValueChange={v => setFormData({ ...formData, [f.id]: v })}>
-            <SelectTrigger className="bg-white/5 border-white/10 text-white h-12 rounded-xl focus:ring-1 focus:ring-white/20"><SelectValue /></SelectTrigger>
-            <SelectContent className="bg-[#0a0a0f] border-white/10 text-white">
-              {f.options.map(opt => <SelectItem key={opt} value={opt} className="focus:bg-white/10 focus:text-white">{opt}</SelectItem>)}
+            <SelectTrigger className="bg-[#F6FBF9] dark:bg-white/5 border-[#B8E4DC] dark:border-white/10 text-[#0B2420] dark:text-white h-12 rounded-xl focus:ring-1 focus:ring-[#0D9488]/30"><SelectValue /></SelectTrigger>
+            <SelectContent className="bg-white dark:bg-[#0B2420] border-[#B8E4DC] dark:border-white/10 text-[#0B2420] dark:text-white">
+              {f.options.map(opt => <SelectItem key={opt} value={opt} className="focus:bg-[#EBF7F4] dark:focus:bg-white/10">{opt}</SelectItem>)}
             </SelectContent>
           </Select>
         ) : (
@@ -181,7 +249,7 @@ export function GlobalAnnouncementModal() {
             value={formData[f.id] || ''}
             onChange={e => setFormData({ ...formData, [f.id]: e.target.value })}
             placeholder={f.placeholder}
-            className="bg-white/5 border-white/10 text-white h-12 rounded-xl placeholder:text-white/20 focus-visible:ring-1 focus-visible:ring-white/20"
+            className="bg-[#F6FBF9] dark:bg-white/5 border-[#B8E4DC] dark:border-white/10 text-[#0B2420] dark:text-white h-12 rounded-xl placeholder:text-[#3B635C]/50 dark:placeholder:text-white/20 focus-visible:ring-1 focus-visible:ring-[#0D9488]/30"
           />
         )}
       </div>
@@ -225,12 +293,12 @@ export function GlobalAnnouncementModal() {
       <motion.div
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        className="relative w-full max-w-[480px] bg-[#0a0a0f] text-white rounded-[2.5rem] shadow-2xl border border-white/5 overflow-hidden flex flex-col max-h-[85dvh]"
+        className="relative w-full max-w-[480px] bg-white dark:bg-[#0B2420] text-[#0B2420] dark:text-[#F6FBF9] rounded-[2.5rem] shadow-2xl border border-[#B8E4DC]/80 dark:border-[#1E4D45] overflow-hidden flex flex-col max-h-[85dvh]"
       >
         {/* Progress bar — fixed at top */}
         {announcements.length > 1 && !isHigh && currentIdx < announcements.length - 1 && (
-          <div className="absolute top-0 left-0 right-0 h-1 bg-white/5 z-30">
-            <div className="h-full bg-white/30 transition-all duration-100 ease-linear" style={{ width: `${progress}%` }} />
+          <div className="absolute top-0 left-0 right-0 h-1 bg-[#B8E4DC]/40 dark:bg-white/5 z-30">
+            <div className="h-full bg-[#0F766E] dark:bg-[#2DD4BF] transition-all duration-100 ease-linear" style={{ width: `${progress}%` }} />
           </div>
         )}
 
@@ -238,7 +306,8 @@ export function GlobalAnnouncementModal() {
         {!isHigh && (
           <button
             onClick={() => handleDismiss(false)}
-            className="absolute top-5 right-5 p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/40 hover:text-white transition-colors z-30"
+            aria-label={t('common:close', 'Tutup')}
+            className="absolute top-5 right-5 p-2 rounded-full bg-[#EBF7F4] dark:bg-white/5 hover:bg-[#D5EFEA] dark:hover:bg-white/10 text-[#3B635C] dark:text-white/60 hover:text-[#0B2420] dark:hover:text-white transition-colors z-30 cursor-pointer"
           >
             <X size={16} />
           </button>
@@ -249,42 +318,62 @@ export function GlobalAnnouncementModal() {
           <div className={`p-3 rounded-full flex-shrink-0 z-10 mb-3 ${getIconColor(current.icon_type, isHigh)}`}>
             {getIcon(current.icon_type, isHigh)}
           </div>
-          <h2 className="text-xl font-black tracking-tighter leading-tight mb-1 text-white">
+          <h2 className="text-xl font-black tracking-tighter leading-tight mb-1 text-[#0B2420] dark:text-[#F6FBF9]">
             {current.title}
           </h2>
           {isHigh && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 mt-1 rounded-full bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase tracking-widest border border-rose-500/20">
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 mt-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-widest border border-rose-500/20">
               Notis Mandatori
             </div>
           )}
         </div>
 
         {/* Butang Buka Pautan — atas sekali, prominent, sentiasa nampak tanpa scroll */}
-        {current.action_url && (
-          <div className="px-6 sm:px-8 pb-3 shrink-0">
-            <a
-              href={current.action_url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-black tracking-wide text-[12px] uppercase shadow-lg shadow-blue-600/25 hover:shadow-blue-500/40 transition-all group"
-            >
-              <ExternalLink size={16} className="text-white/90 group-hover:scale-110 transition-transform" />
-              <span>{t('portal:open_link', 'Buka Pautan')}</span>
-            </a>
-          </div>
-        )}
+        {current.action_url && (() => {
+          const { internalPath, externalUrl } = normalizeAnnouncementRoute(current.action_url);
+          if (internalPath) {
+            return (
+              <div className="px-6 sm:px-8 pb-3 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleNext();
+                    navigate(internalPath);
+                  }}
+                  className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-2xl bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#061714] font-black tracking-wide text-[12px] uppercase shadow-lg shadow-teal-600/20 transition-all group cursor-pointer"
+                >
+                  <ExternalLink size={16} className="group-hover:scale-110 transition-transform" />
+                  <span>{t('portal:open_link', 'Buka Pautan')}</span>
+                </button>
+              </div>
+            );
+          }
+          return (
+            <div className="px-6 sm:px-8 pb-3 shrink-0">
+              <a
+                href={externalUrl || '#'}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center justify-center gap-2 w-full px-5 py-3.5 rounded-2xl bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#061714] font-black tracking-wide text-[12px] uppercase shadow-lg shadow-teal-600/20 transition-all group"
+              >
+                <ExternalLink size={16} className="group-hover:scale-110 transition-transform" />
+                <span>{t('portal:open_link', 'Buka Pautan')}</span>
+              </a>
+            </div>
+          );
+        })()}
 
         {/* Scrollable content area — image included */}
         <div className="flex-1 overflow-y-auto">
           {/* Image inside scroll so it doesn't steal fixed space */}
           {current.image_url && (
-            <div className="w-full relative overflow-hidden bg-black flex items-center justify-center group mb-4">
-              <img src={current.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20  scale-125" />
+            <div className="w-full relative overflow-hidden bg-black/5 dark:bg-black flex items-center justify-center group mb-4">
+              <img src={current.image_url} alt="" className="absolute inset-0 w-full h-full object-cover opacity-20 scale-125" />
               <img src={current.image_url} alt="Poster" className="relative w-full max-h-[35vh] object-contain cursor-zoom-in" onClick={() => setFullScreenImage(current.image_url)} />
-              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0a0a0f] pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-white dark:to-[#0B2420] pointer-events-none" />
               <button
                 onClick={(e) => { e.stopPropagation(); setFullScreenImage(current.image_url); }}
-                className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/40  border border-white/10 text-white/80 hover:text-white hover:bg-white/10 text-[9px] font-bold tracking-widest uppercase flex items-center gap-1.5 transition-all z-20"
+                className="absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1.5 rounded-full bg-black/55 border border-white/15 text-white hover:bg-black/75 text-[10px] font-bold tracking-widest uppercase flex items-center gap-1.5 transition-all z-20"
               >
                 <Maximize2 size={12} />
                 {t('portal:view_fullscreen', 'Papar Skrin Penuh')}
@@ -293,7 +382,7 @@ export function GlobalAnnouncementModal() {
           )}
 
           <div className="px-6 sm:px-8 pb-6 space-y-4">
-            <div className="text-white/60 text-[13px] leading-relaxed text-center font-medium whitespace-pre-wrap">
+            <div className="text-[#3B635C] dark:text-[#99CBC2] text-[13px] leading-relaxed text-center font-medium whitespace-pre-wrap">
               {current.content_body}
             </div>
 
@@ -310,14 +399,14 @@ export function GlobalAnnouncementModal() {
             <>
               <Button
                 disabled={submitting}
-                className={`w-full h-12 rounded-full font-black tracking-wider text-[11px] uppercase shadow-[0_0_40px_-10px_rgba(0,0,0,0.3)] ${isHigh ? 'bg-rose-600 hover:bg-rose-500 text-white' : 'bg-primary hover:bg-primary/90 text-white'}`}
+                className={`w-full h-12 rounded-full font-black tracking-wider text-[11px] uppercase shadow-sm ${isHigh ? 'bg-rose-600 hover:bg-rose-500 text-white' : 'bg-[#0F766E] hover:bg-[#0D9488] text-white'}`}
                 onClick={handleSubmit}
               >
                 <CheckCircle2 className="w-4 h-4 mr-2" />
                 {submitting ? 'Memproses...' : t('portal:submit_info', 'Hantar Maklumat')}
               </Button>
               {!isHigh && (
-                <Button variant="ghost" className="w-full h-12 rounded-full font-bold tracking-wider text-[11px] uppercase border border-white/10 text-white/70 hover:text-white hover:bg-white/5" onClick={() => handleNext()}>
+                <Button variant="ghost" className="w-full h-12 rounded-full font-bold tracking-wider text-[11px] uppercase border border-[#B8E4DC] dark:border-white/10 text-[#3B635C] dark:text-white/70 hover:text-[#0B2420] dark:hover:text-white hover:bg-[#EBF7F4] dark:hover:bg-white/5" onClick={() => handleNext()}>
                   Langkau Seterusnya
                 </Button>
               )}
@@ -325,14 +414,14 @@ export function GlobalAnnouncementModal() {
           ) : isHigh ? (
             <Button
               disabled={submitting}
-              className="w-full h-12 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-black tracking-wider text-[11px] uppercase shadow-[0_0_40px_-5px_rgba(225,29,72,0.3)]"
+              className="w-full h-12 rounded-full bg-rose-600 hover:bg-rose-500 text-white font-black tracking-wider text-[11px] uppercase shadow-sm"
               onClick={handleSubmit}
             >
               <CheckCircle2 className="w-4 h-4 mr-2" />
               {t('portal:i_understand', 'Saya Faham')}
             </Button>
           ) : (
-            <Button className="w-full h-12 rounded-full border border-white/10 bg-white/5 hover:bg-white/10 text-white/80 font-bold tracking-wider text-[11px] uppercase transition-colors" onClick={() => handleNext()}>
+            <Button className="w-full h-12 rounded-full border border-[#B8E4DC] dark:border-white/10 bg-[#F6FBF9] dark:bg-white/5 hover:bg-[#EBF7F4] dark:hover:bg-white/10 text-[#0B2420] dark:text-white/85 font-bold tracking-wider text-[11px] uppercase transition-colors" onClick={() => handleNext()}>
               {currentIdx < announcements.length - 1 ? 'Seterusnya' : t('portal:close_notice', 'Tutup Makluman')}
             </Button>
           )}
@@ -340,7 +429,7 @@ export function GlobalAnnouncementModal() {
           {current.priority === 'EASY' && (
             <button
               onClick={() => handleDismiss(true)}
-              className="flex items-center justify-center gap-1.5 w-full text-[11px] font-bold text-rose-400 uppercase tracking-widest mt-2 py-2 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 hover:text-rose-300 transition-colors text-center"
+              className="flex items-center justify-center gap-1.5 w-full text-[11px] font-bold text-rose-600 dark:text-rose-400 uppercase tracking-widest mt-2 py-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 transition-colors text-center"
             >
               <ShieldAlert size={13} className="shrink-0" />
               {t('portal:dont_show_again', 'Jangan Tunjuk Notis Ini Lagi')}

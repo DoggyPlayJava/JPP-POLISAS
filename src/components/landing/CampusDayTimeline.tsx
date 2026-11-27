@@ -35,7 +35,7 @@ export const CAMPUS_DAY_PHASES: DayPhase[] = [
       'Navigasi terus ke pintu dewan dan makmal di PolyMaps',
       'Paparan waktu rehat & waktu solat teratur',
     ],
-    tagColor: '#6B7F5B',
+    tagColor: '#0D9488',
     metric: {
       value: '1,080+',
       label: 'Jadual Siswa Aktif',
@@ -59,7 +59,7 @@ export const CAMPUS_DAY_PHASES: DayPhase[] = [
       'Pengesahan resit dan kod pesanan digital automatik',
       'Sokongan keusahawanan siswa & kelab POLISAS',
     ],
-    tagColor: '#C96F4F',
+    tagColor: '#0F766E',
     metric: {
       value: '340+',
       label: 'Pesanan Selesai Kampus',
@@ -83,7 +83,7 @@ export const CAMPUS_DAY_PHASES: DayPhase[] = [
       'Pengurusan juri pertandingan & penilaian berpusat EMS',
       'Pemberian markah merit kokurikulum MakMP secara automatik',
     ],
-    tagColor: '#2E3A2F',
+    tagColor: '#0B2420',
     metric: {
       value: '21',
       label: 'Kelab Rasmi Beroperasi',
@@ -107,7 +107,7 @@ export const CAMPUS_DAY_PHASES: DayPhase[] = [
       'Radar prihatin Food Bank untuk siswa yang memerlukan',
       'Bimbingan pintar Nexus AI untuk bantuan soalan lazim kebajikan',
     ],
-    tagColor: '#6B7F5B',
+    tagColor: '#0D9488',
     metric: {
       value: '100%',
       label: 'Tindakan Responsif JPP',
@@ -148,30 +148,30 @@ const LightboxModal: React.FC<LightboxModalProps> = ({ src, alt, title, onClose 
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.96, opacity: 0 }}
         onClick={(e) => e.stopPropagation()}
-        className="relative max-w-5xl w-full max-h-[92vh] bg-[#2E3A2F] rounded-2xl sm:rounded-3xl border border-[#D9C9B2]/30 shadow-2xl overflow-hidden flex flex-col"
+        className="relative max-w-5xl w-full max-h-[85dvh] bg-[#0B2420] rounded-2xl sm:rounded-3xl border border-[#B8E4DC]/30 shadow-2xl overflow-hidden flex flex-col"
       >
-        <div className="px-4 sm:px-6 py-3.5 bg-[#232C24] border-b border-[#D9C9B2]/20 flex items-center justify-between text-white flex-shrink-0">
+        <div className="px-4 sm:px-6 py-3.5 bg-[#081C18] border-b border-[#B8E4DC]/20 flex items-center justify-between text-white flex-shrink-0">
           <div className="flex items-center gap-2.5 min-w-0 pr-4">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#C96F4F] flex-shrink-0" />
-            <span className="text-xs sm:text-sm font-bold text-[#F8F6EE] truncate">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#2DD4BF] flex-shrink-0" />
+            <span className="text-xs sm:text-sm font-bold text-[#F6FBF9] truncate">
               {title}
             </span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-[#F8F6EE] transition-colors cursor-pointer flex-shrink-0"
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-[#F6FBF9] transition-colors cursor-pointer flex-shrink-0"
             aria-label={t('portal:timeline_close_preview', 'Tutup Pratonton')}
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="p-3 sm:p-6 overflow-auto flex items-center justify-center bg-[#1A221B]/95 max-h-[calc(92vh-56px)]">
+        <div className="p-3 sm:p-6 overflow-auto flex items-center justify-center bg-[#061714]/95 max-h-[calc(85dvh-56px)]">
           <img
             src={src}
             alt={alt}
-            className="max-w-full max-h-[78vh] w-auto h-auto object-contain rounded-xl shadow-2xl border border-[#D9C9B2]/20"
+            className="max-w-full max-h-[75dvh] w-auto h-auto object-contain rounded-xl shadow-2xl border border-[#B8E4DC]/20"
           />
         </div>
       </motion.div>
@@ -211,7 +211,7 @@ const StoryCard: React.FC<StoryCardProps> = ({
     <div id={phase.id} className="relative scroll-mt-28">
       {/* ── MOBILE TRACKER CONNECTOR & GLOWING DOT ── */}
       {/* Horizontal connector line linking Mobile Spine (left: 24px) to Card left (64px) */}
-      <div className="lg:hidden absolute top-8 -left-10 w-10 h-0.5 bg-[#D9C9B2]/80 z-10" />
+      <div className="lg:hidden absolute top-8 -left-10 w-10 h-0.5 bg-[#B8E4DC]/80 z-10" />
 
       {/* Mobile Glowing Tracker Dot sitting EXACTLY on spine (at -40px from card left = 24px container left) */}
       <div className="lg:hidden absolute top-8 -left-10 -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center">
@@ -249,7 +249,7 @@ const StoryCard: React.FC<StoryCardProps> = ({
       {/* Left Card: horizontal connector line to spine center (-right-10 = 40px width) */}
       {position === 'left' && (
         <>
-          <div className="hidden lg:block absolute top-12 -right-10 w-10 h-0.5 bg-[#D9C9B2]/80 z-10" />
+          <div className="hidden lg:block absolute top-12 -right-10 w-10 h-0.5 bg-[#B8E4DC]/80 z-10" />
           <div className="hidden lg:flex absolute top-12 -right-10 translate-x-1/2 -translate-y-1/2 z-20 items-center justify-center">
             <motion.div
               initial={{ scale: 0.75, opacity: 0.5 }}
@@ -283,7 +283,7 @@ const StoryCard: React.FC<StoryCardProps> = ({
       {/* Right Card: horizontal connector line to spine center (-left-10 = 40px width) */}
       {position === 'right' && (
         <>
-          <div className="hidden lg:block absolute top-12 -left-10 w-10 h-0.5 bg-[#D9C9B2]/80 z-10" />
+          <div className="hidden lg:block absolute top-12 -left-10 w-10 h-0.5 bg-[#B8E4DC]/80 z-10" />
           <div className="hidden lg:flex absolute top-12 -left-10 -translate-x-1/2 -translate-y-1/2 z-20 items-center justify-center">
             <motion.div
               initial={{ scale: 0.75, opacity: 0.5 }}
@@ -320,7 +320,7 @@ const StoryCard: React.FC<StoryCardProps> = ({
         animate={typeof window === 'undefined' ? { opacity: 1, x: 0, y: 0 } : undefined}
         {...(typeof window !== 'undefined' ? { whileInView: { opacity: 1, x: 0, y: 0 }, viewport: { once: true, margin: "-60px" } } : {})}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="rounded-3xl p-6 md:p-8 bg-white border border-[#D9C9B2] shadow-[0_10px_35px_rgba(46,58,47,0.06)] relative overflow-hidden transition-all duration-300 hover:shadow-[0_20px_50px_rgba(46,58,47,0.12)] group"
+        className="rounded-3xl p-6 md:p-8 bg-white border border-[#B8E4DC] shadow-[0_10px_35px_rgba(11,36,32,0.06)] relative overflow-hidden transition-all duration-300 hover:shadow-[0_20px_50px_rgba(11,36,32,0.12)] group"
       >
         {/* Organic colored background halo */}
         <div
@@ -359,15 +359,15 @@ const StoryCard: React.FC<StoryCardProps> = ({
 
         {/* Title & Copy */}
         <div className="mb-3 relative z-10">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#6B7F5B] mb-1">
+          <div className="text-[11px] font-bold uppercase tracking-wider text-[#0D9488] mb-1">
             {phase.subtitle}
           </div>
-          <h4 className="text-2xl sm:text-3xl font-black text-[#2E3A2F] tracking-tight leading-snug">
+          <h4 className="text-2xl sm:text-3xl font-black text-[#0B2420] tracking-tight leading-snug">
             {phase.title}
           </h4>
         </div>
 
-        <p className="text-xs sm:text-sm text-[#556453] font-medium leading-relaxed mb-5 relative z-10">
+        <p className="text-xs sm:text-sm text-[#3B635C] font-medium leading-relaxed mb-5 relative z-10">
           {phase.description}
         </p>
 
@@ -379,7 +379,7 @@ const StoryCard: React.FC<StoryCardProps> = ({
                 className="w-4 h-4 flex-shrink-0 mt-0.5"
                 style={{ color: accentColor }}
               />
-              <span className="text-xs sm:text-sm font-semibold text-[#2E3A2F]">
+              <span className="text-xs sm:text-sm font-semibold text-[#0B2420]">
                 {highlight}
               </span>
             </div>
@@ -388,28 +388,28 @@ const StoryCard: React.FC<StoryCardProps> = ({
 
         {/* Metric Pill */}
         {phase.metric && (
-          <div className="p-3.5 rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2] inline-flex items-center gap-3.5 mb-6 shadow-2xs relative z-10">
-            <div className="text-2xl font-black text-[#2E3A2F] font-mono tabular-nums leading-none">
+          <div className="p-3.5 rounded-2xl bg-[#F6FBF9] border border-[#B8E4DC] inline-flex items-center gap-3.5 mb-6 shadow-2xs relative z-10">
+            <div className="text-2xl font-black text-[#0B2420] font-mono tabular-nums leading-none">
               {phase.metric.value}
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] leading-tight">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[#0D9488] leading-tight">
               {phase.metric.label}
             </div>
           </div>
         )}
 
         {/* Screenshot Header Controls: Perspective Switcher & Zoom */}
-        <div className="pt-2 border-t border-[#D9C9B2]/50 relative z-10">
+        <div className="pt-2 border-t border-[#B8E4DC]/50 relative z-10">
           <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#F8F6EE] border border-[#D9C9B2]">
+            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#F6FBF9] border border-[#B8E4DC]">
               <button
                 type="button"
                 onClick={() => setActiveView('primary')}
                 className={cn(
                   "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5",
                   activeView === 'primary'
-                    ? "bg-[#2E3A2F] text-[#F8F6EE] shadow-2xs"
-                    : "text-[#556453] hover:text-[#2E3A2F]"
+                    ? "bg-[#0B2420] text-[#F6FBF9] shadow-2xs"
+                    : "text-[#3B635C] hover:text-[#0B2420]"
                 )}
               >
                 {isPhoneScreenshot(primaryImg) ? (
@@ -427,8 +427,8 @@ const StoryCard: React.FC<StoryCardProps> = ({
                   className={cn(
                     "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1.5",
                     activeView === 'secondary'
-                      ? "bg-[#C96F4F] text-white shadow-2xs"
-                      : "text-[#556453] hover:text-[#2E3A2F]"
+                      ? "bg-[#0F766E] text-white shadow-2xs"
+                      : "text-[#3B635C] hover:text-[#0B2420]"
                   )}
                 >
                   {isPhoneScreenshot(secondaryImg) ? (
@@ -450,7 +450,7 @@ const StoryCard: React.FC<StoryCardProps> = ({
                   title: `${phase.title} • ${activeView === 'primary' ? t('portal:timeline_view_primary', 'Paparan Utama') : (phase.secondaryLabel || t('portal:timeline_view_secondary', 'Pratonton'))}`,
                 })
               }
-              className="inline-flex items-center gap-1 text-[10px] font-bold text-[#6B7F5B] hover:text-[#2E3A2F] cursor-pointer transition-colors px-2 py-1 rounded-lg hover:bg-[#F8F6EE]"
+              className="inline-flex items-center gap-1 text-[10px] font-bold text-[#0D9488] hover:text-[#0B2420] cursor-pointer transition-colors px-2 py-1 rounded-lg hover:bg-[#F6FBF9]"
             >
               <Maximize2 className="w-3 h-3" />
               <span className="hidden sm:inline">{t('portal:timeline_zoom_fullscreen', 'Zum Skrin Penuh')}</span>
@@ -461,7 +461,7 @@ const StoryCard: React.FC<StoryCardProps> = ({
           {activeIsPhone ? (
             /* ── SMARTPHONE FRAME (Native Mobile Scale, Un-squished) ── */
             <div className="relative w-full max-w-[270px] sm:max-w-xs mx-auto py-3">
-              <div className="bg-[#1F2720] p-2.5 sm:p-3 rounded-[2.5rem] shadow-xl border border-[#D9C9B2]/60">
+              <div className="bg-[#061714] p-2.5 sm:p-3 rounded-[2.5rem] shadow-xl border border-[#B8E4DC]/60">
                 <div
                   className="relative aspect-[9/18] bg-black rounded-[2rem] overflow-hidden group/img cursor-pointer"
                   onClick={() =>
@@ -492,9 +492,9 @@ const StoryCard: React.FC<StoryCardProps> = ({
                   onClick={() => setActiveView(activeView === 'primary' ? 'secondary' : 'primary')}
                   className="absolute -bottom-2 -right-3 w-32 sm:w-36 rounded-xl overflow-hidden border-2 border-white shadow-xl bg-white cursor-pointer hover:scale-105 transition-transform group/float z-10"
                 >
-                  <div className="px-2 py-0.5 bg-[#2E3A2F] text-[8px] font-bold text-[#D9C9B2] flex items-center justify-between">
+                  <div className="px-2 py-0.5 bg-[#0B2420] text-[10px] font-semibold text-[#B8E4DC] flex items-center justify-between gap-1">
                     <span className="truncate">{activeView === 'primary' ? (phase.secondaryLabel || t('portal:timeline_view_secondary', 'Katalog')) : t('portal:timeline_view_primary', 'Paparan Utama')}</span>
-                    <span className="text-[#C96F4F] group-hover/float:underline text-[7px]">{t('portal:timeline_switch', 'Tukar')}</span>
+                    <span className="text-[#2DD4BF] group-hover/float:underline text-[10px] shrink-0">{t('portal:timeline_switch', 'Tukar')}</span>
                   </div>
                   <img
                     src={companionImg}
@@ -507,15 +507,15 @@ const StoryCard: React.FC<StoryCardProps> = ({
           ) : (
             /* ── LAPTOP BROWSER FRAME (Crisp 16:10 Desktop Proportions) ── */
             <div className="relative w-full">
-              <div className="w-full bg-[#2E3A2F] rounded-t-2xl pt-2 px-2 shadow-lg border border-[#2E3A2F]">
+              <div className="w-full bg-[#0B2420] rounded-t-2xl pt-2 px-2 shadow-lg border border-[#0B2420]">
                 {/* Top Browser Bar */}
-                <div className="bg-[#232C24] rounded-t-xl px-3 py-1.5 flex items-center justify-between">
+                <div className="bg-[#081C18] rounded-t-xl px-3 py-1.5 flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-2 h-2 rounded-full bg-[#C96F4F]" />
-                    <div className="w-2 h-2 rounded-full bg-[#D9C9B2]" />
-                    <div className="w-2 h-2 rounded-full bg-[#6B7F5B]" />
+                    <div className="w-2 h-2 rounded-full bg-[#2DD4BF]" />
+                    <div className="w-2 h-2 rounded-full bg-[#B8E4DC]" />
+                    <div className="w-2 h-2 rounded-full bg-[#0D9488]" />
                   </div>
-                  <span className="text-[9px] sm:text-[10px] font-mono text-[#D9C9B2] truncate max-w-[200px] sm:max-w-xs">
+                  <span className="text-[9px] sm:text-[10px] font-mono text-[#B8E4DC] truncate max-w-[200px] sm:max-w-xs">
                     jpp-polisas.edu.my • {phase.badge}
                   </span>
                   <div className="w-4" />
@@ -523,7 +523,7 @@ const StoryCard: React.FC<StoryCardProps> = ({
 
                 {/* Screenshot Container */}
                 <div
-                  className="relative aspect-[16/10] bg-[#F8F6EE] rounded-b-lg overflow-hidden border border-[#232C24] group/img cursor-pointer"
+                  className="relative aspect-[16/10] bg-[#F6FBF9] rounded-b-lg overflow-hidden border border-[#081C18] group/img cursor-pointer"
                   onClick={() =>
                     onOpenLightbox({
                       src: currentImg,
@@ -546,8 +546,8 @@ const StoryCard: React.FC<StoryCardProps> = ({
                 </div>
 
                 {/* Laptop Base */}
-                <div className="h-2 bg-[#1F2720] rounded-b-lg flex items-center justify-center">
-                  <div className="w-12 h-0.5 bg-[#2E3A2F] rounded-full" />
+                <div className="h-2 bg-[#061714] rounded-b-lg flex items-center justify-center">
+                  <div className="w-12 h-0.5 bg-[#0B2420] rounded-full" />
                 </div>
               </div>
 
@@ -570,13 +570,13 @@ const StoryCard: React.FC<StoryCardProps> = ({
                     phase.id === 'morning' ? "w-28 sm:w-36" : "w-32 sm:w-44"
                   )}
                 >
-                  <div className="px-2 py-0.5 bg-[#2E3A2F] text-[8px] font-bold text-[#D9C9B2] flex items-center justify-between">
+                  <div className="px-2 py-0.5 bg-[#0B2420] text-[8px] font-bold text-[#B8E4DC] flex items-center justify-between">
                     <span className="truncate">{phase.secondaryLabel || t('portal:timeline_view_secondary', 'Pratonton')}</span>
-                    <span className="text-[#C96F4F] group-hover/float:underline text-[7px] ml-1">
+                    <span className="text-[#2DD4BF] group-hover/float:underline text-[7px] ml-1">
                       {isPhoneScreenshot(secondaryImg) ? t('portal:timeline_zoom', 'Zum') : t('portal:timeline_switch', 'Tukar')}
                     </span>
                   </div>
-                  <div className="overflow-hidden max-h-36 sm:max-h-44 bg-[#1F2720]">
+                  <div className="overflow-hidden max-h-36 sm:max-h-44 bg-[#061714]">
                     <img
                       src={secondaryImg}
                       alt={phase.secondaryLabel || 'Secondary Preview'}
@@ -679,28 +679,28 @@ export const CampusDayTimeline: React.FC = () => {
   }, [t]);
 
   return (
-    <section id="hari-kampus" className="py-24 md:py-32 px-4 md:px-6 bg-[#F8F6EE] relative z-20 overflow-hidden">
+    <section id="hari-kampus" className="py-24 md:py-32 px-4 md:px-6 bg-[#F6FBF9] relative z-20 overflow-hidden">
       {/* Decorative Organic Ambient Halos */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#6B7F5B]/5 rounded-full blur-xl pointer-events-none" />
-      <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#C96F4F]/5 rounded-full blur-xl pointer-events-none" />
+      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[#0D9488]/5 rounded-full blur-xl pointer-events-none" />
+      <div className="absolute bottom-1/4 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-[#14B8A6]/5 rounded-full blur-xl pointer-events-none" />
 
       <div className="max-w-7xl mx-auto relative">
         {/* Section Header (The OpenLearning Signature Style) */}
         <div className="text-center max-w-3xl mx-auto mb-14 md:mb-20">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#D9C9B2] shadow-2xs mb-4">
-            <Sparkles className="w-3.5 h-3.5 text-[#C96F4F]" />
-            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[#2E3A2F]">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-[#B8E4DC] shadow-2xs mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-[#0F766E]" />
+            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[#0B2420]">
               {t('portal:landing_timeline_badge', 'PENGALAMAN EKOSISTEM MAHASISWA')}
             </span>
           </div>
 
-          <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-[#2E3A2F] tracking-tight mb-4 leading-[1.05]">
+          <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-[#0B2420] tracking-tight mb-4 leading-[1.05]">
             {t('portal:landing_timeline_exp_title', 'The POLISAS Experience:')}
-            <span className="block text-2xl sm:text-4xl md:text-5xl font-extrabold text-[#6B7F5B] mt-1.5">
+            <span className="block text-2xl sm:text-4xl md:text-5xl font-extrabold text-[#0D9488] mt-1.5">
               {t('portal:landing_timeline_title', 'Sehari Bersama Ekosistem POLISAS')}
             </span>
           </h2>
-          <p className="text-sm md:text-base text-[#556453] font-medium leading-relaxed max-w-2xl mx-auto">
+          <p className="text-sm md:text-base text-[#3B635C] font-medium leading-relaxed max-w-2xl mx-auto">
             {t(
               'portal:landing_timeline_subtitle',
               'Satu ruang pintar di mana teknologi moden dan kehidupan kampus berpadu untuk memacu kecemerlangan mahasiswa'
@@ -711,14 +711,14 @@ export const CampusDayTimeline: React.FC = () => {
         {/* ── TIMELINE SPINE & ALTERNATING CARDS GRID ── */}
         <div className="relative">
           {/* Desktop Central Spine Line (runs through the exact middle of the 2-column grid) */}
-          <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 top-4 bottom-8 w-0.5 bg-gradient-to-b from-[#6B7F5B]/30 via-[#C96F4F]/40 to-[#2E3A2F]/30 pointer-events-none z-10" />
+          <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 top-4 bottom-8 w-0.5 bg-gradient-to-b from-[#0D9488]/30 via-[#14B8A6]/40 to-[#0B2420]/30 pointer-events-none z-10" />
 
           {/* Mobile Left Spine Line (docked at left-6 = 24px) */}
-          <div className="lg:hidden absolute left-6 top-4 bottom-8 w-0.5 bg-gradient-to-b from-[#6B7F5B]/30 via-[#C96F4F]/40 to-[#2E3A2F]/30 pointer-events-none z-10" />
+          <div className="lg:hidden absolute left-6 top-4 bottom-8 w-0.5 bg-gradient-to-b from-[#0D9488]/30 via-[#14B8A6]/40 to-[#0B2420]/30 pointer-events-none z-10" />
 
           {/* Desktop Center Spine Node "&" Badge (OpenLearning Signature connecting element) */}
           <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 top-5 z-20 items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-[#6B7F5B] text-white font-serif font-black text-2xl flex items-center justify-center shadow-md border-2 border-white ring-4 ring-[#F8F6EE]">
+            <div className="w-12 h-12 rounded-full bg-[#0D9488] text-white font-serif font-black text-2xl flex items-center justify-center shadow-md border-2 border-white ring-4 ring-[#F6FBF9]">
               &
             </div>
           </div>
@@ -733,14 +733,14 @@ export const CampusDayTimeline: React.FC = () => {
               transition={{ duration: 0.5 }}
               className="pl-16 lg:pl-0"
             >
-              <div className="inline-flex items-center gap-2 text-xs font-bold font-mono tracking-widest text-[#6B7F5B] uppercase mb-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#6B7F5B]" />
+              <div className="inline-flex items-center gap-2 text-xs font-bold font-mono tracking-widest text-[#0D9488] uppercase mb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#0D9488]" />
                 {t('portal:landing_phase_01_tag', 'Fasa 01 • Pembelajaran & Kemudahan')}
               </div>
-              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#2E3A2F] tracking-tight">
+              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0B2420] tracking-tight">
                 {t('portal:landing_phase_01_title', 'Pintar & Berdaya')}
               </h3>
-              <p className="text-xs sm:text-sm text-[#556453] mt-2 font-medium max-w-md">
+              <p className="text-xs sm:text-sm text-[#3B635C] mt-2 font-medium max-w-md">
                 {t(
                   'portal:landing_phase_01_desc',
                   'Pendedahan akademik pintar & keusahawanan kampus di hujung jari bermula awal pagi.'
@@ -758,20 +758,20 @@ export const CampusDayTimeline: React.FC = () => {
             >
               {/* Mobile '&' separator node */}
               <div className="lg:hidden flex items-center gap-3 py-4 -ml-16 pl-2">
-                <div className="w-10 h-10 rounded-full bg-[#6B7F5B] text-white font-serif font-black text-xl flex items-center justify-center shadow-md border-2 border-white ring-2 ring-[#F8F6EE] z-20 flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#0F766E] text-white font-serif font-black text-xl flex items-center justify-center shadow-md border-2 border-white ring-2 ring-[#F6FBF9] z-20 flex-shrink-0">
                   &
                 </div>
-                <div className="h-px bg-[#D9C9B2] flex-1" />
+                <div className="h-px bg-[#B8E4DC] flex-1" />
               </div>
 
-              <div className="inline-flex items-center gap-2 text-xs font-bold font-mono tracking-widest text-[#C96F4F] uppercase mb-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#C96F4F]" />
+              <div className="inline-flex items-center gap-2 text-xs font-bold font-mono tracking-widest text-[#0F766E] uppercase mb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#0F766E]" />
                 {t('portal:landing_phase_02_tag', 'Fasa 02 • Kepimpinan & Kebajikan')}
               </div>
-              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#2E3A2F] tracking-tight">
+              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0B2420] tracking-tight">
                 {t('portal:landing_phase_02_title', 'Terhubung & Prihatin')}
               </h3>
-              <p className="text-xs sm:text-sm text-[#556453] mt-2 font-medium max-w-md">
+              <p className="text-xs sm:text-sm text-[#3B635C] mt-2 font-medium max-w-md">
                 {t(
                   'portal:landing_phase_02_desc',
                   'Tadbir urus 21 kelab & EMS berpusat disokong rangkaian keselamatan kebajikan 24/7.'
@@ -789,7 +789,7 @@ export const CampusDayTimeline: React.FC = () => {
                 phase={localizedPhases[0]}
                 position="left"
                 icon={Compass}
-                accentColor="#6B7F5B"
+                accentColor="#0D9488"
                 onOpenLightbox={setLightboxImage}
               />
 
@@ -798,7 +798,7 @@ export const CampusDayTimeline: React.FC = () => {
                 phase={localizedPhases[1]}
                 position="left"
                 icon={ShoppingBag}
-                accentColor="#C96F4F"
+                accentColor="#0F766E"
                 onOpenLightbox={setLightboxImage}
               />
             </div>
@@ -810,7 +810,7 @@ export const CampusDayTimeline: React.FC = () => {
                 phase={localizedPhases[2]}
                 position="right"
                 icon={Shield}
-                accentColor="#2E3A2F"
+                accentColor="#0B2420"
                 onOpenLightbox={setLightboxImage}
               />
 
@@ -819,7 +819,7 @@ export const CampusDayTimeline: React.FC = () => {
                 phase={localizedPhases[3]}
                 position="right"
                 icon={HeartHandshake}
-                accentColor="#6B7F5B"
+                accentColor="#0D9488"
                 onOpenLightbox={setLightboxImage}
               />
             </div>

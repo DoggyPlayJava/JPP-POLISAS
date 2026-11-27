@@ -22,7 +22,7 @@ import { useTour } from '@/hooks/useTour';
 
 
 
-const THEME = '#818CF8';
+const THEME = '#0D9488';
 
 export function AkademikLayout() {
   const { t } = useTranslation(['akademik', 'nav', 'common']);
@@ -92,7 +92,7 @@ export function AkademikLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white font-sans overflow-x-hidden transition-colors duration-200">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] font-sans overflow-x-hidden transition-colors duration-200">
       <SystemTour
         run={runTour}
         onClose={closeTour}
@@ -141,13 +141,13 @@ export function AkademikLayout() {
       </div>
 
       {/* ── Main ── */}
-      <div className="relative z-10 md:ml-64 flex flex-col min-h-screen">
+      <div className="relative z-10 md:ml-64 flex flex-col min-h-[100dvh]">
 
         {/* Top Bar */}
-        <header className="sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-slate-200/80 dark:border-white/[0.06] bg-white/80 dark:bg-slate-950/80 ">
+        <header className="sticky top-0 z-30 flex items-center gap-3 px-4 md:px-6 py-3.5 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420]">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="tour-mobile-hamburger md:hidden p-2 rounded-xl text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-all"
+            className="tour-mobile-hamburger md:hidden p-2 rounded-xl text-[#3B635C] dark:text-white/50 hover:text-[#0B2420] dark:hover:text-white hover:bg-[#EBF7F4] dark:hover:bg-white/[0.06] transition-all"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -159,7 +159,7 @@ export function AkademikLayout() {
             >
               <GraduationCap className="w-3.5 h-3.5" />
             </div>
-            <span className="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-white/30">
+            <span className="text-xs font-black uppercase tracking-widest text-[#3B635C] dark:text-[#99CBC2]">
               e-Akademik
             </span>
           </div>
@@ -198,7 +198,7 @@ export function AkademikLayout() {
         <FloatingAiChat />
 
         {/* QR Code FAB — untuk Exco Akademik jana QR */}
-        <QrCodeFab unitLinks={akademikUnitLinks} accentColor="#818CF8" />
+        <QrCodeFab unitLinks={akademikUnitLinks} accentColor="#0D9488" />
         <div className="tour-akademik-mobile-nav">
           <BottomNav onOpenSidebar={() => setSidebarOpen(true)} />
         </div>
@@ -216,12 +216,12 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
   const initials = displayName.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase();
 
   return (
-    <div className="w-full flex flex-col h-full bg-white/95 dark:bg-slate-900/95  border-r border-slate-200/80 dark:border-white/[0.06] overflow-hidden">
+    <div className="w-full flex flex-col h-full bg-gradient-to-b from-[#0B2420] to-[#061714] border-r border-teal-400/15 text-[#F6FBF9] overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col border-b border-slate-200/80 dark:border-white/[0.06]">
+      <div className="flex flex-col border-b border-white/10">
         <button
           onClick={() => navigate('/portal')}
-          className="flex items-center gap-2 px-5 pt-4 pb-2 transition-all duration-200 group text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/75 w-max"
+          className="flex items-center gap-2 px-5 pt-4 pb-2 transition-all duration-200 group text-[#99CBC2] hover:text-white w-max"
         >
           <ArrowLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
           <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
@@ -235,13 +235,13 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
               <GraduationCap className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-sm font-black text-slate-900 dark:text-white">e-Akademik</p>
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30">{t('akademik:exco_academic', 'Exco Akademik')}</p>
+              <p className="text-sm font-black text-white">e-Akademik</p>
+              <p className="text-[9px] font-black uppercase tracking-widest text-[#99CBC2]/80">{t('akademik:exco_academic', 'Exco Akademik')}</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="md:hidden p-1.5 rounded-xl text-slate-400 dark:text-white/30 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/[0.06] transition-all"
+            className="md:hidden p-1.5 rounded-xl text-[#99CBC2] hover:text-white hover:bg-white/10 transition-all"
           >
             <X className="w-4 h-4" />
           </button>
@@ -250,7 +250,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
 
       {/* Nav */}
       <nav className="tour-akademik-sidebar flex-1 px-3 py-4 space-y-1 overflow-y-auto">
-        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/20 px-3 mb-3">{t('nav:navigation', 'Navigasi')}</p>
+        <p className="text-[8px] font-black uppercase tracking-[0.3em] text-white/30 px-3 mb-3">{t('nav:navigation', 'Navigasi')}</p>
         {[
           { path: '/akademik',            label: t('nav:dashboard', 'Dashboard'), icon: LayoutDashboard },
           { path: '/akademik/pencapaian', label: t('akademik:nav_achievements', 'Pencapaian'), icon: Trophy },
@@ -270,8 +270,8 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl text-left transition-all duration-200 group',
                 active
-                  ? 'bg-slate-100 dark:bg-white/[0.08] text-slate-900 dark:text-white'
-                  : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70 hover:bg-slate-50 dark:hover:bg-white/[0.04]'
+                  ? 'bg-teal-500/20 text-white border border-teal-400/25'
+                  : 'text-[#99CBC2] hover:text-white hover:bg-white/[0.06]'
               )}
             >
               <div
@@ -295,28 +295,28 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
         <div className="px-3 py-2 mt-auto pb-4">
           <button
             onClick={() => { navigate('/jpp'); onClose(); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group bg-amber-500/10 text-amber-700 dark:text-amber-300 hover:bg-amber-500/20 border border-amber-500/20"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/25"
           >
             <div className="w-7 h-7 rounded-lg bg-amber-500/30 flex items-center justify-center shadow-lg group-hover:scale-105 transition-transform">
-              <Crown className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+              <Crown className="w-3.5 h-3.5 text-amber-400" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-600 dark:text-amber-400 text-left">{t('nav:global_jpp_dashboard', 'Global JPP Dashboard')}</span>
+            <span className="text-[10px] font-black uppercase tracking-widest leading-tight text-amber-300 text-left">{t('nav:global_jpp_dashboard', 'Global JPP Dashboard')}</span>
           </button>
         </div>
       )}
 
       {/* Footer */}
-      <div className="p-4 border-t border-slate-200/80 dark:border-white/[0.06] text-slate-800 dark:text-white space-y-3 shrink-0">
+      <div className="p-4 border-t border-white/10 text-white space-y-3 shrink-0">
         <div className="flex items-center gap-3 px-2 py-2">
-          <Avatar className="h-8 w-8 rounded-xl ring-2 ring-slate-200 dark:ring-white/10 shadow-md">
+          <Avatar className="h-8 w-8 rounded-xl ring-2 ring-white/15 shadow-md">
             <AvatarImage src={profile?.avatar_url || ''} className="object-cover" />
-            <AvatarFallback className="font-black text-xs" style={{ background: THEME, color: '#0f172a' }}>
+            <AvatarFallback className="font-black text-xs" style={{ background: THEME, color: '#061714' }}>
               {initials}
             </AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0 flex flex-col justify-center">
-            <p className="text-xs font-black truncate leading-tight text-slate-900 dark:text-white/85">{displayName}</p>
-            <p className="text-[10px] font-black uppercase tracking-widest truncate text-slate-500 dark:text-white/40">{profile?.department?.toUpperCase() || profile?.role || 'AHLI'}</p>
+            <p className="text-xs font-black truncate leading-tight text-white/95">{displayName}</p>
+            <p className="text-[10px] font-black uppercase tracking-widest truncate text-[#99CBC2]">{profile?.department?.toUpperCase() || profile?.role || 'AHLI'}</p>
           </div>
           <div
             className="text-[8px] font-black px-1.5 py-0.5 rounded-md uppercase tracking-widest ml-auto shrink-0"
@@ -328,7 +328,7 @@ function Sidebar({ onClose, isActive, navigate, profile }: any) {
         <Button
           variant="ghost"
           onClick={signOut}
-          className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-slate-500 dark:text-white/30 hover:text-rose-500 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-all"
+          className="w-full justify-start gap-3 h-9 px-3 font-black text-[10px] uppercase tracking-widest rounded-xl text-white/50 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
         >
           <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
           {t('nav:logout', 'Log Keluar')}

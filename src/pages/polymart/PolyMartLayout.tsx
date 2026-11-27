@@ -14,6 +14,8 @@ import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTour } from '@/hooks/useTour';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 export const PM_ACCENT   = '#f59e0b';
@@ -130,12 +132,36 @@ export function PolyMartLayout() {
   const refetchCounts = useCallback(async () => {
     if (!user) return;
     if (localStorage.getItem('use_mock_auth') === 'true') {
-      setMyActiveOrdersCount(1);
-      setCartCount(2);
-      
+      let mockCartCount = 0;
+      try {
+        const storedCart = localStorage.getItem('polymart_mock_cart') || localStorage.getItem('mock_cart_items');
+        if (storedCart) {
+          const parsedCart = JSON.parse(storedCart);
+          if (Array.isArray(parsedCart)) mockCartCount = parsedCart.length;
+        }
+      } catch {}
+      setCartCount(mockCartCount);
+
+      let mockOrdersCount = 0;
+      try {
+        const storedBuyerOrders = localStorage.getItem('mock_buyer_orders');
+        if (storedBuyerOrders) {
+          const parsedOrders = JSON.parse(storedBuyerOrders);
+          if (Array.isArray(parsedOrders)) {
+            mockOrdersCount = parsedOrders.filter((o: any) => ['PENDING', 'CONFIRMED', 'READY'].includes(o.status)).length;
+          }
+        }
+      } catch {}
+      setMyActiveOrdersCount(mockOrdersCount);
+
+      const isMockAdmin = localStorage.getItem('mock_auth_role') === 'SUPER_ADMIN_JPP';
       const stored = localStorage.getItem('mock_vendor_orders');
-      let pendingCount = 14;
-      let bizIds = ['e489a087-46d2-4030-aeb1-ae7b1ba00ee3', '4b3a5eb4-1299-460f-addf-7105e7f2e58a'];
+      let pendingCount = 0;
+      let bizIds: string[] = [];
+      if (isMockAdmin) {
+        pendingCount = 14;
+        bizIds = ['e489a087-46d2-4030-aeb1-ae7b1ba00ee3', '4b3a5eb4-1299-460f-addf-7105e7f2e58a'];
+      }
       if (stored) {
         try {
           const parsed = JSON.parse(stored);
@@ -146,7 +172,7 @@ export function PolyMartLayout() {
         }
       }
       setMyBizIds(bizIds);
-      setIsVendor(true);
+      setIsVendor(isMockAdmin || bizIds.length > 0);
       setPendingVendorCount(pendingCount);
       return;
     }
@@ -207,10 +233,10 @@ export function PolyMartLayout() {
         onClose={closeTour}
         tourKey="POLYMART_LAYOUT"
       />
-      <div className="min-h-screen bg-background">
+      <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714]">
 
-        {/* ── Top Navbar ─────────────────────────────────────────────── */}
-        <header className="sticky top-0 z-40 bg-background/90 dark:bg-slate-950/90  border-b border-amber-500/20 shadow-[0_4px_20px_rgba(0,0,0,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
+        {/* Top Navbar */}
+        <header className="sticky top-0 z-40 bg-white dark:bg-[#0B2420] border-b border-amber-500/20 shadow-[0_4px_20px_rgba(11,36,32,0.06)] dark:shadow-[0_8px_30px_rgba(0,0,0,0.3)]">
           <div className="max-w-5xl mx-auto px-3 sm:px-5">
 
             {/* Main row */}
@@ -272,6 +298,8 @@ export function PolyMartLayout() {
 
               {/* Right icons */}
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <LanguageToggle />
+                <ThemeToggle />
                 <button
                   onClick={startTour}
                   className="hidden sm:flex w-9 h-9 rounded-full items-center justify-center bg-muted/40 hover:bg-muted/80 border border-border/60 hover:border-amber-400/40 text-amber-500/80 hover:text-amber-500 transition-all active:scale-95 cursor-pointer"

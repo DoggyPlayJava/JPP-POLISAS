@@ -92,60 +92,61 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
 
         {/* Status badges */}
         {isOut && (
-          <div className="absolute inset-0 bg-black/60 -[1px] flex items-center justify-center z-10">
-            <span className="text-[10px] font-black uppercase text-white tracking-widest bg-black/70 px-2.5 py-1 rounded-full border border-white/20">
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
+            <span className="text-xs font-semibold text-white bg-black/75 px-3 py-1 rounded-full border border-white/20">
               {t('commerce:stock_out', 'Habis')}
             </span>
           </div>
         )}
         {isLowStock && !isOut && (
-          <div className="absolute top-2 left-2 flex items-center gap-1 bg-amber-500/90 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full z-10 shadow-xs">
-            <Clock className="w-2.5 h-2.5" />
+          <div className="absolute top-2 left-2 flex items-center gap-1 bg-amber-500 text-slate-950 text-[11px] font-semibold px-2 py-0.5 rounded-full z-10 shadow-xs">
+            <Clock className="w-3 h-3" />
             <span>{t('commerce:low_stock_pill', 'Hampir habis')}</span>
           </div>
         )}
 
         {/* Category pill */}
         {!isLowStock && (
-          <div className="absolute top-2 left-2 bg-black/50  text-white text-[8px] font-bold px-2 py-0.5 rounded-full z-10 border border-white/10">
+          <div className="absolute top-2 left-2 bg-black/60 text-white text-[11px] font-medium px-2 py-0.5 rounded-full z-10 border border-white/15">
             {product.category}
           </div>
         )}
         {/* Flash sale badge */}
         {isProductOnSale(product) && (
-          <div className="absolute bottom-2 left-2 bg-rose-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs flex items-center gap-0.5 animate-pulse z-10 font-mono tabular-nums">
-            <Zap className="w-2.5 h-2.5 fill-current" />
+          <div className="absolute bottom-2 left-2 bg-rose-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-0.5 z-10 font-mono tabular-nums">
+            <Zap className="w-3 h-3 fill-current" />
             <span>-{Math.round((1 - product.sale_price! / product.price) * 100)}%</span>
           </div>
         )}
         {/* Pre-order badge */}
         {product.is_preorder && (
-          <div className="absolute bottom-2 left-2 bg-indigo-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-full shadow-xs flex items-center gap-1 z-10">
-            <Package className="w-2.5 h-2.5" />
-            <span>{t('commerce:preorder_caps', 'PRA-TEMPAH')}</span>
+          <div className="absolute bottom-2 left-2 bg-indigo-600 text-white text-[11px] font-semibold px-2 py-0.5 rounded-full shadow-xs flex items-center gap-1 z-10">
+            <Package className="w-3 h-3" />
+            <span>{t('commerce:preorder_caps', 'Pra-Tempah')}</span>
           </div>
         )}
 
-        {/* Wishlist toggle */}
+        {/* Wishlist toggle (48x48 thumb hit target) */}
         <button
+          type="button"
           onClick={(e) => { e.stopPropagation(); onToggleWishlist(product.id); }}
-          className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/90 dark:bg-slate-950/80  border border-white/20 shadow-xs flex items-center justify-center z-10 hover:scale-110 active:scale-90 transition-all cursor-pointer"
+          className="absolute top-2 right-2 w-9 h-9 sm:w-10 sm:h-10 after:content-[''] after:absolute after:-inset-1.5 rounded-full bg-white/95 dark:bg-[#0B2420]/95 border border-[#B8E4DC]/70 dark:border-[#1E4D45] shadow-xs flex items-center justify-center z-10 transition-transform duration-150 ease-out active:scale-90 cursor-pointer"
           aria-label="Wishlist"
         >
-          <Heart className={`w-3.5 h-3.5 transition-all ${isWishlisted ? 'text-rose-500 fill-rose-500' : 'text-muted-foreground/60'}`} />
+          <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? 'text-rose-500 fill-rose-500' : 'text-muted-foreground/70'}`} />
         </button>
       </div>
 
       {/* Info */}
       <div className="p-2.5 sm:p-3 flex flex-col flex-1 gap-1">
         {/* Business name */}
-        <p className="text-[9px] font-bold text-muted-foreground/70 truncate flex items-center gap-1">
-          <Store className="w-2.5 h-2.5 text-amber-500 shrink-0" />
+        <p className="text-[11px] font-medium text-muted-foreground truncate flex items-center gap-1">
+          <Store className="w-3 h-3 text-amber-500 shrink-0" />
           <span>{product.keusahawanan_businesses?.name ?? t('commerce:store', 'Kedai')}</span>
         </p>
 
         {/* Product name */}
-        <h3 className="text-[12px] font-bold text-foreground leading-snug line-clamp-2 min-h-[2rem] [text-wrap:balance]">
+        <h3 className="text-xs sm:text-sm font-semibold text-foreground leading-snug line-clamp-2 min-h-[2.25rem] [text-wrap:balance]">
           {product.name}
         </h3>
 
@@ -156,17 +157,17 @@ function ProductCard({ product, index, isWishlisted, onToggleWishlist }: { produ
             const effPrice = getProductEffectivePrice(product);
             return isOnSale ? (
               <div className="flex items-baseline gap-1">
-                <span className="text-xs sm:text-sm font-black text-rose-500 font-mono tabular-nums">RM {effPrice.toFixed(2)}</span>
-                <span className="text-[10px] text-muted-foreground/50 line-through font-mono tabular-nums">RM {product.price.toFixed(2)}</span>
+                <span className="text-xs sm:text-sm font-bold text-rose-500 font-mono tabular-nums">RM {effPrice.toFixed(2)}</span>
+                <span className="text-[11px] text-muted-foreground/60 line-through font-mono tabular-nums">RM {product.price.toFixed(2)}</span>
               </div>
             ) : (
-              <span className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 font-mono tabular-nums">RM {product.price.toFixed(2)}</span>
+              <span className="text-xs sm:text-sm font-bold text-amber-600 dark:text-amber-400 font-mono tabular-nums">RM {product.price.toFixed(2)}</span>
             );
           })()}
           {avgRating && avgRating > 0 ? (
             <div className="flex items-center gap-0.5 shrink-0">
               <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
-              <span className="text-[10px] font-bold text-muted-foreground font-mono tabular-nums">{avgRating.toFixed(1)}</span>
+              <span className="text-[11px] font-semibold text-muted-foreground font-mono tabular-nums">{avgRating.toFixed(1)}</span>
             </div>
           ) : null}
         </div>
@@ -184,7 +185,7 @@ function BusinessCard({ biz }: { biz: PolyBusiness; key?: React.Key }) {
       onClick={() => navigate('/polymart/kedai/' + biz.id)}
       className="group flex flex-col items-center gap-2 cursor-pointer shrink-0"
     >
-      <div className="w-14 h-14 rounded-2xl border border-border/60 hover:border-amber-400/50 bg-muted/30 overflow-hidden relative transition-all group-hover:scale-105 shadow-xs">
+      <div className="w-14 h-14 rounded-2xl border border-border/60 hover:border-amber-400/50 bg-muted/30 overflow-hidden relative transition-transform duration-150 ease-out group-hover:scale-105 shadow-xs">
         {biz.logo_url ? (
           <img src={biz.logo_url} alt={biz.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
         ) : (
@@ -193,7 +194,7 @@ function BusinessCard({ biz }: { biz: PolyBusiness; key?: React.Key }) {
           </div>
         )}
       </div>
-      <p className="text-[10px] font-bold text-center text-muted-foreground group-hover:text-foreground transition-colors max-w-[64px] truncate">
+      <p className="text-[11px] font-medium text-center text-muted-foreground group-hover:text-foreground transition-colors max-w-[72px] truncate">
         {biz.name}
       </p>
     </motion.div>

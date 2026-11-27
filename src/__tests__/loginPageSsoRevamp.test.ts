@@ -19,17 +19,17 @@ describe('LoginPage Google SSO-First & Earthy Minimal Redesign', () => {
       expect(source).not.toContain('–');
     });
 
-    it('incorporates the Earthy Minimal palette tokens (#2E3A2F, #6B7F5B, #D9C9B2, #C96F4F, #F8F6EE)', () => {
-      // Primary: Deep Forest Moss
-      expect(source).toContain('#2E3A2F');
-      // Secondary: Sage Green
-      expect(source).toContain('#6B7F5B');
-      // Border / Tertiary: Warm Sand / Linen
-      expect(source).toContain('#D9C9B2');
-      // Accent: Terracotta Clay
-      expect(source).toContain('#C96F4F');
-      // Background: Warm Alabaster / Cream
-      expect(source).toContain('#F8F6EE');
+    it('incorporates the Semambu Mineral Teal palette tokens (#0B2420, #0D9488, #B8E4DC, #0F766E, #F6FBF9)', () => {
+      // Primary Ink / Pine-Teal
+      expect(source).toContain('#0B2420');
+      // Accent Teal Highlight
+      expect(source).toContain('#0D9488');
+      // Border: Mineral Mist
+      expect(source).toContain('#B8E4DC');
+      // Primary CTA: Mineral Teal
+      expect(source).toContain('#0F766E');
+      // Background: Crisp Alabaster
+      expect(source).toContain('#F6FBF9');
     });
 
     it('removes fake 15,000+ students and 120+ clubs, using authentic POLISAS stats', () => {

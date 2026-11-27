@@ -60,7 +60,13 @@ vi.mock('@/lib/supabase', () => {
     select: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
+    not: vi.fn().mockReturnThis(),
+    ilike: vi.fn().mockReturnThis(),
+    contains: vi.fn().mockReturnThis(),
+    or: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockResolvedValue({ data: [], error: null }),
     range: vi.fn().mockResolvedValue({ data: [], error: null }),
     maybeSingle: vi.fn().mockResolvedValue({ data: { is_enabled: true }, error: null }),
     single: vi.fn().mockResolvedValue({ data: { id: 'mock-id' }, error: null }),
@@ -112,25 +118,26 @@ describe('PolySuaraPage Suite', () => {
   });
 
   describe('Dual Light & Dark Mode Layout Integration', () => {
-    it('renders outer container with smooth transition and light/dark theme classes', () => {
+    it('renders outer container with smooth transition and Mineral Teal light/dark theme classes', () => {
       const html = renderToString(React.createElement(PolySuaraPage));
 
       // Container checks
-      expect(html).toContain('bg-slate-50');
-      expect(html).toContain('dark:bg-slate-950');
-      expect(html).toContain('text-slate-900');
-      expect(html).toContain('dark:text-slate-100');
+      expect(html).toContain('bg-[#F6FBF9]');
+      expect(html).toContain('dark:bg-[#061714]');
+      expect(html).toContain('text-[#0B2420]');
+      expect(html).toContain('dark:text-[#F6FBF9]');
       expect(html).toContain('transition-colors');
     });
 
-    it('renders sticky header with dual glass background and ThemeToggle integration', () => {
+    it('renders sticky header with opaque Mineral Teal dual surface and ThemeToggle integration', () => {
       const html = renderToString(React.createElement(PolySuaraPage));
 
-      // Header background
-      expect(html).toContain('bg-white/85');
-      expect(html).toContain('dark:bg-slate-950/80');
-      expect(html).toContain('border-slate-200/80');
-      expect(html).toContain('dark:border-white/5');
+      // Header background (opaque surface — no /95 translucency)
+      expect(html).toContain('bg-[#F6FBF9]');
+      expect(html).toContain('dark:bg-[#061714]');
+      expect(html).not.toContain('bg-[#F6FBF9]/95');
+      expect(html).toContain('border-[#B8E4DC]/80');
+      expect(html).toContain('dark:border-[#1E4D45]');
 
       // Theme toggle presence in top navigation
       expect(html).toContain('Tukar Tema');
@@ -157,7 +164,7 @@ describe('PolySuaraPage Suite', () => {
       expect(html).toContain('rounded-2xl sm:rounded-3xl');
     });
 
-    it('defines composeModalOpen state and modal dialog structure in PolySuaraPage', () => {
+    it('defines composeModalOpen state and centered modal dialog structure in PolySuaraPage', () => {
       const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
       const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
 
@@ -166,10 +173,13 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).not.toContain('composerStickerId');
       expect(pageContent).not.toContain('stickerPickerOpen');
 
-      // Modal dialog elements with z-[99999] elevation and bottom clearance
+      // Modal dialog centered with flexbox viewport wrapper (never colliding translate-x-1/2 with Framer Motion)
       expect(pageContent).toContain('Tulis Luahan Rahsia');
       expect(pageContent).toContain('100% Rahsia');
-      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 z-[99990]');
+      expect(pageContent).toContain('fixed inset-0 bg-[#061714]/70 z-[99990]');
+      expect(pageContent).toContain('flex items-end sm:items-center justify-center');
+      expect(pageContent).toContain('max-h-[90dvh]');
+      expect(pageContent).not.toContain('sm:-translate-x-1/2');
       expect(pageContent).toContain('z-[99999]');
       expect(pageContent).toContain('pb-28 sm:pb-6');
       expect(pageContent).toContain('rounded-t-[2.5rem] sm:rounded-3xl');
@@ -186,22 +196,26 @@ describe('PolySuaraPage Suite', () => {
       expect(html).not.toContain('Kafe');
     });
 
-    it('renders Executive Single-Line Feed Navigation Track with sort pills and category chips', () => {
+    it('renders X/Threads underline feed navigation bar, Saluran & Tapis drawer button, and adaptive desktop rails', () => {
       const html = renderToString(React.createElement(PolySuaraPage));
 
-      // Sort segmented pills
+      // Clean 3-tab underline bar + Channels & Filters drawer trigger
       expect(html).toContain('Terkini');
       expect(html).toContain('Hangat');
+      expect(html).toContain('Dijawab JPP');
+      expect(html).toContain('Saluran &amp; Tapis');
 
-      // Hairline divider
-      expect(html).toContain('w-px h-5 bg-slate-200 dark:bg-white/10 shrink-0');
-
-      // Category filter chips
+      // Localized categories rendered in PolySuaraLeftRail
       expect(html).toContain('Semua');
+      expect(html).toContain('Umum');
       expect(html).toContain('Akademik');
       expect(html).toContain('Fasiliti');
       expect(html).toContain('Kamsis');
       expect(html).toContain('Kaunseling');
+
+      // Desktop Rails
+      expect(html).toContain('Suara → Tindakan');
+      expect(html).toContain('Mod Fokus');
 
       // Old tabs no longer exist
       expect(html).not.toContain('Untuk Anda');
@@ -299,57 +313,72 @@ describe('PolySuaraPage Suite', () => {
 
   describe('Elevated Pipel/Dribbble Confession Card & Action Bar', () => {
     const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
+    const cardFilePath = path.resolve(__dirname, '../components/polysuara/PolySuaraConfessionCard.tsx');
     const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
+    const cardContent = fs.readFileSync(cardFilePath, 'utf-8');
+    const combinedSrc = `${pageContent}\n${cardContent}`;
 
     it('cleans confession content with cleanConfessionText and removes sticker badges from cards', () => {
-      expect(pageContent).toContain('cleanConfessionText(confession.content)');
-      expect(pageContent).not.toContain('<PolySuaraStickerBadge');
+      expect(combinedSrc).toContain('cleanConfessionText(confession.content)');
+      expect(combinedSrc).not.toContain('<PolySuaraStickerBadge');
     });
 
-    it('renders elevated floating card container with rounded-[2rem] and modern shadows', () => {
-      expect(pageContent).toContain('rounded-[2rem]');
-      expect(pageContent).toContain('shadow-[0_4px_24px_rgba(0,0,0,0.03)]');
-      expect(pageContent).toContain('dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]');
+    it('renders elevated floating card container with rounded-[2rem], Mineral Teal tokens, and Media Viewer', () => {
+      expect(cardContent).toContain('rounded-[2rem]');
+      expect(cardContent).toContain('shadow-[0_4px_24px_rgba(11,36,32,0.04)]');
+      expect(cardContent).toContain('dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]');
+      expect(cardContent).toContain('<PolySuaraCivicProgress');
+      expect(cardContent).toContain('extractCampusLocations(confession.content)');
+      expect(cardContent).toContain('FACT_CHECK');
+      expect(cardContent).toContain('OFFICIAL_NOTE');
+      expect(pageContent).toContain('<PolySuaraMediaViewer');
+      expect(pageContent).toContain('<ConfirmDialog');
+      expect(pageContent).not.toContain('window.confirm(');
     });
 
-    it('renders avatar with neon gradient ring container', () => {
-      expect(pageContent).toContain('bg-gradient-to-tr from-rose-500 via-pink-500 to-amber-400');
-      expect(pageContent).toContain('avatar.emoji');
+    it('renders avatar with Mineral Teal gradient ring container', () => {
+      expect(cardContent).toContain('bg-gradient-to-tr from-[#0F766E] via-[#14B8A6] to-[#2DD4BF]');
+      expect(cardContent).toContain('avatar.emoji');
     });
 
     it('renders verified anonymous identity badge (✓) and author name', () => {
-      expect(pageContent).toMatch(/title="Identiti Anon Sah Disahkan"|title=\{t\(['"]services:anon_verified_tooltip['"],\s*['"]Identiti Anon Sah Disahkan['"]\)\}/);
-      expect(pageContent).toContain('✓');
-      expect(pageContent).toMatch(/formatDistanceToNow\(new Date\(confession\.created_at\)/);
+      expect(cardContent).toMatch(/title="Identiti Anon Sah Disahkan"|title=\{t\(['"]services:anon_verified_tooltip['"],\s*['"]Identiti Anon Sah Disahkan['"]\)\}/);
+      expect(cardContent).toContain('✓');
+      expect(cardContent).toMatch(/formatDistanceToNow\(new Date\(confession\.created_at\)/);
     });
 
-    it('renders modern uppercase category badge chip', () => {
-      expect(pageContent).toContain('text-[10px] uppercase font-black tracking-wider px-3 py-1 rounded-full text-slate-600 dark:text-slate-400 bg-slate-100/90 dark:bg-white/[0.06] border border-slate-200/60 dark:border-white/[0.08] shrink-0');
+    it('renders modern Mineral Teal category badge chip', () => {
+      expect(cardContent).toContain('text-[11px] font-bold px-3 py-1 rounded-full text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#11322C] border border-[#B8E4DC]/80 dark:border-[#1E4D45] shrink-0');
     });
 
     it('applies refined editorial typography mb-3.5 to confession card content', () => {
-      expect(pageContent).toContain('text-[15px] sm:text-base leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-wrap font-normal mb-3.5');
+      expect(cardContent).toContain('text-[15px] sm:text-base leading-relaxed text-[#0B2420] dark:text-[#F6FBF9] whitespace-pre-wrap font-normal mb-3.5');
     });
 
-    it('renders JPP official reply with clean quote callout styling', () => {
-      expect(pageContent).toContain('border-l-2 border-teal-500 bg-teal-50 dark:bg-teal-500/[0.04] p-3.5 rounded-r-2xl');
+    it('renders JPP official note and community fact-check callout with full hairline border', () => {
+      expect(cardContent).toContain('rounded-2xl border border-[#0F766E]/25 dark:border-[#2DD4BF]/25');
+      expect(cardContent).not.toContain('border-l-2');
     });
 
-    it('renders full social action row with reactions, dislike, comments, share, and bookmark', () => {
-      expect(pageContent).toContain('<PolySuaraReactions');
-      expect(pageContent).toContain('ThumbsDown');
-      expect(pageContent).toContain('MessageCircle');
-      expect(pageContent).toContain('Share2');
-      expect(pageContent).toContain('Bookmark');
-      expect(pageContent).toContain('toggleBookmark');
-      expect(pageContent).toContain('flex items-center justify-between gap-1.5 sm:gap-2 pt-3 border-t border-slate-100 dark:border-white/5 flex-nowrap overflow-x-auto scrollbar-none');
+    it('renders full social action row with reactions, dislike, comments, deep link, share, and bookmark', () => {
+      expect(cardContent).toContain('<PolySuaraReactions');
+      expect(cardContent).toContain('ThumbsDown');
+      expect(cardContent).toContain('MessageCircle');
+      expect(cardContent).toContain('Link2');
+      expect(cardContent).toContain('Share2');
+      expect(cardContent).toContain('Bookmark');
+      expect(cardContent).toContain('onToggleBookmark');
+      expect(cardContent).toContain('border-t border-[#B8E4DC]/50 dark:border-[#1E4D45]');
+      expect(pageContent).toContain('<PolySuaraQuickReportModal');
+      expect(pageContent).toContain('<PolySuaraMediaViewer');
     });
 
-    it('manages sort, category filter, and bookmark states in PolySuaraPage and removes SocialTabNav', () => {
+    it('manages sort, category, format, and bookmark states in PolySuaraPage and removes SocialTabNav', () => {
       expect(pageContent).not.toContain('const [activePulseId, setActivePulseId] = useState');
       expect(pageContent).not.toContain('handleSelectPulse');
       expect(pageContent).not.toContain('SocialTabNav');
       expect(pageContent).toContain('const [activeCategory, setActiveCategory] = useState');
+      expect(pageContent).toContain('const [activeFormat, setActiveFormat] = useState');
       expect(pageContent).toContain('const [sortBy, setSortBy] = useState');
       expect(pageContent).toContain('const [bookmarkedIds, setBookmarkedIds] = useState');
     });
@@ -496,24 +525,30 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).toContain('document.body');
 
       // Elevation classes for modal and drawer
-      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 z-[99990]');
+      expect(pageContent).toContain('fixed inset-0 bg-[#061714]/70 z-[99990]');
       expect(pageContent).toContain('z-[99999]');
 
       // Conditional suppression check
       expect(pageContent).toContain('!composeModalOpen && !commentDrawerOpen');
+      expect(pageContent).toContain('?post=');
+      expect(pageContent).toContain('<PolySuaraLeftRail');
+      expect(pageContent).toContain('<PolySuaraRightRail');
     });
   });
 
   describe('1-Hour Self-Delete Feature for Confessions', () => {
     const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
+    const cardFilePath = path.resolve(__dirname, '../components/polysuara/PolySuaraConfessionCard.tsx');
     const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
+    const cardContent = fs.readFileSync(cardFilePath, 'utf-8');
+    const combinedSrc = `${pageContent}\n${cardContent}`;
 
     it('defines handleDeleteConfession with 1-hour time check and tombstone update in PolySuaraPage', () => {
       expect(pageContent).toContain('handleDeleteConfession');
       expect(pageContent).toContain('isWithin1Hour');
       expect(pageContent).toContain("content: '[deleted]'");
       expect(pageContent).toContain('is_deleted_by_author: true');
-      expect(pageContent).toContain('telah memadamkan ruangan ini');
+      expect(combinedSrc).toContain('telah memadamkan ruangan ini');
     });
 
     it('renders "Padam Luahan" button when confession was created within 1 hour by author', () => {
@@ -583,7 +618,7 @@ describe('PolySuaraPage Suite', () => {
 
       // Tombstone message with exact text and styling
       expect(html).toContain('Musang Cerdik telah memadamkan ruangan ini');
-      expect(html).toContain('text-slate-400 dark:text-slate-500 italic text-sm');
+      expect(html).toContain('text-[#3B635C] dark:text-[#99CBC2] italic text-sm');
 
       // Actions are disabled on deleted confessions
       expect(html).toContain('aria-label="Suka (Dinyahdayakan)"');

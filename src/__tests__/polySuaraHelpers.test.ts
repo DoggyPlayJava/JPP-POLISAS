@@ -7,6 +7,14 @@ import {
   getAnimalAvatarFromCodename,
   aggregateReactions,
   cleanConfessionText,
+  hasSpoilerImageToken,
+  embedSpoilerImageToken,
+  extractCampusLocations,
+  isDebatePollOptions,
+  detectPostIntent,
+  getCivicProgressStep,
+  shouldShowCivicTracker,
+  checkEmpathyNudge,
   FRIENDLY_ANON_PERSONAS,
   getFriendlyAnonName,
   isWithin1Hour,
@@ -199,6 +207,7 @@ describe('polySuaraHelpers', () => {
       expect(summary[0]).toEqual({
         type: 'hundred',
         emoji: '💯',
+        label: 'Solid',
         count: 1,
         userReacted: true,
       });
@@ -368,6 +377,72 @@ describe('polySuaraHelpers', () => {
 
       expect(isWithin1Hour(fifteenMinsAgoDate)).toBe(true);
       expect(isWithin1Hour(ninetyMinsAgoDate)).toBe(false);
+    });
+  });
+
+  describe('PolySuara 2.0 Campus Hub Helpers', () => {
+    it('embeds and detects [spoiler-img] token and strips it from cleanConfessionText', () => {
+      const hidden = embedSpoilerImageToken('Lihat keadaan paip rosak di blok.', true);
+      expect(hidden).toBe('[spoiler-img] Lihat keadaan paip rosak di blok.');
+      expect(hasSpoilerImageToken(hidden)).toBe(true);
+      expect(cleanConfessionText(hidden)).toBe('Lihat keadaan paip rosak di blok.');
+
+      const normal = embedSpoilerImageToken(hidden, false);
+      expect(hasSpoilerImageToken(normal)).toBe(false);
+      expect(normal).toBe('Lihat keadaan paip rosak di blok.');
+    });
+
+    it('extracts up to 3 unique POLISAS campus locations and room codes for PolyMaps deep links', () => {
+      const locs = extractCampusLocations('Aircond di BK12 dan JTMK rosak, kafe di Kafeteria dan Kamsis juga sesak.');
+      expect(locs).toHaveLength(3);
+      expect(locs.map((l) => l.roomQuery)).toEqual(['JTMK', 'KAMSIS', 'KAFETERIA']);
+
+      const roomOnly = extractCampusLocations('Jumpa di mk04 atau E102 selepas kelas.');
+      expect(roomOnly).toEqual([
+        { label: 'MK04', roomQuery: 'MK04' },
+        { label: 'E102', roomQuery: 'E102' },
+      ]);
+    });
+
+    it('detects Debate split polls, post intents, civic steps, and client-side PII empathy nudge', () => {
+      expect(isDebatePollOptions([{ option_text: 'Setuju' }, { option_text: 'Tidak' }])).toBe(true);
+      expect(isDebatePollOptions([{ option_text: 'Agree' }, { option_text: 'Disagree' }])).toBe(true);
+      expect(isDebatePollOptions([{ option_text: 'Ya' }, { option_text: 'Mungkin' }, { option_text: 'Tidak' }])).toBe(false);
+
+      expect(detectPostIntent({ content: 'Bila tarikh konvo? #TanyaKampus', category: 'UMUM' })).toBe('QNA');
+      expect(detectPostIntent({ content: 'Terima kasih cleaner blok! #Apresiasi', category: 'UMUM' })).toBe('SHOUTOUT');
+      expect(detectPostIntent({
+        content: 'Wajar ke tutup lampu awal?',
+        polysuara_polls: [{ polysuara_poll_options: [{ option_text: 'Setuju' }, { option_text: 'Tidak' }] }],
+      })).toBe('DEBATE');
+      expect(detectPostIntent({ content: 'Lampu koridor rosak', category: 'FASILITI' })).toBe('CIVIC');
+
+      expect(getCivicProgressStep('NEW')).toBe(1);
+      expect(getCivicProgressStep('PENDING')).toBe(1);
+      expect(getCivicProgressStep('ACKNOWLEDGED')).toBe(2);
+      expect(getCivicProgressStep('FACT_CHECK')).toBe(1);
+      expect(getCivicProgressStep('OFFICIAL_NOTE')).toBe(1);
+      expect(getCivicProgressStep('INVESTIGATING')).toBe(3);
+      expect(getCivicProgressStep('RESOLVED')).toBe(4);
+
+      expect(checkEmpathyNudge('Hubungi saya di 012-3456789 sekarang')).toEqual({ triggered: true, reasonKey: 'phone' });
+      expect(checkEmpathyNudge('Pelajar 03DIT23F1012 perlu dibantu')).toEqual({ triggered: true, reasonKey: 'matric' });
+      expect(checkEmpathyNudge('Ali bin Abu sering datang awal')).toEqual({ triggered: true, reasonKey: 'personal_name' });
+      expect(checkEmpathyNudge('Mohon baiki kipas di dewan kuliah.')).toEqual({ triggered: false, reasonKey: null });
+    });
+
+    it('strictly gates shouldShowCivicTracker and attaches localized labels in aggregateReactions', () => {
+      expect(shouldShowCivicTracker('FASILITI', 'PENDING')).toBe(true);
+      expect(shouldShowCivicTracker('KAMSIS', 'NEW')).toBe(true);
+      expect(shouldShowCivicTracker('UMUM', 'PENDING')).toBe(false);
+      expect(shouldShowCivicTracker('UMUM', 'OFFICIAL_NOTE')).toBe(false);
+      expect(shouldShowCivicTracker('AKADEMIK', 'FACT_CHECK')).toBe(false);
+      expect(shouldShowCivicTracker('UMUM', 'INVESTIGATING')).toBe(true);
+      expect(shouldShowCivicTracker('UMUM', 'RESOLVED')).toBe(false);
+      expect(shouldShowCivicTracker('FASILITI', 'RESOLVED')).toBe(true);
+
+      const list = aggregateReactions([{ reaction_type: 'heart', user_id: 'u1' }], 'u1');
+      expect(list[0].label).toBeDefined();
     });
   });
 });

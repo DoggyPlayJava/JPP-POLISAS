@@ -13,11 +13,11 @@ import { LandingCta } from '@/components/landing/LandingCta';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 
 // ── Palette Tokens (05 Earthy Minimal / Neo-Campus) ───────────
-// #2E3A2F: Primary (Deep Forest Moss Green)
-// #6B7F5B: Secondary (Sage Olive Green)
-// #D9C9B2: Tertiary (Warm Sand / Oatmeal Beige)
-// #C96F4F: Accent (Terracotta Clay Orange)
-// #F8F6EE: Background (Warm Milk Porcelain)
+// #0B2420: Primary Ink (Deep Pine-Teal)
+// #0D9488: Accent Teal (Mineral Teal Highlight)
+// #B8E4DC: Hairline Border (Mineral Mist)
+// #0F766E: Primary CTA (Deep Mineral Teal)
+// #F6FBF9: Background Canvas (Crisp Alabaster)
 
 export type { CampusStats };
 export { useCampusStats };
@@ -57,7 +57,7 @@ export const LandingPage: React.FC = () => {
   const stats = useCampusStats();
 
   return (
-    <div className="min-h-screen bg-[#F8F6EE] text-[#2E3A2F] selection:bg-[#C96F4F] selection:text-white relative overflow-x-hidden font-sans">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] text-[#0B2420] selection:bg-[#0F766E] selection:text-white relative overflow-x-hidden font-sans">
       {/* 1. Bar Navigasi Kapsul Terapung */}
       <LandingNavbar />
 

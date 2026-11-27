@@ -25,6 +25,7 @@ export interface ReactionSummary {
   emoji: string;
   count: number;
   userReacted: boolean;
+  label?: string;
 }
 
 export interface AnimalAvatar {
@@ -157,11 +158,181 @@ export function embedStickerToken(content: string, stickerId: string): string {
 }
 
 /**
- * Strips legacy sticker tokens from confession or comment content.
+ * Strips legacy sticker tokens and spoiler markers from confession or comment content.
  */
 export function cleanConfessionText(content: string): string {
   if (!content) return '';
-  return content.replace(/\[sticker:[a-zA-Z0-9_-]+\]\s*/g, '').trim();
+  return content
+    .replace(/\[sticker:[a-zA-Z0-9_-]+\]\s*/g, '')
+    .replace(/\[spoiler-img\]\s*/g, '')
+    .trim();
+}
+
+const SPOILER_IMG_TOKEN = '[spoiler-img]';
+
+/**
+ * Checks whether a confession marks its attached image as a spoiler/sensitive visual.
+ */
+export function hasSpoilerImageToken(content?: string | null): boolean {
+  return Boolean(content && content.includes(SPOILER_IMG_TOKEN));
+}
+
+/**
+ * Embeds or removes the [spoiler-img] marker cleanly from confession text.
+ */
+export function embedSpoilerImageToken(content: string, spoiler: boolean): string {
+  const clean = (content || '').replace(/\[spoiler-img\]\s*/g, '').trim();
+  if (!spoiler) return clean;
+  return clean ? `${SPOILER_IMG_TOKEN} ${clean}` : SPOILER_IMG_TOKEN;
+}
+
+export interface CampusLocationLink {
+  label: string;
+  roomQuery: string;
+}
+
+const KNOWN_CAMPUS_LOCATIONS: Array<{ pattern: RegExp; label: string; roomQuery: string }> = [
+  { pattern: /\bJTMK\b/i, label: 'JTMK', roomQuery: 'JTMK' },
+  { pattern: /\bJKA\b/i, label: 'JKA', roomQuery: 'JKA' },
+  { pattern: /\bJKM\b/i, label: 'JKM', roomQuery: 'JKM' },
+  { pattern: /\bJKE\b/i, label: 'JKE', roomQuery: 'JKE' },
+  { pattern: /\bJP\b/i, label: 'JP', roomQuery: 'JP' },
+  { pattern: /\bKamsis\b/i, label: 'Kamsis', roomQuery: 'KAMSIS' },
+  { pattern: /\bKafeteria\b/i, label: 'Kafeteria', roomQuery: 'KAFETERIA' },
+  { pattern: /\bPerpustakaan\b/i, label: 'Perpustakaan', roomQuery: 'PERPUSTAKAAN' },
+  { pattern: /\bDewan\s+Sri\s+Mahkota\b/i, label: 'Dewan Sri Mahkota', roomQuery: 'DSM' },
+  { pattern: /\bDewan\s+Jubli\s+Perak\b/i, label: 'Dewan Jubli Perak', roomQuery: 'DJP' },
+  { pattern: /\bPusat\s+Islam\b/i, label: 'Pusat Islam', roomQuery: 'PUSAT ISLAM' },
+];
+
+/**
+ * Extracts up to 3 clickable POLISAS campus locations/room codes from confession copy for PolyMaps deep links.
+ */
+export function extractCampusLocations(content?: string | null): CampusLocationLink[] {
+  if (!content) return [];
+  const results: CampusLocationLink[] = [];
+  const seenQueries = new Set<string>();
+
+  for (const loc of KNOWN_CAMPUS_LOCATIONS) {
+    if (loc.pattern.test(content) && !seenQueries.has(loc.roomQuery)) {
+      seenQueries.add(loc.roomQuery);
+      results.push({ label: loc.label, roomQuery: loc.roomQuery });
+      if (results.length >= 3) return results;
+    }
+  }
+
+  const roomMatches = content.match(/\b(BK\d{1,3}|MK\d{1,3}|A\d{3}|E\d{3})\b/gi);
+  if (roomMatches) {
+    for (const rawRoom of roomMatches) {
+      const code = rawRoom.toUpperCase();
+      if (!seenQueries.has(code)) {
+        seenQueries.add(code);
+        results.push({ label: code, roomQuery: code });
+        if (results.length >= 3) break;
+      }
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Detects 2-option Agree vs Disagree debate polls ("Setuju vs Tidak" / "Agree vs Disagree").
+ */
+export function isDebatePollOptions(
+  options?: Array<{ option_text: string }> | null
+): boolean {
+  if (!options || options.length !== 2) return false;
+  const texts = options.map((o) => (o.option_text || '').trim());
+  const hasAgree = texts.some((txt) => /^(setuju|agree)$/i.test(txt));
+  const hasDisagree = texts.some((txt) => /^(tidak(\s+setuju)?|disagree)$/i.test(txt));
+  return hasAgree && hasDisagree;
+}
+
+export type PolySuaraPostIntent = 'DEBATE' | 'QNA' | 'SHOUTOUT' | 'CIVIC' | 'STANDARD';
+
+/**
+ * Classifies a confession's community format from its poll options, hashtags, or category.
+ */
+export function detectPostIntent(confession: {
+  content?: string | null;
+  category?: string | null;
+  hashtags?: string[] | null;
+  polysuara_polls?: Array<{ polysuara_poll_options?: Array<{ option_text: string }> }> | null;
+}): PolySuaraPostIntent {
+  const pollOpts = confession.polysuara_polls?.[0]?.polysuara_poll_options;
+  if (isDebatePollOptions(pollOpts)) {
+    return 'DEBATE';
+  }
+  const combinedTags = `${confession.content || ''} ${(confession.hashtags || []).join(' ')}`;
+  if (/#(apresiasi|terimakasih|shoutout)\b/i.test(combinedTags)) {
+    return 'SHOUTOUT';
+  }
+  if (/#(tanyakampus|qna|soalan)\b/i.test(combinedTags)) {
+    return 'QNA';
+  }
+  if (/#debat\b/i.test(combinedTags)) {
+    return 'DEBATE';
+  }
+  if (confession.category === 'FASILITI' || confession.category === 'KAMSIS') {
+    return 'CIVIC';
+  }
+  return 'STANDARD';
+}
+
+/**
+ * Determines whether a confession should display the 4-step physical Campus Action Tracker.
+ * Excludes informational OFFICIAL_NOTE / FACT_CHECK community notes and non-facility categories
+ * unless explicitly escalated to INVESTIGATING.
+ */
+export function shouldShowCivicTracker(
+  category?: string | null,
+  status?: string | null
+): boolean {
+  const normalizedStatus = (status || '').toUpperCase();
+  if (normalizedStatus === 'OFFICIAL_NOTE' || normalizedStatus === 'FACT_CHECK') {
+    return false;
+  }
+  const isCivicCategory = category === 'FASILITI' || category === 'KAMSIS';
+  return isCivicCategory || normalizedStatus === 'INVESTIGATING';
+}
+
+/**
+ * Maps JPP confession action status to a 1-4 civic progress stage.
+ */
+export function getCivicProgressStep(status?: string | null): 1 | 2 | 3 | 4 {
+  switch ((status || '').toUpperCase()) {
+    case 'RESOLVED':
+      return 4;
+    case 'INVESTIGATING':
+      return 3;
+    case 'ACKNOWLEDGED':
+      return 2;
+    default:
+      return 1;
+  }
+}
+
+export interface EmpathyNudgeResult {
+  triggered: boolean;
+  reasonKey: 'phone' | 'matric' | 'personal_name' | null;
+}
+
+/**
+ * Zero-cost client-side guard detecting accidental PII or named targets before anonymous submission.
+ */
+export function checkEmpathyNudge(content?: string | null): EmpathyNudgeResult {
+  if (!content) return { triggered: false, reasonKey: null };
+  if (/\b01\d[- ]?\d{7,8}\b/.test(content)) {
+    return { triggered: true, reasonKey: 'phone' };
+  }
+  if (/\b\d{2}[A-Z]{2,4}\d{2}F\d{4}\b/i.test(content)) {
+    return { triggered: true, reasonKey: 'matric' };
+  }
+  if (/\b[a-z]{3,}\s+(bin|binti|a\/l|a\/p)\s+[a-z]{3,}\b/i.test(content)) {
+    return { triggered: true, reasonKey: 'personal_name' };
+  }
+  return { triggered: false, reasonKey: null };
 }
 
 const ANIMAL_AVATAR_MAP: Record<string, AnimalAvatar> = {
@@ -518,6 +689,7 @@ export function aggregateReactions(
       result.push({
         type: item.type,
         emoji: item.emoji,
+        label: item.label,
         count: stats.count,
         userReacted: stats.userReacted,
       });
@@ -531,6 +703,7 @@ export function aggregateReactions(
       result.push({
         type,
         emoji: '✨',
+        label: type,
         count: stats.count,
         userReacted: stats.userReacted,
       });

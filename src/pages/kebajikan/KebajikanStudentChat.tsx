@@ -268,7 +268,7 @@ export function KebajikanStudentChat({
   /* ─── loading ─── */
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950 flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-teal-500" />
       </div>
     );
@@ -283,7 +283,7 @@ export function KebajikanStudentChat({
   const canChat = !isTerminal && !isResolved;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 flex flex-col transition-colors">
+    <div className="min-h-[100dvh] bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 flex flex-col transition-colors">
 
       {/* ── Sticky top bar ── */}
       <div className="sticky top-0 z-40 flex-shrink-0 border-b border-slate-200 dark:border-white/[0.06] bg-white/80 dark:bg-slate-950/80 transition-colors">

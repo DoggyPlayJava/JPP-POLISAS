@@ -28,7 +28,7 @@ export function KarnivalAdminLayout() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0a0a0f]">
+      <div className="min-h-[100dvh] flex items-center justify-center bg-[#061714]">
         <Loader2 className="w-8 h-8 animate-spin text-violet-500" />
       </div>
     );
@@ -47,10 +47,10 @@ export function KarnivalAdminLayout() {
   ];
 
   return (
-    <div className="dark min-h-screen bg-[#0a0a0f] flex flex-col">
+    <div className="dark min-h-[100dvh] bg-[#061714] flex flex-col">
 
       {/* ── Admin Header ─────────────────────────────────────── */}
-      <header className="sticky top-0 z-50 border-b border-white/[0.07] bg-[#0a0a0f]/95 ">
+      <header className="sticky top-0 z-50 border-b border-[#1E4D45]/70 bg-[#0B2420] ">
         <div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
 
           <div className="flex items-center gap-3">

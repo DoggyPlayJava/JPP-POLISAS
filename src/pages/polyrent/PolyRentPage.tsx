@@ -202,7 +202,7 @@ export function PolyRentPage() {
 
   if (!moduleEnabled) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
+      <div className="min-h-[100dvh] bg-slate-950 flex flex-col items-center justify-center p-6 text-center">
         <Home className="w-16 h-16 text-slate-800 mb-6" />
         <h1 className="text-2xl font-black text-white tracking-tight mb-2">{t('housing:polyrent_closed', 'Modul PolyRent Ditutup')}</h1>
         <button onClick={() => navigate('/portal')} className="mt-8 px-6 py-3 rounded-full bg-slate-900 text-white font-medium hover:bg-slate-800 transition-colors">
@@ -275,7 +275,7 @@ export function PolyRentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950 pb-24 selection:bg-teal-500/30">
+    <div className="min-h-[100dvh] bg-white dark:bg-slate-950 pb-24 selection:bg-teal-500/30">
       
       {/* ── CINEMATIC HERO SECTION ── */}
       <div className="relative pt-6 pb-28 md:pb-36 overflow-hidden bg-slate-900">
@@ -299,19 +299,19 @@ export function PolyRentPage() {
             >
               <HelpCircle className="w-4 h-4" />
             </button>
-            <button onClick={() => setIsCalculatorOpen(true)} className="tour-polyrent-calculator w-10 h-10 rounded-full bg-indigo-500/20  flex items-center justify-center text-indigo-300 hover:bg-indigo-500/30 transition-colors border border-indigo-500/30">
+            <button onClick={() => setIsCalculatorOpen(true)} className="tour-polyrent-calculator w-10 h-10 rounded-full bg-teal-500/20 flex items-center justify-center text-teal-300 hover:bg-teal-500/30 transition-colors border border-teal-500/30" aria-label={t('housing:rent_calculator_label', 'Kalkulator Sewa')}>
               <Calculator className="w-4 h-4" />
             </button>
             <button onClick={() => setIsFormOpen(true)} className="tour-polyrent-add flex items-center gap-1.5 px-4 py-2.5 rounded-full bg-teal-500 text-white font-bold text-sm hover:bg-teal-400 transition-colors shadow-lg shadow-teal-500/30">
-              <Plus className="w-4 h-4" /> Iklan
+              <Plus className="w-4 h-4" /> {t('housing:add_listing', 'Iklan')}
             </button>
           </div>
         </div>
 
         <div className="relative z-10 max-w-4xl mx-auto px-6 text-center">
           <motion.div style={{ opacity: headerOpacity, y: headerY }}>
-            <div className="inline-block px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 font-bold text-[9px] uppercase tracking-widest mb-4">
-              {t('commerce:polyrent_title', 'PolyRent — Tempahan Aset & Peralatan')}
+            <div className="inline-block px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 font-bold text-[10px] uppercase tracking-widest mb-4">
+              {t('housing:polyrent_badge_title', 'PolyRent · Portal Rumah Sewa & Kawan Sewa')}
             </div>
             
             <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-tight mb-4">
@@ -321,13 +321,13 @@ export function PolyRentPage() {
 
             <div className="flex flex-wrap items-center justify-center gap-2 mb-8 text-[11px] font-bold">
               <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
-                {t('commerce:rent_asset', 'Tempah Peralatan / Ruang')}
+                {t('housing:chip_verified_homes', 'Rumah Sewa Disahkan')}
               </span>
               <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
-                {t('commerce:rental_duration', 'Tempoh Sewaan (Jam/Hari)')}
+                {t('housing:chip_find_roommates', 'Cari Rakan Serumah')}
               </span>
               <span className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-white/90 shadow-sm">
-                {t('commerce:equipment_condition', 'Status Keadaan Peralatan')}
+                {t('housing:chip_distance_filter', 'Jarak Dari POLISAS')}
               </span>
             </div>
           </motion.div>
@@ -652,21 +652,7 @@ export function PolyRentPage() {
 
       {/* BOTTOM NAV */}
       <div className="tour-polyrent-menu">
-        <BottomNav 
-          customLinks={{
-            left: [
-              { icon: Menu, label: 'Menu', onClick: () => setIsSidebarOpen(true) },
-              { icon: Home, label: 'Rumah', onClick: () => navigate('/portal'), isActive: false }
-            ],
-            right: [
-              { icon: Calculator, label: 'Kira Bil', onClick: () => setIsCalculatorOpen(true) },
-              { icon: Heart, label: 'Wishlist', onClick: () => {
-                  if (activeFilter === ('SAVED' as any)) setActiveFilter('SEMUA');
-                  else setActiveFilter('SAVED' as any);
-              }, isActive: activeFilter === ('SAVED' as any) }
-            ]
-          }}
-        />
+        <BottomNav onOpenSidebar={() => setIsSidebarOpen(true)} />
       </div>
 
       {/* INTERACTIVE TOUR */}

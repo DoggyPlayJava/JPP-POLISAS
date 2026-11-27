@@ -15,7 +15,7 @@ export function OnboardingPage() {
   }, [profile, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-background px-4">
       <div className="text-center space-y-6 max-w-md">
         <div className="w-20 h-20 rounded-[2rem] bg-primary flex items-center justify-center shadow-2xl overflow-hidden mx-auto">
           <img src="/jpp-logo.png" alt="JPP" className="w-14 h-14 object-contain" />

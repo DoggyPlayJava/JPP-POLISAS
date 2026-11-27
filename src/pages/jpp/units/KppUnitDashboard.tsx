@@ -242,7 +242,7 @@ export function KppUnitDashboard() {
   const [newClubName, setNewClubName] = useState('');
   const [newClubShortName, setNewClubShortName] = useState('');
   const [newClubCategory, setNewClubCategory] = useState<'Sukan' | 'Akademik' | 'Awam' | 'Kediaman'>('Akademik');
-  const [newClubColor, setNewClubColor] = useState('#8B1A1A');
+  const [newClubColor, setNewClubColor] = useState('#0F766E');
   const [newClubDesc, setNewClubDesc] = useState('');
   const [addingClub, setAddingClub] = useState(false);
 
@@ -430,7 +430,7 @@ export function KppUnitDashboard() {
       setNewClubName('');
       setNewClubShortName('');
       setNewClubCategory('Akademik');
-      setNewClubColor('#8B1A1A');
+      setNewClubColor('#0F766E');
       setNewClubDesc('');
 
       if (refreshClubs) {
@@ -947,7 +947,7 @@ export function KppUnitDashboard() {
                                         type="text"
                                         value={newClubColor}
                                         onChange={(e) => setNewClubColor(e.target.value)}
-                                        placeholder="#8B1A1A"
+                                        placeholder="#0F766E"
                                         className="flex-1 h-11 px-4 rounded-xl border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.03] text-slate-900 dark:text-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-red-500/20 focus:border-red-500/40 transition-all uppercase"
                                     />
                                 </div>

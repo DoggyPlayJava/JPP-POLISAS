@@ -197,7 +197,7 @@ export function ClubDetailPage({ initialClub, initialLoading }: ClubDetailPagePr
         
         <div className="relative z-10 flex flex-col md:flex-row items-center md:items-start gap-6 sm:gap-8 md:gap-10">
           {/* Logo Kelab */}
-          <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-2xl bg-white/10 backdrop-blur-md border-2 border-white/20 flex items-center justify-center overflow-hidden shrink-0 shadow-xl group-hover:border-white/40 transition-all duration-300">
+          <div className="w-28 h-28 sm:w-36 sm:h-36 md:w-44 md:h-44 rounded-2xl bg-white/15 border-2 border-white/25 flex items-center justify-center overflow-hidden shrink-0 shadow-xl group-hover:border-white/40 transition-all duration-300">
             {club.logo_url ? (
               <img src={club.logo_url} className="w-full h-full object-cover" alt={club.name} />
             ) : (
@@ -208,7 +208,7 @@ export function ClubDetailPage({ initialClub, initialLoading }: ClubDetailPagePr
           {/* Maklumat Tajuk & Deskripsi */}
           <div className="text-center md:text-left space-y-4 flex-1 min-w-0">
             <div className="flex flex-wrap justify-center md:justify-start gap-2">
-              <Badge className="bg-white/20 text-inherit border-none uppercase tracking-wider text-[11px] font-bold px-3 py-1 rounded-full backdrop-blur-sm">
+              <Badge className="bg-white/20 text-inherit border-none uppercase tracking-wider text-[11px] font-bold px-3 py-1 rounded-full">
                 {club.category || t('kpp:club', 'Kelab')}
               </Badge>
               <Badge className="bg-black/25 text-inherit border-none text-[11px] font-semibold px-3 py-1 rounded-full">

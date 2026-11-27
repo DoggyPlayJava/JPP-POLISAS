@@ -51,7 +51,7 @@ export function JppCommandPalette({ open, onOpenChange }: JppCommandPaletteProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 max-w-2xl overflow-hidden bg-white/95 dark:bg-[#151D16]/95 backdrop-blur-xl border border-slate-200 dark:border-white/10 shadow-2xl rounded-3xl">
+      <DialogContent className="p-0 max-w-2xl overflow-hidden bg-white dark:bg-[#0B2420] border border-[#B8E4DC] dark:border-[#1E4D45] shadow-2xl rounded-3xl">
         <DialogTitle className="sr-only">{t('jpp:cmd_palette_title', 'Papan Perintah JPP HQ')}</DialogTitle>
         <Command
           className="w-full flex flex-col text-slate-900 dark:text-white"

@@ -75,12 +75,12 @@ export function AkademikTakwimPage() {
       {/* ── Header ── */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-2">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-2xl bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center">
-            <CalendarDays className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
+          <div className="w-11 h-11 rounded-2xl bg-teal-500/15 border border-teal-500/25 flex items-center justify-center">
+            <CalendarDays className="w-5 h-5 text-[#0F766E] dark:text-[#2DD4BF]" />
           </div>
           <div>
             <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('akademik:takwim_polisas', 'Takwim POLISAS')}</h1>
-            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
               {t('akademik:exam_schedule', 'Kalendar Peperiksaan Rasmi')} · {INSTITUSI_LABEL} · {sesi}
             </p>
           </div>
@@ -93,9 +93,9 @@ export function AkademikTakwimPage() {
           type="button"
           onClick={() => setActiveMainTab('PERSONAL')}
           className={cn(
-            'flex-1 flex items-center justify-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all',
+            'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all',
             activeMainTab === 'PERSONAL'
-              ? 'bg-white dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-xs'
+              ? 'bg-white dark:bg-teal-500/20 text-[#0F766E] dark:text-[#2DD4BF] shadow-xs'
               : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
           )}
         >
@@ -106,9 +106,9 @@ export function AkademikTakwimPage() {
           type="button"
           onClick={() => setActiveMainTab('PUSAT')}
           className={cn(
-            'flex-1 flex items-center justify-center gap-2 py-2 px-3 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all',
+            'flex-1 flex items-center justify-center gap-2 py-2.5 px-3 sm:px-4 rounded-xl text-xs font-black uppercase tracking-wider transition-all',
             activeMainTab === 'PUSAT'
-              ? 'bg-white dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-xs'
+              ? 'bg-white dark:bg-teal-500/20 text-[#0F766E] dark:text-[#2DD4BF] shadow-xs'
               : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/70'
           )}
         >
@@ -151,7 +151,7 @@ export function AkademikTakwimPage() {
             {/* Sesi Toggle */}
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-white/5 rounded-xl p-1 border border-slate-200 dark:border-white/10 shadow-xs">
               {(['ALL', 'I', 'II'] as const).map(s => (
-                <button key={s} onClick={() => setSesiToggle(s)} className={cn('px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all', sesiToggle === s ? 'bg-white dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/60')}>
+                <button key={s} onClick={() => setSesiToggle(s)} className={cn('px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all', sesiToggle === s ? 'bg-white dark:bg-teal-500/20 text-[#0F766E] dark:text-[#2DD4BF] shadow-xs' : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white/60')}>
                   {s === 'ALL' ? 'Semua' : `Sesi ${s}`}
                 </button>
               ))}
@@ -231,11 +231,11 @@ function StudentCalendar({ items, month, onPrev, onNext, onDayClick }: { items: 
               onClick={() => onDayClick(day)}
               className={cn(
                 'p-1.5 min-h-[80px] border-b border-r border-slate-100 dark:border-white/[0.03] transition-colors cursor-pointer select-none overflow-hidden',
-                isToday && 'bg-indigo-50/60 dark:bg-indigo-500/5',
+                isToday && 'bg-teal-50/70 dark:bg-teal-500/10',
                 hasEvents ? 'hover:bg-slate-50 dark:hover:bg-white/[0.04] active:bg-slate-100 dark:active:bg-white/[0.07]' : 'hover:bg-slate-50/50 dark:hover:bg-white/[0.02]'
               )}
             >
-              <span className={cn('text-[10px] font-black inline-flex items-center justify-center', isToday ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-500/20 w-6 h-6 rounded-full' : 'text-slate-700 dark:text-white/60')}>
+              <span className={cn('text-[10px] font-black inline-flex items-center justify-center', isToday ? 'text-[#0F766E] dark:text-[#2DD4BF] bg-teal-100 dark:bg-teal-500/25 w-6 h-6 rounded-full' : 'text-slate-700 dark:text-white/60')}>
                 {format(day, 'd')}
               </span>
               <div className="mt-1 space-y-0.5">

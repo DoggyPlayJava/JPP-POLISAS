@@ -283,8 +283,8 @@ describe('PolySuaraReactions One-Tap Heart & Popover Suite', () => {
     });
   });
 
-  describe('Light & Dark Mode Classes', () => {
-    it('supports dual light and dark mode classes on popover container', () => {
+  describe('Light & Dark Mode Classes & Civic Mode', () => {
+    it('supports dual Mineral Teal light and dark mode classes on popover container', () => {
       const { html } = renderComponentTree({
         confessionId: 'conf-401',
         reactions: sampleReactions,
@@ -292,11 +292,22 @@ describe('PolySuaraReactions One-Tap Heart & Popover Suite', () => {
         defaultOpen: true,
       });
 
-      expect(html).toContain('bg-white/95');
-      expect(html).toContain('dark:bg-slate-900/95');
-      expect(html).toContain('border-slate-200/90');
-      expect(html).toContain('dark:border-white/15');
-      // backdrop-filter diganti solid surface (FASA 1a) — solid bg sudah diassert di atas.
+      expect(html).toContain('bg-white');
+      expect(html).toContain('dark:bg-[#0B2420]');
+      expect(html).toContain('border-[#B8E4DC]');
+      expect(html).toContain('dark:border-[#1E4D45]');
+    });
+
+    it('renders Saya Juga Alami civic support label and Mineral Teal styling when isCivicIssue is true', () => {
+      const { html } = renderComponentTree({
+        confessionId: 'conf-civic-1',
+        reactions: sampleReactions,
+        onToggleReaction: vi.fn(),
+        isCivicIssue: true,
+      });
+
+      expect(html).toContain('Saya Juga Alami');
+      expect(html).toContain('bg-[#0F766E]');
     });
   });
 });

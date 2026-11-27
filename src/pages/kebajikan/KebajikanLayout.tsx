@@ -55,7 +55,7 @@ export function KebajikanLayout() {
 
   if (isLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background">
+      <div className="min-h-[100dvh] w-full flex items-center justify-center bg-background">
         <div className="animate-pulse font-black text-xs uppercase tracking-[0.3em] opacity-20">
           {t('kebajikan:loading_ekebajikan', 'Memuatkan E-Kebajikan...')}
         </div>
@@ -104,7 +104,7 @@ export function KebajikanLayout() {
   ];
 
   return (
-    <div className="flex h-screen w-full bg-background overflow-hidden relative">
+    <div className="flex h-[100dvh] w-full bg-background overflow-hidden relative">
       <SystemTour
         run={runTour}
         onClose={closeTour}
@@ -121,21 +121,21 @@ export function KebajikanLayout() {
       {/* Sidebar container */}
       <div 
         className={cn(
-          "fixed lg:relative z-[140] h-screen transition-transform duration-300 ease-in-out lg:translate-x-0 w-[280px]",
+          "fixed lg:relative z-[140] h-[100dvh] transition-transform duration-300 ease-in-out lg:translate-x-0 w-[280px]",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <KebajikanSidebar />
       </div>
 
-      <main className="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-50 relative min-w-0 transition-colors">
-        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/80  relative z-30 transition-colors">
+      <main className="flex-1 flex flex-col h-[100dvh] overflow-hidden bg-[#F6FBF9] dark:bg-[#061714] text-[#0B2420] dark:text-[#F6FBF9] relative min-w-0 transition-colors">
+        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 h-14 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] relative z-30 transition-colors">
           <div className="flex items-center gap-2">
 
             {isSubmitOrChatPage ? (
               <Link
                 to="/portal"
-                className="p-2 -ml-2 text-slate-600 dark:text-white/70 hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1 text-xs font-bold"
+                className="p-2 -ml-2 text-[#3B635C] dark:text-white/70 hover:text-[#0B2420] dark:hover:text-white transition-colors flex items-center gap-1 text-xs font-bold"
                 aria-label={t('kebajikan:back_to_portal', 'Kembali ke Portal')}
               >
                 <ChevronLeft className="w-5 h-5" />

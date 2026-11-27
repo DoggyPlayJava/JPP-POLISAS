@@ -176,7 +176,15 @@ export function NextClassBentoCard({
   const [isCollapsed, setIsCollapsed] = useState<boolean>(() => {
     try {
       const saved = localStorage.getItem('portal_next_class_collapsed');
-      return saved !== null ? saved === 'true' : true; // DEFAULT TO COMPACT
+      if (
+        saved === null &&
+        typeof window !== 'undefined' &&
+        typeof window.matchMedia === 'function' &&
+        window.matchMedia('(min-width: 1024px)').matches
+      ) {
+        return false;
+      }
+      return saved !== null ? saved === 'true' : true;
     } catch {
       return true;
     }
@@ -308,9 +316,9 @@ export function NextClassBentoCard({
         onClick={toggleCollapsed}
         onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleCollapsed(); } }}
         className={cn(
-          'w-full rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer select-none',
-          'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
-          'shadow-sm hover:shadow-md hover:border-[#2E3A2F]/20 dark:hover:border-[#F8F6EE]/20 ',
+          'w-full flex flex-col justify-center rounded-2xl p-3.5 sm:p-4 transition-all duration-200 cursor-pointer select-none',
+          'bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45]',
+          'shadow-sm hover:shadow-md hover:border-[#0D9488]/60 dark:hover:border-[#14B8A6]/50 ',
           'group',
           className
         )}
@@ -347,14 +355,14 @@ export function NextClassBentoCard({
               {stateData.type === 'TODAY_ACTIVE' ? (
                 <>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
+                    <span className="text-sm font-black text-[#0B2420] dark:text-[#F6FBF9] tracking-tight">
                       {stateData.entry.course_name?.trim() || stateData.entry.course_code}
                     </span>
-                    <span className="text-xs text-[#556453] dark:text-[#A3B39F] font-medium font-mono tabular-nums">
+                    <span className="text-xs text-[#3B635C] dark:text-[#99CBC2] font-medium font-mono tabular-nums">
                       ({formatDisplayTime(stateData.entry.start_time)} - {formatDisplayTime(stateData.entry.end_time)})
                     </span>
                   </div>
-                  <div className="flex items-center gap-1.5 text-xs text-[#556453] dark:text-[#A3B39F] truncate">
+                  <div className="flex items-center gap-1.5 text-xs text-[#3B635C] dark:text-[#99CBC2] truncate">
                     {stateData.entry.is_online ? (
                       <span className="text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1">
                         <Laptop className="w-3 h-3" />
@@ -370,22 +378,22 @@ export function NextClassBentoCard({
                 </>
               ) : stateData.type === 'COMPLETED_TODAY' ? (
                 <>
-                  <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
+                  <div className="text-sm font-bold text-[#0B2420] dark:text-[#F6FBF9]">
                     {t('portal:all_classes_completed_today', 'Semua kelas selesai hari ini')}
                   </div>
                   {stateData.nextClass && (
-                    <div className="text-xs text-[#556453] dark:text-[#A3B39F] truncate">
+                    <div className="text-xs text-[#3B635C] dark:text-[#99CBC2] truncate">
                       {t('portal:next_class_prefix', 'Seterusnya')} {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_name?.trim() || stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
                     </div>
                   )}
                 </>
               ) : (
                 <>
-                  <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
+                  <div className="text-sm font-bold text-[#0B2420] dark:text-[#F6FBF9]">
                     {t('portal:no_classes_today', 'Tiada kelas hari ini')}
                   </div>
                   {stateData.nextClass && (
-                    <div className="text-xs text-[#556453] dark:text-[#A3B39F] truncate">
+                    <div className="text-xs text-[#3B635C] dark:text-[#99CBC2] truncate">
                       {t('portal:next_class_prefix', 'Seterusnya')} {stateData.nextClass.dayLabel}: {stateData.nextClass.entry.course_name?.trim() || stateData.nextClass.entry.course_code} ({formatDisplayTime(stateData.nextClass.entry.start_time)})
                     </div>
                   )}
@@ -414,7 +422,7 @@ export function NextClassBentoCard({
                 <Link
                   to={getPolyMapsUrl(stateData.entry)}
                   onClick={(e) => e.stopPropagation()}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] text-xs font-bold hover:opacity-90 transition-all shadow-sm group-hover:scale-105"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#061714] text-xs font-bold hover:opacity-90 transition-all shadow-sm group-hover:scale-105"
                   title={t('portal:directions_title', 'Tunjuk Arah ke Bilik Kelas')}
                 >
                   <MapPin className="w-3.5 h-3.5 text-rose-400 dark:text-rose-600 shrink-0" />
@@ -428,7 +436,7 @@ export function NextClassBentoCard({
               <Link
                 to="/akademik/takwim?tab=personal"
                 onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-bold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-[#0D9488]/10 dark:bg-[#14B8A6]/15 text-[#0F766E] dark:text-[#2DD4BF] text-xs font-bold hover:bg-[#0D9488]/20 dark:hover:bg-[#14B8A6]/25 transition-colors"
               >
                 <Calendar className="w-3.5 h-3.5" />
                 <span>{t('portal:schedule_short', 'Jadual')}</span>
@@ -437,7 +445,7 @@ export function NextClassBentoCard({
 
             {/* Subtle expand chevron */}
             <span
-              className="p-1 rounded-lg text-[#556453] dark:text-[#A3B39F] group-hover:text-[#2E3A2F] dark:group-hover:text-[#F8F6EE] group-hover:bg-[#2E3A2F]/5 dark:group-hover:bg-[#F8F6EE]/5 transition-colors"
+              className="p-1 rounded-lg text-[#3B635C] dark:text-[#99CBC2] group-hover:text-[#0B2420] dark:group-hover:text-[#F6FBF9] group-hover:bg-[#0B2420]/5 dark:group-hover:bg-[#F6FBF9]/5 transition-colors"
               title={t('portal:expand_card', 'Kembangkan untuk maklumat penuh')}
             >
               <ChevronDown className="w-4 h-4" />
@@ -455,28 +463,28 @@ export function NextClassBentoCard({
     return (
       <div
         className={cn(
-          'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
-          'bg-white/80 dark:bg-[#1a231b]/80 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
+          'w-full flex flex-col justify-between rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
+          'bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45]',
           'shadow-sm hover:shadow-md ',
           className
         )}
       >
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center lg:flex-col lg:items-stretch justify-between gap-4 h-full">
           <div className="flex items-start gap-3.5">
-            <div className="w-10 h-10 rounded-xl bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 flex items-center justify-center shrink-0 text-[#2E3A2F] dark:text-[#F8F6EE]">
-              <Calendar className="w-5 h-5 text-[#2E3A2F] dark:text-[#F8F6EE]" />
+            <div className="w-10 h-10 rounded-xl bg-[#0D9488]/15 dark:bg-[#14B8A6]/15 flex items-center justify-center shrink-0 text-[#0B2420] dark:text-[#F6FBF9]">
+              <Calendar className="w-5 h-5 text-[#0B2420] dark:text-[#F6FBF9]" />
             </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+            <div className="space-y-1 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="whitespace-nowrap text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
                   {t('portal:student_personal_badge', 'Peribadi Pelajar')}
                 </span>
-                <span className="text-xs text-[#556453] dark:text-[#A3B39F]">e-Akademik</span>
+                <span className="text-xs text-[#3B635C] dark:text-[#99CBC2] whitespace-nowrap">e-Akademik</span>
               </div>
-              <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
+              <h3 className="text-base sm:text-lg font-black text-[#0B2420] dark:text-[#F6FBF9] tracking-tight">
                 {t('portal:timetable_not_uploaded_title', 'Jadual Kuliah Belum Dimuat Naik')}
               </h3>
-              <p className="text-xs sm:text-sm text-[#556453] dark:text-[#A3B39F] max-w-xl leading-relaxed">
+              <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#99CBC2] max-w-xl leading-relaxed">
                 {t('portal:timetable_not_uploaded_desc', 'Takut terlepas kelas? Muat naik jadual sekarang untuk peringatan automatik & panduan lokasi bilik.')}
               </p>
             </div>
@@ -484,7 +492,7 @@ export function NextClassBentoCard({
 
           <Link
             to="/akademik/takwim"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] font-bold text-xs sm:text-sm hover:opacity-90 transition-all shrink-0 shadow-sm"
+            className="w-full sm:w-auto lg:w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#061714] font-bold text-xs sm:text-sm hover:opacity-90 transition-all shrink-0 shadow-sm"
           >
             <span>{t('portal:upload_timetable_btn', 'Muat Naik Jadual')}</span>
             <ArrowRight className="w-4 h-4" />
@@ -544,8 +552,8 @@ export function NextClassBentoCard({
     return (
       <div
         className={cn(
-          'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
-          'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
+          'w-full flex flex-col justify-between rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
+          'bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45]',
           'shadow-sm hover:shadow-md space-y-4',
           className
         )}
@@ -572,7 +580,7 @@ export function NextClassBentoCard({
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#0D9488]/10 dark:hover:bg-[#14B8A6]/15 text-xs font-semibold text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-[#F6FBF9] transition-colors"
             title={t('portal:collapse_card', 'Kecilkan')}
             aria-label={t('portal:collapse_card', 'Kecilkan')}
           >
@@ -593,12 +601,12 @@ export function NextClassBentoCard({
               {typeBadge.label}
             </span>
           </div>
-          <h3 className="text-lg sm:text-xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight leading-snug">
+          <h3 className="text-lg sm:text-xl font-black text-[#0B2420] dark:text-[#F6FBF9] tracking-tight leading-snug">
             {displayName}
           </h3>
 
           {/* Meta Chips */}
-          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-xs text-[#556453] dark:text-[#A3B39F]">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-xs text-[#3B635C] dark:text-[#99CBC2]">
             <div className="flex items-center gap-1.5 font-medium">
               <Clock className="w-3.5 h-3.5 text-blue-500" />
               <span>
@@ -612,17 +620,17 @@ export function NextClassBentoCard({
                 <span>{t('portal:online_teams_full', 'Dalam Talian (Microsoft Teams)')}</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-[#2E3A2F] dark:text-[#F8F6EE] font-semibold">
+              <div className="flex items-center gap-1.5 text-[#0B2420] dark:text-[#F6FBF9] font-semibold">
                 <MapPin className="w-3.5 h-3.5 text-rose-500 shrink-0" />
                 <span>{getLocationLabel(entry)}</span>
               </div>
             )}
 
             {entry.lecturer_code && (
-              <div className="flex items-center gap-1 text-[11px] text-[#556453] dark:text-[#A3B39F]">
+              <div className="flex items-center gap-1 text-[11px] text-[#3B635C] dark:text-[#99CBC2]">
                 <BookOpen className="w-3 h-3 opacity-70" />
                 <span>{t('portal:lecturer_label', 'Pensyarah:')}</span>
-                <span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{entry.lecturer_code}</span>
+                <span className="font-semibold text-[#0B2420] dark:text-[#F6FBF9]">{entry.lecturer_code}</span>
               </div>
             )}
           </div>
@@ -630,13 +638,13 @@ export function NextClassBentoCard({
           {/* Ongoing Class Progress Bar */}
           {isOngoing && (
             <div className="pt-2 space-y-1">
-              <div className="w-full bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 rounded-full h-1 overflow-hidden">
+              <div className="w-full bg-[#0D9488]/15 dark:bg-[#14B8A6]/15 rounded-full h-1 overflow-hidden">
                 <div
                   className="bg-emerald-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${progressPercent}%` }}
                 />
               </div>
-              <div className="flex justify-between text-[10px] text-[#556453] dark:text-[#A3B39F] font-medium">
+              <div className="flex justify-between text-[10px] text-[#3B635C] dark:text-[#99CBC2] font-medium">
                 <span>{t('portal:min_elapsed', '{{count}} min berlalu', { count: elapsedMinutes })}</span>
                 <span>{t('portal:min_remaining', '{{count}} min berbaki', { count: totalDuration - elapsedMinutes })}</span>
               </div>
@@ -660,7 +668,7 @@ export function NextClassBentoCard({
           ) : (
             <Link
               to={getPolyMapsUrl(entry)}
-              className="w-full inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] font-bold text-xs sm:text-sm hover:opacity-90 transition-all shadow-xs active:scale-[0.99]"
+              className="w-full inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#061714] font-bold text-xs sm:text-sm hover:opacity-90 transition-all shadow-xs active:scale-[0.99]"
             >
               <MapPin className="w-4 h-4 text-emerald-400 dark:text-emerald-600 shrink-0" />
               <span className="truncate">{t('portal:polymaps_directions', 'Tunjuk Arah PolyMaps')}</span>
@@ -670,7 +678,7 @@ export function NextClassBentoCard({
 
           <Link
             to="/akademik/takwim?tab=personal"
-            className="w-full inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl border border-[#2E3A2F]/20 dark:border-[#F8F6EE]/20 bg-transparent hover:bg-[#2E3A2F]/5 dark:hover:bg-[#F8F6EE]/5 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs sm:text-sm font-bold transition-all active:scale-[0.99]"
+            className="w-full inline-flex items-center justify-center gap-2 h-11 px-4 rounded-xl border border-[#B8E4DC] dark:border-[#1E4D45] bg-transparent hover:bg-[#0D9488]/5 dark:hover:bg-[#14B8A6]/10 text-[#0B2420] dark:text-[#F6FBF9] text-xs sm:text-sm font-bold transition-all active:scale-[0.99]"
           >
             <Calendar className="w-4 h-4 shrink-0 opacity-70" />
             <span className="truncate">{t('portal:view_full_schedule', 'Lihat Jadual Penuh')}</span>
@@ -689,8 +697,8 @@ export function NextClassBentoCard({
     return (
       <div
         className={cn(
-          'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
-          'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
+          'w-full flex flex-col justify-between rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
+          'bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45]',
           'shadow-sm hover:shadow-md space-y-4',
           className
         )}
@@ -704,10 +712,10 @@ export function NextClassBentoCard({
               <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 inline-block">
                 {t('portal:today_done_badge', 'Hari Ini Selesai')}
               </span>
-              <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
+              <h3 className="text-base sm:text-lg font-black text-[#0B2420] dark:text-[#F6FBF9] tracking-tight">
                 {t('portal:all_classes_completed_today', 'Semua kelas selesai hari ini')}
               </h3>
-              <p className="text-xs text-[#556453] dark:text-[#A3B39F]">
+              <p className="text-xs text-[#3B635C] dark:text-[#99CBC2]">
                 {t('portal:all_classes_completed_desc', 'Semua sesi kuliah anda telah tamat. Berehat atau buat persediaan untuk sesi kelas seterusnya.')}
               </p>
             </div>
@@ -716,7 +724,7 @@ export function NextClassBentoCard({
           <button
             type="button"
             onClick={toggleCollapsed}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors shrink-0"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#0D9488]/10 dark:hover:bg-[#14B8A6]/15 text-xs font-semibold text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-[#F6FBF9] transition-colors shrink-0"
             title={t('portal:collapse_card', 'Kecilkan')}
             aria-label={t('portal:collapse_card', 'Kecilkan')}
           >
@@ -727,18 +735,18 @@ export function NextClassBentoCard({
 
         {/* Next Class Preview */}
         {nextClass && (
-          <div className="rounded-xl p-3.5 sm:p-4 bg-[#2E3A2F]/5 dark:bg-[#F8F6EE]/5 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="rounded-xl p-3.5 sm:p-4 bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="space-y-1">
-              <div className="flex items-center gap-2 text-xs font-bold text-[#556453] dark:text-[#A3B39F]">
+              <div className="flex items-center gap-2 text-xs font-bold text-[#3B635C] dark:text-[#99CBC2]">
                 <Clock className="w-3.5 h-3.5 text-blue-500" />
                 <span>
                   {t('portal:next_class_prefix', 'Seterusnya')} {nextClass.dayLabel} ({formatDisplayTime(nextClass.entry.start_time)} - {formatDisplayTime(nextClass.entry.end_time)})
                 </span>
               </div>
-              <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
+              <div className="text-sm font-bold text-[#0B2420] dark:text-[#F6FBF9]">
                 {nextClass.entry.course_name?.trim() || nextClass.entry.course_code}
               </div>
-              <div className="text-xs text-[#556453] dark:text-[#A3B39F] flex items-center gap-1.5">
+              <div className="text-xs text-[#3B635C] dark:text-[#99CBC2] flex items-center gap-1.5">
                 {nextClass.entry.is_online ? (
                   <>
                     <Laptop className="w-3 h-3 text-blue-500" />
@@ -757,7 +765,7 @@ export function NextClassBentoCard({
               {!nextClass.entry.is_online && (
                 <Link
                   to={getPolyMapsUrl(nextClass.entry)}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0D9488]/10 dark:bg-[#14B8A6]/15 text-[#0F766E] dark:text-[#2DD4BF] text-xs font-semibold hover:bg-[#0D9488]/20 dark:hover:bg-[#14B8A6]/25 transition-colors"
                 >
                   <MapPin className="w-3.5 h-3.5" />
                   <span>PolyMaps</span>
@@ -765,7 +773,7 @@ export function NextClassBentoCard({
               )}
               <Link
                 to="/akademik/takwim?tab=personal"
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] text-xs font-bold hover:opacity-90 transition-opacity"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#061714] text-xs font-bold hover:opacity-90 transition-opacity"
               >
                 <span>{t('portal:view_schedule', 'Lihat Jadual')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -785,8 +793,8 @@ export function NextClassBentoCard({
   return (
     <div
       className={cn(
-        'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
-        'bg-white/90 dark:bg-[#1a231b]/90 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10',
+        'w-full flex flex-col justify-between rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
+        'bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45]',
         'shadow-sm hover:shadow-md space-y-4',
         className
       )}
@@ -802,10 +810,10 @@ export function NextClassBentoCard({
                 {isWeekend ? t('portal:weekend_badge', 'Hujung Minggu') : t('portal:holiday_no_class_badge', 'Cuti / Tiada Kuliah')}
               </span>
             </div>
-            <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
+            <h3 className="text-base sm:text-lg font-black text-[#0B2420] dark:text-[#F6FBF9] tracking-tight">
               {t('portal:no_classes_today', 'Tiada kelas hari ini')}
             </h3>
-            <p className="text-xs text-[#556453] dark:text-[#A3B39F]">
+            <p className="text-xs text-[#3B635C] dark:text-[#99CBC2]">
               {isWeekend
                 ? t('portal:weekend_desc', 'Selamat berehat pada hujung minggu! Bersedia untuk jadual kuliah minggu akan datang.')
                 : t('portal:holiday_desc', 'Tiada sesi kelas berjadual untuk hari ini. Gunakan masa lapang untuk mengulang kaji pelajaran.')}
@@ -816,7 +824,7 @@ export function NextClassBentoCard({
         <button
           type="button"
           onClick={toggleCollapsed}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#2E3A2F]/10 dark:hover:bg-[#F8F6EE]/10 text-xs font-semibold text-[#556453] dark:text-[#A3B39F] hover:text-[#2E3A2F] dark:hover:text-[#F8F6EE] transition-colors shrink-0"
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg hover:bg-[#0D9488]/10 dark:hover:bg-[#14B8A6]/15 text-xs font-semibold text-[#3B635C] dark:text-[#99CBC2] hover:text-[#0B2420] dark:hover:text-[#F6FBF9] transition-colors shrink-0"
           title={t('portal:collapse_card', 'Kecilkan')}
           aria-label={t('portal:collapse_card', 'Kecilkan')}
         >
@@ -827,18 +835,18 @@ export function NextClassBentoCard({
 
       {/* Next Class Preview (e.g. Next Monday) */}
       {nextClass && (
-        <div className="rounded-xl p-3.5 sm:p-4 bg-[#2E3A2F]/5 dark:bg-[#F8F6EE]/5 border border-[#2E3A2F]/10 dark:border-[#F8F6EE]/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="rounded-xl p-3.5 sm:p-4 bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="space-y-1">
-            <div className="flex items-center gap-2 text-xs font-bold text-[#556453] dark:text-[#A3B39F]">
+            <div className="flex items-center gap-2 text-xs font-bold text-[#3B635C] dark:text-[#99CBC2]">
               <Clock className="w-3.5 h-3.5 text-blue-500" />
               <span>
                 {t('portal:next_class_prefix', 'Seterusnya')} {nextClass.dayLabel} ({formatDisplayTime(nextClass.entry.start_time)} - {formatDisplayTime(nextClass.entry.end_time)})
               </span>
             </div>
-            <div className="text-sm font-bold text-[#2E3A2F] dark:text-[#F8F6EE]">
+            <div className="text-sm font-bold text-[#0B2420] dark:text-[#F6FBF9]">
               {nextClass.entry.course_name?.trim() || nextClass.entry.course_code}
             </div>
-            <div className="text-xs text-[#556453] dark:text-[#A3B39F] flex items-center gap-1.5">
+            <div className="text-xs text-[#3B635C] dark:text-[#99CBC2] flex items-center gap-1.5">
               {nextClass.entry.is_online ? (
                 <>
                   <Laptop className="w-3 h-3 text-blue-500" />
@@ -857,7 +865,7 @@ export function NextClassBentoCard({
             {!nextClass.entry.is_online && (
               <Link
                 to={getPolyMapsUrl(nextClass.entry)}
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#2E3A2F]/10 dark:bg-[#F8F6EE]/10 text-[#2E3A2F] dark:text-[#F8F6EE] text-xs font-semibold hover:bg-[#2E3A2F]/20 dark:hover:bg-[#F8F6EE]/20 transition-colors"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0D9488]/10 dark:bg-[#14B8A6]/15 text-[#0F766E] dark:text-[#2DD4BF] text-xs font-semibold hover:bg-[#0D9488]/20 dark:hover:bg-[#14B8A6]/25 transition-colors"
               >
                 <MapPin className="w-3.5 h-3.5" />
                 <span>PolyMaps</span>
@@ -865,7 +873,7 @@ export function NextClassBentoCard({
             )}
             <Link
               to="/akademik/takwim?tab=personal"
-              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#2E3A2F] dark:bg-[#F8F6EE] text-[#F8F6EE] dark:text-[#2E3A2F] text-xs font-bold hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#061714] text-xs font-bold hover:opacity-90 transition-opacity"
             >
               <span>{t('portal:view_schedule', 'Lihat Jadual')}</span>
               <ArrowRight className="w-3.5 h-3.5" />

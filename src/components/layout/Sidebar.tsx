@@ -166,8 +166,14 @@ function SidebarNavItem({ item, accentColor = 'amber' }: { item: NavItem; accent
       iconBg: 'bg-fuchsia-500/30 shadow-lg',
       iconText: 'text-fuchsia-400',
     },
+    teal: {
+      active: 'bg-teal-500/20 text-teal-200 shadow-inner',
+      dot: 'bg-teal-400 shadow-[0_0_6px_2px_rgba(45,212,191,0.4)]',
+      iconBg: 'bg-teal-500/30 shadow-lg',
+      iconText: 'text-teal-300',
+    },
   };
-  const c = colorMap[accentColor] ?? colorMap.amber;
+  const c = colorMap[accentColor] ?? colorMap.teal;
 
   return (
     <NavLink
@@ -216,7 +222,7 @@ function EkppSidebarContent() {
       {/* Menu Utama */}
       <p className="px-3 mb-3 text-[10px] font-black uppercase tracking-[0.25em] text-white/25">{t('nav:main_menu', 'Menu Utama')}</p>
       {ekppNav.map(item => (
-        <SidebarNavItem key={item.href} item={item} accentColor="amber" />
+        <SidebarNavItem key={item.href} item={item} accentColor="teal" />
       ))}
 
       {/* Nexus AI */}
@@ -556,9 +562,9 @@ export function Sidebar() {
 
   return (
     <aside className={cn(
-      "w-64 h-screen flex flex-col z-50 select-none",
+      "w-64 h-[100dvh] flex flex-col z-50 select-none",
       activeExco === 'ems' 
-        ? "bg-slate-950 border-r border-slate-800/80 text-slate-100 shadow-2xl" 
+        ? "bg-[#061714] border-r border-teal-400/15 text-slate-100 shadow-2xl" 
         : "sidebar-jpp"
     )}>
 
@@ -590,11 +596,11 @@ export function Sidebar() {
             )}
           </div>
           <div className="leading-tight">
-            <p className="font-black text-white text-sm tracking-tight flex items-center gap-1.5">
-              {excoModule?.name ?? t('nav:jpp_portal', 'JPP Portal')}
-              {excoModule && <div className="w-1 h-1 rounded-full animate-pulse" style={{ backgroundColor: excoModule.defaultColor }} />}
-            </p>
-            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-amber-400/80">
+            <div className="font-black text-white text-sm tracking-tight flex items-center gap-1.5">
+              <span>{excoModule?.name ?? t('nav:jpp_portal', 'JPP Portal')}</span>
+              {excoModule && <span className="inline-block w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: excoModule.defaultColor }} />}
+            </div>
+            <p className="text-[10px] font-black uppercase tracking-[0.25em] text-[#5EEAD4]">
               JPP Polisas
             </p>
           </div>
@@ -653,7 +659,7 @@ export function Sidebar() {
         <div className="flex items-center gap-3 px-2 py-2 rounded-xl hover:bg-white/6 transition-colors cursor-pointer">
           <Avatar className="h-8 w-8 rounded-xl ring-2 ring-white/15 shadow-md">
             <AvatarImage
-              src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${initials}&backgroundColor=8B1A1A&textColor=FFF8F0`}
+              src={profile?.avatar_url || `https://api.dicebear.com/7.x/initials/svg?seed=${initials}&backgroundColor=0F766E&textColor=F6FBF9`}
               className="object-cover"
             />
             <AvatarFallback className="bg-primary text-primary-foreground font-black text-xs">{initials}</AvatarFallback>

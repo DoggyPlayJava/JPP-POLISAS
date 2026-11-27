@@ -98,6 +98,9 @@ vi.mock('framer-motion', () => ({
     span: ({ children, className, ...props }: any) => (
       React.createElement('span', { className, ...props }, children)
     ),
+    p: ({ children, className, ...props }: any) => (
+      React.createElement('p', { className, ...props }, children)
+    ),
   },
   AnimatePresence: ({ children }: any) => children,
 }));

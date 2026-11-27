@@ -40,7 +40,7 @@ const MODULE_CONFIG: Record<NotificationModule, { label?: string; color: string;
   EKPP:         { color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b' },
   AKADEMIK:     { label: 'E-Akademik',   color: '#6366f1', bg: 'rgba(99,102,241,0.12)',   dot: '#6366f1' },
   KEUSAHAWANAN: { label: 'Keusahawanan', color: '#f97316', bg: 'rgba(249,115,22,0.12)',   dot: '#f97316' },
-  JPP:          { label: 'JPP HQ',       color: '#8b1a1a', bg: 'rgba(139,26,26,0.12)',    dot: '#ef4444' },
+  JPP:          { label: 'JPP HQ',       color: '#0F766E', bg: 'rgba(15,118,110,0.14)',   dot: '#14B8A6' },
   SYSTEM:       { label: 'Sistem',       color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#94a3b8' },
   POLYMART:     { label: 'PolyMart',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b' },
   KAMSIS:       { label: 'i-KAMSIS',     color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',   dot: '#8B5CF6' },

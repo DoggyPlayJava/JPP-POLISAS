@@ -331,39 +331,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initialize = async () => {
       try {
         if (localStorage.getItem('use_mock_auth') === 'true') {
-          console.log('🚧 [AuthContext] Using Developer Mock Bypass');
+          const mockRole = localStorage.getItem('mock_auth_role') === 'SUPER_ADMIN_JPP'
+            ? 'SUPER_ADMIN_JPP'
+            : 'CLUB_MEMBER';
+          const isMockAdmin = mockRole === 'SUPER_ADMIN_JPP';
+          console.log(`🚧 [AuthContext] Using Developer Mock Bypass (${mockRole})`);
+
           const mockUser = {
             id: '00000000-0000-0000-0000-000000000000',
-            email: 'dev@polisas.edu.my',
-            user_metadata: { full_name: 'DEVELOPER BYPASS' }
+            email: isMockAdmin ? 'dev@polisas.edu.my' : 'pelajar.dev@polisas.edu.my',
+            user_metadata: {
+              full_name: isMockAdmin ? 'DEVELOPER BYPASS' : 'AHMAD DANIAL (PELAJAR)',
+            }
           } as any;
-          
-          const mockProfile: Profile = {
-            id: '00000000-0000-0000-0000-000000000000',
-            email: 'dev@polisas.edu.my',
-            full_name: 'DEVELOPER BYPASS',
-            role: 'SUPER_ADMIN_JPP',
-            account_status: 'APPROVED',
-            club_id: '00000000-0000-0000-0000-000000000001',
-            jpp_position: 'YDP',
-            jpp_unit: 'HQ',
-            phone: '0123456789',
-            matric_no: 'MOCK-DEV-0000',
-            department: 'JPP',
-            programme_code: 'DEV',
-            intake_year: 2026,
-            intake_period: 1
-          };
-          
+
+          const mockProfile: Profile = isMockAdmin
+            ? {
+                id: '00000000-0000-0000-0000-000000000000',
+                email: 'dev@polisas.edu.my',
+                full_name: 'DEVELOPER BYPASS',
+                role: 'SUPER_ADMIN_JPP',
+                account_status: 'APPROVED',
+                club_id: '00000000-0000-0000-0000-000000000001',
+                jpp_position: 'YDP',
+                jpp_unit: 'HQ',
+                phone: '0123456789',
+                matric_no: 'MOCK-DEV-0000',
+                department: 'JPP',
+                programme_code: 'DEV',
+                intake_year: 2026,
+                intake_period: 1
+              }
+            : {
+                id: '00000000-0000-0000-0000-000000000000',
+                email: 'pelajar.dev@polisas.edu.my',
+                full_name: 'AHMAD DANIAL (PELAJAR)',
+                role: 'CLUB_MEMBER',
+                account_status: 'APPROVED',
+                club_id: '00000000-0000-0000-0000-000000000001',
+                phone: '0123456789',
+                matric_no: '02DDT26F1001',
+                department: 'JTMK',
+                programme_code: 'DDT',
+                intake_year: 2026,
+                intake_period: 1
+              };
+
           setUser(mockUser);
           setProfile(mockProfile);
           setSession({ user: mockUser, access_token: 'mock-token' } as any);
-          
+
           // Set mock club lists and memberships
           setUserClubIds(['00000000-0000-0000-0000-000000000001']);
-          setUserMemberships([{ club_id: '00000000-0000-0000-0000-000000000001', role: 'SUPER_ADMIN_JPP', is_primary: true }]);
+          setUserMemberships([{
+            club_id: '00000000-0000-0000-0000-000000000001',
+            role: mockRole,
+            is_primary: true
+          }]);
           setSelectedClubIdState('00000000-0000-0000-0000-000000000001');
-          
+
           clearTimeout(safetyTimer);
           setIsLoading(false);
           return;

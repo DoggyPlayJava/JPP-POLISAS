@@ -13,6 +13,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { JPP_THEME_DEFAULT_COLOR, JPP_MODULE_ID } from './jppConfig';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip as RechartsTooltip } from 'recharts';
 import { IGStoryExportCard } from '@/components/polysuara/IGStoryExportCard';
+import { cleanConfessionText, hasSpoilerImageToken } from '@/lib/polySuaraHelpers';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 
 type Tab = 'POLYSUARA' | 'ANALITIK';
@@ -777,6 +778,9 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                            {suara.status === 'ACKNOWLEDGED' && <span className="bg-blue-500/20 text-blue-600 dark:text-blue-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Check className="w-3 h-3"/> {t('services:status_acknowledged', 'Diterima')}</span>}
                            {suara.status === 'INVESTIGATING' && <span className="bg-amber-500/20 text-amber-600 dark:text-amber-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Clock className="w-3 h-3"/> {t('services:status_investigating', 'Disiasat')}</span>}
                            {suara.status === 'RESOLVED' && <span className="bg-green-500/20 text-green-600 dark:text-green-400 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><CheckCircle className="w-3 h-3"/> {t('services:status_resolved', 'Selesai')}</span>}
+                           {suara.status === 'OFFICIAL_NOTE' && <span className="bg-teal-500/15 text-teal-700 dark:text-teal-300 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><Shield className="w-3 h-3"/> {t('services:status_official_note', 'Nota Rasmi JPP')}</span>}
+                           {suara.status === 'FACT_CHECK' && <span className="bg-amber-500/15 text-amber-700 dark:text-amber-300 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider flex items-center gap-1 shrink-0"><AlertTriangle className="w-3 h-3"/> {t('services:status_fact_check_short', 'Semak Fakta')}</span>}
+                           {hasSpoilerImageToken(suara.content) && <span className="bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-wider shrink-0">{t('services:suara_admin_spoiler_badge', 'Gambar Spoiler')}</span>}
                          </div>
                        </div>
                       
@@ -785,7 +789,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                       </div>
                     </div>
                     
-                    <p className="text-slate-800 dark:text-white/80 text-sm leading-relaxed mb-3">"{suara.content}"</p>
+                    <p className="text-slate-800 dark:text-white/80 text-sm leading-relaxed mb-3">"{cleanConfessionText(suara.content)}"</p>
                     
                     {/* Hashtags */}
                     {suara.hashtags && suara.hashtags.length > 0 && (
@@ -826,7 +830,7 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                           <span className="text-[10px] font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">Balasan Pengarang</span>
                         </div>
                         <p className="text-rose-900 dark:text-rose-50/90 text-xs leading-relaxed">
-                          {suara.author_reply}
+                          {cleanConfessionText(suara.author_reply)}
                         </p>
                       </div>
                     )}
@@ -876,6 +880,11 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                           <button
                             onClick={() => {
                               setReplyTargetId(suara.id);
+                              setReplyStatus(
+                                suara.category === 'FASILITI' || suara.category === 'KAMSIS'
+                                  ? 'ACKNOWLEDGED'
+                                  : 'OFFICIAL_NOTE'
+                              );
                               setReplyModalOpen(true);
                             }}
                             className="flex-1 sm:flex-none px-4 py-2 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-2 bg-teal-500/10 text-teal-600 dark:text-teal-400 hover:bg-teal-500/20"
@@ -1033,9 +1042,11 @@ export function PolyServicesAdmin({ isEmbedded = false }: { isEmbedded?: boolean
                     onChange={(e) => setReplyStatus(e.target.value)}
                     className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-sm font-medium text-slate-900 dark:text-white outline-none focus:border-teal-500/50"
                   >
+                    <option value="OFFICIAL_NOTE" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('services:status_official_note_opt', 'Maklum Balas Rasmi JPP (Nota Tanpa Penjejak)')}</option>
                     <option value="ACKNOWLEDGED" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('services:status_acknowledged_opt', 'Maklumat Diterima (Acknowledged)')}</option>
                     <option value="INVESTIGATING" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('services:status_investigating_opt', 'Sedang Disiasat (Investigating)')}</option>
                     <option value="RESOLVED" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('services:status_resolved_opt', 'Selesai (Resolved)')}</option>
+                    <option value="FACT_CHECK" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('services:status_fact_check_opt', 'Nota Komuniti / Semak Fakta')}</option>
                   </select>
                 </div>
 

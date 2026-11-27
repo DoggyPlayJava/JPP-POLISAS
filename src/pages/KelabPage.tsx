@@ -296,7 +296,7 @@ export function KelabPage() {
             ))}
           </div>
           <span className="text-xs font-semibold text-muted-foreground">
-            <strong className="font-mono tabular-nums text-foreground">{approvedCount}</strong> daripada{' '}
+            <strong className="font-mono tabular-nums text-foreground">{approvedCount}</strong> {t('common:of', 'daripada')}{' '}
             <strong className="font-mono tabular-nums text-foreground">{effectiveMaxClubs}</strong> {t('kpp:clubs_joined_count', 'kelab disertai')}
           </span>
         </div>
@@ -348,7 +348,7 @@ export function KelabPage() {
                   {club.logo_url ? (
                     <img src={club.logo_url} loading="lazy" decoding="async" className="w-full h-full object-cover" alt={club.short_name} />
                   ) : (
-                    club.short_name?.slice(0, 2).toUpperCase() || 'K'
+                    club.short_name?.replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || 'K'
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -488,7 +488,7 @@ export function KelabPage() {
                             {club.logo_url ? (
                               <img src={club.logo_url} loading="lazy" decoding="async" className="w-full h-full object-cover" alt={club.short_name} />
                             ) : (
-                              club.short_name?.slice(0, 2).toUpperCase() || 'K'
+                              club.short_name?.replace(/[^A-Za-z0-9]/g, '').slice(0, 2).toUpperCase() || 'K'
                             )}
                           </div>
                         </div>

@@ -33,8 +33,8 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
         'Sistem tadbir urus rasmi untuk 21 kelab & persatuan berdaftar POLISAS. Automasi kertas kerja dan pelaporan bulanan secara digital.'
       ),
       icon: Shield,
-      color: '#2E3A2F',
-      accentColor: '#6B7F5B',
+      color: '#0B2420',
+      accentColor: '#0D9488',
       path: '/portal',
       stats: [
         { value: `${stats.clubsCount}`, label: t('portal:stat_registered_clubs_label', 'Kelab Berdaftar') },
@@ -46,26 +46,26 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
             {
               name: 'PePKa (Awam)',
               status: t('portal:status_approved_hep', 'Diluluskan HEP'),
-              dot: '#6B7F5B',
+              dot: '#0D9488',
             },
             {
               name: 'Robosas (Robotik)',
               status: t('portal:status_in_review', 'Dalam Semakan'),
-              dot: '#C96F4F',
+              dot: '#0F766E',
             },
             {
               name: 'ICS (Kerohanian)',
               status: t('portal:status_budget_verified', 'Bajet Disahkan'),
-              dot: '#6B7F5B',
+              dot: '#0D9488',
             },
           ].map((item, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 p-3 rounded-xl bg-white border border-[#D9C9B2]/80 shadow-2xs hover:border-[#6B7F5B] transition-colors"
+              className="flex items-center gap-3 p-3 rounded-xl bg-white border border-[#B8E4DC]/80 shadow-2xs hover:border-[#0D9488] transition-colors"
             >
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.dot }} />
-              <span className="text-xs font-bold text-[#2E3A2F] truncate">{item.name}</span>
-              <span className="ml-auto text-[9px] font-semibold text-[#6B7F5B] hidden sm:block">
+              <span className="text-xs font-bold text-[#0B2420] truncate">{item.name}</span>
+              <span className="ml-auto text-[11px] font-semibold text-[#0D9488] hidden sm:block">
                 {item.status}
               </span>
             </div>
@@ -82,8 +82,8 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
         'Memperkasa usahawan siswa POLISAS dengan sistem POS digital terpadu, pengurusan inventori gerai, dan analitik jualan masa nyata.'
       ),
       icon: BarChart3,
-      color: '#6B7F5B',
-      accentColor: '#C96F4F',
+      color: '#0D9488',
+      accentColor: '#0F766E',
       path: '/keusahawanan',
       stats: [
         { value: `${stats.productsCount}+`, label: t('portal:stat_student_products_label', 'Produk Siswa') },
@@ -98,7 +98,7 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
                 initial={{ scaleY: 0 }}
                 animate={{ scaleY: h / 100 }}
                 transition={{ delay: 0.2 + i * 0.08, duration: 0.6 }}
-                className="w-4 md:w-6 lg:w-7 h-full origin-bottom bg-gradient-to-t from-[#6B7F5B]/30 to-[#6B7F5B] rounded-t-md shadow-xs"
+                className="w-4 md:w-6 lg:w-7 h-full origin-bottom bg-gradient-to-t from-[#0D9488]/30 to-[#0D9488] rounded-t-md shadow-xs"
               />
             ))}
           </div>
@@ -114,8 +114,8 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
         'Semakan maklumat dan pengurusan rekod mahasiswa merentasi Jabatan Kejuruteraan Awam, Mekanikal, Elektrik, Perdagangan dan Teknologi Makanan.'
       ),
       icon: GraduationCap,
-      color: '#2E3A2F',
-      accentColor: '#6B7F5B',
+      color: '#0B2420',
+      accentColor: '#0D9488',
       path: '/akademik',
       stats: [
         { value: `${stats.studentsCount.toLocaleString()}+`, label: t('portal:stat_student_records_label', 'Rekod Siswa') },
@@ -129,12 +129,12 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
             className="w-full h-full object-cover object-left-top transition-transform duration-500 group-hover/prev:scale-105"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#2E3A2F]/85 via-[#2E3A2F]/20 to-transparent flex items-end p-3">
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[10px] font-bold text-white tracking-wide truncate">
-                Jadual & Navigasi PolyMaps
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0B2420]/85 via-[#0B2420]/20 to-transparent flex items-end p-3">
+            <div className="flex items-center justify-between w-full gap-2">
+              <span className="text-[11px] font-semibold text-white tracking-tight truncate">
+                Jadual &amp; Navigasi PolyMaps
               </span>
-              <span className="text-[9px] font-mono font-black px-2 py-0.5 rounded-full bg-[#6B7F5B] text-white">
+              <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded-full bg-[#14B8A6] text-[#061714] shrink-0">
                 4.00 HPNM
               </span>
             </div>
@@ -151,8 +151,8 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
         'Platform e-dagang berpusat khas buat warga POLISAS. Sokong dan pesan makanan, minuman, serta cenderamata rasmi siswa dalam satu hab.'
       ),
       icon: ShoppingCart,
-      color: '#C96F4F',
-      accentColor: '#2E3A2F',
+      color: '#0F766E',
+      accentColor: '#0B2420',
       path: '/polymart',
       stats: [
         { value: `${stats.productsCount}+`, label: t('portal:stat_menu_items_label', 'Pilihan Menu & Barang') },
@@ -160,21 +160,17 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
       ],
       colSpan: 'lg:col-span-2',
       preview: (
-        <div className="flex w-full h-full p-4 md:p-6 items-center justify-between overflow-hidden relative">
+        <div className="flex w-full h-full p-4 md:p-5 items-center justify-between overflow-hidden relative bg-[#061714]">
           {/* Left Icon Display */}
-          <div className="w-1/3 flex flex-col items-center justify-center relative z-10 pl-2 md:pl-4">
-            <motion.div
-              animate={{ y: [0, -6, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-16 h-16 md:w-20 md:h-20 rounded-2xl md:rounded-3xl bg-[#C96F4F]/15 border border-[#C96F4F]/40 flex items-center justify-center shadow-xs mb-3"
-            >
-              <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-[#C96F4F]" />
-            </motion.div>
-            <div className="h-2 w-16 bg-[#C96F4F]/30 rounded-full" />
+          <div className="w-1/3 flex flex-col items-center justify-center relative z-10 pl-1 md:pl-3">
+            <div className="w-16 h-16 md:w-20 md:h-20 rounded-2xl bg-[#14B8A6]/15 border border-[#2DD4BF]/35 flex items-center justify-center shadow-xs mb-3">
+              <ShoppingCart className="w-8 h-8 md:w-10 md:h-10 text-[#2DD4BF]" />
+            </div>
+            <div className="h-1.5 w-14 bg-[#2DD4BF]/35 rounded-full" />
           </div>
 
           {/* Right Product Items (Chicken Popcorn, Loaded Fries, Lanyard) */}
-          <div className="w-2/3 flex flex-col gap-2.5 relative pr-2 md:pr-4">
+          <div className="w-2/3 flex flex-col gap-2 relative pr-1 md:pr-2">
             {[
               {
                 id: 1,
@@ -200,22 +196,22 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
             ].map((item, i) => (
               <div
                 key={i}
-                className="flex items-center gap-3 p-3 rounded-xl bg-white border border-[#D9C9B2]/80 ml-2 md:ml-4 shadow-2xs hover:border-[#C96F4F] transition-colors"
+                className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-[#0B2420] border border-[#1E4D45] ml-2 md:ml-3 hover:border-[#2DD4BF]/50 transition-colors"
               >
-                <div className="w-8 h-8 rounded-lg bg-[#C96F4F]/15 flex items-center justify-center flex-shrink-0 text-[#C96F4F] font-black text-xs font-mono">
+                <div className="w-8 h-8 rounded-lg bg-[#14B8A6]/15 flex items-center justify-center shrink-0 text-[#2DD4BF] font-bold text-xs font-mono">
                   #{item.id}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-black text-[#2E3A2F] truncate">{item.name}</p>
-                  <p className="text-[9px] font-bold text-[#6B7F5B]">
+                  <p className="text-xs font-semibold text-[#F6FBF9] truncate">{item.name}</p>
+                  <p className="text-[11px] font-medium text-[#99CBC2] truncate">
                     {item.vendor === 'Rasmi JPP' ? t('portal:official_jpp', 'Rasmi JPP') : item.vendor}
                   </p>
                 </div>
-                <div className="text-right flex-shrink-0">
-                  <span className="text-xs font-black text-[#C96F4F] block font-mono">
+                <div className="text-right shrink-0">
+                  <span className="text-xs font-bold text-[#2DD4BF] block font-mono tabular-nums">
                     {item.price}
                   </span>
-                  <span className="text-[8px] font-bold text-[#6B7F5B]">
+                  <span className="text-[11px] font-medium text-[#99CBC2]">
                     {t('portal:status_completed', item.status)}
                   </span>
                 </div>
@@ -234,8 +230,8 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
         'Sistem pelaporan aduan telus, bantuan Food Bank siswa, dan pemantauan penempatan kamsis serta kediaman luar kampus.'
       ),
       icon: HeartHandshake,
-      color: '#6B7F5B',
-      accentColor: '#2E3A2F',
+      color: '#0D9488',
+      accentColor: '#0B2420',
       path: '/kebajikan',
       stats: [
         { value: `${stats.studentsCount.toLocaleString()}+`, label: t('portal:stat_residence_records_label', 'Rekod Kediaman') },
@@ -249,12 +245,12 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
             className="w-full h-full object-cover object-top transition-transform duration-500 group-hover/prev:scale-105"
             loading="lazy"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#2E3A2F]/90 via-[#2E3A2F]/20 to-transparent flex items-end p-3">
-            <div className="flex items-center justify-between w-full">
-              <span className="text-[10px] font-bold text-white tracking-wide truncate">
-                Radar Kebajikan & Food Bank
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0B2420]/90 via-[#0B2420]/20 to-transparent flex items-end p-3">
+            <div className="flex items-center justify-between w-full gap-2">
+              <span className="text-[11px] font-semibold text-white tracking-tight truncate">
+                Radar Kebajikan &amp; Food Bank
               </span>
-              <span className="text-[9px] font-bold px-2 py-0.5 rounded-full bg-[#C96F4F] text-white">
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-[#0F766E] text-white shrink-0">
                 24/7 Aktif
               </span>
             </div>
@@ -266,20 +262,12 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
 
   return (
     <section id="modul" className="py-24 md:py-32 px-4 md:px-6 max-w-7xl mx-auto relative z-20">
-      {/* Section Header */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 md:gap-8 mb-16 md:mb-20">
-        <div className="space-y-3">
-          <div className="flex items-center gap-2.5">
-            <span className="w-2 h-2 rounded-full bg-[#C96F4F]" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-[#556453]">
-              {t('portal:landing_bento_tag', 'Modul Bersepadu')}
-            </span>
-          </div>
-          <h2 className="text-4xl sm:text-6xl md:text-[4.5rem] font-black tracking-tight text-[#2E3A2F] leading-[0.96]">
-            {t('portal:features_heading', 'Ciri-Ciri Menyeluruh Platform')}
-          </h2>
-        </div>
-        <p className="max-w-md text-sm md:text-base text-[#556453] font-medium leading-relaxed pb-2">
+      {/* Stacked Focused Section Header (No uppercase eyebrow spam or split filler) */}
+      <div className="max-w-3xl mb-14 md:mb-16 space-y-3">
+        <h2 className="text-3xl sm:text-5xl md:text-[3.75rem] font-black tracking-[-0.03em] text-[#0B2420] leading-[1.02]">
+          {t('portal:features_heading', 'Ciri-Ciri Menyeluruh Platform')}
+        </h2>
+        <p className="text-sm md:text-base text-[#3B635C] font-normal leading-relaxed max-w-2xl">
           {t(
             'portal:features_desc',
             '5 tonggak utama sistem mengintegrasikan seluruh pentadbiran kokurikulum, kebajikan, perniagaan kampus, dan rekod siswa dalam satu sistem bersatu.'
@@ -287,82 +275,145 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
         </p>
       </div>
 
-      {/* Bento Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
-        {modules.map((m) => (
-          <SpotlightCard
-            key={m.id}
-            onClick={() => navigate(m.path)}
-            className={cn('p-8 md:p-10 flex flex-col h-full bg-white', m.colSpan)}
-          >
-            {/* Top Bar of Card */}
-            <div className="flex items-start justify-between mb-8">
+      {/* Gapless Bento Cards Grid with Deep Pine-Teal Flagship Anchoring */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 grid-flow-dense gap-6 md:gap-8">
+        {modules.map((m) => {
+          const isFlagship = m.id === 'polymart';
+          const isTintedIce = m.id === 'akademik';
+
+          return (
+            <SpotlightCard
+              key={m.id}
+              onClick={() => navigate(m.path)}
+              spotlightColor={isFlagship ? 'rgba(45, 212, 191, 0.14)' : 'rgba(13, 148, 136, 0.09)'}
+              className={cn(
+                'p-7 sm:p-8 md:p-9 flex flex-col h-full',
+                isFlagship
+                  ? '!bg-[#0B2420] !border-[#1E4D45] hover:!border-[#2DD4BF]/60 text-[#F6FBF9]'
+                  : isTintedIce
+                  ? 'bg-gradient-to-br from-white via-white to-[#EBF7F4]/90'
+                  : 'bg-white',
+                m.colSpan
+              )}
+            >
+              {/* Top Bar of Card */}
+              <div className="flex items-start justify-between mb-7">
+                <div
+                  className={cn(
+                    'w-13 h-13 md:w-14 md:h-14 rounded-2xl flex items-center justify-center shadow-xs transition-transform duration-300 group-hover:scale-105',
+                    isFlagship && '!bg-[#14B8A6]/15 !text-[#2DD4BF]'
+                  )}
+                  style={!isFlagship ? { backgroundColor: `${m.color}15`, color: m.color } : undefined}
+                >
+                  <m.icon className="w-6 h-6 md:w-7 md:h-7" />
+                </div>
+                <div
+                  className={cn(
+                    'w-10 h-10 md:w-11 md:h-11 rounded-full border flex items-center justify-center transition-colors duration-200',
+                    isFlagship
+                      ? 'border-[#1E4D45] bg-[#061714] text-[#2DD4BF] group-hover:bg-[#2DD4BF] group-hover:text-[#061714]'
+                      : 'border-[#B8E4DC] bg-[#F6FBF9] text-[#0B2420] group-hover:bg-[#0F766E] group-hover:text-white'
+                  )}
+                >
+                  <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" />
+                </div>
+              </div>
+
+              {/* Middle Content */}
+              <div className="flex-1 mb-7">
+                <span
+                  className={cn(
+                    'text-xs font-semibold block mb-1.5',
+                    isFlagship ? 'text-[#2DD4BF]' : 'text-[#0D9488]'
+                  )}
+                >
+                  {m.subtitle}
+                </span>
+                <h3
+                  className={cn(
+                    'text-2xl md:text-[1.75rem] font-bold mb-2.5 tracking-tight',
+                    isFlagship ? 'text-[#F6FBF9]' : 'text-[#0B2420]'
+                  )}
+                >
+                  {m.title}
+                </h3>
+                <p
+                  className={cn(
+                    'text-sm font-normal leading-relaxed',
+                    isFlagship ? 'text-[#99CBC2]' : 'text-[#3B635C]'
+                  )}
+                >
+                  {m.desc}
+                </p>
+              </div>
+
+              {/* Bottom Preview + Stat Metrics */}
               <div
-                className="w-14 h-14 md:w-16 md:h-16 rounded-2xl flex items-center justify-center shadow-xs transition-transform duration-300 group-hover:scale-105"
-                style={{ backgroundColor: `${m.color}15`, color: m.color }}
+                className={cn(
+                  'grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t',
+                  isFlagship ? 'border-[#1E4D45]' : 'border-[#B8E4DC]/60'
+                )}
               >
-                <m.icon className="w-7 h-7 md:w-8 md:h-8" />
-              </div>
-              <div className="w-10 h-10 md:w-12 md:h-12 rounded-full border border-[#D9C9B2] flex items-center justify-center bg-[#F8F6EE] group-hover:bg-[#C96F4F] group-hover:text-white transition-colors">
-                <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5 text-[#2E3A2F] group-hover:text-white" />
-              </div>
-            </div>
-
-            {/* Middle Content */}
-            <div className="flex-1 mb-8">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-[#6B7F5B] block mb-2">
-                {m.subtitle}
-              </span>
-              <h3 className="text-2xl md:text-3xl font-black text-[#2E3A2F] mb-3 tracking-tight">
-                {m.title}
-              </h3>
-              <p className="text-sm text-[#556453] font-medium leading-relaxed">{m.desc}</p>
-            </div>
-
-            {/* Bottom Preview + Stat Metrics */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t border-[#D9C9B2]/60">
-              <div className="rounded-2xl bg-[#F8F6EE] border border-[#D9C9B2]/70 aspect-[4/3] sm:aspect-square overflow-hidden relative">
-                {m.preview}
-              </div>
-              <div className="flex flex-row sm:flex-col items-center sm:items-start justify-between sm:justify-center gap-3 py-2 sm:py-0 sm:pl-4">
-                {m.stats.map((s, idx: number) => {
-                  let value = '';
-                  let label = '';
-                  if (typeof s === 'object' && s !== null && 'value' in s) {
-                    value = s.value;
-                    label = s.label;
-                  } else {
-                    const str = String(s);
-                    const match = str.match(/^([\d,]+(?:\.\d+)?\+?%?)\s+(.+)$/);
-                    if (match) {
-                      value = match[1];
-                      label = match[2];
-                    } else if (str.toLowerCase().includes('pay') || str.toLowerCase().includes('qr')) {
-                      value = '100%';
-                      label = str;
-                    } else if (str.toLowerCase().includes('tindakan') || str.toLowerCase().includes('action') || str.toLowerCase().includes('pantas') || str.toLowerCase().includes('quick')) {
-                      value = '24/7';
-                      label = str;
+                <div
+                  className={cn(
+                    'rounded-2xl border aspect-[4/3] sm:aspect-square overflow-hidden relative',
+                    isFlagship
+                      ? 'bg-[#061714] border-[#1E4D45]'
+                      : 'bg-[#F6FBF9] border-[#B8E4DC]/70'
+                  )}
+                >
+                  {m.preview}
+                </div>
+                <div className="flex flex-row sm:flex-col items-center sm:items-start justify-between sm:justify-center gap-3 py-2 sm:py-0 sm:pl-4">
+                  {m.stats.map((s, idx: number) => {
+                    let value = '';
+                    let label = '';
+                    if (typeof s === 'object' && s !== null && 'value' in s) {
+                      value = s.value;
+                      label = s.label;
                     } else {
-                      value = '★';
-                      label = str;
+                      const str = String(s);
+                      const match = str.match(/^([\d,]+(?:\.\d+)?\+?%?)\s+(.+)$/);
+                      if (match) {
+                        value = match[1];
+                        label = match[2];
+                      } else if (str.toLowerCase().includes('pay') || str.toLowerCase().includes('qr')) {
+                        value = '100%';
+                        label = str;
+                      } else if (str.toLowerCase().includes('tindakan') || str.toLowerCase().includes('action') || str.toLowerCase().includes('pantas') || str.toLowerCase().includes('quick')) {
+                        value = '24/7';
+                        label = str;
+                      } else {
+                        value = '★';
+                        label = str;
+                      }
                     }
-                  }
-                  return (
-                    <div key={idx} className="flex flex-col">
-                      <span className="text-lg md:text-xl font-black text-[#2E3A2F] tracking-tight font-mono tabular-nums">
-                        {value}
-                      </span>
-                      <span className="text-[9px] font-bold text-[#556453] uppercase tracking-wider">
-                        {label}
-                      </span>
-                    </div>
-                  );
-                })}
+                    return (
+                      <div key={idx} className="flex flex-col">
+                        <span
+                          className={cn(
+                            'text-lg md:text-xl font-black tracking-tight font-mono tabular-nums',
+                            isFlagship ? 'text-[#F6FBF9]' : 'text-[#0B2420]'
+                          )}
+                        >
+                          {value}
+                        </span>
+                        <span
+                          className={cn(
+                            'text-[11px] font-medium',
+                            isFlagship ? 'text-[#99CBC2]' : 'text-[#3B635C]'
+                          )}
+                        >
+                          {label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          </SpotlightCard>
-        ))}
+            </SpotlightCard>
+          );
+        })}
       </div>
     </section>
   );

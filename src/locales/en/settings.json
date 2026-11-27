@@ -34,6 +34,7 @@
   "dark_mode_desc": "OLED dark background for eye comfort & battery saving.",
   "delete_account": "Delete Account",
   "delete_account_warning": "Once deleted, your account cannot be recovered.",
+  "logout_session_warning": "End the active session on this device for your account security.",
   "department": "Department",
   "did_not_receive_email": "Didn't receive email?",
   "doc_faq_title": "Frequently Asked Questions (FAQ) Archive",

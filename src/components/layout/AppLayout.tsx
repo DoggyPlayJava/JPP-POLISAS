@@ -12,6 +12,9 @@ import { EXCO_MODULES } from '@/config/excoModules';
 import { ExcoIcon } from '@/components/ui/ExcoIcon';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from './BottomNav';
+import { LanguageToggle } from '@/components/ui/LanguageToggle';
+import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { NotificationBell } from '@/components/ui/NotificationBell';
 import { useTranslation } from 'react-i18next';
 
 
@@ -72,7 +75,7 @@ export function AppLayout() {
   }, [isSidebarOpen]);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden selection:bg-primary selection:text-white">
+    <div className="flex h-[100dvh] bg-background overflow-hidden selection:bg-primary selection:text-white">
 
       {/* ── 1. BACKDROP (MOBILE ONLY) ── */}
       <AnimatePresence>
@@ -90,7 +93,7 @@ export function AppLayout() {
       {/* ── 2. SIDEBAR (RESPONSIVE) ── */}
       <aside className={cn(
         "fixed inset-y-0 left-0 z-[140] w-72 transform transition-transform duration-300 ease-in-out",
-        activeExco.id === 'ems' ? "bg-slate-950" : "bg-sidebar",
+        activeExco.id === 'ems' ? "bg-[#061714]" : "bg-[#0B2420]",
         "md:relative md:translate-x-0 md:flex-shrink-0",
         isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
       )}>
@@ -108,28 +111,36 @@ export function AppLayout() {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 
         {/* ── MOBILE HEADER OVERRIDE ── */}
-        <div className="md:hidden flex items-center p-4 border-b bg-background/80  sticky top-0 z-[50]">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setIsSidebarOpen(true)}
-            className="tour-mobile-hamburger mr-3 bg-muted/50 rounded-xl"
-          >
-            <Menu className="w-5 h-5" />
-          </Button>
+        <div className="md:hidden flex items-center justify-between gap-2 px-4 py-3 border-b border-border bg-card sticky top-0 z-[50]">
+          <div className="flex items-center min-w-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSidebarOpen(true)}
+              className="tour-mobile-hamburger mr-3 bg-muted/50 rounded-xl shrink-0"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
 
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center text-lg shadow-sm overflow-hidden">
-              <ExcoIcon iconName={activeExco.icon} className="w-5 h-5" />
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-lg bg-muted/50 flex items-center justify-center text-lg shadow-sm overflow-hidden shrink-0">
+                <ExcoIcon iconName={activeExco.icon} className="w-5 h-5" />
+              </div>
+              <div className="leading-tight min-w-0">
+                <span className="font-black text-[13px] uppercase tracking-tighter text-foreground block truncate">
+                  {activeExco.name}
+                </span>
+                <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/70 block">
+                  JPP Polisas
+                </span>
+              </div>
             </div>
-            <div className="leading-tight">
-              <span className="font-black text-[13px] uppercase tracking-tighter text-foreground block">
-                {activeExco.name}
-              </span>
-              <span className="text-[9px] font-black uppercase tracking-[0.2em] text-muted-foreground/50 block">
-                JPP Polisas
-              </span>
-            </div>
+          </div>
+
+          <div className="flex items-center gap-1 shrink-0">
+            <NotificationBell />
+            <LanguageToggle />
+            <ThemeToggle />
           </div>
         </div>
 

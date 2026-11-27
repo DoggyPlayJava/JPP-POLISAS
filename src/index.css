@@ -4,59 +4,59 @@
 
 @layer base {
   :root {
-    /* JPP Polisas - Red & Gold Institutional Theme */
-    --background: 30 50% 99%;
-    --foreground: 0 50% 12%;
+    /* JPP Polisas - Semambu Mineral Teal & Crisp Alabaster */
+    --background: 160 45% 97%;
+    --foreground: 170 53% 9%;
 
-    --card: 30 30% 99%;
-    --card-foreground: 0 50% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 170 53% 9%;
 
-    --popover: 30 30% 99%;
-    --popover-foreground: 0 50% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 170 53% 9%;
 
-    --primary: 0 78% 29%;
-    --primary-foreground: 30 60% 97%;
+    --primary: 175 77% 26%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 36 90% 94%;
-    --secondary-foreground: 0 60% 18%;
+    --secondary: 162 42% 95%;
+    --secondary-foreground: 170 53% 9%;
 
-    --muted: 30 30% 95%;
-    --muted-foreground: 0 10% 45%;
+    --muted: 162 36% 93%;
+    --muted-foreground: 169 25% 31%;
 
-    --accent: 43 78% 46%;
-    --accent-foreground: 30 60% 97%;
+    --accent: 175 84% 32%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 30 60% 97%;
+    --destructive: 0 84% 52%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 30 25% 90%;
-    --input: 30 25% 90%;
-    --ring: 43 78% 46%;
+    --border: 168 42% 81%;
+    --input: 168 42% 81%;
+    --ring: 175 77% 26%;
 
     --radius: 1.25rem;
 
-    /* Sidebar - JPP Maroon (Consistent identity) */
-    --sidebar-background: 0 55% 14%;
-    --sidebar-foreground: 30 40% 95%;
-    --sidebar-primary: 43 78% 46%;
-    --sidebar-primary-foreground: 0 55% 14%;
-    --sidebar-accent: 0 45% 20%;
-    --sidebar-accent-foreground: 30 40% 95%;
-    --sidebar-border: 0 40% 22%;
-    --sidebar-ring: 43 78% 46%;
+    /* Sidebar - Deep Pine-Teal Unified Identity */
+    --sidebar-background: 170 53% 9%;
+    --sidebar-foreground: 160 45% 97%;
+    --sidebar-primary: 171 77% 50%;
+    --sidebar-primary-foreground: 170 58% 6%;
+    --sidebar-accent: 169 49% 13%;
+    --sidebar-accent-foreground: 160 45% 97%;
+    --sidebar-border: 170 44% 21%;
+    --sidebar-ring: 171 77% 50%;
 
-    /* Custom Tokens - Red/Gold */
-    --primary-gradient: linear-gradient(135deg, hsl(0 78% 29%) 0%, hsl(0 60% 20%) 100%);
-    --accent-gradient: linear-gradient(135deg, hsl(43 78% 46%) 0%, hsl(36 85% 55%) 100%);
-    --glass-background: rgba(255, 252, 247, 0.45);
-    --glass-border: rgba(131, 16, 16, 0.05);
-    --glass-edge: rgba(255, 255, 255, 0.6);
+    /* Custom Tokens - Mineral Teal */
+    --primary-gradient: linear-gradient(135deg, hsl(175 77% 26%) 0%, hsl(175 69% 22%) 100%);
+    --accent-gradient: linear-gradient(135deg, hsl(175 84% 32%) 0%, hsl(171 77% 50%) 100%);
+    --glass-background: rgba(246, 251, 249, 0.92);
+    --glass-border: rgba(15, 118, 110, 0.12);
+    --glass-edge: rgba(255, 255, 255, 0.7);
     
-    --nexus-maroon: 0 78% 29%;
-    --nexus-black: 0 0% 2%;
+    --nexus-maroon: 175 77% 26%;
+    --nexus-black: 170 58% 6%;
     
-    --shadow-premium: 0 12px 40px -8px rgba(131, 16, 16, 0.12);
-    --shadow-glow: 0 0 24px -4px hsla(0, 78%, 29%, 0.35);
+    --shadow-premium: 0 12px 40px -8px rgba(15, 118, 110, 0.12);
+    --shadow-glow: 0 0 24px -4px hsla(175, 77%, 26%, 0.35);
 
     --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-heading: 'Manrope', 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -64,41 +64,41 @@
   }
 
   .dark {
-    --background: 0 0% 2%;
-    --foreground: 0 0% 98%;
+    --background: 170 58% 6%;
+    --foreground: 160 45% 97%;
 
-    --card: 0 0% 4%;
-    --card-foreground: 0 0% 98%;
+    --card: 170 53% 9%;
+    --card-foreground: 160 45% 97%;
 
-    --popover: 0 0% 4%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 170 53% 9%;
+    --popover-foreground: 160 45% 97%;
 
-    --primary: 0 78% 29%;
-    --primary-foreground: 0 0% 100%;
+    --primary: 171 77% 50%;
+    --primary-foreground: 170 58% 6%;
 
-    --secondary: 0 0% 8%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 169 49% 13%;
+    --secondary-foreground: 160 45% 97%;
 
-    --muted: 0 0% 8%;
-    --muted-foreground: 0 0% 55%;
+    --muted: 169 42% 12%;
+    --muted-foreground: 169 32% 70%;
 
-    --accent: 43 78% 46%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 173 80% 40%;
+    --accent-foreground: 170 58% 6%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 12%;
-    --input: 0 0% 12%;
-    --ring: 43 78% 46%;
+    --border: 170 44% 21%;
+    --input: 170 44% 21%;
+    --ring: 171 77% 50%;
 
-    --sidebar-background: 0 0% 3%;
-    --sidebar-accent: 0 0% 8%;
-    --sidebar-border: 0 0% 10%;
+    --sidebar-background: 170 58% 6%;
+    --sidebar-accent: 169 49% 13%;
+    --sidebar-border: 170 44% 21%;
 
-    --glass-background: rgba(5, 5, 5, 0.45);
-    --glass-border: rgba(255, 255, 255, 0.04);
-    --glass-edge: rgba(255, 255, 255, 0.1);
+    --glass-background: rgba(6, 23, 20, 0.92);
+    --glass-border: rgba(45, 212, 191, 0.14);
+    --glass-edge: rgba(45, 212, 191, 0.18);
   }
 }
 
@@ -138,20 +138,30 @@
   }
 
   .bento-card {
-    @apply bg-card border border-border/40 rounded-[2.5rem] shadow-sm transition-all duration-500 hover:shadow-2xl hover:shadow-primary/10 hover:border-primary/30 hover:-translate-y-1;
+    @apply bg-card border border-border/40 rounded-2xl shadow-sm transition-[transform,box-shadow,border-color] duration-200 ease-out active:scale-[0.99];
   }
 
   .premium-card {
-    @apply bg-card border border-border/40 shadow-[var(--shadow-premium)] hover:shadow-[0_40px_80px_-20px_rgba(139,26,26,0.12)] hover:-translate-y-1.5 transition-all duration-700;
-    transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    @apply bg-card border border-border/40 rounded-2xl shadow-[var(--shadow-premium)] transition-[transform,box-shadow,border-color] duration-200 active:scale-[0.99];
+    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .bento-card:hover {
+      @apply shadow-xl shadow-primary/10 border-primary/30 -translate-y-0.5;
+    }
+    .premium-card:hover {
+      box-shadow: 0 32px 64px -18px rgba(15, 118, 110, 0.14);
+      transform: translateY(-2px);
+    }
   }
 
   .glow-accent {
-    @apply shadow-[0_0_40px_-5px_hsla(43,78%,46%,0.4)];
+    @apply shadow-[0_0_40px_-5px_hsla(175,84%,32%,0.35)];
   }
 
   .premium-glow {
-    @apply relative after:absolute after:inset-0 after:rounded-[inherit] after:shadow-[0_0_60px_rgba(212,160,23,0.2)] after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-700 ease-out;
+    @apply relative after:absolute after:inset-0 after:rounded-[inherit] after:shadow-[0_0_60px_rgba(20,184,166,0.2)] after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-700 ease-out;
   }
 
   .gradient-text {
@@ -163,12 +173,12 @@
   }
 
   .sidebar-jpp {
-    background: linear-gradient(180deg, hsl(0 60% 12%) 0%, hsl(0 65% 9%) 100%);
+    background: linear-gradient(180deg, #0B2420 0%, #061714 100%);
     @apply shadow-[0_20px_50px_rgba(0,0,0,0.3)];
   }
 
   .tab-glow {
-    @apply relative after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full after:blur-[2px] after:shadow-[0_0_8px_rgba(139,26,26,0.8)] dark:after:shadow-[0_0_12px_rgba(255,255,255,0.6)];
+    @apply relative after:absolute after:bottom-0 after:left-1/2 after:-translate-x-1/2 after:w-1 after:h-1 after:bg-primary after:rounded-full after:blur-[2px] after:shadow-[0_0_8px_rgba(15,118,110,0.8)] dark:after:shadow-[0_0_12px_rgba(45,212,191,0.6)];
   }
 }
 
@@ -189,13 +199,15 @@
 /* Hide scrollbar for clean horizontal scrolls */
 .hide-scrollbar,
 .no-scrollbar,
-.scrollbar-hide {
+.scrollbar-hide,
+.scrollbar-none {
   -ms-overflow-style: none !important;  /* IE and Edge */
   scrollbar-width: none !important;  /* Firefox */
 }
 .hide-scrollbar::-webkit-scrollbar,
 .no-scrollbar::-webkit-scrollbar,
-.scrollbar-hide::-webkit-scrollbar {
+.scrollbar-hide::-webkit-scrollbar,
+.scrollbar-none::-webkit-scrollbar {
   display: none !important;
   width: 0 !important;
   height: 0 !important;
@@ -244,7 +256,7 @@ body.supsas-route {
 /* ── JPP HQ Canvas Micro-Texture ──────────────────────────────────
    Subtle SVG noise overlay for tactile institutional depth without performance penalty. */
 .jpp-canvas-texture {
-  background-image: radial-gradient(rgba(46, 58, 47, 0.04) 1px, transparent 0);
+  background-image: radial-gradient(rgba(15, 118, 110, 0.05) 1px, transparent 0);
   background-size: 24px 24px;
 }
 .dark .jpp-canvas-texture {

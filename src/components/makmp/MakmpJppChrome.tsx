@@ -33,8 +33,8 @@ export function MakmpJppChrome() {
         onOpenSidebar={() => navigate('/portal')}
         customLinks={{
           left: [
-            { icon: Menu, label: 'Portal', onClick: () => navigate('/portal') },
-            { icon: Home, label: 'Utama', onClick: () => navigate('/'), isActive: location.pathname === '/makmp' },
+            { icon: Home, label: t('common:nav.home', 'Utama'), onClick: () => navigate('/'), isActive: location.pathname === '/makmp' },
+            { icon: LayoutGrid, label: t('common:nav.portal', 'Portal'), onClick: () => navigate('/portal') },
           ],
           right: [
             {
@@ -45,7 +45,7 @@ export function MakmpJppChrome() {
             },
             {
               icon: User,
-              label: 'Profil',
+              label: t('common:nav.profile', 'Profil'),
               onClick: () => (profile ? navigate('/tetapan') : navigate('/login')),
             },
           ],

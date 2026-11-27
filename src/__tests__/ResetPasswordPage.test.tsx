@@ -24,11 +24,11 @@ describe('ResetPasswordPage Polish & Dark Mode High Contrast', () => {
     expect(source).toContain('Portal Rasmi');
   });
 
-  it('provides high-contrast text and Earthy Minimal tokens for dark mode readability', () => {
-    expect(source).toContain('#2E3A2F');
-    expect(source).toContain('#F8F6EE');
-    expect(source).toContain('#151D16');
-    expect(source).toContain('dark:text-[#F8F6EE]');
+  it('provides high-contrast text and Semambu Mineral Teal tokens for dark mode readability', () => {
+    expect(source).toContain('#0B2420');
+    expect(source).toContain('#F6FBF9');
+    expect(source).toContain('#061714');
+    expect(source).toContain('dark:text-[#F6FBF9]');
   });
 
   it('provides password visibility toggle for both fields', () => {

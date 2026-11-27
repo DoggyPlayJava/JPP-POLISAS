@@ -521,7 +521,7 @@ function ReviewReportRow({ report, idx, onStartReview, onDecision }: ReviewRowPr
             <Avatar className="h-11 w-11 rounded-xl ring-2 ring-border/30 flex-shrink-0">
               <AvatarFallback
                 className="font-black text-xs text-white rounded-xl"
-                style={{ background: club ? `${(report as any).club_id === 'club_pepka' ? '#8B1A1A' : (report as any).club_id === 'club_elektron' ? '#1A3A8B' : '#1A6B3A'}` : '#8B1A1A' }}
+                style={{ background: club ? `${(report as any).club_id === 'club_pepka' ? '#0F766E' : (report as any).club_id === 'club_elektron' ? '#1A3A8B' : '#1A6B3A'}` : '#0F766E' }}
               >
                 {clubInitials.slice(0, 3)}
               </AvatarFallback>

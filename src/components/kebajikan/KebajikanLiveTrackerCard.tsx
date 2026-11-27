@@ -50,8 +50,8 @@ export function KebajikanLiveTrackerCard({
     <div
       className={cn(
         'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
-        'bg-white/95 dark:bg-[#1A231B]/95',
-        'border border-[#D9C9B2]/60 dark:border-[#3A4A3B]/60 shadow-sm hover:shadow-md',
+        'bg-white dark:bg-[#0B2420]',
+        'border border-[#B8E4DC]/80 dark:border-[#1E4D45] shadow-sm hover:shadow-md',
         'space-y-6',
         className
       )}
@@ -64,7 +64,7 @@ export function KebajikanLiveTrackerCard({
 
       {/* Divider if both exist */}
       {isTicketActive && isFoodBankActive && (
-        <div className="border-t border-[#D9C9B2]/40 dark:border-[#3A4A3B]/60 my-2" />
+        <div className="border-t border-[#B8E4DC]/60 dark:border-[#1E4D45] my-2" />
       )}
 
       {/* ── Active FoodBank Application Tracker Section ── */}
@@ -108,11 +108,11 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
             </span>
             {t('kebajikan:tracker_live_badge', 'Penjejak Aduan Langsung')}
           </div>
-          <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
+          <h3 className="text-base sm:text-lg font-black text-[#0F172A] dark:text-[#F6FBF9] tracking-tight">
             {t('kebajikan:tracker_facility_title', `Aduan Fasiliti: ${title}`, { title })}
           </h3>
-          <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-mono tabular-nums">
-            {t('kebajikan:tracker_ref_no', 'No. Rujukan: ')}<span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{ticketNo}</span>
+          <p className="text-xs text-[#475569] dark:text-[#99CBC2] font-mono tabular-nums">
+            {t('kebajikan:tracker_ref_no', 'No. Rujukan: ')}<span className="font-semibold text-[#0F172A] dark:text-[#F6FBF9]">{ticketNo}</span>
           </p>
         </div>
 
@@ -249,11 +249,11 @@ function FoodBankTrackerItem({
             </span>
             {t('kebajikan:tracker_foodbank_badge', 'Food Bank JPP • Pas Pengambilan')}
           </div>
-          <h3 className="text-base sm:text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] tracking-tight">
+          <h3 className="text-base sm:text-lg font-black text-[#0F172A] dark:text-[#F6FBF9] tracking-tight">
             {t('kebajikan:tracker_foodbank_app_title', 'Permohonan Food Bank JPP')}
           </h3>
-          <p className="text-xs text-[#556453] dark:text-[#A3B39F] font-mono tabular-nums">
-            {t('kebajikan:tracker_ref_no', 'No. Rujukan: ')}<span className="font-semibold text-[#2E3A2F] dark:text-[#F8F6EE]">{appNo}</span>
+          <p className="text-xs text-[#475569] dark:text-[#99CBC2] font-mono tabular-nums">
+            {t('kebajikan:tracker_ref_no', 'No. Rujukan: ')}<span className="font-semibold text-[#0F172A] dark:text-[#F6FBF9]">{appNo}</span>
           </p>
         </div>
 

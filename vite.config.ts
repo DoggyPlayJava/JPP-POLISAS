@@ -62,13 +62,18 @@ export default defineConfig({
       },
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg', 'jpp-app-icon.png', 'offline.html'],
       manifest: {
-        name: 'JPP POLISAS',
-        short_name: 'JPP Digital Portal',
-        description: 'Sistem Pengurusan JPP & Kelab POLISAS',
-        theme_color: '#3b82f6',
-        background_color: '#0f172a',
+        id: '/',
+        name: 'JPP POLISAS — Portal Digital Pelajar',
+        short_name: 'JPP POLISAS',
+        description: 'Super App Kampus & Pengurusan JPP Politeknik Sultan Haji Ahmad Shah',
+        theme_color: '#0F766E',
+        background_color: '#F6FBF9',
         display: 'standalone',
+        scope: '/',
         start_url: '/portal',
+        launch_handler: {
+          client_mode: 'navigate-existing',
+        },
         icons: [
           { src: 'jpp-app-icon.png', sizes: '192x192', type: 'image/png' },
           { src: 'jpp-app-icon.png', sizes: '512x512', type: 'image/png' },
@@ -78,8 +83,22 @@ export default defineConfig({
           {
             name: "Buka Kad Matrik",
             short_name: "QR Matrik",
-            description: "Papar kod QR matrik anda",
+            description: "Papar kod QR matrik & merit anda",
             url: "/akademik/qr",
+            icons: [{ src: "jpp-app-icon.png", sizes: "192x192" }]
+          },
+          {
+            name: "Takwim Rasmi",
+            short_name: "Takwim",
+            description: "Lihat kalendar akademik dan jadual kuliah",
+            url: "/akademik/takwim",
+            icons: [{ src: "jpp-app-icon.png", sizes: "192x192" }]
+          },
+          {
+            name: "PolyMart Siswa",
+            short_name: "PolyMart",
+            description: "Pesan makanan & produk usahawan siswa",
+            url: "/polymart",
             icons: [{ src: "jpp-app-icon.png", sizes: "192x192" }]
           },
           {
@@ -87,13 +106,6 @@ export default defineConfig({
             short_name: "Pengumuman",
             description: "Lihat pengumuman rasmi JPP",
             url: "/jpp/announcements",
-            icons: [{ src: "jpp-app-icon.png", sizes: "192x192" }]
-          },
-          {
-            name: "Takwim Rasmi",
-            short_name: "Takwim",
-            description: "Lihat kalendar akademik dan aktiviti",
-            url: "/akademik/takwim",
             icons: [{ src: "jpp-app-icon.png", sizes: "192x192" }]
           }
         ]

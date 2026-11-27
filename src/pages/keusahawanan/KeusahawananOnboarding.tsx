@@ -68,7 +68,7 @@ export function KeusahawananOnboarding() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-[100dvh] bg-slate-950 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-500"></div>
       </div>
     );
@@ -78,7 +78,7 @@ export function KeusahawananOnboarding() {
   const isWaiting = pendingMemberships.length > 0;
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden pb-28 md:pb-8">
+    <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col items-center justify-center p-6 relative overflow-hidden pb-28 md:pb-8">
       {/* Background Enhancements */}
       <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
       </div>

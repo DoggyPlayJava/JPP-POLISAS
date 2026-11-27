@@ -77,7 +77,7 @@ export function ConfirmDialog({
 
   return (
     <AlertDialog open={isDialogOpen} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="rounded-3xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-[#151D16] p-6 shadow-2xl max-w-md">
+      <AlertDialogContent className="rounded-3xl border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] p-6 shadow-2xl max-w-md">
         <AlertDialogHeader className="space-y-2">
           <AlertDialogTitle className="text-lg font-bold text-slate-900 dark:text-white">
             {title}

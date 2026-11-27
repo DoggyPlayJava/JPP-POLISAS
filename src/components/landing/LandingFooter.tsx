@@ -6,11 +6,11 @@ export const LandingFooter: React.FC = () => {
   const { t } = useTranslation(['portal', 'common']);
 
   return (
-    <footer className="w-full bg-[#F2EDE4] border-t border-[#D9C9B2] py-14 px-4 md:px-6 relative z-20">
+    <footer className="w-full bg-[#EBF7F4] border-t border-[#B8E4DC] py-14 px-4 md:px-6 relative z-20">
       <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
         {/* Brand & Badge */}
         <div className="flex items-center gap-3.5">
-          <div className="w-10 h-10 rounded-2xl bg-white border border-[#D9C9B2] p-1.5 flex items-center justify-center shadow-2xs">
+          <div className="w-10 h-10 rounded-2xl bg-white border border-[#B8E4DC] p-1.5 flex items-center justify-center shadow-2xs">
             <img
               src="/jpp-logo.png"
               alt="JPP POLISAS"
@@ -24,24 +24,24 @@ export const LandingFooter: React.FC = () => {
             />
           </div>
           <div className="flex flex-col text-left">
-            <span className="font-black text-sm tracking-tight text-[#2E3A2F]">
+            <span className="font-black text-sm tracking-tight text-[#0B2420]">
               JPP POLISAS
             </span>
-            <span className="text-[9px] font-bold text-[#6B7F5B] uppercase tracking-wider">
+            <span className="text-[11px] font-medium text-[#0F766E] tracking-tight">
               {t('portal:mpp_new_session', 'Majlis Perwakilan Pelajar Sesi Baharu')}
             </span>
           </div>
         </div>
 
         {/* Quick Nav Anchors */}
-        <div className="flex flex-wrap justify-center items-center gap-6 text-xs font-semibold text-[#556453]">
+        <div className="flex flex-wrap justify-center items-center gap-6 text-xs font-semibold text-[#3B635C]">
           <a
             href="#ekosistem"
             onClick={(e) => {
               e.preventDefault();
               scrollToLandingSection('#ekosistem');
             }}
-            className="hover:text-[#2E3A2F] transition-colors"
+            className="hover:text-[#0B2420] transition-colors"
           >
             {t('portal:nav_ecosystem', 'Ekosistem')}
           </a>
@@ -51,7 +51,7 @@ export const LandingFooter: React.FC = () => {
               e.preventDefault();
               scrollToLandingSection('#hari-kampus');
             }}
-            className="hover:text-[#2E3A2F] transition-colors"
+            className="hover:text-[#0B2420] transition-colors"
           >
             {t('portal:nav_campus_life', 'Hari Kampus')}
           </a>
@@ -61,7 +61,7 @@ export const LandingFooter: React.FC = () => {
               e.preventDefault();
               scrollToLandingSection('#modul');
             }}
-            className="hover:text-[#2E3A2F] transition-colors"
+            className="hover:text-[#0B2420] transition-colors"
           >
             {t('portal:nav_main_modules', 'Modul')}
           </a>
@@ -71,7 +71,7 @@ export const LandingFooter: React.FC = () => {
               e.preventDefault();
               scrollToLandingSection('#nexus');
             }}
-            className="hover:text-[#2E3A2F] transition-colors"
+            className="hover:text-[#0B2420] transition-colors"
           >
             {t('portal:nav_nexus_ai', 'Nexus AI')}
           </a>
@@ -81,14 +81,14 @@ export const LandingFooter: React.FC = () => {
               e.preventDefault();
               scrollToLandingSection('#statistik');
             }}
-            className="hover:text-[#2E3A2F] transition-colors"
+            className="hover:text-[#0B2420] transition-colors"
           >
             {t('portal:nav_statistics', 'Statistik')}
           </a>
         </div>
 
         {/* Copyright Notice */}
-        <p className="text-[10px] font-medium text-[#556453]">
+        <p className="text-[11px] font-medium text-[#3B635C]">
           {t(
             'portal:footer_copyright',
             '© 2026 JPP Digital Portal POLISAS. Hak Cipta Terpelihara.'

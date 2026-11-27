@@ -214,7 +214,7 @@ function RequireApproval({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-background">
+      <div className="min-h-[100dvh] w-full flex items-center justify-center bg-background">
         <div className="animate-pulse font-black text-xs uppercase tracking-[0.3em] opacity-20">Mengesahkan Akses...</div>
       </div>
     );
@@ -266,9 +266,9 @@ function RequireApproval({ children }: { children: React.ReactNode }) {
 function InitialPageLoader() {
   const { t } = useTranslation();
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center bg-slate-950 text-white">
-      <div className="w-12 h-12 border-4 border-indigo-500/20 border-t-indigo-500 rounded-full animate-spin mb-4" />
-      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white/40 animate-pulse">{t('nav:downloading_data', 'Memuat turun data...')}</p>
+    <div className="min-h-[100dvh] w-full flex flex-col items-center justify-center bg-background text-foreground">
+      <div className="w-12 h-12 border-4 border-primary/20 border-t-primary rounded-full animate-spin mb-4" />
+      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground animate-pulse">{t('nav:downloading_data', 'Memuat turun data...')}</p>
     </div>
   );
 }
@@ -722,7 +722,7 @@ function App() {
                               }}
                               className={cn(
                                 "flex items-center gap-3 px-4 py-2.5 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] pointer-events-auto overflow-hidden",
-                                "bg-black border border-white/10",
+                                "bg-[#0B2420] dark:bg-[#0C221E] border border-teal-400/20",
                                 "rounded-full min-w-[160px] max-w-[90vw] justify-center mt-[env(safe-area-inset-top,0px)]"
                               )}
                             >

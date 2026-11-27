@@ -37,12 +37,20 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
   }, [formData.category]);
 
   const fetchAverageBudget = async (category: string) => {
-    const { data, error } = await supabase.rpc('get_average_budget_by_category', {
-      p_category: category
-    });
-    if (!error && data !== null && data > 0) {
-      setAvgBudget(Number(data));
-    } else {
+    if (localStorage.getItem('use_mock_auth') === 'true') {
+      setAvgBudget(null);
+      return;
+    }
+    try {
+      const { data, error } = await supabase.rpc('get_average_budget_by_category', {
+        p_category: category
+      });
+      if (!error && data !== null && data > 0) {
+        setAvgBudget(Number(data));
+      } else {
+        setAvgBudget(null);
+      }
+    } catch {
       setAvgBudget(null);
     }
   };
@@ -113,43 +121,43 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[160] flex items-center justify-center p-4">
         <motion.div 
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="absolute inset-0 bg-slate-950/80 "
+          className="absolute inset-0 bg-[#061714]/80 "
           onClick={onClose}
         />
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl text-slate-900 dark:text-slate-100"
+          className="relative bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col shadow-2xl text-[#0B2420] dark:text-[#F6FBF9]"
         >
           {/* Header */}
-          <div className="p-6 border-b border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800/30">
+          <div className="p-6 border-b border-[#B8E4DC]/60 dark:border-[#1E4D45] bg-[#F6FBF9] dark:bg-[#081A17]">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-purple-500/20 text-purple-600 dark:text-purple-400 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-teal-500/15 text-[#0F766E] dark:text-[#2DD4BF] rounded-xl flex items-center justify-center">
                   <Briefcase className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white">{t('gig:create_job_modal_title', 'Cipta Tugasan Baharu')}</h2>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">{t('gig:create_job_modal_desc', 'Iklankan tugasan anda kepada rakan pelajar.')}</p>
+                  <h2 className="text-xl font-bold text-[#0B2420] dark:text-[#F6FBF9]">{t('gig:create_job_modal_title', 'Cipta Tugasan Baharu')}</h2>
+                  <p className="text-xs text-[#3B635C] dark:text-[#99CBC2]">{t('gig:create_job_modal_desc', 'Iklankan tugasan anda kepada rakan pelajar.')}</p>
                 </div>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-slate-200 dark:hover:bg-white/10 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors">
+              <button onClick={onClose} className="p-2 hover:bg-[#EBF7F4] dark:hover:bg-[#11322C] rounded-full text-[#3B635C] hover:text-[#0B2420] dark:text-[#99CBC2] dark:hover:text-white transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Progress Bar */}
             <div className="flex items-center gap-2 mt-4">
-              <div className={`h-1.5 flex-1 rounded-full ${step >= 1 ? 'bg-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.4)]' : 'bg-slate-200 dark:bg-slate-800'}`} />
-              <div className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.4)]' : 'bg-slate-200 dark:bg-slate-800'}`} />
+              <div className={`h-1.5 flex-1 rounded-full ${step >= 1 ? 'bg-[#0F766E] dark:bg-[#2DD4BF] shadow-[0_0_10px_rgba(13,148,136,0.35)]' : 'bg-[#EBF7F4] dark:bg-[#11322C]'}`} />
+              <div className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${step >= 2 ? 'bg-[#0F766E] dark:bg-[#2DD4BF] shadow-[0_0_10px_rgba(13,148,136,0.35)]' : 'bg-[#EBF7F4] dark:bg-[#11322C]'}`} />
             </div>
-            <div className="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              <span className={step >= 1 ? 'text-purple-600 dark:text-purple-400' : ''}>{t('gig:step_details', 'Langkah 1: Butiran')}</span>
-              <span className={step >= 2 ? 'text-purple-600 dark:text-purple-400' : ''}>{t('gig:step_logistics', 'Langkah 2: Logistik & Upah')}</span>
+            <div className="flex justify-between mt-2 text-[10px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#99CBC2]">
+              <span className={step >= 1 ? 'text-[#0F766E] dark:text-[#2DD4BF]' : ''}>{t('gig:step_details', 'Langkah 1: Butiran')}</span>
+              <span className={step >= 2 ? 'text-[#0F766E] dark:text-[#2DD4BF]' : ''}>{t('gig:step_logistics', 'Langkah 2: Logistik & Upah')}</span>
             </div>
           </div>
 
@@ -245,7 +253,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                           />
                         </div>
                         {avgBudget !== null && (
-                          <p className="text-[10px] text-purple-600 dark:text-purple-400 font-medium flex items-center mt-1">
+                          <p className="text-[10px] text-[#0F766E] dark:text-[#2DD4BF] font-medium flex items-center mt-1">
                             {t('gig:average_market_price', 'Purata pasaran untuk {{cat}}: RM {{avg}}', { cat: formData.category.toLowerCase(), avg: avgBudget.toFixed(2) })}
                           </p>
                         )}
@@ -260,7 +268,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                           value={formData.deadlineDate}
                           min={new Date().toISOString().split('T')[0]}
                           onChange={e => setFormData({...formData, deadlineDate: e.target.value})}
-                          className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-300 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-300 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/50"
                           required
                         />
                       </div>
@@ -270,13 +278,13 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
                           type="time" 
                           value={formData.deadlineTime}
                           onChange={e => setFormData({...formData, deadlineTime: e.target.value})}
-                          className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-300 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                          className="w-full bg-slate-50 dark:bg-slate-950/50 border border-slate-300 dark:border-white/10 rounded-xl px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0D9488]/50"
                         />
                       </div>
                     </div>
 
-                    <div className="bg-purple-500/10 border border-purple-500/20 rounded-xl p-4 flex gap-3 text-purple-900 dark:text-purple-200 text-sm leading-relaxed mt-4">
-                      <AlertCircle className="w-5 h-5 flex-shrink-0 text-purple-600 dark:text-purple-400 mt-0.5" />
+                    <div className="bg-teal-500/10 border border-teal-500/20 rounded-xl p-4 flex gap-3 text-[#0B2420] dark:text-[#B8E4DC] text-sm leading-relaxed mt-4">
+                      <AlertCircle className="w-5 h-5 flex-shrink-0 text-[#0F766E] dark:text-[#2DD4BF] mt-0.5" />
                       <p>
                         {t('gig:escrow_notice', 'Sila pastikan tawaran anda munasabah dan adil. Pembayaran kepada Tasker harus dibincangkan dan diselesaikan secara terus (tunai/transfer) setelah tugasan selesai. JPPHQ tidak memegang wang anda buat masa ini.')}
                       </p>
@@ -288,7 +296,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
           </div>
 
           {/* Footer */}
-          <div className="p-6 border-t border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-slate-800/30 flex items-center justify-between mt-auto">
+          <div className="p-6 border-t border-[#B8E4DC]/60 dark:border-[#1E4D45] bg-[#F6FBF9] dark:bg-[#081A17] flex items-center justify-between mt-auto">
             {step === 1 ? (
               <Button variant="ghost" type="button" onClick={onClose} disabled={loading} className="text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
                 {t('gig:cancel', 'Batal')}
@@ -303,7 +311,7 @@ export function CreateJobModal({ isOpen, onClose, onSuccess }: CreateJobModalPro
               <Button 
                 type="button" 
                 onClick={handleNextStep}
-                className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white min-w-[120px] rounded-xl font-bold shadow-md shadow-purple-500/25 active:scale-95"
+                className="bg-[#0F766E] hover:bg-[#0D9488] text-white min-w-[120px] rounded-xl font-bold shadow-md shadow-teal-500/25 active:scale-95"
               >
                 {t('gig:next', 'Seterusnya')} <ChevronRight className="w-4 h-4 ml-2" />
               </Button>

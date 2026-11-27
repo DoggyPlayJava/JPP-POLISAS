@@ -74,7 +74,7 @@ describe('Task 1: Landing Page Scaffolding and Types', () => {
       imageAlt: 'Jadual Kuliah & Peta Dewan',
       deviceType: 'laptop',
       highlights: ['Waktu & Bilik Kuliah Tepat', 'Navigasi PolyMaps'],
-      tagColor: '#6B7F5B',
+      tagColor: '#0D9488',
     };
     expect(phase.deviceType).toBe('laptop');
     expect(phase.image).toContain('Integrated Jadual Akademik View');
@@ -356,7 +356,7 @@ describe('Task 8: Mobile Header Slimness, Academic Badges & Bilingual Support', 
     expect(html).toMatch(/BM|EN/);
 
     // Primary CTA is hidden on mobile screens
-    expect(html).toContain('hidden md:flex');
+    expect(html).toContain('hidden lg:flex');
   });
 
   it('renders all 5 POLISAS academic departments and lively floating chips in LandingHero', async () => {
@@ -426,9 +426,9 @@ describe('Task 8: Mobile Header Slimness, Academic Badges & Bilingual Support', 
     const html = renderToString(<LandingStats stats={stats} />);
 
     // Rounded executive container with ambient glow
-    expect(html).toContain('rounded-[2.5rem] md:rounded-[3.5rem] bg-[#2E3A2F]');
-    expect(html).toContain('bg-[#6B7F5B]/15 rounded-full blur-xl');
-    expect(html).toContain('bg-[#C96F4F]/10 rounded-full blur-xl');
+    expect(html).toContain('rounded-[2.5rem] md:rounded-[3.5rem] bg-[#0B2420]');
+    expect(html).toContain('bg-[#14B8A6]/15 rounded-full blur-xl');
+    expect(html).toContain('bg-[#0D9488]/10 rounded-full blur-xl');
 
     // Font-mono tabular-nums for numeric telemetry
     expect(html).toContain('font-mono tabular-nums');

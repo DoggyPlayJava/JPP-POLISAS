@@ -308,7 +308,7 @@ export const BusinessCertVerifyPage: React.FC = () => {
                 <p className="text-xs font-black text-slate-900 dark:text-white">
                   POLITEKNIK SULTAN HAJI AHMAD SHAH
                 </p>
-                <p className="text-[11px] font-bold text-[#831010] dark:text-amber-400">
+                <p className="text-[11px] font-bold text-[#0F766E] dark:text-teal-400">
                   PUSAT KEUSAHAWANAN POLITEKNIK (PUSKEP) • JPP-POLISAS
                 </p>
               </div>
@@ -343,7 +343,7 @@ export const BusinessCertVerifyPage: React.FC = () => {
                     type: regType,
                   })}
                 </p>
-                <p className="text-lg font-mono tabular-nums font-black text-[#831010] dark:text-amber-400 mt-0.5">
+                <p className="text-lg font-mono tabular-nums font-black text-[#0F766E] dark:text-teal-400 mt-0.5">
                   {regNo || t('keusahawanan:cert_reg_not_assigned', 'BELUM DINYATAKAN')}
                 </p>
               </div>
@@ -485,7 +485,7 @@ export const BusinessCertVerifyPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-4 sm:p-6 md:p-8 pb-24 flex flex-col justify-between max-w-5xl mx-auto font-sans transition-colors">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0F172A] dark:text-white p-4 sm:p-6 md:p-8 pb-24 flex flex-col justify-between max-w-5xl mx-auto font-sans transition-colors">
       {/* Top Bar */}
       <div className="flex items-center justify-between gap-4">
         <button
@@ -497,7 +497,7 @@ export const BusinessCertVerifyPage: React.FC = () => {
         </button>
 
         <div className="flex items-center gap-3">
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#831010]/10 text-[#831010] dark:bg-amber-500/10 dark:text-amber-400 border border-[#831010]/20 dark:border-amber-500/20 flex items-center gap-1.5">
+          <span className="px-3 py-1 rounded-full text-xs font-bold bg-[#0F766E]/10 text-[#0F766E] dark:bg-teal-500/10 dark:text-teal-400 border border-[#0F766E]/20 dark:border-teal-500/20 flex items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" />
             {t('keusahawanan:cert_official_badge', 'PUSKEP • JPP POLISAS')}
           </span>
@@ -510,7 +510,7 @@ export const BusinessCertVerifyPage: React.FC = () => {
       <div className="my-8 w-full max-w-3xl mx-auto space-y-6">
         {/* Search Card */}
         <div className="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 shadow-xl rounded-3xl p-6 sm:p-8 text-center space-y-5">
-          <div className="w-16 h-16 rounded-2xl bg-[#831010]/10 dark:bg-amber-500/10 border border-[#831010]/20 dark:border-amber-500/20 flex items-center justify-center text-[#831010] dark:text-amber-400 mx-auto">
+          <div className="w-16 h-16 rounded-2xl bg-[#0F766E]/10 dark:bg-teal-500/10 border border-[#0F766E]/20 dark:border-teal-500/20 flex items-center justify-center text-[#0F766E] dark:text-teal-400 mx-auto">
             <Award className="w-8 h-8" />
           </div>
 
@@ -537,13 +537,13 @@ export const BusinessCertVerifyPage: React.FC = () => {
                   'keusahawanan:cert_verify_input_placeholder',
                   'Contoh: P-2026-001 atau 202403198765'
                 )}
-                className="w-full h-12 pl-11 pr-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-mono tabular-nums text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#831010]/30"
+                className="w-full h-12 pl-11 pr-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 font-mono tabular-nums text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/30"
               />
             </div>
             <button
               type="submit"
               disabled={loading}
-              className="h-12 px-6 rounded-2xl bg-[#831010] hover:bg-[#6d0d0d] text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60 shrink-0"
+              className="h-12 px-6 rounded-2xl bg-[#0F766E] hover:bg-[#115E59] text-white text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer disabled:opacity-60 shrink-0"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
@@ -559,7 +559,7 @@ export const BusinessCertVerifyPage: React.FC = () => {
         {/* Loading State */}
         {loading && (
           <div className="p-10 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col items-center gap-3 text-slate-600 dark:text-slate-400">
-            <Loader2 className="w-7 h-7 animate-spin text-[#831010] dark:text-amber-400" />
+            <Loader2 className="w-7 h-7 animate-spin text-[#0F766E] dark:text-teal-400" />
             <p className="text-xs font-bold">
               {t('keusahawanan:cert_verifying_loading', 'Mengesahkan rekod pendaftaran perniagaan...')}
             </p>
@@ -585,7 +585,7 @@ export const BusinessCertVerifyPage: React.FC = () => {
             {requiresAuthHint && (
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#831010] text-white text-xs font-black uppercase tracking-wider hover:brightness-110 transition"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#115E59] text-white text-xs font-black uppercase tracking-wider transition"
               >
                 {t('common:login', 'Log Masuk')} <ArrowRight className="w-3.5 h-3.5" />
               </Link>

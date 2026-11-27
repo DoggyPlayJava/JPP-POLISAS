@@ -98,10 +98,10 @@ export function JppTelemetryPage() {
   );
 
   return (
-    <div className="min-h-screen bg-[#F8F6EE]/60 dark:bg-[#151D16] text-slate-800 dark:text-slate-100 p-4 lg:p-6 transition-colors font-sans antialiased">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-slate-800 dark:text-slate-100 p-4 lg:p-6 transition-colors font-sans antialiased">
       <div className="max-w-[1560px] mx-auto space-y-4">
         {/* ── Top Navigation Bar (Exact SentinelAI Image 3 Style) ── */}
-        <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-2xs px-5 py-3 flex items-center justify-between">
+        <div className="bg-white dark:bg-[#0B2420] rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-2xs px-5 py-3 flex items-center justify-between">
           {/* Left: SentinelAI Logo & Title */}
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-[#FF5B37] flex items-center justify-center text-white shadow-2xs">
@@ -185,7 +185,7 @@ export function JppTelemetryPage() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch animate-pulse">
             {/* Left Rail Skeleton (3/12) */}
             <div className="lg:col-span-3 space-y-4">
-              <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 p-5 space-y-4">
+              <div className="bg-white dark:bg-[#0B2420] rounded-2xl border border-slate-200/90 dark:border-white/10 p-5 space-y-4">
                 <div className="h-6 w-32 bg-slate-200 dark:bg-white/10 rounded-lg" />
                 <div className="h-28 w-28 bg-slate-200 dark:bg-white/10 rounded-full mx-auto" />
                 <div className="space-y-2 pt-2">
@@ -193,7 +193,7 @@ export function JppTelemetryPage() {
                   <div className="h-4 w-3/4 bg-slate-200/60 dark:bg-white/5 rounded" />
                 </div>
               </div>
-              <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 p-4 space-y-2">
+              <div className="bg-white dark:bg-[#0B2420] rounded-2xl border border-slate-200/90 dark:border-white/10 p-4 space-y-2">
                 <div className="h-4 w-28 bg-slate-200 dark:bg-white/10 rounded" />
                 <div className="h-8 w-full bg-slate-200/60 dark:bg-white/5 rounded-xl" />
               </div>
@@ -201,7 +201,7 @@ export function JppTelemetryPage() {
 
             {/* Center Topology + Quick Metrics Skeleton (6/12) */}
             <div className="lg:col-span-6 space-y-5 flex flex-col justify-between">
-              <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 p-6 space-y-4 min-h-[260px] flex flex-col justify-between">
+              <div className="bg-white dark:bg-[#0B2420] rounded-2xl border border-slate-200/90 dark:border-white/10 p-6 space-y-4 min-h-[260px] flex flex-col justify-between">
                 <div className="h-5 w-44 bg-slate-200 dark:bg-white/10 rounded" />
                 <div className="grid grid-cols-3 gap-4 py-6">
                   <div className="h-20 bg-slate-200/60 dark:bg-white/5 rounded-2xl" />
@@ -212,7 +212,7 @@ export function JppTelemetryPage() {
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[1, 2, 3, 4].map((k) => (
-                  <div key={k} className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 p-4 space-y-2">
+                  <div key={k} className="bg-white dark:bg-[#0B2420] rounded-2xl border border-slate-200/90 dark:border-white/10 p-4 space-y-2">
                     <div className="h-3 w-16 bg-slate-200 dark:bg-white/10 rounded" />
                     <div className="h-6 w-12 bg-slate-200 dark:bg-white/10 rounded font-mono" />
                   </div>
@@ -222,7 +222,7 @@ export function JppTelemetryPage() {
 
             {/* Right Live Timeline Skeleton (3/12) */}
             <div className="lg:col-span-3">
-              <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 p-5 space-y-4 min-h-full">
+              <div className="bg-white dark:bg-[#0B2420] rounded-2xl border border-slate-200/90 dark:border-white/10 p-5 space-y-4 min-h-full">
                 <div className="h-5 w-32 bg-slate-200 dark:bg-white/10 rounded" />
                 <div className="space-y-3 pt-2">
                   {[1, 2, 3, 4, 5].map((idx) => (
@@ -281,7 +281,7 @@ export function JppTelemetryPage() {
 
         {/* ── Tab 3: Key Alerts Modal / View ── */}
         {data && currentTab === 'alerts' && (
-          <div className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-xs p-6 space-y-4">
+          <div className="bg-white dark:bg-[#0B2420] rounded-2xl border border-slate-200/90 dark:border-white/10 shadow-xs p-6 space-y-4">
             <h3 className="text-base font-black text-slate-900 dark:text-white">
               {t('jpp:telemetry_alerts_list_title', 'Senarai Lengkap Amaran Aktif & Ralat Sistem')}
             </h3>
@@ -307,12 +307,12 @@ export function JppTelemetryPage() {
         {/* ── Incident Detail Modal ── */}
         <AnimatePresence>
           {showIncidentModal && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60">
               <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="bg-white dark:bg-[#1C261D] rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl max-w-lg w-full p-6 space-y-4 text-slate-900 dark:text-white"
+                className="bg-white dark:bg-[#0B2420] rounded-2xl border border-slate-200 dark:border-white/10 shadow-xl max-w-lg w-full p-6 space-y-4 text-slate-900 dark:text-white"
               >
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/10">
                   <div className="flex items-center gap-2">

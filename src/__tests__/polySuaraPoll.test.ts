@@ -90,22 +90,22 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
     });
   });
 
-  describe('Apple Porcelain & Rose Glow Dual Theme Styling', () => {
-    it('renders outer container with Apple Porcelain light mode and obsidian dark mode classes', () => {
+  describe('Mineral Teal Dual Theme & Debate Meter Styling', () => {
+    it('renders outer container with Mineral Teal light and dark mode classes', () => {
       const { html, tree } = renderComponentTree({
         poll: samplePoll,
         currentUserId: 'usr-current',
       });
 
-      expect(tree.props.className).toContain('bg-slate-50/90');
-      expect(tree.props.className).toContain('dark:bg-slate-900/50');
-      expect(tree.props.className).toContain('border-slate-200/80');
-      expect(tree.props.className).toContain('dark:border-slate-800');
+      expect(tree.props.className).toContain('bg-[#F6FBF9]');
+      expect(tree.props.className).toContain('dark:bg-[#081A17]');
+      expect(tree.props.className).toContain('border-[#B8E4DC]/80');
+      expect(tree.props.className).toContain('dark:border-[#1E4D45]');
       expect(tree.props.className).toContain('shadow-2xs');
-      expect(html).toContain('bg-slate-50/90');
+      expect(html).toContain('bg-[#F6FBF9]');
     });
 
-    it('renders header with dual theme muted uppercase typography', () => {
+    it('renders header with Mineral Teal muted uppercase typography', () => {
       const { tree, html } = renderComponentTree({
         poll: samplePoll,
         currentUserId: 'usr-current',
@@ -113,8 +113,8 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
 
       const header = findElements(tree, el => el.props?.className?.includes('tracking-wider'))[0];
       expect(header).toBeDefined();
-      expect(header.props.className).toContain('text-slate-500');
-      expect(header.props.className).toContain('dark:text-slate-400');
+      expect(header.props.className).toContain('text-[#3B635C]');
+      expect(header.props.className).toContain('dark:text-[#99CBC2]');
       expect(header.props.className).toContain('text-xs');
       expect(header.props.className).toContain('font-bold');
       expect(header.props.className).toContain('uppercase');
@@ -134,7 +134,7 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
       expect(html).toContain('(Pelbagai Pilihan)');
     });
 
-    it('renders option buttons with distinct voted vs default porcelain dual theme classes', () => {
+    it('renders option buttons with distinct voted vs default Mineral Teal dual theme classes', () => {
       const { tree } = renderComponentTree({
         poll: samplePoll,
         currentUserId: 'usr-current',
@@ -145,27 +145,27 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
 
       // First button is voted by usr-current
       const votedBtn = buttons[0];
-      expect(votedBtn.props.className).toContain('border-rose-400/60');
-      expect(votedBtn.props.className).toContain('dark:border-rose-500/50');
-      expect(votedBtn.props.className).toContain('bg-rose-50/60');
-      expect(votedBtn.props.className).toContain('dark:bg-rose-500/10');
+      expect(votedBtn.props.className).toContain('border-[#0F766E]/60');
+      expect(votedBtn.props.className).toContain('dark:border-[#2DD4BF]/50');
+      expect(votedBtn.props.className).toContain('bg-[#EBF7F4]/80');
+      expect(votedBtn.props.className).toContain('dark:bg-[#11322C]/70');
       expect(votedBtn.props.className).toContain('shadow-xs');
       expect(votedBtn.props.className).toContain('ring-1');
-      expect(votedBtn.props.className).toContain('ring-rose-400/20');
-      expect(votedBtn.props.className).toContain('dark:ring-rose-500/20');
+      expect(votedBtn.props.className).toContain('ring-[#0F766E]/20');
+      expect(votedBtn.props.className).toContain('dark:ring-[#2DD4BF]/20');
 
       // Second button is not voted
       const unvotedBtn = buttons[1];
-      expect(unvotedBtn.props.className).toContain('border-slate-200/80');
-      expect(unvotedBtn.props.className).toContain('dark:border-slate-800');
+      expect(unvotedBtn.props.className).toContain('border-[#B8E4DC]/80');
+      expect(unvotedBtn.props.className).toContain('dark:border-[#1E4D45]');
       expect(unvotedBtn.props.className).toContain('bg-white');
-      expect(unvotedBtn.props.className).toContain('dark:bg-slate-800/50');
-      expect(unvotedBtn.props.className).toContain('hover:border-slate-300');
-      expect(unvotedBtn.props.className).toContain('dark:hover:border-slate-700');
+      expect(unvotedBtn.props.className).toContain('dark:bg-[#0B2420]');
+      expect(unvotedBtn.props.className).toContain('hover:border-[#0F766E]/40');
+      expect(unvotedBtn.props.className).toContain('dark:hover:border-[#2DD4BF]/40');
       expect(unvotedBtn.props.className).toContain('shadow-2xs');
     });
 
-    it('renders progress bar fill with Rose Glow for voted option and subtle slate for unvoted', () => {
+    it('renders progress bar fill with Mineral Teal for voted option and subtle surface for unvoted', () => {
       const { tree } = renderComponentTree({
         poll: samplePoll,
         currentUserId: 'usr-current',
@@ -174,15 +174,15 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
       const buttons = findElements(tree, el => el.type === 'button');
       
       const votedBar = findElements(buttons[0], el => el.props?.className?.includes('absolute inset-y-0'))[0];
-      expect(votedBar.props.className).toContain('bg-rose-500/20');
-      expect(votedBar.props.className).toContain('dark:bg-rose-500/25');
+      expect(votedBar.props.className).toContain('bg-[#0F766E]/20');
+      expect(votedBar.props.className).toContain('dark:bg-[#2DD4BF]/25');
 
       const unvotedBar = findElements(buttons[1], el => el.props?.className?.includes('absolute inset-y-0'))[0];
-      expect(unvotedBar.props.className).toContain('bg-slate-100');
-      expect(unvotedBar.props.className).toContain('dark:bg-slate-700/40');
+      expect(unvotedBar.props.className).toContain('bg-[#EBF7F4]/70');
+      expect(unvotedBar.props.className).toContain('dark:bg-[#11322C]/50');
     });
 
-    it('renders option text with high contrast rose-950/rose-100 when voted, slate-800/200 when unvoted', () => {
+    it('renders option text with Mineral Teal deep pine contrast', () => {
       const { tree } = renderComponentTree({
         poll: samplePoll,
         currentUserId: 'usr-current',
@@ -191,17 +191,17 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
       const buttons = findElements(tree, el => el.type === 'button');
 
       const votedText = findElements(buttons[0], el => el.props?.children === 'Menu Kafeteria Baru')[0];
-      expect(votedText.props.className).toContain('text-rose-950');
-      expect(votedText.props.className).toContain('dark:text-rose-100');
+      expect(votedText.props.className).toContain('text-[#0B2420]');
+      expect(votedText.props.className).toContain('dark:text-[#F6FBF9]');
       expect(votedText.props.className).toContain('font-semibold');
 
       const unvotedText = findElements(buttons[1], el => el.props?.children === 'Kekalkan Menu Sekarang')[0];
-      expect(unvotedText.props.className).toContain('text-slate-800');
-      expect(unvotedText.props.className).toContain('dark:text-slate-200');
+      expect(unvotedText.props.className).toContain('text-[#0B2420]');
+      expect(unvotedText.props.className).toContain('dark:text-[#EBF7F4]');
       expect(unvotedText.props.className).toContain('font-medium');
     });
 
-    it('renders percentage and vote count with mono numerals and dual theme rose/slate colors', () => {
+    it('renders percentage and vote count with mono numerals and Mineral Teal accent colors', () => {
       const { tree, html } = renderComponentTree({
         poll: samplePoll,
         currentUserId: 'usr-current',
@@ -211,13 +211,13 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
 
       // Total votes = 10 + 5 = 15. opt-1 = 10/15 (67%), opt-2 = 5/15 (33%)
       const votedStat = findElements(buttons[0], el => el.props?.className?.includes('font-mono'))[0];
-      expect(votedStat.props.className).toContain('text-rose-600');
-      expect(votedStat.props.className).toContain('dark:text-rose-400');
+      expect(votedStat.props.className).toContain('text-[#0F766E]');
+      expect(votedStat.props.className).toContain('dark:text-[#2DD4BF]');
       expect(votedStat.props.className).toContain('font-bold');
 
       const unvotedStat = findElements(buttons[1], el => el.props?.className?.includes('font-mono'))[0];
-      expect(unvotedStat.props.className).toContain('text-slate-500');
-      expect(unvotedStat.props.className).toContain('dark:text-slate-400');
+      expect(unvotedStat.props.className).toContain('text-[#3B635C]');
+      expect(unvotedStat.props.className).toContain('dark:text-[#99CBC2]');
       expect(unvotedStat.props.className).toContain('font-bold');
 
       const cleanHtml = html.replace(/<!--.*?-->/g, '');
@@ -225,7 +225,7 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
       expect(cleanHtml).toContain('33% (5)');
     });
 
-    it('renders total votes text with dual theme muted slate styling', () => {
+    it('renders total votes text and debate split meter when debate poll has votes', () => {
       const { tree, html } = renderComponentTree({
         poll: samplePoll,
         currentUserId: 'usr-current',
@@ -236,11 +236,24 @@ describe('PolySuaraPoll Apple Porcelain & Dual Mode Suite', () => {
         findElements(tree, el => Array.isArray(el.props?.children) && el.props?.children.some((c: any) => typeof c === 'string' && c.includes('JUMLAH UNDIAN')))[0];
 
       expect(totalFooter).toBeDefined();
-      expect(totalFooter.props.className).toContain('text-slate-400');
-      expect(totalFooter.props.className).toContain('dark:text-slate-500');
+      expect(totalFooter.props.className).toContain('text-[#3B635C]');
+      expect(totalFooter.props.className).toContain('dark:text-[#99CBC2]');
       expect(totalFooter.props.className).toContain('text-[10px]');
       const cleanHtml = html.replace(/<!--.*?-->/g, '');
       expect(cleanHtml).toContain('JUMLAH UNDIAN: 15');
+
+      const debateHtml = renderComponentTree({
+        poll: {
+          id: 'debate-1',
+          is_multiple_choice: false,
+          polysuara_poll_options: [
+            { id: 'd1', option_text: 'Setuju', vote_count: 8, polysuara_poll_votes: [] },
+            { id: 'd2', option_text: 'Tidak', vote_count: 2, polysuara_poll_votes: [] },
+          ],
+        },
+        currentUserId: 'usr-current',
+      }).html;
+      expect(debateHtml).toContain('data-testid="debate-split-meter"');
     });
   });
 

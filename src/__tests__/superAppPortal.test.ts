@@ -167,13 +167,14 @@ describe('superAppHelpers', () => {
       expect(html).toContain('Cari makanan, runner, servis, acara, merit...');
 
       // Floating discrete action circles container
-      expect(html).toContain('flex items-center gap-3 shrink-0');
+      expect(html).toContain('flex items-center gap-2 sm:gap-2.5 shrink-0');
       expect(html).not.toContain('divide-x');
       expect(html).not.toContain('rounded-2xl bg-white/[0.08]');
       expect(html).not.toContain('bg-white/[0.08]');
 
-      // Discrete circular buttons & Profile avatar
-      expect(html).toContain('w-9 h-9 rounded-full');
+      // Discrete circular buttons & Profile avatar (thumb-friendly 40-44px + -inset-1)
+      expect(html).toContain('w-10 h-10 sm:w-11 sm:h-11');
+      expect(html).toContain('after:-inset-1');
       expect(html).toContain('ring-2 ring-emerald-400/60');
       expect(html).toContain('from-emerald-600 to-teal-500');
     });
@@ -564,14 +565,13 @@ describe('superAppHelpers', () => {
         )
       );
 
-      // Elevated card container depth (light + dark mode)
+      // Elevated card container depth (Pine-Teal unified light + dark mode)
       expect(html).toContain('bg-white');
-      expect(html).toContain('hover:bg-slate-50');
-      expect(html).toContain('border-slate-200/70');
-      expect(html).toContain('dark:bg-slate-900/80');
-      expect(html).toContain('dark:hover:bg-slate-800/90');
-      expect(html).toContain('dark:border-white/[0.08]');
-      expect(html).toContain('dark:shadow-[0_4px_20px_rgba(0,0,0,0.3)]');
+      expect(html).toContain('hover:bg-[#F6FBF9]');
+      expect(html).toContain('border-[#B8E4DC]/80');
+      expect(html).toContain('dark:bg-[#0B2420]');
+      expect(html).toContain('dark:hover:bg-[#11332D]');
+      expect(html).toContain('dark:border-[#1E4D45]');
 
       // Squircle icon container does NOT contain hardcoded overriding dark classes
       expect(html).not.toContain('dark:bg-white/[0.06]');
@@ -602,13 +602,12 @@ describe('superAppHelpers', () => {
       expect(html).toContain('text-rose-600');
       expect(html).toContain('border-rose-200');
 
-      // Glowing badges
-      expect(html).toContain('dark:shadow-[0_0_10px_rgba(168,85,247,0.5)]'); // MERIT
-      expect(html).toContain('dark:shadow-[0_0_10px_rgba(59,130,246,0.5)]'); // KELAB
-      expect(html).toContain('dark:shadow-[0_0_10px_rgba(244,63,94,0.5)]'); // kebajikan count (3)
+      // Calm Mineral Teal & Alert badges (>=10px, no neon box glow)
+      expect(html).toContain('bg-[#0F766E] text-white');
+      expect(html).toContain('bg-rose-600 text-white');
     });
 
-    it('verifies EmsEventsFeed renders deep glass cards with WCAG AA compliant labels and glowing badge', async () => {
+    it('verifies EmsEventsFeed renders Pine-Teal elevated cards with WCAG AA compliant labels', async () => {
       const { EmsEventsFeed } = await import('@/components/portal/EmsEventsFeed');
       const { MemoryRouter } = await import('react-router-dom');
       const { renderToString } = await import('react-dom/server');
@@ -635,18 +634,19 @@ describe('superAppHelpers', () => {
         )
       );
 
-      // Deep glass card elevation
-      expect(html).toContain('dark:bg-slate-900/60');
+      // Unified Pine-Teal card elevation
+      expect(html).toContain('dark:bg-[#0B2420]');
       expect(html).not.toContain('backdrop-blur');
-      expect(html).toContain('dark:border-white/[0.08]');
-      expect(html).toContain('dark:hover:border-emerald-500/40');
+      expect(html).toContain('border-[#B8E4DC]/80');
+      expect(html).toContain('dark:border-[#1E4D45]');
+      expect(html).toContain('dark:hover:border-[#2DD4BF]/40');
 
-      // Glowing TERBUKA badge
+      // Crisp TERBUKA badge
       expect(html).toContain('TERBUKA');
-      expect(html).toContain('dark:shadow-[0_0_8px_rgba(244,63,94,0.4)]');
+      expect(html).toContain('bg-rose-600');
 
       // WCAG AA compliant text contrast
-      expect(html).toContain('dark:text-slate-300');
+      expect(html).toContain('dark:text-[#99CBC2]');
     });
   });
 

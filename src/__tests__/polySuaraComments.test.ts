@@ -81,6 +81,9 @@ vi.mock('@/lib/supabase', () => ({
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
+      not: vi.fn().mockReturnThis(),
+      ilike: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       range: vi.fn().mockResolvedValue({ data: [], error: null }),
       maybeSingle: vi.fn().mockResolvedValue({ data: { is_enabled: true }, error: null }),
@@ -207,45 +210,46 @@ describe('PolySuara Comments Suite (TDD)', () => {
     });
 
     it('applies dual Light & Dark mode classes, z-[999] elevation, and bottom clearance to comments drawer', () => {
-      // Drawer container
-      expect(pageContent).toContain('bg-white dark:bg-slate-900');
-      expect(pageContent).toContain('border-slate-200 dark:border-slate-800');
-      expect(pageContent).toContain('text-slate-900 dark:text-white');
+      // Drawer container (Mineral Teal Dual Mode)
+      expect(pageContent).toContain('bg-white dark:bg-[#0B2420]');
+      expect(pageContent).toContain('border-[#B8E4DC]/80 dark:border-[#1E4D45]');
+      expect(pageContent).toContain('text-[#0B2420] dark:text-[#F6FBF9]');
       expect(pageContent).toContain('z-[999]');
       expect(pageContent).toContain('pb-8 sm:pb-4');
-      expect(pageContent).toContain('fixed inset-0 bg-slate-950/70 z-[990]');
+      expect(pageContent).toContain('fixed inset-0 bg-[#061714]/70 z-[990]');
 
       // Drawer close button dual mode
-      expect(pageContent).toMatch(/text-slate-500 dark:text-slate-400/);
+      expect(pageContent).toMatch(/text-\[#3B635C\] dark:text-\[#99CBC2\]/);
     });
 
     it('applies minimalist quotation card styling to active confession preview inside drawer', () => {
-      expect(pageContent).toContain('bg-slate-50/80 dark:bg-white/[0.03]');
-      expect(pageContent).toContain('border-b border-slate-100 dark:border-white/5');
-      expect(pageContent).toMatch(/text-slate-600 dark:text-slate-300|text-slate-700 dark:text-slate-300/);
+      expect(pageContent).toContain('bg-[#F6FBF9] dark:bg-[#081A17] border-b border-[#B8E4DC]/60 dark:border-[#1E4D45]');
+      expect(pageContent).toMatch(/text-\[#3B635C\] dark:text-\[#99CBC2\]/);
     });
 
     it('renders clean modern conversation thread styling, role badges, and discrete actions', () => {
       // Clean conversation rows with hairline dividers
-      expect(pageContent).toContain('border-b border-slate-100 dark:border-white/5 py-3.5 px-4');
+      expect(pageContent).toContain('border-b border-[#B8E4DC]/50 dark:border-[#1E4D45] py-3.5 px-4');
 
       // Nested replies hairline thread line with compact 12px indentation
-      expect(pageContent).toContain('border-l-2 border-slate-200 dark:border-white/10 pl-3 ml-2 mt-2 space-y-2.5');
+      expect(pageContent).toContain('border-l-2 border-[#B8E4DC] dark:border-[#1E4D45] pl-3 ml-2 mt-2 space-y-2.5');
 
       // OP role badge
-      expect(pageContent).toContain('text-[9px] font-bold px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-500 border border-rose-500/20');
+      expect(pageContent).toContain('text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#EBF7F4] dark:bg-[#11322C] text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/25');
 
       // JPP RASMI role badge
-      expect(pageContent).toContain('text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 border border-emerald-500/20');
+      expect(pageContent).toContain('text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20');
       expect(pageContent).toContain('JPP RASMI');
 
-      // Discrete escalation trigger replacing bulky yellow button
+      // Discrete escalation trigger + QuickReport modal replacing window.prompt
       expect(pageContent).toMatch(/title="Eskalasi kecemasan ke Kebajikan \(Rahsia\)"|title=\{t\(['"]services:welfare_escalation_tooltip['"],\s*['"]Eskalasi kecemasan ke Kebajikan \(Rahsia\)['"]\)\}/);
       expect(pageContent).not.toContain('bg-amber-500/10 hover:bg-amber-500/20');
+      expect(pageContent).toContain('<PolySuaraQuickReportModal');
+      expect(pageContent).not.toContain('window.prompt');
     });
 
     it('renders modern floating capsule comment input bar and sensitive comment blur toggle', () => {
-      expect(pageContent).toContain('rounded-full bg-slate-100 dark:bg-white/[0.06] border border-slate-200/80 dark:border-white/10 p-1.5 flex items-center gap-2');
+      expect(pageContent).toContain('rounded-full bg-[#F6FBF9] dark:bg-[#081A17] border border-[#B8E4DC]/80 dark:border-[#1E4D45] p-1.5 flex items-center gap-2');
       expect(pageContent).toMatch(/placeholder="Tulis ulasan sulit anda\.\.\."|placeholder=\{t\(['"]services:write_confidential_comment['"],\s*['"]Tulis ulasan sulit anda\.\.\.['"]\)\}/);
       expect(pageContent).not.toContain('Pelekat Kampus');
       expect(pageContent).toContain('Tanda sebagai Sensitif (Blur)');
@@ -266,12 +270,14 @@ describe('PolySuara Comments Suite (TDD)', () => {
 
     it('supports 4-depth nested threaded replies with compact 12px indentation', () => {
       expect(pageContent).toContain('Math.min(depth + 1, 4)');
-      expect(pageContent).toContain('border-l-2 border-slate-200 dark:border-white/10 pl-3 ml-2 mt-2 space-y-2.5');
+      expect(pageContent).toContain('border-l-2 border-[#B8E4DC] dark:border-[#1E4D45] pl-3 ml-2 mt-2 space-y-2.5');
     });
 
-    it('auto-tags parent username in reply input', () => {
+    it('auto-tags parent username and highlights Q&A best answer in comments drawer', () => {
       expect(pageContent).toContain('setReplyingToCommentId(comment.id)');
       expect(pageContent).toContain('setReplyCommentText(`@${displayName} `)');
+      expect(pageContent).toContain('sortedRootComments.list.map');
+      expect(pageContent).toContain('suara_best_answer_badge');
     });
 
     it('renders Threads-style clean micro-actions and typography', () => {
@@ -279,7 +285,7 @@ describe('PolySuara Comments Suite (TDD)', () => {
       expect(pageContent).toMatch(/rounded-xl flex items-center justify-center shrink-0 text-sm/);
 
       // Generous line-height typography
-      expect(pageContent).toContain('leading-relaxed text-sm text-slate-800 dark:text-slate-200');
+      expect(pageContent).toContain('leading-relaxed text-sm text-[#0B2420] dark:text-[#F6FBF9]');
 
       // Discrete ··· action trigger
       expect(pageContent).toContain('···');
@@ -395,7 +401,7 @@ describe('PolySuara Comments Suite (TDD)', () => {
 
       // Tombstone message with exact text and styling
       expect(html).toContain('Tupai Laju telah memadamkan ruangan ini');
-      expect(html).toContain('text-slate-400 dark:text-slate-500 italic text-xs');
+      expect(html).toContain('text-[#3B635C] dark:text-[#99CBC2] italic text-xs');
 
       // Reply and Like actions are disabled on deleted comment
       expect(html).toContain('aria-label="Balas komen"');

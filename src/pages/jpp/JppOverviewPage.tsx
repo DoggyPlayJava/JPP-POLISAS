@@ -47,8 +47,8 @@ function BigStatCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
       onClick={onClick}
-      className={`rounded-[1.75rem] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-white dark:bg-[#1E271F]/80 p-5 shadow-[0_4px_20px_rgba(46,58,47,0.04)] dark:shadow-none transition-all ${
-        onClick ? 'cursor-pointer hover:bg-[#F8F6EE]/60 dark:hover:bg-[#2E3A2F]/20 hover:scale-[1.02] active:scale-[0.98]' : 'hover:bg-[#F8F6EE]/40 dark:hover:bg-[#2E3A2F]/10'
+      className={`rounded-[1.75rem] border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] p-5 shadow-[0_4px_20px_rgba(15,118,110,0.06)] dark:shadow-none transition-all ${
+        onClick ? 'cursor-pointer hover:bg-[#E6F4F1]/80 dark:hover:bg-[#134E4A]/40 hover:scale-[1.02] active:scale-[0.98]' : 'hover:bg-[#E6F4F1]/60 dark:hover:bg-[#134E4A]/25'
       }`}
     >
       <div className="flex items-start justify-between mb-4">
@@ -58,13 +58,13 @@ function BigStatCard({
         >
           <Icon className="w-5 h-5" style={{ color }} />
         </div>
-        <span className="text-[9px] font-black uppercase tracking-widest text-[#556453]/70 dark:text-white/20">
+        <span className="text-[9px] font-black uppercase tracking-widest text-[#475569]/70 dark:text-white/20">
           Sistem
         </span>
       </div>
-      <p className="text-3xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-none font-mono tabular-nums">{value}</p>
-      <p className="text-xs font-black uppercase tracking-widest text-[#556453] dark:text-[#A3B39F] mt-1">{label}</p>
-      {sub && <p className="text-[10px] text-[#556453]/70 dark:text-white/20 mt-1">{sub}</p>}
+      <p className="text-3xl font-black text-[#0F172A] dark:text-[#F6FBF9] leading-none font-mono tabular-nums">{value}</p>
+      <p className="text-xs font-black uppercase tracking-widest text-[#475569] dark:text-[#99CBC2] mt-1">{label}</p>
+      {sub && <p className="text-[10px] text-[#475569]/70 dark:text-white/20 mt-1">{sub}</p>}
     </motion.div>
   );
 }
@@ -138,25 +138,25 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/70 backdrop-blur-xs" onClick={onClose} />
+      <div className="absolute inset-0 bg-black/70" onClick={onClose} />
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 20 }}
         transition={undefined}
-        className="relative w-full max-w-2xl max-h-[85vh] bg-white dark:bg-[#151D16] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] rounded-3xl overflow-hidden flex flex-col shadow-2xl text-[#2E3A2F] dark:text-[#F8F6EE]"
+        className="relative w-full max-w-2xl max-h-[85dvh] bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-[#1E4D45] rounded-3xl overflow-hidden flex flex-col shadow-2xl text-[#0F172A] dark:text-[#F6FBF9]"
       >
-        <div className="p-6 border-b border-[#D9C9B2]/80 dark:border-[#3A4A3B] flex items-center justify-between bg-[#F8F6EE]/60 dark:bg-white/[0.02]">
+        <div className="p-6 border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] flex items-center justify-between bg-[#F6FBF9] dark:bg-white/[0.02]">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-[#2E3A2F]/10 dark:bg-white/5 border border-[#D9C9B2]/80 dark:border-[#3A4A3B] flex items-center justify-center shadow-sm">
-              <BellRing className="w-5 h-5 text-[#2E3A2F] dark:text-[#F8F6EE]" />
+            <div className="w-10 h-10 rounded-2xl bg-[#0F766E]/10 dark:bg-white/5 border border-[#B8E4DC]/80 dark:border-[#1E4D45] flex items-center justify-center shadow-sm">
+              <BellRing className="w-5 h-5 text-[#0F172A] dark:text-[#F6FBF9]" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">{t('jpp:overview_notif_subs_list', 'Senarai Langganan Notifikasi')}</h2>
-              <p className="text-[10px] text-[#556453] dark:text-[#A3B39F] font-bold uppercase tracking-widest">{subs.length} {t('jpp:overview_active_devices', 'peranti aktif')}</p>
+              <h2 className="text-lg font-black text-[#0F172A] dark:text-[#F6FBF9] leading-tight">{t('jpp:overview_notif_subs_list', 'Senarai Langganan Notifikasi')}</h2>
+              <p className="text-[10px] text-[#475569] dark:text-[#99CBC2] font-bold uppercase tracking-widest">{subs.length} {t('jpp:overview_active_devices', 'peranti aktif')}</p>
             </div>
           </div>
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#2E3A2F]/10 dark:hover:bg-white/10 text-[#556453] dark:text-white/50 hover:text-[#2E3A2F] dark:hover:text-white transition-colors">
+          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#0F766E]/10 dark:hover:bg-white/10 text-[#475569] dark:text-white/50 hover:text-[#0F172A] dark:hover:text-white transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -164,11 +164,11 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex items-center justify-center py-20">
-              <Loader2 className="w-6 h-6 animate-spin text-[#556453] dark:text-white/20" />
+              <Loader2 className="w-6 h-6 animate-spin text-[#475569] dark:text-white/20" />
             </div>
           ) : subs.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-[#556453] dark:text-white/30 text-sm">{t('jpp:overview_no_subs_yet', 'Tiada langganan buat masa ini.')}</p>
+              <p className="text-[#475569] dark:text-white/30 text-sm">{t('jpp:overview_no_subs_yet', 'Tiada langganan buat masa ini.')}</p>
             </div>
           ) : (
             <div className="space-y-3">
@@ -178,29 +178,29 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                 const DeviceIcon = isMobile ? Smartphone : Monitor;
                 
                 return (
-                  <div key={s.id} className="p-4 rounded-2xl bg-[#F8F6EE]/40 dark:bg-white/5 border border-[#D9C9B2]/80 dark:border-white/5 flex items-center gap-4 hover:bg-[#F8F6EE]/80 dark:hover:bg-white/[0.08] transition-colors shadow-sm dark:shadow-none">
-                    <div className="w-12 h-12 shrink-0 rounded-2xl bg-white dark:bg-black/30 border border-[#D9C9B2]/80 dark:border-white/10 flex items-center justify-center relative">
-                      <DeviceIcon className="w-5 h-5 text-[#556453] dark:text-white/50" />
+                  <div key={s.id} className="p-4 rounded-2xl bg-[#F6FBF9]/90 dark:bg-white/5 border border-[#B8E4DC]/80 dark:border-white/5 flex items-center gap-4 hover:bg-[#E6F4F1] dark:hover:bg-white/[0.08] transition-colors shadow-sm dark:shadow-none">
+                    <div className="w-12 h-12 shrink-0 rounded-2xl bg-white dark:bg-black/30 border border-[#B8E4DC]/80 dark:border-white/10 flex items-center justify-center relative">
+                      <DeviceIcon className="w-5 h-5 text-[#475569] dark:text-white/50" />
                       {s.device_hint && (
-                        <div className="absolute -bottom-1 text-[8px] font-black px-1.5 py-0.5 rounded-md bg-white dark:bg-[#151D16] border border-[#D9C9B2]/80 dark:border-white/20 text-[#2E3A2F] dark:text-white uppercase truncate max-w-[40px] shadow-sm">
+                        <div className="absolute -bottom-1 text-[8px] font-black px-1.5 py-0.5 rounded-md bg-white dark:bg-[#0B2420] border border-[#B8E4DC]/80 dark:border-white/20 text-[#0F172A] dark:text-white uppercase truncate max-w-[40px] shadow-sm">
                           {s.device_hint}
                         </div>
                       )}
                     </div>
                     
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-bold text-[#2E3A2F] dark:text-white truncate">{p?.full_name || t('jpp:overview_unknown_user', 'Pengguna Tidak Diketahui')}</p>
+                      <p className="text-sm font-bold text-[#0F172A] dark:text-white truncate">{p?.full_name || t('jpp:overview_unknown_user', 'Pengguna Tidak Diketahui')}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-[#556453] dark:text-white/40">{p?.matric_no}</span>
-                        <span className="w-1 h-1 rounded-full bg-[#D9C9B2] dark:bg-white/20" />
+                        <span className="text-[10px] text-[#475569] dark:text-white/40">{p?.matric_no}</span>
+                        <span className="w-1 h-1 rounded-full bg-[#B8E4DC] dark:bg-white/20" />
                         <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{p?.role}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-4 shrink-0">
                       <div className="text-right hidden sm:block">
-                        <p className="text-[10px] text-[#556453]/70 dark:text-white/30">{t('jpp:overview_subscribed_at', 'Dilanggan pada')}</p>
-                        <p className="text-xs text-[#556453] dark:text-white/60 font-medium">
+                        <p className="text-[10px] text-[#475569]/70 dark:text-white/30">{t('jpp:overview_subscribed_at', 'Dilanggan pada')}</p>
+                        <p className="text-xs text-[#475569] dark:text-white/60 font-medium">
                           {new Date(s.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
                       </div>
@@ -378,23 +378,23 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
           <ClipboardList className="w-5 h-5" style={{ color: themeColor }} />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">{t('jpp:overview_profile_audit_title', 'Semakan Pindaan Profil')}</h2>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#556453] dark:text-[#A3B39F]">{t('jpp:overview_profile_audit_subtitle', 'Kelulusan pindaan no. matrik & semester pelajar')}</p>
+          <h2 className="text-2xl font-black text-[#0F172A] dark:text-[#F6FBF9] leading-tight">{t('jpp:overview_profile_audit_title', 'Semakan Pindaan Profil')}</h2>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#475569] dark:text-[#99CBC2]">{t('jpp:overview_profile_audit_subtitle', 'Kelulusan pindaan no. matrik & semester pelajar')}</p>
         </div>
         {pendingCount > 0 && (
           <span className="ml-auto px-3 py-1.5 rounded-full text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">{pendingCount} PENDING</span>
         )}
       </div>
 
-      <div className="rounded-[1.75rem] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-white dark:bg-[#1E271F]/80 overflow-hidden shadow-[0_4px_20px_rgba(46,58,47,0.04)] dark:shadow-none">
-        <div className="flex border-b border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-[#F8F6EE]/60 dark:bg-transparent">
+      <div className="rounded-[1.75rem] border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] overflow-hidden shadow-[0_4px_20px_rgba(15,118,110,0.06)] dark:shadow-none">
+        <div className="flex border-b border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-[#F6FBF9] dark:bg-transparent">
           {filterTabs.map(tab => (
             <button
               key={tab.key}
               onClick={() => setFilter(tab.key)}
               className={cn(
                 'flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all',
-                filter === tab.key ? 'text-[#2E3A2F] dark:text-[#F8F6EE] border-b-2' : 'text-[#556453] dark:text-white/30 hover:text-[#2E3A2F] dark:hover:text-white/60'
+                filter === tab.key ? 'text-[#0F172A] dark:text-[#F6FBF9] border-b-2' : 'text-[#475569] dark:text-white/30 hover:text-[#0F172A] dark:hover:text-white/60'
               )}
               style={filter === tab.key ? { borderBottomColor: themeColor, color: themeColor } : {}}
             >
@@ -406,38 +406,38 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
 
         <div className="p-6">
           {loading ? (
-            <div className="flex items-center justify-center gap-2 py-10 text-[#556453] dark:text-white/30 text-xs">
+            <div className="flex items-center justify-center gap-2 py-10 text-[#475569] dark:text-white/30 text-xs">
               <Loader2 className="w-4 h-4 animate-spin" /> Memuatkan...
             </div>
           ) : filtered.length === 0 ? (
             <div className="text-center py-12">
-              <ClipboardList className="w-10 h-10 mx-auto mb-3 text-[#D9C9B2] dark:text-white/10" />
-              <p className="text-[#556453] dark:text-white/30 text-xs font-medium">{t('jpp:overview_no_records', 'Tiada rekod')} {filter === 'PENDING' ? t('jpp:overview_pending_review_suffix', 'menunggu semakan') : filter === 'APPROVED' ? t('jpp:overview_approved_suffix', 'yang telah diluluskan') : t('jpp:overview_rejected_suffix', 'yang ditolak')}</p>
+              <ClipboardList className="w-10 h-10 mx-auto mb-3 text-[#B8E4DC] dark:text-white/10" />
+              <p className="text-[#475569] dark:text-white/30 text-xs font-medium">{t('jpp:overview_no_records', 'Tiada rekod')} {filter === 'PENDING' ? t('jpp:overview_pending_review_suffix', 'menunggu semakan') : filter === 'APPROVED' ? t('jpp:overview_approved_suffix', 'yang telah diluluskan') : t('jpp:overview_rejected_suffix', 'yang ditolak')}</p>
             </div>
           ) : (
             <div className="space-y-3">
               {filtered.map(req => (
-                <div key={req.id} className="p-5 rounded-2xl border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-[#F8F6EE]/40 dark:bg-white/[0.02] flex flex-col sm:flex-row sm:items-center gap-4 shadow-sm dark:shadow-none">
+                <div key={req.id} className="p-5 rounded-2xl border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-[#F6FBF9]/90 dark:bg-white/[0.02] flex flex-col sm:flex-row sm:items-center gap-4 shadow-sm dark:shadow-none">
                   <div className="flex-1 min-w-0 space-y-2">
                     <div className="flex items-center gap-2 flex-wrap">
                       <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: hexToRgba(themeColor, 0.15) }}>
                         <User className="w-3.5 h-3.5" style={{ color: themeColor }} />
                       </div>
-                      <p className="text-sm font-black text-[#2E3A2F] dark:text-[#F8F6EE] truncate">{req.requester?.full_name ?? '-'}</p>
-                      {req.requester?.matric_no && <span className="text-[10px] font-mono text-[#556453] dark:text-white/40 bg-[#D9C9B2]/40 dark:bg-white/5 px-2 py-0.5 rounded-lg">{req.requester.matric_no}</span>}
+                      <p className="text-sm font-black text-[#0F172A] dark:text-[#F6FBF9] truncate">{req.requester?.full_name ?? '-'}</p>
+                      {req.requester?.matric_no && <span className="text-[10px] font-mono text-[#475569] dark:text-white/40 bg-[#E6F4F1] dark:bg-white/5 px-2 py-0.5 rounded-lg">{req.requester.matric_no}</span>}
                     </div>
                     <div className="ml-9">
-                      <p className="text-xs text-[#556453] dark:text-white/60 font-medium">
-                        <span className="text-[#556453]/70 dark:text-white/30">Pindaan:</span>{' '}
-                        <span className="font-bold text-[#2E3A2F] dark:text-white/80">{req.field_type === 'matric_no' ? t('jpp:matric_no', 'No. Matrik') : t('jpp:semester', 'Semester')}</span>
+                      <p className="text-xs text-[#475569] dark:text-white/60 font-medium">
+                        <span className="text-[#475569]/70 dark:text-white/30">Pindaan:</span>{' '}
+                        <span className="font-bold text-[#0F172A] dark:text-white/80">{req.field_type === 'matric_no' ? t('jpp:matric_no', 'No. Matrik') : t('jpp:semester', 'Semester')}</span>
                         {' : '}
-                        <span className="line-through text-[#556453]/60 dark:text-white/30 font-mono text-[11px]">{req.current_value ?? '-'}</span>
+                        <span className="line-through text-[#475569]/60 dark:text-white/30 font-mono text-[11px]">{req.current_value ?? '-'}</span>
                         {' -> '}
-                        <span className="font-black text-[#2E3A2F] dark:text-white font-mono">{req.requested_value}</span>
+                        <span className="font-black text-[#0F172A] dark:text-white font-mono">{req.requested_value}</span>
                       </p>
-                      {req.reason && <p className="text-[11px] text-[#556453] dark:text-white/40 mt-1">Sebab: {req.reason}</p>}
+                      {req.reason && <p className="text-[11px] text-[#475569] dark:text-white/40 mt-1">Sebab: {req.reason}</p>}
                       {req.review_note && <p className="text-[11px] text-amber-600 dark:text-amber-400/80 mt-1">Nota JPP: {req.review_note}</p>}
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-[#556453]/70 dark:text-white/25">
+                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-[#475569]/70 dark:text-white/25">
                         <span>Dihantar: {new Date(req.submitted_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                         {req.reviewed_at && <span>· Disemak: {new Date(req.reviewed_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}</span>}
                         {req.reviewer?.full_name && <span>· {t('jpp:by', 'oleh')} {req.reviewer.full_name}</span>}
@@ -479,7 +479,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
             />
             <motion.div
               initial={{ opacity: 0, scale: 0.95, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 10 }} transition={undefined}
-              className="relative w-full max-w-md rounded-[2rem] p-6 border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-white dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] z-10 shadow-2xl"
+              className="relative w-full max-w-md rounded-[2rem] p-6 border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] text-[#0F172A] dark:text-[#F6FBF9] z-10 shadow-2xl"
             >
               <div className="space-y-5">
                 <div className="flex items-center gap-3">
@@ -487,29 +487,29 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                     {reviewModal.action === 'APPROVED' ? <CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-emerald-400" /> : <XCircle className="w-5 h-5 text-red-500 dark:text-red-400" />}
                   </div>
                   <div>
-                    <p className="font-black text-[#2E3A2F] dark:text-[#F8F6EE] text-sm">{reviewModal.action === 'APPROVED' ? 'Luluskan' : 'Tolak'} Permintaan Pindaan</p>
-                    <p className="text-[11px] text-[#556453] dark:text-white/40">
+                    <p className="font-black text-[#0F172A] dark:text-[#F6FBF9] text-sm">{reviewModal.action === 'APPROVED' ? 'Luluskan' : 'Tolak'} Permintaan Pindaan</p>
+                    <p className="text-[11px] text-[#475569] dark:text-white/40">
                       {reviewModal.req.field_type === 'matric_no' ? t('jpp:matric_no', 'No. Matrik') : t('jpp:semester', 'Semester')}:{' '}
-                      <span className="font-mono text-[#556453]/60 dark:text-white/60 line-through">{reviewModal.req.current_value}</span>
-                      {' -> '}<span className="font-mono text-[#2E3A2F] dark:text-white font-black">{reviewModal.req.requested_value}</span>
+                      <span className="font-mono text-[#475569]/60 dark:text-white/60 line-through">{reviewModal.req.current_value}</span>
+                      {' -> '}<span className="font-mono text-[#0F172A] dark:text-white font-black">{reviewModal.req.requested_value}</span>
                     </p>
-                    <p className="text-[10px] text-[#556453]/80 dark:text-white/30 mt-0.5">{t('jpp:student', 'Pelajar')}: {reviewModal.req.requester?.full_name}</p>
+                    <p className="text-[10px] text-[#475569]/80 dark:text-white/30 mt-0.5">{t('jpp:student', 'Pelajar')}: {reviewModal.req.requester?.full_name}</p>
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-[#556453] dark:text-white/40">
+                  <label className="text-[11px] font-black uppercase tracking-widest text-[#475569] dark:text-white/40">
                     {reviewModal.action === 'REJECTED' ? t('jpp:overview_rejection_reason_label', 'Sebab Penolakan *') : t('jpp:overview_review_notes_optional', 'Nota Ulasan (Pilihan)')}
                   </label>
                   <textarea
                     value={reviewNote} onChange={e => setReviewNote(e.target.value)} rows={3}
                     placeholder={reviewModal.action === 'REJECTED' ? t('jpp:overview_rejection_reason_placeholder', 'Nyatakan sebab penolakan...') : t('jpp:overview_additional_note_placeholder', 'Nota tambahan (jika ada)...')}
-                    className="w-full px-4 py-3 rounded-xl bg-[#F8F6EE]/50 dark:bg-white/5 border border-[#D9C9B2]/80 dark:border-white/10 text-sm text-[#2E3A2F] dark:text-white placeholder:text-[#556453]/60 dark:placeholder:text-white/20 font-medium resize-none focus:outline-none focus:border-[#2E3A2F] dark:focus:border-white/20"
+                    className="w-full px-4 py-3 rounded-xl bg-[#F6FBF9] dark:bg-white/5 border border-[#B8E4DC]/80 dark:border-white/10 text-sm text-[#0F172A] dark:text-white placeholder:text-[#475569]/60 dark:placeholder:text-white/20 font-medium resize-none focus:outline-none focus:border-[#0F766E] dark:focus:border-white/20"
                   />
-                  <p className="text-[10px] text-[#556453]/70 dark:text-white/25">{t('jpp:overview_audit_log_note', 'Nota ini akan direkodkan dalam Audit Log dan dihantar kepada pelajar.')}</p>
+                  <p className="text-[10px] text-[#475569]/70 dark:text-white/25">{t('jpp:overview_audit_log_note', 'Nota ini akan direkodkan dalam Audit Log dan dihantar kepada pelajar.')}</p>
                 </div>
                 <div className="flex gap-3">
                   <button onClick={() => setReviewModal({ open: false, req: null, action: null })} disabled={processing}
-                    className="flex-1 h-11 rounded-xl font-bold text-xs uppercase tracking-wider border border-[#D9C9B2]/80 dark:border-white/10 text-[#556453] dark:text-white/40 hover:bg-[#F8F6EE] dark:hover:bg-white/5 transition-all">
+                    className="flex-1 h-11 rounded-xl font-bold text-xs uppercase tracking-wider border border-[#B8E4DC]/80 dark:border-white/10 text-[#475569] dark:text-white/40 hover:bg-[#E6F4F1] dark:hover:bg-white/5 transition-all">
                     {t('jpp:cancel', 'Batal')}
                   </button>
                   <button onClick={handleReview} disabled={processing || (reviewModal.action === 'REJECTED' && !reviewNote.trim())}
@@ -652,10 +652,10 @@ export function JppOverviewPage() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#151D16]/95 border border-[#3A4A3B] rounded-xl p-3 shadow-xl ">
-          <p className="text-[#A3B39F] text-xs font-bold mb-1">{label}</p>
-          <p className="text-[#F8F6EE] font-black text-lg">
-            {payload[0].value} <span className="text-xs font-medium text-[#A3B39F]/70">pelajar</span>
+        <div className="bg-[#0B2420] border border-[#1E4D45] rounded-xl p-3 shadow-xl ">
+          <p className="text-[#99CBC2] text-xs font-bold mb-1">{label}</p>
+          <p className="text-[#F6FBF9] font-black text-lg">
+            {payload[0].value} <span className="text-xs font-medium text-[#99CBC2]/70">pelajar</span>
           </p>
         </div>
       );
@@ -664,7 +664,7 @@ export function JppOverviewPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F8F6EE] dark:bg-[#151D16] text-[#2E3A2F] dark:text-[#F8F6EE] transition-colors">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#061714] text-[#0F172A] dark:text-[#F6FBF9] transition-colors">
       {/* Background glow */}
       <div className="fixed inset-0 pointer-events-none z-0">
         <div className="absolute -top-[10%] right-[10%] w-[40vw] h-[40vw] rounded-full  opacity-5 dark:opacity-8"
@@ -688,10 +688,10 @@ export function JppOverviewPage() {
               <BarChart3 className="w-5 h-5" style={{ color: themeColor }} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-tight">
+              <h1 className="text-2xl font-black text-[#0F172A] dark:text-[#F6FBF9] leading-tight">
                 {t('jpp:overview_title', 'Analisis Prestasi Rentas-Kelab')}
               </h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#556453] dark:text-[#A3B39F]">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#475569] dark:text-[#99CBC2]">
                 {t('jpp:overview_subtitle', 'Indeks komprehensif, metrik kesihatan, dan pematuhan program semua kelab mahasiswa POLISAS.')}
               </p>
             </div>
@@ -720,7 +720,7 @@ export function JppOverviewPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-24">
-            <Loader2 className="w-8 h-8 animate-spin text-[#556453] dark:text-white/20" />
+            <Loader2 className="w-8 h-8 animate-spin text-[#475569] dark:text-white/20" />
           </div>
         ) : (
           <>
@@ -732,23 +732,23 @@ export function JppOverviewPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.45 }}
-                className="lg:col-span-2 rounded-[1.75rem] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-white dark:bg-[#1E271F]/80 p-6 flex flex-col shadow-[0_4px_20px_rgba(46,58,47,0.04)] dark:shadow-none"
+                className="lg:col-span-2 rounded-[1.75rem] border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] p-6 flex flex-col shadow-[0_4px_20px_rgba(15,118,110,0.06)] dark:shadow-none"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                   <div>
-                    <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#556453] dark:text-[#A3B39F] mb-1">{t('jpp:overview_student_reg_trend', 'Trend Pendaftaran Pelajar')}</h2>
-                    <p className="text-2xl font-black text-[#2E3A2F] dark:text-[#F8F6EE]">
-                      <span className="font-mono tabular-nums">{(stats?.totalStudents ?? 0).toLocaleString()}</span> <span className="text-xs text-[#556453] dark:text-[#A3B39F]/70 font-medium font-sans">{t('jpp:overview_total_students_label', 'jumlah pelajar')}</span>
+                    <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#475569] dark:text-[#99CBC2] mb-1">{t('jpp:overview_student_reg_trend', 'Trend Pendaftaran Pelajar')}</h2>
+                    <p className="text-2xl font-black text-[#0F172A] dark:text-[#F6FBF9]">
+                      <span className="font-mono tabular-nums">{(stats?.totalStudents ?? 0).toLocaleString()}</span> <span className="text-xs text-[#475569] dark:text-[#99CBC2]/70 font-medium font-sans">{t('jpp:overview_total_students_label', 'jumlah pelajar')}</span>
                     </p>
-                    <p className="text-[11px] text-[#556453]/80 dark:text-white/30 font-medium mt-0.5">
+                    <p className="text-[11px] text-[#475569]/80 dark:text-white/30 font-medium mt-0.5">
                       {t('jpp:overview_newly_registered_days', '{{count}} baru mendaftar dalam {{days}} hari', { count: chartData.reduce((acc, curr) => acc + curr.count, 0), days: timeRange === '7d' ? '7' : '30' })}
                     </p>
                   </div>
-                  <div className="flex items-center bg-[#F8F6EE] dark:bg-white/5 rounded-xl p-1 shrink-0">
+                  <div className="flex items-center bg-[#E6F4F1] dark:bg-white/5 rounded-xl p-1 shrink-0">
                     <button
                       onClick={() => setTimeRange('7d')}
                       className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
-                        timeRange === '7d' ? 'bg-white dark:bg-white/10 text-[#2E3A2F] dark:text-white shadow-sm dark:shadow-none' : 'text-[#556453] dark:text-white/30 hover:text-[#2E3A2F] dark:hover:text-white/60'
+                        timeRange === '7d' ? 'bg-white dark:bg-white/10 text-[#0F172A] dark:text-white shadow-sm dark:shadow-none' : 'text-[#475569] dark:text-white/30 hover:text-[#0F172A] dark:hover:text-white/60'
                       }`}
                     >
                       {t('jpp:days_7', '7 Hari')}
@@ -756,7 +756,7 @@ export function JppOverviewPage() {
                     <button
                       onClick={() => setTimeRange('30d')}
                       className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
-                        timeRange === '30d' ? 'bg-white dark:bg-white/10 text-[#2E3A2F] dark:text-white shadow-sm dark:shadow-none' : 'text-[#556453] dark:text-white/30 hover:text-[#2E3A2F] dark:hover:text-white/60'
+                        timeRange === '30d' ? 'bg-white dark:bg-white/10 text-[#0F172A] dark:text-white shadow-sm dark:shadow-none' : 'text-[#475569] dark:text-white/30 hover:text-[#0F172A] dark:hover:text-white/60'
                       }`}
                     >
                       {t('jpp:days_30', '30 Hari')}
@@ -805,15 +805,15 @@ export function JppOverviewPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 }}
-                className="rounded-[1.75rem] border border-[#D9C9B2]/80 dark:border-[#3A4A3B] bg-white dark:bg-[#1E271F]/80 p-6 flex flex-col shadow-[0_4px_20px_rgba(46,58,47,0.04)] dark:shadow-none"
+                className="rounded-[1.75rem] border border-[#B8E4DC]/80 dark:border-[#1E4D45] bg-white dark:bg-[#0B2420] p-6 flex flex-col shadow-[0_4px_20px_rgba(15,118,110,0.06)] dark:shadow-none"
               >
-                <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#556453] dark:text-[#A3B39F] mb-2">{t('jpp:overview_welfare_ticket_status', 'Status Tiket Kebajikan')}</h2>
+                <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#475569] dark:text-[#99CBC2] mb-2">{t('jpp:overview_welfare_ticket_status', 'Status Tiket Kebajikan')}</h2>
                 
                 <div className="flex-1 min-h-[200px] w-full flex items-center justify-center relative mt-4">
                   {ticketStats.every(t => t.value === 0) ? (
                     <div className="text-center">
-                      <Heart className="w-8 h-8 text-[#D9C9B2] dark:text-white/10 mx-auto mb-2" />
-                      <p className="text-xs text-[#556453] dark:text-white/30 font-medium">{t('jpp:overview_no_welfare_tickets', 'Tiada tiket kebajikan')}</p>
+                      <Heart className="w-8 h-8 text-[#B8E4DC] dark:text-white/10 mx-auto mb-2" />
+                      <p className="text-xs text-[#475569] dark:text-white/30 font-medium">{t('jpp:overview_no_welfare_tickets', 'Tiada tiket kebajikan')}</p>
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
@@ -834,8 +834,8 @@ export function JppOverviewPage() {
                           ))}
                         </Pie>
                         <RechartsTooltip 
-                          contentStyle={{ backgroundColor: 'rgba(21, 29, 22, 0.95)', borderColor: 'rgba(58, 74, 59, 0.6)', borderRadius: '12px', color: '#F8F6EE', fontWeight: 800 }}
-                          itemStyle={{ color: '#F8F6EE' }}
+                          contentStyle={{ backgroundColor: 'rgba(11, 36, 32, 0.96)', borderColor: 'rgba(30, 77, 69, 0.8)', borderRadius: '12px', color: '#F6FBF9', fontWeight: 800 }}
+                          itemStyle={{ color: '#F6FBF9' }}
                         />
                       </PieChart>
                     </ResponsiveContainer>
@@ -843,10 +843,10 @@ export function JppOverviewPage() {
                   {/* Center Text for Donut */}
                   {!ticketStats.every(t => t.value === 0) && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-3xl font-black text-[#2E3A2F] dark:text-[#F8F6EE] leading-none font-mono tabular-nums">
+                      <span className="text-3xl font-black text-[#0F172A] dark:text-[#F6FBF9] leading-none font-mono tabular-nums">
                         {(stats?.totalTickets ?? 0).toLocaleString()}
                       </span>
-                      <span className="text-[9px] uppercase tracking-widest font-black text-[#556453] dark:text-white/30 mt-1">
+                      <span className="text-[9px] uppercase tracking-widest font-black text-[#475569] dark:text-white/30 mt-1">
                         Tiket
                       </span>
                     </div>
@@ -859,7 +859,7 @@ export function JppOverviewPage() {
                     {ticketStats.map(stat => (
                       <div key={stat.name} className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stat.color }} />
-                        <span className="text-xs font-black text-[#556453] dark:text-[#A3B39F]">{stat.name}</span>
+                        <span className="text-xs font-black text-[#475569] dark:text-[#99CBC2]">{stat.name}</span>
                       </div>
                     ))}
                   </div>

@@ -174,36 +174,39 @@ remotion/
     └── scenes/               ← 9 komposisi kendiri terhubung 60fps: OpeningHeroScene, PolyMapsCampusScene, PolyMartCommerceScene (Fotografi Sebenar <CanvasImage> + Ken Burns & ★ Penilaian), PolyRentHousingScene (UI PolyRentPage + Foto Rumah Sebenar + Peta 3D Jalan Semambu & Laluan Beserah Rapat), PolySuaraVoiceScene (Privasi Aktif Scramble Aiman Hakim -> Rubah Semambu + Undian Tertutup), WelfareCareScene (Dalam & Luar Kampus + Live Chat 2-Hala + Food Bank), ClubsEmsScene (Cincin Orbital 3D 21 Kelab Berterusan Tanpa KineticWindow + Flip e-Sijil 0-Scanner), ImpactNumbersScene (Amfiteater 3D Lengkung ±11°/±4° + SpatialFloorGrid + Nadi Aktiviti Siswa), ClosingVaultScene (Midnight-Teal #061714 Aurora + Spiral Komet 4-Jalur Berlawanan Arah + Konstelasi 8 Modul + LED QR 440px #061714 Kunci 0.00° dalam Zon Senyap 492×492px)
 ```
 
-### 2.1 Piawaian Reka Bentuk UI/UX & Token Tema Digital Flagship (Hybrid Precision-Editorial)
+### 2.1 Piawaian Reka Bentuk UI/UX & Sistem Reka Bentuk Rasmi (Semambu Mineral Teal & Crisp Alabaster)
 
-Bagi memastikan JPP-POLISAS mencapai kualiti produk taraf flagship antarabangsa tanpa kelihatan seperti "AI Slop" generik:
+Spesifikasi produk dan sistem reka bentuk rasmi didokumentasikan secara terperinci di [PRODUCT.md](PRODUCT.md) dan [DESIGN.md](DESIGN.md) pada root repositori:
 
-1. **Palet Warna Institusi Teguh (Locked Color Tokens):**
-   - **Royal Maroon:** `hsl(0 78% 29%)` / `#831010` (Elemen utama, border fokus, tindakan kepimpinan rasmi).
-   - **Refined Brass / Gold:** `hsl(43 78% 46%)` / `#D4A017` (Lencana anugerah, penunjuk merit, sorotan pencapaian).
-   - **Latar Belakang Bersih:** Mod gelap menggunakan Neutral Deep Slate `#0A0202` / `slate-950` yang jitu, manakala mod terang menggunakan `#F8FAFC` bersih.
-   - **Tiada Warna Neon Berkonflik:** Menghapuskan ungu cerah terpencil (`bg-purple-600`) dan warna chameleon yang tidak seragam merentasi navigasi dan modul.
+1. **Palet Warna Rasmi (Semambu Mineral Teal & Crisp Alabaster):**
+   - **Mineral Teal (`--primary` CTA & Interaktif):** `hsl(175 77% 26%)` / `#0F766E` dalam Mod Terang (bersama teks `#FFFFFF`, kontras 5.54:1 WCAG AA; hover `#115E59`) dan `hsl(171 77% 50%)` / `#2DD4BF` (dan `#14B8A6`) dalam Mod Gelap (bersama teks `#061714`, kontras 10.8:1 WCAG AAA).
+   - **Crisp Alabaster & Deep Pine-Teal Surfaces:** Mod Terang menggunakan kanvas `#F6FBF9` (`160 45% 97%`), kad `#FFFFFF`, sub-permukaan `#EBF7F4`, border `#B8E4DC`, dan teks `#0B2420` / `#3B635C`. Mod Gelap menggunakan kanvas `#061714` (`170 58% 6%`), kad `#0B2420` / `#081A17`, border `#1E4D45`, dan teks `#F6FBF9` / `#99CBC2`.
+   - **Institutional Gold Seal (<=3% Luas Permukaan):** `#D97706` / `#F59E0B` dikhaskan untuk lencana merit rasmi, penunjuk parlimen MAKMP/JPP, dan penarafan 4.9.
+   - **Unified Deep Pine-Teal Shell:** Semua panel sisi ruang kerja (`Sidebar`, `JppSidebar`, `AkademikLayout`, `KebajikanSidebar`, `KeusahawananLayout`, `KlkSidebar`, `PolyTaskLayout`) berkongsi gradien seragam `#0B2420` ke `#061714` dengan teks terang atas gelap, tanpa warna berkonflik. Tema bermusim (`SUPSAS` / `Karnival`) hanya menukar aksen semasa acara aktif.
 
-2. **Tipografi & Hirarki Kandungan:**
-   - Menggunakan sistem susunan fon natif berprestasi tinggi (`Inter, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif`).
-   - Larangan teks berbalut melampau (banned 6-line awkward wraps); menggunakan `max-w-2xl` atau `max-w-3xl` dengan *leading-relaxed*.
+2. **Tipografi, Ergonomik & Unit Viewport:**
+   - **Fon:** `'Geist', 'Manrope', sans-serif` untuk paparan dan antaramuka; `'JetBrains Mono'` (`font-mono` di `tailwind.config.cjs`) untuk matrik, metrik KPI, dan cap masa.
+   - **Unit Viewport Mudah Alih (`100dvh`) & Zum:** Susun atur skrin penuh menggunakan `h-[100dvh]` / `min-h-[100dvh]` (bukan `h-screen`), `index.html` membenarkan *pinch-to-zoom* (`viewport-fit=cover` tanpa `user-scalable=0`), satu pengepala mudah alih tunggal dalam `AppLayout`, dan jarak selamat antara `BottomNav` (label minimum `10px`) dengan `FloatingAiChat` (`bottom-[calc(5.75rem+env(safe-area-inset-bottom,0px))]`).
 
-3. **Prinsip Anti-Slop (Strict Anti-Patterns):**
-   - **Sifar Mockup Pelayar Palsu:** Menghapuskan div palsu bertingkap tiga butang merah/kuning/hijau (*fake browser chrome*). Sebaliknya paparkan antaramuka interaktif sebenar.
-   - **Pencegahan Kebutaan Banner (Banner Blindness):** Menggabungkan banner berturut-turut yang memakan ketinggian melebihi 600px ke dalam satu `PortalNotificationCenter` kompak (72-80px) dengan navigasi bertitik dan tindakan terus.
-   - **Hirarki Tindakan Kemas:** Pada setiap kad acara EMS, elakkan timbunan 10 butang berwarna-warni. Gunakan butang tindakan utama ("Urus Acara & Skor") bersama dropdown menu bagi fungsi pengurusan lain.
-   - **Kekemasan Portal Juri & Modal Pemarkahan (Audit UI/UX):**
-     - **Modal Header Kompak 1-Baris (Compact 1-Line Bar)**: Pengepala modal penilaian juri menggunakan bar kompak mendatar satu baris (`px-3.5 sm:px-5 py-2.5 sm:py-3 shrink-0`) yang menggabungkan lencana booth, tajuk produk calon terpotong kemas (`truncate max-w-[200px] sm:max-w-md`), mikrolencana status autosave (`Draf Disimpan`), butang togol info calon (`showCandidateInfo`), dan butang tutup modal (`X`), mengelakkan pembaziran ruang menegak skrin peranti tablet/mudah alih.
-     - **Laci Maklumat Calon & Lampiran Berasingan (`showCandidateInfo`)**: Maklumat perincian calon, ketua/ahli pasukan, serta senarai lampiran dokumen/PDF diasingkan ke dalam laci gelongsor boleh buka-tutup (*collapsible slide-down drawer*) yang tertutup secara lalai (`showCandidateInfo = false`). Ini memastikan kriteria rubrik pemarkahan utama dapat dilihat dan diakses serta-merta sebaik sahaja modal dibuka tanpa perlu skrol ke bawah.
-     - **Pengepala Seksyen Rubrik Melekat Padu (Solid Sticky Headers)**: Pengepala seksyen rubrik yang melekat (`sticky top-0 z-10`) **WAJIB** menggunakan latar belakang padu/opaque (`bg-slate-100 dark:bg-slate-900`) dan bukannya lutsinar kabur (`backdrop-blur` / `bg-card/80`) bagi menghapuskan pertindihan teks (*text bleed-through*) semasa juri menskrol kriteria rubrik yang panjang.
-     - **Tipografi & Sasaran Sentuhan Likert**: Butang skala Likert (1 - 5) dan kad rubrik menggunakan tipografi berkontras tinggi, saiz sasaran ergonomik tablet (`touch-manipulation`), dan gelang penunjuk pilihan aktif (`ring-2 ring-primary`) yang jelas tanpa pembalutan teks yang canggung.
-     - Bar tindakan modal (`Docked Modal Footer Action Bar`) wajib didokkan di dalam bekas modal kad (`shrink-0 border-t`) dan bukan terapung bebas seluruh viewport (`fixed bottom-0 left-0 right-0`) agar tidak memecahkan bucu bulat modal dialog (`rounded-3xl`).
-     - Butang pratonton lampiran PDF wajib diposisikan dengan ikon berpusat tanpa pertindihan teks/sempadan (`FileText` dengan tag PDF kemas).
-     - Tab anugerah rubrik pada papan pendahulu EMS menggunakan susun atur fleksibel tanpa sekatan rigid `max-w-md` bagi mengelakkan nama kategori dipotong (cth: "Anugerah Projek Keusahawanan Terbaik").
-     - Tab penapis status pada papan pemuka EMS menggunakan semantik neutral (`bg-slate-900 text-white dark:bg-amber-500 dark:text-slate-950`) dan bukannya warna merah/marun amaran.
+3. **Prinsip Anti-Slop, Header Padu & Kekangan GPU Baseline:**
+   - **Sifar `backdrop-filter` Kabur:** `src/index.css` menguatkuasakan `* { backdrop-filter: none !important; }` bagi kelancaran peranti siswa; gunakan **sticky header padu/opaque** (`bg-card` / `bg-white dark:bg-[#0B2420]`) pada `Header`, `AppLayout`, `JppLayout`, `AkademikLayout`, `KebajikanLayout`, `KeusahawananLayout`, `PolyMartLayout`, `KlkLayout`, `PolyRiderLayout`, dan `PolyTaskLayout`, serta elakkan `blur-2xl`/`blur-3xl`.
+   - **Pencegahan Kebutaan Banner & Kekemasan Portal Juri EMS:**
+     - **Modal Header Kompak 1-Baris (Compact 1-Line Bar)**: Pengepala modal penilaian juri menggunakan bar kompak mendatar satu baris (`px-3.5 sm:px-5 py-2.5 sm:py-3 shrink-0`) yang menggabungkan lencana booth, tajuk produk calon terpotong kemas (`truncate max-w-[200px] sm:max-w-md`), mikrolencana status autosave (`Draf Disimpan`), butang togol info calon (`showCandidateInfo`), dan butang tutup modal (`X`).
+     - **Laci Maklumat Calon & Lampiran Berasingan (`showCandidateInfo`)**: Tertutup secara lalai (`showCandidateInfo = false`) supaya rubrik pemarkahan terus kelihatan.
+     - **Pengepala Seksyen Rubrik Melekat Padu (Solid Sticky Headers)**: `sticky top-0 z-10` wajib menggunakan latar belakang padu/opaque.
+     - **Sasaran Sentuhan & Dialog Modal:** Butang skala Likert menggunakan `touch-manipulation` & `ring-2 ring-primary`, dan bar tindakan modal (`Docked Modal Footer Action Bar`) didokkan di dalam kad dialog (`shrink-0 border-t`).
 
 4. **Fizik Interaksi & Prestasi Skrol:**
-   - Navigasi terapung dan bar status wajib menggunakan `useScroll` daripada `framer-motion` dan bukan event listener manual `window.addEventListener('scroll')` bagi mengelakkan kebocoran memori dan jank susun atur.
+   - Pastikan animasi Motion hanya memanipulasi `transform` dan `opacity` tanpa gelung tersembunyi `repeat: Infinity` pada elemen statik; navigasi pendaratan (`LandingNavbar`) menggunakan pendengar skrol RAF pasif ringan yang serasi dengan ujian SSR/Vitest.
+
+5. **Pintu Gerbang Token Reka Bentuk (`check:design-tokens`):**
+   - Jalankan `npm run check:design-tokens` (`scripts/check-design-tokens.mjs`) bersama `src/__tests__/mineralTealDesignSystem.test.ts` sebelum penggabungan kod untuk memastikan sifar kembalinya token legasi Earthy Beige/Olive (`#2E3A2F`, `#F8F6EE`, `#D9C9B2`, `#151D16`, `#6B7F5B`, `#C96F4F`) atau web Maroon (`#831010`, `#8B1A1A`) luar pengecualian sijil cetakan/acara bermusim.
+
+6. **Ergonomik Super App Natif & Hierarki Portal (Fasa 4):**
+   - **Dock `BottomNav` 5-Slot Padat-Skrol (`min-h-[48px]` & 1-Tap):** Pada keadaan rehat, semua 5 tab memaparkan teks label pendek bersama pelancar tengah `Pintasan` (`LayoutGrid`). Semasa skrol ke bawah, pendengar skrol pasif RAF (`data-compact="true"`) mengecilkan label (`opacity-0 max-h-0`) dan kapsul (`scale-[0.84] opacity-80`) tanpa React *re-render*, sambil mengekalkan respons terus 1 sentuhan tanpa tooltip melantun `repeat: Infinity`.
+   - **Landing Page Asimetri 12-Kolum & Double-Bezel:** `LandingHero` memisahkan teks utama + butang *Button-in-Button* di sebelah kiri dengan pentas pratonton Dwi-Peranti *Double-Bezel* interaktif (`Portal Hab` / `PolyMart` / `PolyMaps`) di kanan supaya muat penuh atas skrin `1280×800`, disambung oleh `LandingBento` (`grid-flow-dense` + kad utama `#0B2420`) serta `LandingNexusAI` & `LandingCta` *Double-Bezel* dengan sekatan *eyebrow* HURUF BESAR.
+   - **Sasaran Ibu Jari `>=44×44px` & Lantai Teks `11px`:** Kawalan penjuru kanan `SuperAppHeader` (`w-10 h-10 sm:w-11 sm:h-11` + `after:-inset-1`) dan butang Wishlist di `PolyMartHome` (`after:-inset-1.5`) menjamin kawasan sentuhan `>=48px` tanpa menjejaskan muatan skrin telefon `360px`; metadata pelajar menggunakan `11px` huruf biasa dengan bucu terkunci (`12px` / `16px` / `24px`).
+   - **Bento `/portal` 12-Kolum Desktop & Manifest Tunggal `#0F766E`:** Susun atur desktop menggabungkan `NextClassBentoCard` (`lg:col-span-5`) + `CampusServicesGrid` (`lg:col-span-7`), diikuti suapan sebelah-menyebelah `EmsEventsFeed` + `PolyMartFeed` (`lg:col-span-6`) dan direktori kompak `ExcoCard` 4-kolum (`lg:grid-cols-4`). Kedua-dua `public/site.webmanifest` dan `vite.config.ts` menggunakan `#0F766E`, `scope: '/'`, dan `launch_handler`.
 
 ---
 
@@ -486,6 +489,10 @@ npm run lint:css     # Stylelint sahaja
 | `src/components/ui/PromptDialog.tsx` | Pengganti standard accessible modal untuk `window.prompt` dan pengesahan berinput teks. Mengelakkan sekatan pelayar moden |
 | `src/components/portal/PortalNotificationCenter.tsx` | Pusat notifikasi portal bersepadu untuk KAMSIS, Karnival, SUPSAS, dan MAKMP menggantikan banner bertindih |
 | `src/pages/PortalPage.tsx` | Entry portal utama. Mengintegrasikan Campus Super App dan modul rasmi Exco |
+| `src/components/polysuara/PolySuaraSideRails.tsx` | Panel kiri gaya X/Threads (paparan/saluran/format/Mod Fokus), panel kanan carian global + `Suara → Tindakan` (`xl:flex`) & laci penapis mudah alih (`PolySuaraMobileDrawer`) |
+| `src/components/polysuara/PolySuaraConfessionCard.tsx` | Komponen kad kiriman PolySuara bermodul lengkap dengan imej aspek dinamik, butang *"Saya Juga Alami"*, penjejak sivik & nota rasmi JPP |
+| `src/components/polysuara/PolySuaraMediaViewer.tsx` | Pembelek gambar sosial dwi-panel dengan zum 1x–3x, pan seret, muat turun & panel ulasan desktop |
+| `src/components/polysuara/PolySuaraOverlays.tsx` | Komponen overlay PolySuara: `PolySuaraQuickReportModal` & `PolySuaraCivicProgress` (mengikut kontrak `shouldShowCivicTracker`) serta re-export `PolySuaraImageLightbox` |
 | `src/lib/superAppHelpers.ts` | Kontrak pembantu & konfigurasi 8 servis teras, ucapan harian dan pengiraan kempen Super App |
 | `src/components/portal/SuperAppHeader.tsx` | Header pintar Super App berorientasikan gaya hidup pelajar kampus |
 | `src/lib/timetableParser.ts` | Enjin parser PDF jadual waktu berasaskan koordinat grid client-side (`pdfjs-dist`) |
@@ -4056,6 +4063,11 @@ Modul PolySuara telah dinaik taraf kepada **Aplikasi Media Sosial Alternatif Mah
 3. **Ergonomik Mudah Alih & Ruang Bawah:**
    - Penjarakan bawah `pb-36 md:pb-32` berserta ruang pemisah mudah alih `<div className="h-32 md:hidden" aria-hidden="true" />` memastikan `BottomNav` tidak sekali-kali menghalang butang reaksi atau kad luahan paling bawah semasa suapan ditatal.
 
+### 30.8 Naik Taraf PolySuara 2.0 & Pemantapan Skala/UX X-Threads (Semambu Mineral Teal Campus Hub)
+- Mengguna pakai susun atur responsif X/Threads (`PolySuaraLeftRail` tanpa kotak bertindan dengan penapis format & Mod Fokus di `lg+`, suapan tengah `lg:col-span-9 xl:col-span-6`, `PolySuaraRightRail` di `xl:flex` dengan carian global & statistik impak kampus seluruh sistem melalui RPC `get_polysuara_impact_summary()` ber-cache 5 minit `queryCache`, serta `PolySuaraMobileDrawer` + bar 3-tab mudah alih + butang *Saluran & Tapis*).
+- Kad kiriman dimodulkan kepada `src/components/polysuara/PolySuaraConfessionCard.tsx` bersama pembelek gambar 2-panel `src/components/polysuara/PolySuaraMediaViewer.tsx` (zum/pan/muat turun/panel komen), penjejak tindakan bersyarat `shouldShowCivicTracker()` (hanya `FASILITI`/`KAMSIS` atau status siasatan/penyelesaian sebenar), butang *"Saya Juga Alami"*, serta status `OFFICIAL_NOTE` dan `FACT_CHECK` diselaraskan antara `/polysuara` dan `/jpp/polyservices`.
+- Skala 1,500 pengguna: penapis kategori/tag/format/Mod Fokus ditolak terus ke PostgreSQL dalam `buildFeedQuery()`, pratonton komen utama diambil secara kelompok via `get_polysuara_top_comments(UUID[])` (`DISTINCT ON`, `parent_id IS NULL`), semua `window.confirm()` diganti `<ConfirmDialog />`, modal gubah diletakkan di tengah port pandangan (`max-h-[90dvh]`), dan standardisasi `<BottomNav />` dilaksanakan merentas `PolySuaraPage`, `PolyRentPage`, `PolyMapsPage`, `NotifikasiPage`, dan `MakmpJppChrome`. Perincian penuh didokumentasikan di [PolySuara_Guideline.md](PolySuara_Guideline.md) Seksyen 9.
+
 ---
 
 ## 31. Flagship Landing Page SuperApp & E-Akademik Light Mode Parity (with PolyMaps Refinements)
@@ -5533,3 +5545,21 @@ Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asa
 - **Cip Pilihan Pantas & Penciptaan Bilik Baharu Automatik:**
   - Di Langkah 2 (*Letak Pin Pintu*), sukarelawan boleh menekan cip pilihan pantas bilik sedia ada (bilik yang belum mempunyai 360° ditandakan `Perlu 360°`) ATAU menaip terus kod & nama bilik baharu.
   - Apabila JPP menekan **Lulus & Terbitkan** di `/jpp/polymaps` (atau semasa simpanan terus admin), sebarang pin pintu yang belum wujud dalam `imaps_locations` akan **dicipta secara automatik** dalam pangkalan data dan dipautkan (`target_location_id`) ke pin 360° tersebut.
+
+---
+
+## 39. Penambahbaikan Audit UX/UI Pelajar & Dev Mode Role Switcher (Nov 2026)
+
+- **Pemilih Peranan Dev Mode (`AuthContext.tsx` & `LoginPage.tsx`):**
+  - `localStorage.getItem('mock_auth_role')` membezakan antara mod **`CLUB_MEMBER` (Pelajar — lalai baharu)** dan **`SUPER_ADMIN_JPP` (Admin JPP)**.
+  - Kedua-dua pilihan dipaparkan terus di skrin log masuk apabila `import.meta.env.DEV` aktif tanpa menjejaskan pengesahan SSO produksi (`use_mock_auth` tidak wujud di produksi).
+- **Panduan Interaktif & Modal Pengumuman:**
+  - `SuperAppHeader.tsx` menyertakan kelas sasaran `.tour-superapp-header` supaya `SystemTour` tidak lagi tersangkut pada *spinner* di `/portal`.
+  - `useTour.ts` kini memerlukan pencetus manual (ikon `?`) atau bendera sesi `sessionStorage.getItem('jpp_force_tour') === 'true'` (ditetapkan oleh butang *Mulakan Semula Panduan* di `SettingsPage.tsx`) agar kotak gelap tidak muncul secara mengejut semasa pelajar melayari modul.
+  - `GlobalAnnouncementModal.tsx` kini mengikut Dwi-Tema *Mineral Teal* (Cerah/Gelap), menyimpan status tutup kekal dalam `localStorage` (`mock_dismissed_announcements`) ketika Dev Mode aktif, serta memetakan pautan `https://jpp.cipher-node.org/...` kepada navigasi SPA dalaman.
+- **Keseragaman Dwi-Tema, Zon Ibu Jari & Aksesibiliti:**
+  - `NotifikasiPage.tsx`, `KlkResidencyFormPage.tsx`, `PolyTaskLayout.tsx`, `PolyTaskBoard.tsx`, `CreateJobModal.tsx`, `AkademikLayout.tsx`, `AkademikDashboard.tsx`, dan `AkademikTakwimPage.tsx` diselaras dengan palet *Mineral Teal* Dwi-Tema.
+  - `FloatingAiChat.tsx` (melangkau tinjauan mesej Supabase dalam Dev Mode + dinaikkan ke `max-md:bottom-[calc(6.75rem+env(safe-area-inset-bottom,0px))]`) dan kawalan bawah `PolyMapsPage.tsx` (`bottom-[104px]`) dinyahkonflik daripada `BottomNav`.
+  - `PolyMartLayout.tsx` membaca kiraan troli Dev Mode secara dinamik daripada `localStorage` (`0` jika kosong) serta menambah penukar bahasa/tema pada pengepala.
+  - `CampusServicesGrid.tsx` mengalihkan lencana `MERIT`/`CLUB` ke penjuru kad dan mengelakkan pemotongan label (`E-Kebajikan`), `LandingNavbar.tsx` menggunakan breakpoint `lg:` untuk mengelakkan pembalutan bar atas pada paparan tengah `860px`, dan `Sidebar.tsx` menukar pembungkus `<div>` di luar `<p>` bagi membuang amaran hidrasi React.
+

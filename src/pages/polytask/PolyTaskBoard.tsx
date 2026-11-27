@@ -92,7 +92,7 @@ export function PolyTaskBoard() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 pb-24 font-sans transition-colors duration-300">
       
-      {/* ── HERO SECTION (EMS Purple Vibe) ── */}
+      {/* ── HERO SECTION (Mineral Teal Theme) ── */}
       <div className="relative pt-12 pb-20 px-4 md:px-8 overflow-hidden flex flex-col items-center justify-center min-h-[300px]">
         {/* Help Button */}
         <button 
@@ -107,17 +107,17 @@ export function PolyTaskBoard() {
           animate={{ opacity: 1, y: 0 }}
           className="relative z-10 text-center max-w-2xl w-full"
         >
-          <div className="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/10 border border-purple-500/20 rounded-full mb-6 text-xs font-bold text-purple-700 dark:text-purple-300 tracking-wide shadow-xs">
-            <ShieldCheck className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" /> {t('gig:polytask_badge', '100% Khidmat Pelajar ke Pelajar')}
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#0F766E]/10 border border-[#0F766E]/20 rounded-full mb-6 text-xs font-bold text-[#0F766E] dark:text-[#2DD4BF] tracking-wide shadow-xs">
+            <ShieldCheck className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" /> {t('gig:polytask_badge', '100% Khidmat Pelajar ke Pelajar')}
           </div>
           
-          <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-950 via-slate-800 to-violet-950 dark:from-white dark:via-purple-100 dark:to-violet-300 tracking-tight leading-[1.1] mb-6">
+          <h1 className="text-4xl md:text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#0B2420] via-[#0F766E] to-[#0D9488] dark:from-white dark:via-teal-100 dark:to-teal-300 tracking-tight leading-[1.1] mb-6">
             {t('gig:polytask_hero_line1', 'Cari Peluang,')}<br /> {t('gig:polytask_hero_line2', 'Jana Pendapatan.')}
           </h1>
           
           {/* Main Search Bar */}
           <div className="relative group max-w-xl mx-auto w-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500 to-violet-500 rounded-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 blur-sm" />
+            <div className="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 blur-sm" />
             <div className="relative flex items-center bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 rounded-2xl p-2 shadow-xl backdrop-blur-md">
               <Search className="w-6 h-6 text-slate-400 ml-4 shrink-0" />
               <input 
@@ -127,7 +127,7 @@ export function PolyTaskBoard() {
                 onChange={e => setSearch(e.target.value)}
                 className="w-full bg-transparent border-none px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-0 text-base md:text-lg placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
-              <button className="bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white px-6 py-3 rounded-xl font-bold transition-all shadow-[0_4px_16px_rgba(147,51,234,0.35)] shrink-0 active:scale-95">
+              <button className="bg-[#0F766E] hover:bg-[#0D9488] text-white px-6 py-3 rounded-xl font-bold transition-all shadow-[0_4px_16px_rgba(13,148,136,0.3)] shrink-0 active:scale-95">
                 {t('gig:search_btn', 'Cari')}
               </button>
             </div>
@@ -155,7 +155,7 @@ export function PolyTaskBoard() {
                     onClick={() => setActiveCategory(cat.id)}
                     className={`flex items-center gap-2.5 px-5 py-3 rounded-2xl transition-all duration-300 font-bold text-sm border ${
                       activeCategory === cat.id 
-                        ? 'bg-purple-600 border-purple-500 shadow-md shadow-purple-500/25 text-white' 
+                        ? 'bg-[#0F766E] border-[#0F766E] shadow-md shadow-teal-500/25 text-white' 
                         : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-white/5 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white'
                     }`}
                   >
@@ -172,7 +172,7 @@ export function PolyTaskBoard() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 tour-step-board-main">
               <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 {t('gig:available_tasks', 'Tugasan Tersedia')}{' '}
-                <span className="text-xs px-2.5 py-1 bg-purple-500/10 text-purple-600 dark:bg-purple-500/20 dark:text-purple-300 rounded-md font-bold">{filteredJobs.length}</span>
+                <span className="text-xs px-2.5 py-1 bg-teal-500/10 text-[#0F766E] dark:bg-teal-500/20 dark:text-[#2DD4BF] rounded-md font-bold">{filteredJobs.length}</span>
               </h2>
 
               <div className="flex items-center gap-3">
@@ -180,7 +180,7 @@ export function PolyTaskBoard() {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 text-sm font-semibold rounded-xl px-4 py-2 focus:ring-2 focus:ring-purple-500 focus:outline-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
+                  className="bg-white dark:bg-slate-900/80 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 text-sm font-semibold rounded-xl px-4 py-2 focus:ring-2 focus:ring-[#0D9488] focus:outline-none cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
                 >
                   <option value="LATEST">{t('gig:sort_latest', 'Paling Baru')}</option>
                   <option value="HIGHEST_PAY">{t('gig:sort_highest_pay', 'Upah Tertinggi')}</option>
@@ -220,10 +220,10 @@ export function PolyTaskBoard() {
                         transition={{ duration: 0.2 }}
                         key={job.id}
                         onClick={() => navigate(`/polytask/job/${job.id}`)}
-                        className={`group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-6 cursor-pointer hover:border-purple-300 dark:hover:border-purple-500/40 hover:shadow-xl dark:hover:bg-slate-800/50 shadow-xs transition-all flex flex-col ${idx === 0 ? 'tour-step-bid' : ''}`}
+                        className={`group relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-3xl p-6 cursor-pointer hover:border-teal-300 dark:hover:border-teal-500/40 hover:shadow-xl dark:hover:bg-slate-800/50 shadow-xs transition-all flex flex-col ${idx === 0 ? 'tour-step-bid' : ''}`}
                       >
                         {/* Hover Glow Effect */}
-                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                        <div className="absolute inset-0 rounded-3xl bg-gradient-to-b from-teal-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                         
                         {/* Header: Requester Info & Price */}
                         <div className="flex justify-between items-start mb-5 relative z-10 gap-3">
@@ -248,7 +248,7 @@ export function PolyTaskBoard() {
                         </div>
 
                         {/* Job Title */}
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight mb-4 group-hover:text-purple-600 dark:group-hover:text-purple-300 transition-colors line-clamp-2 relative z-10">
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white leading-tight mb-4 group-hover:text-[#0F766E] dark:group-hover:text-[#2DD4BF] transition-colors line-clamp-2 relative z-10">
                           {job.title}
                         </h3>
 
