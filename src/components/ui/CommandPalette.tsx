@@ -133,37 +133,37 @@ export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteP
         }
       }}
       label={t('portal:global_search_title', 'Carian Global JPP')}
-      overlayClassName="fixed inset-0 z-[200] bg-background/60  transition-opacity duration-200"
-      contentClassName="fixed left-1/2 top-[12vh] z-[201] w-full max-w-xl -translate-x-1/2 overflow-hidden rounded-[2rem] border border-border/40 bg-card/95 shadow-2xl  p-0 outline-none"
+      overlayClassName="fixed inset-0 z-[200] bg-black/55 transition-opacity duration-200"
+      contentClassName="fixed left-1/2 top-[calc(3rem+var(--sat,env(safe-area-inset-top,0px)))] sm:top-[12vh] z-[201] w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-[1.75rem] border border-border bg-card shadow-surface-lg p-0 outline-none"
     >
       <DialogPrimitive.Title className="sr-only">{t('portal:global_search_title', 'Carian Global JPP')}</DialogPrimitive.Title>
       <DialogPrimitive.Description className="sr-only">
         {t('portal:global_search_desc', 'Cari kelab, acara EMS, MAKMP, kebajikan, dan tindakan pantas.')}
       </DialogPrimitive.Description>
-      <div className="flex items-center border-b border-border/40 px-6 py-4">
-        <Search className="mr-3 h-5 w-5 text-muted-foreground/50" />
+      <div className="flex items-center border-b border-border/60 px-5 py-3.5">
+        <Search className="mr-3 h-5 w-5 text-muted-foreground" />
         <Command.Input
           placeholder={t('portal:global_search_placeholder', 'Cari kelab, acara EMS, MAKMP, kebajikan...')}
-          className="flex h-10 w-full bg-transparent text-base font-medium outline-none placeholder:text-muted-foreground/30"
+          className="flex h-10 w-full bg-transparent text-base font-medium text-foreground outline-none placeholder:text-muted-foreground/70"
         />
-        <div className="ml-auto hidden items-center gap-1 rounded-lg border border-border/40 bg-muted/20 px-2 py-1 md:flex">
-          <span className="text-[10px] font-black text-muted-foreground/60">ESC</span>
+        <div className="ml-auto hidden items-center gap-1 rounded-lg border border-border/60 bg-muted/40 px-2 py-1 md:flex">
+          <span className="text-[10px] font-black text-muted-foreground">ESC</span>
         </div>
       </div>
 
-      <Command.List className="max-h-[60vh] overflow-y-auto p-4 scrollbar-hide">
+      <Command.List className="max-h-[60dvh] overflow-y-auto overscroll-contain p-3.5 scrollbar-hide">
         <Command.Empty className="py-12 text-center">
           <div className="flex flex-col items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/20">
-              <Search className="h-6 w-6 text-muted-foreground/20" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/40">
+              <Search className="h-6 w-6 text-muted-foreground/60" />
             </div>
-            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground/40">
+            <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">
               {t('portal:no_results_found', 'Tiada hasil ditemui')}
             </p>
           </div>
         </Command.Empty>
 
-        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t('portal:quick_actions_hub', 'Tindakan Pantas & Hub')}</span>}>
+        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t('portal:quick_actions_hub', 'Tindakan Pantas & Hub')}</span>}>
           <Item icon={LayoutDashboard} label={t('nav:student_dashboard', 'Papan Pemuka Pelajar')} onSelect={() => runCommand(() => navigate('/dashboard'))} />
           <Item icon={Sparkles} label={t('portal:polisas_student_hub', 'Portal Pelajar POLISAS Hub')} onSelect={() => runCommand(() => navigate('/portal'))} />
           <Item icon={CalendarDays} label={t('portal:all_activities_calendar', 'Semua Aktiviti & Takwim')} onSelect={() => runCommand(() => navigate('/aktiviti'))} />
@@ -205,20 +205,21 @@ export function CommandPalette({ open: propOpen, onOpenChange }: CommandPaletteP
           <Item icon={ClipboardCheck} label={t('portal:makmp_status', 'Status Pencalonan MAKMP')} onSelect={() => runCommand(() => navigate('/makmp/status'))} />
           <Item icon={HeartHandshake} label={t('portal:foodbank_siswa', 'Food Bank Siswa POLISAS')} onSelect={() => runCommand(() => navigate('/kebajikan/foodbank'))} />
           <Item icon={ShoppingBag} label="PolyMart Campus Marketplace" onSelect={() => runCommand(() => navigate('/polymart'))} />
-          <Item icon={Truck} label="PolyServices & PolyRider" onSelect={() => runCommand(() => navigate('/services'))} />
+          <Item icon={Sparkles} label="PolySuara & Suara Siswa" onSelect={() => runCommand(() => navigate('/polysuara'))} />
+          <Item icon={Truck} label="PolyRider Kampus" onSelect={() => runCommand(() => navigate('/polyrider'))} />
         </Command.Group>
 
-        <Command.Separator className="my-4 h-px bg-border/40" />
+        <Command.Separator className="my-4 h-px bg-border/60" />
 
-        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t('nav:jpp_administration', 'Pentadbiran')}</span>}>
+        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t('nav:jpp_administration', 'Pentadbiran')}</span>}>
           <Item icon={ClipboardCheck} label={t('portal:report_review_jpp', 'Semakan Laporan (JPP)')} onSelect={() => runCommand(() => navigate('/semakan-laporan'))} />
           <Item icon={ShieldCheck} label={t('portal:jpp_control_center', 'Pusat Kawalan JPP / JPP HQ Portal')} onSelect={() => runCommand(() => navigate('/jpp'))} />
           <Item icon={Settings} label={t('nav:system_settings', 'Tetapan Sistem')} onSelect={() => runCommand(() => navigate('/tetapan'))} />
         </Command.Group>
 
-        <Command.Separator className="my-4 h-px bg-border/40" />
+        <Command.Separator className="my-4 h-px bg-border/60" />
 
-        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">{t('portal:clubs_and_societies', 'Kelab & Persatuan')}</span>}>
+        <Command.Group heading={<span className="px-3 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{t('portal:clubs_and_societies', 'Kelab & Persatuan')}</span>}>
           {ALL_CLUBS.map((club) => (
             <Item 
               key={club.id} 
@@ -261,25 +262,25 @@ function Item({ icon: Icon, label, shortLabel, color, onSelect }: any) {
     <Command.Item
       onSelect={onSelect}
       className={cn(
-        "group flex cursor-pointer items-center justify-between rounded-2xl px-4 py-3.5 outline-none transition-all duration-200",
-        "aria-selected:bg-primary/10 aria-selected:shadow-inner"
+        "group flex cursor-pointer items-center justify-between rounded-2xl px-4 py-3 outline-none transition-[background-color,color,transform] duration-150 ease-apple-out",
+        "aria-selected:bg-primary/12 dark:aria-selected:bg-primary/15"
       )}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3.5 min-w-0">
         <div className={cn(
-          "flex h-10 w-10 items-center justify-center rounded-xl shadow-lg transition-all duration-200",
-          "bg-muted/20 group-aria-selected:bg-primary group-aria-selected:scale-110",
+          "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-[transform,background-color] duration-150 ease-apple-out",
+          "bg-muted/50 group-aria-selected:bg-primary group-aria-selected:scale-105",
         )}
         style={color && !['PRIMARY', 'ACCENT'].includes(color) ? { backgroundColor: color + '20' } : {}}
         >
-          <Icon className={cn("h-4 w-4 transition-colors", "text-muted-foreground group-aria-selected:text-white")} />
+          <Icon className={cn("h-4 w-4 transition-colors", "text-muted-foreground group-aria-selected:text-primary-foreground")} />
         </div>
-        <div className="flex flex-col">
-          <span className="text-sm font-bold tracking-tight text-foreground group-aria-selected:text-primary-foreground">{label}</span>
-          {shortLabel && <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">{shortLabel}</span>}
+        <div className="flex flex-col min-w-0">
+          <span className="text-sm font-bold tracking-tight text-foreground group-aria-selected:text-primary truncate">{label}</span>
+          {shortLabel && <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{shortLabel}</span>}
         </div>
       </div>
-      <ChevronRight className="h-4 w-4 text-muted-foreground/0 transition-all duration-300 group-aria-selected:translate-x-1 group-aria-selected:text-primary hover:text-primary" />
+      <ChevronRight className="h-4 w-4 shrink-0 text-transparent transition-[transform,color] duration-150 ease-apple-out group-aria-selected:translate-x-0.5 group-aria-selected:text-primary" />
     </Command.Item>
   );
 }

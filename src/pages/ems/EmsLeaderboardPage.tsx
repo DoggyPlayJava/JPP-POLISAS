@@ -555,9 +555,9 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   // Guard private leaderboard from unauthorized students
   if (!canManageLeaderboard && !event.is_leaderboard_public) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 relative overflow-hidden select-none transition-colors">
+      <div className="min-h-[100dvh] bg-slate-50 dark:bg-[#090B0E] text-slate-900 dark:text-white flex flex-col items-center justify-center px-6 pt-[calc(4.5rem+var(--sat,env(safe-area-inset-top,0px)))] pb-6 relative overflow-hidden select-none">
         {/* Floating ThemeToggle */}
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+        <div className="absolute top-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] right-4 z-20 flex items-center gap-2">
           <LanguageToggle />
           <ThemeToggle />
         </div>
@@ -602,9 +602,9 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     // Stage Curtain / Locked State when is_leaderboard_public is FALSE
     if (!event.is_leaderboard_public) {
       return (
-        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 relative overflow-hidden select-none transition-colors">
+        <div className="min-h-[100dvh] bg-slate-50 dark:bg-[#090B0E] text-slate-900 dark:text-white flex flex-col items-center justify-center px-6 pt-[calc(4.5rem+var(--sat,env(safe-area-inset-top,0px)))] pb-6 relative overflow-hidden select-none">
           {/* Floating ThemeToggle */}
-          <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+          <div className="absolute top-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] right-4 z-20 flex items-center gap-2">
           <LanguageToggle />
             <ThemeToggle />
           </div>
@@ -664,7 +664,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
     const restItems = filteredLeaderboard.slice(3);
 
     return (
-      <div className="min-h-[100dvh] bg-slate-950 text-white flex flex-col justify-between p-4 md:p-8 pb-32 md:pb-24 relative overflow-hidden select-none font-sans transition-colors">
+      <div className="min-h-[100dvh] bg-[#090B0E] text-white flex flex-col justify-between px-4 md:px-8 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] md:pt-8 pb-32 md:pb-24 relative overflow-hidden select-none font-sans">
         {/* Background glow effects */}
 
         {/* Top Navigation & Controls */}

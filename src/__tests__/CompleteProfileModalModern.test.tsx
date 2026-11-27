@@ -12,15 +12,15 @@ describe('CompleteProfileModal Modern Institutional Polish', () => {
     expect(content).not.toContain('animate={{ rotate: 360 }}');
     expect(content).not.toContain('h-32 bg-gradient-to-br from-primary to-accent');
 
-    // Must have institutional dark styling with POLISAS portal subtitle
-    expect(content).toMatch(/h-28 bg-slate-900 dark:bg-zinc-950 border-b border-white\/10/);
+    // Must have institutional Semambu Teal / Obsidian Carbon dark styling with POLISAS portal subtitle
+    expect(content).toMatch(/h-28 bg-\[#0B2420\] dark:bg-\[#0E1116\] border-b border-white\/10/);
     expect(content).toContain('Portal Rasmi POLISAS');
     expect(content).toContain('POLISAS Emblem');
   });
 
-  it('contains frosted emblem container with backdrop blur', () => {
-    expect(content).toContain('bg-white/10 border border-white/20');
-    expect(content).toContain('backdrop-blur-md');
+  it('contains solid translucent emblem container without GPU-heavy backdrop blur', () => {
+    expect(content).toContain('bg-white/12 border border-white/20');
+    expect(content).not.toContain('backdrop-blur');
   });
 
   it('contains smart matric auto-detection verification badge', () => {

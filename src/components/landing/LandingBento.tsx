@@ -61,11 +61,11 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
           ].map((item, i) => (
             <div
               key={i}
-              className="flex items-center gap-3 p-3 rounded-xl bg-white border border-[#B8E4DC]/80 shadow-2xs hover:border-[#0D9488] transition-colors"
+              className="flex items-center gap-3 p-3 rounded-xl bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-2xs hover:border-[#0D9488] transition-colors"
             >
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.dot }} />
-              <span className="text-xs font-bold text-[#0B2420] truncate">{item.name}</span>
-              <span className="ml-auto text-[11px] font-semibold text-[#0D9488] hidden sm:block">
+              <span className="text-xs font-bold text-[#0B2420] dark:text-[#F1F5F9] truncate">{item.name}</span>
+              <span className="ml-auto text-[11px] font-semibold text-[#0F766E] dark:text-[#2DD4BF] hidden sm:block">
                 {item.status}
               </span>
             </div>
@@ -264,10 +264,10 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
     <section id="modul" className="py-24 md:py-32 px-4 md:px-6 max-w-7xl mx-auto relative z-20">
       {/* Stacked Focused Section Header (No uppercase eyebrow spam or split filler) */}
       <div className="max-w-3xl mb-14 md:mb-16 space-y-3">
-        <h2 className="text-3xl sm:text-5xl md:text-[3.75rem] font-black tracking-[-0.03em] text-[#0B2420] leading-[1.02]">
+        <h2 className="text-3xl sm:text-5xl md:text-[3.75rem] font-black tracking-[-0.03em] text-[#0B2420] dark:text-[#F1F5F9] leading-[1.02]">
           {t('portal:features_heading', 'Ciri-Ciri Menyeluruh Platform')}
         </h2>
-        <p className="text-sm md:text-base text-[#3B635C] font-normal leading-relaxed max-w-2xl">
+        <p className="text-sm md:text-base text-[#3B635C] dark:text-[#94A0B2] font-normal leading-relaxed max-w-2xl">
           {t(
             'portal:features_desc',
             '5 tonggak utama sistem mengintegrasikan seluruh pentadbiran kokurikulum, kebajikan, perniagaan kampus, dan rekod siswa dalam satu sistem bersatu.'
@@ -287,12 +287,12 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
               onClick={() => navigate(m.path)}
               spotlightColor={isFlagship ? 'rgba(45, 212, 191, 0.14)' : 'rgba(13, 148, 136, 0.09)'}
               className={cn(
-                'p-7 sm:p-8 md:p-9 flex flex-col h-full',
+                'p-7 sm:p-8 md:p-9 flex flex-col h-full shadow-surface-sm',
                 isFlagship
-                  ? '!bg-[#0B2420] !border-[#1E4D45] hover:!border-[#2DD4BF]/60 text-[#F6FBF9]'
+                  ? '!bg-[#0B2420] dark:!bg-[#13171D] !border-[#1E4D45] dark:!border-[#252B35] hover:!border-[#2DD4BF]/60 text-[#F6FBF9]'
                   : isTintedIce
-                  ? 'bg-gradient-to-br from-white via-white to-[#EBF7F4]/90'
-                  : 'bg-white',
+                  ? 'bg-gradient-to-br from-white via-white to-[#EBF7F4]/90 dark:from-[#13171D] dark:via-[#13171D] dark:to-[#1B2028] dark:border-[#252B35]'
+                  : 'bg-white dark:bg-[#13171D] dark:border-[#252B35]',
                 m.colSpan
               )}
             >
@@ -300,8 +300,8 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
               <div className="flex items-start justify-between mb-7">
                 <div
                   className={cn(
-                    'w-13 h-13 md:w-14 md:h-14 rounded-2xl flex items-center justify-center shadow-xs transition-transform duration-300 group-hover:scale-105',
-                    isFlagship && '!bg-[#14B8A6]/15 !text-[#2DD4BF]'
+                    'w-13 h-13 md:w-14 md:h-14 rounded-2xl flex items-center justify-center shadow-xs transition-transform duration-200 group-hover:scale-105',
+                    isFlagship ? '!bg-[#14B8A6]/15 !text-[#2DD4BF]' : 'dark:!bg-[#1B2028] dark:!text-[#2DD4BF]'
                   )}
                   style={!isFlagship ? { backgroundColor: `${m.color}15`, color: m.color } : undefined}
                 >
@@ -311,8 +311,8 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
                   className={cn(
                     'w-10 h-10 md:w-11 md:h-11 rounded-full border flex items-center justify-center transition-colors duration-200',
                     isFlagship
-                      ? 'border-[#1E4D45] bg-[#061714] text-[#2DD4BF] group-hover:bg-[#2DD4BF] group-hover:text-[#061714]'
-                      : 'border-[#B8E4DC] bg-[#F6FBF9] text-[#0B2420] group-hover:bg-[#0F766E] group-hover:text-white'
+                      ? 'border-[#1E4D45] dark:border-[#252B35] bg-[#061714] dark:bg-[#0E1116] text-[#2DD4BF] group-hover:bg-[#2DD4BF] group-hover:text-[#061714]'
+                      : 'border-[#B8E4DC] dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#1B2028] text-[#0B2420] dark:text-[#F1F5F9] group-hover:bg-[#0F766E] dark:group-hover:bg-[#2DD4BF] group-hover:text-white dark:group-hover:text-[#090B0E]'
                   )}
                 >
                   <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" />
@@ -324,7 +324,7 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
                 <span
                   className={cn(
                     'text-xs font-semibold block mb-1.5',
-                    isFlagship ? 'text-[#2DD4BF]' : 'text-[#0D9488]'
+                    isFlagship ? 'text-[#2DD4BF]' : 'text-[#0F766E] dark:text-[#2DD4BF]'
                   )}
                 >
                   {m.subtitle}
@@ -332,7 +332,7 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
                 <h3
                   className={cn(
                     'text-2xl md:text-[1.75rem] font-bold mb-2.5 tracking-tight',
-                    isFlagship ? 'text-[#F6FBF9]' : 'text-[#0B2420]'
+                    isFlagship ? 'text-[#F6FBF9]' : 'text-[#0B2420] dark:text-[#F1F5F9]'
                   )}
                 >
                   {m.title}
@@ -340,7 +340,7 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
                 <p
                   className={cn(
                     'text-sm font-normal leading-relaxed',
-                    isFlagship ? 'text-[#99CBC2]' : 'text-[#3B635C]'
+                    isFlagship ? 'text-[#99CBC2] dark:text-[#94A0B2]' : 'text-[#3B635C] dark:text-[#94A0B2]'
                   )}
                 >
                   {m.desc}
@@ -351,15 +351,15 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
               <div
                 className={cn(
                   'grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 border-t',
-                  isFlagship ? 'border-[#1E4D45]' : 'border-[#B8E4DC]/60'
+                  isFlagship ? 'border-[#1E4D45] dark:border-[#252B35]' : 'border-[#B8E4DC]/60 dark:border-[#252B35]'
                 )}
               >
                 <div
                   className={cn(
                     'rounded-2xl border aspect-[4/3] sm:aspect-square overflow-hidden relative',
                     isFlagship
-                      ? 'bg-[#061714] border-[#1E4D45]'
-                      : 'bg-[#F6FBF9] border-[#B8E4DC]/70'
+                      ? 'bg-[#061714] dark:bg-[#090B0E] border-[#1E4D45] dark:border-[#252B35]'
+                      : 'bg-[#F6FBF9] dark:bg-[#0E1116] border-[#B8E4DC]/70 dark:border-[#252B35]'
                   )}
                 >
                   {m.preview}
@@ -393,7 +393,7 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
                         <span
                           className={cn(
                             'text-lg md:text-xl font-black tracking-tight font-mono tabular-nums',
-                            isFlagship ? 'text-[#F6FBF9]' : 'text-[#0B2420]'
+                            isFlagship ? 'text-[#F6FBF9]' : 'text-[#0B2420] dark:text-[#F1F5F9]'
                           )}
                         >
                           {value}
@@ -401,7 +401,7 @@ export const LandingBento: React.FC<LandingBentoProps> = ({ stats }) => {
                         <span
                           className={cn(
                             'text-[11px] font-medium',
-                            isFlagship ? 'text-[#99CBC2]' : 'text-[#3B635C]'
+                            isFlagship ? 'text-[#99CBC2] dark:text-[#94A0B2]' : 'text-[#3B635C] dark:text-[#94A0B2]'
                           )}
                         >
                           {label}

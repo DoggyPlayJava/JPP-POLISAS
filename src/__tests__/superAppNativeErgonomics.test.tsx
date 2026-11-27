@@ -75,11 +75,11 @@ describe('Phase 4 — Super App Native Ergonomics, IA & Motion', () => {
   it('upgrades BottomNav to always-labeled 5-slot dock with smooth zero-rerender scroll-compact mode', async () => {
     const src = read('src/components/layout/BottomNav.tsx');
 
-    // Uses data-compact RAF passive scroll without blocking 1-tap navigation or bounce tooltips
+    // Uses data-compact RAF passive scroll with pure GPU transform/opacity (zero layout reflow)
     expect(src).toContain('dataset.compact');
-    expect(src).toContain('data-[compact=true]:scale-[0.84]');
-    expect(src).toContain('group-data-[compact=true]/dock:opacity-0');
-    expect(src).toContain('group-data-[compact=true]/dock:max-h-0');
+    expect(src).toContain('data-[compact=true]:scale-[0.88]');
+    expect(src).toContain('group-data-[compact=true]/dock:opacity-75');
+    expect(src).not.toContain('group-data-[compact=true]/dock:max-h-0');
     expect(src).not.toContain('repeat: Infinity');
     expect(src).not.toContain('hide_bottomnav_tooltip');
     expect(src).toContain('LayoutGrid');

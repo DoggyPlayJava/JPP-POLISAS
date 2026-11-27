@@ -173,19 +173,19 @@ export function NotifikasiPage() {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
   const moduleConfig = useMemo<Record<NotificationModule, { label: string; color: string; bg: string; dot: string; emoji: string }>>(() => ({
-    KEBAJIKAN:    { label: t('portal:module_kebajikan_title', 'e-Kebajikan'),  color: '#2DD4BF', bg: 'rgba(45,212,191,0.12)',   dot: '#2DD4BF', emoji: '🩺' },
-    EKPP:         { label: t('portal:module_ekpp_title', 'Sistem Kelab'),      color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🏛️' },
-    AKADEMIK:     { label: t('portal:module_akademik_title', 'e-Akademik'),    color: '#6366f1', bg: 'rgba(99,102,241,0.12)',   dot: '#6366f1', emoji: '📚' },
-    KEUSAHAWANAN: { label: t('portal:module_keusahawanan_title', 'e-Keusahawanan'), color: '#f97316', bg: 'rgba(249,115,22,0.12)',   dot: '#f97316', emoji: '🛒' },
-    JPP:          { label: 'JPP HQ',       color: '#ef4444', bg: 'rgba(239,68,68,0.10)',    dot: '#ef4444', emoji: '🏅' },
-    SYSTEM:       { label: t('portal:system_title', 'Sistem'),            color: '#94a3b8', bg: 'rgba(148,163,184,0.10)', dot: '#94a3b8', emoji: '⚙️' },
-    POLYMART:     { label: 'PolyMart',     color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🛍️' },
-    KAMSIS:       { label: 'i-KAMSIS',     color: '#8B5CF6', bg: 'rgba(139,92,246,0.12)',   dot: '#8B5CF6', emoji: '🏠' },
-    KLK:          { label: 'KLK',          color: '#14b8a6', bg: 'rgba(20,184,166,0.12)',   dot: '#14b8a6', emoji: '🏢' },
-    POLYRIDER:    { label: 'PolyRider',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)',   dot: '#f59e0b', emoji: '🏍️' },
-    POLYTASK:     { label: 'PolyTask',     color: '#a78bfa', bg: 'rgba(167,139,250,0.12)',  dot: '#a78bfa', emoji: '📋' },
-    POLYSUARA:    { label: 'PolySuara',    color: '#f43f5e', bg: 'rgba(244,63,94,0.12)',    dot: '#f43f5e', emoji: '👻' },
-    POLYRENT:     { label: 'PolyRent',     color: '#34d399', bg: 'rgba(52,211,153,0.12)',   dot: '#34d399', emoji: '🏡' },
+    KEBAJIKAN:    { label: t('portal:module_kebajikan_title', 'e-Kebajikan'),  color: '#0F766E', bg: 'rgba(15,118,110,0.12)',   dot: '#0F766E', emoji: '🩺' },
+    EKPP:         { label: t('portal:module_ekpp_title', 'Sistem Kelab'),      color: '#B45309', bg: 'rgba(245,158,11,0.14)',   dot: '#D97706', emoji: '🏛️' },
+    AKADEMIK:     { label: t('portal:module_akademik_title', 'e-Akademik'),    color: '#4338CA', bg: 'rgba(99,102,241,0.12)',   dot: '#4F46E5', emoji: '📚' },
+    KEUSAHAWANAN: { label: t('portal:module_keusahawanan_title', 'e-Keusahawanan'), color: '#C2410C', bg: 'rgba(249,115,22,0.12)',   dot: '#EA580C', emoji: '🛒' },
+    JPP:          { label: 'JPP HQ',       color: '#B91C1C', bg: 'rgba(239,68,68,0.10)',    dot: '#DC2626', emoji: '🏅' },
+    SYSTEM:       { label: t('portal:system_title', 'Sistem'),            color: '#475569', bg: 'rgba(148,163,184,0.14)', dot: '#64748B', emoji: '⚙️' },
+    POLYMART:     { label: 'PolyMart',     color: '#B45309', bg: 'rgba(245,158,11,0.14)',   dot: '#D97706', emoji: '🛍️' },
+    KAMSIS:       { label: 'i-KAMSIS',     color: '#6D28D9', bg: 'rgba(139,92,246,0.12)',   dot: '#7C3AED', emoji: '🏠' },
+    KLK:          { label: 'KLK',          color: '#0F766E', bg: 'rgba(20,184,166,0.12)',   dot: '#0D9488', emoji: '🏢' },
+    POLYRIDER:    { label: 'PolyRider',    color: '#B45309', bg: 'rgba(245,158,11,0.14)',   dot: '#D97706', emoji: '🏍️' },
+    POLYTASK:     { label: 'PolyTask',     color: '#6D28D9', bg: 'rgba(139,92,246,0.12)',   dot: '#7C3AED', emoji: '📋' },
+    POLYSUARA:    { label: 'PolySuara',    color: '#BE123C', bg: 'rgba(244,63,94,0.12)',    dot: '#E11D48', emoji: '👻' },
+    POLYRENT:     { label: 'PolyRent',     color: '#047857', bg: 'rgba(16,185,129,0.12)',   dot: '#059669', emoji: '🏡' },
   }), [t]);
 
   const handleNotifClick = async (notif: AppNotification) => {
@@ -232,9 +232,9 @@ export function NotifikasiPage() {
   const activeModules = ALL_MODULES.filter(m => (moduleCount[m] ?? 0) > 0);
 
   return (
-    <div className="min-h-screen bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] transition-colors">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9]">
       {/* ── Header ──────────────────────────────────────────────────────────── */}
-      <div className="sticky top-0 z-30 bg-white/95 dark:bg-[#13171D]/95 backdrop-blur-md border-b border-[#B8E4DC]/60 dark:border-[#252B35] pt-[var(--sat,env(safe-area-inset-top,0px))]">
+      <div className="sticky top-0 z-30 bg-white dark:bg-[#13171D] border-b border-[#B8E4DC]/70 dark:border-[#252B35] shadow-surface-sm pt-[var(--sat,env(safe-area-inset-top,0px))]">
         <div className="max-w-2xl mx-auto px-4 pt-4 pb-3">
           <div className="flex items-center gap-3 mb-3">
             <button

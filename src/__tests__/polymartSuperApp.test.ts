@@ -249,8 +249,9 @@ describe('Task 1 Pembaikan PolyMart Bugfixes & SuperApp Modernization', () => {
     const layoutPath = path.resolve(__dirname, '../pages/polymart/PolyMartLayout.tsx');
     const source = fs.readFileSync(layoutPath, 'utf-8');
 
-    // Mobile search button capsule min-w-0
-    expect(source).toContain('flex sm:hidden flex-1 min-w-0 items-center gap-2.5 h-10 px-3 rounded-full');
+    // Mobile circular search trigger opening fullscreen search sheet (zero 393px truncation)
+    expect(source).toContain('flex sm:hidden w-9 h-9 rounded-full');
+    expect(source).toContain('setShowMobileSearch(true)');
 
     // Responsive store button classes eliminating overflow on <380px mobile screens
     expect(source).toContain('w-9 h-9 sm:w-auto sm:px-3.5 sm:h-9 rounded-full');

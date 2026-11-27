@@ -451,7 +451,7 @@ export function FloatingAiChat() {
 
           {/* Unread Indicator Badge */}
           {isUnread && (
-            <span className="w-4 h-4 rounded-full bg-rose-600 text-white text-[8px] font-black flex items-center justify-center shrink-0 absolute right-3 bottom-3 shadow-md shadow-rose-600/20 animate-bounce">
+            <span className="w-4 h-4 rounded-full bg-rose-600 text-white text-[9px] font-black flex items-center justify-center shrink-0 absolute right-3 bottom-3 shadow-surface-sm">
               {chat.unreadCount}
             </span>
           )}
@@ -1884,16 +1884,16 @@ export function FloatingAiChat() {
         <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
         <AnimatePresence mode="wait" initial={false}>
           {isOpen ? (
-            <motion.span key="x" initial={{ rotate: -90, scale: 0 }} animate={{ rotate: 0, scale: 1 }} exit={{ rotate: 90, scale: 0 }} transition={{ duration: 0.18 }}>
+            <motion.span key="x" initial={{ rotate: -45, opacity: 0, scale: 0.92 }} animate={{ rotate: 0, opacity: 1, scale: 1 }} exit={{ rotate: 45, opacity: 0, scale: 0.92 }} transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}>
               <X className="w-[18px] h-[18px] md:w-[22px] md:h-[22px]" />
             </motion.span>
           ) : (
-            <motion.span key="s" className="relative flex items-center justify-center" initial={{ rotate: 90, scale: 0 }} animate={{ rotate: 0, scale: 1 }} exit={{ rotate: -90, scale: 0 }} transition={{ duration: 0.18 }}>
+            <motion.span key="s" className="relative flex items-center justify-center" initial={{ rotate: 45, opacity: 0, scale: 0.92 }} animate={{ rotate: 0, opacity: 1, scale: 1 }} exit={{ rotate: -45, opacity: 0, scale: 0.92 }} transition={{ duration: 0.16, ease: [0.23, 1, 0.32, 1] }}>
               <MessageSquare className="w-[18px] h-[18px] md:w-[22px] md:h-[22px]" />
               
               {/* Unread badge on closed FAB */}
               {unreadTotal > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] px-1 bg-rose-600 border-2 border-slate-950 rounded-full text-[9px] font-black text-white flex items-center justify-center animate-bounce shadow-md shadow-rose-600/30">
+                <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] px-1 bg-rose-600 border-2 border-white dark:border-[#090B0E] rounded-full text-[9px] font-black text-white flex items-center justify-center shadow-surface-sm">
                   {unreadTotal}
                 </span>
               )}
@@ -1908,11 +1908,11 @@ export function FloatingAiChat() {
           <motion.div
             ref={panelRef}
             key="chat-panel"
-            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            initial={{ opacity: 0, scale: 0.96, y: 10 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 12 }}
-            transition={{ duration: 0.2, ease: 'easeOut' }}
-            className="absolute bottom-[4.5rem] right-0 w-[calc(100vw-2rem)] sm:w-80 md:w-96 rounded-[2.5rem] shadow-2xl bg-card overflow-hidden flex flex-col border border-white/[0.05]"
+            exit={{ opacity: 0, scale: 0.96, y: 10 }}
+            transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+            className="absolute bottom-[4.5rem] right-0 w-[calc(100vw-2rem)] sm:w-80 md:w-96 rounded-[2rem] shadow-surface-lg bg-card overflow-hidden overscroll-contain flex flex-col border border-border"
             style={{ height: 'min(580px, calc(100dvh - 12rem))' }}
           >
             {/* Header (Streamlined compact ratio for maximized chat viewport) */}
@@ -2276,13 +2276,11 @@ export function FloatingAiChat() {
                     });
                   })()}
 
-                  {/* Partner Typing Indicator Bouncing Bubble */}
+                  {/* Partner Typing Indicator */}
                   {isPartnerTyping && (
-                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-card/45 border border-border/40 rounded-2xl rounded-bl-sm self-start text-[9px] text-muted-foreground animate-pulse w-fit">
-                      <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-1 h-1 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                      <span className="ml-1 font-bold">{t('portal:ai_partner_typing', 'sedang menaip...')}</span>
+                    <div className="flex items-center gap-1.5 px-3 py-1.5 bg-card/80 border border-border/60 rounded-2xl rounded-bl-sm self-start text-[10px] text-muted-foreground w-fit">
+                      <span className="w-1.5 h-1.5 bg-primary/70 rounded-full animate-pulse" />
+                      <span className="font-semibold">{t('portal:ai_partner_typing', 'sedang menaip...')}</span>
                     </div>
                   )}
 
@@ -2298,11 +2296,11 @@ export function FloatingAiChat() {
                       setUnreadMessagesInFeed(0);
                     }}
                     type="button"
-                    className="absolute bottom-20 right-4 w-7 h-7 rounded-full bg-card/90  border border-border/50 shadow-lg flex items-center justify-center hover:bg-muted/80 text-foreground z-20 transition-all active:scale-95 duration-100 animate-bounce"
+                    className="absolute bottom-20 right-4 w-8 h-8 rounded-full bg-card border border-border shadow-surface-md flex items-center justify-center hover:bg-muted text-foreground z-20 transition-[transform,background-color] duration-150 active:scale-95"
                   >
-                    <ArrowDown size={12} />
+                    <ArrowDown size={13} />
                     {unreadMessagesInFeed > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[8px] font-black w-4.5 h-4.5 rounded-full flex items-center justify-center border border-card shadow-sm animate-pulse">
+                      <span className="absolute -top-1.5 -right-1.5 bg-rose-600 text-white text-[9px] font-black min-w-[18px] h-[18px] px-1 rounded-full flex items-center justify-center border border-card shadow-surface-sm">
                         {unreadMessagesInFeed}
                       </span>
                     )}

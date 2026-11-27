@@ -56,19 +56,19 @@ export const EmsCertVerifyPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-4 sm:p-6 md:p-8 pb-28 md:pb-8 flex flex-col justify-between max-w-5xl mx-auto font-sans relative overflow-hidden transition-colors">
+    <div className="min-h-[100dvh] bg-slate-50 dark:bg-[#090B0E] text-slate-900 dark:text-[#F1F5F9] px-4 sm:px-6 md:px-8 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] sm:pt-6 md:pt-8 pb-28 md:pb-8 flex flex-col justify-between max-w-5xl mx-auto font-sans relative overflow-x-hidden">
       {/* Top Header Nav */}
-      <div className="relative z-10 flex items-center justify-between gap-4">
+      <div className="relative z-10 flex items-center justify-between gap-2 sm:gap-4">
         <button
           type="button"
           onClick={() => navigate(-1)}
-          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-semibold transition-all"
+          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-white dark:bg-[#13171D] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#252B35] shadow-surface-sm hover:bg-slate-50 dark:hover:bg-[#1B2028] text-xs font-semibold transition-colors shrink-0"
         >
           <ArrowLeft className="w-4 h-4" /> {t('common:back', 'Kembali')}
         </button>
 
-        <div className="flex items-center gap-3">
-          <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1.5">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          <span className="hidden sm:inline-flex px-3 py-1 rounded-full text-xs font-bold bg-amber-500/12 text-amber-700 dark:text-amber-400 border border-amber-500/25 items-center gap-1.5">
             <ShieldCheck className="w-3.5 h-3.5" /> {t('ems:official_portal_badge', 'Portal Rasmi POLISAS')}
           </span>
           <LanguageToggle />

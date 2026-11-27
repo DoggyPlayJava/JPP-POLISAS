@@ -517,7 +517,7 @@ export function EmsPublicRegisterPage({
   // Loading view
   if (loadingEvent) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 transition-colors">
+      <div className="min-h-[100dvh] pt-[var(--sat,env(safe-area-inset-top,0px))] bg-slate-50 dark:bg-[#090B0E] text-slate-900 dark:text-white flex flex-col items-center justify-center p-4 transition-colors">
         <RefreshCw className="w-10 h-10 text-amber-500 dark:text-amber-400 animate-spin mb-4" />
         <p className="text-slate-600 dark:text-slate-400 text-sm font-medium animate-pulse">{t('reg_loading_form', 'Memuatkan borang pendaftaran acara...')}</p>
       </div>
@@ -527,7 +527,7 @@ export function EmsPublicRegisterPage({
   // Error view
   if (eventError || !eventDetail) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 text-center transition-colors">
+      <div className="min-h-[100dvh] pt-[var(--sat,env(safe-area-inset-top,0px))] bg-slate-50 dark:bg-[#090B0E] text-slate-900 dark:text-white flex flex-col items-center justify-center p-6 text-center transition-colors">
         <div className="w-16 h-16 rounded-full bg-rose-500/10 border border-rose-500/20 flex items-center justify-center mb-4 text-rose-500">
           <AlertCircle className="w-8 h-8" />
         </div>
@@ -535,7 +535,7 @@ export function EmsPublicRegisterPage({
         <p className="text-slate-600 dark:text-slate-400 max-w-md mb-6">{eventError || t('reg_event_not_found', 'Maklumat acara tidak dapat dijumpai.')}</p>
         <button
           onClick={() => navigate('/')}
-          className="px-6 py-2.5 rounded-xl bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-medium transition text-sm"
+          className="px-6 py-2.5 rounded-xl bg-slate-200 dark:bg-[#1B2028] hover:bg-slate-300 dark:hover:bg-[#252B35] text-slate-800 dark:text-slate-200 font-medium transition-colors text-sm"
         >
           {t('reg_back_home', 'Kembali ke Halaman Utama')}
         </button>
@@ -548,7 +548,7 @@ export function EmsPublicRegisterPage({
   const isQuotaFull = maxParticipants > 0 && totalParticipants >= maxParticipants;
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white selection:bg-amber-500 selection:text-slate-950 pb-28 md:pb-8 transition-colors">
+    <div className="min-h-[100dvh] bg-slate-50 dark:bg-[#090B0E] text-slate-900 dark:text-white selection:bg-amber-500 selection:text-slate-950 pb-28 md:pb-8 transition-colors">
       {/* Print Specific CSS */}
       <style>{`
         @media print {
@@ -577,7 +577,7 @@ export function EmsPublicRegisterPage({
       `}</style>
 
       {/* Header Banner */}
-      <header className="relative bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 pt-6 pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden transition-colors">
+      <header className="relative bg-white dark:bg-[#13171D] border-b border-slate-200 dark:border-[#252B35] pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] pb-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-amber-500/10 via-slate-500/5 to-amber-500/10 dark:from-amber-950/20 dark:via-slate-900 dark:to-amber-950/10 opacity-70" />
         
         {/* Top bar with back and ThemeToggle */}
@@ -1312,7 +1312,7 @@ export function EmsPublicRegisterPage({
           {/* Mobile Sticky Bottom Navigation Capsule */}
           {currentStep < 4 && (
             <div className="mt-8 pt-4 border-t border-slate-200 dark:border-slate-800 md:border-t-0 md:pt-0">
-              <div className="fixed bottom-4 left-4 right-4 z-40 md:relative md:bottom-0 p-3 bg-slate-900/90 dark:bg-slate-900/95 backdrop-blur-md rounded-2xl flex items-center justify-between shadow-2xl border border-slate-700/50 text-white">
+              <div className="fixed bottom-[calc(1rem+var(--sab,env(safe-area-inset-bottom,0px)))] left-4 right-4 z-40 md:relative md:bottom-0 p-3 bg-[#13171D] rounded-2xl flex items-center justify-between shadow-surface-lg border border-[#252B35] text-white">
                 <button
                   type="button"
                   onClick={currentStep === 1 ? () => navigate('/') : handlePrevStep}

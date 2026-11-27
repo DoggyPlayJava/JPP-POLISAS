@@ -63,28 +63,29 @@ export class ErrorBoundary extends React.Component<Props, State> {
       const t = (key: string, fallback: string) => i18n.t(key, fallback);
 
       return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-background p-6">
+        <div className="min-h-[100dvh] w-full flex items-center justify-center bg-background px-5 pb-8 pt-[calc(1.5rem+var(--sat,env(safe-area-inset-top,0px)))]">
           <motion.div 
-            initial={{ opacity: 0, scale: 0.9 }}
+            initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
+            transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+            className="w-full max-w-md"
           >
-            <Card className="max-w-md w-full border-none shadow-2xl rounded-[3rem] overflow-hidden bg-card/50 ">
-              <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-transparent pointer-events-none" />
-              <CardContent className="p-12 flex flex-col items-center text-center space-y-8">
-                <div className="w-20 h-20 rounded-[2rem] bg-rose-500/10 flex items-center justify-center mb-2">
-                  <AlertTriangle className="w-10 h-10 text-rose-500" />
+            <Card className="relative w-full border border-border shadow-surface-lg rounded-[2rem] overflow-hidden bg-card">
+              <div className="absolute inset-0 bg-gradient-to-br from-rose-500/[0.06] to-transparent pointer-events-none" />
+              <CardContent className="relative z-10 p-8 sm:p-10 flex flex-col items-center text-center space-y-6">
+                <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+                  <AlertTriangle className="w-8 h-8 text-rose-600 dark:text-rose-400" />
                 </div>
                 
-                <div className="space-y-4">
-                  <h1 className="text-3xl font-black tracking-tighter leading-tight">
+                <div className="space-y-2.5">
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight leading-tight text-foreground">
                     {navigator.onLine ? (
-                      <>{t('common:ops_error_prefix', 'Ops! Berlaku')} <span className="text-rose-500">{t('common:ops_error_highlight', 'Ralat.')}</span></>
+                      <>{t('common:ops_error_prefix', 'Ops! Berlaku')} <span className="text-rose-600 dark:text-rose-400">{t('common:ops_error_highlight', 'Ralat.')}</span></>
                     ) : (
-                      <>{t('common:no_internet_prefix', 'Tiada')} <span className="text-rose-500">{t('common:no_internet_highlight', 'Internet.')}</span></>
+                      <>{t('common:no_internet_prefix', 'Tiada')} <span className="text-rose-600 dark:text-rose-400">{t('common:no_internet_highlight', 'Internet.')}</span></>
                     )}
                   </h1>
-                  <p className="text-sm text-muted-foreground font-medium px-4">
+                  <p className="text-sm text-muted-foreground font-medium px-2">
                     {navigator.onLine 
                       ? t('common:error_boundary_desc', 'Sesuatu yang tidak dijangka telah berlaku. Jangan risau, kami telah merekodkan kejadian ini.')
                       : t('common:error_boundary_offline', 'Aplikasi gagal dimuatkan kerana anda sedang berada di luar talian (offline). Sila sambung ke internet semula.')}
@@ -92,44 +93,44 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 </div>
 
                 {process.env.NODE_ENV === 'development' && (
-                  <div className="w-full p-4 bg-muted/50 rounded-2xl border border-border/50 text-[10px] font-mono text-left overflow-auto max-h-32 opacity-60">
+                  <div className="w-full p-3.5 bg-muted/60 rounded-xl border border-border text-[11px] font-mono text-foreground/80 text-left overflow-auto max-h-32">
                     {this.state.error?.toString()}
                   </div>
                 )}
 
-                <div className="grid grid-cols-1 w-full gap-3">
+                <div className="grid grid-cols-1 w-full gap-2.5">
                   <Button 
                     onClick={this.handleReset}
-                    className="h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 flex items-center gap-2"
+                    className="h-11 rounded-xl font-bold text-xs uppercase tracking-wider bg-primary hover:bg-primary/90 text-primary-foreground shadow-surface-sm flex items-center gap-2"
                   >
                     <RefreshCcw size={14} /> {t('common:try_refresh_page', 'Cuba Segarkan Halaman')}
                   </Button>
                   <Button 
                     variant="outline"
                     onClick={this.handleGoHome}
-                    className="h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest border-border hover:bg-muted"
+                    className="h-11 rounded-xl font-bold text-xs uppercase tracking-wider border-border hover:bg-muted"
                   >
                     <Home size={14} className="mr-2" /> {t('common:back_to_home', 'Kembali ke Laman Utama')}
                   </Button>
                 </div>
 
                 {/* Helpline JPP — supaya pengguna boleh hubungi bila hadapi masalah */}
-                <div className="w-full p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-1.5">
-                  <p className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+                <div className="w-full p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-center space-y-2">
+                  <p className="text-xs font-semibold text-emerald-800 dark:text-emerald-300">
                     {t('common:recurring_issue_contact', 'Masalah berulang? Hubungi kami untuk bantuan:')}
                   </p>
                   <a
                     href="https://wa.me/601139413699?text=Salam%20JPP%2C%20saya%20mengalami%20ralat%20pada%20sistem%20(Error%20Boundary).%20Mohon%20bantuan."
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-[10px] uppercase tracking-widest transition-all shadow-md hover:shadow-lg"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0F766E] hover:bg-[#0D9488] text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-surface-sm"
                   >
                     <Phone size={14} />
                     {t('common:contact_jpp_helpline', 'Hubungi Helpline JPP')}
                   </a>
                 </div>
 
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] opacity-30">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">
                   JPP POLISAS • System Recovery
                 </p>
               </CardContent>

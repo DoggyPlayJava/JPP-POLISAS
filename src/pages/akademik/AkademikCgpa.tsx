@@ -475,12 +475,12 @@ export function AkademikCgpa() {
               <span className="text-xl font-black" style={{ color: grade.color }}>
                 {latestHpnm.toFixed(2)}
               </span>
-              <span className="text-[8px] font-black text-slate-500 dark:text-white/30 uppercase tracking-widest mt-0.5">HPNM</span>
+              <span className="text-[10px] font-black text-slate-600 dark:text-[#94A0B2] uppercase tracking-widest mt-0.5">HPNM</span>
             </div>
             <div className="flex-1">
-              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mb-0.5">{t('akademik:latest_cgpa', 'Terkini')}</p>
-              <p className="text-xl font-black text-slate-900 dark:text-white">{grade.label}</p>
-              <p className="text-[10px] font-bold text-slate-500 dark:text-white/40 mt-1">
+              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-[#94A0B2] mb-0.5">{t('akademik:latest_cgpa', 'Terkini')}</p>
+              <p className="text-xl font-black text-slate-900 dark:text-[#F1F5F9]">{grade.label}</p>
+              <p className="text-[11px] font-bold text-slate-600 dark:text-[#94A0B2] mt-1">
                 {semLabel(latestRecord.semester, latestRecord.tahun, t)}
               </p>
             </div>
@@ -489,17 +489,17 @@ export function AkademikCgpa() {
               <div className="text-right shrink-0">
                 <div className="flex items-center gap-1 justify-end">
                   {trend > 0.001
-                    ? <TrendingUp className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />
+                    ? <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                     : trend < -0.001
-                    ? <TrendingDown className="w-4 h-4 text-rose-500 dark:text-rose-400" />
-                    : <Minus className="w-4 h-4 text-slate-400 dark:text-white/30" />
+                    ? <TrendingDown className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                    : <Minus className="w-4 h-4 text-slate-500 dark:text-[#94A0B2]" />
                   }
-                  <span className={`text-sm font-black ${trend > 0.001 ? 'text-emerald-600 dark:text-emerald-400' : trend < -0.001 ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-white/30'}`}>
+                  <span className={`text-sm font-black ${trend > 0.001 ? 'text-emerald-700 dark:text-emerald-400' : trend < -0.001 ? 'text-rose-700 dark:text-rose-400' : 'text-slate-600 dark:text-[#94A0B2]'}`}>
                     {trend > 0 ? '+' : ''}{trend.toFixed(2)}
                   </span>
                 </div>
-                <p className="text-[9px] text-slate-400 dark:text-white/25 font-medium mt-0.5">{t('akademik:vs_previous_sem', 'vs semester lepas')}</p>
-                <p className="text-xs font-black text-slate-600 dark:text-white/50 mt-1">
+                <p className="text-[10px] text-slate-500 dark:text-[#94A0B2] font-medium mt-0.5">{t('akademik:vs_previous_sem', 'vs semester lepas')}</p>
+                <p className="text-xs font-black text-slate-700 dark:text-[#F1F5F9] mt-1">
                   PNM: <span style={{ color: PNM_COLOR }}>{latestRecord.pnm ? Number(latestRecord.pnm).toFixed(2) : '—'}</span>
                 </p>
               </div>

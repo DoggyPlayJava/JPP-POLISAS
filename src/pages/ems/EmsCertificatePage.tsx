@@ -218,30 +218,34 @@ export const EmsCertificatePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white flex flex-col font-sans pb-28 md:pb-8 transition-colors">
+    <div className="min-h-[100dvh] bg-slate-50 dark:bg-[#090B0E] text-slate-900 dark:text-[#F1F5F9] flex flex-col font-sans pb-28 md:pb-8 overflow-x-hidden">
       {/* ── Navbar Public Branding ── */}
-      <header className="border-b border-slate-200 dark:border-slate-800/80 bg-white/95 dark:bg-[#13171D]/95 pt-[var(--sat,env(safe-area-inset-top,0px))] sticky top-0 z-50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="border-b border-slate-200 dark:border-[#252B35] bg-white dark:bg-[#13171D] pt-[var(--sat,env(safe-area-inset-top,0px))] sticky top-0 z-50 shadow-surface-sm">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 min-h-[4rem] py-2 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold border border-slate-200 dark:border-slate-700 transition-colors"
+              className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-700 dark:text-slate-200 text-xs font-semibold border border-slate-200 dark:border-[#252B35] transition-colors shrink-0"
             >
-              <ArrowLeft className="w-4 h-4" /> {t('ems:back', 'Kembali')}
+              <ArrowLeft className="w-4 h-4 shrink-0" />
+              <span className="hidden xs:inline sm:inline">{t('ems:back', 'Kembali')}</span>
             </button>
-            <div className="w-9 h-9 rounded-xl bg-amber-500 flex items-center justify-center font-black text-slate-950 shadow-lg shadow-amber-500/20">
-              <ShieldCheck className="w-5 h-5 text-slate-950" />
+            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-500 flex items-center justify-center font-black text-slate-950 shadow-surface-sm shrink-0">
+              <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-slate-950" />
             </div>
-            <div>
-              <div className="font-black tracking-wider text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-1.5">
-                POLISAS <span className="text-amber-600 dark:text-amber-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/20">{t('certificate_generator')}</span>
+            <div className="min-w-0">
+              <div className="font-black tracking-wider text-sm sm:text-base text-slate-900 dark:text-white flex items-center gap-1.5 min-w-0">
+                <span className="truncate">POLISAS</span>
+                <span className="hidden sm:inline-flex text-amber-700 dark:text-amber-400 text-xs font-semibold px-2 py-0.5 rounded-full bg-amber-500/12 border border-amber-500/25 whitespace-nowrap">
+                  {t('certificate_generator')}
+                </span>
               </div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">{t('verify_certificate')}</p>
+              <p className="text-[10px] text-slate-500 dark:text-[#94A0B2] font-medium truncate">{t('verify_certificate')}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <form onSubmit={handleSearchSubmit} className="hidden md:flex items-center gap-2">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />

@@ -31,47 +31,49 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ stats }) => {
   return (
     <section
       id="hero"
-      className="relative min-h-[100dvh] flex items-center pt-24 sm:pt-28 lg:pt-24 pb-10 sm:pb-14 overflow-hidden bg-gradient-to-b from-[#F6FBF9] via-[#F6FBF9] to-[#EBF7F4]/65 jpp-canvas-texture"
+      className="relative min-h-[100dvh] flex items-center pt-[calc(5.5rem+var(--sat,env(safe-area-inset-top,0px)))] sm:pt-28 lg:pt-24 pb-10 sm:pb-14 overflow-hidden bg-gradient-to-b from-[#F6FBF9] via-[#F6FBF9] to-[#EBF7F4]/65 dark:from-[#090B0E] dark:via-[#090B0E] dark:to-[#0E1116] jpp-canvas-texture"
     >
-      {/* Restrained Atmospheric Mineral Glow */}
-      <div className="absolute top-16 right-0 w-[640px] h-[420px] bg-gradient-to-bl from-[#0D9488]/14 via-[#14B8A6]/10 to-transparent rounded-full blur-xl pointer-events-none" />
-      <div className="absolute bottom-8 left-0 w-72 h-72 bg-[#B8E4DC]/20 rounded-full blur-xl pointer-events-none hidden md:block" />
+      {/* Restrained Atmospheric Mineral Glow (radial gradient, zero filter blur) */}
+      <div className="absolute top-16 right-0 w-[640px] h-[420px] bg-[radial-gradient(circle,rgba(13,148,136,0.12)_0%,transparent_70%)] dark:bg-[radial-gradient(circle,rgba(45,212,191,0.08)_0%,transparent_70%)] rounded-full pointer-events-none" />
+      <div className="absolute bottom-8 left-0 w-72 h-72 bg-[radial-gradient(circle,rgba(184,228,220,0.22)_0%,transparent_70%)] dark:bg-[radial-gradient(circle,rgba(45,212,191,0.05)_0%,transparent_70%)] rounded-full pointer-events-none hidden md:block" />
 
       <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-10 xl:gap-12 items-center">
         {/* ── LEFT COLUMN: Editorial Positioning, 2-Line Display Headline & Conversion Actions ── */}
         <div className="lg:col-span-6 flex flex-col items-center lg:items-start text-center lg:text-left">
           {/* Single Editorial Pill */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.45, ease: [0.23, 1, 0.32, 1] }}
-            className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white border border-[#B8E4DC] text-[#0B2420] text-[11px] sm:text-xs font-medium shadow-2xs max-w-[94vw] sm:max-w-none"
+            transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+            className="inline-flex flex-wrap items-center justify-center gap-x-2 gap-y-0.5 px-3.5 py-1.5 rounded-2xl sm:rounded-full bg-white dark:bg-[#13171D] border border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] text-[11px] sm:text-xs font-medium shadow-surface-sm max-w-[94vw] sm:max-w-none"
           >
-            <span className="w-2 h-2 rounded-full bg-[#0D9488] shrink-0" />
-            <span className="font-semibold text-[#0B2420] shrink-0">POLISAS Semambu</span>
-            <span className="text-[#B8E4DC]" aria-hidden="true">|</span>
-            <span className="text-[#3B635C] truncate sm:whitespace-normal">
+            <span className="inline-flex items-center gap-1.5 shrink-0">
+              <span className="w-2 h-2 rounded-full bg-[#0D9488] dark:bg-[#2DD4BF] shrink-0" />
+              <span className="font-semibold text-[#0B2420] dark:text-[#F1F5F9]">POLISAS Semambu</span>
+            </span>
+            <span className="hidden sm:inline text-[#B8E4DC] dark:text-[#252B35]" aria-hidden="true">|</span>
+            <span className="text-[#3B635C] dark:text-[#94A0B2]">
               {t('portal:hero_title', 'Ekosistem Digital Kampus & Super App Pelajar')}
             </span>
           </motion.div>
 
           {/* Architectural 2-Line Headline */}
           <motion.h1
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.06, ease: [0.23, 1, 0.32, 1] }}
-            className="text-4xl sm:text-5xl lg:text-[2.9rem] xl:text-[3.4rem] font-black tracking-[-0.035em] text-[#0B2420] mt-4 mb-4 sm:mb-5 leading-[1.04] max-w-2xl [text-wrap:balance]"
+            transition={{ duration: 0.24, delay: 0.04, ease: [0.23, 1, 0.32, 1] }}
+            className="text-4xl sm:text-5xl lg:text-[2.9rem] xl:text-[3.4rem] font-black tracking-[-0.035em] text-[#0B2420] dark:text-[#F1F5F9] mt-4 mb-4 sm:mb-5 leading-[1.04] max-w-2xl [text-wrap:balance]"
           >
             <span>{t('portal:landing_hero_line1', 'Satu Kampus.')}</span>
-            <span className="block text-[#0F766E]">{t('portal:landing_hero_line2', 'Satu Ekosistem Pintar.')}</span>
+            <span className="block text-[#0F766E] dark:text-[#2DD4BF]">{t('portal:landing_hero_line2', 'Satu Ekosistem Pintar.')}</span>
           </motion.h1>
 
           {/* Focused Value Proposition (65ch cap) */}
           <motion.p
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.12, ease: [0.23, 1, 0.32, 1] }}
-            className="text-sm sm:text-base text-[#3B635C] max-w-[52ch] font-normal leading-relaxed mb-6 sm:mb-7"
+            transition={{ duration: 0.24, delay: 0.08, ease: [0.23, 1, 0.32, 1] }}
+            className="text-sm sm:text-base text-[#3B635C] dark:text-[#94A0B2] max-w-[52ch] font-normal leading-relaxed mb-6 sm:mb-7"
           >
             {t(
               'portal:hero_subtitle',
@@ -81,38 +83,38 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ stats }) => {
 
           {/* Island Button-in-Button CTAs */}
           <motion.div
-            initial={{ opacity: 0, y: 16 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.18, ease: [0.23, 1, 0.32, 1] }}
+            transition={{ duration: 0.24, delay: 0.12, ease: [0.23, 1, 0.32, 1] }}
             className="flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 w-full sm:w-auto"
           >
             <button
               type="button"
               onClick={() => navigate('/portal')}
-              className="w-full sm:w-auto pl-6 pr-2 py-2 min-h-[48px] rounded-full bg-[#0F766E] hover:bg-[#115E59] text-white font-semibold text-sm shadow-[0_14px_30px_-8px_rgba(15,118,110,0.48)] transition-[transform,background-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] active:scale-[0.98] flex items-center justify-between sm:justify-center gap-3 group cursor-pointer"
+              className="w-full sm:w-auto pl-6 pr-2 py-2 min-h-[48px] rounded-full bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] text-white dark:text-[#090B0E] font-semibold text-sm shadow-surface-md transition-[transform,background-color] duration-150 ease-apple-out active:scale-[0.97] flex items-center justify-between sm:justify-center gap-3 group cursor-pointer"
             >
               <span>{t('portal:explore_portal', 'Terokai Portal Pelajar')}</span>
-              <span className="w-8 h-8 rounded-full bg-white/15 flex items-center justify-center shrink-0">
-                <ArrowRight className="w-4 h-4 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <span className="w-8 h-8 rounded-full bg-white/15 dark:bg-[#090B0E]/15 flex items-center justify-center shrink-0">
+                <ArrowRight className="w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </span>
             </button>
 
             <button
               type="button"
               onClick={() => scrollToLandingSection('#hari-kampus')}
-              className="w-full sm:w-auto px-5 py-2.5 min-h-[48px] rounded-full bg-white hover:bg-[#EBF7F4] border border-[#B8E4DC] text-[#0B2420] font-semibold text-sm transition-[transform,background-color,border-color] duration-200 active:scale-[0.98] flex items-center justify-center gap-2 shadow-2xs cursor-pointer"
+              className="w-full sm:w-auto px-5 py-2.5 min-h-[48px] rounded-full bg-white dark:bg-[#13171D] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] font-semibold text-sm transition-[transform,background-color,border-color] duration-150 active:scale-[0.97] flex items-center justify-center gap-2 shadow-surface-sm cursor-pointer"
             >
-              <Compass className="w-4 h-4 text-[#0D9488]" />
+              <Compass className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
               <span>{t('portal:landing_explore_campus_day', 'Jelajah Hari Kampus')}</span>
             </button>
           </motion.div>
 
           {/* Clean Non-Redundant Proof & 5 Academic Faculties Ledger */}
           <motion.div
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.24, ease: [0.23, 1, 0.32, 1] }}
-            className="w-full border-t border-[#B8E4DC]/80 pt-5 mt-7 space-y-3"
+            transition={{ duration: 0.24, delay: 0.14, ease: [0.23, 1, 0.32, 1] }}
+            className="w-full border-t border-[#B8E4DC]/80 dark:border-[#252B35] pt-5 mt-7 space-y-3"
           >
             <div className="flex flex-wrap items-center justify-center lg:justify-start gap-x-4 gap-y-2 text-xs">
               <div className="flex items-center gap-2">
@@ -120,28 +122,28 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ stats }) => {
                   {['FA', 'NR', 'AI'].map((av, idx) => (
                     <span
                       key={idx}
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-mono font-bold text-white ring-2 ring-[#F6FBF9] bg-[#0F766E]"
+                      className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-mono font-bold text-white dark:text-[#090B0E] ring-2 ring-[#F6FBF9] dark:ring-[#090B0E] bg-[#0F766E] dark:bg-[#2DD4BF]"
                     >
                       {av}
                     </span>
                   ))}
                 </div>
-                <span className="font-semibold text-[#0B2420]">
+                <span className="font-semibold text-[#0B2420] dark:text-[#F1F5F9]">
                   {t('portal:landing_chip_active_students', '1,080+ Siswa Aktif')}
                 </span>
-                <span className="text-[#3B635C]">
+                <span className="text-[#3B635C] dark:text-[#94A0B2]">
                   ({t('portal:landing_audience_polisas', 'Mahasiswa POLISAS')})
                 </span>
               </div>
 
-              <span className="hidden sm:inline text-[#B8E4DC]" aria-hidden="true">|</span>
+              <span className="hidden sm:inline text-[#B8E4DC] dark:text-[#252B35]" aria-hidden="true">|</span>
 
               <div className="flex items-center gap-1.5">
-                <ShoppingBag className="w-3.5 h-3.5 text-[#0F766E] shrink-0" />
-                <span className="font-semibold text-[#0B2420]">
+                <ShoppingBag className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF] shrink-0" />
+                <span className="font-semibold text-[#0B2420] dark:text-[#F1F5F9]">
                   {t('portal:landing_chip_polymart_direct', 'Pesanan PolyMart Terus')}
                 </span>
-                <span className="font-mono font-semibold text-amber-600">★ 4.9</span>
+                <span className="font-mono font-semibold text-amber-600 dark:text-amber-400">★ 4.9</span>
               </div>
             </div>
 
@@ -149,7 +151,7 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ stats }) => {
               {['JKA (Awam)', 'JKM (Mekanikal)', 'JKE (Elektrik)', 'JP (Perdagangan)', 'JTMK (InfoTech)'].map((dept) => (
                 <span
                   key={dept}
-                  className="px-2 py-0.5 rounded-lg bg-white/90 border border-[#B8E4DC]/90 text-[10.5px] font-mono font-medium text-[#0B2420] shadow-2xs whitespace-nowrap"
+                  className="px-2 py-0.5 rounded-lg bg-white dark:bg-[#13171D] border border-[#B8E4DC]/90 dark:border-[#252B35] text-[10.5px] font-mono font-medium text-[#0B2420] dark:text-[#F1F5F9] shadow-2xs whitespace-nowrap"
                 >
                   {dept}
                 </span>
@@ -160,13 +162,13 @@ export const LandingHero: React.FC<LandingHeroProps> = ({ stats }) => {
 
         {/* ── RIGHT COLUMN: Double-Bezel Interactive Campus Product Showcase ── */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
+          transition={{ duration: 0.28, delay: 0.1, ease: [0.23, 1, 0.32, 1] }}
           className="lg:col-span-6 relative"
         >
           {/* Outer Aluminum/Mist Bezel */}
-          <div className="rounded-[2rem] p-2 sm:p-2.5 bg-[#0B2420]/[0.04] ring-1 ring-[#0B2420]/10 shadow-[0_32px_70px_-18px_rgba(11,36,32,0.22)] relative">
+          <div className="rounded-[2rem] p-2 sm:p-2.5 bg-[#0B2420]/[0.04] dark:bg-white/[0.03] ring-1 ring-[#0B2420]/10 dark:ring-[#252B35] shadow-surface-lg relative">
             {/* Inner Pine-Teal Hardware Stage */}
             <div className="rounded-[calc(2rem-0.5rem)] bg-gradient-to-b from-[#0B2420] to-[#061714] p-3 sm:p-4 border border-[#1E4D45] shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] relative">
               {/* Top Stage Bar + Interactive Product Lens Switcher */}

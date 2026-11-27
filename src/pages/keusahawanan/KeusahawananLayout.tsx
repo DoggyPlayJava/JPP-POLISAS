@@ -452,12 +452,12 @@ export function LayoutInner({
 
         {/* Sidebar */}
         <aside className={cn(
-          'tour-keusahawanan-sidebar fixed inset-y-0 left-0 z-[140] w-64 transform transition-transform duration-300 ease-in-out',
+          'tour-keusahawanan-sidebar fixed inset-y-0 left-0 z-[140] w-64 transform transition-transform duration-250 ease-drawer overscroll-contain',
           'md:relative md:translate-x-0 md:flex-shrink-0',
-          isSidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+          isSidebarOpen ? 'translate-x-0 shadow-surface-lg' : '-translate-x-full'
         )}>
-          <div className="md:hidden absolute right-4 top-5">
-            <button onClick={() => setIsSidebarOpen(false)} className="p-2 rounded-full text-white/40 hover:text-white/70">
+          <div className="md:hidden absolute right-3 top-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] z-20">
+            <button onClick={() => setIsSidebarOpen(false)} aria-label="Tutup menu" className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition-colors">
               <X className="w-5 h-5" />
             </button>
           </div>
@@ -468,35 +468,36 @@ export function LayoutInner({
         <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
 
           {/* Global header shared on mobile and desktop */}
-          <header className="flex items-center justify-between px-6 pb-4 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] border-b border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] sticky top-0 z-50">
-            <div className="flex items-center gap-4">
+          <header className="flex items-center justify-between gap-2 px-3.5 sm:px-6 pb-3.5 pt-[calc(0.875rem+var(--sat,env(safe-area-inset-top,0px)))] border-b border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] sticky top-0 z-50">
+            <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
               <button
                 onClick={() => setIsSidebarOpen(true)}
-                className="tour-mobile-hamburger md:hidden p-2 -ml-2 rounded-xl transition-all active:scale-95 bg-muted/30 text-foreground"
+                aria-label="Buka menu"
+                className="tour-mobile-hamburger md:hidden p-2 -ml-1 rounded-xl transition-transform active:scale-95 bg-muted/40 text-foreground shrink-0"
               >
                 <Menu className="w-5 h-5" />
               </button>
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2 min-w-0">
                 <div
-                  className="w-8 h-8 rounded-xl flex items-center justify-center shadow-lg"
-                  style={{ background: hexToRgba(themeColor, 0.1), border: `1px solid ${hexToRgba(themeColor, 0.2)}` }}
+                  className="w-8 h-8 rounded-xl flex items-center justify-center shadow-surface-sm shrink-0"
+                  style={{ background: hexToRgba(themeColor, 0.12), border: `1px solid ${hexToRgba(themeColor, 0.25)}` }}
                 >
-                  <Lightbulb className="w-4 h-4 text-amber-500" />
+                  <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 </div>
-                <div className="flex flex-col">
-                  <span className="font-black text-xs tracking-tight text-foreground uppercase">{t('module_title')}</span>
-                  <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-30 text-foreground">{t('module_subtitle')}</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="font-black text-[11px] sm:text-xs tracking-tight text-foreground uppercase truncate">{t('module_title')}</span>
+                  <span className="hidden sm:block text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground truncate">{t('module_subtitle')}</span>
                 </div>
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
               <LanguageToggle />
               <ThemeToggle />
               
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl hover:bg-muted/60 text-muted-foreground/70">
+                  <Button variant="ghost" size="icon" aria-label="Bantuan" className="hidden sm:inline-flex h-9 w-9 rounded-xl hover:bg-muted/60 text-muted-foreground">
                     <HelpCircle className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>

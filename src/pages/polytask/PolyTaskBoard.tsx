@@ -117,17 +117,16 @@ export function PolyTaskBoard() {
           
           {/* Main Search Bar */}
           <div className="relative group max-w-xl mx-auto w-full">
-            <div className="absolute inset-0 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-2xl opacity-20 group-hover:opacity-40 transition-opacity duration-500 blur-sm" />
-            <div className="relative flex items-center bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-white/10 rounded-2xl p-2 shadow-xl backdrop-blur-md">
-              <Search className="w-6 h-6 text-slate-400 ml-4 shrink-0" />
+            <div className="relative flex items-center bg-white dark:bg-[#13171D] border border-[#B8E4DC] dark:border-[#252B35] focus-within:border-[#0F766E] dark:focus-within:border-[#2DD4BF] rounded-2xl p-2 shadow-surface-md transition-colors">
+              <Search className="w-5 h-5 text-slate-400 ml-3 shrink-0" />
               <input 
                 type="text"
                 placeholder={t('gig:search_tasks_placeholder', 'Cari tugasan (Cth: Format Laptop, Beli Makanan...)')}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="w-full bg-transparent border-none px-4 py-3 text-slate-900 dark:text-white focus:outline-none focus:ring-0 text-base md:text-lg placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                className="w-full bg-transparent border-none px-3.5 py-2.5 text-slate-900 dark:text-white focus:outline-none focus:ring-0 text-base md:text-lg placeholder:text-slate-400 dark:placeholder:text-[#94A0B2]"
               />
-              <button className="bg-[#0F766E] hover:bg-[#0D9488] text-white px-6 py-3 rounded-xl font-bold transition-all shadow-[0_4px_16px_rgba(13,148,136,0.3)] shrink-0 active:scale-95">
+              <button className="bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#090B0E] px-5 py-2.5 rounded-xl font-bold transition-[transform,background-color] duration-150 shadow-surface-sm shrink-0 active:scale-[0.97]">
                 {t('gig:search_btn', 'Cari')}
               </button>
             </div>

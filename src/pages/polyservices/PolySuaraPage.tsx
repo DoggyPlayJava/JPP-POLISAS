@@ -2245,7 +2245,8 @@ export function PolySuaraPage({
                       <MessageSquare className="w-4 h-4" />
                     </div>
                     <span className="text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0B2420] dark:group-hover:text-[#F1F5F9] font-medium truncate">
-                      {t('services:suara_quick_compose_placeholder', 'Ada luahan atau rahsia kampus? Kongsi secara rahsia...')}
+                      <span className="sm:hidden">{t('services:suara_quick_compose_short', 'Ada luahan kampus? Kongsi rahsia...')}</span>
+                      <span className="hidden sm:inline">{t('services:suara_quick_compose_placeholder', 'Ada luahan atau rahsia kampus? Kongsi secara rahsia...')}</span>
                     </span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">

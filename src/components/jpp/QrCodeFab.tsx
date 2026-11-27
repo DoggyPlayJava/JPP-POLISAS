@@ -37,17 +37,16 @@ export function QrCodeFab({ unitLinks, accentColor }: QrCodeFabProps) {
       <motion.button
         type="button"
         onClick={() => setIsOpen(true)}
-        initial={{ scale: 0, opacity: 0 }}
+        initial={{ scale: 0.94, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
-        transition={{ delay: 0.8, type: 'spring', stiffness: 300, damping: 25 }}
-        whileHover={{ scale: 1.08 }}
-        whileTap={{ scale: 0.95 }}
+        transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+        whileHover={{ scale: 1.06 }}
+        whileTap={{ scale: 0.96 }}
         className={cn(
-          'fixed z-[200] w-11 h-11 rounded-2xl shadow-xl',
+          'fixed z-[200] w-11 h-11 rounded-2xl shadow-surface-md',
           'hidden md:flex md:bottom-32 md:right-8',
           'items-center justify-center',
-          'border border-white/10',
-          'transition-shadow hover:shadow-2xl',
+          'border border-white/15',
         )}
         style={{
           background: accentColor
@@ -75,15 +74,15 @@ export function QrCodeFab({ unitLinks, accentColor }: QrCodeFabProps) {
 
             {/* Panel — slide in dari kanan */}
             <motion.div
-              initial={{ opacity: 0, x: 60 }}
+              initial={{ opacity: 0, x: 40 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 60 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              exit={{ opacity: 0, x: 40 }}
+              transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
               className={cn(
                 'fixed right-0 top-0 bottom-0 z-[310]',
                 'w-full max-w-sm',
-                'bg-card border-l border-border/60',
-                'shadow-2xl overflow-y-auto',
+                'bg-card border-l border-border',
+                'shadow-surface-lg overflow-y-auto overscroll-contain',
                 'flex flex-col',
               )}
             >

@@ -60,9 +60,9 @@ export function SuperAppHeader({
       {/* Main Header Container */}
       <div className="relative z-10 px-4 sm:px-6 md:px-8 pt-5 sm:pt-7 pb-5 sm:pb-6 max-w-7xl mx-auto flex flex-col gap-4 sm:gap-5">
         {/* Top Action Bar: Brand Logo & Location (Left) + Floating Discrete Action Circles (Right) */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-2 sm:gap-3">
           {/* Left Side: Desktop Menu Trigger + JPP Logo & Campus Location Pill */}
-          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             {onOpenSidebar && (
               <button
                 type="button"
@@ -74,15 +74,15 @@ export function SuperAppHeader({
               </button>
             )}
             {/* JPP Brand Badge */}
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-10 h-10 rounded-xl bg-white/10 border border-[#B8E4DC]/30 flex items-center justify-center p-1.5 shadow-sm shrink-0">
+            <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 border border-[#B8E4DC]/30 flex items-center justify-center p-1.5 shadow-sm shrink-0">
                 <img src="/jpp-logo.png" alt="JPP POLISAS" className="w-full h-full object-contain" />
               </div>
               <div className="flex flex-col min-w-0">
                 <span className="font-bold text-xs sm:text-sm tracking-tight text-white leading-tight truncate">
                   JPP POLISAS
                 </span>
-                <span className="text-[11px] font-medium text-[#5EEAD4] tracking-tight truncate">
+                <span className="text-[10.5px] sm:text-[11px] font-medium text-[#5EEAD4] tracking-tight whitespace-nowrap">
                   {t('portal:official_student_portal', 'Portal Rasmi Pelajar')}
                 </span>
               </div>

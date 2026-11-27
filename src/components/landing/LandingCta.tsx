@@ -9,18 +9,18 @@ export const LandingCta: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <section className="py-20 md:py-32 px-4 md:px-6 relative flex justify-center z-20 bg-gradient-to-b from-transparent to-[#EBF7F4]/60">
+    <section className="py-20 md:py-32 px-4 md:px-6 relative flex justify-center z-20 bg-gradient-to-b from-transparent to-[#EBF7F4]/60 dark:to-[#0E1116]">
       {/* Double-Bezel Pine-Teal Architectural Finale */}
       <motion.div
         initial={{ opacity: 0, scale: 0.97 }}
         animate={typeof window === 'undefined' ? { opacity: 1, scale: 1 } : undefined}
         {...(typeof window !== 'undefined' ? { whileInView: { opacity: 1, scale: 1 }, viewport: { once: true } } : {})}
-        transition={{ duration: 0.55, ease: [0.23, 1, 0.32, 1] }}
-        className="w-full max-w-5xl rounded-[2.75rem] p-2 bg-[#0B2420]/[0.05] ring-1 ring-[#0B2420]/10"
+        transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
+        className="w-full max-w-5xl rounded-[2.75rem] p-2 bg-[#0B2420]/[0.05] dark:bg-white/[0.03] ring-1 ring-[#0B2420]/10 dark:ring-[#252B35]"
       >
-        <div className="w-full rounded-[2.25rem] bg-gradient-to-br from-[#0B2420] via-[#081C18] to-[#061714] border border-[#1E4D45] p-8 sm:p-12 md:p-16 text-center space-y-6 md:space-y-8 relative overflow-hidden shadow-[0_24px_60px_rgba(11,36,32,0.22)]">
+        <div className="w-full rounded-[2.25rem] bg-gradient-to-br from-[#0B2420] via-[#081C18] to-[#061714] dark:from-[#13171D] dark:via-[#0E1116] dark:to-[#090B0E] border border-[#1E4D45] dark:border-[#252B35] p-8 sm:p-12 md:p-16 text-center space-y-6 md:space-y-8 relative overflow-hidden shadow-surface-lg">
           {/* Restrained Top Radial Highlight */}
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 bg-[#14B8A6]/15 rounded-full blur-xl pointer-events-none" />
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-32 bg-[radial-gradient(circle,rgba(20,184,166,0.16)_0%,transparent_70%)] rounded-full pointer-events-none" />
 
           {/* Headline (Distinct from Hero headline) */}
           <h2 className="text-3xl sm:text-5xl md:text-[3.5rem] font-black tracking-[-0.03em] text-[#F6FBF9] leading-[1.04] relative z-10 max-w-3xl mx-auto [text-wrap:balance]">

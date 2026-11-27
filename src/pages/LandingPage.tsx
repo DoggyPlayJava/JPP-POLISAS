@@ -57,7 +57,7 @@ export const LandingPage: React.FC = () => {
   const stats = useCampusStats();
 
   return (
-    <div className="min-h-[100dvh] bg-[#F6FBF9] text-[#0B2420] selection:bg-[#0F766E] selection:text-white relative overflow-x-hidden font-sans">
+    <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] selection:bg-[#0F766E] selection:text-white relative overflow-x-hidden font-sans">
       {/* 1. Bar Navigasi Kapsul Terapung */}
       <LandingNavbar />
 

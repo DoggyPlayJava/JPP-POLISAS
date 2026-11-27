@@ -74,19 +74,21 @@ export function UrusKelabPage() {
         .in('role', ['CLUB_PRESIDENT', 'CLUB_MT']);
 
       if (coreMembers) {
-        const unified = coreMembers.map(m => {
-          const profileInfo = m.profiles as any;
-          const fullName = profileInfo.full_name;
-          const override = (commRecords || []).find(c => c.full_name === fullName);
+        const unified = coreMembers
+          .filter((m) => Boolean(m?.profiles))
+          .map((m) => {
+            const profileInfo = Array.isArray(m.profiles) ? m.profiles[0] : (m.profiles as any);
+            const fullName = profileInfo?.full_name || t('kpp:committee_member', 'Ahli Jawatankuasa');
+            const override = (commRecords || []).find((c) => c.full_name === fullName);
 
-          return {
-            user_id: m.user_id,
-            full_name: fullName,
-            role: m.role,
-            category: override?.category || (m.role === 'CLUB_PRESIDENT' ? 'MT' : 'EXCO'),
-            position_title: override?.position_title || (m.role === 'CLUB_PRESIDENT' ? t('kpp:club_president', 'Presiden Kelab') : t('kpp:committee_member', 'Ahli Jawatankuasa'))
-          };
-        });
+            return {
+              user_id: m.user_id,
+              full_name: fullName,
+              role: m.role,
+              category: override?.category || (m.role === 'CLUB_PRESIDENT' ? 'MT' : 'EXCO'),
+              position_title: override?.position_title || (m.role === 'CLUB_PRESIDENT' ? t('kpp:club_president', 'Presiden Kelab') : t('kpp:committee_member', 'Ahli Jawatankuasa'))
+            };
+          });
 
         unified.sort((a, b) => {
           if (a.role === 'CLUB_PRESIDENT' && b.role !== 'CLUB_PRESIDENT') return -1;
@@ -607,24 +609,24 @@ export function UrusKelabPage() {
 
       </div>
 
-      {/* ── STICKY ACTION BAR BERKADAR MODEN ── */}
-      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 w-full max-w-lg px-4 pointer-events-none">
-        <div className="bg-card rounded-2xl p-2.5 flex items-center justify-between gap-3 shadow-xl border border-border/80 pointer-events-auto">
-          <div className="flex items-center gap-2.5 pl-2">
+      {/* ── STICKY ACTION BAR BERKADAR MODEN (lifted above BottomNav on mobile) ── */}
+      <div className="fixed bottom-[calc(5.75rem+var(--sab,env(safe-area-inset-bottom,0px)))] md:bottom-6 left-1/2 -translate-x-1/2 z-[110] w-full max-w-lg px-4 pointer-events-none">
+        <div className="bg-card rounded-2xl p-2.5 flex items-center justify-between gap-2.5 sm:gap-3 shadow-surface-lg border border-border pointer-events-auto">
+          <div className="flex items-center gap-2.5 pl-1 sm:pl-2 min-w-0">
             <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
               <Save size={16} />
             </div>
-            <div>
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{t('kpp:profile_settings', 'Tetapan Profil')}</p>
-              <p className="text-xs font-bold text-foreground">{t('kpp:ready_to_save', 'Sedia untuk disimpan?')}</p>
+            <div className="hidden sm:block min-w-0">
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider truncate">{t('kpp:profile_settings', 'Tetapan Profil')}</p>
+              <p className="text-xs font-bold text-foreground truncate">{t('kpp:ready_to_save', 'Sedia untuk disimpan?')}</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-1 sm:flex-none gap-2 justify-end">
             <Button
               onClick={fetchData}
               variant="outline"
               size="sm"
-              className="rounded-xl h-9 px-3.5 text-xs font-semibold border-border hover:bg-muted"
+              className="flex-1 sm:flex-none rounded-xl h-9 px-3.5 text-xs font-semibold border-border hover:bg-muted whitespace-nowrap"
             >
               {t('kpp:reset', 'Reset')}
             </Button>
@@ -632,7 +634,7 @@ export function UrusKelabPage() {
               onClick={handleSaveAll}
               disabled={saving}
               size="sm"
-              className="rounded-xl h-9 px-5 text-xs font-bold bg-primary text-primary-foreground shadow-sm hover:bg-primary/90"
+              className="flex-1 sm:flex-none rounded-xl h-9 px-4 sm:px-5 text-xs font-bold bg-primary text-primary-foreground shadow-sm hover:bg-primary/90 whitespace-nowrap"
             >
               {saving ? t('kpp:saving', 'Menyimpan...') : t('kpp:save_all', 'Simpan Semua')}
             </Button>

@@ -376,48 +376,49 @@ export function AkademikDashboard() {
 
       {/* ── Student Cockpit Header Card ── */}
       <motion.div
-        initial={{ opacity: 0, y: -8 }}
+        initial={{ opacity: 0, y: -6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-[2rem] border border-slate-200/80 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] text-slate-900 dark:text-white p-5 md:p-6  relative overflow-hidden shadow-xs"
+        transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+        className="rounded-[2rem] border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] text-slate-900 dark:text-[#F1F5F9] p-5 md:p-6 relative overflow-hidden shadow-surface-sm"
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-5">
           {/* Left: Student Identity & Academic Profile */}
-          <div className="flex items-start gap-4">
+          <div className="flex items-start gap-3.5 sm:gap-4 min-w-0">
             <div
-              className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 border border-[#B8E4DC] dark:border-teal-400/30 text-[#0F766E] dark:text-[#2DD4BF] font-black text-xl shadow-xs"
+              className="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 border border-[#B8E4DC] dark:border-teal-400/30 text-[#0F766E] dark:text-[#2DD4BF] font-black text-xl shadow-xs"
               style={{ background: hexToRgba(THEME, 0.14) }}
             >
               {profile?.full_name ? profile.full_name.charAt(0).toUpperCase() : <GraduationCap className="w-7 h-7 text-[#0F766E] dark:text-[#2DD4BF]" />}
             </div>
-            <div className="space-y-1.5 min-w-0">
+            <div className="space-y-1.5 min-w-0 flex-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[10px] font-bold uppercase tracking-[0.18em] px-2.5 py-0.5 rounded-full bg-teal-500/10 text-[#0F766E] dark:bg-teal-500/20 dark:text-[#2DD4BF] border border-teal-500/20 dark:border-teal-500/30">
+                <span className="text-[10px] font-bold uppercase tracking-[0.16em] px-2.5 py-0.5 rounded-full bg-teal-500/10 text-[#0F766E] dark:bg-teal-500/20 dark:text-[#2DD4BF] border border-teal-500/20 dark:border-teal-500/30">
                   {t('akademik:module_title', 'Hab Akademik & Matriks Jadual Waktu')}
                 </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300 border border-emerald-500/20 dark:border-emerald-500/30 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" />
                   {t('akademik:status_active', 'Aktif')}
                 </span>
               </div>
-              <h1 className="text-xl md:text-2xl font-black text-slate-900 dark:text-white leading-tight truncate">
+              <h1 className="text-lg sm:text-xl md:text-2xl font-black text-slate-900 dark:text-[#F1F5F9] leading-snug break-words">
                 {profile?.full_name || t('akademik:default_student_name', 'Pelajar POLISAS')}
               </h1>
-              <p className="text-xs text-slate-500 dark:text-white/40 font-medium">
+              <p className="text-xs text-slate-600 dark:text-[#94A0B2] font-medium">
                 {t('akademik:module_subtitle', 'Matriks jadual kuliah, tarikh peperiksaan, parser jadual kelas, dan anggaran HPNM.')}
               </p>
               {/* Badges row: Matric, Department, Semester */}
-              <div className="flex items-center gap-2.5 flex-wrap text-slate-500 dark:text-white/40 text-[11px] font-medium pt-1">
-                <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/[0.04] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06]">
+              <div className="flex items-center gap-2 flex-wrap text-slate-600 dark:text-[#94A0B2] text-[11px] font-medium pt-1">
+                <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-[#1B2028] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-[#252B35]">
                   <CreditCard className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
-                  <span className="font-bold text-slate-700 dark:text-white/70">{profile?.matric_no || profile?.matrix_no || t('akademik:no_matric_no', 'Tiada No. Matrik')}</span>
+                  <span className="font-bold text-slate-800 dark:text-[#F1F5F9]">{profile?.matric_no || profile?.matrix_no || t('akademik:no_matric_no', 'Tiada No. Matrik')}</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/[0.04] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06]">
+                <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-[#1B2028] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-[#252B35]">
                   <Building2 className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
-                  <span className="font-bold text-slate-700 dark:text-white/70">{profile?.department || profile?.programme_code || t('akademik:default_department', 'Jabatan POLISAS')}</span>
+                  <span className="font-bold text-slate-800 dark:text-[#F1F5F9]">{profile?.department || profile?.programme_code || t('akademik:default_department', 'Jabatan POLISAS')}</span>
                 </div>
-                <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-white/[0.04] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-white/[0.06]">
+                <div className="flex items-center gap-1.5 bg-slate-100/80 dark:bg-[#1B2028] px-2.5 py-1 rounded-xl border border-slate-200/80 dark:border-[#252B35]">
                   <GraduationCap className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
-                  <span className="font-bold text-slate-700 dark:text-white/70">{t('akademik:semester_n', 'Sem {{sem}}', { sem: semInfo.semester })} ({semInfo.level})</span>
+                  <span className="font-bold text-slate-800 dark:text-[#F1F5F9]">{t('akademik:semester_n', 'Sem {{sem}}', { sem: semInfo.semester })} ({semInfo.level})</span>
                 </div>
               </div>
             </div>

@@ -792,8 +792,8 @@ export function EmsJuryPortalPage() {
   // ---------------------------------------------------------------------------
   if (!session || !eventData || !juryCodeData) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col justify-center items-center p-4 sm:p-6 pb-28 md:pb-8 relative overflow-hidden transition-colors">
-        <div className="absolute top-4 right-4 z-20 flex items-center gap-2">
+      <div className="min-h-[100dvh] bg-slate-50 dark:bg-[#090B0E] text-slate-900 dark:text-slate-100 flex flex-col justify-center items-center px-4 sm:px-6 pt-[calc(4.5rem+var(--sat,env(safe-area-inset-top,0px)))] pb-28 md:pb-8 relative overflow-hidden">
+        <div className="absolute top-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] right-4 z-20 flex items-center gap-2">
           <LanguageToggle />
           <ThemeToggle />
         </div>

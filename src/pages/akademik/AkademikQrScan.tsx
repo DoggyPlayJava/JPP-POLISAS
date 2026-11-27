@@ -276,9 +276,9 @@ export function AkademikQrScan() {
         return (
           <div className="flex flex-col items-center gap-4 text-center">
             <motion.div
-              initial={{ scale: 0, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: 'spring', duration: 0.6 }}
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
               className="w-20 h-20 rounded-3xl flex items-center justify-center"
               style={{ background: hexToRgba('#10B981', 0.2), border: '1px solid rgba(16,185,129,0.3)' }}
             >

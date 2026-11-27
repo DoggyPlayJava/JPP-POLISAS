@@ -18,7 +18,7 @@ export function KeusahawananPoster() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-900 flex flex-col items-center justify-center p-4 sm:p-6 overflow-y-auto selection:bg-amber-500/30 pb-28 md:pb-8">
+    <div className="min-h-[100dvh] bg-[#090B0E] text-slate-900 flex flex-col items-center justify-center px-4 sm:px-6 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] sm:pt-6 overflow-y-auto selection:bg-amber-500/30 pb-28 md:pb-8">
       {/* Tombol Navigasi / Kawalan */}
       <div className="w-full max-w-[450px] flex items-center justify-between mb-4 text-white">
         <button

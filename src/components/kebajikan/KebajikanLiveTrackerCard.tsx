@@ -49,9 +49,9 @@ export function KebajikanLiveTrackerCard({
   return (
     <div
       className={cn(
-        'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-all duration-300',
+        'w-full rounded-2xl md:rounded-3xl p-5 sm:p-6 transition-[border-color,box-shadow] duration-200',
         'bg-white dark:bg-[#13171D]',
-        'border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-sm hover:shadow-md',
+        'border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-surface-sm',
         'space-y-6',
         className
       )}
@@ -103,7 +103,7 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
         <div className="space-y-1">
           <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-teal-500/10 text-teal-700 dark:text-teal-300 border border-teal-500/20">
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75 motion-reduce:hidden" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-teal-500" />
             </span>
             {t('kebajikan:tracker_live_badge', 'Penjejak Aduan Langsung')}
@@ -126,9 +126,18 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
       {/* Parcel-delivery Pulse Stepper */}
       <div className="pt-2 pb-1">
         <div className="grid grid-cols-4 gap-2 relative">
+          {/* Connecting progress track */}
+          <div className="absolute top-4 left-[12.5%] right-[12.5%] h-0.5 bg-[#B8E4DC]/70 dark:bg-[#252B35] pointer-events-none" aria-hidden="true">
+            <div
+              className={cn(
+                'h-full bg-[#0F766E] dark:bg-[#2DD4BF]',
+                isStep3Active ? 'w-2/3' : 'w-1/3'
+              )}
+            />
+          </div>
           {/* Step 1: Dihantar */}
-          <div className="flex flex-col items-center text-center space-y-1.5">
-            <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+          <div className="flex flex-col items-center text-center space-y-1.5 relative z-10">
+            <div className="w-8 h-8 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white flex items-center justify-center shadow-surface-sm ring-4 ring-white dark:ring-[#13171D]">
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white">
@@ -137,18 +146,17 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
           </div>
 
           {/* Step 2: Disemak JPP */}
-          <div className="flex flex-col items-center text-center space-y-1.5">
+          <div className="flex flex-col items-center text-center space-y-1.5 relative z-10">
             {isStep2Completed ? (
-              <div className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs">
+              <div className="w-8 h-8 rounded-full bg-emerald-600 dark:bg-emerald-500 text-white flex items-center justify-center shadow-surface-sm ring-4 ring-white dark:ring-[#13171D]">
                 <CheckCircle2 className="w-4 h-4" />
               </div>
             ) : isStep2Active ? (
-              <div className="relative w-8 h-8 rounded-full bg-teal-500/20 border-2 border-teal-500 text-teal-600 dark:text-teal-300 flex items-center justify-center">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-60" />
+              <div className="relative w-8 h-8 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028] border-2 border-[#0F766E] dark:border-[#2DD4BF] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center ring-4 ring-white dark:ring-[#13171D]">
                 <Clock className="w-4 h-4 relative z-10" />
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#1B2028] text-slate-400 flex items-center justify-center ring-4 ring-white dark:ring-[#13171D]">
                 <Clock className="w-4 h-4" />
               </div>
             )}
@@ -163,14 +171,13 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
           </div>
 
           {/* Step 3: Tindakan Unit Fasiliti */}
-          <div className="flex flex-col items-center text-center space-y-1.5">
+          <div className="flex flex-col items-center text-center space-y-1.5 relative z-10">
             {isStep3Active ? (
-              <div className="relative w-8 h-8 rounded-full bg-teal-500/20 border-2 border-teal-500 text-teal-600 dark:text-teal-300 flex items-center justify-center">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-60" />
+              <div className="relative w-8 h-8 rounded-full bg-[#EBF7F4] dark:bg-[#102624] border-2 border-[#0F766E] dark:border-[#2DD4BF] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shadow-surface-sm ring-4 ring-white dark:ring-[#13171D]">
                 <Sparkles className="w-4 h-4 relative z-10" />
               </div>
             ) : (
-              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-400 flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#1B2028] text-slate-400 flex items-center justify-center ring-4 ring-white dark:ring-[#13171D]">
                 <Sparkles className="w-4 h-4" />
               </div>
             )}
@@ -185,8 +192,8 @@ function WelfareTicketTrackerItem({ ticket }: { ticket: any }) {
           </div>
 
           {/* Step 4: Selesai */}
-          <div className="flex flex-col items-center text-center space-y-1.5">
-            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/10 text-slate-400 flex items-center justify-center">
+          <div className="flex flex-col items-center text-center space-y-1.5 relative z-10">
+            <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-[#1B2028] text-slate-400 flex items-center justify-center ring-4 ring-white dark:ring-[#13171D]">
               <CheckCircle2 className="w-4 h-4" />
             </div>
             <span className="text-[11px] sm:text-xs font-bold text-slate-400 dark:text-slate-500">

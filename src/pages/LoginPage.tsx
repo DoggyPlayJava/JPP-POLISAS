@@ -445,7 +445,7 @@ export function LoginPage() {
   return (
     <div className="min-h-[100dvh] flex flex-col lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] font-sans antialiased selection:bg-[#0D9488]/20 relative overflow-x-hidden">
       {/* ── Mobile / tablet header: compact dark banner, form sheet floats over it ── */}
-      <header className="lg:hidden relative overflow-hidden bg-[#0B2420] dark:bg-[#090B0E] px-6 pt-6 pb-16 sm:px-10">
+      <header className="lg:hidden relative overflow-hidden bg-[#0B2420] dark:bg-[#090B0E] px-5 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] pb-16 sm:px-10">
         <div className="absolute -top-24 -left-16 w-[320px] h-[320px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(13,148,136,0.45)_0%,transparent_65%)]" />
         <div className="absolute -bottom-20 -right-10 w-[260px] h-[260px] rounded-full pointer-events-none bg-[radial-gradient(circle,rgba(20,184,166,0.28)_0%,transparent_65%)]" />
         <div
@@ -457,27 +457,24 @@ export function LoginPage() {
           }}
         />
 
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-          className="relative z-10 flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <img src="/jpp-logo.png" alt="JPP Logo" className="w-11 h-11 object-contain drop-shadow-md select-none" />
-            <div className="leading-tight">
-              <p className="text-[14px] font-black tracking-tight text-[#F6FBF9]">JPP POLISAS</p>
-              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#99CBC2]">
+        <div className="relative z-10 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3 min-w-0">
+            <img src="/jpp-logo.png" alt="JPP Logo" className="w-10 h-10 object-contain drop-shadow-md select-none shrink-0" />
+            <div className="leading-tight min-w-0">
+              <p className="text-[14px] font-black tracking-tight text-[#F6FBF9] truncate">JPP POLISAS</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#99CBC2] truncate">
                 {t('auth:brand_panel_badge', 'Portal Rasmi Mahasiswa')}
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <span className="hidden sm:inline text-[10px] font-medium text-[#99CBC2]/80">Sesi 2026/2027</span>
-            <ThemeToggle />
-            <LanguageToggle />
+            <div className="[&_button]:bg-white/12 [&_button]:border-white/25 [&_button]:text-white [&_button]:hover:bg-white/20">
+              <ThemeToggle />
+            </div>
+            <LanguageToggle className="!bg-white/12 !border !border-white/25 !text-white hover:!bg-white/20" />
           </div>
-        </motion.div>
+        </div>
 
         <motion.p
           initial={{ opacity: 0, y: 8 }}
@@ -963,10 +960,10 @@ export function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowManualLogin(true)}
-                  className="w-full h-14 rounded-2xl bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#090B0E] font-bold text-[15px] flex items-center justify-center gap-2.5 transition-all shadow-sm active:scale-[0.98] cursor-pointer"
+                  className="w-full min-h-[56px] px-4 py-3 rounded-2xl bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#090B0E] font-bold text-sm sm:text-[15px] flex items-center justify-center gap-2.5 transition-[transform,background-color] duration-150 ease-apple-out shadow-surface-sm active:scale-[0.98] cursor-pointer"
                 >
-                  <Mail className="w-4 h-4 opacity-90" />
-                  <span>{t('auth:login_with_email_matric', 'Log masuk menggunakan Emel / No Matrik')}</span>
+                  <Mail className="w-4 h-4 shrink-0 opacity-90" />
+                  <span className="leading-snug">{t('auth:login_with_email_matric', 'Log masuk menggunakan Emel / No Matrik')}</span>
                 </button>
               </motion.div>
             ) : (

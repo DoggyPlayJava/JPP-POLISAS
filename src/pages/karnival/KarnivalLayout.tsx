@@ -31,7 +31,7 @@ export function KarnivalLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0d0d1a]">
+    <div className="min-h-[100dvh] bg-[#0d0d1a]">
       {/* Navbar */}
       <header className="sticky top-0 z-50 pt-[var(--sat,env(safe-area-inset-top,0px))] border-b border-white/[0.18] bg-[#0d0d1a]/95">
         <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between gap-4">
@@ -39,7 +39,8 @@ export function KarnivalLayout() {
           {/* ← Back to Portal */}
           <button
             onClick={() => navigate('/portal')}
-            className="p-1.5 rounded-lg text-white/30 hover:text-white/60 hover:bg-white/[0.05] transition-all"
+            aria-label={t('karnival:back_to_portal', 'Balik ke Portal')}
+            className="p-2 rounded-lg text-white/75 hover:text-white hover:bg-white/[0.08] transition-colors"
             title={t('karnival:back_to_portal', 'Balik ke Portal')}
           >
             <ArrowLeft className="w-4 h-4" />

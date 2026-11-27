@@ -252,36 +252,37 @@ export function PolyMartLayout() {
               </button>
 
               {/* Logo */}
-              <motion.button
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
+              <button
+                type="button"
                 onClick={() => { navigate('/polymart'); setActiveCategory('all'); }}
-                className="flex items-center gap-2.5 shrink-0 cursor-pointer text-left"
+                className="flex items-center gap-2 shrink-0 cursor-pointer text-left mr-auto sm:mr-0"
               >
                 <div
-                  className="w-9 h-9 rounded-2xl flex items-center justify-center shadow-md shadow-amber-500/20 border border-amber-400/30"
+                  className="w-9 h-9 rounded-2xl flex items-center justify-center shadow-surface-sm border border-amber-400/30 shrink-0"
                   style={{ background: PM_GRADIENT }}
                 >
                   <ShoppingBag className="w-4 h-4 text-white" />
                 </div>
-                <div className="leading-tight hidden sm:block">
+                <div className="leading-tight">
                   <p className="text-[13px] font-black tracking-tight text-foreground">PolyMart</p>
-                  <p className="text-[8px] font-black tracking-widest uppercase text-amber-600 dark:text-amber-400">
+                  <p className="text-[9px] font-black tracking-widest uppercase text-amber-700 dark:text-amber-400">
                     MARKETPLACE
                   </p>
                 </div>
-              </motion.button>
-
-              {/* Search Bar - Desktop: Full Stadium Input, Mobile: Stadium Trigger Button */}
-              <button
-                onClick={() => setShowMobileSearch(true)}
-                className="flex sm:hidden flex-1 min-w-0 items-center gap-2.5 h-10 px-3 rounded-full bg-white dark:bg-slate-900 border border-border/70 hover:border-amber-400/50 shadow-xs text-muted-foreground/60 cursor-pointer"
-              >
-                <Search className="w-4 h-4 text-amber-500 shrink-0" />
-                <span className="text-xs text-left truncate flex-1">{t('commerce:search_placeholder_short', 'Cari makanan, servis, pakaian...')}</span>
               </button>
 
-              <div className="hidden sm:flex flex-1 items-center gap-2.5 h-10 px-4 rounded-full bg-white dark:bg-slate-900 border border-border/70 hover:border-amber-400/50 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/25 shadow-xs transition-all">
+              {/* Search Trigger - Mobile: Clean Icon Button (zero truncation); Desktop: Full Stadium Input */}
+              <button
+                type="button"
+                onClick={() => setShowMobileSearch(true)}
+                aria-label={t('commerce:search_placeholder_short', 'Cari makanan, servis, pakaian...')}
+                className="flex sm:hidden w-9 h-9 rounded-full bg-muted/50 hover:bg-muted border border-border/70 items-center justify-center shrink-0 text-amber-600 dark:text-amber-400 active:scale-[0.97] transition-[transform,background-color] duration-150 cursor-pointer"
+              >
+                <Search className="w-4 h-4 shrink-0" />
+                <span className="sr-only">{t('commerce:search_placeholder_short', 'Cari makanan, servis, pakaian...')}</span>
+              </button>
+
+              <div className="hidden sm:flex flex-1 items-center gap-2.5 h-10 px-4 rounded-full bg-white dark:bg-[#0E1116] border border-border/70 hover:border-amber-400/50 focus-within:border-amber-500 focus-within:ring-2 focus-within:ring-amber-500/25 shadow-xs transition-[border-color,box-shadow] duration-150">
                 <Search className="w-4 h-4 text-amber-500 shrink-0" />
                 <input
                   value={searchQuery}
@@ -444,14 +445,14 @@ export function PolyMartLayout() {
         <AnimatePresence>
           {showMobileSearch && (
             <motion.div
-              initial={{ opacity: 0, y: 50 }}
+              initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-0 z-[100] bg-background/95  flex flex-col sm:hidden"
+              exit={{ opacity: 0, y: 24 }}
+              transition={{ duration: 0.2, ease: [0.32, 0.72, 0, 1] }}
+              className="fixed inset-0 z-[150] bg-background flex flex-col sm:hidden"
             >
               {/* Header */}
-              <div className="flex items-center gap-3 p-4 border-b border-border/40 bg-background safe-area-pt">
+              <div className="flex items-center gap-3 px-4 pb-3.5 pt-[calc(0.875rem+var(--sat,env(safe-area-inset-top,0px)))] border-b border-border bg-card">
                 <button onClick={() => setShowMobileSearch(false)} className="w-10 h-10 rounded-full bg-muted/50 flex items-center justify-center shrink-0">
                   <ArrowLeft className="w-5 h-5 text-foreground" />
                 </button>
@@ -473,7 +474,7 @@ export function PolyMartLayout() {
               </div>
 
               {/* Body: Conditional Categories or Live Search Results */}
-              <div className="flex-1 overflow-y-auto p-5">
+              <div className="flex-1 overflow-y-auto overscroll-contain p-5">
                 {!searchQuery.trim() ? (
                   <>
                     <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">{t('commerce:category_filter', 'Penapis Kategori')}</p>

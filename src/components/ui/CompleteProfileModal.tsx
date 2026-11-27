@@ -779,21 +779,21 @@ export function CompleteProfileModal() {
           className="absolute inset-0 bg-slate-950/90"
         />
         <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          initial={{ opacity: 0, scale: 0.95, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl border border-black/5 dark:border-white/10 overflow-hidden max-h-[90dvh] overflow-y-auto custom-scrollbar"
+          transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+          className="relative w-full max-w-md bg-card dark:bg-[#13171D] rounded-[2rem] shadow-surface-lg border border-border overflow-hidden max-h-[90dvh] overflow-y-auto overscroll-contain custom-scrollbar"
         >
           {/* Refined Institutional Header with Language Toggle */}
-          <div className="h-28 bg-slate-900 dark:bg-zinc-950 border-b border-white/10 relative overflow-hidden flex items-center justify-between px-6 shrink-0">
+          <div className="h-28 bg-[#0B2420] dark:bg-[#0E1116] border-b border-white/10 dark:border-[#252B35] relative overflow-hidden flex items-center justify-between px-6 shrink-0">
             <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,white_0%,transparent_100%)] pointer-events-none" />
             <div className="flex items-center gap-3.5 z-10">
-              <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center p-2 shadow-sm backdrop-blur-md shrink-0">
+              <div className="w-12 h-12 rounded-2xl bg-white/12 border border-white/20 flex items-center justify-center p-2 shadow-sm shrink-0">
                 <img src="/jpp-logo.png" alt="POLISAS Emblem" className="w-full h-full object-contain" />
               </div>
               <div className="space-y-0.5">
-                <span className="text-[10px] font-black uppercase tracking-[0.25em] text-emerald-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="text-[10px] font-black uppercase tracking-[0.22em] text-[#2DD4BF] flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#2DD4BF]" />
                   {t('auth:official_portal_polisas', 'Portal Rasmi POLISAS')}
                 </span>
                 <h2 className="text-base sm:text-lg font-black text-white tracking-tight">{heading}</h2>
@@ -801,7 +801,7 @@ export function CompleteProfileModal() {
             </div>
 
             {/* Language Segmented Switch in Header */}
-            <div className="z-10 flex items-center p-1 bg-white/10 border border-white/15 rounded-xl backdrop-blur-md shrink-0">
+            <div className="z-10 flex items-center p-1 bg-white/12 border border-white/15 rounded-xl shrink-0">
               <button
                 type="button"
                 onClick={() => changeLanguage('ms')}

@@ -250,13 +250,13 @@ export function BottomNav({ onOpenSidebar, customLinks, forceShowDesktop = false
         onPointerMove={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         onPointerUp={(e) => { e.stopPropagation(); e.nativeEvent.stopImmediatePropagation(); }}
         className={cn(
-          "group/dock tour-bottom-nav fixed bottom-[max(0.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))*0.82))] left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-[392px] z-[120] origin-bottom transform-gpu transition-[transform,opacity] duration-300 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] data-[compact=true]:scale-[0.84] data-[compact=true]:opacity-80 data-[compact=true]:translate-y-2.5 hover:data-[compact=true]:opacity-100",
+          "group/dock tour-bottom-nav fixed bottom-[max(0.75rem,calc(var(--sab,env(safe-area-inset-bottom,0px))*0.82))] left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-[392px] z-[120] origin-bottom transform-gpu transition-[transform,opacity] duration-200 ease-apple-out data-[compact=true]:scale-[0.88] data-[compact=true]:opacity-85 data-[compact=true]:translate-y-2 hover:data-[compact=true]:opacity-100",
           !forceShowDesktop && "md:hidden"
         )}
       >
         <nav
           aria-label={t('nav:navigation', 'Navigasi')}
-          className="bg-white dark:bg-[#0E1116] border border-[#B8E4DC]/90 dark:border-[#252B35] shadow-[0_12px_32px_rgba(6,23,20,0.16)] rounded-[20px] px-1.5 py-0.5 grid grid-cols-5 items-center gap-0.5 relative transition-[padding,border-radius,box-shadow] duration-300 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] group-data-[compact=true]/dock:px-2 group-data-[compact=true]/dock:py-0.5 group-data-[compact=true]/dock:rounded-full"
+          className="bg-white dark:bg-[#0E1116] border border-[#B8E4DC]/90 dark:border-[#252B35] shadow-surface-lg rounded-[20px] px-1.5 py-0.5 grid grid-cols-5 items-center gap-0.5 relative"
         >
           {leftLinks.slice(0, 2).map((link, i) => (
             <NavIconButton key={`left-${i}`} {...link} theme={theme} />
@@ -268,14 +268,14 @@ export function BottomNav({ onOpenSidebar, customLinks, forceShowDesktop = false
             onClick={handleFabClick}
             aria-label={t('nav:quick_actions', 'Tindakan Pantas')}
             aria-expanded={isActionsOpen}
-            className="tour-bottomnav-fab flex flex-col items-center justify-center gap-0.5 min-h-[48px] group-data-[compact=true]/dock:min-h-[38px] group-data-[compact=true]/dock:gap-0 w-full px-1 py-0.5 rounded-[14px] transition-[transform,min-height,gap] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] active:scale-[0.96] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E]"
+            className="tour-bottomnav-fab flex flex-col items-center justify-center gap-0.5 min-h-[48px] w-full px-1 py-0.5 rounded-[14px] transition-transform duration-150 ease-apple-out active:scale-[0.96] cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E]"
           >
             <span
               className={cn(
-                "w-8 h-8 rounded-[12px] flex items-center justify-center transition-[transform,background-color,color,border-radius] duration-200 ease-out group-data-[compact=true]/dock:rounded-full",
+                "w-8 h-8 rounded-[12px] flex items-center justify-center transition-[transform,background-color,color] duration-150 ease-apple-out",
                 isActionsOpen
                   ? "bg-slate-200 dark:bg-[#252B35] text-[#0B2420] dark:text-white"
-                  : cn(theme.fabBg, "text-white shadow-md")
+                  : cn(theme.fabBg, "text-white shadow-surface-sm")
               )}
             >
               {isActionsOpen ? (
@@ -284,7 +284,7 @@ export function BottomNav({ onOpenSidebar, customLinks, forceShowDesktop = false
                 <LayoutGrid className="w-4 h-4" strokeWidth={2.25} />
               )}
             </span>
-            <span className="text-[10px] font-semibold leading-none tracking-tight text-[#0B2420] dark:text-[#F1F5F9] truncate max-w-[64px] max-h-4 opacity-100 overflow-hidden transition-[opacity,max-height,transform] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] group-data-[compact=true]/dock:opacity-0 group-data-[compact=true]/dock:max-h-0 group-data-[compact=true]/dock:scale-90">
+            <span className="text-[10px] font-semibold leading-none tracking-tight text-[#0B2420] dark:text-[#F1F5F9] truncate max-w-[64px] transition-[opacity,transform] duration-150 ease-apple-out group-data-[compact=true]/dock:opacity-75">
               {t('nav:hub_short', 'Pintasan')}
             </span>
           </button>
@@ -346,14 +346,14 @@ function NavIconButton({ icon: Icon, label, isActive, onClick, badge, theme }: N
       onClick={onClick}
       aria-current={isActive ? 'page' : undefined}
       className={cn(
-        "flex flex-col items-center justify-center gap-0.5 min-h-[48px] group-data-[compact=true]/dock:min-h-[38px] group-data-[compact=true]/dock:gap-0 w-full px-1 py-0.5 rounded-[14px] group-data-[compact=true]/dock:rounded-full transition-[transform,color,background-color,min-height,gap] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] active:scale-[0.96] relative cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E]",
+        "flex flex-col items-center justify-center gap-0.5 min-h-[48px] w-full px-1 py-0.5 rounded-[14px] transition-[transform,color,background-color] duration-150 ease-apple-out active:scale-[0.96] relative cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E]",
         isActive
           ? cn(t.pillBg, t.color)
           : "text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-white"
       )}
     >
       <Icon className="w-5 h-5 shrink-0" strokeWidth={isActive ? 2.4 : 2} />
-      <span className={cn("text-[10px] leading-none tracking-tight truncate max-w-[64px] max-h-4 opacity-100 overflow-hidden transition-[opacity,max-height,transform] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] group-data-[compact=true]/dock:opacity-0 group-data-[compact=true]/dock:max-h-0 group-data-[compact=true]/dock:scale-90", isActive ? "font-bold" : "font-medium")}>
+      <span className={cn("text-[10px] leading-none tracking-tight truncate max-w-[64px] transition-opacity duration-150 ease-apple-out group-data-[compact=true]/dock:opacity-75", isActive ? "font-bold" : "font-medium")}>
         {label}
       </span>
 

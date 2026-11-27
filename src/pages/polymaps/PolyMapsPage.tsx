@@ -2097,7 +2097,7 @@ export function PolyMapsPage() {
                             onClick={(e) => { e.stopPropagation(); setCardExpanded(true); }}
                             className="flex items-center gap-2.5 bg-emerald-500/20 rounded-xl px-3 py-2.5 cursor-pointer active:scale-[0.98] transition-transform group"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-emerald-500/30 flex items-center justify-center shrink-0 animate-bounce">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/30 flex items-center justify-center shrink-0">
                               <DoorOpen className="w-4 h-4 text-emerald-300" />
                             </div>
                             <div className="flex-1 min-w-0">
@@ -2150,7 +2150,7 @@ export function PolyMapsPage() {
                     {/* Weather alert warning / covered suggestion */}
                     {weather?.isRaining && (
                       <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-2xl p-2.5 flex items-center gap-2 text-emerald-100 text-xs mt-1">
-                        <CloudRain className="w-4 h-4 shrink-0 text-emerald-300 animate-bounce" />
+                        <CloudRain className="w-4 h-4 shrink-0 text-emerald-300" />
                         <span>{t('services:rain_detected_covered_route', 'Hujan dikesan! Laluan berbumbung diutamakan secara automatik.')}</span>
                       </div>
                     )}

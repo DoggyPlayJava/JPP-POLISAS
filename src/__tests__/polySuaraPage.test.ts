@@ -325,8 +325,7 @@ describe('PolySuaraPage Suite', () => {
 
     it('renders elevated floating card container with rounded-[2rem], Mineral Teal tokens, and Media Viewer', () => {
       expect(cardContent).toContain('rounded-[2rem]');
-      expect(cardContent).toContain('shadow-[0_4px_24px_rgba(11,36,32,0.04)]');
-      expect(cardContent).toContain('dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)]');
+      expect(cardContent).toContain('shadow-surface-sm');
       expect(cardContent).toContain('<PolySuaraCivicProgress');
       expect(cardContent).toContain('extractCampusLocations(confession.content)');
       expect(cardContent).toContain('FACT_CHECK');

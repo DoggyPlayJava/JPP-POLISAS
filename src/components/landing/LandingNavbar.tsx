@@ -51,20 +51,20 @@ export const LandingNavbar: React.FC = () => {
 
   return (
     <>
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
+      <nav
         className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-500 flex justify-center px-3 sm:px-4 md:px-6",
-          isScrolled ? "pt-[calc(0.5rem+var(--sat,env(safe-area-inset-top,0px)))] pb-2 sm:pt-2.5 sm:pb-2.5 md:py-2.5" : "pt-[calc(0.625rem+var(--sat,env(safe-area-inset-top,0px)))] pb-2.5 sm:py-4 md:py-6"
+          "fixed top-0 left-0 right-0 z-50 transition-[padding] duration-200 ease-apple-out flex justify-center px-3 sm:px-4 md:px-6",
+          isScrolled
+            ? "pt-[calc(0.5rem+var(--sat,env(safe-area-inset-top,0px)))] pb-2 sm:py-2.5"
+            : "pt-[calc(0.625rem+var(--sat,env(safe-area-inset-top,0px)))] pb-2.5 sm:py-4 md:py-5"
         )}
       >
         <div
           className={cn(
-            "flex items-center justify-between w-full max-w-6xl px-3 sm:px-4 md:px-6 py-1.5 sm:py-2.5 md:py-3 rounded-full border transition-all duration-500",
+            "flex items-center justify-between w-full max-w-6xl px-3 sm:px-4 md:px-6 py-1.5 sm:py-2.5 md:py-3 rounded-full border transition-[background-color,border-color,box-shadow] duration-200 ease-apple-out",
             isScrolled
-              ? "bg-[#F6FBF9] border-[#B8E4DC] shadow-[0_8px_30px_rgba(11,36,32,0.08)]"
-              : "bg-white border-[#B8E4DC]/80 shadow-xs"
+              ? "bg-[#F6FBF9] dark:bg-[#0E1116] border-[#B8E4DC] dark:border-[#252B35] shadow-surface-md"
+              : "bg-white dark:bg-[#13171D] border-[#B8E4DC]/80 dark:border-[#252B35] shadow-surface-sm"
           )}
         >
           {/* Logo JPP POLISAS & Branding - Clean, slim, no redundant AI capsule */}
@@ -76,7 +76,7 @@ export const LandingNavbar: React.FC = () => {
               }
             }}
           >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center p-1 sm:p-1.5 rounded-xl md:rounded-2xl bg-[#F6FBF9] border border-[#B8E4DC] overflow-hidden relative shadow-2xs group-hover:scale-105 transition-transform duration-300">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 flex items-center justify-center p-1 sm:p-1.5 rounded-xl md:rounded-2xl bg-[#F6FBF9] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] overflow-hidden relative shadow-2xs group-hover:scale-105 transition-transform duration-200">
               <img
                 src="/jpp-logo.png"
                 alt="JPP Logo"
@@ -90,10 +90,10 @@ export const LandingNavbar: React.FC = () => {
               />
             </div>
             <div className="flex flex-col">
-              <span className="font-black tracking-tight text-[#0B2420] text-xs sm:text-sm md:text-base leading-none">
+              <span className="font-black tracking-tight text-[#0B2420] dark:text-[#F1F5F9] text-xs sm:text-sm md:text-base leading-none">
                 JPP POLISAS
               </span>
-              <span className="hidden xl:block text-[10px] font-medium text-[#0F766E] tracking-tight leading-none mt-0.5 whitespace-nowrap">
+              <span className="hidden xl:block text-[10px] font-medium text-[#0F766E] dark:text-[#2DD4BF] tracking-tight leading-none mt-0.5 whitespace-nowrap">
                 {t('portal:smart_system_new_session', 'Sistem Pintar Sesi Baharu')}
               </span>
             </div>
@@ -105,7 +105,7 @@ export const LandingNavbar: React.FC = () => {
               <button
                 key={item.href}
                 onClick={() => scrollToLandingSection(item.href)}
-                className="text-xs font-semibold text-[#3B635C] hover:text-[#0B2420] transition-colors cursor-pointer tracking-wide whitespace-nowrap"
+                className="text-xs font-semibold text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9] transition-colors cursor-pointer tracking-wide whitespace-nowrap"
               >
                 {item.label}
               </button>
@@ -115,24 +115,24 @@ export const LandingNavbar: React.FC = () => {
           {/* Right Action Cluster: Language Switcher + Desktop CTA + Mobile Hamburger */}
           <div className="flex items-center gap-1.5 sm:gap-2 md:gap-3 shrink-0">
             {/* Global Language Switcher */}
-            <LanguageToggle className="rounded-full bg-[#F6FBF9] border border-[#B8E4DC] text-[#0B2420] hover:bg-[#B8E4DC]/30 px-2 sm:px-2.5 h-8 md:h-9" />
+            <LanguageToggle className="rounded-full bg-[#F6FBF9] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] hover:bg-[#B8E4DC]/30 dark:hover:bg-[#252B35] px-2 sm:px-2.5 h-8 md:h-9" />
 
             {/* Desktop-only Button-in-Button Island CTA */}
             <button
               type="button"
               onClick={() => navigate('/portal')}
-              className="hidden lg:flex pl-4 pr-1.5 py-1.5 rounded-full bg-[#0F766E] hover:bg-[#115E59] text-white text-xs font-semibold items-center gap-2.5 shadow-[0_8px_20px_-6px_rgba(15,118,110,0.45)] transition-[transform,background-color,box-shadow] duration-200 [transition-timing-function:cubic-bezier(0.23,1,0.32,1)] active:scale-[0.97] group cursor-pointer whitespace-nowrap shrink-0"
+              className="hidden lg:flex pl-4 pr-1.5 py-1.5 rounded-full bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] text-white dark:text-[#090B0E] text-xs font-semibold items-center gap-2.5 shadow-surface-sm transition-[transform,background-color] duration-150 ease-apple-out active:scale-[0.97] group cursor-pointer whitespace-nowrap shrink-0"
             >
               <span>{t('portal:landing_explore_portal', t('portal:explore_portal', 'Terokai Portal'))}</span>
-              <span className="w-6 h-6 rounded-full bg-white/15 flex items-center justify-center">
-                <ArrowRight className="w-3.5 h-3.5 transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              <span className="w-6 h-6 rounded-full bg-white/15 dark:bg-[#090B0E]/15 flex items-center justify-center">
+                <ArrowRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </span>
             </button>
 
             {/* Mobile Hamburger Toggle */}
             <button
               type="button"
-              className="lg:hidden w-9 h-9 rounded-full bg-[#F6FBF9] border border-[#B8E4DC] flex items-center justify-center text-[#0B2420] hover:bg-[#B8E4DC]/20 transition-colors cursor-pointer"
+              className="lg:hidden w-9 h-9 rounded-full bg-[#F6FBF9] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] flex items-center justify-center text-[#0B2420] dark:text-[#F1F5F9] hover:bg-[#B8E4DC]/20 dark:hover:bg-[#252B35] transition-colors cursor-pointer"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               aria-label={t('portal:landing_toggle_nav', 'Buka menu navigasi')}
             >
@@ -140,7 +140,7 @@ export const LandingNavbar: React.FC = () => {
             </button>
           </div>
         </div>
-      </motion.nav>
+      </nav>
 
       {/* Mobile Backdrop & Drawer Menu */}
       <AnimatePresence>
@@ -150,24 +150,24 @@ export const LandingNavbar: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              transition={{ duration: 0.18 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 z-30 bg-black/30 lg:hidden"
+              className="fixed inset-0 z-30 bg-black/45 lg:hidden"
               aria-hidden="true"
             />
             <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.98 }}
+              initial={{ opacity: 0, y: -12, scale: 0.98 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.98 }}
-              transition={{ duration: 0.2 }}
-              className="fixed inset-x-3 sm:inset-x-4 top-14 sm:top-20 z-40 p-5 sm:p-6 rounded-3xl bg-[#F6FBF9] border border-[#B8E4DC] lg:hidden shadow-2xl flex flex-col gap-2"
+              exit={{ opacity: 0, y: -12, scale: 0.98 }}
+              transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+              className="fixed inset-x-3 sm:inset-x-4 top-[calc(4.25rem+var(--sat,env(safe-area-inset-top,0px)))] z-40 p-5 sm:p-6 rounded-3xl bg-[#F6FBF9] dark:bg-[#13171D] border border-[#B8E4DC] dark:border-[#252B35] lg:hidden shadow-surface-lg overscroll-contain flex flex-col gap-2"
             >
-              <div className="flex items-center justify-between pb-3 border-b border-[#B8E4DC]/60 mb-1">
-                <span className="text-[10px] font-bold uppercase tracking-widest text-[#0D9488]">
+              <div className="flex items-center justify-between pb-3 border-b border-[#B8E4DC]/60 dark:border-[#252B35] mb-1">
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#0F766E] dark:text-[#2DD4BF]">
                   {t('portal:landing_quick_nav', 'Navigasi Pantas')}
                 </span>
-                <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#0B2420]">
-                  <Sparkles className="w-3 h-3 text-[#0F766E]" />
+                <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#0B2420] dark:text-[#F1F5F9]">
+                  <Sparkles className="w-3 h-3 text-[#0F766E] dark:text-[#2DD4BF]" />
                   {t('portal:landing_student_superapp', 'Superapp Mahasiswa')}
                 </span>
               </div>

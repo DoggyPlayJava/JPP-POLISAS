@@ -355,14 +355,14 @@ export function PolyRentPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 -mt-8 relative z-20 mb-8 flex flex-col justify-center items-center gap-4">
         
         {/* Main Tabs */}
-        <div className="tour-polyrent-tabs bg-white dark:bg-slate-900 rounded-full shadow-xl shadow-slate-200/50 dark:shadow-none border border-slate-100 dark:border-white/5 p-1.5 flex overflow-hidden w-full max-w-sm">
+        <div className="tour-polyrent-tabs bg-white dark:bg-[#13171D] rounded-full shadow-surface-md border border-[#B8E4DC]/80 dark:border-[#252B35] p-1.5 flex overflow-hidden w-full max-w-sm">
           <button
             onClick={() => setActiveTab('CARI_BILIK')}
             className={cn(
-              "flex-1 py-2.5 rounded-full text-xs font-bold transition-all text-center",
+              "flex-1 py-2.5 rounded-full text-xs font-bold transition-[background-color,color] duration-150 text-center cursor-pointer",
               activeTab === 'CARI_BILIK' 
-                ? "bg-teal-500 text-white shadow-md" 
-                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                ? "bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] shadow-surface-sm" 
+                : "text-slate-600 hover:text-slate-900 dark:text-[#94A0B2] dark:hover:text-white"
             )}
           >
             {t('housing:tab_house_ads', 'Iklan Rumah')}
@@ -370,10 +370,10 @@ export function PolyRentPage() {
           <button
             onClick={() => setActiveTab('PELAJAR_MENCARI')}
             className={cn(
-              "flex-1 py-2.5 rounded-full text-xs font-bold transition-all text-center",
+              "flex-1 py-2.5 rounded-full text-xs font-bold transition-[background-color,color] duration-150 text-center cursor-pointer",
               activeTab === 'PELAJAR_MENCARI' 
-                ? "bg-teal-500 text-white shadow-md" 
-                : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+                ? "bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] shadow-surface-sm" 
+                : "text-slate-600 hover:text-slate-900 dark:text-[#94A0B2] dark:hover:text-white"
             )}
           >
             {t('housing:tab_student_searching', 'Pelajar Mencari')}
@@ -382,16 +382,16 @@ export function PolyRentPage() {
 
         {/* Gender Filters + Saved */}
         {activeTab === 'CARI_BILIK' && (
-          <div className="tour-polyrent-filters bg-white dark:bg-slate-900 rounded-full shadow-lg shadow-slate-200/40 dark:shadow-none border border-slate-100 dark:border-white/5 p-1.5 flex gap-1 overflow-x-auto no-scrollbar max-w-full">
+          <div className="tour-polyrent-filters bg-white dark:bg-[#13171D] rounded-full shadow-surface-sm border border-[#B8E4DC]/80 dark:border-[#252B35] p-1 flex gap-1 overflow-x-auto no-scrollbar max-w-full">
             {(['SEMUA', 'LELAKI', 'PEREMPUAN'] as const).map(filter => (
               <button
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
                 className={cn(
-                  "px-6 sm:px-8 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap",
+                  "px-3.5 sm:px-6 py-2 rounded-full text-[11px] sm:text-xs font-bold transition-[background-color,color] duration-150 whitespace-nowrap cursor-pointer",
                   activeFilter === filter 
-                    ? "bg-slate-900 dark:bg-slate-800 text-white shadow-sm" 
-                    : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5"
+                    ? "bg-[#0B2420] dark:bg-[#1B2028] text-white shadow-surface-sm" 
+                    : "text-slate-600 hover:text-slate-900 dark:text-[#94A0B2] dark:hover:text-white hover:bg-slate-50 dark:hover:bg-white/5"
                 )}
               >
                 {filter === 'SEMUA' ? t('housing:filter_all', 'SEMUA') : filter === 'LELAKI' ? t('housing:filter_male', 'LELAKI') : t('housing:filter_female', 'PEREMPUAN')}
@@ -400,14 +400,14 @@ export function PolyRentPage() {
             <button
               onClick={() => setActiveFilter('SAVED')}
               className={cn(
-                "px-5 py-2 rounded-full text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap flex items-center gap-1.5",
+                "px-3.5 sm:px-5 py-2 rounded-full text-[11px] sm:text-xs font-bold transition-[background-color,color] duration-150 whitespace-nowrap flex items-center gap-1.5 cursor-pointer",
                 activeFilter === 'SAVED'
-                  ? "bg-rose-500 text-white shadow-sm"
-                  : "text-slate-500 hover:text-rose-500 dark:text-slate-400 hover:bg-rose-50 dark:hover:bg-rose-500/10"
+                  ? "bg-rose-600 text-white shadow-surface-sm"
+                  : "text-slate-600 hover:text-rose-600 dark:text-[#94A0B2] hover:bg-rose-50 dark:hover:bg-rose-500/10"
               )}
             >
-              <Heart className={cn("w-3 h-3", activeFilter === 'SAVED' ? 'fill-white' : '')} />
-              {t('housing:filter_saved', 'Tersimpan')} {wishlist.length > 0 && <span className="ml-0.5 opacity-70">({wishlist.length})</span>}
+              <Heart className={cn("w-3 h-3 shrink-0", activeFilter === 'SAVED' ? 'fill-white' : '')} />
+              {t('housing:filter_saved', 'Tersimpan')} {wishlist.length > 0 && <span className="ml-0.5 opacity-80">({wishlist.length})</span>}
             </button>
           </div>
         )}

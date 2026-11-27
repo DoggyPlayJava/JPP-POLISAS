@@ -950,14 +950,28 @@ export function PolyMartHome() {
             <motion.div
               key="empty"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center py-20 gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shadow-xs">
+              transition={{ duration: 0.16 }}
+              className="flex flex-col items-center justify-center py-16 px-4 gap-3 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/12 border border-amber-500/25 flex items-center justify-center text-amber-600 dark:text-amber-400 shadow-surface-sm">
                 <PackageSearch className="w-7 h-7" />
               </div>
-              <p className="text-sm font-bold text-muted-foreground/60">
+              <p className="text-sm font-bold text-foreground">
                 {searchQuery ? t('commerce:no_products_found', 'Tiada produk dijumpai') : t('commerce:no_products_in_category', 'Tiada produk dalam kategori ini')}
               </p>
-              <p className="text-xs text-muted-foreground/40">{t('commerce:try_other_category_or_search', 'Cuba kategori atau carian lain')}</p>
+              <p className="text-xs text-muted-foreground max-w-xs">{t('commerce:try_other_category_or_search', 'Cuba kategori atau carian lain')}</p>
+              {(activeCategory !== 'all' || Boolean(searchQuery) || Boolean(vendorFilter)) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveCategory('all');
+                    setSearchQuery('');
+                    if (vendorFilter) navigate('/polymart');
+                  }}
+                  className="mt-1 px-4 py-2 rounded-full bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] text-white dark:text-[#090B0E] text-xs font-bold shadow-surface-sm active:scale-[0.97] transition-[transform,background-color] duration-150 cursor-pointer"
+                >
+                  {t('commerce:reset_filters', 'Reset Tapis')}
+                </button>
+              )}
             </motion.div>
           ) : (
             <motion.div

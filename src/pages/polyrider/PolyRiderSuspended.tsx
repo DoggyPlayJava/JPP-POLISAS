@@ -135,7 +135,7 @@ export function PolyRiderSuspended({ suspendedUntil }: PolyRiderSuspendedProps) 
           )}
 
           {klkPhone && (() => {
-            let cleanPhone = klkPhone.replace(/\D/g, '');
+            let cleanPhone = String(klkPhone).replace(/\D/g, '');
             if (cleanPhone.startsWith('0')) cleanPhone = '6' + cleanPhone;
             else if (!cleanPhone.startsWith('6')) cleanPhone = '60' + cleanPhone;
             

@@ -58,6 +58,14 @@
     --shadow-premium: 0 12px 40px -8px rgba(15, 118, 110, 0.12);
     --shadow-glow: 0 0 24px -4px hsla(175, 77%, 26%, 0.35);
 
+    /* Layered Neutral Elevation (Light) & Motion Curves */
+    --shadow-surface-sm: 0 1px 2px rgba(11, 36, 32, 0.05), 0 1px 1px rgba(11, 36, 32, 0.03);
+    --shadow-surface-md: 0 2px 4px rgba(11, 36, 32, 0.04), 0 8px 20px -4px rgba(11, 36, 32, 0.08);
+    --shadow-surface-lg: 0 4px 10px -2px rgba(11, 36, 32, 0.05), 0 18px 38px -8px rgba(11, 36, 32, 0.12);
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+    --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+
     --font-sans: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-heading: 'Manrope', 'Geist', -apple-system, BlinkMacSystemFont, sans-serif;
     --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -101,6 +109,11 @@
     --glass-background: rgba(19, 23, 29, 0.96);
     --glass-border: rgba(255, 255, 255, 0.08);
     --glass-edge: rgba(255, 255, 255, 0.12);
+
+    /* Crisp Hairline Elevation (Obsidian Dark) */
+    --shadow-surface-sm: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 1px 2px rgba(0, 0, 0, 0.35);
+    --shadow-surface-md: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 8px 24px -6px rgba(0, 0, 0, 0.55);
+    --shadow-surface-lg: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 20px 44px -10px rgba(0, 0, 0, 0.72);
   }
 }
 
@@ -110,12 +123,12 @@
   }
 
   body {
-    @apply bg-background text-foreground font-sans antialiased transition-colors duration-500 ease-in-out relative;
+    @apply bg-background text-foreground font-sans antialiased relative;
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-heading);
-    @apply font-bold tracking-tight text-foreground transition-colors duration-500;
+    @apply font-bold tracking-tight text-foreground;
   }
 }
 
@@ -130,22 +143,23 @@
 
 @layer components {
   .glass {
-    background: hsl(var(--card) / 0.95);
-    @apply border border-border shadow-2xl;
+    background: hsl(var(--card) / 0.96);
+    @apply border border-border shadow-[var(--shadow-surface-lg)];
   }
 
   .glass-premium {
     background: hsl(var(--card) / 0.98);
-    @apply border border-border shadow-2xl ring-1 ring-white/10 dark:ring-white/5;
+    @apply border border-border shadow-[var(--shadow-surface-lg)] ring-1 ring-white/10 dark:ring-white/5;
   }
 
   .bento-card {
-    @apply bg-card border border-border/40 rounded-2xl shadow-sm transition-[transform,box-shadow,border-color] duration-200 ease-out active:scale-[0.99];
+    @apply bg-card border border-border/60 rounded-2xl shadow-[var(--shadow-surface-sm)] transition-[transform,box-shadow,border-color] duration-200 active:scale-[0.985];
+    transition-timing-function: var(--ease-out);
   }
 
   .premium-card {
-    @apply bg-card border border-border/40 rounded-2xl shadow-[var(--shadow-premium)] transition-[transform,box-shadow,border-color] duration-200 active:scale-[0.99];
-    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+    @apply bg-card border border-border/60 rounded-2xl shadow-[var(--shadow-surface-md)] transition-[transform,box-shadow,border-color] duration-200 active:scale-[0.985];
+    transition-timing-function: var(--ease-out);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -271,13 +285,15 @@ body.supsas-route {
 }
 
 @layer utilities {
-  .pt-safe {
+  .pt-safe,
+  .safe-area-pt {
     padding-top: var(--sat, env(safe-area-inset-top, 0px));
   }
   .pt-safe-top {
     padding-top: calc(0.75rem + var(--sat, env(safe-area-inset-top, 0px)));
   }
-  .pb-safe {
+  .pb-safe,
+  .safe-area-pb {
     padding-bottom: var(--sab, env(safe-area-inset-bottom, 0px));
   }
 }

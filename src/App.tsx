@@ -706,24 +706,21 @@ function App() {
                           
                           return (
                             <motion.div
-                              layout
-                              initial={{ opacity: 0, y: -50, scale: 0.3 }}
+                              initial={{ opacity: 0, y: -16, scale: 0.95 }}
                               animate={{ 
                                 opacity: t.visible ? 1 : 0, 
-                                y: t.visible ? 8 : -50,
-                                scale: t.visible ? 1 : 0.5,
-                                }}
-                              exit={{ opacity: 0, y: -50, scale: 0.5 }}
+                                y: t.visible ? 8 : -16,
+                                scale: t.visible ? 1 : 0.95,
+                              }}
+                              exit={{ opacity: 0, y: -12, scale: 0.95 }}
                               transition={{ 
-                                type: "spring", 
-                                stiffness: 400, 
-                                damping: 25,
-                                mass: 0.8
+                                duration: 0.18,
+                                ease: [0.23, 1, 0.32, 1],
                               }}
                               className={cn(
-                                "flex items-center gap-3 px-4 py-2.5 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] pointer-events-auto overflow-hidden",
-                                "bg-[#13171D] dark:bg-[#1B2028] border border-white/10 dark:border-[#252B35]",
-                                "rounded-full min-w-[160px] max-w-[90vw] justify-center mt-[env(safe-area-inset-top,0px)]"
+                                "flex items-center gap-3 px-4 py-2.5 shadow-surface-lg pointer-events-auto overflow-hidden",
+                                "bg-[#13171D] dark:bg-[#1B2028] border border-white/12 dark:border-[#252B35]",
+                                "rounded-full min-w-[160px] max-w-[90vw] justify-center mt-[var(--sat,env(safe-area-inset-top,0px))]"
                               )}
                             >
                               <div className="flex-shrink-0">

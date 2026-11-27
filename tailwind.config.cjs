@@ -64,6 +64,14 @@ module.exports = {
   		},
   		boxShadow: {
   			xs: '0 1px 2px 0 rgb(0 0 0 / 0.04)',
+  			'surface-sm': 'var(--shadow-surface-sm)',
+  			'surface-md': 'var(--shadow-surface-md)',
+  			'surface-lg': 'var(--shadow-surface-lg)',
+  		},
+  		transitionTimingFunction: {
+  			'apple-out': 'var(--ease-out)',
+  			'apple-in-out': 'var(--ease-in-out)',
+  			'drawer': 'var(--ease-drawer)',
   		},
   		opacity: {
   			15: '0.15',

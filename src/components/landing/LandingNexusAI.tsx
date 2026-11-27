@@ -40,32 +40,32 @@ export const LandingNexusAI: React.FC = () => {
   ];
 
   return (
-    <section id="nexus" className="py-24 md:py-36 px-4 md:px-6 bg-white border-y border-[#B8E4DC] relative z-20">
+    <section id="nexus" className="py-24 md:py-36 px-4 md:px-6 bg-white dark:bg-[#0E1116] border-y border-[#B8E4DC] dark:border-[#252B35] relative z-20">
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 md:gap-16 items-center">
 
         {/* Left Column: Descriptive Content & Capabilities (6 cols) */}
         <div className="lg:col-span-6 space-y-6 md:space-y-8">
-          <h2 className="text-3xl sm:text-5xl md:text-[3.75rem] font-black tracking-[-0.03em] text-[#0B2420] leading-[1.02]">
+          <h2 className="text-3xl sm:text-5xl md:text-[3.75rem] font-black tracking-[-0.03em] text-[#0B2420] dark:text-[#F1F5F9] leading-[1.02]">
             {t('portal:nexus_intelligence', 'Kepintaran Nexus')} <br />
-            <span className="text-[#0F766E]">{t('portal:empowering_operations', 'Memperkasa Operasi.')}</span>
+            <span className="text-[#0F766E] dark:text-[#2DD4BF]">{t('portal:empowering_operations', 'Memperkasa Operasi.')}</span>
           </h2>
 
-          <p className="text-sm md:text-base text-[#3B635C] font-normal leading-relaxed max-w-xl">
+          <p className="text-sm md:text-base text-[#3B635C] dark:text-[#94A0B2] font-normal leading-relaxed max-w-xl">
             {t(
               'portal:nexus_ai_description',
               'Sistem dipacu LLM untuk menyemak kualiti kertas kerja aktiviti dan merumuskan sentimen mahasiswa secara pintar. Serahkan tugasan analitik kepada kepintaran sistem JPP.'
             )}
           </p>
 
-          <div className="grid grid-cols-2 gap-4 md:gap-5 pt-4 border-t border-[#B8E4DC]/60 mt-6">
+          <div className="grid grid-cols-2 gap-4 md:gap-5 pt-4 border-t border-[#B8E4DC]/60 dark:border-[#252B35] mt-6">
             {aiFeatures.map((f, i) => (
-              <div key={i} className="flex flex-col gap-2 p-3.5 rounded-2xl bg-[#F6FBF9] border border-[#B8E4DC]/70">
-                <div className="w-10 h-10 rounded-xl bg-white border border-[#B8E4DC]/80 flex items-center justify-center text-[#0B2420] shadow-2xs">
-                  <f.icon className="w-5 h-5 text-[#0F766E]" />
+              <div key={i} className="flex flex-col gap-2 p-3.5 rounded-2xl bg-[#F6FBF9] dark:bg-[#13171D] border border-[#B8E4DC]/70 dark:border-[#252B35] shadow-surface-sm">
+                <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#1B2028] border border-[#B8E4DC]/80 dark:border-[#252B35] flex items-center justify-center text-[#0B2420] dark:text-[#F1F5F9] shadow-2xs">
+                  <f.icon className="w-5 h-5 text-[#0F766E] dark:text-[#2DD4BF]" />
                 </div>
                 <div>
-                  <h3 className="text-xs sm:text-sm font-semibold text-[#0B2420]">{f.label}</h3>
-                  <p className="text-[11px] font-medium text-[#3B635C]">{f.desc}</p>
+                  <h3 className="text-xs sm:text-sm font-semibold text-[#0B2420] dark:text-[#F1F5F9]">{f.label}</h3>
+                  <p className="text-[11px] font-medium text-[#3B635C] dark:text-[#94A0B2]">{f.desc}</p>
                 </div>
               </div>
             ))}
@@ -74,8 +74,8 @@ export const LandingNexusAI: React.FC = () => {
 
         {/* Right Column: Double-Bezel Interactive Paperwork Audit Simulation Card (6 cols) */}
         <div className="lg:col-span-6">
-          <div className="rounded-[2.75rem] p-2 bg-[#0B2420]/[0.05] ring-1 ring-[#0B2420]/10">
-            <div className="relative rounded-[2.25rem] bg-[#0B2420] p-6 sm:p-8 text-white shadow-[0_20px_50px_rgba(11,36,32,0.22)] border border-[#1E4D45] overflow-hidden">
+          <div className="rounded-[2.75rem] p-2 bg-[#0B2420]/[0.05] dark:bg-white/[0.03] ring-1 ring-[#0B2420]/10 dark:ring-[#252B35]">
+            <div className="relative rounded-[2.25rem] bg-[#0B2420] dark:bg-[#13171D] p-6 sm:p-8 text-white shadow-surface-lg border border-[#1E4D45] dark:border-[#252B35] overflow-hidden">
               {/* Top Scanning Bar */}
               <div className="flex items-center justify-between pb-5 border-b border-white/10 mb-6">
                 <div className="flex items-center gap-2.5">

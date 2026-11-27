@@ -16,38 +16,38 @@ function LoadingScreen() {
   }, []);
 
   return (
-    <div className="h-screen w-screen flex flex-col items-center justify-center bg-background gap-6 relative">
-      <div className="relative flex flex-col items-center justify-center mb-6 mt-[-5vh]">
-        {/* Logo HZ dengan animasi masuk ala wayang (Cinematic Intro) */}
+    <div className="h-[100dvh] w-screen flex flex-col items-center justify-center bg-background gap-6 relative px-4">
+      <div className="relative flex flex-col items-center justify-center mb-4 mt-[-4vh]">
+        {/* Logo HZ dengan animasi masuk kemas (compositor-only) */}
         <motion.img 
-          initial={{ scale: 0.85, opacity: 0 }}
+          initial={{ scale: 0.94, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }} // smooth spring-like ease out
+          transition={{ duration: 0.24, ease: [0.23, 1, 0.32, 1] }}
           src="/HZ.png?v=2" 
           alt="HZ Infinity" 
-          className="relative z-10 w-[85vw] max-w-[320px] md:max-w-[450px] h-auto object-contain drop-shadow-[0_0_50px_rgba(168,85,247,0.8)]" 
+          className="relative z-10 w-[78vw] max-w-[300px] md:max-w-[400px] h-auto object-contain drop-shadow-[0_14px_28px_rgba(15,118,110,0.2)]" 
         />
       </div>
       
-      {/* Teks branding yang muncul lepas logo (mengelakkan feel "loading") */}
+      {/* Teks branding yang muncul lepas logo */}
       <motion.div 
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.25, duration: 0.4 }}
+        transition={{ delay: 0.08, duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
         className="flex flex-col items-center gap-2 z-10"
       >
-        <h1 className="text-base md:text-lg font-black uppercase tracking-[0.4em] text-black/80 dark:text-white/90 drop-shadow-md text-center pl-1">
+        <h1 className="text-base md:text-lg font-black uppercase tracking-[0.35em] text-foreground text-center pl-1">
           JPP Digital Portal
         </h1>
         
         <div className="flex flex-col items-center gap-1.5 mt-1">
-          <div className="flex items-center gap-2 text-[10px] md:text-xs font-black uppercase tracking-[0.25em] text-black/50 dark:text-white/50">
+          <div className="flex items-center gap-2 text-[10px] md:text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">
             <span>A Digital Experience By</span>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-orange-500 dark:from-purple-400 dark:to-orange-400 drop-shadow-sm font-black">
+            <span className="text-primary font-black">
               JPP Haziq
             </span>
           </div>
-          <p className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-black/30 dark:text-white/30 text-center max-w-[350px] leading-relaxed">
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground/85 text-center max-w-[350px] leading-relaxed">
             {t('nav:exco_kpp_title', '& Exco Kelab, Persatuan Dan Perpaduan')}
           </p>
         </div>

@@ -16,6 +16,7 @@ import { LanguageToggle } from '@/components/ui/LanguageToggle';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { useTranslation } from 'react-i18next';
+import { useEdgeSwipeDrawer } from '@/hooks/useEdgeSwipeDrawer';
 
 
 // Detect exco aktif dari pathname (sama logik dengan Sidebar.tsx)
@@ -49,6 +50,7 @@ export function AppLayout() {
   ];
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  useEdgeSwipeDrawer({ isOpen: isSidebarOpen, onOpen: () => setIsSidebarOpen(true) });
 
   // Detect exco aktif untuk header mobile
   const activeExco = detectExcoFromPath(location.pathname);
@@ -92,15 +94,15 @@ export function AppLayout() {
 
       {/* ── 2. SIDEBAR (RESPONSIVE) ── */}
       <aside className={cn(
-        "fixed inset-y-0 left-0 z-[140] w-72 transform transition-transform duration-300 ease-in-out",
+        "fixed inset-y-0 left-0 z-[140] w-72 transform transition-transform duration-250 ease-drawer overscroll-contain",
         activeExco.id === 'ems' ? "bg-[#061714]" : "bg-[#0B2420]",
         "md:relative md:translate-x-0 md:flex-shrink-0",
-        isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+        isSidebarOpen ? "translate-x-0 shadow-surface-lg" : "-translate-x-full"
       )}>
         {/* Butang Close (X) khas untuk mobile di dalam sidebar */}
-        <div className="md:hidden absolute right-4 top-5">
-          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)} className="rounded-full text-white/50">
-            <X className="w-6 h-6" />
+        <div className="md:hidden absolute right-4 top-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] z-20">
+          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)} aria-label="Tutup menu" className="rounded-full text-white/70 hover:text-white hover:bg-white/10">
+            <X className="w-5 h-5" />
           </Button>
         </div>
 

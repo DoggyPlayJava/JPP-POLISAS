@@ -20,11 +20,11 @@ export const LandingTicker: React.FC<LandingTickerProps> = ({ stats }) => {
 
   const tickerItems = [
     {
-      icon: <Zap className="w-3.5 h-3.5 text-[#0F766E]" />,
+      icon: <Zap className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />,
       text: t('portal:ticker_nexus_ai', 'Nexus AI: Semakan Dokumen & Kertas Kerja Pintar'),
     },
     {
-      icon: <BarChart3 className="w-3.5 h-3.5 text-[#0D9488]" />,
+      icon: <BarChart3 className="w-3.5 h-3.5 text-[#0D9488] dark:text-[#2DD4BF]" />,
       text: t(
         'portal:ticker_keusahawanan',
         `e-Keusahawanan: ${stats.productsCount}+ Produk & ${stats.ordersCount}+ Pesanan PolyMart`,
@@ -32,7 +32,7 @@ export const LandingTicker: React.FC<LandingTickerProps> = ({ stats }) => {
       ),
     },
     {
-      icon: <GraduationCap className="w-3.5 h-3.5 text-[#0B2420]" />,
+      icon: <GraduationCap className="w-3.5 h-3.5 text-[#0B2420] dark:text-[#F1F5F9]" />,
       text: t(
         'portal:ticker_akademik',
         `e-Akademik: ${stats.studentsCount.toLocaleString()}+ Rekod Siswa Sesi 2026/2027`,
@@ -40,7 +40,7 @@ export const LandingTicker: React.FC<LandingTickerProps> = ({ stats }) => {
       ),
     },
     {
-      icon: <Shield className="w-3.5 h-3.5 text-[#0B2420]" />,
+      icon: <Shield className="w-3.5 h-3.5 text-[#0B2420] dark:text-[#F1F5F9]" />,
       text: t(
         'portal:ticker_eaktiviti',
         `e-Aktiviti: ${stats.clubsCount} Kelab Berdaftar & ${stats.activitiesCount} Aktiviti Rasmi`,
@@ -48,11 +48,11 @@ export const LandingTicker: React.FC<LandingTickerProps> = ({ stats }) => {
       ),
     },
     {
-      icon: <ShoppingCart className="w-3.5 h-3.5 text-[#0F766E]" />,
+      icon: <ShoppingCart className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />,
       text: t('portal:ticker_polymart', 'PolyMart: Pasaran Siswa POLISAS • JPP Pay Selamat'),
     },
     {
-      icon: <HeartHandshake className="w-3.5 h-3.5 text-[#0D9488]" />,
+      icon: <HeartHandshake className="w-3.5 h-3.5 text-[#0D9488] dark:text-[#2DD4BF]" />,
       text: t('portal:ticker_kebajikan', 'e-Kebajikan: Pemantauan Kediaman Luar & Kamsis Bersepadu'),
     },
   ];
@@ -60,7 +60,7 @@ export const LandingTicker: React.FC<LandingTickerProps> = ({ stats }) => {
   return (
     <div
       id="ekosistem"
-      className="w-full bg-[#EBF7F4] border-y border-[#B8E4DC] py-3.5 md:py-4 overflow-hidden flex items-center relative z-20 group"
+      className="w-full bg-[#EBF7F4] dark:bg-[#0E1116] border-y border-[#B8E4DC] dark:border-[#252B35] py-3.5 md:py-4 overflow-hidden flex items-center relative z-20 group"
     >
       <motion.div
         animate={{ x: ['0%', '-50%'] }}
@@ -73,12 +73,12 @@ export const LandingTicker: React.FC<LandingTickerProps> = ({ stats }) => {
               <React.Fragment key={`${loopIdx}-${itemIdx}`}>
                 <div className="flex items-center gap-2.5">
                   {item.icon}
-                  <span className="text-[11px] md:text-xs font-bold text-[#0B2420] tracking-tight">
+                  <span className="text-[11px] md:text-xs font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
                     {item.text}
                   </span>
                 </div>
                 <div className="flex items-center px-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#0D9488]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#0D9488] dark:bg-[#2DD4BF]" />
                 </div>
               </React.Fragment>
             ))}

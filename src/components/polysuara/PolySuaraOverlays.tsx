@@ -185,14 +185,14 @@ export function PolySuaraCivicProgress({
                     : 'bg-[#B8E4DC]/50 dark:bg-[#252B35]'
                 )}
               />
-              <div className="flex items-center gap-1">
-                {active && <Check className="w-2.5 h-2.5 text-[#0F766E] dark:text-[#2DD4BF] shrink-0" />}
+              <div className="flex items-start gap-1">
+                {active && <Check className="w-2.5 h-2.5 mt-0.5 text-[#0F766E] dark:text-[#2DD4BF] shrink-0" />}
                 <span
                   className={cn(
-                    'text-[10px] font-semibold truncate',
+                    'text-[10px] font-semibold leading-tight',
                     active
                       ? 'text-[#0B2420] dark:text-[#F1F5F9]'
-                      : 'text-[#3B635C]/70 dark:text-[#94A0B2]/60'
+                      : 'text-[#3B635C]/80 dark:text-[#94A0B2]/75'
                   )}
                 >
                   {st.label}

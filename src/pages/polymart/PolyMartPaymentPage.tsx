@@ -304,7 +304,7 @@ export function PolyMartPaymentPage() {
             className="p-8 rounded-3xl border border-emerald-500/20 bg-emerald-500/5 text-center space-y-4"
           >
             <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto">
-              <CheckCircle className="w-8 h-8 text-emerald-500 animate-bounce" />
+              <CheckCircle className="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div>
               <h2 className="text-lg font-black text-foreground">{t('commerce:receipt_submitted_title', 'Resit Pembayaran Dihantar!')}</h2>

@@ -123,21 +123,21 @@ export function KebajikanLayout() {
       {/* Sidebar container */}
       <div 
         className={cn(
-          "fixed lg:relative z-[140] h-[100dvh] transition-transform duration-300 ease-in-out lg:translate-x-0 w-[280px]",
+          "fixed lg:relative z-[140] h-[100dvh] transition-transform duration-250 ease-drawer lg:translate-x-0 w-[280px] overscroll-contain",
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <KebajikanSidebar />
       </div>
 
-      <main className="flex-1 flex flex-col h-[100dvh] overflow-hidden bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] relative min-w-0 transition-colors">
-        <div className="lg:hidden flex-shrink-0 flex items-center justify-between px-4 min-h-[calc(3.5rem+var(--sat,env(safe-area-inset-top,0px)))] pt-[var(--sat,env(safe-area-inset-top,0px))] border-b border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] relative z-30 transition-colors">
-          <div className="flex items-center gap-2">
+      <main className="flex-1 flex flex-col h-[100dvh] overflow-hidden bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9] relative min-w-0">
+        <div className="lg:hidden flex-shrink-0 flex items-center justify-between gap-2 px-4 min-h-[calc(3.5rem+var(--sat,env(safe-area-inset-top,0px)))] pt-[var(--sat,env(safe-area-inset-top,0px))] border-b border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] relative z-30">
+          <div className="flex items-center gap-2 min-w-0">
 
             {isSubmitOrChatPage ? (
               <Link
                 to="/portal"
-                className="p-2 -ml-2 text-[#3B635C] dark:text-white/70 hover:text-[#0B2420] dark:hover:text-white transition-colors flex items-center gap-1 text-xs font-bold"
+                className="p-2 -ml-2 text-[#3B635C] dark:text-white/70 hover:text-[#0B2420] dark:hover:text-white transition-colors flex items-center gap-1 text-xs font-bold shrink-0"
                 aria-label={t('kebajikan:back_to_portal', 'Kembali ke Portal')}
               >
                 <ChevronLeft className="w-5 h-5" />
@@ -146,18 +146,19 @@ export function KebajikanLayout() {
             ) : (
               <button 
                 onClick={() => setSidebarOpen(true)} 
-                className="tour-mobile-hamburger p-2 -ml-2 text-slate-600 dark:text-white/50 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="tour-mobile-hamburger p-2 -ml-2 text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white transition-colors shrink-0"
+                aria-label="Buka menu"
               >
                 <Menu className="w-5 h-5" />
               </button>
             )}
-            <div className="flex flex-col ml-1">
-              <span className="font-black text-[10px] uppercase tracking-widest text-[#2DD4BF]">{t('module_title')}</span>
-              <span className="text-[8px] font-medium text-slate-400 dark:text-slate-500 hidden sm:inline">{t('module_subtitle')}</span>
+            <div className="flex flex-col ml-0.5 min-w-0">
+              <span className="font-black text-[11px] uppercase tracking-wider text-[#0F766E] dark:text-[#2DD4BF] truncate">{t('module_title')}</span>
+              <span className="text-[10px] font-medium text-[#3B635C] dark:text-[#94A0B2] hidden sm:inline truncate">{t('module_subtitle')}</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={startTour} className="p-2 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-all">
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button onClick={startTour} className="hidden sm:flex p-2 text-slate-500 dark:text-[#94A0B2] hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 rounded-xl transition-colors" aria-label="Panduan">
               <HelpCircle className="w-4 h-4" />
             </button>
             <LanguageToggle />
@@ -167,7 +168,7 @@ export function KebajikanLayout() {
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 overflow-y-auto after:content-[''] after:block after:h-40 after:shrink-0">
+        <div className="flex-1 overflow-y-auto overscroll-contain after:content-[''] after:block after:h-40 after:shrink-0">
           <Outlet />
         </div>
 

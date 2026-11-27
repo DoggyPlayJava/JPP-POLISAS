@@ -869,7 +869,7 @@ export function SettingsPage() {
             </div>
           </div>
 
-          <span className="bg-[#0F766E]/10 dark:bg-[#14B8A6]/15 text-[#0F172A] dark:text-[#F1F5F9] border border-[#0F766E]/25 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full">
+          <span className="bg-[#0F766E]/10 dark:bg-[#14B8A6]/15 text-[#0F766E] dark:text-[#2DD4BF] border border-[#0F766E]/25 text-[10px] font-black uppercase tracking-wider px-3 py-1 rounded-full whitespace-nowrap shrink-0">
             PORTAL POLISAS
           </span>
         </div>
@@ -1022,7 +1022,7 @@ export function SettingsPage() {
                         type="button"
                         onClick={handleUpdateProfile}
                         disabled={loading || (fullName === profile?.full_name && phone === profile?.phone && email === user?.email)}
-                        className="h-11 px-6 rounded-2xl font-black text-xs bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#0D9488] dark:hover:bg-[#14B8A6] text-white shadow-xs active:scale-95 transition-all min-h-[44px]"
+                        className="h-11 px-6 rounded-2xl font-black text-xs bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#090B0E] disabled:opacity-70 dark:disabled:bg-[#1B2028] dark:disabled:text-[#94A0B2] dark:disabled:border dark:disabled:border-[#252B35] shadow-surface-sm min-h-[44px]"
                       >
                         {loading ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />{t('common:saving', 'Menyimpan...')}</> : t('settings:save_changes', 'Simpan Profil')}
                       </Button>

@@ -12,6 +12,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { CreateJobModal } from '@/components/polytask/CreateJobModal';
 
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import { useEdgeSwipeDrawer } from '@/hooks/useEdgeSwipeDrawer';
 
 export function PolyTaskLayout() {
   const { t } = useTranslation(['gig', 'portal', 'common']);
@@ -22,6 +23,7 @@ export function PolyTaskLayout() {
   const isDark = theme === 'dark';
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  useEdgeSwipeDrawer({ isOpen: isSidebarOpen, onOpen: () => setIsSidebarOpen(true) });
 
   const NAV_LINKS = [
     { name: t('gig:find_tasks', 'Cari Kerja'), path: '/polytask', icon: Briefcase },
@@ -78,20 +80,20 @@ export function PolyTaskLayout() {
       {/* Sidebar (Responsive) */}
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-[140] md:z-30 w-72 transform transition-transform duration-300 ease-in-out h-[100dvh] flex flex-col border-r border-teal-400/15 dark:border-[#252B35] text-[#F1F5F9]",
+          "fixed inset-y-0 left-0 z-[140] md:z-30 w-72 transform transition-transform duration-250 ease-drawer h-[100dvh] flex flex-col border-r border-teal-400/15 dark:border-[#252B35] text-[#F1F5F9] overscroll-contain",
           "md:relative md:translate-x-0 md:flex-shrink-0 md:w-64 md:sticky md:top-0",
-          isSidebarOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
+          isSidebarOpen ? "translate-x-0 shadow-surface-lg" : "-translate-x-full"
         )}
         style={{ background: isDark ? 'linear-gradient(180deg, #0E1116 0%, #090B0E 100%)' : 'linear-gradient(180deg, #0B2420 0%, #061714 100%)' }}
       >
         {/* Mobile Close Button */}
-        <div className="md:hidden absolute right-4 top-5">
-          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)} className="rounded-full text-[#99CBC2] hover:text-white">
-            <X className="w-6 h-6" />
+        <div className="md:hidden absolute right-4 top-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] z-20">
+          <Button variant="ghost" size="icon" onClick={() => setIsSidebarOpen(false)} aria-label="Tutup menu" className="rounded-full text-[#99CBC2] hover:text-white hover:bg-white/10">
+            <X className="w-5 h-5" />
           </Button>
         </div>
 
-        <div className="p-6">
+        <div className="p-6 pt-[calc(1.5rem+var(--sat,env(safe-area-inset-top,0px)))] md:pt-6">
           <button onClick={() => navigate('/portal')} className="flex items-center text-sm mb-6 transition-colors text-[#99CBC2] hover:text-white">
             <ArrowLeft className="w-4 h-4 mr-2" /> {t('portal:main_portal', 'Portal Utama')}
           </button>
@@ -131,10 +133,7 @@ export function PolyTaskLayout() {
                   <Icon className={cn("w-5 h-5", isActive ? "text-teal-300" : "text-[#99CBC2]/70")} />
                   {link.name}
                   {isActive && (
-                    <motion.div
-                      layoutId="active-indicator"
-                      className="absolute left-0 w-1 h-8 bg-teal-400 rounded-r-full"
-                    />
+                    <span className="absolute left-0 w-1 h-7 bg-teal-400 rounded-r-full" />
                   )}
                 </Link>
               );
@@ -169,11 +168,12 @@ export function PolyTaskLayout() {
       </main>
 
       {/* Mobile Floating Action Button (New Task) */}
-      <div className="md:hidden fixed bottom-[calc(9.25rem+env(safe-area-inset-bottom,0px))] right-4 z-40">
+      <div className="md:hidden fixed bottom-[calc(9.5rem+var(--sab,env(safe-area-inset-bottom,0px)))] right-4 z-40">
         <Button 
           onClick={() => setIsCreateModalOpen(true)}
           size="icon" 
-          className="tour-step-create-mobile w-11 h-11 rounded-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-500 hover:to-violet-500 text-white shadow-[0_10px_25px_rgba(147,51,234,0.4)] border-none"
+          aria-label={t('gig:create_task_btn', 'Cipta Tugasan')}
+          className="tour-step-create-mobile w-11 h-11 rounded-full bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] text-white dark:text-[#090B0E] shadow-surface-lg border border-white/15"
         >
           <PlusCircle className="w-5 h-5" />
         </Button>

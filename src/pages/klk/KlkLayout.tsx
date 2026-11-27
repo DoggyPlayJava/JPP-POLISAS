@@ -12,6 +12,7 @@ import { NotificationBell } from '@/components/ui/NotificationBell';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 import { QrCodeFab } from '@/components/jpp/QrCodeFab';
 import { BottomNav } from '@/components/layout/BottomNav';
+import { useEdgeSwipeDrawer } from '@/hooks/useEdgeSwipeDrawer';
 
 export function KlkLayout() {
   const { t } = useTranslation(['housing', 'common']);
@@ -20,6 +21,7 @@ export function KlkLayout() {
   const isDark = theme === 'dark';
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
+  useEdgeSwipeDrawer({ isOpen: sidebarOpen, onOpen: () => setSidebarOpen(true) });
 
   const klkUnitLinks = [
     { label: t('housing:nav_declaration_form', 'Borang Deklarasi Kediaman'), path: '/klk' },
@@ -78,8 +80,8 @@ export function KlkLayout() {
       {/* Sidebar */}
       <div
         className={cn(
-          'fixed lg:relative z-[140] h-[100dvh] transition-transform duration-300 ease-in-out lg:translate-x-0 w-[280px] flex-shrink-0',
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+          'fixed lg:relative z-[140] h-[100dvh] transition-transform duration-250 ease-drawer lg:translate-x-0 w-[280px] flex-shrink-0 overscroll-contain',
+          sidebarOpen ? 'translate-x-0 shadow-surface-lg' : '-translate-x-full',
         )}
       >
         <KlkSidebar />

@@ -118,7 +118,7 @@ export function LeaderboardPage() {
               >
                 {/* Badge Pangkat */}
                 <div className="absolute top-6 right-6">
-                  {i === 0 && <Trophy className="text-amber-500 w-10 h-10 animate-bounce" />}
+                  {i === 0 && <Trophy className="text-amber-500 w-9 h-9" />}
                   {i === 1 && <Medal className="text-slate-400 w-8 h-8" />}
                   {i === 2 && <Medal className="text-orange-400 w-8 h-8" />}
                 </div>
@@ -127,28 +127,32 @@ export function LeaderboardPage() {
                   <div className="relative">
                     <Avatar className={cn("border-4", i === 0 ? "w-28 h-28 border-primary/20" : "w-20 h-20 border-border")}>
                       <AvatarFallback className={cn("font-black text-primary", i === 0 ? "text-3xl" : "text-xl", medalColors[i])}>
-                        {m.full_name?.[0]}
+                        {(m.full_name?.trim()?.[0] || m.role?.[0] || 'P').toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
                     <div className={cn(
                       "absolute -bottom-2 -right-2 text-white rounded-full flex items-center justify-center font-black text-xs border-2 border-background",
                       "w-8 h-8",
-                      i === 0 ? "bg-amber-500" : i === 1 ? "bg-slate-400" : "bg-orange-500"
+                      i === 0 ? "bg-amber-500" : i === 1 ? "bg-slate-500" : "bg-orange-500"
                     )}>
                       {i + 1}
                     </div>
                   </div>
                   
                   <div className="text-center w-full px-4">
-                    <h3 className="font-black text-xl truncate">{m.full_name}</h3>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate">{m.role}</p>
+                    <h3 className="font-black text-xl truncate text-foreground">
+                      {m.full_name?.trim() || t('akademik:student_member_fallback', 'Ahli Kelab')}
+                    </h3>
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider truncate">
+                      {m.role ? String(m.role).replace(/_/g, ' ') : t('common:member', 'Ahli')}
+                    </p>
                   </div>
 
                   <div className="mt-4 text-center">
-                    <p className={cn("font-black tracking-tighter", i === 0 ? "text-5xl text-primary" : "text-4xl text-primary/80")}>
+                    <p className={cn("font-black tracking-tighter font-mono tabular-nums", i === 0 ? "text-5xl text-primary" : "text-4xl text-primary/85")}>
                       {m.merit || 0}
                     </p>
-                    <p className="text-[10px] font-black opacity-40 uppercase">
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
                       {t('akademik:merit_points_label', 'Mata Merit')}
                     </p>
                   </div>

@@ -157,7 +157,7 @@ export function PolySuaraConfessionCard({
         onToggleReaction(confession.id, 'heart');
       }}
       className={cn(
-        'bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-[0_4px_24px_rgba(11,36,32,0.04)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.35)] rounded-[2rem] p-4 sm:p-6 mb-4 transition-[border-color,box-shadow] duration-200 relative overflow-hidden',
+        'bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-surface-sm rounded-[2rem] p-4 sm:p-6 mb-4 transition-[border-color,box-shadow] duration-200 relative overflow-hidden',
         isTrending && 'border-[#0F766E]/45 dark:border-[#2DD4BF]/40'
       )}
     >
@@ -180,8 +180,8 @@ export function PolySuaraConfessionCard({
           </div>
 
           <div className="flex flex-col min-w-0 flex-1">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <h4 className="text-sm sm:text-base font-bold text-[#0B2420] dark:text-[#F1F5F9] truncate min-w-0">
+            <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+              <h4 className="text-sm sm:text-base font-bold text-[#0B2420] dark:text-[#F1F5F9] leading-snug break-words">
                 {confession.codename || t('services:anon_student', 'Pelajar Anon')}
               </h4>
               <span

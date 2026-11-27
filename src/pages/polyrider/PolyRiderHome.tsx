@@ -363,7 +363,7 @@ export function PolyRiderHome() {
       }
     } catch {
       // GPS denied or unavailable
-      toast(t('gig:gps_denied_manual', 'GPS dinafikan. Sila cari lokasi anda secara manual.'), { icon: '📍', duration: 4000 });
+      toast(t('gig:gps_denied_manual', 'GPS dinafikan. Sila cari lokasi anda secara manual.'), { id: 'polyrider-gps-denied', icon: '📍', duration: 3500 });
     } finally {
       setIsDetectingLocation(false);
     }
@@ -1099,19 +1099,19 @@ export function PolyRiderHome() {
 
   const renderContactJPP = () => {
     if (!klkPhone) return null;
-    let cleanPhone = klkPhone.replace(/\D/g, '');
+    let cleanPhone = String(klkPhone).replace(/\D/g, '');
     if (cleanPhone.startsWith('0')) cleanPhone = '6' + cleanPhone;
     else if (!cleanPhone.startsWith('6')) cleanPhone = '60' + cleanPhone;
 
     return (
-      <div className="fixed bottom-24 right-4 z-50 flex flex-col items-end">
+      <div className="fixed bottom-[calc(5.75rem+var(--sab,env(safe-area-inset-bottom,0px)))] md:bottom-6 left-4 z-50 flex flex-col items-start">
         <AnimatePresence>
           {showContactMenu && (
             <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.9 }}
+              initial={{ opacity: 0, y: 10, scale: 0.94 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10, scale: 0.9 }}
-              className="bg-white dark:bg-zinc-900 border border-slate-200 dark:border-white/10 shadow-2xl rounded-2xl p-2 mb-3 flex flex-col gap-1 w-48 origin-bottom-right"
+              exit={{ opacity: 0, y: 10, scale: 0.94 }}
+              className="bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] shadow-surface-lg rounded-2xl p-2 mb-3 flex flex-col gap-1 w-48 origin-bottom-left"
             >
               <a
                 href={`https://wa.me/601139413699`}
@@ -1334,7 +1334,7 @@ export function PolyRiderHome() {
   // RENDER: BOOKING / BIDDING VIEW
   // -------------------------------------------------------
   return (
-    <div className="max-w-xl mx-auto pb-40 pt-4 px-4 min-h-[100dvh] flex flex-col">
+    <div className="max-w-xl mx-auto pb-40 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] px-4 min-h-[100dvh] flex flex-col">
       {showManageContacts && (
         <SOSContactsManager
           onClose={() => setShowManageContacts(false)}
@@ -1416,7 +1416,7 @@ export function PolyRiderHome() {
       </AnimatePresence>
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between gap-2 mb-6 pt-[var(--sat,env(safe-area-inset-top,0px))]">
         <div>
           <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             PolyRider <Bike className="w-6 h-6 text-amber-500" />
@@ -1953,26 +1953,26 @@ export function PolyRiderHome() {
       <div className="mt-8 mb-4">
         <button
           onClick={() => navigate('/polyrider/rider')}
-          className="w-full relative overflow-hidden bg-slate-900 dark:bg-zinc-800 rounded-[2rem] p-5 text-left shadow-xl shadow-slate-200/50 dark:shadow-none flex items-center justify-between group transition-all hover:scale-[1.02]"
+          className="w-full relative overflow-hidden bg-slate-900 dark:bg-[#13171D] border border-transparent dark:border-[#252B35] rounded-[2rem] p-4 sm:p-5 text-left shadow-surface-md flex items-center justify-between gap-3 group transition-transform duration-150 active:scale-[0.98]"
         >
           <div className="absolute top-0 right-0 w-32 h-full bg-gradient-to-l from-amber-500/10 to-transparent pointer-events-none" />
-          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-500/20 rounded-full  pointer-events-none group-hover:bg-amber-500/30 transition-all" />
+          <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-amber-500/20 rounded-full pointer-events-none group-hover:bg-amber-500/30 transition-colors" />
 
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-amber-600 rounded-[1rem] flex items-center justify-center shadow-inner shadow-amber-300/50">
-              <Bike className="w-6 h-6 text-white" />
+          <div className="relative z-10 flex items-center gap-3.5 min-w-0 flex-1">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 shrink-0 bg-gradient-to-br from-amber-400 to-amber-600 rounded-[1rem] flex items-center justify-center shadow-inner shadow-amber-300/50">
+              <Bike className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
             </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-0.5">
+            <div className="min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-widest text-amber-400 mb-0.5 truncate">
                 {isRegisteredRider ? t('gig:rider_dashboard', 'Dashboard Rider') : t('gig:earn_income', 'Jana Pendapatan')}
               </p>
-              <h3 className="text-white font-black text-base">
+              <h3 className="text-white font-black text-sm sm:text-base leading-snug">
                 {isRegisteredRider ? t('gig:go_to_dashboard', 'Pergi Ke Papan Pemuka') : t('gig:register_rider_driver', 'Daftar Rider / Driver')}
               </h3>
             </div>
           </div>
 
-          <div className="relative z-10 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center  group-hover:bg-white/20 transition-colors">
+          <div className="relative z-10 w-8 h-8 shrink-0 rounded-full bg-white/10 flex items-center justify-center group-hover:bg-white/20 transition-colors">
             <span className="text-white font-bold text-sm">→</span>
           </div>
         </button>
