@@ -8,6 +8,7 @@ import { supabase } from '@/lib/supabase';
 import { uploadFileToDrive, uploadPdfToDrive } from '@/lib/driveUpload';
 import { queryCache } from '@/lib/cache';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import {
   Plus, Pencil, Calendar, MapPin,
   FileText, CheckCircle2, Lock,
@@ -1118,7 +1119,7 @@ function TakwimRasmiTab({ user, profile, selectedClubId, canManage }: any) {
   };
 
   const handleDeleteProgram = async (actId: string) => {
-    if (!window.confirm(t('kpp:confirm_delete_draft_program', 'Padam draf program ini secara kekal? Tindakan ini tidak boleh dibuat semula.'))) return;
+    if (!(await confirmAction(t('kpp:confirm_delete_draft_program', 'Padam draf program ini secara kekal? Tindakan ini tidak boleh dibuat semula.')))) return;
     try {
       setSaving(true);
       const { error } = await supabase

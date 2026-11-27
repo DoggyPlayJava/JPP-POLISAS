@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { formatDistanceToNow } from 'date-fns';
 import { ms, enUS } from 'date-fns/locale';
 import toast from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { Search, Loader2, Trash2, Home, MapPin, ChevronLeft, ShieldCheck, ShieldAlert, EyeOff } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
@@ -46,7 +47,7 @@ export function PolyRentAdmin() {
   };
 
   const handleDeleteMatch = async (id: string) => {
-    if (!window.confirm(t('housing:confirm_delete_listing_perm', 'Padam iklan PolyRent ini secara kekal?'))) return;
+    if (!(await confirmAction(t('housing:confirm_delete_listing_perm', 'Padam iklan PolyRent ini secara kekal?')))) return;
     try {
       const { error } = await supabase.from('polyrent_listings').delete().eq('id', id);
       if (error) throw error;

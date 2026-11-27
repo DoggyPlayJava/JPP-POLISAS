@@ -24,6 +24,7 @@ import {
 } from '@/lib/makmp';
 import { sendNotificationToUser } from '@/lib/notifications';
 import { sendEmail } from '@/lib/email';
+import { confirmAction } from '@/lib/confirmDialog';
 import type { MakmpAwardDefinition } from '@/types';
 
 interface MakmpRankingPanelProps {
@@ -112,13 +113,14 @@ export default function MakmpRankingPanel({
   };
 
   const handleFinalize = async () => {
-    const ok = window.confirm(
-      t(
+    const ok = await confirmAction({
+      description: t(
         'makmp:confirm_finalize_award',
         'Sahkan keputusan untuk "{{awardName}}"?\n\nTindakan ini akan KUNCI ranking dan menghantar notifikasi kepada pemenang (Top 3).',
         { awardName: award.name }
-      )
-    );
+      ),
+      variant: 'warning',
+    });
     if (!ok) return;
     setFinalizing(true);
     setError(null);

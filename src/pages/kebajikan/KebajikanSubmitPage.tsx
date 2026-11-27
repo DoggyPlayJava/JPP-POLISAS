@@ -978,7 +978,7 @@ export function KebajikanSubmitPage() {
         {step === 'SUCCESS' && (
           <motion.div key="success" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="max-w-lg mx-auto px-6 py-16 sm:py-20 text-center">
             <motion.div
-              initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', delay: 0.2 }}
+              initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
               className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-6 bg-emerald-100 dark:bg-emerald-500/15 border-2 border-emerald-500/30"
             >
               <CheckCircle2 className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />

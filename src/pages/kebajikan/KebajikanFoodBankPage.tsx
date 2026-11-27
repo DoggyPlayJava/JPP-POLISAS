@@ -13,6 +13,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { motion, AnimatePresence } from 'framer-motion';
+import { confirmAction } from '@/lib/confirmDialog';
 import { QRCodeSVG } from 'qrcode.react';
 import {
   ShoppingBag,
@@ -795,7 +796,7 @@ export function KebajikanFoodBankPage() {
   // Batalkan Permohonan Aktif
   const handleCancelActiveApp = async (appId: string) => {
     if (!user) return;
-    const confirmed = window.confirm(
+    const confirmed = await confirmAction(
       t('kebajikan:confirm_cancel_foodbank_app', 'Adakah anda pasti ingin membatalkan permohonan Food Bank ini? Tindakan ini tidak boleh diundur.')
     );
     if (!confirmed) return;

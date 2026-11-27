@@ -178,28 +178,30 @@ export function JppSidebar() {
       className="w-72 h-[100dvh] flex flex-col select-none overflow-hidden border-r border-teal-400/15"
       style={{ background: `linear-gradient(180deg, ${bg.top} 0%, ${bg.bottom} 100%)` }}
     >
-      {/* ── Header ─────────────────────────────────────────────────────── */}
+      {/* Header */}
       <div
-        className="flex-shrink-0 flex flex-col border-b border-white/10"
+        className="flex-shrink-0 flex flex-col border-b border-white/10 pt-[var(--sat,env(safe-area-inset-top,0px))] md:pt-0"
       >
         {/* Row 1: Utilities & Navigation */}
-        <div className="flex items-center justify-between px-5 pt-3.5 pb-1">
+        <div className="flex items-center justify-between gap-2 px-4 md:px-5 pt-3.5 pb-1 pr-14 md:pr-5">
           <NavLink
             to="/portal"
-            className="flex items-center gap-2 text-[#99CBC2] hover:text-white transition-colors group"
+            className="flex items-center gap-1.5 min-w-0 text-[#99CBC2] hover:text-white transition-colors group"
           >
-            <ChevronLeft className="w-3.5 h-3.5 transition-transform group-hover:-translate-x-0.5" />
-            <span className="text-[10px] font-black uppercase tracking-[0.25em]">{t('nav:jpp_portal', 'Portal JPP')}</span>
-            <LayoutGrid className="w-3 h-3 ml-0.5" />
+            <ChevronLeft className="w-3.5 h-3.5 shrink-0 transition-transform group-hover:-translate-x-0.5" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] truncate">{t('nav:jpp_portal', 'Portal JPP')}</span>
+            <LayoutGrid className="w-3 h-3 ml-0.5 shrink-0 hidden md:block" />
           </NavLink>
 
-          <div className="flex items-center gap-1">
-            <LanguageToggle />
-            <ThemeToggle />
+          <div className="flex items-center gap-1.5 shrink-0 [&_button]:!text-[#F6FBF9] [&_button]:!bg-white/10 [&_button]:hover:!bg-white/20 [&_button]:!border-white/15">
+            <div className="hidden md:flex items-center gap-1.5">
+              <LanguageToggle />
+              <ThemeToggle />
+            </div>
             {canCustomize && (
               <button
                 onClick={() => setShowPicker(v => !v)}
-                className="p-2 rounded-xl transition-all hover:bg-white/10 text-[#99CBC2] hover:text-white"
+                className="p-2 rounded-xl transition-colors hover:bg-white/15 text-[#F6FBF9]"
                 title={t('jpp:change_theme_color', 'Tukar warna tema')}
               >
                 <Palette className="w-3.5 h-3.5" />
@@ -227,8 +229,8 @@ export function JppSidebar() {
               Politeknik Polisas
             </p>
             <div className="flex items-center gap-1.5 mt-1">
-              <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-teal-400 animate-pulse" />
-              <span className="truncate text-[9px] font-black uppercase tracking-widest text-[#99CBC2]">
+              <div className="shrink-0 w-1.5 h-1.5 rounded-full bg-teal-400" />
+              <span className="truncate text-[10px] font-bold uppercase tracking-widest text-[#99CBC2]">
                 {getCurrentAcademicSession(t)}
               </span>
             </div>
@@ -318,8 +320,8 @@ export function JppSidebar() {
         </div>
       </div>
 
-      {/* ── Navigation ──────────────────────────────────────────────────── */}
-      <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto scrollbar-hide">
+      {/* Navigation */}
+      <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto overscroll-contain scrollbar-hide">
 
         {/* Main nav */}
         <p className="px-3 mb-2 text-[9px] font-black uppercase tracking-[0.3em] text-[#99CBC2]/60 dark:text-[#94A0B2]/60">

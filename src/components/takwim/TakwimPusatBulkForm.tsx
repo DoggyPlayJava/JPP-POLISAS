@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { KALENDAR_AKADEMIK_2026_2027, type KalendarAkademikEntry } from '@/config/takwim-akademik-template';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -81,9 +82,10 @@ export function TakwimPusatBulkForm({ open, onClose, onSuccess, userId, sesi }: 
         .select('id', { count: 'exact', head: true })
         .eq('sesi', sesi).eq('jenis', 'AKADEMIK');
       if (count && count > 0) {
-        const proceed = window.confirm(
-          t('jpp:takwim_bulk_duplicate_confirm', '⚠️ Sudah ada {{count}} entri Akademik untuk sesi {{sesi}}.\n\nTeruskan akan menambah entri baharu (bukan replace).\nAnda pasti?', { count, sesi })
-        );
+        const proceed = await confirmAction({
+          description: t('jpp:takwim_bulk_duplicate_confirm', '⚠️ Sudah ada {{count}} entri Akademik untuk sesi {{sesi}}.\n\nTeruskan akan menambah entri baharu (bukan replace).\nAnda pasti?', { count, sesi }),
+          variant: 'warning',
+        });
         if (!proceed) { setSaving(false); return; }
       }
     } catch { /* skip guard if check fails */ }

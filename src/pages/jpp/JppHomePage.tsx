@@ -34,38 +34,38 @@ function StatCard({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="flex-1 min-w-0 rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.03] hover:border-slate-300 dark:hover:bg-white/[0.06] shadow-sm dark:shadow-none transition-all"
+      transition={{ delay: Math.min(delay * 0.25, 0.08), duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+      className="flex-1 min-w-0 rounded-2xl p-4 border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] hover:border-[#0F766E]/40 dark:hover:border-[#2DD4BF]/30 shadow-surface-sm transition-[border-color,box-shadow] duration-150"
     >
-      <div className="flex items-center justify-between mb-3">
+      <div className="flex items-center justify-between gap-2 mb-3">
         <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center"
-          style={{ background: hexToRgba(color, 0.15) }}
+          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+          style={{ background: hexToRgba(color, 0.14) }}
         >
           <Icon className="w-4 h-4" style={{ color }} />
         </div>
         {subtitle && (
-          <span className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC]/70 dark:border-[#252B35] px-2 py-0.5 rounded-full truncate">
             {subtitle}
           </span>
         )}
       </div>
-      <p className="text-2xl font-black font-mono tabular-nums text-slate-900 dark:text-white leading-none tracking-tight">
+      <p className="text-2xl font-black font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9] leading-none tracking-tight">
         {value}
       </p>
-      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-white/40 mt-1.5">{label}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#3B635C] dark:text-[#94A0B2] mt-1.5">{label}</p>
     </motion.div>
   );
 }
 
 function StatCardSkeleton() {
   return (
-    <div className="flex-1 min-w-0 rounded-2xl p-4 border border-slate-200 dark:border-white/5 bg-white/50 dark:bg-white/[0.02] animate-pulse">
-      <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-white/10 mb-3" />
-      <div className="h-6 w-14 bg-slate-200 dark:bg-white/10 rounded mb-2" />
-      <div className="h-3 w-20 bg-slate-200 dark:bg-white/10 rounded" />
+    <div className="flex-1 min-w-0 rounded-2xl p-4 border border-[#B8E4DC]/70 dark:border-[#252B35] bg-white/70 dark:bg-[#13171D] animate-pulse">
+      <div className="w-9 h-9 rounded-xl bg-slate-200 dark:bg-[#1B2028] mb-3" />
+      <div className="h-6 w-14 bg-slate-200 dark:bg-[#1B2028] rounded mb-2" />
+      <div className="h-3 w-20 bg-slate-200 dark:bg-[#1B2028] rounded" />
     </div>
   );
 }
@@ -106,51 +106,42 @@ function UnitCard({
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ delay: Math.min(delay * 0.25, 0.1), duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
       onClick={() => canOpen && onNavigate(`/jpp/unit/${code.toLowerCase()}`)}
       className={cn(
-        'relative rounded-[1.75rem] border overflow-hidden transition-all duration-500 p-5 shadow-xs dark:shadow-none flex flex-col justify-between',
+        'relative rounded-[1.75rem] border overflow-hidden transition-[border-color,box-shadow,transform] duration-200 p-5 shadow-surface-sm flex flex-col justify-between active:scale-[0.99]',
         canOpen
-          ? 'cursor-pointer border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.03] hover:border-slate-300 dark:hover:border-white/15 hover:shadow-md group'
-          : 'cursor-default bg-slate-50 dark:bg-white/[0.015] border-slate-200 dark:border-white/[0.03] opacity-60'
+          ? 'cursor-pointer border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] hover:border-[#0F766E]/45 dark:hover:border-[#2DD4BF]/40 hover:shadow-surface-md group'
+          : 'cursor-default bg-[#F6FBF9] dark:bg-[#0E1116] border-[#B8E4DC]/50 dark:border-[#252B35]/60 opacity-65'
       )}
       style={{ minHeight: 160 }}
     >
-      {/* Hover gradient */}
-      {canOpen && (
-        <div
-          className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-          style={{ background: `linear-gradient(135deg, ${hexToRgba(cfg.color, 0.08)}, transparent)` }}
-        />
-      )}
-
       <div className="relative z-10 flex flex-col h-full gap-4">
         <div className="flex items-start justify-between">
           {/* Icon */}
           <div
-            className="w-11 h-11 rounded-2xl flex items-center justify-center transition-transform duration-500 group-hover:scale-110"
-            style={{ background: hexToRgba(cfg.color, 0.15), border: `1px solid ${hexToRgba(cfg.color, 0.2)}` }}
+            className="w-11 h-11 rounded-2xl flex items-center justify-center transition-transform duration-200 group-hover:scale-105 bg-[#0B2420] dark:bg-[#1B2028] border border-[#B8E4DC]/30 dark:border-[#252B35]"
           >
             {isLocked
-              ? <Lock className="w-4 h-4 text-slate-400 dark:text-white/20" />
+              ? <Lock className="w-4 h-4 text-slate-400 dark:text-[#94A0B2]" />
               : <cfg.icon className="w-5 h-5" style={{ color: cfg.color }} />
             }
           </div>
 
           {/* Status badge */}
           <div className={cn(
-            'px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border',
+            'px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border',
             cfg.isActive && !isLocked
-              ? 'bg-emerald-500/10 dark:bg-emerald-500/15 border-emerald-500/20 dark:border-emerald-500/25 text-emerald-600 dark:text-emerald-400'
+              ? 'bg-[#EBF7F4] dark:bg-emerald-500/15 border-[#B8E4DC] dark:border-emerald-500/25 text-[#0F766E] dark:text-emerald-400'
               : cfg.isActive
-                ? 'bg-blue-500/10 border-blue-500/20 dark:border-blue-500/15 text-blue-600 dark:text-blue-400'
-                : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-400 dark:text-white/25'
+                ? 'bg-blue-50 dark:bg-blue-500/10 border-blue-200 dark:border-blue-500/20 text-blue-700 dark:text-blue-400'
+                : 'bg-slate-100 dark:bg-[#1B2028] border-slate-200 dark:border-[#252B35] text-slate-600 dark:text-[#94A0B2]'
           )}>
             {!cfg.isActive ? t('jpp:home_status_coming_soon', 'Akan Datang') : isLocked ? t('jpp:home_status_monitor', 'Pantau') : (
-              <span className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 dark:bg-emerald-400 animate-pulse" />
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#0F766E] dark:bg-emerald-400" />
                 {t('jpp:home_status_active', 'Aktif')}
               </span>
             )}
@@ -160,27 +151,26 @@ function UnitCard({
         <div className="flex-1">
           <h3 className={cn(
             'font-black text-base leading-tight',
-            canOpen ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-white/40'
+            canOpen ? 'text-[#0B2420] dark:text-[#F1F5F9]' : 'text-[#3B635C] dark:text-[#94A0B2]'
           )}>
             {unitTitle}
           </h3>
-          <p className="text-[11px] text-slate-500 dark:text-white/35 mt-0.5 leading-relaxed line-clamp-2">
+          <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-1 leading-relaxed line-clamp-2">
             {cfg.fullLabel}
           </p>
         </div>
 
         {unitMetric && (
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/5 text-[10px] font-bold text-slate-600 dark:text-white/60 w-fit">
-            <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: cfg.color }} />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F6FBF9] dark:bg-[#1B2028] border border-[#B8E4DC]/70 dark:border-[#252B35] text-[10px] font-bold text-[#0B2420] dark:text-[#F1F5F9] w-fit">
+            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: cfg.color }} />
             {unitMetric}
           </div>
         )}
 
         {canOpen && (
-          <div className="mt-auto pt-1 flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-all duration-300 group-hover:gap-3"
-            style={{ color: cfg.color }}>
+          <div className="mt-auto pt-1 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-[#0F766E] dark:text-[#2DD4BF] transition-colors">
             <span>{t('jpp:home_btn_open_module', 'Buka Modul')}</span>
-            <ArrowUpRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+            <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
         )}
       </div>
@@ -364,56 +354,56 @@ export function JppHomePage() {
         </motion.div>
 
         {/* ── Server Health & System Vitals ───────────────────────────── */}
-        <div className="rounded-2xl border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.02] p-5 shadow-xs dark:shadow-none">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-100 dark:border-white/5 pb-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <h2 className="text-xs font-black uppercase tracking-[0.2em] text-slate-700 dark:text-white/80">
+        <div className="rounded-2xl border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] p-5 shadow-surface-sm">
+          <div className="flex items-center justify-between gap-2 mb-4 border-b border-[#B8E4DC]/60 dark:border-[#252B35] pb-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+              <h2 className="text-xs font-black uppercase tracking-[0.18em] text-[#0B2420] dark:text-[#F1F5F9] truncate">
                 {t('jpp:server_health')}
               </h2>
             </div>
-            <span className="text-[10px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+            <span className="text-[10px] font-mono font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] px-2.5 py-0.5 rounded-full border border-[#B8E4DC] dark:border-[#252B35] whitespace-nowrap shrink-0">
               99.98% ONLINE
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04]">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-blue-500/10 text-blue-600 dark:text-blue-400">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/60 dark:border-[#252B35]">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-blue-500/10 text-blue-700 dark:text-blue-400">
                 <Users className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40">
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
                   {t('jpp:total_students')}
                 </p>
-                <p className="text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
+                <p className="text-lg font-black font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9]">
                   {isLoadingData ? '—' : stats.totalStudents.toLocaleString()}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04]">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-600 dark:text-amber-400">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/60 dark:border-[#252B35]">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-700 dark:text-amber-400">
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40">
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
                   {t('jpp:total_staff')}
                 </p>
-                <p className="text-lg font-black font-mono tabular-nums text-slate-900 dark:text-white">
+                <p className="text-lg font-black font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9]">
                   {isLoadingData ? '—' : stats.totalStaff.toLocaleString()}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-100 dark:border-white/[0.04]">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-purple-500/10 text-purple-600 dark:text-purple-400">
+            <div className="flex items-center gap-3 p-3 rounded-xl bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/60 dark:border-[#252B35]">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-teal-500/10 text-[#0F766E] dark:text-[#2DD4BF]">
                 <CalendarDays className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40">
+                <p className="text-[10px] font-black uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
                   {t('jpp:active_sessions')}
                 </p>
-                <p className="text-sm font-black text-slate-900 dark:text-white truncate">
+                <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9] truncate">
                   Sesi I 2026/2027
                 </p>
               </div>

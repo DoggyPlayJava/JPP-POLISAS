@@ -77,13 +77,13 @@ export function ConfirmDialog({
 
   return (
     <AlertDialog open={isDialogOpen} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="rounded-3xl border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] p-6 shadow-2xl max-w-md">
+      <AlertDialogContent className="w-[calc(100%-2rem)] rounded-3xl border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] p-6 shadow-surface-lg max-w-md overscroll-contain">
         <AlertDialogHeader className="space-y-2">
-          <AlertDialogTitle className="text-lg font-bold text-slate-900 dark:text-white">
+          <AlertDialogTitle className="text-lg font-bold text-[#0B2420] dark:text-[#F1F5F9]">
             {title}
           </AlertDialogTitle>
           {description && (
-            <AlertDialogDescription className="text-sm text-slate-600 dark:text-white/70 leading-relaxed">
+            <AlertDialogDescription className="text-sm text-[#3B635C] dark:text-[#94A0B2] leading-relaxed whitespace-pre-line">
               {description}
             </AlertDialogDescription>
           )}
@@ -92,7 +92,7 @@ export function ConfirmDialog({
           <AlertDialogCancel
             disabled={isLoading}
             onClick={handleCancel}
-            className="rounded-xl border border-slate-200 dark:border-white/10 bg-transparent text-slate-700 dark:text-white/70 hover:bg-slate-100 dark:hover:bg-white/5 font-medium px-4 py-2 text-xs"
+            className="rounded-xl border border-[#B8E4DC] dark:border-[#252B35] bg-transparent text-[#0B2420] dark:text-[#F1F5F9] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] font-semibold px-4 py-2 text-xs transition-colors"
           >
             {resolvedCancelLabel}
           </AlertDialogCancel>
@@ -100,12 +100,12 @@ export function ConfirmDialog({
             disabled={isLoading}
             onClick={handleConfirm}
             className={cn(
-              "rounded-xl font-bold px-4 py-2 text-xs shadow-md transition-all active:scale-95 flex items-center gap-1.5",
+              "rounded-xl font-bold px-4 py-2 text-xs shadow-surface-sm transition-[transform,background-color] duration-150 ease-apple-out active:scale-[0.97] flex items-center gap-1.5",
               isDestructive
-                ? "bg-rose-600 hover:bg-rose-700 text-white shadow-rose-600/20"
+                ? "bg-rose-600 hover:bg-rose-700 text-white"
                 : isWarning
-                ? "bg-amber-600 hover:bg-amber-700 text-white shadow-amber-600/20"
-                : "bg-emerald-600 hover:bg-emerald-700 text-white shadow-emerald-600/20"
+                ? "bg-amber-600 hover:bg-amber-700 text-white"
+                : "bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] text-white dark:text-[#090B0E]"
             )}
           >
             {isLoading && <Loader2 className="w-3.5 h-3.5 animate-spin" />}

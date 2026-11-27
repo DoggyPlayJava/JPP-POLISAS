@@ -602,9 +602,9 @@ export function ProductVariationBottomSheet({
               exit={{ opacity: 0, y: 10, x: '-50%' }}
               className="absolute bottom-[130px] left-1/2 z-20 pointer-events-none"
             >
-              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500 text-white text-[10px] font-black shadow-lg shadow-amber-500/20  animate-bounce">
+              <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-amber-500 text-white text-[10px] font-black shadow-lg shadow-amber-500/20">
                 <span>{t('commerce:scroll_down', 'Skrol ke bawah')}</span>
-                <ChevronDown className="w-3 h-3 animate-pulse" />
+                <ChevronDown className="w-3 h-3" />
               </div>
             </motion.div>
           )}

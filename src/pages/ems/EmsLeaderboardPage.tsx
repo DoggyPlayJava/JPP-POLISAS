@@ -539,7 +539,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
   if (!event) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white p-6 transition-colors">
-        <AlertTriangle className="w-16 h-16 text-rose-500 mb-4 animate-bounce" />
+        <AlertTriangle className="w-16 h-16 text-rose-500 mb-4" />
         <h2 className="text-2xl font-black mb-2">{t('live_leaderboard')}</h2>
         <p className="text-sm text-slate-600 dark:text-slate-400 mb-6">{t('stage_presentation')}</p>
         <button
@@ -914,7 +914,7 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                       <div className="absolute top-0 inset-x-0 h-2 bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-500 animate-pulse" />
 
                       {/* Crown / Trophy icon */}
-                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-b from-amber-500/20 to-amber-500/5 dark:from-amber-500/30 dark:to-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 dark:border-amber-400/50 mb-4 shadow-inner dark:shadow-[0_0_30px_rgba(245,158,11,0.4)] animate-bounce">
+                      <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-b from-amber-500/20 to-amber-500/5 dark:from-amber-500/30 dark:to-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30 dark:border-amber-400/50 mb-4 shadow-inner">
                         <Trophy className="w-12 h-12" />
                       </div>
 
@@ -1124,52 +1124,55 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
       </div>
 
       {/* Main View Mode Navigation Tabs */}
-      <div className="flex items-center gap-2 p-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm overflow-x-auto">
-        <button
-          onClick={() => {
-            setActiveTab('LEADERBOARD');
-            setSearchParams({});
-          }}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition ${
-            activeTab === 'LEADERBOARD'
-              ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <Trophy className={`w-4 h-4 ${activeTab === 'LEADERBOARD' ? 'text-slate-950' : 'text-amber-400'}`} />
-          {t('live_leaderboard')}
-        </button>
-
-        <button
-          onClick={() => {
-            window.open(`/ems/stage/${eventId}`, '_blank');
-          }}
-          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition ${
-            activeTab === 'STAGE'
-              ? 'bg-amber-500 text-slate-950 shadow-md'
-              : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
-          }`}
-        >
-          <ExternalLink className="w-4 h-4 text-amber-500" />
-          {t('stage_presentation')}
-        </button>
-
-        {canAccessAuditTab && (
+      <div className="relative">
+        <div className="flex items-center gap-2 p-1.5 bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl shadow-surface-sm overflow-x-auto scrollbar-hide">
           <button
             onClick={() => {
-              setActiveTab('AUDIT');
-              setSearchParams({ tab: 'audit' });
+              setActiveTab('LEADERBOARD');
+              setSearchParams({});
             }}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition ${
-              activeTab === 'AUDIT'
-                ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/20'
-                : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-colors whitespace-nowrap shrink-0 ${
+              activeTab === 'LEADERBOARD'
+                ? 'bg-amber-500 text-slate-950 shadow-surface-sm'
+                : 'text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028]'
             }`}
           >
-            <Shield className={`w-4 h-4 ${activeTab === 'AUDIT' ? 'text-slate-950' : 'text-amber-500'}`} />
-            {t('ems:leaderboard_tab_audit', 'Audit & Pemantauan Juri')}
+            <Trophy className={`w-4 h-4 shrink-0 ${activeTab === 'LEADERBOARD' ? 'text-slate-950' : 'text-amber-600 dark:text-amber-400'}`} />
+            {t('live_leaderboard')}
           </button>
-        )}
+
+          <button
+            onClick={() => {
+              window.open(`/ems/stage/${eventId}`, '_blank');
+            }}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-colors whitespace-nowrap shrink-0 ${
+              activeTab === 'STAGE'
+                ? 'bg-amber-500 text-slate-950 shadow-surface-sm'
+                : 'text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028]'
+            }`}
+          >
+            <ExternalLink className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400" />
+            {t('stage_presentation')}
+          </button>
+
+          {canAccessAuditTab && (
+            <button
+              onClick={() => {
+                setActiveTab('AUDIT');
+                setSearchParams({ tab: 'audit' });
+              }}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-black text-xs uppercase tracking-wider transition-colors whitespace-nowrap shrink-0 ${
+                activeTab === 'AUDIT'
+                  ? 'bg-amber-500 text-slate-950 shadow-surface-sm'
+                  : 'text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028]'
+              }`}
+            >
+              <Shield className={`w-4 h-4 shrink-0 ${activeTab === 'AUDIT' ? 'text-slate-950' : 'text-amber-600 dark:text-amber-400'}`} />
+              {t('ems:leaderboard_tab_audit', 'Audit & Pemantauan Juri')}
+            </button>
+          )}
+        </div>
+        <div className="pointer-events-none absolute inset-y-1.5 right-1.5 w-8 rounded-r-xl bg-gradient-to-l from-white dark:from-[#13171D] to-transparent sm:hidden" aria-hidden="true" />
       </div>
 
       {activeTab === 'AUDIT' && canAccessAuditTab ? (
@@ -1187,18 +1190,18 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
           {canManageLeaderboard && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {/* Toggle Public Leaderboard Visibility */}
-              <div className="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex items-center justify-between">
+              <div className="p-5 rounded-2xl bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] shadow-surface-sm flex items-center justify-between gap-3">
                 <div className="space-y-1">
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
                     {t('ems:stage_screen_visibility', 'Visibiliti Skrin Pentas')}
                   </span>
                   <div className="flex items-center gap-2">
                     <span className={`w-2.5 h-2.5 rounded-full ${event.is_leaderboard_public ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-                    <h4 className="text-sm font-black">
+                    <h4 className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9]">
                       {event.is_leaderboard_public ? t('ems:public_status_revealed', 'Status Awam: Didedahkan') : t('ems:public_status_hidden', 'Status Awam: Disembunyikan')}
                     </h4>
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2]">
                     {event.is_leaderboard_public
                       ? t('ems:stage_displays_rankings', 'Skrin pentas memaparkan kedudukan & kedudukan terkini peserta.')
                       : t('ems:stage_displays_locked', 'Skrin pentas memaparkan skrin kunci "Keputusan Sedang Diproses".')}
@@ -1208,10 +1211,10 @@ export function EmsLeaderboardPage({ isStageMode: isStageProp }: { isStageMode?:
                 <button
                   onClick={handleToggleVisibility}
                   disabled={togglingVisibility}
-                  className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition shadow-sm shrink-0 flex items-center gap-2 ${
+                  className={`px-4 py-2 rounded-xl font-black text-xs uppercase tracking-wider transition-colors shadow-surface-sm shrink-0 flex items-center gap-2 ${
                     event.is_leaderboard_public
-                      ? 'bg-rose-500/10 text-rose-600 hover:bg-rose-500/20 border border-rose-500/20'
-                      : 'bg-emerald-500 text-white hover:bg-emerald-600 shadow-emerald-500/20'
+                      ? 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-rose-500/25 border border-rose-200 dark:border-rose-500/30'
+                      : 'bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] hover:bg-[#115E59] dark:hover:bg-[#5EEAD4]'
                   }`}
                 >
                   {event.is_leaderboard_public ? (

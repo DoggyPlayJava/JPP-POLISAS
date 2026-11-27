@@ -295,7 +295,7 @@ export function Pannellum360Viewer({
               wrapper.className = cn(
                 'group/pin relative flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-black shadow-xl transition-transform duration-200 hover:scale-110 select-none border whitespace-nowrap -translate-x-1/2 -translate-y-1/2',
                 isHighlighted
-                  ? 'bg-emerald-500 text-slate-950 border-white ring-4 ring-emerald-400/50 animate-bounce'
+                  ? 'bg-emerald-500 text-slate-950 border-white ring-4 ring-emerald-400/50'
                   : hs.pin_type === 'room'
                   ? 'bg-slate-900/90 text-white border-emerald-400/60 hover:bg-emerald-600 hover:border-white'
                   : hs.pin_type === 'scene'

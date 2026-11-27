@@ -122,15 +122,16 @@ export function JppLayout() {
 
       {/* Sidebar */}
       <aside className={[
-        'fixed inset-y-0 left-0 z-[140] w-72 transform transition-transform duration-300 ease-in-out',
+        'fixed inset-y-0 left-0 z-[140] w-72 transform transition-transform duration-250 ease-drawer overscroll-contain',
         'md:relative md:translate-x-0 md:flex-shrink-0',
         isMobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0',
       ].join(' ')}>
         {/* Mobile close button */}
-        <div className="md:hidden absolute right-4 top-5 z-10">
+        <div className="md:hidden absolute right-4 top-[calc(0.875rem+var(--sat,env(safe-area-inset-top,0px)))] z-10">
           <button
             onClick={() => setIsMobileOpen(false)}
-            className="p-2 rounded-full text-white/40 hover:text-white/70 hover:bg-white/10 transition-all"
+            aria-label={t('common:close', 'Tutup')}
+            className="p-2 rounded-full text-white/75 hover:text-white hover:bg-white/15 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -145,7 +146,8 @@ export function JppLayout() {
         <header className="flex md:hidden items-center justify-between px-4 pb-3 pt-[calc(0.75rem+var(--sat,env(safe-area-inset-top,0px)))] border-b border-[#B8E4DC]/80 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#13171D] sticky top-0 z-50 text-[#0B2420] dark:text-white">
           <button
             onClick={() => setIsMobileOpen(true)}
-            className="p-2 -ml-1 rounded-xl text-[#0B2420]/70 dark:text-white/60 hover:text-[#0B2420] dark:hover:text-white hover:bg-[#0B2420]/5 dark:hover:bg-white/10 transition-all"
+            aria-label={t('common:menu', 'Menu')}
+            className="p-2 -ml-1 rounded-xl text-[#0B2420]/70 dark:text-white/70 hover:text-[#0B2420] dark:hover:text-white hover:bg-[#0B2420]/5 dark:hover:bg-white/10 transition-colors"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -154,7 +156,7 @@ export function JppLayout() {
               <img src="/jpp-logo.png" alt="JPP" className="h-7 object-contain" />
               <span className="text-sm font-black tracking-tight text-[#0B2420] dark:text-white">JPP HQ</span>
             </div>
-            <span className="text-[8px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mt-0.5">
+            <span className="text-[10px] font-bold uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mt-0.5">
               {getCurrentAcademicSession()}
             </span>
           </div>

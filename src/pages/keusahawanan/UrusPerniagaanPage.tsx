@@ -14,6 +14,7 @@ import {
   Award, Copy, FileBadge,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { useTour } from '@/hooks/useTour';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { sendNotificationToUser } from '@/lib/notifications';
@@ -236,7 +237,10 @@ export function UrusPerniagaanPage() {
     const member = members.find(m => m.user_id === transferToId);
     if (!member) return;
 
-    if (!window.confirm(t('commerce:confirm_transfer_ownership', "AMARAN: Adakah anda pasti mahu menyerahkan pemilikan '{{bizName}}' kepada '{{memberName}}'?\n\nTindakan ini TIDAK boleh diundurkan dan anda akan dilucutkan peranan Pemilik secara serta merta.", { bizName: businessData?.name || '', memberName: member.user?.full_name || '' }))) {
+    if (!(await confirmAction({
+      description: t('commerce:confirm_transfer_ownership', "AMARAN: Adakah anda pasti mahu menyerahkan pemilikan '{{bizName}}' kepada '{{memberName}}'?\n\nTindakan ini TIDAK boleh diundurkan dan anda akan dilucutkan peranan Pemilik secara serta merta.", { bizName: businessData?.name || '', memberName: member.user?.full_name || '' }),
+      variant: 'danger',
+    }))) {
       return;
     }
 
@@ -277,7 +281,7 @@ export function UrusPerniagaanPage() {
   };
 
   const handleDeletePromo = async (p: BusinessPromotion) => {
-    if (!window.confirm(t('commerce:confirm_delete_promo', 'Padam promosi "{{code}}"?', { code: p.code }))) return;
+    if (!(await confirmAction(t('commerce:confirm_delete_promo', 'Padam promosi "{{code}}"?', { code: p.code })))) return;
     await pos.deletePromotion(p.id, businessId!, p.code);
     await loadPromotions();
   };
@@ -419,7 +423,7 @@ export function UrusPerniagaanPage() {
   };
 
   const handleRemoveMember = async (memberId: string, userId: string, userName: string) => {
-    if (!window.confirm(t('commerce:confirm_remove_member', 'Buang {{name}} dari perniagaan?', { name: userName }))) return;
+    if (!(await confirmAction(t('commerce:confirm_remove_member', 'Buang {{name}} dari perniagaan?', { name: userName })))) return;
     const { error } = await supabase.from('student_business_memberships').delete().eq('id', memberId);
     if (error) {
       toast.error(t('keusahawanan:toast_member_remove_failed', 'Gagal membuang: {{error}}', { error: error.message }));

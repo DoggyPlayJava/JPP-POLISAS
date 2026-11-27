@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Shield, CheckCircle, XCircle, FileText, MapPin, Plus, Trash2, GripVertical, Eye, EyeOff, Phone, AlertTriangle, Settings, Upload, MessageCircle, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { notifyKLKOnSuspension } from '@/lib/polyRiderNotify';
 import { uploadFileToDrive } from '@/lib/driveUpload';
 import { logAuditAction } from '@/lib/auditLogger';
@@ -335,7 +336,7 @@ export function PolyRiderAdminDashboard() {
   };
 
   const deletePreset = async (id: string) => {
-    if (!window.confirm(t('gig:confirm_delete_preset', 'Padam preset ini?'))) return;
+    if (!(await confirmAction(t('gig:confirm_delete_preset', 'Padam preset ini?')))) return;
     await supabase.from('polyrider_location_presets').delete().eq('id', id);
     toast.success(t('gig:preset_deleted_toast', 'Preset dipadam.'));
     fetchPresets();
@@ -364,7 +365,7 @@ export function PolyRiderAdminDashboard() {
   };
 
   const handleReject = async (id: string) => {
-    if (!window.confirm(t('gig:confirm_reject_rider', 'Pasti untuk tolak pendaftaran ini?'))) return;
+    if (!(await confirmAction(t('gig:confirm_reject_rider', 'Pasti untuk tolak pendaftaran ini?')))) return;
     const { error } = await supabase
       .from('polyrider_profiles')
       .update({ status: 'REJECTED', updated_at: new Date().toISOString() })
@@ -380,7 +381,7 @@ export function PolyRiderAdminDashboard() {
   };
 
   const handleSuspend = async (id: string) => {
-    if (!window.confirm(t('gig:confirm_suspend_rider', 'Pasti untuk gantung rider ini? Mereka tidak akan dapat bertugas.'))) return;
+    if (!(await confirmAction({ description: t('gig:confirm_suspend_rider', 'Pasti untuk gantung rider ini? Mereka tidak akan dapat bertugas.'), variant: 'danger' }))) return;
     const { error } = await supabase
       .from('polyrider_profiles')
       .update({ status: 'SUSPENDED', is_active: false, updated_at: new Date().toISOString() })
@@ -396,7 +397,7 @@ export function PolyRiderAdminDashboard() {
   };
 
   const handleResume = async (id: string) => {
-    if (!window.confirm(t('gig:confirm_resume_rider', 'Pasti untuk sambung tugas rider ini?'))) return;
+    if (!(await confirmAction({ description: t('gig:confirm_resume_rider', 'Pasti untuk sambung tugas rider ini?'), variant: 'warning' }))) return;
     const { error } = await supabase
       .from('polyrider_profiles')
       .update({ status: 'APPROVED', updated_at: new Date().toISOString() })
@@ -477,7 +478,7 @@ export function PolyRiderAdminDashboard() {
           }`}>
           <AlertTriangle className="w-3 h-3" /> {t('gig:tab_sos', 'SOS')}
           {sosAlerts.length > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center animate-bounce">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">
               {sosAlerts.length}
             </span>
           )}
@@ -488,7 +489,7 @@ export function PolyRiderAdminDashboard() {
           }`}>
           <FileText className="w-3 h-3" /> {t('gig:tab_appeals', 'Rayuan')}
           {appeals.filter(a => a.status === 'PENDING').length > 0 && (
-            <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[8px] font-black rounded-full flex items-center justify-center animate-bounce">
+            <span className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 text-white text-[8px] font-black rounded-full flex items-center justify-center">
               {appeals.filter(a => a.status === 'PENDING').length}
             </span>
           )}

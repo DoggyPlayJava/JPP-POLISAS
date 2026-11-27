@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Key, X, Copy, Check, Send, Trash2 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { useTranslation } from 'react-i18next';
 import { supabase } from '@/lib/supabase';
 import { createJuryCode, toggleJuryCodeActive, deleteJuryCode } from '@/lib/ems';
@@ -458,7 +459,7 @@ export function EmsJuryCodeModal({ event, onClose }: EmsJuryCodeModalProps) {
                     <button
                       type="button"
                       onClick={async () => {
-                        if (!window.confirm(t('ems:confirm_delete_jury_code', 'Adakah anda pasti untuk memadam kod juri {{code}}?', { code: j.code })))
+                        if (!(await confirmAction(t('ems:confirm_delete_jury_code', 'Adakah anda pasti untuk memadam kod juri {{code}}?', { code: j.code }))))
                           return;
                         try {
                           await deleteJuryCode(j.id);

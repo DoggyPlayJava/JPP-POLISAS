@@ -9,6 +9,7 @@ import {
   XCircle, Clock, Loader2, FileText, ChevronRight, Settings, Calendar
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { format, parseISO } from 'date-fns';
 import { ms } from 'date-fns/locale';
 
@@ -224,7 +225,7 @@ export function DemeritManager({ sourceOverride }: DemeritManagerProps = {}) {
       ? t('akademik:cohort_archive_confirm_global', 'PERINGATAN: Adakah anda pasti untuk TUTUP KOHORT "{{cohortName}}"?\n\nSEMUA merit pelajar akan di-reset ke 0. Proses ini tidak boleh diundur.', { cohortName })
       : t('akademik:cohort_archive_confirm_pool', 'PERINGATAN: Adakah anda pasti untuk TUTUP KOHORT "{{cohortName}}"?\n\nHanya {{poolLabel}} akan di-reset ke 0. Merit pool lain kekal.', { cohortName, poolLabel });
 
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirmAction({ description: confirmMsg, variant: 'danger' }))) return;
 
     setArchiving(true);
     try {

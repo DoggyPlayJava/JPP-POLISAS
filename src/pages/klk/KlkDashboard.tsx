@@ -470,58 +470,58 @@ export function KlkDashboard() {
       {/* Greeting & Quick Actions */}
       <div className="mb-8 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
         <div>
-          <div className="text-xs font-semibold text-blue-400 uppercase tracking-widest mb-1">
+          <div className="text-xs font-bold text-[#0F766E] dark:text-[#2DD4BF] uppercase tracking-widest mb-1">
             {t('housing:klk_title', 'KLK — Panduan Kediaman Luar Kampus')}
           </div>
-          <motion.h1 initial={{ y: -10, opacity: 0 }} animate={{ y: 0, opacity: 1 }}
-            className="text-3xl font-black text-slate-900 dark:text-slate-50 mb-1 tracking-tight">
+          <motion.h1 initial={{ y: -6, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.18 }}
+            className="text-3xl font-black text-[#0B2420] dark:text-[#F1F5F9] mb-1 tracking-tight">
             {t('housing:greeting_message', 'Selamat {{period}}, {{name}}!', { period: getGreeting(t), name })}
           </motion.h1>
           <div className="flex items-center gap-3 flex-wrap mt-1">
-            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">
+            <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] font-medium">
               {t('housing:klk_title', 'KLK — Panduan Kediaman Luar Kampus')} — {t('housing:academic_year', 'Tahun Akademik')}
             </p>
             <select
               value={selectedYear}
               onChange={e => setSelectedYear(e.target.value)}
-              className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-2.5 py-1 text-xs font-black text-blue-300 cursor-pointer hover:bg-blue-500/20 transition-colors"
+              className="bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] rounded-lg px-2.5 py-1 text-xs font-black text-[#0F766E] dark:text-[#2DD4BF] cursor-pointer hover:bg-[#0F766E]/10 transition-colors"
             >
               {getKlkYearOptions().map(y => (
-                <option key={y} value={y}>{y}</option>
+                <option key={y} value={y} className="bg-white dark:bg-[#13171D] text-[#0B2420] dark:text-[#F1F5F9]">{y}</option>
               ))}
             </select>
           </div>
         </div>
 
-        <div className="flex gap-2">
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }}>
+        <div className="flex flex-wrap gap-2.5">
+          <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.18 }}>
             <Link
               to="/klk/polyrent-admin"
-              className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-teal-500/10 to-teal-500/5 border border-teal-500/20 hover:border-teal-500/40 hover:bg-teal-500/15 transition-all group shadow-lg shadow-teal-500/5"
+              className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-[#13171D] border border-[#B8E4DC] dark:border-[#252B35] hover:border-[#0F766E]/50 dark:hover:border-[#2DD4BF]/40 hover:bg-[#EBF7F4]/60 dark:hover:bg-[#1B2028] transition-[background-color,border-color,box-shadow] duration-150 group shadow-surface-sm"
             >
-              <div className="w-10 h-10 rounded-xl bg-teal-500/20 flex items-center justify-center">
-                <Home className="w-5 h-5 text-teal-400" />
+              <div className="w-10 h-10 rounded-xl bg-[#EBF7F4] dark:bg-[#2DD4BF]/15 border border-[#B8E4DC]/80 dark:border-[#2DD4BF]/25 flex items-center justify-center shrink-0">
+                <Home className="w-5 h-5 text-[#0F766E] dark:text-[#2DD4BF]" />
               </div>
               <div className="text-left">
-                <p className="text-xs font-black text-teal-300 uppercase tracking-widest">
+                <p className="text-xs font-black text-[#0F766E] dark:text-[#2DD4BF] uppercase tracking-wider">
                   {t('housing:browse_rentals', 'Cari Rumah Sewa Disahkan')}
                 </p>
-                <p className="text-[10px] text-teal-400/70 font-medium group-hover:text-teal-400 transition-colors">PolyRent · Moderasi Iklan</p>
+                <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2] font-medium">PolyRent · Moderasi Iklan</p>
               </div>
             </Link>
           </motion.div>
           {/* Quick Setting PolyRider */}
-          <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.15 }}>
+          <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.18, delay: 0.04 }}>
             <Link
               to="/polyrider-admin"
-              className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40 hover:bg-emerald-500/15 transition-all group shadow-lg shadow-emerald-500/5"
+              className="inline-flex items-center gap-3 px-4 py-3 rounded-2xl bg-white dark:bg-[#13171D] border border-emerald-200 dark:border-[#252B35] hover:border-emerald-500/50 dark:hover:border-emerald-400/40 hover:bg-emerald-50/70 dark:hover:bg-[#1B2028] transition-[background-color,border-color,box-shadow] duration-150 group shadow-surface-sm"
             >
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                <Car className="w-5 h-5 text-emerald-400" />
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/25 flex items-center justify-center shrink-0">
+                <Car className="w-5 h-5 text-emerald-700 dark:text-emerald-400" />
               </div>
               <div className="text-left">
-                <p className="text-xs font-black text-emerald-300 uppercase tracking-widest">PolyRider HQ</p>
-                <p className="text-[10px] text-emerald-400/70 font-medium group-hover:text-emerald-400 transition-colors">{t('housing:manage_riders_and_settings', 'Urus Rider & Tetapan')}</p>
+                <p className="text-xs font-black text-emerald-800 dark:text-emerald-300 uppercase tracking-wider">PolyRider HQ</p>
+                <p className="text-[11px] text-emerald-700 dark:text-[#94A0B2] font-medium">{t('housing:manage_riders_and_settings', 'Urus Rider & Tetapan')}</p>
               </div>
             </Link>
           </motion.div>
@@ -531,11 +531,11 @@ export function KlkDashboard() {
       {/* DB Not Ready Banner */}
       {!loading && !dbReady && (
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-          className="mb-8 rounded-2xl p-5 border border-amber-500/20 bg-amber-500/5 flex items-start gap-4">
-          <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+          className="mb-8 rounded-2xl p-5 border border-amber-300 dark:border-amber-500/25 bg-amber-50 dark:bg-amber-500/10 flex items-start gap-4">
+          <AlertTriangle className="w-5 h-5 text-amber-700 dark:text-amber-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-black text-amber-300">{t('housing:db_not_ready', 'Database Sedang Disediakan')}</p>
-            <p className="text-xs text-amber-400/70 mt-1">
+            <p className="text-sm font-black text-amber-900 dark:text-amber-300">{t('housing:db_not_ready', 'Database Sedang Disediakan')}</p>
+            <p className="text-xs text-amber-800 dark:text-amber-200/80 mt-1">
               {t('housing:db_not_ready_desc', 'Jadual {{table}} belum wujud. Migration perlu dijalankan dahulu. Form pelajar sudah boleh digunakan — data akan disimpan bila DB sedia.', { table: 'klk_student_residency' })}
             </p>
           </div>

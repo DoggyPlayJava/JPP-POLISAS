@@ -10,6 +10,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Settings, Save, Clock, Mail, MessageSquare, Trash2, Database, ShieldAlert, Users, Plus, ToggleLeft, ToggleRight } from 'lucide-react';
 import { KEBAJIKAN_THEME_COLOR, KebajikanPic } from '@/types';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
@@ -218,7 +219,7 @@ export function KebajikanSettingsPage() {
 
   const handleRunCleanup = async () => {
     if (!isAllowed) return;
-    if (!window.confirm(t('kebajikan:confirm_run_cleanup', 'Anda pasti? Ini akan MEMADAM GAMBAR daripada {{count}} tiket lama. Rekod tiket TIDAK dipadam.', { count: cleanupPreview?.count ?? 0 }))) return;
+    if (!(await confirmAction({ description: t('kebajikan:confirm_run_cleanup', 'Anda pasti? Ini akan MEMADAM GAMBAR daripada {{count}} tiket lama. Rekod tiket TIDAK dipadam.', { count: cleanupPreview?.count ?? 0 }), variant: 'danger' }))) return;
     setCleaning(true);
     try {
       const cutoff = new Date();

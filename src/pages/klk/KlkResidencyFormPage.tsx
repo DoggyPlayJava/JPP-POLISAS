@@ -353,8 +353,8 @@ export function KlkResidencyFormPage() {
             {step === 'done' && (
               <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="py-8 text-center">
                 <motion.div
-                  initial={{ scale: 0 }} animate={{ scale: 1 }}
-                  transition={{ type: 'spring', delay: 0.1 }}
+                  initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.18 }}
                   className="w-20 h-20 rounded-3xl bg-emerald-500/15 flex items-center justify-center mx-auto mb-5"
                 >
                   <CheckCircle2 className="w-10 h-10 text-emerald-500" />

@@ -12,6 +12,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { queryCache } from '@/lib/cache';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { logAuditAction } from '@/lib/auditLogger';
@@ -793,7 +794,7 @@ export function JppPolyMapsAdmin() {
     if (conflicts.length) {
       const details = conflicts.map((conflict) => { const b = buildings.find((item) => item.id === conflict.building_id); return `• ${b?.code || 'Bangunan'} aras ${conflict.floor_level ?? '1'} · ${conflict.room_code}: ${conflict.panorama_360_url || '(tiada URL)'}`; }).join('\n');
       const message = `Konflik bilik ditemui (${conflicts.length}):\n${details}\n\nTerus simpan dan ganti kaitan untuk bilik ini sahaja?`;
-      if (!window.confirm(message)) return;
+      if (!(await confirmAction({ description: message, variant: 'warning' }))) return;
     }
     setSavingUsage(true);
     try {
@@ -1396,13 +1397,14 @@ export function JppPolyMapsAdmin() {
       </div>
 
       {/* Tabs & Search */}
-      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-slate-100 dark:bg-white/5 p-2 rounded-2xl border border-slate-200 dark:border-white/10">
-        <div className="flex items-center gap-1 w-full md:w-auto p-1 bg-slate-200/80 dark:bg-black/20 rounded-xl overflow-x-auto max-w-full">
+      <div className="flex flex-col gap-3 bg-[#EBF7F4] dark:bg-[#13171D] p-2.5 rounded-2xl border border-[#B8E4DC] dark:border-[#252B35]">
+        <div className="relative w-full max-w-full">
+          <div className="flex items-center gap-1 w-full p-1 bg-white/80 dark:bg-[#0E1116] rounded-xl overflow-x-auto scrollbar-none max-w-full pr-8 lg:pr-1">
           <button
             onClick={() => setActiveTab('buildings')}
             className={cn(
-              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all",
-              activeTab === 'buildings' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-3.5 md:px-4 py-2 rounded-lg font-bold text-sm transition-colors",
+              activeTab === 'buildings' ? "bg-[#0F766E] text-white dark:bg-[#1B2028] dark:text-[#F1F5F9] shadow-surface-sm" : "text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-[#F1F5F9]"
             )}
           >
             <Building2 className="w-4 h-4" /> {t('jpp:polymaps_tab_buildings')}
@@ -1410,8 +1412,8 @@ export function JppPolyMapsAdmin() {
           <button
             onClick={() => setActiveTab('locations')}
             className={cn(
-              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all",
-              activeTab === 'locations' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-3.5 md:px-4 py-2 rounded-lg font-bold text-sm transition-colors",
+              activeTab === 'locations' ? "bg-[#0F766E] text-white dark:bg-[#1B2028] dark:text-[#F1F5F9] shadow-surface-sm" : "text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-[#F1F5F9]"
             )}
           >
             <Navigation className="w-4 h-4" /> {t('jpp:polymaps_tab_locations')}
@@ -1419,13 +1421,13 @@ export function JppPolyMapsAdmin() {
           <button
             onClick={() => setActiveTab('submissions')}
             className={cn(
-              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
-              activeTab === 'submissions' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-3.5 md:px-4 py-2 rounded-lg font-bold text-sm transition-colors relative",
+              activeTab === 'submissions' ? "bg-[#0F766E] text-white dark:bg-[#1B2028] dark:text-[#F1F5F9] shadow-surface-sm" : "text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-[#F1F5F9]"
             )}
           >
             <Camera className="w-4 h-4" /> {t('jpp:polymaps_tab_submissions', 'Sumbangan 360°')}
             {fieldSubmissions.filter(s => s.status === 'pending').length > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-500 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-pulse">
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-black flex items-center justify-center shadow-sm">
                 {fieldSubmissions.filter(s => s.status === 'pending').length}
               </span>
             )}
@@ -1433,8 +1435,8 @@ export function JppPolyMapsAdmin() {
           <button
             onClick={() => setActiveTab('360directory')}
             className={cn(
-              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all",
-              activeTab === '360directory' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-3.5 md:px-4 py-2 rounded-lg font-bold text-sm transition-colors",
+              activeTab === '360directory' ? "bg-[#0F766E] text-white dark:bg-[#1B2028] dark:text-[#F1F5F9] shadow-surface-sm" : "text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-[#F1F5F9]"
             )}
           >
             <Compass className="w-4 h-4" /> 360 Directory
@@ -1442,13 +1444,13 @@ export function JppPolyMapsAdmin() {
           <button
             onClick={() => setActiveTab('reports')}
             className={cn(
-              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
-              activeTab === 'reports' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-3.5 md:px-4 py-2 rounded-lg font-bold text-sm transition-colors relative",
+              activeTab === 'reports' ? "bg-[#0F766E] text-white dark:bg-[#1B2028] dark:text-[#F1F5F9] shadow-surface-sm" : "text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-[#F1F5F9]"
             )}
           >
             <AlertCircle className="w-4 h-4" /> {t('jpp:polymaps_tab_reports')}
             {reports.filter(r => r.status === 'pending').length > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-500 text-white text-[10px] font-black flex items-center justify-center shadow-md animate-pulse">
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center shadow-sm">
                 {reports.filter(r => r.status === 'pending').length}
               </span>
             )}
@@ -1456,14 +1458,16 @@ export function JppPolyMapsAdmin() {
           <button
             onClick={() => setActiveTab('walkways')}
             className={cn(
-              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-4 md:px-6 py-2 rounded-lg font-bold text-sm transition-all relative",
-              activeTab === 'walkways' ? "bg-white text-slate-900 dark:bg-white/10 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-800 dark:text-white/40 dark:hover:text-white/70"
+              "flex-none shrink-0 whitespace-nowrap flex items-center justify-center gap-2 px-3.5 md:px-4 py-2 rounded-lg font-bold text-sm transition-colors relative",
+              activeTab === 'walkways' ? "bg-[#0F766E] text-white dark:bg-[#1B2028] dark:text-[#F1F5F9] shadow-surface-sm" : "text-[#3B635C] hover:text-[#0B2420] dark:text-[#94A0B2] dark:hover:text-[#F1F5F9]"
             )}
           >
             <Map className="w-4 h-4" /> {t('jpp:polymaps_tab_walkways')}
           </button>
+          </div>
+          <div aria-hidden="true" className="pointer-events-none lg:hidden absolute right-0 top-0 bottom-0 w-8 rounded-r-xl bg-gradient-to-l from-[#EBF7F4] dark:from-[#0E1116] to-transparent" />
         </div>
-        <div className="flex flex-col md:flex-row items-center gap-2 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row items-center gap-2 w-full">
           {activeTab === 'buildings' ? (
             <div className="relative w-full md:w-48">
               <input

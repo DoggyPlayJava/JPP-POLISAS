@@ -75,6 +75,12 @@ export function SupsasLayout() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const isAdminRoute = location.pathname.startsWith('/supsas/admin');
+
+  if (isAdminRoute) {
+    return <Outlet />;
+  }
+
   return (
     <div className="min-h-[100dvh] bg-[#050A14] text-white font-sans overflow-x-hidden">
       {/* ── Starfield background ── */}

@@ -129,33 +129,36 @@ export function KeusahawananUnitDashboard() {
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
 
       {/* ── Tabs Navigation ─── */}
-      <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] p-1 rounded-2xl overflow-x-auto relative z-10 w-full scrollbar-hide">
-        <button onClick={() => setActiveMainTab('perniagaan')}
-          className={cn("flex-1 min-w-[140px] flex items-center justify-center gap-2 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all",
-            activeMainTab === 'perniagaan' ? "shadow-sm" : "text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white"
-          )}
-          style={activeMainTab === 'perniagaan' ? { background: color, color: '#fff' } : undefined}>
-          <Store className="w-4 h-4" /> {t('jpp:keusahawanan_tab_businesses', 'Senarai Perniagaan')}
-        </button>
-        <button onClick={() => setActiveMainTab('polymart')}
-          className={cn("flex-1 min-w-[140px] flex items-center justify-center gap-2 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all relative",
-            activeMainTab === 'polymart' ? "shadow-sm" : "text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white"
-          )}
-          style={activeMainTab === 'polymart' ? { background: '#f43f5e', color: '#fff' } : undefined}>
-          <ShoppingBag className="w-4 h-4" /> {t('jpp:keusahawanan_tab_polymart', 'Pengurusan PolyMart')}
-          {pendingReports > 0 && (
-            <span className="absolute top-1.5 right-1.5 w-4 h-4 bg-white text-rose-500 rounded-full flex items-center justify-center text-[8px] font-black pointer-events-none">
-              {pendingReports}
-            </span>
-          )}
-        </button>
-        <button onClick={() => setActiveMainTab('kupon')}
-          className={cn("flex-1 min-w-[140px] flex items-center justify-center gap-2 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all",
-            activeMainTab === 'kupon' ? "shadow-sm" : "text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white"
-          )}
-          style={activeMainTab === 'kupon' ? { background: '#f59e0b', color: '#1e293b' } : undefined}>
-          <Ticket className="w-4 h-4" /> {t('jpp:keusahawanan_tab_coupons', 'Kupon / Voucher')}
-        </button>
+      <div className="relative z-10 w-full">
+        <div className="flex gap-1.5 bg-[#EBF7F4] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] p-1.5 rounded-2xl overflow-x-auto w-full scrollbar-none pr-8 sm:pr-1.5">
+          <button onClick={() => setActiveMainTab('perniagaan')}
+            className={cn("flex-none sm:flex-1 shrink-0 px-4 flex items-center justify-center gap-2 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-colors",
+              activeMainTab === 'perniagaan' ? "shadow-surface-sm" : "text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]"
+            )}
+            style={activeMainTab === 'perniagaan' ? { background: color, color: '#fff' } : undefined}>
+            <Store className="w-4 h-4 shrink-0" /> {t('jpp:keusahawanan_tab_businesses', 'Senarai Perniagaan')}
+          </button>
+          <button onClick={() => setActiveMainTab('polymart')}
+            className={cn("flex-none sm:flex-1 shrink-0 px-4 flex items-center justify-center gap-2 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-colors relative",
+              activeMainTab === 'polymart' ? "shadow-surface-sm" : "text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]"
+            )}
+            style={activeMainTab === 'polymart' ? { background: '#e11d48', color: '#fff' } : undefined}>
+            <ShoppingBag className="w-4 h-4 shrink-0" /> {t('jpp:keusahawanan_tab_polymart', 'Pengurusan PolyMart')}
+            {pendingReports > 0 && (
+              <span className="ml-1 w-4 h-4 bg-white text-rose-600 rounded-full flex items-center justify-center text-[9px] font-black pointer-events-none">
+                {pendingReports}
+              </span>
+            )}
+          </button>
+          <button onClick={() => setActiveMainTab('kupon')}
+            className={cn("flex-none sm:flex-1 shrink-0 px-4 flex items-center justify-center gap-2 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-colors",
+              activeMainTab === 'kupon' ? "shadow-surface-sm" : "text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]"
+            )}
+            style={activeMainTab === 'kupon' ? { background: '#f59e0b', color: '#0B2420' } : undefined}>
+            <Ticket className="w-4 h-4 shrink-0" /> {t('jpp:keusahawanan_tab_coupons', 'Kupon / Voucher')}
+          </button>
+        </div>
+        <div aria-hidden="true" className="pointer-events-none sm:hidden absolute right-0 top-0 bottom-0 w-8 rounded-r-2xl bg-gradient-to-l from-[#EBF7F4] dark:from-[#0E1116] to-transparent" />
       </div>
 
       <AnimatePresence mode="wait">

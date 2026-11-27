@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { type BusinessProduct, type CostItem, type ProductVariation } from '@/types';
 import toast from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { useTour } from '@/hooks/useTour';
 import { SystemTour } from '@/components/ui/SystemTour';
 import { useTranslation } from 'react-i18next';
@@ -806,7 +807,7 @@ export function PosProductPage() {
   };
 
   const handleDelete = async (p: BusinessProduct) => {
-    if (!window.confirm(t('commerce:confirm_delete_product', 'Padam "{{name}}"? Tindakan ini tidak boleh diundur.', { name: p.name }))) return;
+    if (!(await confirmAction(t('commerce:confirm_delete_product', 'Padam "{{name}}"? Tindakan ini tidak boleh diundur.', { name: p.name })))) return;
     if (businessId) await pos.deleteProduct(p.id, businessId, p.name);
   };
 

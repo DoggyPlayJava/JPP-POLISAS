@@ -39,10 +39,10 @@ export function PromoPage() {
   }, []);
 
   return (
-    <div className="h-screen w-screen bg-[#000000] text-white overflow-hidden relative cursor-none select-none font-sans" style={{ perspective: "2000px", transformStyle: "preserve-3d" }}>
+    <div className="h-[100dvh] w-screen bg-[#090B0E] text-white overflow-hidden relative select-none font-sans" style={{ perspective: "2000px", transformStyle: "preserve-3d" }}>
       
-      {/* KESAN ZARAH DEBU SINEMATIK */}
-      <AmbientDust />
+      {/* SUBTLE STATIC TEXTURE (zero infinite particle loops) */}
+      <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:32px_32px] opacity-30 pointer-events-none z-0" />
 
       {/* Scene Container */}
       <div className="absolute inset-0 z-10 flex items-center justify-center" style={{ transformStyle: "preserve-3d" }}>
@@ -61,47 +61,11 @@ export function PromoPage() {
       {/* Hidden Dev Navigation */}
       <button 
         onClick={() => setCurrentScene((prev) => (prev + 1) % sceneDurations.length)}
-        className="absolute bottom-[2vw] right-[2vw] w-[4vw] h-[4vw] rounded-full bg-white/5 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity z-50 cursor-pointer backdrop-blur-md"
+        aria-label="Seterusnya"
+        className="absolute bottom-[calc(1.25rem+var(--sab,env(safe-area-inset-bottom,0px)))] right-5 w-11 h-11 rounded-full bg-white/10 border border-white/15 flex items-center justify-center opacity-70 hover:opacity-100 transition-opacity z-50 cursor-pointer"
       >
-         <ChevronRight className="w-[2vw] h-[2vw] text-white/50" />
+         <ChevronRight className="w-5 h-5 text-white/80" />
       </button>
-    </div>
-  );
-}
-
-// ---------------------------------------------------------
-// EFEK ZARAH (AMBIENT DUST)
-// ---------------------------------------------------------
-function AmbientDust() {
-  const [particles, setParticles] = useState<{id:number, x:number, y:number, size:number, duration:number}[]>([]);
-  
-  useEffect(() => {
-     // Generate random particles once on mount
-     const p = Array.from({length: 40}).map((_, i) => ({
-        id: i,
-        x: Math.random() * 100,
-        y: Math.random() * 100,
-        size: Math.random() * 2 + 0.5,
-        duration: Math.random() * 20 + 15
-     }));
-     setParticles(p);
-  }, []);
-
-  return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {particles.map((p) => (
-        <motion.div
-          key={p.id}
-          className="absolute bg-white rounded-full opacity-20"
-          style={{ width: `${p.size}px`, height: `${p.size}px`, left: `${p.x}vw`, top: `${p.y}vh` }}
-          animate={{
-             y: [null, `${(p.y - 10) % 100}vh`, `${(p.y + 10) % 100}vh`],
-             x: [null, `${(p.x + 5) % 100}vw`, `${(p.x - 5) % 100}vw`],
-             opacity: [0.1, 0.4, 0.1]
-          }}
-          transition={{ duration: p.duration, repeat: Infinity, ease: "linear" }}
-        />
-      ))}
     </div>
   );
 }
@@ -111,35 +75,28 @@ function AmbientDust() {
 // ---------------------------------------------------------
 
 function Scene0Hook() {
-  const [phase, setPhase] = useState(0);
+  const [phase, setPhase] = useState(2);
 
   useEffect(() => {
-    // Dipadatkan kepada 3s supaya tiada dead space
-    const t1 = setTimeout(() => setPhase(1), 500); // Wait 0.5s
-    const t2 = setTimeout(() => setPhase(2), 700); // SYSTEM
-    const t3 = setTimeout(() => setPhase(3), 900); // ONLINE
-    const t4 = setTimeout(() => setPhase(4), 1100); // JPP
-    const t5 = setTimeout(() => setPhase(5), 1300); // DIGITAL
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); };
+    const t3 = setTimeout(() => setPhase(3), 500); // ONLINE
+    const t4 = setTimeout(() => setPhase(4), 1000); // JPP
+    const t5 = setTimeout(() => setPhase(5), 1500); // DIGITAL
+    return () => { clearTimeout(t3); clearTimeout(t4); clearTimeout(t5); };
   }, []);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center bg-black overflow-hidden">
-       {phase === 0 && <motion.div animate={{ scaleX: [0, 1] }} transition={{ duration: 0.5, ease: appleEase }} className="w-[80vw] h-[2px] bg-white" />}
-       {phase === 1 && <motion.div animate={{ scaleY: [1, 500], opacity: [1, 0] }} transition={{ duration: 0.2, ease: "easeOut" }} className="w-[80vw] h-[2px] bg-white" />}
-       
-       <AnimatePresence>
-          {phase === 2 && <motion.h1 key="1" className="text-[18vw] font-black absolute tracking-tighter text-white">SYSTEM</motion.h1>}
-          {phase === 3 && <motion.h1 key="2" className="text-[18vw] font-black absolute tracking-tighter text-indigo-500">ONLINE</motion.h1>}
-          {phase === 4 && <motion.h1 key="3" className="text-[18vw] font-black absolute tracking-tighter text-white">JPP</motion.h1>}
+    <div className="absolute inset-0 flex items-center justify-center bg-[#090B0E] overflow-hidden">
+       <AnimatePresence mode="wait">
+          {phase === 2 && <motion.h1 key="1" initial={{ opacity: 0.9, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="text-[16vw] font-black absolute tracking-tighter text-white">SYSTEM</motion.h1>}
+          {phase === 3 && <motion.h1 key="2" initial={{ opacity: 0.9, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="text-[16vw] font-black absolute tracking-tighter text-[#2DD4BF]">ONLINE</motion.h1>}
+          {phase === 4 && <motion.h1 key="3" initial={{ opacity: 0.9, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="text-[16vw] font-black absolute tracking-tighter text-white">JPP</motion.h1>}
           {phase >= 5 && (
              <motion.h1 
                 key="4"
-                initial={{ scale: 1, opacity: 1, filter: "blur(0px)" }} 
-                animate={{ scale: 6, opacity: 0, filter: "blur(40px)" }} 
-                transition={{ duration: 1.7, ease: appleEase }} 
-                className="text-[18vw] font-black absolute tracking-tighter text-transparent" 
-                style={{ WebkitTextStroke: "4px white" }}
+                initial={{ scale: 0.96, opacity: 1 }} 
+                animate={{ scale: 1.15, opacity: 0 }} 
+                transition={{ duration: 1.2, ease: appleEase }} 
+                className="text-[16vw] font-black absolute tracking-tighter text-[#2DD4BF]" 
              >
                 DIGITAL
              </motion.h1>
@@ -183,11 +140,10 @@ function FastWipe({ problem, solutionMain, solutionSub, color, bgModel }: any) {
                   
                   {/* Floating Unique 3D BG Object */}
                   <motion.div 
-                      initial={{ scale: 0, rotateY: 90, rotateX: -45 }} 
-                      animate={{ scale: 1, rotateY: 0, rotateX: 0 }} 
-                      transition={{ duration: 2.5, ease: "easeOut" }}
-                      className="absolute z-0 opacity-50"
-                      style={{ transformStyle: "preserve-3d" }}
+                      initial={{ scale: 0.92, opacity: 0 }} 
+                      animate={{ scale: 1, opacity: 0.45 }} 
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      className="absolute z-0"
                   >
                      {bgModel}
                   </motion.div>
@@ -337,7 +293,7 @@ function Scene6BreatheDevice() {
               opacity: phase >= 3 ? 0 : phase >= 1 ? 1 : 0
            }}
            transition={{ duration: phase >= 3 ? 2 : 2.5, ease: appleEase }}
-           className="relative w-[70vw] h-[45vw] max-w-[1400px] max-h-[900px] rounded-[3vw] border-[0.3vw] border-white/20 bg-black/60 backdrop-blur-3xl shadow-[0_0_150px_rgba(255,255,255,0.1)] flex items-center justify-center overflow-hidden"
+           className="relative w-[70vw] h-[45vw] max-w-[1400px] max-h-[900px] rounded-[3vw] border-[0.3vw] border-[#252B35] bg-[#13171D]/95 shadow-2xl flex items-center justify-center overflow-hidden"
            style={{ transformStyle: "preserve-3d" }}
         >
             <div className="absolute top-[-50%] left-[-50%] w-[200%] h-[200%] bg-gradient-to-br from-white/10 to-transparent rotate-45 pointer-events-none" />

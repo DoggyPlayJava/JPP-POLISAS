@@ -143,17 +143,17 @@ export function KarnivalVotePage() {
   // ── Success state ──────────────────────────────────────────
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="min-h-[100dvh] flex items-center justify-center p-6">
         <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
+          initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+          transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
           className="max-w-sm w-full text-center space-y-5"
         >
           <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20, delay: 0.1 }}
+            initial={{ scale: 0.92, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
             className="w-24 h-24 rounded-3xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center mx-auto"
           >
             <CheckCircle2 className="w-12 h-12 text-emerald-400" />

@@ -876,7 +876,7 @@ export function EmsCheckinPage() {
                 <div className="bg-gradient-to-br from-amber-50 via-white to-amber-50/50 dark:from-amber-950/90 dark:to-slate-900 border-2 border-amber-500/70 rounded-2xl p-6 shadow-xl space-y-5 animate-in fade-in zoom-in-95 duration-200">
                   <div className="flex items-center justify-between border-b border-amber-500/20 pb-3">
                     <div className="flex items-center gap-2 text-amber-600 dark:text-amber-400 font-bold text-base">
-                      <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400 animate-bounce" />
+                      <AlertTriangle className="w-6 h-6 text-amber-600 dark:text-amber-400" />
                       <span>{t('ems:checkin_duplicate_badge', 'TELAH DISAHKAN KEHADIRAN')}</span>
                     </div>
                     <span className="px-3 py-1 bg-amber-100 dark:bg-amber-500/20 text-amber-700 dark:text-amber-300 rounded-full text-xs font-mono font-bold">

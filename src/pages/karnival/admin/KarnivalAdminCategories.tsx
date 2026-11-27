@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useKarnival } from '@/contexts/KarnivalContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { Plus, Trash2, GripVertical, Loader2, Tag, Save } from 'lucide-react';
 
 const EMOJI_SUGGESTIONS = ['🏆', '🎨', '🌟', '🎪', '🎭', '🖼️', '🏅', '✨', '🎯', '🌈', '🎉', '🔥'];
@@ -61,7 +62,7 @@ export function KarnivalAdminCategories() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(t('karnival:confirm_delete_category', { name, defaultValue: `Padam kategori "${name}"? Semua booth dalam kategori ini akan turut dipadam.` }))) return;
+    if (!(await confirmAction(t('karnival:confirm_delete_category', { name, defaultValue: `Padam kategori "${name}"? Semua booth dalam kategori ini akan turut dipadam.` })))) return;
     setDeleting(id);
     const { error } = await supabase.from('karnival_categories').delete().eq('id', id);
     if (error) toast.error(error.message);

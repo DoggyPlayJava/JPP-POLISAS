@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { sendNotificationToUser } from '@/lib/notifications';
 import {
   Store, CheckCircle, XCircle, Clock, Eye, RefreshCw,
@@ -479,7 +480,7 @@ export function KeusahawananAdminPanel() {
   };
 
   const handleRemoveUnitAdmin = async (adminId: string, userName: string) => {
-    if (!window.confirm(t('keusahawanan:admin_confirm_remove_unit_admin', 'Buang {{name}} dari Unit Keusahawanan?', { name: userName }))) return;
+    if (!(await confirmAction(t('keusahawanan:admin_confirm_remove_unit_admin', 'Buang {{name}} dari Unit Keusahawanan?', { name: userName })))) return;
     await supabase.from('keusahawanan_unit_admins').delete().eq('id', adminId);
     toast.success(t('keusahawanan:admin_toast_officer_removed', '{{name}} dibuang.', { name: userName }));
     fetchUnitAdmins();

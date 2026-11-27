@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlertTriangle } from 'lucide-react';
 import { motion, useAnimation, useMotionValue, useTransform } from 'framer-motion';
+import { confirmAction } from '@/lib/confirmDialog';
 
 interface SwipeToSOSProps {
   onTrigger: () => void;
@@ -58,8 +59,8 @@ export function SwipeToSOS({ onTrigger, disabled = false }: SwipeToSOSProps) {
       // Snap to end
       await controls.start({ x: maxDrag, transition: { duration: 0.2 } });
       
-      // Give users a 5-second countdown to cancel if they want to
-      if (window.confirm(t('gig:sos_confirm_warning', 'AMARAN: Ini adalah panggilan kecemasan. Menyalahgunakan butang SOS dengan niat khianat akan menyebabkan akaun anda DIGANTUNG. Teruskan?'))) {
+      // Give users a confirmation modal to cancel if they want to
+      if (await confirmAction({ description: t('gig:sos_confirm_warning', 'AMARAN: Ini adalah panggilan kecemasan. Menyalahgunakan butang SOS dengan niat khianat akan menyebabkan akaun anda DIGANTUNG. Teruskan?'), variant: 'danger' })) {
         onTrigger();
       } else {
         // Reset if cancelled

@@ -238,59 +238,39 @@ export function JppUnitDashboard() {
           <>
             {/* ── Header ─── */}
             <motion.div
-              initial={{ opacity: 0, y: 18 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
+              transition={{ duration: 0.2 }}
               className="space-y-3"
             >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] p-5 rounded-[2rem] shadow-sm dark:shadow-xl">
-                <div className="flex items-center gap-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] p-5 rounded-[2rem] shadow-surface-sm">
+                <div className="flex items-center gap-4 sm:gap-5">
                   <div
-                    className="w-16 h-16 rounded-[1.5rem] flex items-center justify-center flex-shrink-0 shadow-inner"
-                    style={{
-                      background: hexToRgba(cfg.color, 0.15),
-                      border: `1px solid ${hexToRgba(cfg.color, 0.3)}`,
-                    }}
+                    className="w-14 h-14 sm:w-16 sm:h-16 rounded-[1.5rem] flex items-center justify-center flex-shrink-0 bg-[#0B2420] dark:bg-[#1B2028] border border-[#B8E4DC]/30 dark:border-[#252B35]"
                   >
-                    <cfg.icon className="w-8 h-8 drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]" style={{ color: cfg.color }} />
+                    <cfg.icon className="w-7 h-7 sm:w-8 sm:h-8" style={{ color: cfg.color }} />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span
-                        className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border"
-                        style={{ 
-                          background: hexToRgba(cfg.color, 0.15), 
-                          color: cfg.color, 
-                          borderColor: hexToRgba(cfg.color, 0.3) 
-                        }}
-                      >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                      <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full border border-[#B8E4DC] dark:border-[#252B35] bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF]">
                         {t('jpp:exco_unit_badge', 'Unit Exco')}
                       </span>
-                      <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 flex items-center gap-1.5">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shadow-[0_0_10px_rgba(52,211,153,0.8)]" /> {t('common:active', 'Aktif')}
+                      <span className="text-[10px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-500/15 border border-emerald-200 dark:border-emerald-500/30 text-emerald-700 dark:text-emerald-400 flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 dark:bg-emerald-400" /> {t('common:active', 'Aktif')}
                       </span>
                     </div>
-                    <h1 className="text-[28px] md:text-3xl font-black text-slate-900 dark:text-white leading-none tracking-tight">{cfg.shortLabel}</h1>
-                    <p className="text-xs text-slate-600 dark:text-white/40 mt-1.5 font-medium">{cfg.fullLabel}</p>
+                    <h1 className="text-2xl md:text-3xl font-black text-[#0B2420] dark:text-[#F1F5F9] leading-tight tracking-tight">{cfg.shortLabel}</h1>
+                    <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-1 font-medium">{cfg.fullLabel}</p>
                   </div>
                 </div>
 
                 <div className="flex-shrink-0 sm:ml-auto w-full sm:w-auto">
                   <button
                     onClick={() => navigate(cfg.moduleLink)}
-                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-[1.25rem] transition-all group overflow-hidden relative shadow-lg hover:scale-105 active:scale-95"
-                    style={{ 
-                      background: hexToRgba(cfg.color, 0.15), 
-                      border: `1px solid ${hexToRgba(cfg.color, 0.3)}` 
-                    }}
+                    className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-3 rounded-2xl bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] text-white dark:text-[#090B0E] transition-[transform,background-color] duration-150 active:scale-[0.97] shadow-surface-sm cursor-pointer"
                   >
-                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" 
-                      style={{ background: `linear-gradient(to bottom right, ${hexToRgba(cfg.color, 0.4)}, transparent)` }} />
-                    <ExternalLink className="w-4 h-4 relative z-10" style={{ color: cfg.color }} />
-                    <span 
-                      className="text-[11px] font-black uppercase tracking-widest relative z-10"
-                      style={{ color: cfg.color }}
-                    >
+                    <ExternalLink className="w-4 h-4 shrink-0" />
+                    <span className="text-[11px] font-black uppercase tracking-widest">
                       {t('jpp:open_main_module', 'Buka Modul Utama')}
                     </span>
                   </button>
@@ -300,7 +280,7 @@ export function JppUnitDashboard() {
 
             {/* ── Full Unit Dashboard (Semua 9 Unit Exco) ─── */}
             {FULL_DASHBOARD_UNITS.has(upperCode) ? (
-              <div className="bg-white dark:bg-white/[0.02] rounded-2xl border border-slate-200 dark:border-white/[0.06] p-5 sm:p-6 shadow-xs">
+              <div className="bg-white dark:bg-[#13171D] rounded-2xl border border-[#B8E4DC]/80 dark:border-[#252B35] p-4 sm:p-6 shadow-surface-sm">
                 {upperCode === 'KPP' && <KppUnitDashboard />}
                 {upperCode === 'KEUSAHAWANAN' && <KeusahawananUnitDashboard />}
                 {upperCode === 'AKADEMIK' && <AkademikUnitDashboard />}

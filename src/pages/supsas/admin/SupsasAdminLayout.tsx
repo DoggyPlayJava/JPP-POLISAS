@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSupsas } from '@/contexts/SupsasContext';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
+import { useEdgeSwipeDrawer } from '@/hooks/useEdgeSwipeDrawer';
 
 export function SupsasAdminLayout() {
   const { t } = useTranslation(['supsas', 'common']);
@@ -18,6 +19,7 @@ export function SupsasAdminLayout() {
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  useEdgeSwipeDrawer({ isOpen: sidebarOpen, onOpen: () => setSidebarOpen(true) });
 
   const adminNav = [
     { label: t('supsas:admin_nav_overview', 'Gambaran Keseluruhan'), path: '/supsas/admin',          icon: BarChart3, exact: true },
@@ -44,32 +46,33 @@ export function SupsasAdminLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-[#050A14] text-white flex">
+    <div className="min-h-[100dvh] bg-[#090B0E] text-[#F1F5F9] flex">
       {/* Sidebar */}
       <aside className={cn(
-        'fixed inset-y-0 left-0 z-[140] w-64 bg-[#0A1628]/95  border-r border-white/5 flex flex-col transition-transform duration-300',
-        sidebarOpen ? 'translate-x-0' : '-translate-x-full',
+        'fixed inset-y-0 left-0 z-[140] w-64 bg-[#0E1116] border-r border-[#252B35] flex flex-col transition-transform duration-250 ease-drawer overscroll-contain',
+        sidebarOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full',
         'md:translate-x-0 md:static md:flex'
       )}>
         {/* Sidebar header */}
-        <div className="flex items-center gap-3 px-5 py-5 border-b border-white/5">
-          <div className="w-9 h-9 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+        <div className="flex items-center gap-3 px-5 pb-5 pt-[calc(1.25rem+var(--sat,env(safe-area-inset-top,0px)))] md:pt-5 border-b border-[#252B35]">
+          <div className="w-9 h-9 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center shrink-0">
             <Trophy className="w-4 h-4 text-amber-400" />
           </div>
-          <div>
-            <p className="text-sm font-black text-white leading-none">SUPSAS Admin</p>
-            <p className="text-[9px] font-black uppercase tracking-widest text-amber-400/60 mt-0.5">{t('supsas:control_panel', 'Panel Kawalan')}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-black text-[#F1F5F9] leading-none truncate">SUPSAS Admin</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-amber-400 mt-1">{t('supsas:control_panel', 'Panel Kawalan')}</p>
           </div>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="ml-auto md:hidden w-8 h-8 flex items-center justify-center rounded-xl bg-white/5 text-white/40"
+            aria-label={t('common:close', 'Tutup')}
+            className="ml-auto md:hidden w-8 h-8 flex items-center justify-center rounded-xl bg-[#1B2028] text-[#94A0B2] hover:text-white transition-colors"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto overscroll-contain">
           {adminNav.map((item) => {
             const active = item.exact
               ? location.pathname === item.path
@@ -81,10 +84,10 @@ export function SupsasAdminLayout() {
                 key={item.path}
                 onClick={() => { navigate(item.path); setSidebarOpen(false); }}
                 className={cn(
-                  'w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black transition-all text-left',
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold transition-colors text-left',
                   isActive
-                    ? 'bg-amber-500/15 border border-amber-500/25 text-amber-400'
-                    : 'text-white/40 hover:text-white hover:bg-white/5'
+                    ? 'bg-amber-500/15 border border-amber-500/30 text-amber-300 font-black'
+                    : 'text-[#94A0B2] hover:text-[#F1F5F9] hover:bg-[#1B2028]'
                 )}
               >
                 <item.icon className="w-4 h-4 flex-shrink-0" />
@@ -96,10 +99,10 @@ export function SupsasAdminLayout() {
         </nav>
 
         {/* Back to SUPSAS */}
-        <div className="px-3 py-4 border-t border-white/5">
+        <div className="px-3 py-4 border-t border-[#252B35]">
           <button
             onClick={() => navigate('/supsas')}
-            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-black text-white/30 hover:text-white hover:bg-white/5 transition-all"
+            className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-bold text-[#94A0B2] hover:text-[#F1F5F9] hover:bg-[#1B2028] transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             {t('supsas:back_to_supsas', 'Kembali ke SUPSAS')}
@@ -112,8 +115,9 @@ export function SupsasAdminLayout() {
         {sidebarOpen && (
           <motion.div
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            transition={{ duration: 0.18 }}
             onClick={() => setSidebarOpen(false)}
-            className="fixed inset-0 bg-black/60 z-[130] md:hidden"
+            className="fixed inset-0 bg-black/70 z-[130] md:hidden"
           />
         )}
       </AnimatePresence>
@@ -121,17 +125,18 @@ export function SupsasAdminLayout() {
       {/* Main */}
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Top bar (mobile) */}
-        <div className="md:hidden flex items-center gap-3 px-4 pb-4 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] border-b border-white/5 bg-[#050A14]/95 sticky top-0 z-30">
+        <div className="md:hidden flex items-center gap-3 px-4 pb-3.5 pt-[calc(0.875rem+var(--sat,env(safe-area-inset-top,0px)))] border-b border-[#252B35] bg-[#0E1116] sticky top-0 z-30">
           <button
             onClick={() => setSidebarOpen(true)}
-            className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 border border-white/10 text-white"
+            aria-label={t('common:menu', 'Menu')}
+            className="w-9 h-9 flex items-center justify-center rounded-xl bg-[#1B2028] border border-[#252B35] text-[#F1F5F9]"
           >
             <Menu className="w-4 h-4" />
           </button>
-          <div className="w-8 h-8 rounded-xl bg-amber-500/20 border border-amber-500/30 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
             <Trophy className="w-4 h-4 text-amber-400" />
           </div>
-          <span className="font-black text-sm text-white">SUPSAS Admin</span>
+          <span className="font-black text-sm text-[#F1F5F9]">SUPSAS Admin</span>
         </div>
 
         <main className="flex-1 p-4 md:p-8 overflow-y-auto">

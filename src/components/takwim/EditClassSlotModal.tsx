@@ -9,6 +9,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { confirmAction } from '@/lib/confirmDialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -282,7 +283,7 @@ export function EditClassSlotModal({
   const handleDelete = async () => {
     if (!slot || !userId) return;
 
-    const confirmed = window.confirm(t('jpp:timetable_confirm_delete_slot', 'Adakah anda pasti ingin memadam slot kelas ini?'));
+    const confirmed = await confirmAction(t('jpp:timetable_confirm_delete_slot', 'Adakah anda pasti ingin memadam slot kelas ini?'));
     if (!confirmed) return;
 
     try {

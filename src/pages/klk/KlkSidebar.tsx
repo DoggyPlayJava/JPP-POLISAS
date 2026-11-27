@@ -201,8 +201,10 @@ export function KlkSidebar() {
             <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
             {t('nav:logout', 'Log Keluar')}
           </Button>
-          <LanguageToggle />
-          <ThemeToggle />
+          <div className="flex items-center gap-1.5 [&_button]:!text-[#F6FBF9] [&_button]:!bg-white/10 [&_button]:hover:!bg-white/20 [&_button]:!border-white/15">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
         </div>
       </div>
     </aside>

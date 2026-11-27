@@ -4,6 +4,7 @@ import { X, Package, Trash2, CheckCircle, Plus, Minus, Home, Loader2, Info, EyeO
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import toast from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -118,7 +119,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm(t('housing:delete_ad_confirm', 'Adakah anda pasti mahu memadam iklan ini? Tindakan ini tidak boleh dipulihkan.'))) return;
+    if (!(await confirmAction(t('housing:delete_ad_confirm', 'Adakah anda pasti mahu memadam iklan ini? Tindakan ini tidak boleh dipulihkan.')))) return;
 
     setMyListings(prev => prev.filter(l => l.id !== id));
     
@@ -139,7 +140,7 @@ export function PolyRentMyAdsModal({ isOpen, onClose, onUpdateComplete }: { isOp
   };
 
   const handleDeleteReverseAd = async (id: string) => {
-    if (!window.confirm(t('housing:delete_search_ad_confirm', 'Padam iklan pencarian ini?'))) return;
+    if (!(await confirmAction(t('housing:delete_search_ad_confirm', 'Padam iklan pencarian ini?')))) return;
     setMyReverseAds(prev => prev.filter(a => a.id !== id));
     try {
       const { error } = await supabase.from('polyrent_reverse_ads').delete().eq('id', id);

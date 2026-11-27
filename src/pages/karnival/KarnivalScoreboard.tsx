@@ -195,16 +195,15 @@ export function KarnivalScoreboard() {
     >
       {/* ── TOP BAR / BROADCAST HEADER ──────────────────────────── */}
       <header
-        className="relative z-20 px-6 md:px-10 py-4 flex items-center justify-between gap-4 flex-wrap"
+        className="relative z-20 px-4 sm:px-6 md:px-10 py-4 flex items-center justify-between gap-4 flex-wrap"
         style={{
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          background: 'rgba(5,5,15,0.8)',
-          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          background: '#080814',
         }}
       >
         {/* Left: Branding */}
-        <div className="grid grid-cols-3 items-center w-full">
-          <div className="flex items-center gap-3">
+        <div className="flex flex-col md:grid md:grid-cols-3 items-center gap-3 w-full">
+          <div className="flex items-center gap-3 w-full md:w-auto">
             <div
               className="w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center text-xl md:text-2xl shadow-xl flex-shrink-0"
               style={{
@@ -214,17 +213,17 @@ export function KarnivalScoreboard() {
             >
               🎪
             </div>
-            <div>
+            <div className="min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.25em] text-violet-400">
+                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-violet-300 truncate">
                   {t('karnival:carnival_scoreboard', 'Papan Skor Karnival Langsung')} · {edition.edition_year}
                 </span>
               </div>
-              <h1 className="text-base md:text-xl font-black tracking-tight text-white leading-tight">
+              <h1 className="text-base md:text-xl font-black tracking-tight text-white leading-tight truncate">
                 {edition.name}
               </h1>
               {edition.tagline && (
-                <p className="text-[10px] md:text-xs text-white/40 font-medium hidden sm:block">
+                <p className="text-[10px] md:text-xs text-white/55 font-medium hidden sm:block truncate">
                   {edition.tagline}
                 </p>
               )}
@@ -232,21 +231,21 @@ export function KarnivalScoreboard() {
           </div>
 
           {/* Center: live badge + clock — truly centered */}
-          <div className="flex flex-col items-center justify-center gap-1">
-            <div className="flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-full"
-              style={{ background: 'rgba(139,92,246,0.15)', border: '1px solid rgba(139,92,246,0.3)' }}>
-              <Zap className="w-3 h-3 text-violet-400" />
-              <span className="text-[9px] md:text-[10px] font-black uppercase tracking-[0.3em] text-violet-300">
+          <div className="flex flex-row md:flex-col items-center justify-between md:justify-center gap-2 md:gap-1 w-full md:w-auto">
+            <div className="flex items-center gap-2 px-3 md:px-4 py-1.5 rounded-full shrink-0"
+              style={{ background: 'rgba(139,92,246,0.18)', border: '1px solid rgba(139,92,246,0.35)' }}>
+              <Zap className="w-3 h-3 text-violet-300 shrink-0" />
+              <span className="text-[10px] font-black uppercase tracking-[0.22em] text-violet-200 whitespace-nowrap">
                 {t('karnival:scoreboard_live_results', 'Keputusan Langsung')}
               </span>
             </div>
-            <p className="text-xl md:text-3xl font-black text-white tabular-nums tracking-tight">
+            <p className="text-lg md:text-3xl font-black text-white font-mono tabular-nums tracking-tight whitespace-nowrap">
               {now.toLocaleTimeString('ms-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
             </p>
           </div>
 
           {/* Right: controls */}
-          <div className="flex items-center justify-end gap-1.5 md:gap-2">
+          <div className="flex items-center justify-center md:justify-end gap-1.5 md:gap-2 w-full md:w-auto">
             <button onClick={() => { const prev = catIndex; const next = (catIndex - 1 + categories.length) % categories.length; goTo(next, -1); setAutoPlay(false); }}
               className="p-2 md:p-2.5 rounded-xl text-white/30 hover:text-white/70 hover:bg-white/[0.06] transition-all"
               style={{ border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -341,9 +340,9 @@ export function KarnivalScoreboard() {
               className="relative flex flex-col items-center gap-4"
             >
               <motion.span
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 20 }}
+                initial={{ scale: 0.92, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
                 className="text-6xl md:text-8xl"
                 style={{ filter: 'drop-shadow(0 0 40px rgba(139,92,246,0.8))' }}
               >

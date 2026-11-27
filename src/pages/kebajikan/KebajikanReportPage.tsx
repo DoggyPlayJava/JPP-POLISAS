@@ -64,7 +64,7 @@ const getStatusLabel = (status: string, t: any): string => {
 
 function GlassCard({ children, className }: { children: React.ReactNode; className?: string }) {
   return (
-    <div className={cn('rounded-3xl border border-white/[0.05] bg-white/[0.02]  shadow-2xl p-6', className)}>
+    <div className={cn('rounded-3xl border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] shadow-surface-sm p-5 sm:p-6', className)}>
       {children}
     </div>
   );
@@ -73,12 +73,12 @@ function GlassCard({ children, className }: { children: React.ReactNode; classNa
 function SectionTitle({ num, title, subtitle }: { num: string; title: string; subtitle?: string }) {
   return (
     <div className="flex items-center gap-4 mb-6">
-      <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm flex-shrink-0" style={{ background: 'rgba(45,212,191,0.1)', color: TEAL, border: `1px solid rgba(45,212,191,0.2)` }}>
+      <div className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm flex-shrink-0 bg-[#EBF7F4] dark:bg-[#2DD4BF]/10 text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#2DD4BF]/25">
         {num}
       </div>
       <div>
-        <h2 className="font-black text-lg text-slate-50">{title}</h2>
-        {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
+        <h2 className="font-black text-lg text-[#0B2420] dark:text-[#F1F5F9]">{title}</h2>
+        {subtitle && <p className="text-xs text-[#3B635C] dark:text-[#94A0B2]">{subtitle}</p>}
       </div>
     </div>
   );
@@ -670,39 +670,41 @@ export function KebajikanReportPage() {
   };
 
   return (
-    <div className="p-8 max-w-6xl mx-auto min-h-screen">
+    <div className="p-4 sm:p-8 max-w-6xl mx-auto min-h-[100dvh]">
       {/* Header */}
-      <div className="mb-10">
+      <div className="mb-8 sm:mb-10">
         <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-2xl flex items-center justify-center" style={{ background: 'rgba(45,212,191,0.1)', border: '1px solid rgba(45,212,191,0.2)' }}>
-                <BarChart3 className="w-5 h-5" style={{ color: TEAL }} />
+              <div className="w-10 h-10 rounded-2xl flex items-center justify-center bg-[#EBF7F4] dark:bg-[#2DD4BF]/10 border border-[#B8E4DC] dark:border-[#2DD4BF]/25 text-[#0F766E] dark:text-[#2DD4BF]">
+                <BarChart3 className="w-5 h-5" />
               </div>
               <div>
-                <motion.h1 className="text-2xl font-black text-slate-50 tracking-tight">
+                <motion.h1 className="text-2xl font-black text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
                   {isKediamanExco && !isSuperAdmin && !isYdp
                     ? t('report_cafeteria_title')
                     : t('report_title')}
                 </motion.h1>
-                <p className="text-xs text-slate-500">{t('report_edition')}: <span className="font-bold text-slate-300 capitalize">{monthLabel}</span> · {t('report_generated_at')}: {generatedAt}</p>
+                <p className="text-xs text-[#3B635C] dark:text-[#94A0B2]">{t('report_edition')}: <span className="font-bold text-[#0B2420] dark:text-[#F1F5F9] capitalize">{monthLabel}</span> · {t('report_generated_at')}: {generatedAt}</p>
               </div>
             </div>
           </div>
 
           {/* Month Nav */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
             <button
               onClick={() => setMonthOffset(o => o + 1)}
-              className="w-9 h-9 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-slate-400 transition-colors"
+              aria-label={t('common:previous', 'Bulan sebelumnya')}
+              className="w-9 h-9 rounded-xl flex items-center justify-center border border-[#B8E4DC] dark:border-[#252B35] bg-white dark:bg-[#13171D] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] text-[#3B635C] dark:text-[#94A0B2] transition-colors"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-sm font-black text-slate-200 min-w-[130px] text-center capitalize">{monthLabel}</span>
+            <span className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9] min-w-[120px] text-center capitalize">{monthLabel}</span>
             <button
               onClick={() => setMonthOffset(o => Math.max(0, o - 1))}
               disabled={monthOffset === 0}
-              className="w-9 h-9 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-slate-400 transition-colors disabled:opacity-30"
+              aria-label={t('common:next', 'Bulan seterusnya')}
+              className="w-9 h-9 rounded-xl flex items-center justify-center border border-[#B8E4DC] dark:border-[#252B35] bg-white dark:bg-[#13171D] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] text-[#3B635C] dark:text-[#94A0B2] transition-colors disabled:opacity-35"
             >
               <ChevronRight className="w-4 h-4" />
             </button>
@@ -711,16 +713,14 @@ export function KebajikanReportPage() {
                 <button
                   onClick={exportMonthlyPdf}
                   disabled={generatingMonthlyPdf}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border transition-colors hover:opacity-80 disabled:opacity-50"
-                  style={{ background: 'rgba(45,212,191,0.08)', borderColor: 'rgba(45,212,191,0.2)', color: TEAL }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-[#0F766E]/30 dark:border-[#2DD4BF]/30 bg-[#EBF7F4] dark:bg-[#2DD4BF]/10 text-[#0F766E] dark:text-[#2DD4BF] transition-colors hover:bg-[#0F766E]/15 disabled:opacity-50"
                 >
-                  <FileDown className={cn("w-3.5 h-3.5", generatingMonthlyPdf && "animate-bounce")} /> 
+                  <FileDown className="w-3.5 h-3.5" /> 
                   {generatingMonthlyPdf ? t('report_generating_pdf') : 'PDF'}
                 </button>
                 <button
                   onClick={exportMonthlyExcel}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border transition-colors hover:opacity-80"
-                  style={{ background: 'rgba(34,197,94,0.08)', borderColor: 'rgba(34,197,94,0.2)', color: '#22C55E' }}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-emerald-600/30 dark:border-emerald-400/30 bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-500/20"
                 >
                   <FileDown className="w-3.5 h-3.5" /> Excel
                 </button>
@@ -728,8 +728,7 @@ export function KebajikanReportPage() {
             ) : (
               <button
                 disabled
-                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border opacity-50 cursor-not-allowed"
-                style={{ background: 'rgba(45,212,191,0.08)', borderColor: 'rgba(45,212,191,0.2)', color: TEAL }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest border border-[#B8E4DC] dark:border-[#252B35] bg-[#EBF7F4]/60 dark:bg-[#13171D] text-[#3B635C] dark:text-[#94A0B2] opacity-60 cursor-not-allowed"
               >
                 <FileDown className="w-3.5 h-3.5" /> PDF
               </button>
@@ -740,7 +739,7 @@ export function KebajikanReportPage() {
 
       {/* Tab Switcher */}
       {showPicTab && (
-        <div className="flex items-center gap-1 mb-8 p-1 rounded-2xl border border-white/[0.06] bg-white/[0.02] w-fit">
+        <div className="flex items-center gap-1 mb-8 p-1 rounded-2xl border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] shadow-surface-sm w-fit">
           {[
             { key: 'bulanan', label: t('report_monthly_tab'), icon: BarChart3 },
             { key: 'pic', label: t('report_pic_tab'), icon: ClipboardList },
@@ -749,12 +748,11 @@ export function KebajikanReportPage() {
               key={tab.key}
               onClick={() => setActiveTab(tab.key as 'bulanan' | 'pic')}
               className={cn(
-                'flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-all duration-200',
+                'flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs font-black uppercase tracking-widest transition-colors duration-150',
                 activeTab === tab.key
-                  ? 'text-slate-950 shadow-lg'
-                  : 'text-slate-400 hover:text-white'
+                  ? 'bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] shadow-surface-sm'
+                  : 'text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]'
               )}
-              style={activeTab === tab.key ? { background: TEAL } : {}}
             >
               <tab.icon className="w-3.5 h-3.5" />
               {tab.label}
@@ -768,10 +766,10 @@ export function KebajikanReportPage() {
         <>
       {loading ? (
         <div className="flex items-center justify-center py-32">
-          <div className="w-12 h-12 rounded-full border-2 border-teal-500/30 border-t-teal-400 animate-spin" />
+          <div className="w-12 h-12 rounded-full border-2 border-[#0F766E]/30 dark:border-[#2DD4BF]/30 border-t-[#0F766E] dark:border-t-[#2DD4BF] animate-spin" />
         </div>
       ) : !data ? (
-        <GlassCard className="text-center py-20 text-slate-500">{t('kebajikan:report_empty_month', 'Tiada data untuk bulan ini.')}</GlassCard>
+        <GlassCard className="text-center py-20 text-[#3B635C] dark:text-[#94A0B2]">{t('kebajikan:report_empty_month', 'Tiada data untuk bulan ini.')}</GlassCard>
       ) : (
         <div className="space-y-8">
 
@@ -780,32 +778,32 @@ export function KebajikanReportPage() {
             <SectionTitle num="1" title={t('report_exec_summary')} subtitle={t('kebajikan:report_exec_summary_subtitle', 'Keseluruhan aduan bagi bulan {{month}}', { month: monthLabel })} />
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
               {[
-                { label: t('report_total_received'),    value: data.total_received,  icon: BarChart3,    color: '#6366F1' },
-                { label: t('report_total_resolved'),    value: data.total_resolved,  icon: CheckCircle2, color: '#10B981' },
-                { label: t('report_total_pending'),     value: data.total_pending,   icon: Clock,        color: '#F59E0B' },
-                { label: t('report_resolution_rate'),   value: `${data.resolution_rate}%`, icon: TrendingUp, color: TEAL },
+                { label: t('report_total_received'),    value: data.total_received,  icon: BarChart3,    color: '#4F46E5' },
+                { label: t('report_total_resolved'),    value: data.total_resolved,  icon: CheckCircle2, color: '#059669' },
+                { label: t('report_total_pending'),     value: data.total_pending,   icon: Clock,        color: '#D97706' },
+                { label: t('report_resolution_rate'),   value: `${data.resolution_rate}%`, icon: TrendingUp, color: '#0F766E' },
               ].map((s, i) => (
-                <motion.div key={s.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.06 }}>
-                  <div className="rounded-2xl p-5 border" style={{ background: `rgba(${hexStr(s.color)}, 0.04)`, borderColor: `rgba(${hexStr(s.color)}, 0.15)` }}>
+                <motion.div key={s.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, delay: Math.min(i * 0.03, 0.1) }}>
+                  <div className="rounded-2xl p-4 sm:p-5 border border-[#B8E4DC]/70 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#0E1116]">
                     <s.icon className="w-5 h-5 mb-3" style={{ color: s.color }} />
-                    <p className="text-2xl font-black text-slate-50 mb-1">{s.value}</p>
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">{s.label}</p>
+                    <p className="text-2xl font-black font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9] mb-1">{s.value}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{s.label}</p>
                   </div>
                 </motion.div>
               ))}
             </div>
-            <div className="grid grid-cols-3 gap-4 mt-4">
-              <div className="rounded-2xl p-4 border border-white/5 bg-white/[0.01] text-center">
-                <p className="text-xl font-black text-slate-200">{data.avg_hours}j</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">{t('report_avg_resolution_hours')}</p>
+            <div className="grid grid-cols-3 gap-3 sm:gap-4 mt-4">
+              <div className="rounded-2xl p-4 border border-[#B8E4DC]/70 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#0E1116] text-center">
+                <p className="text-xl font-black font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9]">{data.avg_hours}j</p>
+                <p className="text-[10px] text-[#3B635C] dark:text-[#94A0B2] uppercase tracking-widest mt-1">{t('report_avg_resolution_hours')}</p>
               </div>
-              <div className="rounded-2xl p-4 border border-white/5 bg-white/[0.01] text-center">
-                <p className="text-xl font-black text-red-400">{data.escalated_count}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">{t('report_escalated_count')}</p>
+              <div className="rounded-2xl p-4 border border-red-200 dark:border-red-500/20 bg-red-50/70 dark:bg-red-500/5 text-center">
+                <p className="text-xl font-black font-mono tabular-nums text-red-700 dark:text-red-400">{data.escalated_count}</p>
+                <p className="text-[10px] text-[#3B635C] dark:text-[#94A0B2] uppercase tracking-widest mt-1">{t('report_escalated_count')}</p>
               </div>
-              <div className="rounded-2xl p-4 border border-white/5 bg-white/[0.01] text-center">
-                <p className="text-xl font-black text-slate-400">{data.total_cancelled}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">{t('report_total_cancelled')}</p>
+              <div className="rounded-2xl p-4 border border-[#B8E4DC]/70 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#0E1116] text-center">
+                <p className="text-xl font-black font-mono tabular-nums text-[#3B635C] dark:text-[#94A0B2]">{data.total_cancelled}</p>
+                <p className="text-[10px] text-[#3B635C] dark:text-[#94A0B2] uppercase tracking-widest mt-1">{t('report_total_cancelled')}</p>
               </div>
             </div>
           </GlassCard>
@@ -814,21 +812,21 @@ export function KebajikanReportPage() {
           <GlassCard>
             <SectionTitle num="2" title={t('report_breakdown_category')} />
             {data.by_category.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">{t('kebajikan:no_data', 'Tiada data')}</p>
+              <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] text-center py-8">{t('kebajikan:no_data', 'Tiada data')}</p>
             ) : (
               <div className="space-y-3">
                 {data.by_category.sort((a, b) => b.total - a.total).map((c, i) => {
                   const pct = Math.round((c.total / data.total_received) * 100);
                   return (
-                    <div key={c.category} className="flex items-center gap-4 p-3 rounded-2xl border border-white/5 bg-white/[0.01]">
+                    <div key={c.category} className="flex items-center gap-3 sm:gap-4 p-3 rounded-2xl border border-[#B8E4DC]/70 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#0E1116]">
                       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                      <p className="text-sm font-bold text-slate-300 w-48 flex-shrink-0">{KEBAJIKAN_CATEGORY_LABELS[c.category as KebajikanTicketCategory] || c.category}</p>
-                      <div className="flex-1 h-2 rounded-full bg-white/5 overflow-hidden">
-                        <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                      <p className="text-xs sm:text-sm font-bold text-[#0B2420] dark:text-[#F1F5F9] w-32 sm:w-48 flex-shrink-0 truncate">{KEBAJIKAN_CATEGORY_LABELS[c.category as KebajikanTicketCategory] || c.category}</p>
+                      <div className="flex-1 h-2 rounded-full bg-[#B8E4DC]/40 dark:bg-[#1B2028] overflow-hidden">
+                        <div className="h-full rounded-full transition-[width] duration-300" style={{ width: `${pct}%`, background: PIE_COLORS[i % PIE_COLORS.length] }} />
                       </div>
-                      <span className="text-xs font-black text-slate-400 w-8 text-right">{c.total}</span>
-                      <span className="text-[10px] font-black text-slate-600 w-10 text-right">{pct}%</span>
-                      <span className="text-[10px] text-emerald-400 w-20 text-right">{t('kebajikan:stat_cases_resolved', '{{count}} selesai', { count: c.resolved })}</span>
+                      <span className="text-xs font-black font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9] w-8 text-right">{c.total}</span>
+                      <span className="text-[10px] font-black font-mono tabular-nums text-[#3B635C] dark:text-[#94A0B2] w-10 text-right">{pct}%</span>
+                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 w-20 text-right">{t('kebajikan:stat_cases_resolved', '{{count}} selesai', { count: c.resolved })}</span>
                     </div>
                   );
                 })}
@@ -844,7 +842,7 @@ export function KebajikanReportPage() {
                 <Pie data={data.by_status.map(s => ({ ...s, name: getStatusLabel(s.status, t) || s.status }))} dataKey="count" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
                   {data.by_status.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
-                <Tooltip contentStyle={{ background: '#1e293b', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, fontSize: 11 }} />
+                <Tooltip contentStyle={{ background: '#13171D', color: '#F1F5F9', border: '1px solid #252B35', borderRadius: 12, fontSize: 11 }} />
               </PieChart>
             </ResponsiveContainer>
           </GlassCard>
@@ -852,20 +850,20 @@ export function KebajikanReportPage() {
           {/* 4. Prestasi SLA */}
           <GlassCard>
             <SectionTitle num="4" title="Prestasi SLA" subtitle="48j = Warning · 72j = Escalation" />
-            <div className="grid grid-cols-3 gap-4">
-              <div className="rounded-2xl p-4 border border-emerald-500/20 bg-emerald-500/5 text-center">
-                <p className="text-2xl font-black text-emerald-400">
+            <div className="grid grid-cols-3 gap-3 sm:gap-4">
+              <div className="rounded-2xl p-4 border border-emerald-200 dark:border-emerald-500/20 bg-emerald-50/70 dark:bg-emerald-500/5 text-center">
+                <p className="text-2xl font-black font-mono tabular-nums text-emerald-700 dark:text-emerald-400">
                   {data.total_resolved > 0 ? Math.round(((data.total_resolved - data.sla_breach_count) / data.total_resolved) * 100) : 0}%
                 </p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Dalam SLA</p>
+                <p className="text-[10px] font-bold text-[#3B635C] dark:text-[#94A0B2] uppercase tracking-widest mt-1">Dalam SLA</p>
               </div>
-              <div className="rounded-2xl p-4 border border-amber-500/20 bg-amber-500/5 text-center">
-                <p className="text-2xl font-black text-amber-400">{data.sla_breach_count}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Melebihi SLA</p>
+              <div className="rounded-2xl p-4 border border-amber-200 dark:border-amber-500/20 bg-amber-50/70 dark:bg-amber-500/5 text-center">
+                <p className="text-2xl font-black font-mono tabular-nums text-amber-700 dark:text-amber-400">{data.sla_breach_count}</p>
+                <p className="text-[10px] font-bold text-[#3B635C] dark:text-[#94A0B2] uppercase tracking-widest mt-1">Melebihi SLA</p>
               </div>
-              <div className="rounded-2xl p-4 border border-red-500/20 bg-red-500/5 text-center">
-                <p className="text-2xl font-black text-red-400">{data.escalated_count}</p>
-                <p className="text-[10px] text-slate-500 uppercase tracking-widest mt-1">Diescalate</p>
+              <div className="rounded-2xl p-4 border border-red-200 dark:border-red-500/20 bg-red-50/70 dark:bg-red-500/5 text-center">
+                <p className="text-2xl font-black font-mono tabular-nums text-red-700 dark:text-red-400">{data.escalated_count}</p>
+                <p className="text-[10px] font-bold text-[#3B635C] dark:text-[#94A0B2] uppercase tracking-widest mt-1">Diescalate</p>
               </div>
             </div>
           </GlassCard>
@@ -874,15 +872,15 @@ export function KebajikanReportPage() {
           <GlassCard>
             <SectionTitle num="5" title={t('kebajikan:section_escalated_tickets', 'Tiket Diescalate')} subtitle={t('kebajikan:section_escalated_subtitle', 'Tiket yang melebihi had masa 72 jam')} />
             {data.escalated_tickets.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">{t('kebajikan:no_escalated_tickets_month', '✅ Tiada tiket diescalate bulan ini')}</p>
+              <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] text-center py-8">{t('kebajikan:no_escalated_tickets_month', 'Tiada tiket diescalate bulan ini')}</p>
             ) : (
               <div className="space-y-2">
                 {data.escalated_tickets.map(item => (
-                  <div key={item.ticket_no} className="flex items-center gap-4 px-4 py-3 rounded-xl border border-red-500/10 bg-red-500/5">
-                    <span className="text-xs font-black text-red-400">{item.ticket_no}</span>
-                    <span className="text-xs text-slate-400 flex-1">{KEBAJIKAN_CATEGORY_LABELS[item.category as KebajikanTicketCategory] || item.category}</span>
-                    <span className="text-xs text-slate-500">{t('kebajikan:report_hours_open_val', '{{count}}j dibuka', { count: item.hours_open })}</span>
-                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-500/20 text-red-400">{getStatusLabel(item.status, t) || item.status}</span>
+                  <div key={item.ticket_no} className="flex items-center gap-4 px-4 py-3 rounded-xl border border-red-200 dark:border-red-500/20 bg-red-50/60 dark:bg-red-500/5">
+                    <span className="text-xs font-black font-mono text-red-700 dark:text-red-400">{item.ticket_no}</span>
+                    <span className="text-xs text-[#0B2420] dark:text-[#F1F5F9] flex-1">{KEBAJIKAN_CATEGORY_LABELS[item.category as KebajikanTicketCategory] || item.category}</span>
+                    <span className="text-xs text-[#3B635C] dark:text-[#94A0B2]">{t('kebajikan:report_hours_open_val', '{{count}}j dibuka', { count: item.hours_open })}</span>
+                    <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-red-100 dark:bg-red-500/20 text-red-700 dark:text-red-400">{getStatusLabel(item.status, t) || item.status}</span>
                   </div>
                 ))}
               </div>
@@ -893,25 +891,25 @@ export function KebajikanReportPage() {
           <GlassCard>
             <SectionTitle num="6" title={t('kebajikan:section_staff_performance', 'Prestasi Exco & Pegawai')} subtitle={t('kebajikan:section_staff_perf_subtitle', 'Jumlah tiket di-assign, diselesaikan, purata masa')} />
             {data.by_assignee.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">{t('kebajikan:no_assignment_data', 'Tiada data penugasan')}</p>
+              <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] text-center py-8">{t('kebajikan:no_assignment_data', 'Tiada data penugasan')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/5">
-                      <th className="text-left py-2 pr-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Nama</th>
-                      <th className="text-right py-2 px-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Di-assign</th>
-                      <th className="text-right py-2 px-4 text-[10px] font-black uppercase tracking-widest text-slate-500">Selesai</th>
-                      <th className="text-right py-2 pl-4 text-[10px] font-black uppercase tracking-widest text-slate-500">{t('kebajikan:report_col_avg_time', 'Purata Masa')}</th>
+                    <tr className="border-b border-[#B8E4DC]/70 dark:border-[#252B35]">
+                      <th className="text-left py-2 pr-4 text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">Nama</th>
+                      <th className="text-right py-2 px-4 text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">Di-assign</th>
+                      <th className="text-right py-2 px-4 text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">Selesai</th>
+                      <th className="text-right py-2 pl-4 text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{t('kebajikan:report_col_avg_time', 'Purata Masa')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {data.by_assignee.map(a => (
-                      <tr key={a.name} className="border-b border-white/[0.03] hover:bg-white/[0.01] transition-colors">
-                        <td className="py-3 pr-4 font-bold text-slate-300">{a.name}</td>
-                        <td className="py-3 px-4 text-right text-slate-400">{a.assigned}</td>
-                        <td className="py-3 px-4 text-right text-emerald-400 font-bold">{a.resolved}</td>
-                        <td className="py-3 pl-4 text-right text-slate-400">{a.avg_hours > 0 ? `${a.avg_hours}j` : '—'}</td>
+                      <tr key={a.name} className="border-b border-[#B8E4DC]/40 dark:border-[#252B35]/60 hover:bg-[#EBF7F4]/50 dark:hover:bg-[#1B2028]/50 transition-colors">
+                        <td className="py-3 pr-4 font-bold text-[#0B2420] dark:text-[#F1F5F9]">{a.name}</td>
+                        <td className="py-3 px-4 text-right font-mono tabular-nums text-[#3B635C] dark:text-[#94A0B2]">{a.assigned}</td>
+                        <td className="py-3 px-4 text-right font-mono tabular-nums text-emerald-700 dark:text-emerald-400 font-bold">{a.resolved}</td>
+                        <td className="py-3 pl-4 text-right font-mono tabular-nums text-[#3B635C] dark:text-[#94A0B2]">{a.avg_hours > 0 ? `${a.avg_hours}j` : '—'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -924,46 +922,46 @@ export function KebajikanReportPage() {
           <GlassCard>
             <SectionTitle num="7" title={t('kebajikan:section_student_ratings', 'Penilaian Pelajar')} subtitle={t('kebajikan:section_student_ratings_subtitle', 'Rating kepuasan setelah kes diselesaikan')} />
             {data.avg_rating === null ? (
-              <p className="text-sm text-slate-500 text-center py-8">{t('kebajikan:no_ratings_yet', 'Belum ada penilaian')}</p>
+              <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] text-center py-8">{t('kebajikan:no_ratings_yet', 'Belum ada penilaian')}</p>
             ) : (
               <div className="space-y-6">
                 <div className="flex items-center gap-6">
                   <div className="text-center">
-                    <p className="text-5xl font-black text-slate-50">{data.avg_rating}</p>
+                    <p className="text-5xl font-black font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9]">{data.avg_rating}</p>
                     <div className="flex gap-0.5 justify-center mt-2">
                       {[1,2,3,4,5].map(s => (
-                        <Star key={s} className={cn('w-4 h-4', (data.avg_rating ?? 0) >= s ? 'fill-amber-400 text-amber-400' : 'text-white/10')} />
+                        <Star key={s} className={cn('w-4 h-4', (data.avg_rating ?? 0) >= s ? 'fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400' : 'text-slate-300 dark:text-white/15')} />
                       ))}
                     </div>
-                    <p className="text-[10px] text-slate-500 mt-1">{t('kebajikan:average_rating', 'Purata Rating')}</p>
+                    <p className="text-[10px] font-bold text-[#3B635C] dark:text-[#94A0B2] mt-1">{t('kebajikan:average_rating', 'Purata Rating')}</p>
                   </div>
                   <div className="flex-1 space-y-2">
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-emerald-400 w-20">{t('kebajikan:rating_satisfied', '😊 Puas Hati')}</span>
-                      <div className="flex-1 h-2 rounded-full bg-white/5"><div className="h-full rounded-full bg-emerald-500" style={{ width: `${data.avg_rating ? Math.round((data.satisfied_count / (data.satisfied_count + data.neutral_count + data.unsatisfied_count)) * 100) : 0}%` }} /></div>
-                      <span className="text-xs text-slate-400">{data.satisfied_count}</span>
+                      <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 w-24">{t('kebajikan:rating_satisfied', 'Puas Hati')}</span>
+                      <div className="flex-1 h-2 rounded-full bg-[#B8E4DC]/40 dark:bg-[#1B2028]"><div className="h-full rounded-full bg-emerald-600 dark:bg-emerald-500" style={{ width: `${data.avg_rating ? Math.round((data.satisfied_count / (data.satisfied_count + data.neutral_count + data.unsatisfied_count)) * 100) : 0}%` }} /></div>
+                      <span className="text-xs font-mono tabular-nums text-[#3B635C] dark:text-[#94A0B2]">{data.satisfied_count}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-amber-400 w-20">{t('kebajikan:rating_neutral', '😐 Neutral')}</span>
-                      <div className="flex-1 h-2 rounded-full bg-white/5"><div className="h-full rounded-full bg-amber-400" style={{ width: `${data.avg_rating ? Math.round((data.neutral_count / (data.satisfied_count + data.neutral_count + data.unsatisfied_count)) * 100) : 0}%` }} /></div>
-                      <span className="text-xs text-slate-400">{data.neutral_count}</span>
+                      <span className="text-xs font-bold text-amber-700 dark:text-amber-400 w-24">{t('kebajikan:rating_neutral', 'Neutral')}</span>
+                      <div className="flex-1 h-2 rounded-full bg-[#B8E4DC]/40 dark:bg-[#1B2028]"><div className="h-full rounded-full bg-amber-500" style={{ width: `${data.avg_rating ? Math.round((data.neutral_count / (data.satisfied_count + data.neutral_count + data.unsatisfied_count)) * 100) : 0}%` }} /></div>
+                      <span className="text-xs font-mono tabular-nums text-[#3B635C] dark:text-[#94A0B2]">{data.neutral_count}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="text-xs text-red-400 w-20">{t('kebajikan:rating_unsatisfied', '😞 Tidak Puas')}</span>
-                      <div className="flex-1 h-2 rounded-full bg-white/5"><div className="h-full rounded-full bg-red-500" style={{ width: `${data.avg_rating ? Math.round((data.unsatisfied_count / (data.satisfied_count + data.neutral_count + data.unsatisfied_count)) * 100) : 0}%` }} /></div>
-                      <span className="text-xs text-slate-400">{data.unsatisfied_count}</span>
+                      <span className="text-xs font-bold text-red-700 dark:text-red-400 w-24">{t('kebajikan:rating_unsatisfied', 'Tidak Puas')}</span>
+                      <div className="flex-1 h-2 rounded-full bg-[#B8E4DC]/40 dark:bg-[#1B2028]"><div className="h-full rounded-full bg-red-600 dark:bg-red-500" style={{ width: `${data.avg_rating ? Math.round((data.unsatisfied_count / (data.satisfied_count + data.neutral_count + data.unsatisfied_count)) * 100) : 0}%` }} /></div>
+                      <span className="text-xs font-mono tabular-nums text-[#3B635C] dark:text-[#94A0B2]">{data.unsatisfied_count}</span>
                     </div>
                   </div>
                 </div>
                 {data.top_comments.length > 0 && (
-                  <div className="space-y-2 pt-2 border-t border-white/5">
-                    <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">{t('kebajikan:featured_reviews', 'Ulasan Terpilih')}</p>
+                  <div className="space-y-2 pt-3 border-t border-[#B8E4DC]/60 dark:border-[#252B35]">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-3">{t('kebajikan:featured_reviews', 'Ulasan Terpilih')}</p>
                     {data.top_comments.map((c, i) => (
-                      <div key={i} className="flex gap-3 p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                      <div key={i} className="flex gap-3 p-3 rounded-xl bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/60 dark:border-[#252B35]">
                         <div className="flex gap-0.5 flex-shrink-0 mt-0.5">
-                          {[1,2,3,4,5].map(s => <Star key={s} className={cn('w-3 h-3', c.rating >= s ? 'fill-amber-400 text-amber-400' : 'text-white/10')} />)}
+                          {[1,2,3,4,5].map(s => <Star key={s} className={cn('w-3 h-3', c.rating >= s ? 'fill-amber-500 text-amber-500 dark:fill-amber-400 dark:text-amber-400' : 'text-slate-300 dark:text-white/15')} />)}
                         </div>
-                        <p className="text-xs text-slate-400 italic">"{c.comment}"</p>
+                        <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] italic">"{c.comment}"</p>
                       </div>
                     ))}
                   </div>
@@ -976,12 +974,12 @@ export function KebajikanReportPage() {
           <GlassCard>
             <SectionTitle num="8" title={t('kebajikan:section_pending_tickets', 'Tiket Masih Tertunggak')} subtitle={t('kebajikan:section_pending_subtitle', 'Perlu tindakan bulan hadapan')} />
             {data.pending_tickets.length === 0 ? (
-              <p className="text-sm text-slate-500 text-center py-8">{t('kebajikan:all_tickets_resolved', '✅ Semua tiket telah selesai')}</p>
+              <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] text-center py-8">{t('kebajikan:all_tickets_resolved', 'Semua tiket telah selesai')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-white/5">
+                    <tr className="border-b border-[#B8E4DC]/70 dark:border-[#252B35]">
                       {[
     t('kebajikan:report_col_ticket_no', 'No. Tiket'),
     t('kebajikan:report_col_category', 'Kategori'),
@@ -989,20 +987,20 @@ export function KebajikanReportPage() {
     t('kebajikan:report_col_status', 'Status'),
     t('kebajikan:report_col_assigned_to', 'Ditetapkan Kepada')
   ].map(h => (
-                        <th key={h} className="text-left py-2 pr-4 text-[10px] font-black uppercase tracking-widest text-slate-500">{h}</th>
+                        <th key={h} className="text-left py-2 pr-4 text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {data.pending_tickets.map(item => (
-                      <tr key={item.ticket_no} className="border-b border-white/[0.03] hover:bg-white/[0.01] transition-colors">
-                        <td className="py-3 pr-4 font-black text-xs text-teal-400">{item.ticket_no}</td>
-                        <td className="py-3 pr-4 text-xs text-slate-400">{KEBAJIKAN_CATEGORY_LABELS[item.category as KebajikanTicketCategory] || item.category}</td>
-                        <td className="py-3 pr-4 text-xs text-slate-400">{item.days_open}h</td>
+                      <tr key={item.ticket_no} className="border-b border-[#B8E4DC]/40 dark:border-[#252B35]/60 hover:bg-[#EBF7F4]/50 dark:hover:bg-[#1B2028]/50 transition-colors">
+                        <td className="py-3 pr-4 font-black font-mono text-xs text-[#0F766E] dark:text-[#2DD4BF]">{item.ticket_no}</td>
+                        <td className="py-3 pr-4 text-xs text-[#0B2420] dark:text-[#F1F5F9]">{KEBAJIKAN_CATEGORY_LABELS[item.category as KebajikanTicketCategory] || item.category}</td>
+                        <td className="py-3 pr-4 text-xs font-mono tabular-nums text-[#3B635C] dark:text-[#94A0B2]">{item.days_open}h</td>
                         <td className="py-3 pr-4 text-xs">
-                          <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 text-[10px] font-black">{getStatusLabel(item.status, t) || item.status}</span>
+                          <span className="px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 text-[10px] font-black">{getStatusLabel(item.status, t) || item.status}</span>
                         </td>
-                        <td className="py-3 text-xs text-slate-400">{item.assigned_to}</td>
+                        <td className="py-3 text-xs text-[#3B635C] dark:text-[#94A0B2]">{item.assigned_to}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1023,15 +1021,15 @@ export function KebajikanReportPage() {
           {/* PIC Tab Header + Month Nav */}
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
-              <h2 className="text-lg font-black text-slate-50">{t('kebajikan:report_generate_pic_title', 'Jana Laporan untuk PIC')}</h2>
-              <p className="text-xs text-slate-500 mt-0.5">{t('kebajikan:report_generate_pic_subtitle', 'Pilih tiket, tetapkan PIC, jana PDF untuk edaran')}</p>
+              <h2 className="text-lg font-black text-[#0B2420] dark:text-[#F1F5F9]">{t('kebajikan:report_generate_pic_title', 'Jana Laporan untuk PIC')}</h2>
+              <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-0.5">{t('kebajikan:report_generate_pic_subtitle', 'Pilih tiket, tetapkan PIC, jana PDF untuk edaran')}</p>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setPicMonthOffset(o => o + 1)} className="w-8 h-8 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-slate-400 transition-colors">
+              <button onClick={() => setPicMonthOffset(o => o + 1)} className="w-8 h-8 rounded-xl flex items-center justify-center border border-[#B8E4DC] dark:border-[#252B35] bg-white dark:bg-[#13171D] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] text-[#3B635C] dark:text-[#94A0B2] transition-colors">
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-sm font-black text-slate-200 min-w-[130px] text-center capitalize">{picMonthLabel}</span>
-              <button onClick={() => setPicMonthOffset(o => Math.max(0, o - 1))} disabled={picMonthOffset === 0} className="w-8 h-8 rounded-xl flex items-center justify-center border border-white/10 bg-white/5 hover:bg-white/10 text-slate-400 transition-colors disabled:opacity-30">
+              <span className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9] min-w-[130px] text-center capitalize">{picMonthLabel}</span>
+              <button onClick={() => setPicMonthOffset(o => Math.max(0, o - 1))} disabled={picMonthOffset === 0} className="w-8 h-8 rounded-xl flex items-center justify-center border border-[#B8E4DC] dark:border-[#252B35] bg-white dark:bg-[#13171D] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] text-[#3B635C] dark:text-[#94A0B2] transition-colors disabled:opacity-35">
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
@@ -1040,40 +1038,40 @@ export function KebajikanReportPage() {
           {/* Filter Bar */}
           <GlassCard>
             <div className="flex items-center gap-2 mb-4">
-              <Filter className="w-3.5 h-3.5 text-teal-400" />
-              <p className="text-[11px] font-black uppercase tracking-widest text-slate-400">{t('kebajikan:report_ticket_filter', 'Penapis Tiket')}</p>
+              <Filter className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
+              <p className="text-[11px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{t('kebajikan:report_ticket_filter', 'Penapis Tiket')}</p>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('kebajikan:report_col_category', 'Kategori')}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-1.5">{t('kebajikan:report_col_category', 'Kategori')}</p>
                 <select value={picCatFilter} onChange={e => { setPicCatFilter(e.target.value); setSelectedTicketIds(new Set()); }}
-                  className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-teal-500/40">
-                  {KEBAJIKAN_CATS.map(c => <option key={c.key} value={c.key} className="bg-slate-800">{c.label}</option>)}
+                  className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] focus:outline-none focus:border-[#0F766E] dark:focus:border-[#2DD4BF]">
+                  {KEBAJIKAN_CATS.map(c => <option key={c.key} value={c.key} className="bg-white dark:bg-[#13171D]">{c.label}</option>)}
                 </select>
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('kebajikan:report_col_status', 'Status')}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-1.5">{t('kebajikan:report_col_status', 'Status')}</p>
                 <select value={picStatusFilter} onChange={e => { setPicStatusFilter(e.target.value); setSelectedTicketIds(new Set()); }}
-                  className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-teal-500/40">
-                  {KEBAJIKAN_STATUSES.map(s => <option key={s.key} value={s.key} className="bg-slate-800">{s.label}</option>)}
+                  className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] focus:outline-none focus:border-[#0F766E] dark:focus:border-[#2DD4BF]">
+                  {KEBAJIKAN_STATUSES.map(s => <option key={s.key} value={s.key} className="bg-white dark:bg-[#13171D]">{s.label}</option>)}
                 </select>
               </div>
             </div>
 
             {/* Quick Select */}
             <div className="flex items-center gap-2 mt-4 flex-wrap">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mr-1">{t('kebajikan:report_quick_select', 'Pilih Cepat:')}</p>
-              <button onClick={selectAll} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-white/[0.05] hover:bg-white/10 text-slate-300 border border-white/10 transition-all">
-                {t('kebajikan:report_select_all', '☑ Semua')} ({picTickets.length})
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mr-1">{t('kebajikan:report_quick_select', 'Pilih Cepat:')}</p>
+              <button onClick={selectAll} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-[#EBF7F4] dark:bg-[#1B2028] hover:bg-[#0F766E]/15 text-[#0B2420] dark:text-[#F1F5F9] border border-[#B8E4DC] dark:border-[#252B35] transition-colors">
+                {t('kebajikan:report_select_all', 'Semua')} ({picTickets.length})
               </button>
-              <button onClick={selectEscalated} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 transition-all">
-                {t('kebajikan:report_escalated_only', '⚠ Escalated Sahaja')} ({picTickets.filter(tk => tk.status === 'ESCALATED').length})
+              <button onClick={selectEscalated} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-red-50 dark:bg-red-500/10 hover:bg-red-100 dark:hover:bg-red-500/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-500/20 transition-colors">
+                {t('kebajikan:report_escalated_only', 'Escalated Sahaja')} ({picTickets.filter(tk => tk.status === 'ESCALATED').length})
               </button>
-              <button onClick={clearAll} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-white/[0.03] hover:bg-white/5 text-white/30 border border-white/5 transition-all">
-                {t('kebajikan:report_clear_all', '☐ Bersih Semua')}
+              <button onClick={clearAll} className="px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-[#F6FBF9] dark:bg-[#0E1116] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] text-[#3B635C] dark:text-[#94A0B2] border border-[#B8E4DC] dark:border-[#252B35] transition-colors">
+                {t('kebajikan:report_clear_all', 'Bersih Semua')}
               </button>
               {selectedTicketIds.size > 0 && (
-                <span className="ml-auto text-xs font-black" style={{ color: TEAL }}>{selectedTicketIds.size} {t('kebajikan:report_tickets_selected', 'tiket dipilih')}</span>
+                <span className="ml-auto text-xs font-black text-[#0F766E] dark:text-[#2DD4BF]">{selectedTicketIds.size} {t('kebajikan:report_tickets_selected', 'tiket dipilih')}</span>
               )}
             </div>
           </GlassCard>
@@ -1082,33 +1080,33 @@ export function KebajikanReportPage() {
           <GlassCard>
             {picLoading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="w-10 h-10 rounded-full border-2 border-teal-500/30 border-t-teal-400 animate-spin" />
+                <div className="w-10 h-10 rounded-full border-2 border-[#0F766E]/30 dark:border-[#2DD4BF]/30 border-t-[#0F766E] dark:border-t-[#2DD4BF] animate-spin" />
               </div>
             ) : picTickets.length === 0 ? (
-              <p className="text-center text-sm text-white/30 py-12">{t('kebajikan:report_no_tickets_found', 'Tiada tiket untuk bulan dan penapis ini.')}</p>
+              <p className="text-center text-sm text-[#3B635C] dark:text-[#94A0B2] py-12">{t('kebajikan:report_no_tickets_found', 'Tiada tiket untuk bulan dan penapis ini.')}</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-xs">
                   <thead>
-                    <tr className="border-b border-white/5">
-                      <th className="pb-3 text-left w-8"><input type="checkbox" checked={selectedTicketIds.size === picTickets.length && picTickets.length > 0} onChange={e => e.target.checked ? selectAll() : clearAll()} className="accent-teal-400 w-3.5 h-3.5" /></th>
-                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">{t('kebajikan:report_col_ticket_no', 'No. Tiket')}</th>
-                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">{t('kebajikan:report_col_date', 'Tarikh')}</th>
-                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">{t('kebajikan:report_col_category', 'Kategori')}</th>
-                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">{t('kebajikan:report_col_title', 'Tajuk')}</th>
-                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-white/30">{t('kebajikan:report_col_status', 'Status')}</th>
+                    <tr className="border-b border-[#B8E4DC]/70 dark:border-[#252B35]">
+                      <th className="pb-3 text-left w-8"><input type="checkbox" checked={selectedTicketIds.size === picTickets.length && picTickets.length > 0} onChange={e => e.target.checked ? selectAll() : clearAll()} className="accent-[#0F766E] dark:accent-[#2DD4BF] w-3.5 h-3.5" /></th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{t('kebajikan:report_col_ticket_no', 'No. Tiket')}</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{t('kebajikan:report_col_date', 'Tarikh')}</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{t('kebajikan:report_col_category', 'Kategori')}</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{t('kebajikan:report_col_title', 'Tajuk')}</th>
+                      <th className="pb-3 text-left text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{t('kebajikan:report_col_status', 'Status')}</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-white/[0.03]">
+                  <tbody className="divide-y divide-[#B8E4DC]/40 dark:divide-[#252B35]/60">
                     {picTickets.map(t => (
-                      <tr key={t.id} onClick={() => toggleTicket(t.id)} className={cn('cursor-pointer transition-colors', selectedTicketIds.has(t.id) ? 'bg-teal-500/5' : 'hover:bg-white/[0.02]')}>
-                        <td className="py-3"><input type="checkbox" checked={selectedTicketIds.has(t.id)} onChange={() => toggleTicket(t.id)} onClick={e => e.stopPropagation()} className="accent-teal-400 w-3.5 h-3.5" /></td>
-                        <td className="py-3 font-black text-teal-400/80">{t.ticket_no}</td>
-                        <td className="py-3 text-white/50">{format(new Date(t.created_at), 'dd/MM/yyyy')}</td>
-                        <td className="py-3 text-white/60">{KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category}</td>
-                        <td className="py-3 text-white/80 max-w-[200px] truncate">{t.title}</td>
+                      <tr key={t.id} onClick={() => toggleTicket(t.id)} className={cn('cursor-pointer transition-colors', selectedTicketIds.has(t.id) ? 'bg-[#EBF7F4] dark:bg-[#2DD4BF]/10' : 'hover:bg-[#F6FBF9] dark:hover:bg-[#1B2028]/60')}>
+                        <td className="py-3"><input type="checkbox" checked={selectedTicketIds.has(t.id)} onChange={() => toggleTicket(t.id)} onClick={e => e.stopPropagation()} className="accent-[#0F766E] dark:accent-[#2DD4BF] w-3.5 h-3.5" /></td>
+                        <td className="py-3 font-black font-mono text-[#0F766E] dark:text-[#2DD4BF]">{t.ticket_no}</td>
+                        <td className="py-3 text-[#3B635C] dark:text-[#94A0B2]">{format(new Date(t.created_at), 'dd/MM/yyyy')}</td>
+                        <td className="py-3 text-[#0B2420] dark:text-[#F1F5F9]">{KEBAJIKAN_CATEGORY_LABELS[t.category as KebajikanTicketCategory] || t.category}</td>
+                        <td className="py-3 text-[#0B2420] dark:text-[#F1F5F9] max-w-[200px] truncate">{t.title}</td>
                         <td className="py-3">
-                          <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider', t.status === 'ESCALATED' ? 'bg-red-500/15 text-red-400' : t.status === 'RESOLVED' ? 'bg-green-500/15 text-green-400' : t.status === 'NEW' ? 'bg-teal-500/15 text-teal-400' : 'bg-white/5 text-white/40')}>
+                          <span className={cn('px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider', t.status === 'ESCALATED' ? 'bg-red-100 dark:bg-red-500/15 text-red-700 dark:text-red-400' : t.status === 'RESOLVED' ? 'bg-emerald-100 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400' : t.status === 'NEW' ? 'bg-[#EBF7F4] dark:bg-[#2DD4BF]/15 text-[#0F766E] dark:text-[#2DD4BF]' : 'bg-slate-100 dark:bg-[#1B2028] text-[#3B635C] dark:text-[#94A0B2]')}>
                             {t.status}
                           </span>
                         </td>
@@ -1124,32 +1122,32 @@ export function KebajikanReportPage() {
           {selectedTicketIds.size > 0 && (
             <GlassCard>
               <div className="flex items-center gap-2 mb-5">
-                <UserCheck className="w-4 h-4" style={{ color: TEAL }} />
-                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-slate-400">{t('kebajikan:report_generate_heading', 'Jana Laporan')}</p>
-                <span className="ml-auto text-xs font-black" style={{ color: TEAL }}>{t('kebajikan:report_tickets_selected_count', '{{count}} tiket dipilih', { count: selectedTickets.length })}</span>
+                <UserCheck className="w-4 h-4 text-[#0F766E] dark:text-[#2DD4BF]" />
+                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-[#3B635C] dark:text-[#94A0B2]">{t('kebajikan:report_generate_heading', 'Jana Laporan')}</p>
+                <span className="ml-auto text-xs font-black text-[#0F766E] dark:text-[#2DD4BF]">{t('kebajikan:report_tickets_selected_count', '{{count}} tiket dipilih', { count: selectedTickets.length })}</span>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-5">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('kebajikan:report_select_pic_preset', 'Pilih Preset PIC')}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-1.5">{t('kebajikan:report_select_pic_preset', 'Pilih Preset PIC')}</p>
                   <select value={reportPicId} onChange={e => {
                     setReportPicId(e.target.value);
                     const found = picPresets.find(p => p.id === e.target.value);
                     if (found) { setReportPicName(found.pic_name); setReportPicTitle(found.pic_title || ''); }
                     else { setReportPicName(''); setReportPicTitle(''); }
-                  }} className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white focus:outline-none focus:border-teal-500/40">
-                    <option value="" className="bg-slate-800">{t('kebajikan:report_pic_manual_option', '— Pilih atau taip manual —')}</option>
-                    {picPresets.map(p => <option key={p.id} value={p.id} className="bg-slate-800">{p.jabatan_label} — {p.pic_name}</option>)}
+                  }} className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] focus:outline-none focus:border-[#0F766E] dark:focus:border-[#2DD4BF]">
+                    <option value="" className="bg-white dark:bg-[#13171D]">{t('kebajikan:report_pic_manual_option', '— Pilih atau taip manual —')}</option>
+                    {picPresets.map(p => <option key={p.id} value={p.id} className="bg-white dark:bg-[#13171D]">{p.jabatan_label} — {p.pic_name}</option>)}
                   </select>
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('kebajikan:report_pic_name_label', 'Nama PIC')}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-1.5">{t('kebajikan:report_pic_name_label', 'Nama PIC')}</p>
                   <input value={reportPicName} onChange={e => setReportPicName(e.target.value)} placeholder={t('kebajikan:report_pic_name_placeholder', 'Nama PIC...')}
-                    className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-teal-500/40 focus:outline-none" />
+                    className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/60 dark:placeholder:text-[#94A0B2]/60 focus:border-[#0F766E] dark:focus:border-[#2DD4BF] focus:outline-none" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-1.5">{t('kebajikan:report_pic_position_label', 'Jawatan PIC')}</p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-1.5">{t('kebajikan:report_pic_position_label', 'Jawatan PIC')}</p>
                   <input value={reportPicTitle} onChange={e => setReportPicTitle(e.target.value)} placeholder={t('kebajikan:report_pic_position_placeholder', 'cth: Ketua Jabatan JKM...')}
-                    className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-white/[0.04] border border-white/10 text-white placeholder:text-white/30 focus:border-teal-500/40 focus:outline-none" />
+                    className="w-full h-9 px-3 rounded-xl text-xs font-medium bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/60 dark:placeholder:text-[#94A0B2]/60 focus:border-[#0F766E] dark:focus:border-[#2DD4BF] focus:outline-none" />
                 </div>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
@@ -1157,27 +1155,25 @@ export function KebajikanReportPage() {
                   onClick={exportPicPdf}
                   disabled={!reportPicName.trim() || selectedTickets.length === 0 || generatingPicPdf}
                   className={cn(
-                    'flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:brightness-110',
+                    'flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-black uppercase tracking-widest bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] transition-colors hover:bg-[#115E59] dark:hover:bg-[#5EEAD4]',
                     (!reportPicName.trim() || selectedTickets.length === 0 || generatingPicPdf) && 'opacity-40 pointer-events-none'
                   )}
-                  style={{ background: TEAL, color: '#0f172a' }}
                 >
-                  <FileDown className={cn('w-4 h-4', generatingPicPdf && 'animate-bounce')} />
+                  <FileDown className="w-4 h-4" />
                   {generatingPicPdf ? t('kebajikan:report_generating_pdf', 'Menjana PDF...') : t('kebajikan:report_pdf_count_btn', 'PDF ({{count}} tiket)', { count: selectedTickets.length })}
                 </button>
                 <button
                   onClick={() => exportPicExcel(selectedTickets)}
                   disabled={selectedTickets.length === 0}
                   className={cn(
-                    'flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-black uppercase tracking-widest transition-all hover:brightness-110',
+                    'flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-black uppercase tracking-widest border border-emerald-600/30 dark:border-emerald-400/30 bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 transition-colors hover:bg-emerald-100 dark:hover:bg-emerald-500/25',
                     selectedTickets.length === 0 && 'opacity-40 cursor-not-allowed'
                   )}
-                  style={{ background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)', color: '#22C55E' }}
                 >
                   <FileDown className="w-4 h-4" /> {t('kebajikan:report_excel_count_btn', 'Excel ({{count}} tiket)', { count: selectedTickets.length })}
                 </button>
               </div>
-              {!reportPicName.trim() && <p className="text-[10px] text-center text-white/25 mt-2">{t('kebajikan:report_enter_pic_name_first', 'Sila masukkan nama PIC dahulu')}</p>}
+              {!reportPicName.trim() && <p className="text-[10px] text-center text-[#3B635C] dark:text-[#94A0B2] mt-2">{t('kebajikan:report_enter_pic_name_first', 'Sila masukkan nama PIC dahulu')}</p>}
             </GlassCard>
           )}
 

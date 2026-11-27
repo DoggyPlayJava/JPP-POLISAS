@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { useTranslation } from 'react-i18next';
 import { changeLanguage, SupportedLanguage } from '@/lib/i18n';
 import { supabase } from '@/lib/supabase';
@@ -209,7 +210,7 @@ export function CompleteProfileModal() {
 
   const handleLogout = async () => {
     if (!profile?.matric_no?.trim()) {
-      const confirmDelete = window.confirm(
+      const confirmDelete = await confirmAction(
         t('auth:confirm_cancel_registration', "Adakah anda pasti mahu membatalkan pendaftaran? Akaun anda akan dipadam dari sistem.")
       );
       if (!confirmDelete) return;

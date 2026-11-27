@@ -77,7 +77,7 @@ export function PolyMapsModal() {
             className="w-24 h-24 bg-white/20  rounded-3xl flex items-center justify-center relative shadow-2xl"
           >
             <Map className="w-12 h-12 text-white" />
-            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center shadow-lg animate-bounce">
+            <div className="absolute -bottom-2 -right-2 w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center shadow-lg">
               <MapPin className="w-4 h-4 text-amber-900" />
             </div>
           </motion.div>

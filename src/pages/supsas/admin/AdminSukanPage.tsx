@@ -5,6 +5,7 @@ import { Trophy, Plus, AlertTriangle, Edit2, Trash2, ToggleLeft, ToggleRight, Sa
 import { supabase } from '@/lib/supabase';
 import { useSupsas, SupsasSport } from '@/contexts/SupsasContext';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { cn } from '@/lib/utils';
 import { DynamicIcon } from '@/components/ui/DynamicIcon';
 import { AdminBracketPanel } from './components/AdminBracketPanel';
@@ -139,10 +140,16 @@ export function AdminSukanPage() {
 
   // Reset: Padam semua fixtures untuk sukan ini
   const handleResetBracket = async (sport: SupsasSport) => {
-    const confirmStep1 = window.confirm(t('supsas:confirm_reset_bracket_1', 'Reset bracket "{{name}}"?\n\nSemua keputusan perlawanan dan jadual yang dijana akan DIPADAM sepenuhnya.\n\nTekan OK untuk teruskan.', { name: sport.name }));
+    const confirmStep1 = await confirmAction({
+      description: t('supsas:confirm_reset_bracket_1', 'Reset bracket "{{name}}"?\n\nSemua keputusan perlawanan dan jadual yang dijana akan DIPADAM sepenuhnya.\n\nTekan OK untuk teruskan.', { name: sport.name }),
+      variant: 'warning',
+    });
     if (!confirmStep1) return;
 
-    const confirmStep2 = window.confirm(t('supsas:confirm_reset_bracket_2', 'PENGESAHAN AKHIR\n\nAdakah anda PASTI ingin memadam bracket "{{name}}"?\n\nTindakan ini TIDAK BOLEH diundur.', { name: sport.name }));
+    const confirmStep2 = await confirmAction({
+      description: t('supsas:confirm_reset_bracket_2', 'PENGESAHAN AKHIR\n\nAdakah anda PASTI ingin memadam bracket "{{name}}"?\n\nTindakan ini TIDAK BOLEH diundur.', { name: sport.name }),
+      variant: 'danger',
+    });
     if (!confirmStep2) return;
 
     setAdvancing(sport.id + '_reset');

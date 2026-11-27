@@ -573,6 +573,7 @@ import { PwaUpdater } from '@/components/PwaUpdater';
 import { InstallAppPrompt } from '@/components/pwa/InstallAppPrompt';
 import { GlobalPullToUpdate } from '@/components/layout/GlobalPullToUpdate';
 import { CommandPalette } from '@/components/ui/CommandPalette';
+import { GlobalConfirmHost } from '@/components/ui/GlobalConfirmHost';
 
 function GlobalRedirector() {
   const navigate = useNavigate();
@@ -699,6 +700,7 @@ function App() {
                     <PwaUpdater />
                     <InstallAppPrompt />
                     <OfflineIndicator />
+                    <GlobalConfirmHost />
                       <Toaster position="top-center">
                         {(t) => {
                           const isError = t.type === 'error';

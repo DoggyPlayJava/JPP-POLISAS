@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { useTranslation } from 'react-i18next';
 
 // ─── TYPES ──────────────────────────────────────────────────────────────────
@@ -239,7 +240,7 @@ export function KeusahawananProgram() {
   // ── Delete ────────────────────────────────────────────────────────────────
   const handleDelete = async (p: Program, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm(t('keusahawanan:confirm_delete_program', 'Padam "{{title}}"? Tindakan ini tidak boleh dibatalkan.', { title: p.title }))) return;
+    if (!(await confirmAction(t('keusahawanan:confirm_delete_program', 'Padam "{{title}}"? Tindakan ini tidak boleh dibatalkan.', { title: p.title })))) return;
     setDeleting(p.id);
     try {
       if (p.image_url) {

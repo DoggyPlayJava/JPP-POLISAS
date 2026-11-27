@@ -5672,6 +5672,29 @@ Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asa
   - Membaiki 2 ralat masa jalan P0: paksaan rentetan selamat `String(klkPhone).replace(...)` pada `PolyRiderHome`/`PolyRiderDashboard`/`PolyRiderSuspended` (serta jarak `--sat` & susun atur kad), dan pengawal `m.profiles?.full_name` pada `UrusKelabPage` (serta menaikkan bar simpan tetap melepasi `#bottom-nav-dock`).
   - Membaiki overflow mendatar `+76px` pada `EmsCertificatePage`, jarak `--sat` pada semua halaman awam berasingan (`EmsPublicRegisterPage`, `EmsAudienceScanPage`, `EmsJuryPortalPage`, `EmsLeaderboardPage`, `EmsCertVerifyPage`, `BusinessCertVerifyPage`, `KeusahawananPoster`, `MakmpJppChrome`), garis penghubung penjejak `KebajikanLiveTrackerCard`, CTA *Reset Tapis* pada `PolyMartHome`, kontras `AkademikDashboard`/`AkademikCgpa`/`PolyRentPage`/`NotifikasiPage`/`SettingsPage`, dan avatar sandaran `LeaderboardPage`.
 
+---
+
+## 46. Elevasi UI/UX Gelombang 2 — Pariti Cockpit Admin/Exco, `GlobalConfirmHost`, Sifar `backdrop-blur` & Sifar `window.confirm()` (Nov 2026)
+
+- **Servis Dialog Pengesahan Global (`src/lib/confirmDialog.ts`, `src/components/ui/GlobalConfirmHost.tsx`, `src/components/ui/ConfirmDialog.tsx`, `src/App.tsx`):**
+  - Menyediakan pembantu berasaskan *Promise* `confirmAction(messageOrOptions)` yang disambungkan ke `<GlobalConfirmHost />` pada akar aplikasi (`src/App.tsx`), menyokong baris gilir pengesahan berturut-turut (*two-step confirm*) dan memaparkan `<ConfirmDialog />` berasaskan Radix dengan margin sisi mudah alih (`w-[calc(100%-2rem)]`), `shadow-surface-lg`, `whitespace-pre-line`, dan `overscroll-contain`.
+  - Menggantikan **kesemua 34 panggilan `window.confirm()` merentas 25 fail** kepada `await confirmAction(...)` supaya tiada lagi dialog pelayar natif menyekat PWA iOS Standalone atau melanggar keseragaman Dwi-Tema.
+  - **Peraturan Baharu:** Semua pengesahan tindakan pemadaman/amaran baharu MESTI menggunakan `confirmAction(...)` daripada `@/lib/confirmDialog` atau `<ConfirmDialog />` — jangan gunakan `window.confirm()`.
+- **Sifar `backdrop-blur` & Pembaikan `PromoPage.tsx`:**
+  - Membuang 2 kebocoran `backdrop-blur-*` terakhir dalam `PromoPage.tsx` (sifar `backdrop-blur` di seluruh `src/`), menggantikan 40 gelung `AmbientDust` berterusan dengan corak titik CSS statik, memulakan `Scene0Hook` terus pada `phase = 2` (tiada skrin hitam kosong 500ms), dan menggantikan `scale: 0` → `scale: 0.92` serta `h-screen` → `h-[100dvh]`.
+- **Laporan e-Kebajikan & Borang (`KebajikanReportPage.tsx`, `KebajikanSubmitPage.tsx`):**
+  - Menulis semula `KebajikanReportPage.tsx` sepenuhnya dengan sokongan Dwi-Tema *Crisp Alabaster* / *Obsidian Carbon* (membetulkan kontras P0 1:1 teks putih-atas-putih dalam Mod Cerah pada kesemua 8 bahagian laporan bulanan dan laporan PIC) serta membuang `animate-bounce` pada butang PDF.
+  - Membaiki animasi masuk lencana kejayaan `KebajikanSubmitPage.tsx` (`scale: 0` → `scale: 0.92`).
+- **Kokpit JPP HQ, Exco & PolyMaps Admin (`JppLayout`, `JppSidebar`, `JppHomePage`, `JppUnitDashboard`, `JppOverviewPage`, `JppLogsPage`, `JppPolyMapsAdmin`):**
+  - Menyeragamkan laci mudah alih `JppLayout` (`ease-drawer`, `--sat`, `overscroll-contain`), membaiki kontras butang `LanguageToggle`/`ThemeToggle` di `JppSidebar` Mod Cerah di atas bar sisi hijau pain gelap, menaik taraf kad & label Mod Gelap kepada tangga *Obsidian Carbon* (`#13171D`, `#252B35`, `#94A0B2`), membaiki lencana `99.98% ONLINE` satu baris (`whitespace-nowrap shrink-0`), dan menambah isyarat pudar skrol melintang mudah alih pada bar tab `JppPolyMapsAdmin`.
+- **SUPSAS Admin, KLK, Keusahawanan/POS, EMS & Karnival:**
+  - `SupsasLayout.tsx` kini melangkau terus kepada `<Outlet />` bagi laluan `/supsas/admin/*` bagi menghapuskan butang hamburger mudah alih berganda dan `<FloatingAiChat />` berganda; `SupsasAdminLayout.tsx` dipautkan kepada `useEdgeSwipeDrawer` dengan tangga *Obsidian Carbon* dan `--sat`; `SupsasAdminHome.tsx` menggantikan kelas dinamik `bg-${color}-500/10` yang gugur dengan peta warna statik dan membaiki kontras KPI `1.76:1`.
+  - `KlkDashboard.tsx` membaiki kontras Mod Cerah kad tindakan pantas PolyRent/PolyRider kepada `#0F766E` / `emerald-800` / `amber-900`.
+  - `KeusahawananDashboard.tsx`, `PosOrderPage.tsx`, `PosScannerModal.tsx`, `EmsLeaderboardPage.tsx`, `EmsCheckinPage.tsx`, `KarnivalScoreboard.tsx`, dan `KarnivalVotePage.tsx`: membersihkan `animate-pulse`/`animate-bounce`/`scale: 0`, menaikkan troli mudah alih POS melepasi `BottomNav` (`pb-28 lg:pb-4`), membaiki kontras butang togol Mod Gelap & isyarat skrol tab `EmsLeaderboardPage`, dan menyeragamkan ketinggian `min-h-[100dvh]`.
+- **Sapuan Mikro Sifar `scale: 0` & Sifar `animate-bounce`:**
+  - Menggantikan kesemua baki `initial={{ scale: 0 }}` kepada `initial={{ scale: 0.92, opacity: 0 }}` (`KamsisApplicationModal`, `KlkResidencyModal`, `PushPermissionModal`, `KlkResidencyFormPage`) dan membuang kesemua baki `animate-bounce` merentas `src/` (`EmsLuckyDrawModal`, `Pannellum360Viewer`, `PolyMapsModal`, `EmsAudienceScanPage`, `EmsLeaderboardPage`, `KeusahawananPoster`, `PolyMartProductDetail`, `PolyRiderAdminDashboard`, `PolyRiderDashboard`, `AhliPage`).
+
+
 
 
 

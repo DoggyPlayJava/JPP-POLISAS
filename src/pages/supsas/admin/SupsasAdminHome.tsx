@@ -126,11 +126,11 @@ export function SupsasAdminHome() {
     { label: t('supsas:stat_medals_won', 'Medal Diraih'),    value: totalMedals,      icon: Medal,    color: 'emerald',sub: t('supsas:sub_gold_silver_bronze', 'emas + perak + gangsa'), path: '/supsas/admin/keputusan' },
   ];
 
-  const colorMap: Record<string, string> = {
-    violet:  'from-violet-500/10  border-violet-500/20  text-violet-400',
-    amber:   'from-amber-500/10   border-amber-500/20   text-amber-400',
-    red:     'from-red-500/10     border-red-500/20     text-red-400',
-    emerald: 'from-emerald-500/10 border-emerald-500/20 text-emerald-400',
+  const colorMap: Record<string, { card: string; iconBox: string; text: string }> = {
+    violet:  { card: 'bg-[#13171D] border-violet-500/30 hover:border-violet-400/50',  iconBox: 'bg-violet-500/15 border-violet-500/30',  text: 'text-violet-300' },
+    amber:   { card: 'bg-[#13171D] border-amber-500/30 hover:border-amber-400/50',    iconBox: 'bg-amber-500/15 border-amber-500/30',    text: 'text-amber-300' },
+    red:     { card: 'bg-[#13171D] border-red-500/30 hover:border-red-400/50',        iconBox: 'bg-red-500/15 border-red-500/30',        text: 'text-red-300' },
+    emerald: { card: 'bg-[#13171D] border-emerald-500/30 hover:border-emerald-400/50',iconBox: 'bg-emerald-500/15 border-emerald-500/30',text: 'text-emerald-300' },
   };
 
   const QUICK_ACTIONS = [
@@ -141,23 +141,23 @@ export function SupsasAdminHome() {
   ];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8 pb-24 md:pb-8">
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.4em] text-amber-400/60 mb-2">{t('supsas:admin_panel_badge', 'Panel Admin')}</p>
-          <h1 className="text-3xl sm:text-4xl font-black text-white tracking-tight">
+          <p className="text-[11px] font-black uppercase tracking-[0.28em] text-amber-400 mb-2">{t('supsas:admin_panel_badge', 'Panel Admin')}</p>
+          <h1 className="text-3xl sm:text-4xl font-black text-[#F1F5F9] tracking-tight">
             {edition?.name ?? 'SUPSAS Dashboard'}
           </h1>
           {edition?.tagline && (
-            <p className="text-white/30 font-medium mt-1">{edition.tagline}</p>
+            <p className="text-[#94A0B2] font-medium mt-1">{edition.tagline}</p>
           )}
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           {isLive && (
-            <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-red-500/15 border border-red-500/25">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-              <span className="text-xs font-black uppercase tracking-widest text-red-400">{t('supsas:event_in_progress', 'Acara Sedang Berlangsung')}</span>
+            <div className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-red-500/15 border border-red-500/30">
+              <span className="w-2 h-2 rounded-full bg-red-500" />
+              <span className="text-xs font-black uppercase tracking-widest text-red-300">{t('supsas:event_in_progress', 'Acara Sedang Berlangsung')}</span>
             </div>
           )}
           {/* N-3: Export PDF button */}
@@ -165,7 +165,7 @@ export function SupsasAdminHome() {
             <button
               onClick={handleExportPDF}
               disabled={exporting}
-              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-white/50 text-[10px] font-black uppercase tracking-widest hover:text-white hover:border-white/20 transition-all disabled:opacity-40"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-[#13171D] border border-[#252B35] text-[#F1F5F9] text-xs font-bold uppercase tracking-wider hover:bg-[#1B2028] transition-colors disabled:opacity-40"
             >
               {exporting ? <Loader className="w-3.5 h-3.5 animate-spin" /> : <FileDown className="w-3.5 h-3.5" />}
               {t('supsas:export_pdf_btn', 'Export PDF')}
@@ -177,27 +177,26 @@ export function SupsasAdminHome() {
       {/* Stat Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {STAT_CARDS.map(({ label, value, icon: Icon, color, sub, path }, i) => {
-          const cls = colorMap[color];
-          const [, borderCls, textCls] = cls.split(' ');
+          const theme = colorMap[color] ?? colorMap.amber;
           return (
             <motion.button
               key={label}
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.07 }}
+              transition={{ duration: 0.18, delay: Math.min(i * 0.03, 0.1) }}
               onClick={() => navigate(path)}
               className={cn(
-                'group relative p-5 rounded-3xl bg-gradient-to-br to-transparent border text-left transition-all hover:scale-[1.03] active:scale-[0.98]',
-                cls
+                'group relative p-5 rounded-3xl border text-left transition-[transform,border-color] duration-150 active:scale-[0.98] shadow-surface-sm',
+                theme.card
               )}
             >
-              <div className={cn('w-10 h-10 rounded-2xl flex items-center justify-center mb-4 transition-transform group-hover:scale-110', `bg-${color}-500/10`, `border border-${color}-500/20`)}>
-                <Icon className={cn('w-5 h-5', textCls)} />
+              <div className={cn('w-10 h-10 rounded-2xl border flex items-center justify-center mb-4 transition-transform duration-150 group-hover:scale-105', theme.iconBox)}>
+                <Icon className={cn('w-5 h-5', theme.text)} />
               </div>
-              <p className="text-3xl font-black text-white mb-1">{value}</p>
-              <p className="text-[9px] font-black uppercase tracking-widest text-white/40">{sub}</p>
-              <p className="text-[8px] font-black uppercase tracking-widest text-white/20 mt-0.5">{label}</p>
-              <ArrowRight className={cn('absolute bottom-5 right-5 w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5', textCls)} />
+              <p className="text-3xl font-black font-mono tabular-nums text-[#F1F5F9] mb-1">{value}</p>
+              <p className="text-[11px] font-bold text-[#94A0B2] leading-snug">{label}</p>
+              <p className="text-[10px] font-medium text-[#94A0B2]/80 mt-0.5 pr-4">{sub}</p>
+              <ArrowRight className={cn('absolute bottom-5 right-5 w-4 h-4 transition-transform duration-150 group-hover:translate-x-0.5', theme.text)} />
             </motion.button>
           );
         })}
@@ -205,34 +204,34 @@ export function SupsasAdminHome() {
 
       {/* Quick Actions */}
       <div>
-        <h2 className="text-lg font-black text-white mb-4">{t('supsas:quick_actions', 'Tindakan Pantas')}</h2>
+        <h2 className="text-lg font-black text-[#F1F5F9] mb-4">{t('supsas:quick_actions', 'Tindakan Pantas')}</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {QUICK_ACTIONS.map(({ label, desc, path, icon: Icon, urgent }, i) => (
             <motion.button
               key={path}
-              initial={{ opacity: 0, x: -16 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 + i * 0.07 }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.18, delay: Math.min(i * 0.03, 0.1) }}
               onClick={() => navigate(path)}
               className={cn(
-                'group flex items-center gap-4 px-5 py-4 rounded-2xl border transition-all hover:scale-[1.02] active:scale-[0.98] text-left',
+                'group flex items-center gap-4 px-5 py-4 rounded-2xl border transition-[transform,background-color,border-color] duration-150 active:scale-[0.98] text-left',
                 urgent
-                  ? 'bg-red-500/5 border-red-500/20 hover:border-red-500/30'
-                  : 'bg-white/[0.02] border-white/5 hover:bg-white/5 hover:border-white/10'
+                  ? 'bg-red-500/10 border-red-500/30 hover:border-red-400/50'
+                  : 'bg-[#13171D] border-[#252B35] hover:bg-[#1B2028] hover:border-white/20'
               )}
             >
               <div className={cn(
-                'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110',
-                urgent ? 'bg-red-500/15 border border-red-500/25' : 'bg-amber-500/10 border border-amber-500/20'
+                'w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 transition-transform duration-150 group-hover:scale-105',
+                urgent ? 'bg-red-500/15 border border-red-500/30' : 'bg-amber-500/15 border border-amber-500/30'
               )}>
                 <Icon className={cn('w-5 h-5', urgent ? 'text-red-400' : 'text-amber-400')} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className={cn('font-black text-sm leading-none mb-0.5', urgent ? 'text-red-300' : 'text-white')}>{label}</p>
-                <p className="text-[10px] text-white/30 font-medium">{desc}</p>
+                <p className={cn('font-black text-sm leading-tight mb-0.5', urgent ? 'text-red-300' : 'text-[#F1F5F9]')}>{label}</p>
+                <p className="text-xs text-[#94A0B2] font-medium">{desc}</p>
               </div>
-              {urgent && <Zap className="w-4 h-4 text-red-400 flex-shrink-0 animate-pulse" />}
-              <ArrowRight className="w-4 h-4 text-white/20 group-hover:text-white/40 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+              {urgent && <Zap className="w-4 h-4 text-red-400 flex-shrink-0" />}
+              <ArrowRight className="w-4 h-4 text-[#94A0B2] group-hover:text-[#F1F5F9] group-hover:translate-x-0.5 transition-transform flex-shrink-0" />
             </motion.button>
           ))}
         </div>
@@ -240,17 +239,17 @@ export function SupsasAdminHome() {
 
       {/* Top Kontingen */}
       {topKontingen && (
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-amber-500/10 to-transparent border border-amber-500/20">
+        <div className="p-6 rounded-3xl bg-[#13171D] border border-amber-500/30 shadow-surface-sm">
           <div className="flex items-center gap-3 mb-4">
             <Trophy className="w-5 h-5 text-amber-400" />
-            <h2 className="text-sm font-black uppercase tracking-widest text-amber-400">{t('supsas:temporary_leader', 'Pemimpin Sementara')}</h2>
+            <h2 className="text-xs font-black uppercase tracking-widest text-amber-400">{t('supsas:temporary_leader', 'Pemimpin Sementara')}</h2>
           </div>
           <div className="flex items-center gap-4">
             <div className="w-4 h-12 rounded-full" style={{ backgroundColor: topKontingen.color }} />
             <div>
-              <p className="text-2xl font-black text-white">{topKontingen.name}</p>
-              <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mt-0.5">
-                🥇 {topKontingen.gold} · 🥈 {topKontingen.silver} · 🥉 {topKontingen.bronze}
+              <p className="text-2xl font-black text-[#F1F5F9]">{topKontingen.name}</p>
+              <p className="text-xs font-bold font-mono tabular-nums text-[#94A0B2] mt-0.5">
+                Emas {topKontingen.gold} · Perak {topKontingen.silver} · Gangsa {topKontingen.bronze}
               </p>
             </div>
           </div>

@@ -73,7 +73,7 @@ export function KeusahawananPoster() {
 
           {/* Headline Megah */}
           <div className="w-full flex items-center justify-center gap-3">
-            <div className="bg-amber-400 text-amber-950 p-2 rounded-2xl shadow-md border border-amber-300 transform -rotate-12 animate-bounce">
+            <div className="bg-amber-400 text-amber-950 p-2 rounded-2xl shadow-md border border-amber-300 transform -rotate-12">
               <Megaphone className="w-6 h-6 fill-amber-950" />
             </div>
             <div className="bg-gradient-to-r from-[#7A1C1C] to-[#992222] px-5 py-2.5 rounded-[1.25rem] shadow-xl border border-red-900/30">

@@ -658,19 +658,18 @@ export function KeusahawananDashboard() {
       {/* PolyMart Hub Card */}
       {selectedBusiness && (
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.09 }}
+          transition={{ duration: 0.18 }}
           className="w-full max-w-full min-w-0"
         >
           {data.polymartProductsCount > 0 ? (
-            <div className="rounded-[2rem] p-5 sm:p-6 bg-gradient-to-br from-amber-500/10 via-card to-card border border-amber-500/30 shadow-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5">
-              <div className="absolute -right-12 -top-12 w-40 h-40 bg-amber-500/10 rounded-full  pointer-events-none" />
+            <div className="rounded-[2rem] p-5 sm:p-6 bg-gradient-to-br from-amber-500/10 via-card to-card border border-amber-500/30 shadow-surface-sm relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-5">
               <div className="space-y-3 relative z-10">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-black">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-400 text-xs font-black">
                   <ShoppingBag className="w-3.5 h-3.5" />
                   <span>{t('keusahawanan:dash_polymart_active_showcase', 'Etalase PolyMart Aktif')}</span>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse ml-0.5" />
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 ml-0.5" />
                 </div>
                 <div>
                   <h3 className="text-base sm:text-lg font-black text-foreground">
@@ -682,17 +681,17 @@ export function KeusahawananDashboard() {
                 </div>
                 {/* Metrics strip */}
                 <div className="flex flex-wrap items-center gap-3 pt-1">
-                  <div className="px-3 py-1.5 rounded-xl bg-background/80 border border-border/40 text-xs font-bold text-foreground flex items-center gap-2">
-                    <span className="font-black text-amber-500">{data.polymartProductsCount}</span>
+                  <div className="px-3 py-1.5 rounded-xl bg-background border border-border text-xs font-bold text-foreground flex items-center gap-2">
+                    <span className="font-black font-mono tabular-nums text-amber-600 dark:text-amber-400">{data.polymartProductsCount}</span>
                     <span>{t('keusahawanan:dash_polymart_products_shown', 'Produk Dipaparkan')}</span>
                   </div>
                   <div className={cn(
                     "px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-2",
                     data.pendingPmOrdersCount > 0
-                      ? "bg-rose-500/10 border-rose-500/30 text-rose-600 dark:text-rose-400 font-black animate-pulse"
-                      : "bg-background/80 border-border/40 text-muted-foreground"
+                      ? "bg-rose-500/10 border-rose-500/30 text-rose-700 dark:text-rose-400 font-black"
+                      : "bg-background border-border text-muted-foreground"
                   )}>
-                    <span className={cn(data.pendingPmOrdersCount > 0 ? "text-rose-500 font-black" : "text-foreground font-black")}>
+                    <span className={cn("font-mono tabular-nums", data.pendingPmOrdersCount > 0 ? "text-rose-600 dark:text-rose-400 font-black" : "text-foreground font-black")}>
                       {data.pendingPmOrdersCount}
                     </span>
                     <span>{t('keusahawanan:dash_polymart_pending_orders', 'Pesanan Baru Menunggu')}</span>
@@ -704,14 +703,14 @@ export function KeusahawananDashboard() {
               <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 relative z-10 shrink-0">
                 <button
                   onClick={() => navigate('/polymart/kedai/' + businessId)}
-                  className="px-4 py-2.5 rounded-xl text-xs font-black text-foreground bg-muted hover:bg-muted/80 border border-border/50 transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-xs font-black text-foreground bg-muted hover:bg-muted/80 border border-border transition-colors flex items-center gap-2 shadow-surface-sm cursor-pointer"
                 >
                   <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>{t('keusahawanan:dash_polymart_view_shop', 'Lihat Etalase Kedai')}</span>
                 </button>
                 <button
                   onClick={() => navigate('/polymart/vendor')}
-                  className="px-4 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-amber-500 hover:bg-amber-400 transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+                  className="px-4 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-amber-500 hover:bg-amber-400 transition-colors flex items-center gap-2 shadow-surface-sm cursor-pointer"
                 >
                   <Store className="w-3.5 h-3.5" />
                   <span>{t('keusahawanan:dash_polymart_manage_orders', 'Urus Pesanan PolyMart')}</span>
@@ -719,8 +718,8 @@ export function KeusahawananDashboard() {
               </div>
             </div>
           ) : (
-            <div className="rounded-[2rem] p-5 sm:p-6 bg-card border border-amber-500/20 relative overflow-hidden flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-              <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500 shrink-0">
+            <div className="rounded-[2rem] p-5 sm:p-6 bg-card border border-amber-500/25 shadow-surface-sm relative overflow-hidden flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+              <div className="w-14 h-14 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
                 <Store className="w-7 h-7" />
               </div>
               <div className="flex-1 min-w-0">
@@ -733,7 +732,7 @@ export function KeusahawananDashboard() {
               </div>
               <button
                 onClick={() => navigate('/keusahawanan/pos/products')}
-                className="mt-2 sm:mt-0 shrink-0 px-4 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-amber-500 hover:bg-amber-400 transition-all flex items-center gap-2 shadow-sm cursor-pointer"
+                className="mt-2 sm:mt-0 shrink-0 px-4 py-2.5 rounded-xl text-xs font-black text-slate-950 bg-amber-500 hover:bg-amber-400 transition-colors flex items-center gap-2 shadow-surface-sm cursor-pointer"
               >
                 {t('keusahawanan:dash_polymart_publish_btn', '+ Terbitkan Produk ke PolyMart')}
               </button>
@@ -746,28 +745,28 @@ export function KeusahawananDashboard() {
       <div className="tour-keusahawanan-stats grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-6 w-full max-w-full min-w-0">
         
         {/* Total Revenue */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-          className="tour-sales-metric bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group min-w-0">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}
+          className="tour-sales-metric bg-card border border-border rounded-[2rem] p-6 shadow-surface-sm hover:shadow-surface-md transition-shadow relative overflow-hidden group min-w-0">
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-500"><DollarSign className="w-4 h-4" /></div>
+              <div className="p-2 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400"><DollarSign className="w-4 h-4" /></div>
               <p className="text-sm font-bold text-foreground">{t('keusahawanan:dash_total_revenue', 'Total Revenue')}</p>
             </div>
-            <Activity className="w-4 h-4 text-muted-foreground/30" />
+            <Activity className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="flex items-end justify-between mt-4">
             <div className="flex-1">
-              <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 mb-0.5">{t('keusahawanan:dash_gross_cash_collected', 'Jumlah Tunai Kasar (Tunai + Bank)')}</p>
-              <p className="text-3xl font-black text-foreground">RM {data.totalCashCollected.toFixed(2)}</p>
+              <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground mb-0.5">{t('keusahawanan:dash_gross_cash_collected', 'Jumlah Tunai Kasar (Tunai + Bank)')}</p>
+              <p className="text-3xl font-black font-mono tabular-nums text-foreground">RM {data.totalCashCollected.toFixed(2)}</p>
               
-              <div className="flex flex-col gap-1.5 mt-3 pt-3 border-t border-border/30 text-[10px] font-bold text-muted-foreground">
+              <div className="flex flex-col gap-1.5 mt-3 pt-3 border-t border-border/60 text-[11px] font-bold text-muted-foreground">
                 <div className="flex justify-between">
                   <span>{t('keusahawanan:dash_settled_sales', 'Jualan Selesai (Accrual):')}</span>
-                  <span className="text-foreground">RM {data.revenue.toFixed(2)}</span>
+                  <span className="font-mono tabular-nums text-foreground">RM {data.revenue.toFixed(2)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>{t('keusahawanan:dash_online_pending', 'Online Pending:')}</span>
-                  <span className="text-blue-500">RM {data.onlinePendingRevenue.toFixed(2)}</span>
+                  <span className="font-mono tabular-nums text-blue-600 dark:text-blue-400">RM {data.onlinePendingRevenue.toFixed(2)}</span>
                 </div>
               </div>
             </div>
@@ -775,7 +774,7 @@ export function KeusahawananDashboard() {
             <div className="h-12 w-24">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.revenueHistory}>
-                  <Bar isAnimationActive dataKey="value" fill={color} radius={[2,2,0,0]} opacity={0.8} />
+                  <Bar isAnimationActive={false} dataKey="value" fill={color} radius={[2,2,0,0]} opacity={0.85} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -783,18 +782,18 @@ export function KeusahawananDashboard() {
         </motion.div>
 
         {/* Total Orders */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-shadow">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, delay: 0.03 }}
+          className="bg-card border border-border rounded-[2rem] p-6 shadow-surface-sm hover:shadow-surface-md transition-shadow">
           <div className="flex items-start justify-between mb-2">
             <div className="flex items-center gap-2">
-              <div className="p-2 rounded-xl bg-purple-500/10 text-purple-500"><ShoppingBag className="w-4 h-4" /></div>
+              <div className="p-2 rounded-xl bg-teal-500/10 text-[#0F766E] dark:text-[#2DD4BF]"><ShoppingBag className="w-4 h-4" /></div>
               <p className="text-sm font-bold text-foreground">{t('keusahawanan:dash_total_orders', 'Total Orders')}</p>
             </div>
-            <Activity className="w-4 h-4 text-muted-foreground/30" />
+            <Activity className="w-4 h-4 text-muted-foreground" />
           </div>
           <div className="flex items-end justify-between mt-4">
             <div>
-              <p className="text-3xl font-black text-foreground">{data.orders}</p>
+              <p className="text-3xl font-black font-mono tabular-nums text-foreground">{data.orders}</p>
               <div className="flex items-center gap-1.5 mt-2 text-xs font-bold text-muted-foreground">
                 <span>{t('keusahawanan:dash_this_month', 'Bulan ini')}</span>
               </div>
@@ -803,7 +802,7 @@ export function KeusahawananDashboard() {
             <div className="h-12 w-24">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={data.orderHistory}>
-                  <Bar isAnimationActive dataKey="value" fill="#a855f7" radius={[2,2,0,0]} opacity={0.8} />
+                  <Bar isAnimationActive={false} dataKey="value" fill="#0F766E" radius={[2,2,0,0]} opacity={0.85} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -811,8 +810,8 @@ export function KeusahawananDashboard() {
         </motion.div>
 
         {/* Monthly Goals */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-          className="bg-card border border-border/50 rounded-[2rem] p-6 shadow-sm hover:shadow-md transition-shadow flex items-center justify-between">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, delay: 0.06 }}
+          className="bg-card border border-border rounded-[2rem] p-6 shadow-surface-sm hover:shadow-surface-md transition-shadow flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-4">
               <div className="p-2 rounded-xl bg-amber-500/10 text-amber-500"><Target className="w-4 h-4" /></div>

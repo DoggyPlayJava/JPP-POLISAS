@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useBusinessSwitcher } from '@/contexts/BusinessSwitcherContext';
 import { usePosData } from '@/hooks/usePosData';
 import { hexToRgba } from '@/lib/utils';
+import { confirmAction } from '@/lib/confirmDialog';
 import {
   History, Search, FileText, Ban, ChevronRight, X,
   CreditCard, Banknote, QrCode, CheckCircle2, XCircle,
@@ -70,7 +71,7 @@ export function PosHistoryPage() {
     const confirmMsg = t('keusahawanan:pos_void_confirm', 'Batalkan transaksi {{invoice}}? Stok akan dikembalikan.', {
       invoice: selected.invoice_number
     });
-    if (!window.confirm(confirmMsg)) return;
+    if (!(await confirmAction({ description: confirmMsg, variant: 'warning' }))) return;
 
     setVoiding(true);
     await pos.voidTransaction(selected.id, businessId);

@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { type BusinessExpense, type ExpenseCategory } from '@/types';
 import toast from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 
 type Range = '1d' | '7d' | '1m';
 const PIE_COLORS = ['#7c3aed', '#2563eb', '#059669', '#d97706', '#dc2626'];
@@ -199,7 +200,7 @@ export function PosStatsPage() {
   };
 
   const handleDeleteExpense = async (id: string) => {
-    if (!businessId || !window.confirm(t('keusahawanan:pos_confirm_delete_expense', 'Padam rekod perbelanjaan ini?'))) return;
+    if (!businessId || !(await confirmAction(t('keusahawanan:pos_confirm_delete_expense', 'Padam rekod perbelanjaan ini?')))) return;
     await pos.deleteExpense(id, businessId);
     await loadExpenses();
     pos.fetchStats(businessId, range).then(s => setStats(s));

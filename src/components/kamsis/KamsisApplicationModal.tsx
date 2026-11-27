@@ -295,9 +295,9 @@ export function KamsisApplicationModal() {
                     className="py-6 text-center"
                   >
                     <motion.div
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      transition={{ type: 'spring', delay: 0.1 }}
+                      initial={{ scale: 0.92, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ duration: 0.18 }}
                       className="w-16 h-16 rounded-2xl bg-violet-500/15 flex items-center justify-center mx-auto mb-4"
                     >
                       <CheckCircle2 className="w-8 h-8 text-violet-400" />

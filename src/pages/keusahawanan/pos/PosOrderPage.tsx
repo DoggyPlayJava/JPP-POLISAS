@@ -617,14 +617,14 @@ export function PosOrderPage() {
           </div>
 
           {/* Scrollable cart + checkout */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto overscroll-contain pb-28 lg:pb-4">
             {/* Cart items */}
             <div className="px-5 py-3">
               {cart.length === 0 ? (
                 <div className="py-10 text-center">
-                  <ShoppingCart className="w-8 h-8 text-muted-foreground/20 mx-auto mb-3" />
-                  <p className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/30">{t('pos_cart_empty')}</p>
-                  <p className="text-[10px] text-muted-foreground/20 mt-1">{t('keusahawanan:pos_select_product_hint', 'Pilih produk dari grid kiri')}</p>
+                  <ShoppingCart className="w-8 h-8 text-muted-foreground/60 mx-auto mb-3" />
+                  <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">{t('pos_cart_empty')}</p>
+                  <p className="text-[11px] text-muted-foreground/80 mt-1">{t('keusahawanan:pos_select_product_hint', 'Pilih produk dari grid kiri')}</p>
                 </div>
               ) : (
                 <AnimatePresence mode="popLayout">
@@ -865,7 +865,7 @@ export function PosOrderPage() {
                 transition={{ type: 'spring', stiffness: 300, damping: 30 }}
                 className="relative w-full max-w-sm mx-auto rounded-3xl p-8 bg-card border border-border shadow-2xl text-center flex flex-col max-h-[90vh] overflow-y-auto"
               >
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.1, type: 'spring', stiffness: 300 }}
+                <motion.div initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
                   className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
                   style={{ background: hexToRgba(color, 0.1) }}>
                   <CheckCircle2 className="w-8 h-8" style={{ color }} />

@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useKarnival, KarnivalCategory } from '@/contexts/KarnivalContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import QRCode from 'react-qr-code';
 import {
   Store, Plus, Trash2, QrCode, Download, Loader2,
@@ -119,7 +120,7 @@ export function KarnivalAdminBooths() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(t('karnival:confirm_delete_booth', { name, defaultValue: `Padam booth "${name}"? Semua undi untuk booth ini akan turut dipadam.` }))) return;
+    if (!(await confirmAction(t('karnival:confirm_delete_booth', { name, defaultValue: `Padam booth "${name}"? Semua undi untuk booth ini akan turut dipadam.` })))) return;
     setDeleting(id);
     const { error } = await supabase.from('karnival_booths').delete().eq('id', id);
     if (error) toast.error(error.message);

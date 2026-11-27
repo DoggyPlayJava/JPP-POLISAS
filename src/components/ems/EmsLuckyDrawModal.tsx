@@ -342,7 +342,7 @@ export function EmsLuckyDrawModal({
           ) : currentWinner ? (
             /* Winner Reveal Celebration Card */
             <div className="relative z-10 space-y-4 animate-scaleUp">
-              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-b from-amber-400/30 to-amber-500/10 border-2 border-amber-400 text-amber-500 dark:text-amber-300 shadow-[0_0_40px_rgba(245,158,11,0.4)] animate-bounce">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-b from-amber-400/30 to-amber-500/10 border-2 border-amber-400 text-amber-500 dark:text-amber-300 shadow-[0_0_40px_rgba(245,158,11,0.4)]">
                 <Trophy className="w-10 h-10" />
               </div>
               <div>

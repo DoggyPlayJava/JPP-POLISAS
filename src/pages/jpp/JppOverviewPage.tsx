@@ -43,12 +43,12 @@ function BigStatCard({
 }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay, duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ delay: Math.min(delay * 0.25, 0.08), duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
       onClick={onClick}
-      className={`rounded-[1.75rem] border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] p-5 shadow-[0_4px_20px_rgba(15,118,110,0.06)] dark:shadow-none transition-all ${
-        onClick ? 'cursor-pointer hover:bg-[#E6F4F1]/80 dark:hover:bg-[#134E4A]/40 hover:scale-[1.02] active:scale-[0.98]' : 'hover:bg-[#E6F4F1]/60 dark:hover:bg-[#134E4A]/25'
+      className={`rounded-[1.75rem] border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] p-5 shadow-surface-sm transition-[border-color,background-color,transform] duration-150 ${
+        onClick ? 'cursor-pointer hover:bg-[#E6F4F1]/80 dark:hover:bg-[#1B2028] active:scale-[0.98]' : 'hover:bg-[#E6F4F1]/60 dark:hover:bg-[#1B2028]/70'
       }`}
     >
       <div className="flex items-start justify-between mb-4">
@@ -58,13 +58,13 @@ function BigStatCard({
         >
           <Icon className="w-5 h-5" style={{ color }} />
         </div>
-        <span className="text-[9px] font-black uppercase tracking-widest text-[#475569]/70 dark:text-white/20">
+        <span className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">
           Sistem
         </span>
       </div>
-      <p className="text-3xl font-black text-[#0F172A] dark:text-[#F1F5F9] leading-none font-mono tabular-nums">{value}</p>
-      <p className="text-xs font-black uppercase tracking-widest text-[#475569] dark:text-[#94A0B2] mt-1">{label}</p>
-      {sub && <p className="text-[10px] text-[#475569]/70 dark:text-white/20 mt-1">{sub}</p>}
+      <p className="text-3xl font-black text-[#0B2420] dark:text-[#F1F5F9] leading-none font-mono tabular-nums">{value}</p>
+      <p className="text-xs font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mt-1">{label}</p>
+      {sub && <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2] mt-1">{sub}</p>}
     </motion.div>
   );
 }

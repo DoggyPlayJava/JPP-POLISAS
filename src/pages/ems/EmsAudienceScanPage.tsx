@@ -281,7 +281,7 @@ export function EmsAudienceScanPage({
             {submittedVisitor.is_milestone_winner ? (
               /* Milestone Winner Celebration Card */
               <div className="space-y-5">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-b from-amber-400/30 to-amber-500/10 border border-amber-400/40 text-amber-500 dark:text-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.3)] animate-bounce">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-3xl bg-gradient-to-b from-amber-400/30 to-amber-500/10 border border-amber-400/40 text-amber-500 dark:text-amber-400 shadow-[0_0_40px_rgba(245,158,11,0.3)]">
                   <Trophy className="w-10 h-10" />
                 </div>
 

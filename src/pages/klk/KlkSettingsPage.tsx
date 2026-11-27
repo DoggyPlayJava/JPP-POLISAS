@@ -14,6 +14,7 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { Button } from '@/components/ui/button';
 
 const KLS_COLOR = '#60A5FA';
@@ -203,14 +204,15 @@ export function KlkSettingsPage() {
     if (!mergeTarget) { toast.error(t('housing:select_target_area_error', 'Pilih kawasan sasaran.')); return; }
     const preview = mergePreviewCount ?? 0;
     const srcLabel = mergeSources.join(', ');
-    if (!window.confirm(
-      t('housing:merge_confirm_dialog', 'Gabung {{count}} kawasan ({{sources}}) → "{{target}}"?\n\n{{preview}} rekod pelajar akan dikemas kini.\nKawasan sumber akan dinyahaktifkan (tidak dipadam).\n\nTindakan ini TIDAK boleh dibatalkan.', {
+    if (!(await confirmAction({
+      description: t('housing:merge_confirm_dialog', 'Gabung {{count}} kawasan ({{sources}}) → "{{target}}"?\n\n{{preview}} rekod pelajar akan dikemas kini.\nKawasan sumber akan dinyahaktifkan (tidak dipadam).\n\nTindakan ini TIDAK boleh dibatalkan.', {
         count: mergeSources.length,
         sources: srcLabel,
         target: mergeTarget,
         preview
-      })
-    )) return;
+      }),
+      variant: 'warning',
+    }))) return;
 
     setMerging(true);
     try {
@@ -493,7 +495,7 @@ export function KlkSettingsPage() {
                             </button>
                             <button
                               onClick={async () => {
-                                if (!window.confirm(t('housing:delete_area_confirm', 'Padam kawasan "{{name}}"? Tindakan ini tidak boleh dibatalkan.', { name: k.name }))) return;
+                                if (!(await confirmAction(t('housing:delete_area_confirm', 'Padam kawasan "{{name}}"? Tindakan ini tidak boleh dibatalkan.', { name: k.name })))) return;
                                 const { error } = await supabase.from('klk_kawasan').delete().eq('id', k.id);
                                 if (error) { toast.error(t('housing:delete_failed', 'Gagal padam.')); return; }
                                 setKawasanList(prev => prev.filter(x => x.id !== k.id));
@@ -969,7 +971,7 @@ export function KlkSettingsPage() {
                       </button>
                       {/* Delete */}
                       <button onClick={async () => {
-                        if (!window.confirm(t('housing:delete_question_confirm', 'Padam soalan "{{label}}"? Data extra_data sedia ada TIDAK terpadam.', { label: f.label }))) return;
+                        if (!(await confirmAction(t('housing:delete_question_confirm', 'Padam soalan "{{label}}"? Data extra_data sedia ada TIDAK terpadam.', { label: f.label })))) return;
                         const { error } = await supabase.from('klk_form_fields').delete().eq('id', f.id);
                         if (error) { toast.error(t('housing:delete_failed', 'Gagal padam.')); return; }
                         setFormFields(prev => prev.filter(x => x.id !== f.id));

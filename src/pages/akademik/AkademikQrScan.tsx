@@ -10,6 +10,7 @@ import {
   MapPin, KeyRound, RefreshCw,
 } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { confirmAction } from '@/lib/confirmDialog';
 import { useTranslation } from 'react-i18next';
 import QRCode from 'qrcode';
 
@@ -476,7 +477,7 @@ export function QrMeritManager({ themeColor = THEME, initialTokens }: { themeCol
   useEffect(() => { load(); }, [load]);
 
   const deleteToken = async (id: string) => {
-    if (!window.confirm(t('akademik:confirm_delete_token', 'Padam token QR ini secara kekal?'))) return;
+    if (!(await confirmAction(t('akademik:confirm_delete_token', 'Padam token QR ini secara kekal?')))) return;
     const { error } = await supabase.from('akademik_qr_tokens').delete().eq('id', id);
     if (!error) {
       toast.success(t('akademik:token_deleted_success', 'Token berjaya dipadam.'));

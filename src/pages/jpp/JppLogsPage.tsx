@@ -349,34 +349,33 @@ export function JppLogsPage() {
       <div className="relative z-10 max-w-7xl mx-auto space-y-8">
 
         {/* ── Header ── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 p-8 rounded-[2.5rem] shadow-sm">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] p-6 sm:p-8 rounded-[2rem] shadow-surface-sm">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-2xl flex items-center justify-center border" style={{ background: hexToRgba(themeColor, 0.1), borderColor: hexToRgba(themeColor, 0.2), color: themeColor }}>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center border" style={{ background: hexToRgba(themeColor, 0.12), borderColor: hexToRgba(themeColor, 0.25), color: themeColor }}>
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                <h1 className="text-2xl font-black text-[#0B2420] dark:text-[#F1F5F9] leading-tight">
                   {t('jpp:audit_logs')}
                 </h1>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40 mt-1">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3B635C] dark:text-[#94A0B2] mt-1">
                   {t('jpp:activity_feed')}
                 </p>
               </div>
             </div>
             <div className="flex gap-2 flex-wrap">
-              <Button variant="outline" size="sm" onClick={handleExportAuditLogs} className="rounded-xl border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent text-xs font-bold">
+              <Button variant="outline" size="sm" onClick={handleExportAuditLogs} className="rounded-xl border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] bg-transparent text-xs font-bold">
                 <Download className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:export_audit_report', 'Eksport Laporan Audit')}
               </Button>
-              <Button variant="outline" size="sm" onClick={handleStorageAudit} disabled={storageLoading} className="rounded-xl border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent text-xs">
+              <Button variant="outline" size="sm" onClick={handleStorageAudit} disabled={storageLoading} className="rounded-xl border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] bg-transparent text-xs font-bold">
                 <HardDrive className="w-3.5 h-3.5 mr-1.5" /> {storageLoading ? t('jpp:logs_scanning', 'Mengimbas...') : t('jpp:logs_check_storage_btn', 'Semak Storage')}
               </Button>
-              <Button variant="outline" size="sm" onClick={fetchData} className="rounded-xl border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/50 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 bg-transparent text-xs">
+              <Button variant="outline" size="sm" onClick={fetchData} className="rounded-xl border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] bg-transparent text-xs font-bold">
                 <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:logs_reload_btn', 'Muat Semula')}
               </Button>
               <Button size="sm" onClick={handleAiSummary} disabled={aiLoading}
-                className="rounded-xl text-xs font-black uppercase tracking-widest text-white"
-                style={{ background: hexToRgba(themeColor, 0.8) }}>
+                className="rounded-xl text-xs font-black uppercase tracking-widest bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] text-white dark:text-[#090B0E]">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                 {aiLoading ? t('jpp:logs_generating', 'Menjana...') : t('jpp:logs_ai_summary_btn', 'Ringkasan AI')}
               </Button>
@@ -386,12 +385,12 @@ export function JppLogsPage() {
 
         {/* ── AI Summary ── */}
         {aiSummary && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-2xl p-6 text-sm text-slate-800 dark:text-white/70 leading-relaxed font-medium shadow-sm">
-            <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 mb-4 flex items-center gap-2">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}
+            className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-6 text-sm text-[#0B2420] dark:text-[#E2E8F0] leading-relaxed font-medium shadow-surface-sm">
+            <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-4 flex items-center gap-2">
               <Sparkles className="w-3 h-3" /> {t('jpp:logs_ai_analytics_summary', 'Ringkasan Analitik AI')}
             </p>
-            <div className="space-y-3 prose-p:my-2 prose-ul:my-2 prose-li:ml-4 prose-li:list-disc marker:text-slate-400 dark:marker:text-white/30 prose-strong:text-slate-900 dark:prose-strong:text-white prose-strong:font-bold">
+            <div className="space-y-3 prose-p:my-2 prose-ul:my-2 prose-li:ml-4 prose-li:list-disc marker:text-[#3B635C] dark:marker:text-[#94A0B2] prose-strong:text-[#0B2420] dark:prose-strong:text-[#F1F5F9] prose-strong:font-bold">
               <ReactMarkdown>{aiSummary}</ReactMarkdown>
             </div>
           </motion.div>
@@ -399,11 +398,11 @@ export function JppLogsPage() {
 
         {/* ── Storage Audit Result ── */}
         {storageResult && (
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-            className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-2xl p-6 space-y-4 shadow-sm">
-            <div className="flex items-center gap-2 text-slate-800 dark:text-white/80">
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}
+            className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-6 space-y-4 shadow-surface-sm">
+            <div className="flex items-center gap-2 text-[#0B2420] dark:text-[#F1F5F9]">
               <HardDrive className="w-4 h-4" />
-              <span className="text-xs font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:logs_storage_audit_dryrun_title', 'Hasil Audit Storage (Dry-Run)')}</span>
+              <span className="text-xs font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{t('jpp:logs_storage_audit_dryrun_title', 'Hasil Audit Storage (Dry-Run)')}</span>
             </div>
             {storageResult.aborted ? (
               <p className="text-sm text-rose-600 dark:text-rose-400 font-medium">
@@ -413,14 +412,14 @@ export function JppLogsPage() {
               <>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
-                    { label: t('jpp:logs_files_scanned', 'Fail Diimbas'), value: storageResult.totalScanned ?? 0, color: 'text-sky-600 dark:text-sky-400' },
-                    { label: t('jpp:logs_files_retained', 'Fail Dikekalkan'), value: storageResult.totalKept ?? 0, color: 'text-emerald-600 dark:text-emerald-400' },
-                    { label: t('jpp:logs_files_orphaned', 'Fail Orphaned'), value: (storageResult.orphanedFiles?.length ?? 0), color: 'text-rose-600 dark:text-rose-400' },
-                    { label: t('jpp:logs_mode', 'Mod'), value: storageResult.dryRun ? 'Dry-Run' : 'LIVE', color: 'text-amber-600 dark:text-amber-400' },
+                    { label: t('jpp:logs_files_scanned', 'Fail Diimbas'), value: storageResult.totalScanned ?? 0, color: 'text-sky-700 dark:text-sky-400' },
+                    { label: t('jpp:logs_files_retained', 'Fail Dikekalkan'), value: storageResult.totalKept ?? 0, color: 'text-emerald-700 dark:text-emerald-400' },
+                    { label: t('jpp:logs_files_orphaned', 'Fail Orphaned'), value: (storageResult.orphanedFiles?.length ?? 0), color: 'text-rose-700 dark:text-rose-400' },
+                    { label: t('jpp:logs_mode', 'Mod'), value: storageResult.dryRun ? 'Dry-Run' : 'LIVE', color: 'text-amber-700 dark:text-amber-400' },
                   ].map(s => (
-                    <div key={s.label} className="bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-xl p-4">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{s.label}</p>
-                      <p className={`font-black text-xl mt-1 ${s.color}`}>{s.value}</p>
+                    <div key={s.label} className="bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/70 dark:border-[#252B35] rounded-xl p-4">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{s.label}</p>
+                      <p className={`font-black font-mono tabular-nums text-xl mt-1 ${s.color}`}>{s.value}</p>
                     </div>
                   ))}
                 </div>
@@ -486,49 +485,49 @@ export function JppLogsPage() {
         )}
 
         {/* ── Stats Bar ── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { icon: Activity, label: t('jpp:logs_today_activity', 'Aktiviti Hari Ini'), value: todayCount, color: 'text-emerald-600 dark:text-emerald-400' },
-            { icon: Trash2, label: t('jpp:logs_delete_actions', 'Tindakan Padam'), value: deleteCount, color: 'text-rose-600 dark:text-rose-400' },
-            { icon: User, label: t('jpp:logs_most_active_user', 'Pengguna Paling Aktif'), value: topUser, color: 'text-amber-600 dark:text-amber-400', small: true },
-            { icon: Clock, label: t('jpp:logs_latest_log', 'Log Terbaru'), value: lastLog, color: 'text-sky-600 dark:text-sky-400', small: true },
+            { icon: Activity, label: t('jpp:logs_today_activity', 'Aktiviti Hari Ini'), value: todayCount, color: 'text-emerald-700 dark:text-emerald-400' },
+            { icon: Trash2, label: t('jpp:logs_delete_actions', 'Tindakan Padam'), value: deleteCount, color: 'text-rose-700 dark:text-rose-400' },
+            { icon: User, label: t('jpp:logs_most_active_user', 'Pengguna Paling Aktif'), value: topUser, color: 'text-amber-700 dark:text-amber-400', small: true },
+            { icon: Clock, label: t('jpp:logs_latest_log', 'Log Terbaru'), value: lastLog, color: 'text-sky-700 dark:text-sky-400', small: true },
           ].map(({ icon: Icon, label, value, color, small }) => (
-            <div key={label} className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 rounded-2xl p-5 space-y-2 shadow-sm">
+            <div key={label} className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-5 space-y-2 shadow-surface-sm">
               <Icon className={cn('w-4 h-4', color)} />
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{label}</p>
-              <p className={cn('font-black', small ? 'text-sm truncate' : 'text-2xl', color)}>{value}</p>
+              <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{label}</p>
+              <p className={cn('font-black font-mono tabular-nums', small ? 'text-sm truncate' : 'text-2xl', color)}>{value}</p>
             </div>
           ))}
         </motion.div>
 
         {/* ── Filters ── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, delay: 0.03 }}
           className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 dark:text-white/30" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#3B635C] dark:text-[#94A0B2]" />
             <Input placeholder={`${t('common:search')}...`} value={logSearch} onChange={e => setLogSearch(e.target.value)}
-              className="pl-11 h-11 bg-white dark:bg-black/40 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 rounded-2xl text-sm font-medium shadow-sm" />
+              className="pl-11 h-11 bg-white dark:bg-[#0E1116] border-[#B8E4DC] dark:border-[#252B35] text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/70 rounded-2xl text-sm font-medium shadow-surface-sm" />
           </div>
           <select value={filterAction} onChange={e => setFilterAction(e.target.value)}
-            className="h-11 px-4 bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-2xl text-sm text-slate-900 dark:text-white font-medium focus:outline-none shadow-sm">
-            <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:logs_all_actions', 'Semua Tindakan')}</option>
-            {uniqueActions.map(a => <option key={a} value={a} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{a}</option>)}
+            className="h-11 px-4 bg-white dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] rounded-2xl text-sm text-[#0B2420] dark:text-[#F1F5F9] font-medium focus:outline-none shadow-surface-sm">
+            <option value="" className="bg-white dark:bg-[#13171D] text-[#0B2420] dark:text-[#F1F5F9]">{t('jpp:logs_all_actions', 'Semua Tindakan')}</option>
+            {uniqueActions.map(a => <option key={a} value={a} className="bg-white dark:bg-[#13171D] text-[#0B2420] dark:text-[#F1F5F9]">{a}</option>)}
           </select>
           <select value={filterUser} onChange={e => setFilterUser(e.target.value)}
-            className="h-11 px-4 bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-2xl text-sm text-slate-900 dark:text-white font-medium focus:outline-none shadow-sm">
-            <option value="" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:logs_all_users', 'Semua Pengguna')}</option>
-            {uniqueUsers.map(u => <option key={u} value={u!} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{u}</option>)}
+            className="h-11 px-4 bg-white dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] rounded-2xl text-sm text-[#0B2420] dark:text-[#F1F5F9] font-medium focus:outline-none shadow-surface-sm">
+            <option value="" className="bg-white dark:bg-[#13171D] text-[#0B2420] dark:text-[#F1F5F9]">{t('jpp:logs_all_users', 'Semua Pengguna')}</option>
+            {uniqueUsers.map(u => <option key={u} value={u!} className="bg-white dark:bg-[#13171D] text-[#0B2420] dark:text-[#F1F5F9]">{u}</option>)}
           </select>
         </motion.div>
 
         {/* ── Tabs ── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, delay: 0.05 }}
           className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
           {['Semua', 'Karnival/Kelab', 'Keusahawanan', 'Kebajikan', 'POS System', 'JPP Admin', 'PolyRider', 'PolyMaps', 'PolyMart', 'Takwim', 'Akademik', 'MAKMP'].map(tab => (
             <button key={tab} onClick={() => setActiveTab(tab)}
-              className={cn('px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all border',
-                activeTab === tab ? 'bg-slate-200 dark:bg-white/10 text-slate-900 dark:text-white border-slate-300 dark:border-white/20' : 'text-slate-500 dark:text-white/40 border-transparent hover:text-slate-900 dark:hover:text-white/60 hover:bg-slate-200/50 dark:hover:bg-white/5')}
+              className={cn('px-4 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-colors border',
+                activeTab === tab ? 'bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0B2420] dark:text-[#F1F5F9] border-[#B8E4DC] dark:border-[#252B35]' : 'text-[#3B635C] dark:text-[#94A0B2] border-transparent hover:text-[#0B2420] dark:hover:text-[#F1F5F9] hover:bg-[#EBF7F4]/60 dark:hover:bg-[#1B2028]/60')}
               style={activeTab === tab ? { backgroundColor: hexToRgba(themeColor, 0.2), color: themeColor, borderColor: hexToRgba(themeColor, 0.5) } : {}}>
               {tab}
             </button>
@@ -536,11 +535,11 @@ export function JppLogsPage() {
         </motion.div>
 
         {/* ── Table ── */}
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-          className="border border-slate-200 dark:border-white/5 bg-white dark:bg-white/[0.01] rounded-[2rem] overflow-hidden shadow-sm">
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18, delay: 0.06 }}
+          className="border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] rounded-[2rem] overflow-hidden shadow-surface-sm">
           <div className="overflow-x-auto max-h-[65vh] rounded-[2rem] custom-scrollbar">
             <table className="w-full text-sm text-left">
-              <thead className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 bg-slate-50 dark:bg-black/40 sticky top-0 z-10 border-b border-slate-200 dark:border-white/5">
+              <thead className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] bg-[#F6FBF9] dark:bg-[#0E1116] sticky top-0 z-10 border-b border-[#B8E4DC]/80 dark:border-[#252B35]">
                 <tr>
                   <th className="px-5 py-4 whitespace-nowrap">{t('jpp:logs_th_timestamp', 'Timestamp')}</th>
                   <th className="px-5 py-4">{t('jpp:logs_header_action', 'Tindakan')}</th>
@@ -549,16 +548,16 @@ export function JppLogsPage() {
                   <th className="px-5 py-4">{t('jpp:logs_header_details', 'Butiran')}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-white/5">
+              <tbody className="divide-y divide-[#B8E4DC]/40 dark:divide-[#252B35]">
                 {loading ? (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-400 dark:text-white/30">
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-[#3B635C] dark:text-[#94A0B2]">
                     <div className="flex flex-col items-center gap-3">
-                      <RefreshCw className="w-6 h-6 animate-spin opacity-50" />
+                      <RefreshCw className="w-6 h-6 animate-spin opacity-60" />
                       <p className="text-[10px] uppercase tracking-widest font-black">{t('jpp:logs_loading_audit_trail', 'Memuat Audit Trail...')}</p>
                     </div>
                   </td></tr>
                 ) : filteredLogs.length === 0 ? (
-                  <tr><td colSpan={5} className="px-6 py-12 text-center text-slate-400 dark:text-white/30">
+                  <tr><td colSpan={5} className="px-6 py-12 text-center text-[#3B635C] dark:text-[#94A0B2]">
                     <div className="flex flex-col items-center gap-3">
                       <ShieldCheck className="w-8 h-8 opacity-50" />
                       <p className="text-[10px] uppercase tracking-widest font-black">{t('jpp:logs_no_records_found', 'Tiada rekod dijumpai')}</p>

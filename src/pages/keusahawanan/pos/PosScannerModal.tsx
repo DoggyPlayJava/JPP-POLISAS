@@ -287,9 +287,9 @@ export function PosScannerModal({ onScan, onClose, businessId, servedBy }: PosSc
                 }`}
               >
                 <motion.div 
-                  initial={{ scale: 0, rotate: -20 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.05, type: 'spring', damping: 15 }}
+                  initial={{ scale: 0.92, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
                   className="mb-4"
                 >
                   {hudState.status === 'success' ? (
