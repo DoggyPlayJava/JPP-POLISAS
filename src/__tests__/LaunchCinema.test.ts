@@ -926,4 +926,88 @@ describe('v4 Zero Static UI Screenshot Policy', () => {
     expect(closingSource).toContain('wake-arc-');
     expect(closingSource).toContain('size={440}');
   });
+
+  it('enforces v11 Pro Motion Craft physics hierarchy, zero overdamped springs, accessibility, arc cursor, and GPU-only composites', async () => {
+    const tokens = await import('../../remotion/launch/tokens');
+
+    const dampingRatio = (cfg: { damping: number; stiffness: number; mass: number }) =>
+      cfg.damping / (2 * Math.sqrt(cfg.stiffness * cfg.mass));
+
+    expect(tokens.MOTION_SPRINGS).toBeDefined();
+    expect(tokens.MOTION_CURVES).toBeDefined();
+
+    // Weight-differentiated physical damping ratios
+    expect(dampingRatio(tokens.MOTION_SPRINGS.HEAVY)).toBeGreaterThanOrEqual(1.0);
+    expect(dampingRatio(tokens.MOTION_SPRINGS.MEDIUM)).toBeGreaterThanOrEqual(0.7);
+    expect(dampingRatio(tokens.MOTION_SPRINGS.MEDIUM)).toBeLessThan(1.0);
+    expect(dampingRatio(tokens.MOTION_SPRINGS.LIGHT)).toBeLessThan(0.7);
+    expect(dampingRatio(tokens.MOTION_SPRINGS.CONFIRM)).toBeLessThan(0.7);
+
+    // Every bespoke curve respects [0, 1] boundary anchors
+    for (const [name, fn] of Object.entries(tokens.MOTION_CURVES)) {
+      expect(fn(0), `${name}(0)`).toBeCloseTo(0, 4);
+      expect(fn(1), `${name}(1)`).toBeCloseTo(1, 4);
+      const mid = fn(0.5);
+      expect(mid, `${name}(0.5)`).toBeGreaterThan(0);
+      expect(mid, `${name}(0.5)`).toBeLessThan(1);
+    }
+
+    // Zero overdamped springs (damping >= 100) across the entire launch codebase
+    for (const filePath of walkLaunchTsFiles(LAUNCH_ROOT_DIR)) {
+      const relPath = relative(LAUNCH_ROOT_DIR, filePath).replace(/\\/g, '/');
+      const content = readFileSync(filePath, 'utf8');
+      const dampingMatches = [...content.matchAll(/\bdamping\s*:\s*(\d+(?:\.\d+)?)/g)];
+      for (const m of dampingMatches) {
+        const val = Number(m[1]);
+        expect(val, `${relPath} has overdamped spring damping: ${val}`).toBeLessThan(100);
+      }
+    }
+
+    const kineticTypeSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'motion', 'KineticTypography.tsx'),
+      'utf8',
+    );
+    expect(kineticTypeSource).toContain('aria-label={text}');
+    expect(kineticTypeSource).toContain('aria-hidden="true"');
+    expect(kineticTypeSource).toMatch(/\[\.\?!—:\]/);
+
+    const actorsSource = readFileSync(join(LAUNCH_ROOT_DIR, 'motion', 'MotionActors.tsx'), 'utf8');
+    expect(actorsSource).toContain('MOTION_CURVES.EASE_OUT_UI');
+    expect(actorsSource).toContain('MOTION_CURVES.EASE_EXIT_ACCEL');
+
+    const kineticCardSource = readFileSync(join(LAUNCH_ROOT_DIR, 'ui', 'KineticCard.tsx'), 'utf8');
+    expect(kineticCardSource).toContain('MOTION_SPRINGS');
+    expect(kineticCardSource).not.toContain('left: `${sheenLeft');
+
+    const polysuaraSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'PolySuaraVoiceScene.tsx'),
+      'utf8',
+    );
+    expect(polysuaraSource).not.toContain('width: `${livePct');
+    expect(polysuaraSource).toContain('scaleX(');
+
+    const clubsSource = readFileSync(join(LAUNCH_ROOT_DIR, 'scenes', 'ClubsEmsScene.tsx'), 'utf8');
+    expect(clubsSource).not.toContain('coreWidth');
+    expect(clubsSource).not.toContain('coreHeight');
+    expect(clubsSource).not.toContain('left: 960 + dx');
+    expect(clubsSource).not.toContain('left: `${foilLeftPct');
+
+    const impactSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'ImpactNumbersScene.tsx'),
+      'utf8',
+    );
+    expect(impactSource).toContain('MOTION_SPRINGS.HEAVY');
+    expect(impactSource).toContain('MOTION_SPRINGS.MEDIUM');
+    expect(impactSource).toContain('MOTION_SPRINGS.LIGHT');
+    expect(impactSource).toContain('MOTION_SPRINGS.CONFIRM');
+    expect(impactSource).toContain('barDisplayPct');
+
+    const closingSource = readFileSync(
+      join(LAUNCH_ROOT_DIR, 'scenes', 'ClosingVaultScene.tsx'),
+      'utf8',
+    );
+    expect(closingSource).not.toContain('left: cx');
+    expect(closingSource).not.toContain('top: cy');
+    expect(closingSource).toContain('MOTION_SPRINGS.HEAVY');
+  });
 });

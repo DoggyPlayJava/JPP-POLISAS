@@ -38,7 +38,13 @@ import {
   Module3DIntroBumper,
 } from '../motion/Module3DIntroBumper';
 import { WHIP_S_CURVE } from '../motion/transitions';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
+import {
+  LAUNCH_FONTS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+  MOTION_CURVES,
+  MOTION_SPRINGS,
+} from '../tokens';
 import { KineticWindow, LiveTypewriterText, SpatialFloorGrid } from '../ui/KineticCard';
 
 const CYAN = LAUNCH_MODULE_THEMES.polyrent.primary; // #06B6D4
@@ -235,27 +241,29 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
   const wordStagger = Math.max(2, Math.round(0.05 * safeFps));
   const wordDuration = Math.max(8, Math.round(0.32 * safeFps));
 
-  // Left panel entrance
+  // Left panel entrance (`MOTION_SPRINGS.HEAVY`)
   const leftCardSpring = spring({
     frame: Math.max(0, frame - (O + 6)),
     fps: safeFps,
-    config: LUXURY_SPRING,
+    config: MOTION_SPRINGS.HEAVY,
   });
   const leftCardOpacity = interpolate(frame, [O + 4, O + 22], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
+    easing: MOTION_CURVES.EASE_OUT_UI,
   });
   const leftCardX = (1 - leftCardSpring) * -36;
 
-  // Right 3D Semambu Map entrance
+  // Right 3D Semambu Map entrance (`MOTION_SPRINGS.HEAVY`)
   const mapStageSpring = spring({
     frame: Math.max(0, frame - (O + 10)),
     fps: safeFps,
-    config: LUXURY_SPRING,
+    config: MOTION_SPRINGS.HEAVY,
   });
   const mapStageOpacity = interpolate(frame, [O + 8, O + 26], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
+    easing: MOTION_CURVES.EASE_OUT_UI,
   });
 
   // Gentle 3D camera panning across Semambu corridor
@@ -298,17 +306,28 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
   });
   const pillarsRiseY = (1 - pillarsProgress) * 34;
 
-  // Brief cutaway spec toast fades cleanly as 4 Pillars rise
+  // Brief cutaway spec toast fades cleanly as 4 Pillars rise (`MOTION_SPRINGS.LIGHT`)
   const cutawayEnterSpring = spring({
     frame: Math.max(0, frame - (O + 48)),
     fps: safeFps,
-    config: LUXURY_SPRING,
+    config: MOTION_SPRINGS.LIGHT,
   });
-  const cutawayExitFade = interpolate(frame, [O + 146, O + 178], [1, 0], {
+  const cutawayExitFade = interpolate(frame, [O + 146, O + 170], [1, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
+    easing: MOTION_CURVES.EASE_EXIT_ACCEL,
   });
-  const cutawayOpacity = cutawayEnterSpring * cutawayExitFade;
+  const cutawayOpacity = Math.min(1, Math.max(0, cutawayEnterSpring)) * cutawayExitFade;
+
+  // Tactile savings pulse right when 4 Pelajar split clicks at O+156
+  const rentSavingsPop =
+    frame >= O + 156 && frame <= O + 178
+      ? interpolate(frame, [O + 156, O + 163, O + 178], [1, 1.09, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: MOTION_CURVES.EASE_OUT_UI,
+        })
+      : 1;
 
   const livePulseScale = 0.86 + Math.sin(timeSec * 4.8) * 0.16;
   const trafficDotA = ((timeSec * 0.24) % 1 + 1) % 1;
@@ -351,7 +370,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
         entryZoomOffset={0.024}
         entryPanXOffset={28}
         entryFrames={Math.round(0.45 * safeFps)}
-        exitZoomDelta={0.015}
+        exitZoomDelta={-0.025}
         exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
@@ -824,10 +843,12 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                                 >
                                   <span
                                     style={{
+                                      display: 'inline-block',
                                       fontSize: 17,
                                       fontWeight: 900,
                                       color: activePillIndex === 2 ? EMERALD_INK : LAUNCH_PALETTE.PRIMARY,
                                       fontVariantNumeric: 'tabular-nums',
+                                      transform: `scale(${rentSavingsPop.toFixed(4)})`,
                                     }}
                                   >
                                     RM {shownPrice}
@@ -898,12 +919,31 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                       {[
-                        { label: '1 Pelajar', sub: `RM ${safeHouseRent}/org`, idx: 0 },
-                        { label: '2 Pelajar', sub: `RM ${Math.round(safeHouseRent / 2)}/org`, idx: 1 },
-                        { label: '4 Pelajar', sub: `RM ${fullFourRent}/org`, idx: 2 },
+                        { label: '1 Pelajar', sub: `RM ${safeHouseRent}/org`, idx: 0, clickAt: -999 },
+                        { label: '2 Pelajar', sub: `RM ${Math.round(safeHouseRent / 2)}/org`, idx: 1, clickAt: O + 120 },
+                        { label: '4 Pelajar', sub: `RM ${fullFourRent}/org`, idx: 2, clickAt: O + 156 },
                       ].map((opt) => {
                         const isActive = opt.idx === activePillIndex;
                         const activeBg = opt.idx === 2 ? EMERALD_INK : CYAN_DARK;
+                        const pillClickScale =
+                          frame >= opt.clickAt - 3 && frame <= opt.clickAt + 16
+                            ? frame <= opt.clickAt + 2
+                              ? interpolate(frame, [opt.clickAt - 3, opt.clickAt + 2], [1, 0.93], {
+                                  extrapolateLeft: 'clamp',
+                                  extrapolateRight: 'clamp',
+                                  easing: MOTION_CURVES.EASE_OUT_UI,
+                                })
+                              : interpolate(
+                                  frame,
+                                  [opt.clickAt + 2, opt.clickAt + 9, opt.clickAt + 16],
+                                  [0.93, 1.045, 1],
+                                  {
+                                    extrapolateLeft: 'clamp',
+                                    extrapolateRight: 'clamp',
+                                    easing: MOTION_CURVES.EASE_OUT_UI,
+                                  },
+                                )
+                            : 1;
                         return (
                           <div
                             key={opt.label}
@@ -917,6 +957,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                               flexDirection: 'column',
                               alignItems: 'center',
                               gap: 1,
+                              transform: `scale(${pillClickScale.toFixed(4)})`,
                             }}
                           >
                             <span style={{ fontSize: 13.5, fontWeight: 900 }}>{opt.label}</span>
@@ -1246,13 +1287,25 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                   }}
                 />
 
-                {/* 3 Counter-Rotated Crisp 3D Floating Price Pins */}
+                {/* 3 Counter-Rotated Crisp 3D Floating Price Pins (`MOTION_SPRINGS.LIGHT`) */}
                 {MAP_LISTINGS.map((pin) => {
-                  const pinSpring = spring({
-                    frame: Math.max(0, frame - pin.delayFrames),
-                    fps: safeFps,
-                    config: LUXURY_SPRING,
-                  });
+                  const pinElapsed = frame - pin.delayFrames;
+                  const pinSpring =
+                    pinElapsed >= 0
+                      ? spring({
+                          frame: pinElapsed,
+                          fps: safeFps,
+                          config: MOTION_SPRINGS.LIGHT,
+                        })
+                      : 0;
+                  const pinOpacity =
+                    pinElapsed >= 0
+                      ? interpolate(pinElapsed, [0, 8], [0, 1], {
+                          extrapolateLeft: 'clamp',
+                          extrapolateRight: 'clamp',
+                          easing: MOTION_CURVES.EASE_OUT_UI,
+                        })
+                      : 0;
                   const liftZ = 38 + pinSpring * 46;
                   const displayPinPrice =
                     pin.isHero && activePillIndex === 2 ? fullFourRent : pin.pricePerPerson;
@@ -1264,8 +1317,8 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                         left: pin.x,
                         top: pin.y,
                         transformStyle: 'preserve-3d',
-                        opacity: pinSpring,
-                        transform: `translate(-50%, -122%) translateZ(${liftZ.toFixed(1)}px) rotateZ(${(-mapBearingDeg).toFixed(2)}deg) rotateX(${(-mapPitchDeg).toFixed(2)}deg)`,
+                        opacity: pinOpacity,
+                        transform: `translate(-50%, -122%) translateZ(${liftZ.toFixed(1)}px) rotateZ(${(-mapBearingDeg).toFixed(2)}deg) rotateX(${(-mapPitchDeg).toFixed(2)}deg) scale(${(0.88 + 0.12 * pinSpring).toFixed(4)})`,
                         pointerEvents: 'none',
                       }}
                     >
@@ -1423,18 +1476,25 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                     }}
                   >
                     {ROOMMATES.map((mate, idx) => {
-                      const barEnter = interpolate(
-                        frame,
-                        [O + 168 + idx * 6, O + 196 + idx * 6],
-                        [0, 1],
-                        {
-                          extrapolateLeft: 'clamp',
-                          extrapolateRight: 'clamp',
-                          easing: EXPO_OUT,
-                        },
-                      );
+                      const barElapsed = frame - (O + 166 + idx * 5);
+                      const barSpring =
+                        barElapsed >= 0
+                          ? spring({
+                              frame: barElapsed,
+                              fps: safeFps,
+                              config: MOTION_SPRINGS.MEDIUM,
+                            })
+                          : 0;
+                      const barOpacity =
+                        barElapsed >= 0
+                          ? interpolate(barElapsed, [0, 8], [0, 1], {
+                              extrapolateLeft: 'clamp',
+                              extrapolateRight: 'clamp',
+                              easing: MOTION_CURVES.EASE_OUT_UI,
+                            })
+                          : 0;
                       const spreadX = (idx - 1.5) * (1 - pillarsProgress) * -28;
-                      const pillarScaleY = 0.32 + 0.68 * barEnter;
+                      const pillarScaleY = 0.24 + 0.76 * barSpring;
                       return (
                         <div
                           key={mate.name}
@@ -1443,7 +1503,7 @@ const PolyRentHousingInner: React.FC<PolyRentHousingProps> = ({
                             flexDirection: 'column',
                             alignItems: 'center',
                             gap: 8,
-                            opacity: barEnter,
+                            opacity: barOpacity,
                             transform: `translate3d(${spreadX.toFixed(1)}px, 0px, 0px)`,
                           }}
                         >

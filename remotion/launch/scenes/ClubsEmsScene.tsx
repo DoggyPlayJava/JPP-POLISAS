@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Easing,
   Interactive,
   interpolate,
   spring,
@@ -47,7 +46,13 @@ import {
   Module3DIntroBumper,
 } from '../motion/Module3DIntroBumper';
 import { WHIP_S_CURVE } from '../motion/transitions';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
+import {
+  LAUNCH_FONTS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+  MOTION_CURVES,
+  MOTION_SPRINGS,
+} from '../tokens';
 import { SpatialFloorGrid } from '../ui/KineticCard';
 
 const BLUE = LAUNCH_MODULE_THEMES.kelab.primary; // #3B82F6
@@ -451,7 +456,7 @@ const renderClubBadgeIcon = (kind: ClubIconKind, size: number, color: string) =>
   }
 };
 
-const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
+const EXPO_OUT = MOTION_CURVES.EASE_OUT_EXPO;
 
 // Cursor moves directly onto center-core Spotlight Card right column button `Mohon Barisan AJK` (1152, 367)
 const CLUB_ROLE_CURSOR_KEYFRAMES: readonly GhostCursorKeyframe[] = [
@@ -503,11 +508,17 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
   const secondaryJoinedClub = ALL_21_POLISAS_CLUBS[6];
 
   const ajkConfirmed = frame >= O + 148;
+  const ajkPressDip = interpolate(frame, [O + 144, O + 147, O + 150], [1, 0.945, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: MOTION_CURVES.EASE_OUT_UI,
+  });
   const confirmStampSpring = ajkConfirmed
-    ? spring({ frame: frame - (O + 148), fps: safeFps, config: LUXURY_SPRING })
+    ? spring({ frame: frame - (O + 148), fps: safeFps, config: MOTION_SPRINGS.CONFIRM })
     : 0;
+  const ajkButtonScale = ajkConfirmed ? 0.95 + 0.05 * confirmStampSpring : ajkPressDip;
 
-  // SHOT 1 -> SHOT 2: Central 3D Hub of the 21-Club Ring flips 180-deg into Giant Digital e-Certificate
+  // SHOT 1 -> SHOT 2: Central 3D Hub of the 21-Club Ring flips 180-deg into Giant Digital e-Certificate (zero layout reflow!)
   const flipPhaseT = interpolate(frame, [O + 336, O + 396], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -518,15 +529,10 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
     extrapolateRight: 'clamp',
   });
   const isCertActive = flipPhaseT >= 0.5;
-
-  const coreWidth = interpolate(flipPhaseT, [0, 1], [840, 1020], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
-  const coreHeight = interpolate(flipPhaseT, [0, 1], [430, 500], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-  });
+  const sealPopSpring =
+    frame >= O + 394
+      ? spring({ frame: frame - (O + 394), fps: safeFps, config: MOTION_SPRINGS.LIGHT })
+      : 0;
 
   // Ring geometry expands gracefully as the center core flips into e-Certificate halo
   const rx = interpolate(flipPhaseT, [0, 1], [740, 820], {
@@ -551,11 +557,11 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
     extrapolateRight: 'clamp',
   });
 
-  // Foil sheen across Hero e-Certificate (`O+412 .. O+488`)
-  const foilLeftPct = interpolate(frame, [O + 412, O + 488], [-45, 135], {
+  // GPU-composited foil sheen across Hero e-Certificate (`O+412 .. O+488`)
+  const foilTranslateXPct = interpolate(frame, [O + 412, O + 488], [-145, 425], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+    easing: MOTION_CURVES.EASE_IN_OUT_STRONG,
   });
   const foilOpacity = interpolate(frame, [O + 412, O + 428, O + 468, O + 488], [0, 0.52, 0.52, 0], {
     extrapolateLeft: 'clamp',
@@ -637,9 +643,11 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
         tiltYTo={0.35}
         breathingAmplitude={0.35}
         entryZoomOffset={0.024}
-        entryPanXOffset={24}
+        entryPanXOffset={0}
+        entryPanYOffset={28}
         entryFrames={Math.round(0.45 * safeFps)}
-        exitZoomDelta={0.015}
+        exitPanXDelta={18}
+        exitZoomDelta={0.024}
         exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
@@ -831,8 +839,8 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     key={`orbit-back-${club.shortName}`}
                     style={{
                       position: 'absolute',
-                      left: 960 + dx,
-                      top: 368 + dy,
+                      left: 960,
+                      top: 368,
                       height: 44,
                       marginLeft: -72,
                       marginTop: -22,
@@ -845,7 +853,8 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       alignItems: 'center',
                       gap: 8,
                       opacity,
-                      transform: `translate3d(0px, 0px, ${dz.toFixed(1)}px) scale(${scale.toFixed(4)})`,
+                      willChange: 'transform, opacity',
+                      transform: `translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, ${dz.toFixed(1)}px) scale(${scale.toFixed(4)})`,
                     }}
                   >
                     <span
@@ -877,17 +886,17 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                 ))}
             </div>
 
-            {/* CENTER 3D 2-FACE FLIP CORE (Beat 1: Active Club Spotlight <-> Beat 2: Giant 3D e-Certificate) */}
+            {/* CENTER 3D 2-FACE FLIP CORE (Beat 1: Active Club Spotlight <-> Beat 2: Giant 3D e-Certificate; fixed face sizes = zero reflow!) */}
             <div
               style={{
                 position: 'absolute',
                 left: '50%',
                 top: 368,
-                width: coreWidth,
-                height: coreHeight,
+                width: 0,
+                height: 0,
                 transformStyle: 'preserve-3d',
                 opacity: contentRevealT,
-                transform: `translate(-50%, -50%) rotateX(${stageRotX.toFixed(2)}deg) rotateY(${stageRotY.toFixed(2)}deg)`,
+                transform: `rotateX(${stageRotX.toFixed(2)}deg) rotateY(${stageRotY.toFixed(2)}deg)`,
                 zIndex: 10,
               }}
             >
@@ -895,7 +904,10 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
               <div
                 style={{
                   position: 'absolute',
-                  inset: 0,
+                  left: -420,
+                  top: -215,
+                  width: 840,
+                  height: 430,
                   borderRadius: 28,
                   backgroundColor: '#FFFFFF',
                   border: `2.5px solid ${ajkConfirmed ? EMERALD : BLUE}`,
@@ -942,28 +954,28 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                   }}
                 >
                   {/* Top Bar: 5 Category Filter Tabs & Live 21-Club Orbital Quota */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'nowrap' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'nowrap' }}>
                       {CLUB_CATEGORIES.map((cat, cIdx) => {
                         const isActive = cIdx === activeCategoryIndex;
                         return (
                           <div
                             key={cat.id}
                             style={{
-                              padding: '6px 11px',
+                              padding: '5px 9px',
                               borderRadius: 999,
                               backgroundColor: isActive ? BLUE_DARK : LAUNCH_PALETTE.BACKGROUND,
                               border: `1.5px solid ${isActive ? BLUE_DARK : LAUNCH_PALETTE.TERTIARY}`,
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: 5,
+                              gap: 4,
                               whiteSpace: 'nowrap',
                             }}
                           >
                             {renderCategoryIcon(cat.iconKind, isActive ? '#FFFFFF' : BLUE_INK)}
                             <span
                               style={{
-                                fontSize: 11.5,
+                                fontSize: 11,
                                 fontWeight: 900,
                                 color: isActive ? '#FFFFFF' : LAUNCH_PALETTE.PRIMARY,
                               }}
@@ -972,11 +984,11 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                             </span>
                             <span
                               style={{
-                                padding: '1px 6px',
+                                padding: '1px 5px',
                                 borderRadius: 999,
                                 backgroundColor: isActive ? 'rgba(255,255,255,0.22)' : BLUE_SOFT,
                                 fontFamily: LAUNCH_FONTS.MONO,
-                                fontSize: 10,
+                                fontSize: 9.5,
                                 fontWeight: 900,
                                 color: isActive ? '#FFFFFF' : BLUE_INK,
                               }}
@@ -998,7 +1010,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         flexShrink: 0,
                       }}
                     >
-                      {ajkConfirmed ? '2 / 21 KELAB AKTIF DISERTAI ✓' : '21 KELAB RASMI'}
+                      {ajkConfirmed ? '2 / 21 KELAB DISERTAI ✓' : '21 KELAB RASMI'}
                     </span>
                   </div>
 
@@ -1168,7 +1180,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'space-between',
-                            transform: `scale(${(0.97 + 0.03 * confirmStampSpring).toFixed(4)})`,
+                            transform: `scale(${ajkButtonScale.toFixed(4)})`,
                           }}
                         >
                           <span style={{ fontSize: 14, fontWeight: 900 }}>
@@ -1242,7 +1254,10 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
               <div
                 style={{
                   position: 'absolute',
-                  inset: 0,
+                  left: -510,
+                  top: -250,
+                  width: 1020,
+                  height: 500,
                   borderRadius: 30,
                   backgroundColor: '#FFFFFF',
                   border: `3px solid ${PINK}`,
@@ -1398,7 +1413,7 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                         textAlign: 'center',
                         gap: 7,
                         backfaceVisibility: 'hidden',
-                        transform: 'translateZ(45px)',
+                        transform: `translateZ(45px) scale(${(0.84 + 0.16 * sealPopSpring).toFixed(4)})`,
                         flexShrink: 0,
                       }}
                     >
@@ -1495,12 +1510,13 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       style={{
                         position: 'absolute',
                         top: '-40%',
-                        left: `${foilLeftPct.toFixed(1)}%`,
+                        left: 0,
                         width: '32%',
                         height: '180%',
                         background:
                           'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(251, 207, 232, 0.36) 46%, rgba(253, 230, 138, 0.45) 54%, rgba(255,255,255,0) 100%)',
-                        transform: 'rotate(24deg)',
+                        willChange: 'transform, opacity',
+                        transform: `translate3d(${foilTranslateXPct.toFixed(1)}%, 0px, 0px) rotate(24deg)`,
                         opacity: foilOpacity,
                       }}
                     />
@@ -1526,8 +1542,8 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                     key={`orbit-front-${club.shortName}`}
                     style={{
                       position: 'absolute',
-                      left: 960 + dx,
-                      top: 368 + dy,
+                      left: 960,
+                      top: 368,
                       height: 46,
                       marginLeft: -76,
                       marginTop: -23,
@@ -1542,7 +1558,8 @@ const ClubsEmsInner: React.FC<ClubsEmsProps> = ({
                       alignItems: 'center',
                       gap: 8,
                       opacity,
-                      transform: `translate3d(0px, 0px, ${dz.toFixed(1)}px) scale(${scale.toFixed(4)})`,
+                      willChange: 'transform, opacity',
+                      transform: `translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, ${dz.toFixed(1)}px) scale(${scale.toFixed(4)})`,
                     }}
                   >
                     <span

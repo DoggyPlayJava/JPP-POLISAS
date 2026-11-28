@@ -34,7 +34,14 @@ import {
   Module3DIntroBumper,
 } from '../motion/Module3DIntroBumper';
 import { CAMPUS_ROUTE_KM } from '../lib/campusRoute';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, POLISAS_COORDS } from '../tokens';
+import {
+  LAUNCH_FONTS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+  MOTION_CURVES,
+  MOTION_SPRINGS,
+  POLISAS_COORDS,
+} from '../tokens';
 import { ExplodedLayer, KineticWindow } from '../ui/KineticCard';
 
 const EMERALD = LAUNCH_MODULE_THEMES.polymaps.primary; // #10B981
@@ -224,32 +231,36 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
     [INDIGO_DARK, LAUNCH_PALETTE.CARD_BG],
   );
 
-  const cardClickScale = interpolate(
-    frame,
-    [
-      clickFrame - 2,
-      clickFrame + Math.max(2, Math.round(0.06 * safeFps)),
-      clickFrame + Math.max(6, Math.round(0.24 * safeFps)),
-    ],
-    [1, 0.982, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-    },
-  );
-  const buttonClickScale = interpolate(
-    frame,
-    [
-      clickFrame - 2,
-      clickFrame + Math.max(2, Math.round(0.05 * safeFps)),
-      clickFrame + Math.max(6, Math.round(0.22 * safeFps)),
-    ],
-    [1, 0.92, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-    },
-  );
+  const cardClickScale =
+    frame <= clickFrame + 2
+      ? interpolate(frame, [clickFrame - 3, clickFrame + 2], [1, 0.986], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: MOTION_CURVES.EASE_OUT_UI,
+        })
+      : interpolate(frame, [clickFrame + 2, clickFrame + 14], [0.986, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: MOTION_CURVES.EASE_OUT_EXPO,
+        });
+  const buttonClickScale =
+    frame <= clickFrame + 2
+      ? interpolate(frame, [clickFrame - 3, clickFrame + 2], [1, 0.935], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: MOTION_CURVES.EASE_OUT_UI,
+        })
+      : frame <= clickFrame + 9
+        ? interpolate(frame, [clickFrame + 2, clickFrame + 9], [0.935, 1.035], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+            easing: MOTION_CURVES.EASE_OUT_UI,
+          })
+        : interpolate(frame, [clickFrame + 9, clickFrame + 16], [1.035, 1], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+            easing: MOTION_CURVES.EASE_OUT_EXPO,
+          });
   const clickFlash = interpolate(
     frame,
     [
@@ -313,7 +324,7 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
       ? spring({
           frame: frame - arrivalFrame,
           fps: safeFps,
-          config: { damping: 24, stiffness: 160, mass: 1.0 },
+          config: MOTION_SPRINGS.CONFIRM,
         })
       : 0;
 
@@ -411,9 +422,9 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
         tiltYFrom={0}
         tiltYTo={0}
         breathingAmplitude={0.3}
-        entryPanXOffset={28}
-        entryZoomOffset={-0.06}
-        entryTiltYOffset={1.0}
+        entryPanXOffset={0}
+        entryZoomOffset={0.045}
+        entryTiltYOffset={0}
         exitPanXDelta={34}
         exitZoomDelta={0.022}
         exitFrames={Math.round(0.35 * safeFps)}
@@ -911,9 +922,26 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                             gap: 8,
                           }}
                         >
-                          {scheduleRows.map((row) => {
+                          {scheduleRows.map((row, rowIdx) => {
                             const isActive = row.state === 'active';
                             const isDone = row.state === 'done';
+                            const rowElapsed = frame - (O + 20 + rowIdx * 3);
+                            const rowSpring =
+                              rowElapsed >= 0
+                                ? spring({
+                                    frame: rowElapsed,
+                                    fps: safeFps,
+                                    config: MOTION_SPRINGS.MEDIUM,
+                                  })
+                                : 0;
+                            const rowOpacity =
+                              rowElapsed >= 0
+                                ? interpolate(rowElapsed, [0, 8], [0, 1], {
+                                    extrapolateLeft: 'clamp',
+                                    extrapolateRight: 'clamp',
+                                    easing: MOTION_CURVES.EASE_OUT_UI,
+                                  })
+                                : 0;
 
                             return (
                               <div
@@ -937,6 +965,8 @@ const PolyMapsCampusInner: React.FC<PolyMapsProps> = ({
                                   alignItems: 'center',
                                   justifyContent: 'space-between',
                                   gap: 10,
+                                  opacity: rowOpacity,
+                                  transform: `translate3d(0px, ${((1 - rowSpring) * 12).toFixed(2)}px, 0px)`,
                                 }}
                               >
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 11, minWidth: 0 }}>

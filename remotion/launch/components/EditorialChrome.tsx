@@ -17,6 +17,7 @@ import {
   CHAPTER_MODULE_THEMES,
   LAUNCH_FONTS,
   LAUNCH_PALETTE,
+  MOTION_CURVES,
   POLISAS_COORDS,
 } from '../tokens';
 
@@ -343,6 +344,17 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
     : -(clampedSlot * ODOMETER_ROW_HEIGHT);
   const translateYCss = `${odometerTranslateY.toFixed(isSettled ? 0 : 3)}px`;
 
+  const currentChapterStart = LAUNCH_CHAPTERS[nearestSlot]?.startFrame ?? 0;
+  const chapterDotElapsed = frame - (currentChapterStart + 6);
+  const chapterDotScale =
+    nearestSlot > 0 && chapterDotElapsed >= 0 && chapterDotElapsed <= 20
+      ? interpolate(chapterDotElapsed, [0, 6, 20], [1, 1.38, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: MOTION_CURVES.EASE_OUT_UI,
+        })
+      : 1;
+
   const railProgress = clampUnit(frame / Math.max(1, durationInFrames - 1));
   const trimmedSession = sessionLabel.trim() || 'SESI 2026/2027';
   const footerRightText = trimmedSession.endsWith('+') ? trimmedSession : `${trimmedSession} +`;
@@ -397,6 +409,7 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
             backgroundColor: activeThemeColor,
             display: 'inline-block',
             flexShrink: 0,
+            transform: `scale(${chapterDotScale.toFixed(3)})`,
           }}
         />
         <span style={{ color: mutedInk }}>BAB</span>
@@ -507,6 +520,15 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
           const pct = (ch.startFrame / LAUNCH_TOTAL_FRAMES) * 100;
           const reached = frame >= ch.startFrame;
           const tickAccent = CHAPTER_MODULE_THEMES[idx]?.accent ?? LAUNCH_PALETTE.ACCENT;
+          const tickElapsed = frame - ch.startFrame;
+          const tickPulseScaleY =
+            idx > 0 && tickElapsed >= 0 && tickElapsed <= 16
+              ? interpolate(tickElapsed, [0, 5, 16], [1, 1.65, 1], {
+                  extrapolateLeft: 'clamp',
+                  extrapolateRight: 'clamp',
+                  easing: MOTION_CURVES.EASE_OUT_UI,
+                })
+              : 1;
           return (
             <div
               key={`gate-tick-${ch.id}`}
@@ -517,7 +539,7 @@ export const GlobalCinemaGate: React.FC<GlobalCinemaGateProps> = ({
                 width: reached ? 2.5 : 2,
                 height: reached ? 7 : 6,
                 backgroundColor: reached ? tickAccent : tickInactiveColor,
-                transform: 'translate3d(-50%, -50%, 0px)',
+                transform: `translate3d(-50%, -50%, 0px) scaleY(${tickPulseScaleY.toFixed(3)})`,
               }}
             />
           );

@@ -29,7 +29,13 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath, GhostCursor, type GhostCursorKeyframe } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
+import {
+  LAUNCH_FONTS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+  MOTION_CURVES,
+  MOTION_SPRINGS,
+} from '../tokens';
 import {
   ExplodedLayer,
   KineticWindow,
@@ -472,21 +478,24 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
       easing: CLICK_LIFT_EASE,
     },
   );
-  const pressDip = interpolate(
-    frame,
-    [clickFrame - 2, clickFrame + 2, clickFrame + 9],
-    [1, 0.94, 1],
-    {
-      extrapolateLeft: 'clamp',
-      extrapolateRight: 'clamp',
-    },
-  );
+  const pressDip =
+    frame <= clickFrame + 2
+      ? interpolate(frame, [clickFrame - 3, clickFrame + 2], [1, 0.948], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: MOTION_CURVES.EASE_OUT_UI,
+        })
+      : interpolate(frame, [clickFrame + 2, clickFrame + 11], [0.948, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: MOTION_CURVES.EASE_OUT_EXPO,
+        });
   const liftProgress =
     frame >= clickFrame
       ? spring({
           frame: frame - clickFrame,
           fps: safeFps,
-          config: LUXURY_SPRING,
+          config: MOTION_SPRINGS.CONFIRM,
         })
       : 0;
 
@@ -1237,14 +1246,17 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                 >
                   {CAMPUS_SERVICE_TILES.map((tile, idx) => {
                     const isPolyMaps = tile.id === 'polymaps';
-                    const enterStart = gridBaseEnterFrame + idx * gridStaggerFrames;
+                    const col = idx % 4;
+                    const row = Math.floor(idx / 4);
+                    const enterStart =
+                      gridBaseEnterFrame + col * Math.max(2, gridStaggerFrames - 1) + row * 5;
                     const localFrame = frame - enterStart;
                     const popSpring =
                       localFrame >= 0
                         ? spring({
                             frame: localFrame,
                             fps: safeFps,
-                            config: { damping: 145, stiffness: 235, mass: 0.8 },
+                            config: MOTION_SPRINGS.MEDIUM,
                           })
                         : 0;
                     const tileOpacity =
@@ -1252,10 +1264,11 @@ const OpeningHeroInner: React.FC<OpeningHeroProps> = ({
                         ? interpolate(localFrame, [0, 8], [0, 1], {
                             extrapolateLeft: 'clamp',
                             extrapolateRight: 'clamp',
+                            easing: MOTION_CURVES.EASE_OUT_UI,
                           })
                         : 0;
-                    const baseScale = 0.76 + 0.24 * popSpring;
-                    const baseLiftY = (1 - popSpring) * 18;
+                    const baseScale = 0.9 + 0.1 * popSpring;
+                    const baseLiftY = (1 - popSpring) * 16;
                     const baseZ = popSpring * 14;
 
                     const emerald = LAUNCH_MODULE_THEMES.polymaps.primary;

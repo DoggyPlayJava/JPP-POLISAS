@@ -8,11 +8,11 @@ import {
 } from 'remotion';
 import { evolvePath, getLength, getPointAtLength } from '@remotion/paths';
 import { Circle, Star } from '@remotion/shapes';
-import { LAUNCH_FONTS, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_PALETTE, MOTION_CURVES } from '../tokens';
 
-const CURSOR_MOVE_EASING = Easing.bezier(0.45, 0, 0.2, 1);
+const CURSOR_MOVE_EASING = MOTION_CURVES.EASE_IN_OUT_STRONG;
 const PATH_EVOLVE_EASING = Easing.bezier(0.22, 1, 0.36, 1);
-const SPARK_BURST_EASING = Easing.bezier(0.16, 1, 0.3, 1);
+const SPARK_BURST_EASING = MOTION_CURVES.EASE_OUT_EXPO;
 
 export type GhostCursorKeyframe = {
   readonly frame: number;
@@ -63,9 +63,23 @@ const sampleCursorAtFrame = (
         extrapolateRight: 'clamp',
         easing: CURSOR_MOVE_EASING,
       });
-      const x = a.x + (b.x - a.x) * t;
-      const y = a.y + (b.y - a.y) * t;
-      const vx = ((b.x - a.x) / span) * (1 - Math.abs(t - 0.5) * 1.4);
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy);
+      let arcOffsetX = 0;
+      let arcOffsetY = 0;
+      if (dist > 24) {
+        const arcHeight = Math.min(18, (dist - 24) * 0.068);
+        const nx = -dy / dist;
+        const ny = dx / dist;
+        const bowSign = ny <= 0 ? 1 : -1;
+        const arcBell = 4 * t * (1 - t);
+        arcOffsetX = nx * arcHeight * bowSign * arcBell;
+        arcOffsetY = ny * arcHeight * bowSign * arcBell;
+      }
+      const x = a.x + dx * t + arcOffsetX;
+      const y = a.y + dy * t + arcOffsetY;
+      const vx = (dx / span) * (1 - Math.abs(t - 0.5) * 1.4);
       const label = t > 0.72 ? b.label ?? a.label : a.label;
       return { x, y, vx, label };
     }
@@ -104,12 +118,27 @@ export const GhostCursor: React.FC<GhostCursorProps> = ({
   const enterOpacity = interpolate(frame, [entryFrame, entryFrame + 10], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
+    easing: MOTION_CURVES.EASE_OUT_UI,
+  });
+  const enterScale = interpolate(frame, [entryFrame, entryFrame + 10], [0.92, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: MOTION_CURVES.EASE_OUT_UI,
   });
   const exitOpacity =
     disappearFrame !== undefined
-      ? interpolate(frame, [disappearFrame, disappearFrame + 12], [1, 0], {
+      ? interpolate(frame, [disappearFrame, disappearFrame + 10], [1, 0], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
+          easing: MOTION_CURVES.EASE_EXIT_ACCEL,
+        })
+      : 1;
+  const exitScale =
+    disappearFrame !== undefined
+      ? interpolate(frame, [disappearFrame, disappearFrame + 10], [1, 0.9], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: MOTION_CURVES.EASE_EXIT_ACCEL,
         })
       : 1;
   const opacity = enterOpacity * exitOpacity;
@@ -121,20 +150,35 @@ export const GhostCursor: React.FC<GhostCursorProps> = ({
 
   const leanDeg = Math.max(-5, Math.min(5, current.vx * 0.45));
 
-  // Click press dip across any click keyframe near current frame
+  // Asymmetric tactile click press: fast EASE_OUT_UI compression -> crisp 1.05 overshoot rebound -> settle
   let clickScale = 1;
   for (const kf of sorted) {
     if (!kf.click) continue;
-    if (frame >= kf.frame - 2 && frame <= kf.frame + 12) {
-      clickScale = Math.min(
-        clickScale,
-        interpolate(frame, [kf.frame - 2, kf.frame + 3, kf.frame + 12], [1, 0.84, 1], {
+    if (frame >= kf.frame - 3 && frame <= kf.frame + 16) {
+      let localScale = 1;
+      if (frame <= kf.frame + 2) {
+        localScale = interpolate(frame, [kf.frame - 3, kf.frame + 2], [1, 0.86], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
-        }),
-      );
+          easing: MOTION_CURVES.EASE_OUT_UI,
+        });
+      } else if (frame <= kf.frame + 9) {
+        localScale = interpolate(frame, [kf.frame + 2, kf.frame + 9], [0.86, 1.05], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: MOTION_CURVES.EASE_OUT_UI,
+        });
+      } else {
+        localScale = interpolate(frame, [kf.frame + 9, kf.frame + 16], [1.05, 1], {
+          extrapolateLeft: 'clamp',
+          extrapolateRight: 'clamp',
+          easing: MOTION_CURVES.EASE_OUT_EXPO,
+        });
+      }
+      clickScale *= localScale;
     }
   }
+  const combinedCursorScale = scale * enterScale * exitScale * clickScale;
 
   const filterId = `ghost-cursor-shadow-${uid.replace(/:/g, '')}`;
 
@@ -247,7 +291,7 @@ export const GhostCursor: React.FC<GhostCursorProps> = ({
           top: current.y,
           transformOrigin: '4px 3px',
           willChange: 'transform',
-          transform: `translate3d(-4px, -3px, 0px) scale(${(scale * clickScale).toFixed(3)}) rotate(${leanDeg.toFixed(2)}deg)`,
+          transform: `translate3d(-4px, -3px, 0px) scale(${combinedCursorScale.toFixed(3)}) rotate(${leanDeg.toFixed(2)}deg)`,
         }}
       >
         <svg width={34} height={38} viewBox="0 0 34 38" style={{ overflow: 'visible', display: 'block' }}>
@@ -538,18 +582,29 @@ export const GeometricSparkBurst: React.FC<GeometricSparkBurstProps> = ({
       </svg>
 
       {particles.map((p, i) => {
-        const travel = progress * radius * p.distScale;
+        const dotDelay = p.isStar ? 0 : 2;
+        const particleProgress = interpolate(
+          localFrame - dotDelay,
+          [0, Math.max(4, safeDuration - dotDelay)],
+          [0, 1],
+          {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+            easing: SPARK_BURST_EASING,
+          },
+        );
+        const travel = particleProgress * radius * p.distScale;
         const px = Math.cos(p.angle) * travel;
         const py = Math.sin(p.angle) * travel;
-        const itemScale = interpolate(progress, [0, 0.22, 0.72, 1], [0.25, 1.08, 0.82, 0.2], {
+        const itemScale = interpolate(particleProgress, [0, 0.22, 0.72, 1], [0.25, 1.08, 0.82, 0.2], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         });
-        const itemOpacity = interpolate(progress, [0, 0.14, 0.7, 1], [0, 1, 0.88, 0], {
+        const itemOpacity = interpolate(particleProgress, [0, 0.14, 0.7, 1], [0, 1, 0.88, 0], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         });
-        const rotation = progress * p.spinDeg;
+        const rotation = particleProgress * p.spinDeg;
 
         return (
           <div

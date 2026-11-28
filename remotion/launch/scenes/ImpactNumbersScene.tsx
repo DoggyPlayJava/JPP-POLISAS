@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Easing,
   Interactive,
   interpolate,
   spring,
@@ -14,7 +13,13 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { KineticReveal, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
+import {
+  LAUNCH_FONTS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+  MOTION_CURVES,
+  MOTION_SPRINGS,
+} from '../tokens';
 import { SpatialFloorGrid } from '../ui/KineticCard';
 
 type ImpactNumbersProps = {
@@ -25,9 +30,8 @@ type ImpactNumbersProps = {
   readonly ordersCount: number;
 };
 
-const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
-const COUNTER_EASE = Easing.bezier(0.22, 1, 0.36, 1);
-const SHEEN_EASE = Easing.bezier(0.25, 0.1, 0.25, 1);
+const COUNTER_EASE = MOTION_CURVES.EASE_DATA_SETTLE;
+const SHEEN_EASE = MOTION_CURVES.EASE_IN_OUT_STRONG;
 
 const TICKER_MODULES: readonly string[] = [
   'POLYMAPS',
@@ -115,26 +119,26 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
 
   const timeSec = frame / safeFps;
 
-  // Beat 1 (0..1.7s): Community badge + KineticWords headline + 4 student proof bento cards cascade
-  const pillDuration = Math.max(8, Math.round(0.45 * safeFps));
-  const headlineStart = Math.round(0.14 * safeFps);
-  const wordStagger = Math.max(2, Math.round(0.07 * safeFps));
-  const wordDuration = Math.max(8, Math.round(0.42 * safeFps));
-  const ruleStart = Math.round(0.34 * safeFps);
-  const ruleDuration = Math.max(10, Math.round(0.72 * safeFps));
+  // Tier 1 (0..48f): Community pill + KineticWords headline + architectural rule
+  const pillDuration = Math.max(8, Math.round(0.36 * safeFps)); // 22f
+  const headlineStart = Math.round(0.13 * safeFps); // 8f
+  const wordStagger = Math.max(2, Math.round(0.065 * safeFps)); // 4f
+  const wordDuration = Math.max(8, Math.round(0.36 * safeFps)); // 22f
+  const ruleStart = Math.round(0.33 * safeFps); // 20f
+  const ruleDuration = Math.max(10, Math.round(0.6 * safeFps)); // 36f
 
-  const cardBaseStart = Math.round(0.42 * safeFps);
-  const cardStagger = Math.max(3, Math.round(0.11 * safeFps));
-  const cardFadeFrames = Math.max(4, Math.round(0.26 * safeFps));
+  // Tier 2 (28..72f): Center-out 3D Amphitheater Cards (`HEAVY`) + Extruded Icon Pop (`LIGHT` +6f)
+  const cardBaseStart = Math.round(0.46 * safeFps); // 28f
+  const cardFadeFrames = Math.max(4, Math.round(0.23 * safeFps)); // 14f
 
-  // Beat 2 (1.3..4.4s): @remotion/shapes <Pie> progress rings + tabular counters + seamless kinetic ticker strip
-  const arcBaseStart = Math.round(1.35 * safeFps);
-  const arcStagger = Math.max(2, Math.round(0.08 * safeFps));
-  const arcSpanFrames = Math.max(24, Math.round(2.75 * safeFps));
-  const countSpanFrames = Math.max(24, Math.round(2.85 * safeFps));
+  // Tier 3 (52..212f): Cascading Spotlight KPI Rings & Tabular Counters (`52, 88, 124, 160f`, 52f EASE_DATA_SETTLE)
+  const arcBaseStart = Math.round(0.86 * safeFps); // 52f
+  const arcStagger = Math.max(12, Math.round(0.6 * safeFps)); // 36f
+  const arcSpanFrames = Math.max(24, Math.round(0.86 * safeFps)); // 52f
+  const countSpanFrames = arcSpanFrames;
 
-  const tickerFadeStart = Math.round(1.05 * safeFps);
-  const tickerFadeEnd = Math.max(tickerFadeStart + 8, Math.round(1.52 * safeFps));
+  const tickerFadeStart = Math.round(1.2 * safeFps); // 72f
+  const tickerFadeEnd = Math.max(tickerFadeStart + 8, Math.round(1.66 * safeFps)); // 100f
   const tickerOpacity = interpolate(frame, [tickerFadeStart, tickerFadeEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -143,52 +147,66 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
   const tickerPhase = (timeSec / tickerCycleSec) % 1;
   const tickerShiftPercent = -(tickerPhase * 50);
 
-  // Beat 2b (1.8..4.5s): Live animated 6-month student community participation bar chart (peaks cleanly before f_4860 / local 288f!)
-  const chartStart = Math.round(1.8 * safeFps);
+  // Tier 4 (136..240f): 6-Month Bar Chart (`HEAVY` shell, `MEDIUM` bars on 5f wave, live %, punctuated `CONFIRM` peak badge at 204f)
+  const chartStart = Math.round(2.26 * safeFps); // 136f
   const chartElapsed = frame - chartStart;
   const chartSpring =
     chartElapsed >= 0
       ? spring({
           frame: chartElapsed,
           fps: safeFps,
-          config: { damping: 24, stiffness: 165, mass: 1.0 },
+          config: MOTION_SPRINGS.HEAVY,
         })
       : 0;
   const chartOpacity =
     chartElapsed >= 0
-      ? interpolate(chartElapsed, [0, Math.max(6, Math.round(0.28 * safeFps))], [0, 1], {
+      ? interpolate(chartElapsed, [0, Math.max(6, Math.round(0.23 * safeFps))], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
       : 0;
   const chartTranslateY = (1 - chartSpring) * 24;
-  const barBaseStart = Math.round(2.15 * safeFps);
-  const barStagger = Math.max(2, Math.round(0.08 * safeFps));
+  const barBaseStart = Math.round(2.6 * safeFps); // 156f
+  const barStagger = Math.max(2, Math.round(0.083 * safeFps)); // 5f wave
+  const peakBadgeStart = Math.round(3.4 * safeFps); // 204f
+  const peakBadgeSpring =
+    frame >= peakBadgeStart
+      ? spring({
+          frame: frame - peakBadgeStart,
+          fps: safeFps,
+          config: MOTION_SPRINGS.CONFIRM,
+        })
+      : 0;
+  const peakBadgeOpacity = interpolate(frame, [peakBadgeStart, peakBadgeStart + 6], [0, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
 
-  // Beat 3 (4.0..9.2s): Electric Teal (#0D9488) student action pill lifts cleanly with sweeping specular sheen
-  const beat3Start = Math.round(4.05 * safeFps);
+  // Tier 5 (206..278f): 3 Live Student Activity Pulse Pills (`LIGHT` 6f stagger) + Signature Teal CTA Pill (`MEDIUM`) -> calm ~4.1s hold!
+  const activityPulseStart = Math.round(3.43 * safeFps); // 206f
+  const beat3Start = Math.round(3.83 * safeFps); // 230f
   const pillElapsed = frame - beat3Start;
   const beat3Spring =
     pillElapsed >= 0
       ? spring({
           frame: pillElapsed,
           fps: safeFps,
-          config: { damping: 24, stiffness: 165, mass: 1.0 },
+          config: MOTION_SPRINGS.MEDIUM,
         })
       : 0;
   const beat3Opacity =
     pillElapsed >= 0
-      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.22 * safeFps))], [0, 1], {
+      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.2 * safeFps))], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
       : 0;
   const beat3HoverY = beat3Opacity > 0.001 ? Math.sin(timeSec * 2.0) * 2.5 * beat3Spring : 0;
-  const beat3TranslateY = (1 - beat3Spring) * 34 + beat3HoverY;
-  const beat3Scale = 0.92 + 0.08 * beat3Spring;
+  const beat3TranslateY = (1 - beat3Spring) * 30 + beat3HoverY;
+  const beat3Scale = 0.93 + 0.07 * beat3Spring;
 
   const ordersCountStart = beat3Start;
-  const ordersCountEnd = Math.max(ordersCountStart + 8, Math.round(5.45 * safeFps));
+  const ordersCountEnd = Math.max(ordersCountStart + 8, Math.round(4.63 * safeFps)); // 278f (100% settled before f_4860 / local 288f!)
   const liveOrders = Math.round(
     interpolate(
       frame,
@@ -202,8 +220,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
     ),
   );
 
-  const sheenStart = beat3Start + Math.max(4, Math.round(0.42 * safeFps));
-  const sheenEnd = Math.max(sheenStart + 10, Math.round(6.95 * safeFps));
+  const sheenStart = Math.round(4.46 * safeFps); // 268f
+  const sheenEnd = Math.max(sheenStart + 10, Math.round(5.8 * safeFps)); // 348f
   const sheenProgress = interpolate(frame, [sheenStart, sheenEnd], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
@@ -288,8 +306,6 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
     },
   ] as const;
 
-  const activityPulseStart = Math.round(3.35 * safeFps);
-
   return (
     <>
       <EditorialBackdrop dark ambientTint={LAUNCH_MODULE_THEMES.impact.tint} />
@@ -307,6 +323,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
         tiltYTo={0.9}
         breathingAmplitude={0.45}
         entryZoomOffset={0.036}
+        entryPanXOffset={-18}
         exitZoomDelta={0.042}
         exitFrames={Math.round(0.35 * safeFps)}
         clip
@@ -428,14 +445,16 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
             }}
           >
             {metrics.map((m, idx) => {
-              const cardStart = cardBaseStart + idx * cardStagger;
+              // Center-out amphitheater stagger: inner forward cards (1, 2) lead by 8f over outer wings (0, 3)
+              const centerOutDelay = idx === 1 || idx === 2 ? 0 : 8;
+              const cardStart = cardBaseStart + centerOutDelay;
               const cardElapsed = frame - cardStart;
               const cardSpring =
                 cardElapsed >= 0
                   ? spring({
                       frame: cardElapsed,
                       fps: safeFps,
-                      config: { damping: 24, stiffness: 175, mass: 1.0 },
+                      config: MOTION_SPRINGS.HEAVY,
                     })
                   : 0;
               const cardOpacity =
@@ -445,16 +464,24 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       extrapolateRight: 'clamp',
                     })
                   : 0;
+              const iconPopSpring =
+                frame >= cardStart + 6
+                  ? spring({
+                      frame: frame - (cardStart + 6),
+                      fps: safeFps,
+                      config: MOTION_SPRINGS.LIGHT,
+                    })
+                  : 0;
               const floatY = Math.sin(timeSec * 1.45 + idx * 1.35) * 3 * cardSpring;
-              const cardTranslateY = (1 - cardSpring) * 44 + floatY;
-              const cardScale = 0.9 + 0.1 * cardSpring;
+              const cardTranslateY = (1 - cardSpring) * 38 + floatY;
+              const cardScale = 0.92 + 0.08 * cardSpring;
 
               const cardArcStart = arcBaseStart + idx * arcStagger;
               const cardArcEnd = cardArcStart + arcSpanFrames;
               const rawArc = interpolate(frame, [cardArcStart, cardArcEnd], [0, m.targetArc], {
                 extrapolateLeft: 'clamp',
                 extrapolateRight: 'clamp',
-                easing: EXPO_OUT,
+                easing: COUNTER_EASE,
               });
               const clampedArc = Number.isFinite(rawArc) ? Math.min(1, Math.max(0, rawArc)) : 0;
 
@@ -465,7 +492,15 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                 easing: COUNTER_EASE,
               });
               const displayValue = `${Math.round(m.target * countProgress).toLocaleString('en-US')}${m.suffix}`;
+              const isCounting = frame >= cardArcStart && frame < cardArcEnd;
               const ringSettled = frame >= cardArcEnd;
+              const settlePop = ringSettled
+                ? interpolate(frame, [cardArcEnd, cardArcEnd + 5, cardArcEnd + 14], [1, 1.045, 1], {
+                    extrapolateLeft: 'clamp',
+                    extrapolateRight: 'clamp',
+                    easing: MOTION_CURVES.EASE_OUT_UI,
+                  })
+                : 1;
 
               return (
                 <div
@@ -473,11 +508,17 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                   style={{
                     backgroundColor: 'rgba(11, 36, 32, 0.84)',
                     border: `1.5px solid ${
-                      ringSettled ? `${m.ringColor}88` : 'rgba(184, 228, 220, 0.26)'
+                      isCounting
+                        ? m.ringColor
+                        : ringSettled
+                          ? `${m.ringColor}88`
+                          : 'rgba(184, 228, 220, 0.26)'
                     }`,
                     borderRadius: 26,
                     padding: '22px 24px 24px',
-                    boxShadow: '0 24px 52px rgba(6, 23, 20, 0.36)',
+                    boxShadow: isCounting
+                      ? `0 24px 56px rgba(6, 23, 20, 0.44), 0 0 26px ${m.ringColor}40`
+                      : '0 24px 52px rgba(6, 23, 20, 0.36)',
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
@@ -576,7 +617,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                         alignItems: 'center',
                         justifyContent: 'center',
                         boxShadow: 'inset 0 0 18px rgba(6, 23, 20, 0.45)',
-                        transform: 'translateZ(14px)',
+                        transform: `translateZ(14px) scale(${(0.76 + 0.24 * iconPopSpring).toFixed(4)})`,
                       }}
                     >
                       {renderMetricIcon(m.iconKind, LAUNCH_PALETTE.BACKGROUND)}
@@ -593,6 +634,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       lineHeight: 1,
                       color: LAUNCH_PALETTE.BACKGROUND,
                       fontVariantNumeric: 'tabular-nums',
+                      transform: `scale(${settlePop.toFixed(4)})`,
                     }}
                   >
                     {displayValue}
@@ -719,7 +761,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       ? spring({
                           frame: barElapsed,
                           fps: safeFps,
-                          config: { damping: 165, stiffness: 215, mass: 0.85 },
+                          config: MOTION_SPRINGS.MEDIUM,
                         })
                       : 0;
                   const barOpacity =
@@ -731,6 +773,10 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                       : 0;
                   const barTargetPx = Math.round((item.pct / 100) * BAR_TRACK_HEIGHT_PX);
                   const barScaleY = Math.max(0.001, barSpring);
+                  const barDisplayPct = Math.min(
+                    item.pct,
+                    Math.max(0, Math.round(item.pct * Math.min(1, barSpring))),
+                  );
                   const isPeak = Boolean(item.isPeak);
 
                   return (
@@ -749,7 +795,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          opacity: barOpacity,
+                          opacity: isPeak ? peakBadgeOpacity : barOpacity,
                         }}
                       >
                         {isPeak ? (
@@ -765,6 +811,8 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                               color: LAUNCH_PALETTE.BACKGROUND,
                               fontVariantNumeric: 'tabular-nums',
                               whiteSpace: 'nowrap',
+                              display: 'inline-block',
+                              transform: `scale(${(0.72 + 0.28 * peakBadgeSpring).toFixed(4)})`,
                             }}
                           >
                             {liveOrders.toLocaleString('en-US')}+
@@ -779,7 +827,7 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                               fontVariantNumeric: 'tabular-nums',
                             }}
                           >
-                            {item.pct}%
+                            {barDisplayPct}%
                           </span>
                         )}
                       </div>
@@ -864,19 +912,19 @@ const ImpactNumbersInner: React.FC<ImpactNumbersProps> = ({
                 }}
               >
                 {liveActivityPills.map((pill, pillIdx) => {
-                  const pillStartF = activityPulseStart + pillIdx * Math.max(4, Math.round(0.16 * safeFps));
+                  const pillStartF = activityPulseStart + pillIdx * Math.max(4, Math.round(0.1 * safeFps));
                   const pillElapsed = frame - pillStartF;
                   const pillSpr =
                     pillElapsed >= 0
                       ? spring({
                           frame: pillElapsed,
                           fps: safeFps,
-                          config: { damping: 22, stiffness: 175, mass: 0.95 },
+                          config: MOTION_SPRINGS.LIGHT,
                         })
                       : 0;
                   const pillOp =
                     pillElapsed >= 0
-                      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.2 * safeFps))], [0, 1], {
+                      ? interpolate(pillElapsed, [0, Math.max(4, Math.round(0.17 * safeFps))], [0, 1], {
                           extrapolateLeft: 'clamp',
                           extrapolateRight: 'clamp',
                         })

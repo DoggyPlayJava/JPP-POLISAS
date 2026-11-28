@@ -1,3 +1,5 @@
+import { Easing } from 'remotion';
+
 export const LAUNCH_FPS = 60;
 export const LAUNCH_WIDTH = 1920;
 export const LAUNCH_HEIGHT = 1080;
@@ -7,6 +9,32 @@ export const LUXURY_SPRING = {
   damping: 26,
   stiffness: 110,
   mass: 1.15,
+} as const;
+
+/**
+ * v11 Weight-differentiated Remotion spring physics calibrated by element mass.
+ * Damping ratios (ζ = d / 2√(k·m)):
+ * - HEAVY   ≈ 1.10 (0% overshoot — grounded hero windows, monoliths, 3D stages)
+ * - MEDIUM  ≈ 0.80 (~1.5% crisp settle — cards, chat bubbles, split pillars, chart bars)
+ * - LIGHT   ≈ 0.56 (~8% lively pop — feature chips, badges, icon pops, checkmarks)
+ * - CONFIRM ≈ 0.58 (~7% decisive punch — payment/AJK/arrival confirmation stamps)
+ */
+export const MOTION_SPRINGS = {
+  HEAVY: { damping: 28, stiffness: 135, mass: 1.2 },
+  MEDIUM: { damping: 22, stiffness: 210, mass: 0.9 },
+  LIGHT: { damping: 15, stiffness: 280, mass: 0.65 },
+  CONFIRM: { damping: 16, stiffness: 260, mass: 0.72 },
+} as const;
+
+/**
+ * Canonical v11 Remotion bezier & cubic easing curves aligned with design-engineering craft.
+ */
+export const MOTION_CURVES = {
+  EASE_OUT_UI: Easing.bezier(0.23, 1, 0.32, 1),
+  EASE_OUT_EXPO: Easing.bezier(0.16, 1, 0.3, 1),
+  EASE_IN_OUT_STRONG: Easing.bezier(0.77, 0, 0.175, 1),
+  EASE_EXIT_ACCEL: Easing.bezier(0.3, 0, 1, 1),
+  EASE_DATA_SETTLE: Easing.out(Easing.cubic),
 } as const;
 
 export const LAUNCH_PALETTE = {

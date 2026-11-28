@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import {
   CanvasImage,
-  Easing,
   Interactive,
   Solid,
   interpolate,
@@ -30,7 +29,13 @@ import { EditorialBackdrop, EditorialFrameMarks } from '../components/EditorialC
 import { CameraStage } from '../motion/CameraStage';
 import { EditorialAnnotation, KineticWords } from '../motion/KineticTypography';
 import { EvolvingPath, GeometricSparkBurst } from '../motion/MotionActors';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE } from '../tokens';
+import {
+  LAUNCH_FONTS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+  MOTION_CURVES,
+  MOTION_SPRINGS,
+} from '../tokens';
 import { SpatialFloorGrid } from '../ui/KineticCard';
 
 type ClosingVaultProps = {
@@ -40,8 +45,8 @@ type ClosingVaultProps = {
   readonly studentsCount?: number;
 };
 
-const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
-const RADAR_EASE = Easing.bezier(0.22, 1, 0.36, 1);
+const EXPO_OUT = MOTION_CURVES.EASE_OUT_EXPO;
+const RADAR_EASE = MOTION_CURVES.EASE_DATA_SETTLE;
 
 const EMERALD = LAUNCH_MODULE_THEMES.polymaps.primary; // #10B981
 const EMERALD_BORDER = LAUNCH_MODULE_THEMES.polymaps.border; // #A7F3D0
@@ -207,7 +212,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
   const pillSpring = spring({
     frame,
     fps: safeFps,
-    config: { damping: 24, stiffness: 150, mass: 1.05 },
+    config: MOTION_SPRINGS.MEDIUM,
   });
   const pillScaleX = 0.86 + 0.14 * pillSpring;
   const pillScaleY = 0.94 + 0.06 * pillSpring;
@@ -260,28 +265,29 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
   const bracketPulseScale = 1 + Math.sin(timeSec * 2.6) * 0.018;
   const bracketPulseOpacity = 0.78 + Math.sin(timeSec * 2.6) * 0.2;
 
-  // Flanking Side Cockpit Cards (+7deg / -7deg)
+  // Flanking Side Cockpit Cards (+7deg / -7deg) with HEAVY authority & symmetrical inward settle
   const satStart = Math.round(1.45 * safeFps);
   const satSpring =
     frame >= satStart
       ? spring({
           frame: frame - satStart,
           fps: safeFps,
-          config: { damping: 24, stiffness: 155, mass: 1.05 },
+          config: MOTION_SPRINGS.HEAVY,
         })
       : 0;
   const satOpacity =
     frame >= satStart
-      ? interpolate(frame, [satStart, satStart + Math.round(0.28 * safeFps)], [0, 1], {
+      ? interpolate(frame, [satStart, satStart + Math.round(0.24 * safeFps)], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         })
       : 0;
-  const satRiseY = (1 - satSpring) * 28;
+  const satRiseY = (1 - satSpring) * 24;
+  const satSlideX = (1 - satSpring) * 24;
   const satScale = 0.94 + 0.06 * satSpring;
 
-  const stepBaseStart = satStart + Math.round(0.32 * safeFps);
-  const stepStagger = Math.max(4, Math.round(0.24 * safeFps));
+  const stepBaseStart = satStart + Math.round(0.24 * safeFps);
+  const stepStagger = Math.max(4, Math.round(0.135 * safeFps));
 
   // Orbiting 8-Module 3D Constellation enters cleanly with Triad
   const orbitOpacity = interpolate(frame, [Math.round(1.6 * safeFps), Math.round(2.3 * safeFps)], [0, 1], {
@@ -334,7 +340,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
         tiltYFrom={-0.6}
         tiltYTo={0.6}
         breathingAmplitude={0.4}
-        entryZoomOffset={0.032}
+        entryZoomOffset={0.036}
         entryFrames={Math.round(0.42 * safeFps)}
         clip
       >
@@ -613,8 +619,8 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                 key={`orbit-${mod.label}`}
                 style={{
                   position: 'absolute',
-                  left: cx,
-                  top: cy,
+                  left: 0,
+                  top: 0,
                   width: 56,
                   height: 56,
                   marginLeft: -28,
@@ -627,7 +633,8 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   opacity: tileOpacity,
-                  transform: `translate3d(0px, 0px, ${tileZ.toFixed(1)}px) scale(${tileScale.toFixed(4)})`,
+                  willChange: 'transform, opacity',
+                  transform: `translate3d(${cx.toFixed(1)}px, ${cy.toFixed(1)}px, ${tileZ.toFixed(1)}px) scale(${tileScale.toFixed(4)})`,
                 }}
               >
                 {renderOrbitIcon(mod.iconKind)}
@@ -817,7 +824,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               flexDirection: 'column',
               gap: 13,
               opacity: satOpacity,
-              transform: `translate3d(0px, ${satRiseY.toFixed(2)}px, 45px) rotateY(7deg) scale(${satScale.toFixed(4)})`,
+              transform: `translate3d(${(-satSlideX).toFixed(2)}px, ${satRiseY.toFixed(2)}px, 45px) rotateY(7deg) scale(${satScale.toFixed(4)})`,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -856,12 +863,20 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                     ? spring({
                         frame: stepElapsed,
                         fps: safeFps,
-                        config: { damping: 24, stiffness: 165, mass: 1.0 },
+                        config: MOTION_SPRINGS.MEDIUM,
+                      })
+                    : 0;
+                const badgePopSpring =
+                  stepElapsed >= 3
+                    ? spring({
+                        frame: stepElapsed - 3,
+                        fps: safeFps,
+                        config: MOTION_SPRINGS.LIGHT,
                       })
                     : 0;
                 const stepOpacity =
                   stepElapsed >= 0
-                    ? interpolate(stepElapsed, [0, Math.max(4, Math.round(0.22 * safeFps))], [0, 1], {
+                    ? interpolate(stepElapsed, [0, Math.max(4, Math.round(0.18 * safeFps))], [0, 1], {
                         extrapolateLeft: 'clamp',
                         extrapolateRight: 'clamp',
                       })
@@ -901,6 +916,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
                         fontFamily: LAUNCH_FONTS.MONO,
                         fontSize: 11,
                         fontWeight: 900,
+                        transform: `scale(${(0.76 + 0.24 * badgePopSpring).toFixed(4)})`,
                       }}
                     >
                       {step.code}
@@ -1157,7 +1173,7 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
               flexDirection: 'column',
               gap: 13,
               opacity: satOpacity,
-              transform: `translate3d(0px, ${satRiseY.toFixed(2)}px, 45px) rotateY(-7deg) scale(${satScale.toFixed(4)})`,
+              transform: `translate3d(${satSlideX.toFixed(2)}px, ${satRiseY.toFixed(2)}px, 45px) rotateY(-7deg) scale(${satScale.toFixed(4)})`,
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -1189,33 +1205,55 @@ const ClosingVaultInner: React.FC<ClosingVaultProps> = ({
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-              {MODULE_SPECTRUM_LIST.map((mod) => (
-                <div
-                  key={mod.label}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 8,
-                    padding: '8px 10px',
-                    borderRadius: 12,
-                    backgroundColor: 'rgba(246, 251, 249, 0.08)',
-                    border: '1px solid rgba(184, 228, 220, 0.22)',
-                  }}
-                >
-                  <span
+              {MODULE_SPECTRUM_LIST.map((mod, modIdx) => {
+                const chipStart = satStart + 14 + modIdx * 2;
+                const chipElapsed = frame - chipStart;
+                const chipSpring =
+                  chipElapsed >= 0
+                    ? spring({
+                        frame: chipElapsed,
+                        fps: safeFps,
+                        config: MOTION_SPRINGS.LIGHT,
+                      })
+                    : 0;
+                const chipOpacity =
+                  chipElapsed >= 0
+                    ? interpolate(chipElapsed, [0, 8], [0, 1], {
+                        extrapolateLeft: 'clamp',
+                        extrapolateRight: 'clamp',
+                      })
+                    : 0;
+
+                return (
+                  <div
+                    key={mod.label}
                     style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: 999,
-                      backgroundColor: mod.color,
-                      flexShrink: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      padding: '8px 10px',
+                      borderRadius: 12,
+                      backgroundColor: 'rgba(246, 251, 249, 0.08)',
+                      border: '1px solid rgba(184, 228, 220, 0.22)',
+                      opacity: chipOpacity,
+                      transform: `translate3d(0px, ${((1 - chipSpring) * 10).toFixed(2)}px, 0px) scale(${(0.92 + 0.08 * chipSpring).toFixed(4)})`,
                     }}
-                  />
-                  <span style={{ fontSize: 13, fontWeight: 800, color: '#FFFFFF', whiteSpace: 'nowrap' }}>
-                    {mod.label}
-                  </span>
-                </div>
-              ))}
+                  >
+                    <span
+                      style={{
+                        width: 9,
+                        height: 9,
+                        borderRadius: 999,
+                        backgroundColor: mod.color,
+                        flexShrink: 0,
+                      }}
+                    />
+                    <span style={{ fontSize: 13, fontWeight: 800, color: '#FFFFFF', whiteSpace: 'nowrap' }}>
+                      {mod.label}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
 
             <div

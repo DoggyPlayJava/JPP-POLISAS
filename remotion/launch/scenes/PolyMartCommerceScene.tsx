@@ -34,7 +34,13 @@ import {
   Module3DIntroBumper,
 } from '../motion/Module3DIntroBumper';
 import { WHIP_S_CURVE } from '../motion/transitions';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
+import {
+  LAUNCH_FONTS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+  MOTION_CURVES,
+  MOTION_SPRINGS,
+} from '../tokens';
 import { DeterministicQrMatrix, KineticWindow, SpatialFloorGrid } from '../ui/KineticCard';
 
 const AMBER = LAUNCH_MODULE_THEMES.polymart.primary; // #F59E0B
@@ -315,15 +321,16 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
   const wordStagger = Math.max(2, Math.round(0.05 * safeFps));
   const wordDuration = Math.max(8, Math.round(0.32 * safeFps));
 
-  // Left Cart HUD entrance
+  // Left Cart HUD entrance (`MOTION_SPRINGS.HEAVY` — grounded focal HUD)
   const cartHudSpring = spring({
     frame: Math.max(0, frame - (O + 6)),
     fps: safeFps,
-    config: LUXURY_SPRING,
+    config: MOTION_SPRINGS.HEAVY,
   });
   const cartHudOpacity = interpolate(frame, [O + 4, O + 22], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
+    easing: MOTION_CURVES.EASE_OUT_UI,
   });
   const cartHudX = (1 - cartHudSpring) * -32;
 
@@ -335,6 +342,20 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
     0,
   );
   const allAdded = cartCount === MENU_PRODUCTS.length;
+
+  // Causal follow-through: Cart Count badge pops cleanly right as each parabolic +1 orb lands
+  let cartBadgePopScale = 1;
+  for (const item of MENU_PRODUCTS) {
+    const landFrame = item.flyStartFrame + 22;
+    const landElapsed = frame - landFrame;
+    if (landElapsed >= 0 && landElapsed <= 14) {
+      cartBadgePopScale *= interpolate(landElapsed, [0, 4, 14], [1, 1.13, 1], {
+        extrapolateLeft: 'clamp',
+        extrapolateRight: 'clamp',
+        easing: MOTION_CURVES.EASE_OUT_UI,
+      });
+    }
+  }
 
   // Shot 1 -> Shot 2 Convergence & 180-deg Y-Axis Card Flip (O+236f .. O+308f = 368f .. 440f)
   const carouselConvergeT = interpolate(frame, [O + 236, O + 266], [0, 1], {
@@ -367,7 +388,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
     ? spring({
         frame: frame - (O + 352),
         fps: safeFps,
-        config: LUXURY_SPRING,
+        config: MOTION_SPRINGS.CONFIRM,
       })
     : 0;
 
@@ -410,9 +431,10 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
         tiltYFrom={-0.35}
         tiltYTo={0.35}
         breathingAmplitude={0.35}
-        entryZoomOffset={0.025}
-        entryPanXOffset={24}
+        entryZoomOffset={0.02}
+        entryPanXOffset={-26}
         entryFrames={Math.round(0.45 * safeFps)}
+        exitPanXDelta={-32}
         exitZoomDelta={0.015}
         exitFrames={Math.round(0.35 * safeFps)}
         clip
@@ -641,6 +663,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       fontSize: 13,
                       fontWeight: 900,
                       fontVariantNumeric: 'tabular-nums',
+                      transform: `scale(${cartBadgePopScale.toFixed(4)})`,
                     }}
                   >
                     {cartCount} ITEM
@@ -655,7 +678,14 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       ? spring({
                           frame: frame - item.clickFrame,
                           fps: safeFps,
-                          config: { damping: 16, stiffness: 220, mass: 0.85 },
+                          config: MOTION_SPRINGS.MEDIUM,
+                        })
+                      : 0;
+                    const checkPop = isAdded
+                      ? spring({
+                          frame: Math.max(0, frame - (item.clickFrame + 2)),
+                          fps: safeFps,
+                          config: MOTION_SPRINGS.LIGHT,
                         })
                       : 0;
                     return (
@@ -770,6 +800,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
+                                transform: `scale(${(0.84 + 0.16 * checkPop).toFixed(4)})`,
                               }}
                             >
                               <Check size={13} strokeWidth={3} />
@@ -936,21 +967,62 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
               >
                 {MENU_PRODUCTS.map((item, idx) => {
                   const enterSpring = spring({
-                    frame: Math.max(0, frame - (O + 12 + idx * 9)),
+                    frame: Math.max(0, frame - (O + 12 + idx * 6)),
                     fps: safeFps,
-                    config: LUXURY_SPRING,
+                    config: MOTION_SPRINGS.MEDIUM,
                   });
                   const isAdded = addedStates[idx];
                   const isHero = idx === 0;
 
-                  // Smoothly converge cards into center before 180-deg flip morph
+                  // Tactile press recoil on card & button right as GhostCursor clicks `+ MASUK BAKUL`
+                  const cardClickRecoil =
+                    frame >= item.clickFrame - 3 && frame <= item.clickFrame + 16
+                      ? frame <= item.clickFrame + 2
+                        ? interpolate(frame, [item.clickFrame - 3, item.clickFrame + 2], [1, 0.97], {
+                            extrapolateLeft: 'clamp',
+                            extrapolateRight: 'clamp',
+                            easing: MOTION_CURVES.EASE_OUT_UI,
+                          })
+                        : interpolate(
+                            frame,
+                            [item.clickFrame + 2, item.clickFrame + 9, item.clickFrame + 16],
+                            [0.97, 1.015, 1],
+                            {
+                              extrapolateLeft: 'clamp',
+                              extrapolateRight: 'clamp',
+                              easing: MOTION_CURVES.EASE_OUT_UI,
+                            },
+                          )
+                      : 1;
+                  const btnClickScale =
+                    frame >= item.clickFrame - 3 && frame <= item.clickFrame + 15
+                      ? frame <= item.clickFrame + 2
+                        ? interpolate(frame, [item.clickFrame - 3, item.clickFrame + 2], [1, 0.92], {
+                            extrapolateLeft: 'clamp',
+                            extrapolateRight: 'clamp',
+                            easing: MOTION_CURVES.EASE_OUT_UI,
+                          })
+                        : interpolate(
+                            frame,
+                            [item.clickFrame + 2, item.clickFrame + 8, item.clickFrame + 15],
+                            [0.92, 1.045, 1],
+                            {
+                              extrapolateLeft: 'clamp',
+                              extrapolateRight: 'clamp',
+                              easing: MOTION_CURVES.EASE_OUT_UI,
+                            },
+                          )
+                      : 1;
+
+                  // Smoothly converge cards into center before 180-deg flip morph (100% GPU translate3d)
                   const currX = interpolate(carouselConvergeT, [0, 1], [item.baseX, 340]);
                   const currY =
                     interpolate(carouselConvergeT, [0, 1], [item.baseY, 92]) +
-                    (1 - enterSpring) * 34;
+                    (1 - enterSpring) * 28;
                   const currZ = interpolate(carouselConvergeT, [0, 1], [item.baseZ, isHero ? 74 : -140]);
+                  const clampedEnter = Math.min(1, Math.max(0, enterSpring));
                   const currOpacity =
-                    enterSpring *
+                    clampedEnter *
                     (isHero
                       ? interpolate(carouselConvergeT, [0.75, 1], [1, 0], {
                           extrapolateLeft: 'clamp',
@@ -961,15 +1033,13 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                           extrapolateLeft: 'clamp',
                           extrapolateRight: 'clamp',
                         }));
-                  const currScale = interpolate(
-                    carouselConvergeT,
-                    [0, 1],
-                    [item.baseScale, isHero ? 0.96 : 0.8],
-                  );
+                  const currScale =
+                    interpolate(carouselConvergeT, [0, 1], [item.baseScale, isHero ? 0.96 : 0.8]) *
+                    cardClickRecoil;
                   const rotY = isHero ? -5 : -6;
                   const rotX = 3;
 
-                  // Parabolic flying +1 orb toward Cart HUD right after tap
+                  // Parabolic flying +1 orb toward Cart HUD right after tap (GPU translate3d)
                   const flyT = interpolate(
                     frame,
                     [item.flyStartFrame, item.flyStartFrame + 24],
@@ -991,8 +1061,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                       <div
                         style={{
                           position: 'absolute',
-                          left: currX,
-                          top: currY,
+                          left: 0,
+                          top: 0,
                           width: item.width,
                           height: item.height,
                           borderRadius: 28,
@@ -1012,7 +1082,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             : '0 22px 48px rgba(6, 23, 20, 0.14)',
                           opacity: currOpacity,
                           transformOrigin: '50% 50%',
-                          transform: `translate3d(0px, 0px, ${currZ.toFixed(1)}px) rotateY(${rotY}deg) rotateX(${rotX}deg) scale(${currScale.toFixed(4)})`,
+                          willChange: 'transform, opacity',
+                          transform: `translate3d(${currX.toFixed(1)}px, ${currY.toFixed(1)}px, ${currZ.toFixed(1)}px) rotateY(${rotY}deg) rotateX(${rotX}deg) scale(${currScale.toFixed(4)})`,
                           padding: isHero ? '24px 26px' : '20px 22px',
                           display: 'flex',
                           flexDirection: 'column',
@@ -1120,6 +1191,7 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                               boxShadow: isAdded
                                 ? '0 10px 20px rgba(4, 120, 87, 0.26)'
                                 : '0 10px 20px rgba(217, 119, 6, 0.25)',
+                              transform: `scale(${btnClickScale.toFixed(4)})`,
                             }}
                           >
                             {isAdded ? (
@@ -1138,8 +1210,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                         <div
                           style={{
                             position: 'absolute',
-                            left: orbX,
-                            top: orbY,
+                            left: 0,
+                            top: 0,
                             width: 44,
                             height: 44,
                             borderRadius: 999,
@@ -1153,7 +1225,8 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                             alignItems: 'center',
                             justifyContent: 'center',
                             boxShadow: '0 12px 24px rgba(217, 119, 6, 0.36)',
-                            transform: 'translate(-50%, -50%) translateZ(120px)',
+                            willChange: 'transform',
+                            transform: `translate3d(${orbX.toFixed(1)}px, ${orbY.toFixed(1)}px, 120px) translate(-50%, -50%)`,
                             zIndex: 25,
                           }}
                         >
@@ -1434,6 +1507,14 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                         {PREP_STAGES.map((stage, sIdx) => {
                           const stageThreshold = (sIdx + 1) / PREP_STAGES.length;
                           const done = kitchenProgress >= stageThreshold - 0.04;
+                          const stageTriggerFrame = O + 314 + sIdx * 18;
+                          const stageCheckPop = done
+                            ? spring({
+                                frame: Math.max(0, frame - stageTriggerFrame),
+                                fps: safeFps,
+                                config: MOTION_SPRINGS.LIGHT,
+                              })
+                            : 0;
                           return (
                             <div
                               key={stage.label}
@@ -1448,11 +1529,20 @@ const PolyMartCommerceInner: React.FC<PolyMartProps> = ({
                               }}
                             >
                               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                                <CheckCircle2
-                                  size={15}
-                                  color={done ? EMERALD_INK : LAUNCH_PALETTE.INK_SOFT}
-                                  strokeWidth={2.6}
-                                />
+                                <span
+                                  style={{
+                                    display: 'inline-flex',
+                                    transform: done
+                                      ? `scale(${(0.86 + 0.14 * stageCheckPop).toFixed(4)})`
+                                      : 'scale(1)',
+                                  }}
+                                >
+                                  <CheckCircle2
+                                    size={15}
+                                    color={done ? EMERALD_INK : LAUNCH_PALETTE.INK_SOFT}
+                                    strokeWidth={2.6}
+                                  />
+                                </span>
                                 <span
                                   style={{
                                     fontSize: 13.5,

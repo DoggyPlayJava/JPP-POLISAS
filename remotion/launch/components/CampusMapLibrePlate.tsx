@@ -22,7 +22,13 @@ import {
   Navigation,
   Umbrella,
 } from 'lucide-react';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, POLISAS_COORDS } from '../tokens';
+import {
+  LAUNCH_FONTS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+  MOTION_SPRINGS,
+  POLISAS_COORDS,
+} from '../tokens';
 import {
   CAMPUS_JUNCTION_NODES,
   CAMPUS_LANDMARKS,
@@ -627,7 +633,7 @@ export const CampusMapLibrePlate: React.FC<CampusMapLibrePlateProps> = ({
     ? spring({
         frame: arrivalElapsed,
         fps: safeFps,
-        config: { damping: 145, stiffness: 225, mass: 0.85 },
+        config: MOTION_SPRINGS.CONFIRM,
       })
     : 0;
   const arrivalPillEnter = hasArrived

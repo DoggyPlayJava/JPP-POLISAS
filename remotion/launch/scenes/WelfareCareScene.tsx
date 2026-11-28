@@ -1,6 +1,5 @@
 import React from 'react';
 import {
-  Easing,
   Interactive,
   interpolate,
   spring,
@@ -34,7 +33,13 @@ import {
   Module3DIntroBumper,
 } from '../motion/Module3DIntroBumper';
 import { WHIP_S_CURVE } from '../motion/transitions';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
+import {
+  LAUNCH_FONTS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+  MOTION_CURVES,
+  MOTION_SPRINGS,
+} from '../tokens';
 import { DeterministicQrMatrix, KineticWindow, SpatialFloorGrid } from '../ui/KineticCard';
 
 const TEAL = LAUNCH_MODULE_THEMES.kebajikan.primary; // #14B8A6
@@ -89,12 +94,12 @@ const KAMSIS_STAGES: readonly ComplaintStageSpec[] = [
 ];
 
 const FOOD_BANK_STEPS = [
-  { label: 'Dimohon', subLabel: '08:40 AM', threshold: 0.2 },
-  { label: 'Diluluskan Rahsia', subLabel: '09:05 AM', threshold: 0.55 },
-  { label: 'Sedia Diambil ✓', subLabel: 'Loker Privasi B2', threshold: 0.85 },
+  { label: 'Dimohon', subLabel: '08:40 AM', reachFrame: O + 362 },
+  { label: 'Diluluskan Rahsia', subLabel: '09:05 AM', reachFrame: O + 378 },
+  { label: 'Sedia Diambil ✓', subLabel: 'Loker Privasi B2', reachFrame: O + 394 },
 ] as const;
 
-const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
+const EXPO_OUT = MOTION_CURVES.EASE_OUT_EXPO;
 
 const WelfareCareInner: React.FC<WelfareCareProps> = ({
   ticketNo,
@@ -131,7 +136,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
   const entrySpring = spring({
     frame: Math.max(0, frame - (O + 6)),
     fps: safeFps,
-    config: LUXURY_SPRING,
+    config: MOTION_SPRINGS.HEAVY,
   });
 
   // Card 1: Smart Ticket & 2-Way Direct Live Chat Hub (width 1060x576)
@@ -153,15 +158,15 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
   // Live 2-Way Chat message progression (all settle well BEFORE f=3450 / local 348f / O+216f!)
   const msg1Spring =
     frame >= O + 36
-      ? spring({ frame: frame - (O + 36), fps: safeFps, config: LUXURY_SPRING })
+      ? spring({ frame: frame - (O + 36), fps: safeFps, config: MOTION_SPRINGS.MEDIUM })
       : 0;
   const msg2Spring =
     frame >= O + 86
-      ? spring({ frame: frame - (O + 86), fps: safeFps, config: LUXURY_SPRING })
+      ? spring({ frame: frame - (O + 86), fps: safeFps, config: MOTION_SPRINGS.MEDIUM })
       : 0;
   const liveToastSpring =
     frame >= O + 146
-      ? spring({ frame: frame - (O + 146), fps: safeFps, config: LUXURY_SPRING })
+      ? spring({ frame: frame - (O + 146), fps: safeFps, config: MOTION_SPRINGS.CONFIRM })
       : 0;
   const slaCompleted = frame >= O + 124;
 
@@ -172,11 +177,6 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
     easing: WHIP_S_CURVE,
   });
   const shieldTranslateY = interpolate(shieldLiftProgress, [0, 1], [0, -112]);
-  const pickupStepsProgress = interpolate(frame, [O + 354, O + 406], [0, 1], {
-    extrapolateLeft: 'clamp',
-    extrapolateRight: 'clamp',
-    easing: EXPO_OUT,
-  });
 
   const laserCycle = ((frame - (O + 372)) % 72 + 72) % 72;
   const laserY = interpolate(laserCycle, [0, 36, 72], [12, 156, 12]);
@@ -219,9 +219,10 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
         tiltYTo={0.35}
         breathingAmplitude={0.35}
         entryZoomOffset={0.024}
-        entryPanXOffset={24}
+        entryPanXOffset={-24}
         entryFrames={Math.round(0.45 * safeFps)}
-        exitZoomDelta={0.015}
+        exitPanYDelta={-28}
+        exitZoomDelta={-0.02}
         exitFrames={Math.round(0.35 * safeFps)}
         clip
       >
@@ -578,6 +579,14 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                         {KAMSIS_STAGES.map((stage, idx) => {
                           const reached = frame >= stage.reachFrame;
                           const isFinal = idx === KAMSIS_STAGES.length - 1;
+                          const stageCheckSpring = reached
+                            ? spring({
+                                frame: frame - stage.reachFrame,
+                                fps: safeFps,
+                                config: MOTION_SPRINGS.LIGHT,
+                              })
+                            : 0;
+                          const stageDotScale = reached ? 0.52 + 0.48 * stageCheckSpring : 0.86;
                           return (
                             <div
                               key={stage.code}
@@ -605,6 +614,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     justifyContent: 'center',
+                                    transform: `scale(${stageDotScale.toFixed(4)})`,
                                   }}
                                 >
                                   {reached ? <Check size={11} strokeWidth={3} /> : null}
@@ -679,7 +689,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                       </div>
 
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, flex: 1, justifyContent: 'center' }}>
-                        {/* Student Message Bubble (Right) */}
+                        {/* Student Message Bubble (Right — directional origin slide from right) */}
                         <div
                           style={{
                             alignSelf: 'flex-end',
@@ -688,8 +698,9 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                             borderRadius: '18px 18px 4px 18px',
                             backgroundColor: LAUNCH_PALETTE.SECONDARY,
                             color: '#FFFFFF',
-                            opacity: msg1Spring,
-                            transform: `translate3d(0px, ${((1 - msg1Spring) * 16).toFixed(1)}px, 0px)`,
+                            opacity: Math.min(1, msg1Spring),
+                            transformOrigin: '100% 100%',
+                            transform: `translate3d(${((1 - msg1Spring) * 18).toFixed(1)}px, ${((1 - msg1Spring) * 14).toFixed(1)}px, 0px) scale(${(0.95 + 0.05 * msg1Spring).toFixed(4)})`,
                           }}
                         >
                           <p style={{ margin: 0, fontSize: 13.5, fontWeight: 700, lineHeight: 1.38 }}>
@@ -709,7 +720,7 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                           </span>
                         </div>
 
-                        {/* Exco & Officer Verified Reply Bubble (Left) */}
+                        {/* Exco & Officer Verified Reply Bubble (Left — directional origin slide from left) */}
                         <div
                           style={{
                             alignSelf: 'flex-start',
@@ -719,8 +730,9 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                             backgroundColor: LAUNCH_PALETTE.BACKGROUND,
                             border: `1.5px solid ${TEAL_BORDER}`,
                             color: LAUNCH_PALETTE.PRIMARY,
-                            opacity: msg2Spring,
-                            transform: `translate3d(0px, ${((1 - msg2Spring) * 16).toFixed(1)}px, 0px)`,
+                            opacity: Math.min(1, msg2Spring),
+                            transformOrigin: '0% 100%',
+                            transform: `translate3d(${((1 - msg2Spring) * -18).toFixed(1)}px, ${((1 - msg2Spring) * 14).toFixed(1)}px, 0px) scale(${(0.95 + 0.05 * msg2Spring).toFixed(4)})`,
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
@@ -752,8 +764,8 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             gap: 10,
-                            opacity: liveToastSpring,
-                            transform: `scale(${(0.94 + 0.06 * liveToastSpring).toFixed(4)})`,
+                            opacity: Math.min(1, liveToastSpring),
+                            transform: `scale(${(0.92 + 0.08 * liveToastSpring).toFixed(4)})`,
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -928,7 +940,15 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                   >
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                       {FOOD_BANK_STEPS.map((step) => {
-                        const active = pickupStepsProgress >= step.threshold;
+                        const active = frame >= step.reachFrame;
+                        const stepCheckSpring = active
+                          ? spring({
+                              frame: frame - step.reachFrame,
+                              fps: safeFps,
+                              config: MOTION_SPRINGS.LIGHT,
+                            })
+                          : 0;
+                        const checkScale = active ? 0.56 + 0.44 * stepCheckSpring : 0.9;
                         return (
                           <div
                             key={step.label}
@@ -945,11 +965,20 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                             }}
                           >
                             <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
-                              <CheckCircle2
-                                size={18}
-                                color={active ? EMERALD_BORDER : 'rgba(255,255,255,0.38)'}
-                                strokeWidth={2.5}
-                              />
+                              <span
+                                style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  transform: `scale(${checkScale.toFixed(4)})`,
+                                }}
+                              >
+                                <CheckCircle2
+                                  size={18}
+                                  color={active ? EMERALD_BORDER : 'rgba(255,255,255,0.38)'}
+                                  strokeWidth={2.5}
+                                />
+                              </span>
                               <span style={{ fontSize: 16.5, fontWeight: 900, color: '#FFFFFF' }}>
                                 {step.label}
                               </span>
@@ -1020,11 +1049,13 @@ const WelfareCareInner: React.FC<WelfareCareProps> = ({
                             position: 'absolute',
                             left: 8,
                             right: 8,
-                            top: laserY,
+                            top: 0,
                             height: 3.5,
                             borderRadius: 999,
                             backgroundColor: AMBER,
                             boxShadow: '0 0 12px rgba(245, 158, 11, 0.85)',
+                            willChange: 'transform',
+                            transform: `translate3d(0px, ${laserY.toFixed(1)}px, 0px)`,
                           }}
                         />
                       </div>

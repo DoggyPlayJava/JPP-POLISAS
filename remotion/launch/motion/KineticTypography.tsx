@@ -1,10 +1,12 @@
 import React from 'react';
 import { Easing, interpolate, useCurrentFrame, useVideoConfig } from 'remotion';
 import { Circle, Highlight, Underline, type Padding } from '@remotion/rough-notation';
-import { LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_PALETTE, MOTION_CURVES } from '../tokens';
 
-const EXPO_OUT_EASING = Easing.bezier(0.16, 1, 0.3, 1);
+const EXPO_OUT_EASING = MOTION_CURVES.EASE_OUT_EXPO;
 const ANNOTATION_EASING = Easing.bezier(0.22, 1, 0.36, 1);
+const PUNCTUATION_BREATH_FRAMES = 4;
+const MAX_TOTAL_STAGGER_SPREAD_FRAMES = 34;
 
 export type AccentWordsTarget =
   | readonly number[]
@@ -74,10 +76,25 @@ export const KineticWords: React.FC<KineticWordsProps> = ({
   const justifyContent =
     align === 'center' ? 'center' : align === 'right' ? 'flex-end' : 'flex-start';
 
+  // Compute human speech-rhythm offsets: brief rhetorical breath after . ? ! — and capped total spread
+  const rawOffsets: number[] = [];
+  let cursorOffset = 0;
+  for (let i = 0; i < words.length; i++) {
+    rawOffsets.push(cursorOffset);
+    const hasPunctuationPause = /[.?!—:]$/.test(words[i]);
+    cursorOffset += staggerFrames + (hasPunctuationPause ? PUNCTUATION_BREATH_FRAMES : 0);
+  }
+  const maxRawOffset = rawOffsets[rawOffsets.length - 1] ?? 0;
+  const spreadScale =
+    maxRawOffset > MAX_TOTAL_STAGGER_SPREAD_FRAMES
+      ? MAX_TOTAL_STAGGER_SPREAD_FRAMES / maxRawOffset
+      : 1;
+
   const ContainerTag = as;
 
   return (
     <ContainerTag
+      aria-label={text}
       style={{
         margin: 0,
         display: as === 'span' ? 'inline-flex' : 'flex',
@@ -89,35 +106,40 @@ export const KineticWords: React.FC<KineticWordsProps> = ({
       }}
     >
       {words.map((word, index) => {
-        const wordStart = startFrame + index * staggerFrames;
+        const wordStart = startFrame + Math.round((rawOffsets[index] ?? 0) * spreadScale);
         const progress = interpolate(frame, [wordStart, wordStart + safeDuration], [0, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
           easing,
         });
 
+        const accented = isWordAccented(word, index, accentWords);
         const translateYPercent = interpolate(progress, [0, 1], [115, 0], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         });
-        const settleRotate = interpolate(progress, [0, 1], [1.6, 0], {
+        const settleRotate = interpolate(progress, [0, 1], [accented ? 2.1 : 1.4, 0], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         });
-        const settleScale = interpolate(progress, [0, 0.78, 1], [0.97, 1.008, 1], {
-          extrapolateLeft: 'clamp',
-          extrapolateRight: 'clamp',
-        });
+        const settleScale = accented
+          ? interpolate(progress, [0, 0.72, 1], [0.96, 1.028, 1], {
+              extrapolateLeft: 'clamp',
+              extrapolateRight: 'clamp',
+            })
+          : interpolate(progress, [0, 0.78, 1], [0.975, 1.006, 1], {
+              extrapolateLeft: 'clamp',
+              extrapolateRight: 'clamp',
+            });
         const opacity = interpolate(progress, [0, 0.25, 1], [0, 1, 1], {
           extrapolateLeft: 'clamp',
           extrapolateRight: 'clamp',
         });
 
-        const accented = isWordAccented(word, index, accentWords);
-
         return (
           <span
             key={`${index}-${word}`}
+            aria-hidden="true"
             style={{
               display: 'inline-block',
               overflow: 'hidden',
@@ -177,7 +199,10 @@ export const KineticReveal: React.FC<KineticRevealProps> = ({
     easing: EXPO_OUT_EASING,
   });
 
-  const translateY = interpolate(progress, [0, 1], [distanceY, 0]);
+  const translateY = interpolate(progress, [0, 1], [distanceY, 0], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
   const opacity = interpolate(progress, [0, 0.28, 1], [0, 1, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',

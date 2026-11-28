@@ -36,7 +36,13 @@ import {
   Module3DIntroBumper,
 } from '../motion/Module3DIntroBumper';
 import { WHIP_S_CURVE } from '../motion/transitions';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
+import {
+  LAUNCH_FONTS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+  MOTION_CURVES,
+  MOTION_SPRINGS,
+} from '../tokens';
 import {
   KineticWindow,
   LiveTypewriterText,
@@ -200,16 +206,52 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
       ? 'ENKRIPSI IDENTITI SEDANG BERJALAN...'
       : REAL_MATRIC_TAG;
 
-  // Avatar 3D Y-axis coin-flip (`AH` student badge <-> `PersonaMonogram fox`)
-  const avatarFlipDeg = interpolate(scrambleT, [0, 1], [0, 180]);
-  const shieldSweepPct = interpolate(scrambleT, [0, 1], [-18, 118]);
+  // Avatar 3D Y-axis coin-flip (`AH` student badge <-> `PersonaMonogram fox`) & GPU shield sweep
+  const avatarFlipDeg = interpolate(scrambleT, [0, 1], [0, 180], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
+  const shieldSweepPx = interpolate(scrambleT, [0, 1], [-140, 1080], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
 
-  // Locked callout & reaction pop right after scramble locks (O+132 .. O+182 = 264..314f, sharp at f=2750 / local 356f!)
+  // Tactile press compression when GhostCursor taps `Aktifkan Mod Tanpa Nama` (O+76) & Option A (O+332)
+  const anonBtnPressScale =
+    frame >= O + 73 && frame <= O + 84
+      ? frame <= O + 78
+        ? interpolate(frame, [O + 73, O + 78], [1, 0.945], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+            easing: MOTION_CURVES.EASE_OUT_UI,
+          })
+        : interpolate(frame, [O + 78, O + 84], [0.945, 1.02], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+            easing: MOTION_CURVES.EASE_OUT_UI,
+          })
+      : 1;
+  const optionAPressScale =
+    frame >= O + 329 && frame <= O + 346
+      ? frame <= O + 334
+        ? interpolate(frame, [O + 329, O + 334], [1, 0.984], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+            easing: MOTION_CURVES.EASE_OUT_UI,
+          })
+        : interpolate(frame, [O + 334, O + 340, O + 346], [0.984, 1.012, 1], {
+            extrapolateLeft: 'clamp',
+            extrapolateRight: 'clamp',
+            easing: MOTION_CURVES.EASE_OUT_UI,
+          })
+      : 1;
+
+  // Locked callout & reaction pop right after scramble locks (`MOTION_SPRINGS.CONFIRM`)
   const trustCalloutSpring = isAnonymousLocked
     ? spring({
         frame: frame - scrambleEnd,
         fps: safeFps,
-        config: LUXURY_SPRING,
+        config: MOTION_SPRINGS.CONFIRM,
       })
     : 0;
   const reactionFillProgress = interpolate(frame, [scrambleEnd, scrambleEnd + 54], [0, 1], {
@@ -275,7 +317,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
     ? spring({
         frame: frame - (O + 366),
         fps: safeFps,
-        config: LUXURY_SPRING,
+        config: MOTION_SPRINGS.CONFIRM,
       })
     : 0;
 
@@ -287,7 +329,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
   });
   const phoneRiseY = (1 - phoneEnterProgress) * 140;
   const phoneRotY = interpolate(phoneEnterProgress, [0, 1], [-18, -8]);
-  const phoneSheenLeft = interpolate(frame, [O + 434, O + 492], [-45, 135], {
+  const phoneSheenTranslateXPct = interpolate(frame, [O + 434, O + 492], [-135, 405], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: Easing.bezier(0.25, 0.1, 0.25, 1),
@@ -344,9 +386,10 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
         tiltYFrom={-0.35}
         tiltYTo={0.35}
         breathingAmplitude={0.35}
-        entryZoomOffset={0.024}
-        entryPanXOffset={24}
+        entryZoomOffset={0.032}
+        entryPanXOffset={0}
         entryFrames={Math.round(0.45 * safeFps)}
+        exitPanXDelta={24}
         exitZoomDelta={0.015}
         exitFrames={Math.round(0.35 * safeFps)}
         clip
@@ -618,7 +661,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                           overflow: 'hidden',
                         }}
                       >
-                        {/* Sweeping Privacy Shield Scanner Bar across name strip during scramble */}
+                        {/* Sweeping Privacy Shield Scanner Bar across name strip during scramble (GPU translate3d) */}
                         {isScrambling ? (
                           <div
                             aria-hidden
@@ -626,11 +669,13 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                               position: 'absolute',
                               top: 0,
                               bottom: 0,
-                              left: `${shieldSweepPct.toFixed(1)}%`,
+                              left: 0,
                               width: 120,
                               background:
                                 'linear-gradient(90deg, rgba(244, 63, 94, 0) 0%, rgba(244, 63, 94, 0.32) 50%, rgba(244, 63, 94, 0) 100%)',
                               borderRight: `3px solid ${ROSE}`,
+                              transform: `translate3d(${shieldSweepPx.toFixed(1)}px, 0px, 0px)`,
+                              willChange: 'transform',
                               pointerEvents: 'none',
                             }}
                           />
@@ -782,9 +827,9 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                             {REACTIONS.map((rx, rIdx) => {
                               const popSpring = spring({
-                                frame: Math.max(0, frame - (scrambleEnd + rIdx * 6)),
+                                frame: Math.max(0, frame - (scrambleEnd + rIdx * 4)),
                                 fps: safeFps,
-                                config: LUXURY_SPRING,
+                                config: MOTION_SPRINGS.LIGHT,
                               });
                               const rxCount = Math.round(rx.count * reactionFillProgress);
                               return (
@@ -864,6 +909,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                               fontWeight: 900,
                               letterSpacing: '0.06em',
                               boxShadow: '0 14px 28px rgba(225, 29, 72, 0.28)',
+                              transform: `scale(${anonBtnPressScale.toFixed(4)})`,
                             }}
                           >
                             <Lock size={15} strokeWidth={2.6} />
@@ -1038,6 +1084,7 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                           border: `2px solid ${ROSE}`,
                           boxShadow: '0 14px 32px rgba(244, 63, 94, 0.14)',
                           overflow: 'hidden',
+                          transform: `scale(${optionAPressScale.toFixed(4)})`,
                         }}
                       >
                         <div
@@ -1046,9 +1093,12 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                             left: 0,
                             top: 0,
                             bottom: 0,
-                            width: `${livePctA}%`,
+                            width: '100%',
                             backgroundColor: ROSE_SOFT,
                             borderRight: `3px solid ${ROSE}`,
+                            transformOrigin: '0% 50%',
+                            transform: `scaleX(${(livePctA / 100).toFixed(4)})`,
+                            willChange: 'transform',
                           }}
                         />
                         <div
@@ -1121,8 +1171,11 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                             left: 0,
                             top: 0,
                             bottom: 0,
-                            width: `${livePctB}%`,
+                            width: '100%',
                             backgroundColor: LAUNCH_PALETTE.SURFACE_MUTED,
+                            transformOrigin: '0% 50%',
+                            transform: `scaleX(${(livePctB / 100).toFixed(4)})`,
+                            willChange: 'transform',
                           }}
                         />
                         <div
@@ -1412,17 +1465,18 @@ const PolySuaraVoiceInner: React.FC<PolySuaraProps> = ({
                   </div>
 
                   {phoneSheenOpacity > 0.01 ? (
-                    <div
+                      <div
                       aria-hidden
                       style={{
                         position: 'absolute',
                         top: '-40%',
-                        left: `${phoneSheenLeft.toFixed(1)}%`,
+                        left: 0,
                         width: '34%',
                         height: '180%',
                         background:
                           'linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.45) 50%, rgba(255,255,255,0) 100%)',
-                        transform: 'rotate(22deg)',
+                        transform: `translate3d(${phoneSheenTranslateXPct.toFixed(1)}%, 0px, 0px) rotate(22deg)`,
+                        willChange: 'transform, opacity',
                         opacity: phoneSheenOpacity,
                         pointerEvents: 'none',
                       }}

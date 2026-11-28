@@ -6,7 +6,7 @@ import {
   useCurrentFrame,
   useVideoConfig,
 } from 'remotion';
-import { LAUNCH_FONTS, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_PALETTE, MOTION_SPRINGS } from '../tokens';
 
 export type KineticWindowSurface = 'light' | 'dark' | 'sand';
 
@@ -116,7 +116,7 @@ export const KineticWindow: React.FC<KineticWindowProps> = ({
   const theme = SURFACE_THEMES[surface];
   const hasTopBar = Boolean(routeLabel || statusPill);
 
-  let sheenLeftPct = -45;
+  let sheenTranslateXPct = -145;
   let sheenOpacity = 0;
   if (sheenStartFrame !== undefined && Number.isFinite(sheenStartFrame)) {
     const safeDuration = Math.max(1, Number.isFinite(sheenDuration) ? sheenDuration : 42);
@@ -130,7 +130,10 @@ export const KineticWindow: React.FC<KineticWindowProps> = ({
         easing: SHEEN_EASING,
       },
     );
-    sheenLeftPct = interpolate(sheenProgress, [0, 1], [-45, 135]);
+    sheenTranslateXPct = interpolate(sheenProgress, [0, 1], [-145, 425], {
+      extrapolateLeft: 'clamp',
+      extrapolateRight: 'clamp',
+    });
     sheenOpacity = interpolate(sheenProgress, [0, 0.18, 0.78, 1], [0, 1, 1, 0], {
       extrapolateLeft: 'clamp',
       extrapolateRight: 'clamp',
@@ -293,13 +296,13 @@ export const KineticWindow: React.FC<KineticWindowProps> = ({
             style={{
               position: 'absolute',
               top: '-50%',
-              left: `${sheenLeftPct.toFixed(2)}%`,
+              left: 0,
               width: '32%',
               height: '200%',
               opacity: sheenOpacity,
               background: theme.sheenGradient,
-              transform: 'rotate(24deg)',
-              willChange: 'left, opacity',
+              transform: `translate3d(${sheenTranslateXPct.toFixed(2)}%, 0px, 0px) rotate(24deg)`,
+              willChange: 'transform, opacity',
               pointerEvents: 'none',
             }}
           />
@@ -319,13 +322,14 @@ export type ExplodedLayerProps = {
   readonly rotateZ?: number;
   readonly floatAmplitude?: number;
   readonly floatPhase?: number;
+  readonly weight?: 'heavy' | 'medium' | 'light';
   readonly style?: React.CSSProperties;
   readonly children: React.ReactNode;
 };
 
 /**
- * 3D-lifted UI sub-layer with deterministic Remotion spring entry and gentle
- * sinusoidal micro-float in true CSS Z-space (`preserve-3d`).
+ * 3D-lifted UI sub-layer with weight-differentiated deterministic Remotion spring entry
+ * and gentle sinusoidal micro-float in true CSS Z-space (`preserve-3d`).
  */
 export const ExplodedLayer: React.FC<ExplodedLayerProps> = ({
   zDepth = 0,
@@ -337,6 +341,7 @@ export const ExplodedLayer: React.FC<ExplodedLayerProps> = ({
   rotateZ = 0,
   floatAmplitude = 3,
   floatPhase = 0,
+  weight = 'medium',
   style,
   children,
 }) => {
@@ -345,13 +350,19 @@ export const ExplodedLayer: React.FC<ExplodedLayerProps> = ({
 
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
   const localFrame = frame - enterFrame;
+  const springConfig =
+    weight === 'heavy'
+      ? MOTION_SPRINGS.HEAVY
+      : weight === 'light'
+        ? MOTION_SPRINGS.LIGHT
+        : MOTION_SPRINGS.MEDIUM;
 
   const enterSpring =
     localFrame >= 0
       ? spring({
           frame: localFrame,
           fps: safeFps,
-          config: { damping: 180, stiffness: 220, mass: 0.9 },
+          config: springConfig,
         })
       : 0;
 
@@ -364,10 +375,12 @@ export const ExplodedLayer: React.FC<ExplodedLayerProps> = ({
         })
       : 0;
 
+  const clampedEnter = Math.min(1, Math.max(0, enterSpring));
   const floatY =
-    Math.sin((frame / safeFps) * 1.45 + floatPhase) * floatAmplitude * enterSpring;
+    Math.sin((frame / safeFps) * 1.45 + floatPhase) * floatAmplitude * clampedEnter;
   const tx = (1 - enterSpring) * enterOffsetX;
   const ty = (1 - enterSpring) * enterOffsetY + floatY;
+  const enterScale = 0.965 + 0.035 * enterSpring;
   const rotSuffix =
     rotateX !== 0 || rotateY !== 0 || rotateZ !== 0
       ? ` rotateX(${rotateX.toFixed(2)}deg) rotateY(${rotateY.toFixed(2)}deg) rotateZ(${rotateZ.toFixed(2)}deg)`
@@ -380,7 +393,7 @@ export const ExplodedLayer: React.FC<ExplodedLayerProps> = ({
         transformStyle: 'preserve-3d',
         opacity,
         willChange: 'transform, opacity',
-        transform: `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, ${zDepth.toFixed(2)}px)${rotSuffix}`,
+        transform: `translate3d(${tx.toFixed(2)}px, ${ty.toFixed(2)}px, ${zDepth.toFixed(2)}px) scale(${enterScale.toFixed(4)})${rotSuffix}`,
       }}
     >
       {children}

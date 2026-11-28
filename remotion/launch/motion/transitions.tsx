@@ -13,7 +13,7 @@ import type {
   TransitionPresentation,
   TransitionPresentationComponentProps,
 } from '@remotion/transitions';
-import { LAUNCH_FONTS, LAUNCH_PALETTE } from '../tokens';
+import { LAUNCH_FONTS, LAUNCH_PALETTE, MOTION_CURVES } from '../tokens';
 
 const clampUnit = (value: number): number => {
   if (!Number.isFinite(value)) return 0;
@@ -1385,10 +1385,10 @@ export const EditorialShutterOverlay: React.FC<EditorialShutterOverlayProps> = (
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
-  const exitProgress = interpolate(u, [27, 32], [0, 1], {
+  const exitProgress = interpolate(u, [28, 32], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: CUBIC_IN_OUT,
+    easing: MOTION_CURVES.EASE_EXIT_ACCEL,
   });
 
   const textTranslateY =

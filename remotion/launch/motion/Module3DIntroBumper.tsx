@@ -1,5 +1,5 @@
 import React from 'react';
-import { Easing, interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
+import { interpolate, spring, useCurrentFrame, useVideoConfig } from 'remotion';
 import {
   Award,
   Briefcase,
@@ -16,14 +16,20 @@ import {
   UtensilsCrossed,
   Zap,
 } from 'lucide-react';
-import { LAUNCH_FONTS, LAUNCH_MODULE_THEMES, LAUNCH_PALETTE, LUXURY_SPRING } from '../tokens';
+import {
+  LAUNCH_FONTS,
+  LAUNCH_MODULE_THEMES,
+  LAUNCH_PALETTE,
+  MOTION_CURVES,
+  MOTION_SPRINGS,
+} from '../tokens';
 import { WHIP_S_CURVE } from './transitions';
 import { SpatialFloorGrid } from '../ui/KineticCard';
 
 export const MODULE_BUMPER_DURATION_FRAMES = 168;
 export const MODULE_CONTENT_ENTER_OFFSET = 132;
 
-const EXPO_OUT = Easing.bezier(0.16, 1, 0.3, 1);
+const EXPO_OUT = MOTION_CURVES.EASE_OUT_EXPO;
 
 export type ModuleBumperMorphMode =
   | 'compass-drop-to-map'
@@ -58,23 +64,27 @@ type ChipPlacement = {
   readonly posStyle: React.CSSProperties;
   readonly delayFrames: number;
   readonly floatPhase: number;
+  readonly radialOffsetX: number;
 };
 
 const CHIP_PLACEMENTS: readonly [ChipPlacement, ChipPlacement, ChipPlacement] = [
   {
     posStyle: { right: 546, top: 44 },
-    delayFrames: 18,
+    delayFrames: 14,
     floatPhase: 0,
+    radialOffsetX: 28,
   },
   {
     posStyle: { left: 546, top: 68 },
-    delayFrames: 28,
+    delayFrames: 20,
     floatPhase: 1.9,
+    radialOffsetX: -28,
   },
   {
     posStyle: { right: 530, bottom: 26 },
-    delayFrames: 38,
+    delayFrames: 26,
     floatPhase: 3.7,
+    radialOffsetX: 24,
   },
 ];
 
@@ -283,16 +293,24 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
   const safeFps = Math.max(1, Number.isFinite(fps) ? fps : 60);
   const timeSec = frame / safeFps;
 
-  // Phase A hero squircle entry (`LUXURY_SPRING`)
+  // Phase A hero squircle entry (`MOTION_SPRINGS.HEAVY` — grounded 0% overshoot)
   const heroSpring = spring({
     frame,
     fps: safeFps,
-    config: LUXURY_SPRING,
+    config: MOTION_SPRINGS.HEAVY,
+  });
+
+  // Subtle 8-frame anticipation compression right before Phase B morph fires (`104..115f`)
+  const morphAnticipation = interpolate(frame, [104, 111, 115], [1, 0.962, 1], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+    easing: MOTION_CURVES.EASE_OUT_UI,
   });
 
   const entryOpacity = interpolate(frame, [0, 10], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
+    easing: MOTION_CURVES.EASE_OUT_UI,
   });
 
   // Phase B Contextual Spatial Morph (`112..168f`, midpoint ~138f stays at full morphOpacity)
@@ -314,27 +332,31 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
   const idlePitch = Math.cos(timeSec * 1.5) * 1.6 * heroSpring * floatBlend;
   const idleHoverY = Math.sin(timeSec * 2.1) * 5.5 * heroSpring * floatBlend;
 
-  // Animated diagonal glass sheen across monolith face (`26..92f`)
+  // Animated diagonal glass sheen across monolith face (`26..92f`, GPU translate3d)
   const sheenProgress = interpolate(frame, [26, 92], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
     easing: EXPO_OUT,
   });
-  const sheenLeftPct = interpolate(sheenProgress, [0, 1], [-55, 145]);
+  const sheenTranslateXPct = interpolate(sheenProgress, [0, 1], [-130, 330], {
+    extrapolateLeft: 'clamp',
+    extrapolateRight: 'clamp',
+  });
   const sheenOpacity = interpolate(sheenProgress, [0, 0.2, 0.8, 1], [0, 0.85, 0.85, 0], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
   });
 
-  // Typography stack stagger (`8..62f`), clearing cleanly across `104..130f`
+  // Typography stack stagger (`8..60f`), exiting fast & asymmetrically (`104..124f`, EASE_EXIT_ACCEL)
   const pillSpring = spring({
     frame: Math.max(0, frame - 8),
     fps: safeFps,
-    config: LUXURY_SPRING,
+    config: MOTION_SPRINGS.LIGHT,
   });
-  const pillEnterOpacity = interpolate(frame, [8, 22], [0, 1], {
+  const pillEnterOpacity = interpolate(frame, [8, 20], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
+    easing: MOTION_CURVES.EASE_OUT_UI,
   });
 
   const titleReveal = interpolate(frame, [16, 46], [0, 1], {
@@ -353,10 +375,10 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
     easing: EXPO_OUT,
   });
 
-  const copyExitT = interpolate(frame, [104, 130], [0, 1], {
+  const copyExitT = interpolate(frame, [104, 124], [0, 1], {
     extrapolateLeft: 'clamp',
     extrapolateRight: 'clamp',
-    easing: WHIP_S_CURVE,
+    easing: MOTION_CURVES.EASE_EXIT_ACCEL,
   });
   const copyExitOpacity = 1 - copyExitT;
   const copyExitTranslateY = -18 * copyExitT;
@@ -368,7 +390,7 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
   let rotX = interpolate(heroSpring, [0, 1], [18, 4]) + idlePitch;
   let rotY = interpolate(heroSpring, [0, 1], [-34, 0]) + idleYaw;
   let rotZ = 0;
-  let scale = interpolate(heroSpring, [0, 1], [0.56, 1]);
+  let scale = interpolate(heroSpring, [0, 1], [0.78, 1]) * morphAnticipation;
   let boxWidth = 248;
   let boxHeight = 248;
   let boxRadius = 62;
@@ -644,18 +666,23 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
               const chipSpring = spring({
                 frame: Math.max(0, frame - placement.delayFrames),
                 fps: safeFps,
-                config: LUXURY_SPRING,
+                config: MOTION_SPRINGS.LIGHT,
               });
               const chipEnterOpacity = interpolate(
                 frame,
-                [placement.delayFrames, placement.delayFrames + 12],
+                [placement.delayFrames, placement.delayFrames + 10],
                 [0, 1],
-                { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' },
+                {
+                  extrapolateLeft: 'clamp',
+                  extrapolateRight: 'clamp',
+                  easing: MOTION_CURVES.EASE_OUT_UI,
+                },
               );
               const chipOpacity = chipEnterOpacity * copyExitOpacity;
               const chipFloatY = Math.sin(timeSec * 2.3 + placement.floatPhase) * 4.5;
-              const chipLiftY = (1 - chipSpring) * 20 + chipFloatY + copyExitTranslateY * 0.6;
-              const chipScale = interpolate(chipSpring, [0, 1], [0.84, 1]);
+              const chipRadialX = (1 - chipSpring) * placement.radialOffsetX;
+              const chipLiftY = (1 - chipSpring) * 14 + chipFloatY + copyExitTranslateY * 0.6;
+              const chipScale = 0.88 + 0.12 * chipSpring;
 
               return (
                 <div
@@ -669,7 +696,7 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
                     marginBottom: idx === 2 ? 90 : undefined,
                     opacity: chipOpacity,
                     willChange: 'transform, opacity',
-                    transform: `translate3d(0px, ${chipLiftY.toFixed(2)}px, 78px) scale(${chipScale.toFixed(4)})`,
+                    transform: `translate3d(${chipRadialX.toFixed(2)}px, ${chipLiftY.toFixed(2)}px, 78px) scale(${chipScale.toFixed(4)})`,
                     zIndex: 6,
                   }}
                 >
@@ -1118,12 +1145,13 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
                       position: 'absolute',
                       top: '-30%',
                       bottom: '-30%',
-                      left: `${sheenLeftPct.toFixed(2)}%`,
+                      left: 0,
                       width: '44%',
                       opacity: sheenOpacity,
                       background:
                         'linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.42) 50%, rgba(255, 255, 255, 0) 100%)',
-                      transform: 'rotate(24deg)',
+                      transform: `translate3d(${sheenTranslateXPct.toFixed(2)}%, 0px, 0px) rotate(24deg)`,
+                      willChange: 'transform, opacity',
                     }}
                   />
                 ) : null}
@@ -1296,7 +1324,7 @@ export const Module3DIntroBumper: React.FC<Module3DIntroBumperProps> = ({
               border: `1.5px solid ${borderColor}`,
               boxShadow: '0 8px 20px rgba(6, 23, 20, 0.06)',
               opacity: pillEnterOpacity,
-              transform: `scale(${interpolate(pillSpring, [0, 1], [0.88, 1]).toFixed(4)})`,
+              transform: `scale(${(0.9 + 0.1 * pillSpring).toFixed(4)})`,
             }}
           >
             <span
