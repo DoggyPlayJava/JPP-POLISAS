@@ -218,10 +218,10 @@ export function JppTakwimPage() {
               <CalendarDays className="w-5 h-5 text-indigo-400" />
             </div>
             <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-white">
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-900 dark:text-white">
                 {t('jpp:takwim_admin_title', 'Takwim Aktiviti Kampus & Jadual Akademik')}
               </h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">
                 {INSTITUSI_LABEL} · {sesi} · {t('jpp:takwim_admin_subtitle', 'Pengurusan kalendar akademik, peperiksaan, cuti umum, dan acara rasmi kampus POLISAS.')}
               </p>
             </div>
@@ -233,13 +233,13 @@ export function JppTakwimPage() {
           <div className="flex items-center gap-4 bg-card p-5 rounded-[2rem] border border-border shadow-sm">
             <Palette className="w-5 h-5 text-muted-foreground shrink-0" />
             <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('jpp:takwim_official_color', 'Warna Rasmi JPP')}</p>
-              <p className="text-[10px] text-muted-foreground">{t('jpp:takwim_official_color_desc', 'Digunakan pada header jadual, baris cuti & PDF takwim.')}</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t('jpp:takwim_official_color', 'Warna Rasmi JPP')}</p>
+              <p className="text-xs text-muted-foreground">{t('jpp:takwim_official_color_desc', 'Digunakan pada header jadual, baris cuti & PDF takwim.')}</p>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               <input type="color" value={colorInput} onChange={e => setColorInput(e.target.value)} className="w-11 h-11 rounded-xl border-2 border-border cursor-pointer" />
-              <div className="hidden sm:flex h-11 px-3 rounded-xl items-center font-black text-[10px] uppercase tracking-widest shadow-sm" style={{ backgroundColor: colorInput, color: getContrastColor(colorInput) }}>{colorInput}</div>
-              <Button onClick={handleSaveColor} disabled={savingColor || colorInput === themeColor} variant="outline" size="sm" className="rounded-xl h-11 px-4 font-black text-xs">
+              <div className="hidden sm:flex h-11 px-3 rounded-xl items-center font-semibold text-xs uppercase tracking-widest shadow-sm" style={{ backgroundColor: colorInput, color: getContrastColor(colorInput) }}>{colorInput}</div>
+              <Button onClick={handleSaveColor} disabled={savingColor || colorInput === themeColor} variant="outline" size="sm" className="rounded-xl h-11 px-4 font-semibold text-xs">
                 {savingColor ? '...' : t('common:save', 'Simpan')}
               </Button>
             </div>
@@ -264,13 +264,13 @@ export function JppTakwimPage() {
           </div>
           <div className="ml-auto flex flex-wrap justify-end items-center gap-2">
             {rbac.isAkademik && (
-              <Button onClick={() => setBulkMode(true)} variant="outline" className="h-10 rounded-xl border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 text-[10px] font-black uppercase tracking-widest">
+              <Button onClick={() => setBulkMode(true)} variant="outline" className="h-10 rounded-xl border-indigo-500/30 text-indigo-400 hover:bg-indigo-500/10 text-xs font-semibold uppercase tracking-widest">
                 <Upload className="w-3 h-3 md:mr-2" />
                 <span className="hidden md:inline">{t('jpp:takwim_autofill_btn', 'Auto-Fill Akademik')}</span>
               </Button>
             )}
             {rbac.isYDP && (
-              <Button onClick={handleNotify} variant="outline" className="h-10 rounded-xl border-amber-500/30 text-amber-400 hover:bg-amber-500/10 text-[10px] font-black uppercase tracking-widest">
+              <Button onClick={handleNotify} variant="outline" className="h-10 rounded-xl border-amber-500/30 text-amber-400 hover:bg-amber-500/10 text-xs font-semibold uppercase tracking-widest">
                 <Bell className="w-3 h-3 md:mr-2" />
                 <span className="hidden md:inline">{t('jpp:takwim_broadcast_btn', 'Hebah')}</span>
               </Button>
@@ -294,14 +294,14 @@ export function JppTakwimPage() {
                 }}
                 disabled={isExportingPdf}
                 variant="outline"
-                className="h-10 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest"
+                className="h-10 rounded-xl border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/10 text-xs font-semibold uppercase tracking-widest"
               >
                 {isExportingPdf ? <Loader2 className="w-3 h-3 animate-spin md:mr-2" /> : <Download className="w-3 h-3 md:mr-2" />}
                 <span className="hidden md:inline">{t('jpp:takwim_export_pdf', 'Eksport PDF')}</span>
               </Button>
             )}
             {rbac.canAdd && (
-              <Button onClick={openCreate} className="h-10 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest">
+              <Button onClick={openCreate} className="h-10 rounded-xl bg-indigo-500 hover:bg-indigo-600 text-white text-xs font-semibold uppercase tracking-widest">
                 <Plus className="w-3 h-3 md:mr-2" />
                 <span className="hidden md:inline">{t('jpp:takwim_add_event_btn', 'Tambah Acara Takwim')}</span>
               </Button>
@@ -315,14 +315,14 @@ export function JppTakwimPage() {
             const cfg = TAKWIM_JENIS[k];
             if (!cfg || v === 0) return null;
             return (
-              <Badge key={k} className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 border-none cursor-pointer hover:scale-105 transition-transform"
+              <Badge key={k} className="text-xs font-semibold uppercase tracking-widest px-2.5 py-1 border-none cursor-pointer hover:scale-105 transition-transform"
                 style={{ background: cfg.bgColor, color: cfg.color }}
                 onClick={() => setFilter(k)}>
                 {cfg.shortLabel}: {v}
               </Badge>
             );
           })}
-          {(stats?.KESELURUHAN || 0) > 0 && <Badge className="text-[9px] font-black uppercase tracking-widest px-2.5 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/50 border border-slate-200 dark:border-white/10">Jumlah: {stats.KESELURUHAN}</Badge>}
+          {(stats?.KESELURUHAN || 0) > 0 && <Badge className="text-xs font-semibold uppercase tracking-widest px-2.5 py-1 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/50 border border-slate-200 dark:border-white/10">Jumlah: {stats.KESELURUHAN}</Badge>}
         </div>
 
         {/* ── Floating Bulk Actions Dock ── */}
@@ -373,64 +373,64 @@ export function JppTakwimPage() {
 
       {/* ── CRUD Dialog ── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[520px] rounded-[2rem] p-0 border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+        <DialogContent className="sm:max-w-[520px] rounded-[2rem] p-0 border border-slate-200 dark:border-[#252B35] bg-white dark:bg-[#13171D] text-slate-900 dark:text-white overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
           <div className="p-8 space-y-6 overflow-y-auto flex-1">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{editTarget ? t('jpp:takwim_edit_title', 'Kemaskini') : t('jpp:takwim_new_entry_title', 'Entri Baharu')}</DialogTitle>
+              <DialogTitle className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">{editTarget ? t('jpp:takwim_edit_title', 'Kemaskini') : t('jpp:takwim_new_entry_title', 'Entri Baharu')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Jenis *</Label>
+                <Label className="text-xs font-semibold uppercase text-slate-600 dark:text-white/50 tracking-widest">Jenis *</Label>
                 <Select value={form.jenis} onValueChange={v => setForm({ ...form, jenis: v })} disabled={!!editTarget}>
                   <SelectTrigger className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold"><SelectValue /></SelectTrigger>
                   <SelectContent>{rbac.allowedJenis.map(j => <SelectItem key={j} value={j}>{TAKWIM_JENIS[j]?.label || j}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Tajuk *</Label>
+                <Label className="text-xs font-semibold uppercase text-slate-600 dark:text-white/50 tracking-widest">Tajuk *</Label>
                 <Input value={form.tajuk} onChange={e => setForm({ ...form, tajuk: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder={t('jpp:takwim_title_placeholder', 'Nama aktiviti / peristiwa...')} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_start_date_required', 'Tarikh Mula *')}</Label>
+                  <Label className="text-xs font-semibold uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_start_date_required', 'Tarikh Mula *')}</Label>
                   <Input type="date" value={form.tarikh_mula} onChange={e => setForm({ ...form, tarikh_mula: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_end_date_label', 'Tarikh Tamat')}</Label>
+                  <Label className="text-xs font-semibold uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_end_date_label', 'Tarikh Tamat')}</Label>
                   <Input type="date" value={form.tarikh_tamat} onChange={e => setForm({ ...form, tarikh_tamat: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Catatan</Label>
+                <Label className="text-xs font-semibold uppercase text-slate-600 dark:text-white/50 tracking-widest">Catatan</Label>
                 <Textarea value={form.catatan} onChange={e => setForm({ ...form, catatan: e.target.value })} className="rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-medium min-h-[60px] resize-none" />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Bil. Minggu</Label>
+                  <Label className="text-xs font-semibold uppercase text-slate-600 dark:text-white/50 tracking-widest">Bil. Minggu</Label>
                   <Input type="number" value={form.bil_minggu} onChange={e => setForm({ ...form, bil_minggu: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="—" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">Aktiviti</Label>
+                  <Label className="text-xs font-semibold uppercase text-slate-600 dark:text-white/50 tracking-widest">Aktiviti</Label>
                   <Input value={form.aktiviti} onChange={e => setForm({ ...form, aktiviti: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
               </div>
               {/* Kelab Kediaman Label */}
               {form.jenis === 'KELAB_KEDIAMAN' && (
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_hostel_club_name', 'Nama Kelab Kediaman')}</Label>
+                  <Label className="text-xs font-semibold uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_hostel_club_name', 'Nama Kelab Kediaman')}</Label>
                   <Input value={form.kelab_kediaman_label} onChange={e => setForm({ ...form, kelab_kediaman_label: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="cth: JPPI, AG, IS..." />
                 </div>
               )}
               {/* Color Picker */}
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_custom_color', 'Warna Custom (Pilihan)')}</Label>
+                <Label className="text-xs font-semibold uppercase text-slate-600 dark:text-white/50 tracking-widest">{t('jpp:takwim_custom_color', 'Warna Custom (Pilihan)')}</Label>
                 <div className="flex items-center gap-3">
                   <input type="color" value={form.warna_custom || TAKWIM_JENIS[form.jenis]?.color || '#94A3B8'} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="w-12 h-12 rounded-xl border-2 border-slate-200 dark:border-white/10 cursor-pointer bg-transparent" />
                   <div className="flex-1">
                     <Input value={form.warna_custom} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold" placeholder={TAKWIM_JENIS[form.jenis]?.color || '#94A3B8'} />
                   </div>
                   {form.warna_custom && (
-                    <button onClick={() => setForm({ ...form, warna_custom: '' })} className="text-[10px] font-bold text-slate-400 dark:text-white/30 hover:text-slate-700 dark:hover:text-white/60">Reset</button>
+                    <button onClick={() => setForm({ ...form, warna_custom: '' })} className="text-xs font-bold text-slate-400 dark:text-white/30 hover:text-slate-700 dark:hover:text-white/60">Reset</button>
                   )}
                 </div>
               </div>
@@ -438,7 +438,7 @@ export function JppTakwimPage() {
           </div>
           <DialogFooter className="p-6 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-200 dark:border-white/5 gap-3">
             <Button variant="ghost" onClick={() => setDialogOpen(false)} className="flex-1 h-12 rounded-xl text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/5">{t('common:cancel', 'Batal')}</Button>
-            <Button onClick={handleSave} disabled={saving} className="flex-[2] h-12 rounded-xl bg-indigo-500 text-white font-black text-[10px] uppercase tracking-widest">
+            <Button onClick={handleSave} disabled={saving} className="flex-[2] h-12 rounded-xl bg-indigo-500 text-white font-semibold text-xs uppercase tracking-widest">
               {saving ? t('common:saving', 'Menyimpan...') : editTarget ? t('jpp:takwim_edit_title', 'Kemaskini') : t('common:save', 'Simpan')}
             </Button>
           </DialogFooter>
@@ -517,12 +517,12 @@ function TakwimTable({ items, rbac, onEdit, onDelete, bulkSelected, onBulkToggle
                     className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-white/5 text-rose-500 focus:ring-rose-500/30" />
                 )}
               </th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_type', 'Jenis')}</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_title', 'Tajuk')}</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_date', 'Tarikh')}</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_week', 'Minggu')}</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_notes', 'Catatan')}</th>
-              <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 w-20"></th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_type', 'Jenis')}</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_title', 'Tajuk')}</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_date', 'Tarikh')}</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_week', 'Minggu')}</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:takwim_th_notes', 'Catatan')}</th>
+              <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30 w-20"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
@@ -540,19 +540,19 @@ function TakwimTable({ items, rbac, onEdit, onDelete, bulkSelected, onBulkToggle
                     )}
                   </td>
                   <td className="px-4 py-3">
-                    <Badge className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 border-none" style={{ background: hexToRgba(color, 0.15), color }}>{cfg?.shortLabel || item.jenis}</Badge>
-                    {item.status && <Badge className="ml-1 text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 bg-amber-500/10 text-amber-500 dark:text-amber-400 border-none">{item.status}</Badge>}
+                    <Badge className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 border-none" style={{ background: hexToRgba(color, 0.15), color }}>{cfg?.shortLabel || item.jenis}</Badge>
+                    {item.status && <Badge className="ml-1 text-xs font-semibold uppercase tracking-widest px-1.5 py-0.5 bg-amber-500/10 text-amber-500 dark:text-amber-400 border-none">{item.status}</Badge>}
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-xs font-black text-slate-900 dark:text-white/90 leading-tight">{item.tajuk}</p>
-                    {item.club_name && <p className="text-[10px] text-slate-500 dark:text-white/30 mt-0.5">{item.club_name}</p>}
-                    {item.kelab_kediaman_label && <p className="text-[10px] text-fuchsia-600 dark:text-fuchsia-400/60 mt-0.5 flex items-center gap-1"><Home className="w-3 h-3 inline" /> {item.kelab_kediaman_label}</p>}
+                    <p className="text-xs font-semibold text-slate-900 dark:text-white/90 leading-tight">{item.tajuk}</p>
+                    {item.club_name && <p className="text-xs text-slate-500 dark:text-white/30 mt-0.5">{item.club_name}</p>}
+                    {item.kelab_kediaman_label && <p className="text-xs text-fuchsia-600 dark:text-fuchsia-400/60 mt-0.5 flex items-center gap-1"><Home className="w-3 h-3 inline" /> {item.kelab_kediaman_label}</p>}
                   </td>
-                  <td className="px-4 py-3 text-[11px] font-bold text-slate-600 dark:text-white/60 whitespace-nowrap">
+                  <td className="px-4 py-3 text-xs font-bold text-slate-600 dark:text-white/60 whitespace-nowrap">
                     {fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ' — ' + fmtDate(item.tarikh_tamat) : ''}
                   </td>
-                  <td className="px-4 py-3 text-xs font-black text-slate-600 dark:text-white/40 text-center">{item.bil_minggu || '—'}</td>
-                  <td className="px-4 py-3 text-[10px] text-slate-500 dark:text-white/40 max-w-[200px] truncate">{item.catatan || '—'}</td>
+                  <td className="px-4 py-3 text-xs font-semibold text-slate-600 dark:text-white/40 text-center">{item.bil_minggu || '—'}</td>
+                  <td className="px-4 py-3 text-xs text-slate-500 dark:text-white/40 max-w-[200px] truncate">{item.catatan || '—'}</td>
                   <td className="px-4 py-3">
                     {canMod && (
                       <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -582,12 +582,12 @@ function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: T
     <div className="bg-white dark:bg-transparent rounded-2xl border border-slate-200 dark:border-white/10 shadow-sm overflow-hidden">
       <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/[0.03] border-b border-slate-100 dark:border-white/5">
         <button onClick={onPrev} className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/10 text-slate-600 dark:text-white/50 transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-        <h3 className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">{format(month, 'MMMM yyyy', { locale: ms })}</h3>
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-widest">{format(month, 'MMMM yyyy', { locale: ms })}</h3>
         <button onClick={onNext} className="p-2 rounded-lg hover:bg-slate-200/60 dark:hover:bg-white/10 text-slate-600 dark:text-white/50 transition-colors"><ChevronRight className="w-4 h-4" /></button>
       </div>
       <div className="grid grid-cols-7">
         {['Ahd', 'Isn', 'Sel', 'Rab', 'Kha', 'Jum', 'Sab'].map(d => (
-          <div key={d} className="p-2 text-center text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/25 border-b border-slate-100 dark:border-white/5">{d}</div>
+          <div key={d} className="p-2 text-center text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/25 border-b border-slate-100 dark:border-white/5">{d}</div>
         ))}
         {Array.from({ length: startDay }).map((_, i) => <div key={`e-${i}`} className="p-2 min-h-[80px] border-b border-r border-slate-100 dark:border-white/[0.03]" />)}
         {days.map(day => {
@@ -604,16 +604,16 @@ function TakwimCalendar({ items, month, onPrev, onNext, onDayClick }: { items: T
                 hasEvents ? 'hover:bg-slate-50 dark:hover:bg-white/[0.04] active:bg-slate-100 dark:active:bg-white/[0.07]' : 'hover:bg-slate-50/50 dark:hover:bg-white/[0.02]'
               )}
             >
-              <span className={cn('text-[10px] font-black', isToday ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/20 w-6 h-6 rounded-full flex items-center justify-center' : 'text-slate-600 dark:text-white/40')}>
+              <span className={cn('text-xs font-semibold', isToday ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/20 w-6 h-6 rounded-full flex items-center justify-center' : 'text-slate-600 dark:text-white/40')}>
                 {format(day, 'd')}
               </span>
               <div className="mt-1 space-y-0.5">
                 {evts.slice(0, 3).map(e => {
                   const c = e.warna_custom || TAKWIM_JENIS[e.jenis]?.color || '#94A3B8';
-                  return <div key={e.id} className="text-[8px] font-bold px-1.5 py-0.5 rounded truncate w-full" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
+                  return <div key={e.id} className="text-xs font-bold px-1.5 py-0.5 rounded truncate w-full" style={{ background: hexToRgba(c, 0.15), color: c }}>{e.tajuk}</div>;
                 })}
                 {evts.length > 3 && (
-                  <div className="text-[8px] font-black text-slate-500 dark:text-white/40 px-1.5 py-0.5 rounded truncate w-full" style={{ background: 'rgba(148,163,184,0.15)' }}>{t('jpp:takwim_more_items', '+{{count}} lagi', { count: evts.length - 3 })}</div>
+                  <div className="text-xs font-semibold text-slate-500 dark:text-white/40 px-1.5 py-0.5 rounded truncate w-full" style={{ background: 'rgba(148,163,184,0.15)' }}>{t('jpp:takwim_more_items', '+{{count}} lagi', { count: evts.length - 3 })}</div>
                 )}
               </div>
             </div>
@@ -629,8 +629,8 @@ function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-20 text-center">
       <CalendarDays className="w-10 h-10 text-slate-300 dark:text-white/10 mb-3" />
-      <p className="text-xs font-black text-slate-600 dark:text-white/40 uppercase tracking-widest">{t('jpp:takwim_empty_title', 'Tiada entri takwim')}</p>
-      <p className="text-[10px] text-slate-400 dark:text-white/20 mt-1">{t('jpp:takwim_empty_desc', 'Gunakan butang "Tambah" untuk menambah entri baru')}</p>
+      <p className="text-xs font-semibold text-slate-600 dark:text-white/40 uppercase tracking-widest">{t('jpp:takwim_empty_title', 'Tiada entri takwim')}</p>
+      <p className="text-xs text-slate-400 dark:text-white/20 mt-1">{t('jpp:takwim_empty_desc', 'Gunakan butang "Tambah" untuk menambah entri baru')}</p>
     </div>
   );
 }

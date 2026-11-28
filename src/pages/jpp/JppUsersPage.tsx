@@ -317,10 +317,10 @@ export function JppUsersPage() {
                             <Users className="w-5 h-5" style={{ color: themeColor }} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">
+                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">
                                 {t('jpp:users_management')}
                             </h1>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:users_management_subtitle')}</p>
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:users_management_subtitle')}</p>
                         </div>
                     </div>
                 </motion.div>
@@ -335,7 +335,7 @@ export function JppUsersPage() {
                                 </div>
                                 <div>
                                     <h3 className="font-bold text-slate-900 dark:text-white text-lg">{t('jpp:users_pro_applications')}</h3>
-                                    <p className="text-[11px] text-slate-500 dark:text-white/40 mt-1 max-w-xl">{t('jpp:users_pro_desc')}</p>
+                                    <p className="text-xs text-slate-500 dark:text-white/40 mt-1 max-w-xl">{t('jpp:users_pro_desc')}</p>
                                 </div>
                             </div>
                             
@@ -349,11 +349,11 @@ export function JppUsersPage() {
                                     <div key={req.id} className="p-5 rounded-[1.25rem] border border-slate-200 dark:border-white/[0.06] bg-slate-50 dark:bg-white/[0.03] hover:bg-slate-100/70 dark:hover:bg-white/[0.05] shadow-sm dark:shadow-none transition-all group">
                                         <div className="flex justify-between items-start mb-4">
                                             <div>
-                                                <p className="text-sm font-black text-slate-900 dark:text-white">{req.profiles?.full_name || 'Pelajar'}</p>
-                                                <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1 uppercase tracking-widest">{format(new Date(req.created_at), 'dd MMM yyyy, h:mm a')}</p>
+                                                <p className="text-sm font-bold text-slate-900 dark:text-white">{req.profiles?.full_name || 'Pelajar'}</p>
+                                                <p className="text-xs text-slate-500 dark:text-white/40 mt-1 uppercase tracking-widest">{format(new Date(req.created_at), 'dd MMM yyyy, h:mm a')}</p>
                                             </div>
                                             <div className={cn(
-                                                "px-2.5 py-1 rounded-lg text-[9px] font-black uppercase tracking-widest border",
+                                                "px-2.5 py-1 rounded-lg text-xs font-semibold uppercase tracking-widest border",
                                                 req.status === 'PENDING' ? "bg-amber-500/10 text-amber-600 dark:text-amber-500 border-amber-500/20" :
                                                 req.status === 'APPROVED' ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-500 border-emerald-500/20" :
                                                 "bg-rose-500/10 text-rose-600 dark:text-rose-500 border-rose-500/20"
@@ -364,15 +364,15 @@ export function JppUsersPage() {
 
                                         <div className="p-3.5 bg-white dark:bg-black/40 rounded-xl border border-slate-200 dark:border-white/5 mb-4 space-y-2">
                                             <div>
-                                                <span className="text-[10px] uppercase font-black tracking-widest text-slate-500 dark:text-white/30 block mb-1">{t('jpp:users_justification')}</span>
-                                                <p className="text-[11px] text-slate-700 dark:text-white/70 italic">&quot;{req.reason}&quot;</p>
+                                                <span className="text-xs uppercase font-semibold tracking-widest text-slate-500 dark:text-white/30 block mb-1">{t('jpp:users_justification')}</span>
+                                                <p className="text-xs text-slate-700 dark:text-white/70 italic">&quot;{req.reason}&quot;</p>
                                             </div>
                                             
                                             {req.receipt_url && (
                                                 <div className="pt-3 mt-3 border-t border-slate-200 dark:border-white/5">
                                                     <button onClick={() => handleViewReceipt(req.receipt_url)} className="flex items-center gap-2 px-3 py-2 bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 rounded-lg text-slate-700 dark:text-white/70 hover:text-slate-900 dark:hover:text-white transition-colors w-full justify-center">
                                                         <FileText className="w-3.5 h-3.5" />
-                                                        <span className="text-[10px] uppercase font-black tracking-widest">{t('jpp:users_view_receipt')}</span>
+                                                        <span className="text-xs uppercase font-semibold tracking-widest">{t('jpp:users_view_receipt')}</span>
                                                     </button>
                                                 </div>
                                             )}
@@ -382,11 +382,11 @@ export function JppUsersPage() {
                                             <div className="flex gap-2">
                                                 <button onClick={() => setTierApproveTarget({ requestId: req.id, userId: req.user_id, newTier: 'pro', receipt_url: req.receipt_url })} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400 transition-colors">
                                                     <CheckCircle2 className="w-4 h-4" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('common:approve', 'Luluskan')}</span>
+                                                    <span className="text-xs font-semibold uppercase tracking-widest">{t('common:approve', 'Luluskan')}</span>
                                                 </button>
                                                 <button onClick={() => setTierRejectTarget({ requestId: req.id, userId: req.user_id, receipt_url: req.receipt_url })} className="flex-1 flex items-center justify-center gap-2 h-10 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 transition-colors">
                                                     <XCircle className="w-4 h-4" />
-                                                    <span className="text-[10px] font-black uppercase tracking-widest">{t('common:reject', 'Tolak')}</span>
+                                                    <span className="text-xs font-semibold uppercase tracking-widest">{t('common:reject', 'Tolak')}</span>
                                                 </button>
                                             </div>
                                         )}
@@ -411,7 +411,7 @@ export function JppUsersPage() {
                                     </div>
                                     <div>
                                         <h3 className="font-bold text-slate-900 dark:text-white text-lg">{t('jpp:users_duplicate_detection')}</h3>
-                                        <p className="text-[11px] text-slate-500 dark:text-white/40 mt-1 max-w-xl">
+                                        <p className="text-xs text-slate-500 dark:text-white/40 mt-1 max-w-xl">
                                             {t('jpp:users_duplicate_subtitle')}
                                         </p>
                                     </div>
@@ -419,7 +419,7 @@ export function JppUsersPage() {
                                 <button 
                                     onClick={fetchDuplicates}
                                     disabled={duplicateLoading}
-                                    className="px-5 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-[10px] font-black uppercase tracking-widest transition-all disabled:opacity-50 flex items-center gap-2 shrink-0 shadow-sm dark:shadow-none"
+                                    className="px-5 py-2.5 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-600 dark:text-amber-400 text-xs font-semibold uppercase tracking-widest transition-all disabled:opacity-50 flex items-center gap-2 shrink-0 shadow-sm dark:shadow-none"
                                 >
                                     {duplicateLoading ? (
                                         <>
@@ -449,14 +449,14 @@ export function JppUsersPage() {
                                                     <CheckCircle2 className="w-7 h-7 text-emerald-500 dark:text-emerald-400" />
                                                 </div>
                                                 <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">{t('jpp:users_clean_title')}</p>
-                                                <p className="text-[11px] text-slate-500 dark:text-white/40 max-w-xs">{t('jpp:users_clean_desc')}</p>
+                                                <p className="text-xs text-slate-500 dark:text-white/40 max-w-xs">{t('jpp:users_clean_desc')}</p>
                                             </div>
                                         ) : (
                                             <div className="space-y-4">
                                                 {/* Summary badge */}
                                                 <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20">
                                                     <AlertTriangle className="w-4 h-4 text-rose-500 dark:text-rose-400 shrink-0" />
-                                                    <p className="text-[11px] text-rose-600 dark:text-rose-400 font-bold">
+                                                    <p className="text-xs text-rose-600 dark:text-rose-400 font-bold">
                                                         {t('jpp:users_duplicate_alert', { count: duplicates.length, total: duplicates.reduce((sum, d) => sum + d.account_count, 0) })}
                                                     </p>
                                                 </div>
@@ -479,9 +479,9 @@ export function JppUsersPage() {
                                                             <div className="px-5 py-4 bg-slate-100 dark:bg-white/[0.02] border-b border-slate-200 dark:border-white/[0.04] flex items-center justify-between">
                                                                 <div className="flex items-center gap-3">
                                                                     <div className="px-3 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/25">
-                                                                        <span className="text-[11px] font-black text-rose-600 dark:text-rose-400 tracking-wider font-mono">{group.matric_no}</span>
+                                                                        <span className="text-xs font-semibold text-rose-600 dark:text-rose-400 tracking-wider font-mono">{group.matric_no}</span>
                                                                     </div>
-                                                                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                                                                    <span className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                                                                         {t('jpp:users_account_count', { count: group.account_count })}
                                                                     </span>
                                                                 </div>
@@ -498,30 +498,30 @@ export function JppUsersPage() {
                                                                                 <div className="flex items-center gap-2 flex-wrap">
                                                                                     <span className="text-sm font-bold text-slate-900 dark:text-white">{acc.full_name || 'Tanpa Nama'}</span>
                                                                                     {isPrimary && (
-                                                                                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[8px] font-black uppercase tracking-widest border border-emerald-500/20">
+                                                                                        <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-semibold uppercase tracking-widest border border-emerald-500/20">
                                                                                             {t('jpp:users_keep_primary')}
                                                                                         </span>
                                                                                     )}
                                                                                     {!isPrimary && (
-                                                                                        <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[8px] font-black uppercase tracking-widest border border-rose-500/20">
+                                                                                        <span className="px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-xs font-semibold uppercase tracking-widest border border-rose-500/20">
                                                                                             {t('jpp:users_duplicate_badge')}
                                                                                         </span>
                                                                                     )}
                                                                                 </div>
                                                                                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                                                                                    <span className="text-[11px] text-slate-600 dark:text-white/50 flex items-center gap-1">
+                                                                                    <span className="text-xs text-slate-600 dark:text-white/50 flex items-center gap-1">
                                                                                         📧 {acc.email}
                                                                                     </span>
-                                                                                    <span className="text-[10px] text-slate-500 dark:text-white/30">
+                                                                                    <span className="text-xs text-slate-500 dark:text-white/30">
                                                                                         {acc.providers?.join(', ') || 'email'}
                                                                                     </span>
                                                                                     {acc.email_confirmed ? (
-                                                                                        <span className="text-[9px] text-emerald-600 dark:text-emerald-400 font-bold">{t('jpp:users_verified')}</span>
+                                                                                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">{t('jpp:users_verified')}</span>
                                                                                     ) : (
-                                                                                        <span className="text-[9px] text-amber-600 dark:text-amber-400 font-bold">{t('jpp:users_unverified')}</span>
+                                                                                        <span className="text-xs text-amber-600 dark:text-amber-400 font-bold">{t('jpp:users_unverified')}</span>
                                                                                     )}
                                                                                 </div>
-                                                                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[10px] text-slate-400 dark:text-white/25">
+                                                                                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-400 dark:text-white/25">
                                                                                     <span>{t('jpp:users_registered_at')} {format(new Date(acc.created_at), 'dd MMM yyyy, h:mm a')}</span>
                                                                                     <span className={isPrimary ? "text-emerald-600 dark:text-emerald-400/80 font-bold" : ""}>
                                                                                         {t('jpp:users_last_login')} {acc.last_sign_in ? format(new Date(acc.last_sign_in), 'dd MMM yyyy, h:mm a') : t('jpp:users_no_record')}
@@ -531,7 +531,7 @@ export function JppUsersPage() {
                                                                             </div>
                                                                             <div className="flex items-center gap-2 shrink-0">
                                                                                 <span className={cn(
-                                                                                    "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border",
+                                                                                    "px-2 py-0.5 rounded-md text-xs font-semibold uppercase tracking-widest border",
                                                                                     acc.role === 'SUPER_ADMIN_JPP' ? "bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20" :
                                                                                     acc.role === 'JPP' ? "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20" :
                                                                                     "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/40 border-slate-200 dark:border-white/10"
@@ -558,7 +558,7 @@ export function JppUsersPage() {
                                                                                             acc.full_name,
                                                                                             acc.email
                                                                                         )}
-                                                                                        className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/25 text-rose-600 dark:text-rose-400 transition-colors flex items-center gap-1.5"
+                                                                                        className="px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-widest bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/25 text-rose-600 dark:text-rose-400 transition-colors flex items-center gap-1.5"
                                                                                         title={t('jpp:users_merge_data_to', 'Gabung data dari akaun ini ke {{name}} (login terkini)', { name: primaryAcc.full_name })}
                                                                                     >
                                                                                         <ExternalLink className="w-3 h-3" />
@@ -590,7 +590,7 @@ export function JppUsersPage() {
                         <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-6">
                             <div>
                                 <h3 className="font-bold text-lg text-slate-900 dark:text-white">{t('jpp:users_directory')}</h3>
-                                <p className="text-[11px] text-slate-500 dark:text-white/40 uppercase tracking-widest mt-1">{t('jpp:users_directory_subtitle', { count: userCount.toLocaleString() })}</p>
+                                <p className="text-xs text-slate-500 dark:text-white/40 uppercase tracking-widest mt-1">{t('jpp:users_directory_subtitle', { count: userCount.toLocaleString() })}</p>
                             </div>
                             <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
                                 {/* Search */}
@@ -631,11 +631,11 @@ export function JppUsersPage() {
                             <table className="w-full text-left whitespace-nowrap">
                                 <thead>
                                     <tr className="border-b border-slate-200 dark:border-white/[0.05] bg-slate-50 dark:bg-white/[0.02]">
-                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('common:user', 'Pengguna')}</th>
-                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_cohort')}</th>
-                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_ai_tier')}</th>
-                                        <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_token_balance')}</th>
-                                        {(isMTUser || isSuperAdmin) && <th className="px-5 py-4 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-white/40 text-center">{t('jpp:manage_roles')}</th>}
+                                        <th className="px-5 py-4 text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-white/40">{t('common:user', 'Pengguna')}</th>
+                                        <th className="px-5 py-4 text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_cohort')}</th>
+                                        <th className="px-5 py-4 text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_ai_tier')}</th>
+                                        <th className="px-5 py-4 text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-white/40">{t('jpp:users_token_balance')}</th>
+                                        {(isMTUser || isSuperAdmin) && <th className="px-5 py-4 text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-white/40 text-center">{t('jpp:manage_roles')}</th>}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -695,14 +695,14 @@ export function JppUsersPage() {
                                                             title={t('jpp:users_view_full_profile', 'Lihat maklumat penuh')}
                                                         >
                                                             <div className="font-bold text-sm text-slate-900 dark:text-white/90 group-hover/name:underline decoration-dotted underline-offset-4">{u.full_name || 'Pelajar'}</div>
-                                                            <div className="text-[11px] text-slate-500 dark:text-white/40">{u.email}</div>
-                                                            <div className="text-[10px] text-slate-400 dark:text-white/25 mt-0.5">{u.matric_no || ''}</div>
+                                                            <div className="text-xs text-slate-500 dark:text-white/40">{u.email}</div>
+                                                            <div className="text-xs text-slate-400 dark:text-white/25 mt-0.5">{u.matric_no || ''}</div>
                                                         </button>
                                                     ) : (
                                                         <>
                                                             <div className="font-bold text-sm text-slate-900 dark:text-white/90">{u.full_name || 'Pelajar'}</div>
-                                                            <div className="text-[11px] text-slate-500 dark:text-white/40">{u.email}</div>
-                                                            <div className="text-[10px] text-slate-400 dark:text-white/25 mt-0.5">{u.matric_no || ''}</div>
+                                                            <div className="text-xs text-slate-500 dark:text-white/40">{u.email}</div>
+                                                            <div className="text-xs text-slate-400 dark:text-white/25 mt-0.5">{u.matric_no || ''}</div>
                                                         </>
                                                     )}
                                                 </td>
@@ -711,7 +711,7 @@ export function JppUsersPage() {
                                                     {cohort ? (
                                                         <div className="space-y-1">
                                                             <div className={cn(
-                                                                'px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border inline-block',
+                                                                'px-2 py-0.5 rounded-md text-xs font-semibold uppercase tracking-widest border inline-block',
                                                                 cohort.level === 'Senior'  ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30' :
                                                                 cohort.level === 'Junior'  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' :
                                                                                             'bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/30'
@@ -719,23 +719,23 @@ export function JppUsersPage() {
                                                                 {cohort.level} • Sem {cohort.semester}
                                                             </div>
                                                             {u.programme_code && (
-                                                                <div className="text-[9px] text-slate-500 dark:text-white/30 font-bold">{u.programme_code}</div>
+                                                                <div className="text-xs text-slate-500 dark:text-white/30 font-bold">{u.programme_code}</div>
                                                             )}
                                                         </div>
                                                     ) : (
-                                                        <span className="text-[9px] text-slate-400 dark:text-white/20">—</span>
+                                                        <span className="text-xs text-slate-400 dark:text-white/20">—</span>
                                                     )}
                                                 </td>
                                                 <td className="px-5 py-3.5">
                                                     <div className="flex flex-col gap-1 items-start">
                                                         <div className={cn(
-                                                            "px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border",
+                                                            "px-2 py-0.5 rounded-md text-xs font-semibold uppercase tracking-widest border",
                                                             u.subscription_tier?.toLowerCase() === 'pro' ? "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30" : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/40 border-slate-200 dark:border-white/10"
                                                         )}>
                                                             {u.subscription_tier || 'FREE'}
                                                         </div>
                                                         {u.subscription_tier?.toLowerCase() === 'pro' && u.ai_tier_expiration && (
-                                                            <span className="text-[9px] text-slate-500 dark:text-white/30 uppercase tracking-widest">
+                                                            <span className="text-xs text-slate-500 dark:text-white/30 uppercase tracking-widest">
                                                                 {(() => {
                                                                     const diff = Math.ceil((new Date(u.ai_tier_expiration).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
                                                                     if (diff < 0) return <span className="text-rose-600 dark:text-rose-400">{t('jpp:users_status_expired', 'Luput')}</span>;
@@ -748,7 +748,7 @@ export function JppUsersPage() {
                                                 <td className="px-5 py-3.5">
                                                     <div className="font-mono text-sm text-slate-900 dark:text-white/80 tabular-nums">
                                                         {(u.ai_token_balance || 0).toLocaleString()}
-                                                        <span className="text-[9px] text-slate-400 dark:text-white/30 ml-1 font-sans">Tk</span>
+                                                        <span className="text-xs text-slate-400 dark:text-white/30 ml-1 font-sans">Tk</span>
                                                     </div>
                                                 </td>
                                                 {(isMTUser || isSuperAdmin) && (
@@ -758,7 +758,7 @@ export function JppUsersPage() {
                                                                 <button 
                                                                     onClick={() => setRoleToggleTarget({ id: u.id, name: u.full_name, currentRole: u.role })}
                                                                     className={cn(
-                                                                        "px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest transition-colors",
+                                                                        "px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-widest transition-colors",
                                                                         u.role === 'JPP' 
                                                                         ? "bg-rose-500/10 text-rose-600 dark:text-rose-500 hover:bg-rose-500/20" 
                                                                         : "bg-amber-500/20 text-amber-600 dark:text-amber-500 hover:bg-amber-500/30"
@@ -770,14 +770,14 @@ export function JppUsersPage() {
                                                             {u.subscription_tier?.toLowerCase() !== 'pro' ? (
                                                                 <button 
                                                                     onClick={() => setTierToggleTarget({ id: u.id, name: u.full_name, newTier: 'pro' })}
-                                                                    className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-indigo-500 text-white hover:bg-indigo-600 transition-colors"
+                                                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-widest bg-indigo-500 text-white hover:bg-indigo-600 transition-colors"
                                                                 >
                                                                     PRO
                                                                 </button>
                                                             ) : (
                                                                 <button 
                                                                     onClick={() => setTierToggleTarget({ id: u.id, name: u.full_name, newTier: 'free' })}
-                                                                    className="px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white/60 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors border border-slate-200 dark:border-white/5"
+                                                                    className="px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-widest bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white/60 hover:bg-slate-200 dark:hover:bg-white/20 transition-colors border border-slate-200 dark:border-white/5"
                                                                 >
                                                                     FREE
                                                                 </button>
@@ -793,7 +793,7 @@ export function JppUsersPage() {
                             </table>
                         </div>
                         {filteredUsers.length > 100 && userSearch === '' && (
-                            <p className="text-center text-[10px] uppercase tracking-widest text-slate-400 dark:text-white/30 mt-4">{t('jpp:users_search_hint')}</p>
+                            <p className="text-center text-xs uppercase tracking-widest text-slate-400 dark:text-white/30 mt-4">{t('jpp:users_search_hint')}</p>
                         )}
                     </div>
                 </motion.div>

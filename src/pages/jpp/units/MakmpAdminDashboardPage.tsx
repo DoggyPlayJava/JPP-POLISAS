@@ -1108,10 +1108,10 @@ export default function MakmpAdminDashboardPage() {
           <select
             value={selectedEditionId}
             onChange={(e) => handleEditionChange(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm transition"
+            className="px-3 py-2 rounded-xl bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] text-xs text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm transition"
           >
             {editions.map((ed) => (
-              <option key={ed.id} value={ed.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+              <option key={ed.id} value={ed.id} className="bg-white dark:bg-[#13171D] text-slate-900 dark:text-white">
                 {ed.title} ({ed.year}) {ed.is_active ? t('makmp:admin_active_bullet', '• Aktif') : ''}
               </option>
             ))}
@@ -1120,7 +1120,7 @@ export default function MakmpAdminDashboardPage() {
           <button
             onClick={() => selectedEditionId && loadEditionDetails(selectedEditionId)}
             title={t('makmp:admin_reload_data_title', 'Muat Semula Data')}
-            className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 shadow-sm transition"
+            className="p-2 rounded-xl bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-700 dark:text-slate-300 shadow-sm transition"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
@@ -1154,39 +1154,39 @@ export default function MakmpAdminDashboardPage() {
 
       {/* KPI Stats Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 shadow-sm space-y-1">
-          <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold uppercase">{t('admin_stats_total_subs', 'Jumlah Pencalonan')}</div>
-          <div className="text-2xl font-extrabold text-slate-900 dark:text-white">{totalSubmissions}</div>
-          <div className="text-[10px] text-slate-400 dark:text-slate-500">{submissions.length} {t('makmp:admin_incoming_applications', 'permohonan masuk')}</div>
+        <div className="p-4 rounded-2xl bg-white dark:bg-[#13171D]/80 border border-slate-200 dark:border-[#252B35] shadow-sm space-y-1">
+          <div className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase">{t('admin_stats_total_subs', 'Jumlah Pencalonan')}</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-white">{totalSubmissions}</div>
+          <div className="text-xs text-slate-400 dark:text-slate-500">{submissions.length} {t('makmp:admin_incoming_applications', 'permohonan masuk')}</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 shadow-sm space-y-1">
-          <div className="text-[11px] text-amber-600 dark:text-amber-400 font-semibold uppercase">{t('admin_stats_pending_audit', 'Menunggu Semakan')}</div>
-          <div className="text-2xl font-extrabold text-amber-600 dark:text-amber-300">{pendingCount}</div>
-          <div className="text-[10px] text-amber-600/80 dark:text-amber-500/80">{t('makmp:admin_needs_officer_action', 'Perlu tindakan pegawai/juri')}</div>
+          <div className="text-xs text-amber-600 dark:text-amber-400 font-semibold uppercase">{t('admin_stats_pending_audit', 'Menunggu Semakan')}</div>
+          <div className="text-2xl font-bold text-amber-600 dark:text-amber-300">{pendingCount}</div>
+          <div className="text-xs text-amber-600/80 dark:text-amber-500/80">{t('makmp:admin_needs_officer_action', 'Perlu tindakan pegawai/juri')}</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/20 shadow-sm space-y-1">
-          <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold uppercase">{t('admin_stats_qualified', 'Diluluskan')}</div>
-          <div className="text-2xl font-extrabold text-emerald-600 dark:text-emerald-300">{approvedCount}</div>
-          <div className="text-[10px] text-emerald-600/80 dark:text-emerald-500/80">{t('makmp:rejected_count', '{{count}} ditolak', { count: rejectedCount })}</div>
+          <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold uppercase">{t('admin_stats_qualified', 'Diluluskan')}</div>
+          <div className="text-2xl font-bold text-emerald-600 dark:text-emerald-300">{approvedCount}</div>
+          <div className="text-xs text-emerald-600/80 dark:text-emerald-500/80">{t('makmp:rejected_count', '{{count}} ditolak', { count: rejectedCount })}</div>
         </div>
 
         <div className="p-4 rounded-2xl bg-indigo-500/5 border border-indigo-500/20 shadow-sm space-y-1">
-          <div className="text-[11px] text-indigo-600 dark:text-indigo-400 font-semibold uppercase">{t('track_merit_score', 'Merit Dianugerah')}</div>
-          <div className="text-2xl font-extrabold text-indigo-600 dark:text-indigo-300">+{totalMeritGiven}</div>
-          <div className="text-[10px] text-indigo-500/80 dark:text-indigo-400/80">{t('makmp:admin_synced_to_eakademik', 'Diselaraskan ke e-akademik')}</div>
+          <div className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold uppercase">{t('track_merit_score', 'Merit Dianugerah')}</div>
+          <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-300">+{totalMeritGiven}</div>
+          <div className="text-xs text-indigo-500/80 dark:text-indigo-400/80">{t('makmp:admin_synced_to_eakademik', 'Diselaraskan ke e-akademik')}</div>
         </div>
       </div>
 
       {/* Tabs Navigation */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-2 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-[#252B35] pb-2 overflow-x-auto">
         <button
           onClick={() => setTab('submissions')}
           className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
             tab === 'submissions'
               ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1B2028]/80'
           }`}
         >
           <Layers className="w-3.5 h-3.5" />
@@ -1198,7 +1198,7 @@ export default function MakmpAdminDashboardPage() {
           className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
             tab === 'categories'
               ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1B2028]/80'
           }`}
         >
           <Award className="w-3.5 h-3.5" />
@@ -1210,7 +1210,7 @@ export default function MakmpAdminDashboardPage() {
           className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
             tab === 'pins'
               ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1B2028]/80'
           }`}
         >
           <KeyRound className="w-3.5 h-3.5" />
@@ -1222,7 +1222,7 @@ export default function MakmpAdminDashboardPage() {
           className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
             tab === 'editions'
               ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1B2028]/80'
           }`}
         >
           <CalendarClock className="w-3.5 h-3.5" />
@@ -1234,7 +1234,7 @@ export default function MakmpAdminDashboardPage() {
           className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
             tab === 'ranking'
               ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1B2028]/80'
           }`}
         >
           <Trophy className="w-3.5 h-3.5" />
@@ -1246,7 +1246,7 @@ export default function MakmpAdminDashboardPage() {
           className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 ${
             tab === 'winners'
               ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/20'
-              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-[#1B2028]/80'
           }`}
         >
           <IdCard className="w-3.5 h-3.5" />
@@ -1265,7 +1265,7 @@ export default function MakmpAdminDashboardPage() {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] text-xs text-slate-900 dark:text-white shadow-sm"
               >
                 <option value="ALL">{t('jpp:makmp_filter_all_status', 'Semua Status')}</option>
                 <option value="MENUNGGU">{t('jpp:makmp_filter_pending', 'Menunggu')}</option>
@@ -1277,7 +1277,7 @@ export default function MakmpAdminDashboardPage() {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white max-w-[200px] shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] text-xs text-slate-900 dark:text-white max-w-[200px] shadow-sm"
               >
                 <option value="ALL">{t('jpp:makmp_filter_all_categories', 'Semua Kategori')}</option>
                 {categories.map((c) => (
@@ -1291,7 +1291,7 @@ export default function MakmpAdminDashboardPage() {
               <select
                 value={awardFilter}
                 onChange={(e) => setAwardFilter(e.target.value)}
-                className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white max-w-[220px] shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] text-xs text-slate-900 dark:text-white max-w-[220px] shadow-sm"
               >
                 <option value="ALL">{t('jpp:makmp_filter_all_awards', 'Semua Anugerah')}</option>
                 {awards.map((a) => (
@@ -1310,13 +1310,13 @@ export default function MakmpAdminDashboardPage() {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder={t('makmp:admin_search_subs_placeholder', 'Cari nama, matrik, kod...')}
-                  className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-sm"
+                  className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-sm"
                 />
               </div>
 
               <button
                 onClick={handleExportCSV}
-                className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-white text-xs font-semibold flex items-center gap-1.5 transition shrink-0 shadow-sm"
+                className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-700 dark:text-white text-xs font-semibold flex items-center gap-1.5 transition shrink-0 shadow-sm"
               >
                 <Download className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                 <span>{t('makmp:admin_export_xlsx_btn', 'Eksport XLSX')}</span>
@@ -1325,10 +1325,10 @@ export default function MakmpAdminDashboardPage() {
           </div>
 
           {/* Master Table */}
-          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 overflow-hidden bg-white dark:bg-slate-900/60 shadow-sm">
+          <div className="rounded-2xl border border-slate-200 dark:border-[#252B35] overflow-hidden bg-white dark:bg-[#13171D]/80 shadow-sm">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs text-slate-600 dark:text-slate-300">
-                <thead className="bg-slate-50 dark:bg-slate-950 text-[11px] uppercase tracking-wider text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                <thead className="bg-slate-50 dark:bg-[#0E1116] text-xs uppercase tracking-wider text-slate-600 dark:text-slate-400 border-b border-slate-200 dark:border-[#252B35]">
                   <tr>
                     <th className="py-3 px-4">{t('makmp:col_ref_code', 'Kod Rujukan')}</th>
                     <th className="py-3 px-4">{t('jpp:makmp_th_student_name', 'Nama Pelajar')}</th>
@@ -1341,7 +1341,7 @@ export default function MakmpAdminDashboardPage() {
                     <th className="py-3 px-4 text-right">{t('jpp:makmp_th_actions', 'Tindakan')}</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                <tbody className="divide-y divide-slate-100 dark:divide-[#252B35]">
                   {filteredSubmissions.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="py-12 text-center text-slate-400 dark:text-slate-500">
@@ -1350,7 +1350,7 @@ export default function MakmpAdminDashboardPage() {
                     </tr>
                   ) : (
                     filteredSubmissions.map((sub) => (
-                      <tr key={sub.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition">
+                      <tr key={sub.id} className="hover:bg-slate-50/70 dark:hover:bg-[#1B2028]/60 transition">
                         <td className="py-3 px-4 font-mono font-bold text-amber-600 dark:text-amber-400">
                           {sub.tracking_code}
                         </td>
@@ -1363,7 +1363,7 @@ export default function MakmpAdminDashboardPage() {
                             {getJabatanLabel(sub.department)}
                           </span>
                           {sub.programme_code && (
-                            <span className="block text-[10px] text-slate-400 dark:text-slate-400">
+                            <span className="block text-xs text-slate-400 dark:text-slate-400">
                               {sub.programme_code}
                             </span>
                           )}
@@ -1377,7 +1377,7 @@ export default function MakmpAdminDashboardPage() {
                                     {aw.award?.name}
                                   </span>
                                   {aw.entity_name && (
-                                    <span className="text-[10px] text-purple-600 dark:text-purple-300 truncate">
+                                    <span className="text-xs text-purple-600 dark:text-purple-300 truncate">
                                       {aw.entity_name} ({aw.applicant_role || 'Calon'})
                                     </span>
                                   )}
@@ -1394,7 +1394,7 @@ export default function MakmpAdminDashboardPage() {
                         <td className="py-3 px-4">
                           <span
                             className={cn(
-                              'px-2 py-0.5 rounded-full text-[10px] font-bold',
+                              'px-2 py-0.5 rounded-full text-xs font-bold',
                               sub.status === 'DISAHKAN'
                                 ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                                 : sub.status === 'DITOLAK'
@@ -1415,7 +1415,7 @@ export default function MakmpAdminDashboardPage() {
                                 onClick={() => handleUnlockSubmission(sub)}
                                 disabled={unlockingAwardId === '__submission__' + sub.id}
                                 title={t('makmp:admin_unlock_awards_title', 'Buka semula anugerah yang terkunci')}
-                                className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-600 dark:text-amber-300 transition inline-flex items-center gap-1 text-[11px] disabled:opacity-50"
+                                className="p-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 hover:bg-amber-500/20 text-amber-600 dark:text-amber-300 transition inline-flex items-center gap-1 text-xs disabled:opacity-50"
                               >
                                 {unlockingAwardId === '__submission__' + sub.id ? (
                                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1427,7 +1427,7 @@ export default function MakmpAdminDashboardPage() {
                             )}
                             <button
                               onClick={() => openSubDetail(sub)}
-                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition inline-flex items-center gap-1 text-[11px] shadow-xs"
+                              className="p-1.5 rounded-lg bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition inline-flex items-center gap-1 text-xs shadow-xs"
                             >
                               <Eye className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                               <span>{t('makmp:admin_btn_details', 'Perincian')}</span>
@@ -1460,7 +1460,7 @@ export default function MakmpAdminDashboardPage() {
           </div>
 
           {awards.length === 0 ? (
-            <div className="p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center text-slate-500 text-sm shadow-sm">
+            <div className="p-8 rounded-2xl bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] text-center text-slate-500 text-sm shadow-sm">
               {t('makmp:admin_no_awards_for_edition', 'Tiada anugerah untuk edisi yang dipilih.')}
             </div>
           ) : (
@@ -1532,18 +1532,18 @@ export default function MakmpAdminDashboardPage() {
               {awards.map((aw) => (
                 <div
                   key={aw.id}
-                  className={`p-4 rounded-2xl bg-white dark:bg-slate-900 border transition flex flex-col justify-between shadow-sm ${
-                    aw.is_active ? 'border-slate-200 dark:border-slate-800' : 'border-rose-300 dark:border-rose-900/40 opacity-70'
+                  className={`p-4 rounded-2xl bg-white dark:bg-[#13171D] border transition flex flex-col justify-between shadow-sm ${
+                    aw.is_active ? 'border-slate-200 dark:border-[#252B35]' : 'border-rose-300 dark:border-rose-900/40 opacity-70'
                   }`}
                 >
                   <div className="space-y-3">
                     <div className="flex items-start justify-between gap-2">
-                      <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20">
+                      <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20">
                         {aw.category_group}
                       </span>
                       <div className="flex items-center gap-1.5">
                         <span
-                          className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${
+                          className={`text-xs font-bold px-2 py-0.5 rounded-full ${
                             aw.target_type === 'ENTITY'
                               ? 'bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20'
                               : 'bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20'
@@ -1555,7 +1555,7 @@ export default function MakmpAdminDashboardPage() {
                           type="button"
                           onClick={() => handleToggleAwardActive(aw)}
                           title={t('makmp:admin_toggle_active_tooltip', 'Klik untuk ubah status aktif/nyahaktif')}
-                          className={`text-[9px] font-bold px-2 py-0.5 rounded-full transition ${
+                          className={`text-xs font-bold px-2 py-0.5 rounded-full transition ${
                             aw.is_active
                               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
                               : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20'
@@ -1568,7 +1568,7 @@ export default function MakmpAdminDashboardPage() {
 
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono">#{aw.sort_order}</span>
+                        <span className="text-xs text-slate-400 dark:text-slate-500 font-mono">#{aw.sort_order}</span>
                         <h4 className="font-bold text-sm text-slate-900 dark:text-white">{aw.name}</h4>
                       </div>
                       <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
@@ -1577,11 +1577,11 @@ export default function MakmpAdminDashboardPage() {
                     </div>
 
                     {/* Badge Dokumen & Template Box */}
-                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 space-y-1.5 text-xs">
-                      <div className="flex items-center justify-between text-[11px]">
+                    <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200/80 dark:border-[#252B35] space-y-1.5 text-xs">
+                      <div className="flex items-center justify-between text-xs">
                         <span className="text-slate-500 dark:text-slate-400">Keperluan:</span>
                         <span
-                          className={`font-semibold px-2 py-0.5 rounded text-[10px] ${
+                          className={`font-semibold px-2 py-0.5 rounded text-xs ${
                             aw.doc_requirement_type === 'REPORT_AND_EVIDENCE'
                               ? 'bg-sky-500/10 text-sky-600 dark:text-sky-300 border border-sky-500/20'
                               : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/20'
@@ -1594,8 +1594,8 @@ export default function MakmpAdminDashboardPage() {
                       </div>
 
                       {aw.doc_requirement_type === 'REPORT_AND_EVIDENCE' && (
-                        <div className="pt-1 border-t border-slate-200 dark:border-slate-800/60 space-y-1">
-                          <div className="text-[11px] text-sky-600 dark:text-sky-400 font-medium truncate">
+                        <div className="pt-1 border-t border-slate-200 dark:border-[#252B35]/80 space-y-1">
+                          <div className="text-xs text-sky-600 dark:text-sky-400 font-medium truncate">
                             {t('makmp:admin_template_prefix', 'Templat:') + ' ' + (aw.template_name || t('makmp:admin_template_not_set', 'Belum Ditetapkan'))}
                           </div>
                           {aw.template_url ? (
@@ -1603,13 +1603,13 @@ export default function MakmpAdminDashboardPage() {
                               href={aw.template_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-[10px] text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1 truncate"
+                              className="text-xs text-amber-600 dark:text-amber-400 hover:text-amber-500 flex items-center gap-1 truncate"
                             >
                               <ExternalLink className="w-3 h-3 shrink-0" />
                               <span className="truncate">{aw.template_url}</span>
                             </a>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-[10px] font-semibold">
+                            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-rose-500/15 border border-rose-500/30 text-rose-600 dark:text-rose-300 text-xs font-semibold">
                               <AlertTriangle className="w-3 h-3 shrink-0" />
                               {t('makmp:admin_no_template_warning', 'Tiada Templat — student akan muat naik format sendiri')}
                             </span>
@@ -1619,8 +1619,8 @@ export default function MakmpAdminDashboardPage() {
                     </div>
                   </div>
 
-                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800/80 mt-3 space-y-2">
-                    <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+                  <div className="pt-3 border-t border-slate-100 dark:border-[#252B35] mt-3 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
                       <span>{t('makmp:max_docs_prefix', 'Maks.')} {aw.max_certificates} {t('makmp:documents_suffix', 'Dokumen')}</span>
                       <span className="font-bold text-amber-600 dark:text-amber-400">{t('makmp:limit_prefix', 'Had:')} {aw.max_merit} {t('makmp:merit_unit', 'Merit')}</span>
                     </div>
@@ -1630,7 +1630,7 @@ export default function MakmpAdminDashboardPage() {
                       <button
                         type="button"
                         onClick={() => handleOpenEditAward(aw)}
-                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
+                        className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
                       >
                         <Edit2 className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                         <span>{t('common:update', 'Kemaskini')}</span>
@@ -1651,7 +1651,7 @@ export default function MakmpAdminDashboardPage() {
           </div>
 
           {/* Section 2: Kategori Pangkalan Data Asas */}
-          <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
+          <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-[#252B35]">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
@@ -1665,7 +1665,7 @@ export default function MakmpAdminDashboardPage() {
 
               <button
                 onClick={handleOpenCreateCategory}
-                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition self-start sm:self-auto shadow-sm"
+                className="px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition self-start sm:self-auto shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                 <span>{t('makmp:admin_add_base_cat_btn', 'Tambah Kategori Asas')}</span>
@@ -1676,21 +1676,21 @@ export default function MakmpAdminDashboardPage() {
               {categories.map((cat) => (
                 <div
                   key={cat.id}
-                  className={`p-4 rounded-xl bg-white dark:bg-slate-900 border space-y-2 text-xs flex flex-col justify-between shadow-sm ${
-                    cat.is_active ? 'border-slate-200 dark:border-slate-800' : 'border-rose-300 dark:border-rose-900/40 opacity-70'
+                  className={`p-4 rounded-xl bg-white dark:bg-[#13171D] border space-y-2 text-xs flex flex-col justify-between shadow-sm ${
+                    cat.is_active ? 'border-slate-200 dark:border-[#252B35]' : 'border-rose-300 dark:border-rose-900/40 opacity-70'
                   }`}
                 >
                   <div className="space-y-1.5">
                     <div className="flex items-start justify-between gap-2">
                       <h3 className="font-bold text-slate-900 dark:text-white text-sm">{cat.name}</h3>
                       <div className="flex items-center gap-1.5">
-                        <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                        <span className="px-2 py-0.5 rounded text-xs font-semibold bg-slate-100 dark:bg-[#1B2028] text-slate-700 dark:text-slate-300">
                           {cat.department_scope || 'UMUM'}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleToggleCategoryActive(cat)}
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full transition ${
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full transition ${
                             cat.is_active
                               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                               : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
@@ -1701,17 +1701,17 @@ export default function MakmpAdminDashboardPage() {
                       </div>
                     </div>
                     <p className="text-slate-500 dark:text-slate-400">{cat.description || t('makmp:admin_no_description', 'Tiada penerangan.')}</p>
-                    <div className="flex items-center gap-4 text-[11px] text-slate-500 dark:text-slate-400 pt-1">
+                    <div className="flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 pt-1">
                       <span>{t('makmp:admin_max_certs_label', 'Maks. Sijil') + ': '}<strong className="text-slate-900 dark:text-white">{cat.max_certificates}</strong></span>
                       <span>{t('makmp:admin_max_merit_label', 'Maks. Merit') + ': '}<strong className="text-amber-600 dark:text-amber-400">{cat.max_merit}</strong></span>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 mt-2">
+                  <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-100 dark:border-[#252B35] mt-2">
                     <button
                       type="button"
                       onClick={() => handleOpenEditCategory(cat)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
                     >
                       <Edit2 className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                       <span>{t('common:update', 'Kemaskini')}</span>
@@ -1735,8 +1735,8 @@ export default function MakmpAdminDashboardPage() {
           {/* ================================================================ */}
           {isAwardModalOpen && (
             <div className="fixed inset-0 z-50 bg-black/70  flex items-center justify-center p-4 overflow-y-auto">
-              <div className="w-full max-w-lg p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+              <div className="w-full max-w-lg p-6 rounded-2xl bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#252B35]">
                   <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                     <Award className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     <span>{editingAward ? t('makmp:admin_edit_award_modal_title', 'Kemaskini Anugerah Rasmi') : t('makmp:admin_add_new_award_btn', 'Tambah Anugerah Baharu')}</span>
@@ -1759,7 +1759,7 @@ export default function MakmpAdminDashboardPage() {
                       value={awardName}
                       onChange={(e) => setAwardName(e.target.value)}
                       placeholder={t('makmp:admin_award_name_placeholder', 'cth: Anugerah Khas Pengarah')}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                     />
                   </div>
 
@@ -1769,14 +1769,14 @@ export default function MakmpAdminDashboardPage() {
                       <select
                         value={awardCategoryGroup}
                         onChange={(e) => setAwardCategoryGroup(e.target.value)}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                       >
                         {PRESET_CATEGORY_GROUPS.map((grp) => (
-                          <option key={grp} value={grp} className="bg-white dark:bg-slate-900">
+                          <option key={grp} value={grp} className="bg-white dark:bg-[#13171D]">
                             {grp}
                           </option>
                         ))}
-                        <option value="CUSTOM" className="bg-white dark:bg-slate-900">{t('makmp:admin_custom_category_option', '+ Kategori Tersuai / Lain-lain...')}</option>
+                        <option value="CUSTOM" className="bg-white dark:bg-[#13171D]">{t('makmp:admin_custom_category_option', '+ Kategori Tersuai / Lain-lain...')}</option>
                       </select>
                     </div>
 
@@ -1785,10 +1785,10 @@ export default function MakmpAdminDashboardPage() {
                       <select
                         value={awardTargetType}
                         onChange={(e) => setAwardTargetType(e.target.value as 'INDIVIDUAL' | 'ENTITY')}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                       >
-                        <option value="INDIVIDUAL" className="bg-white dark:bg-slate-900">{t('makmp:admin_target_individual', 'INDIVIDU (Pelajar Sendiri)')}</option>
-                        <option value="ENTITY" className="bg-white dark:bg-slate-900">{t('makmp:admin_target_entity', 'ENTITI / KELAB (Organisasi)')}</option>
+                        <option value="INDIVIDUAL" className="bg-white dark:bg-[#13171D]">{t('makmp:admin_target_individual', 'INDIVIDU (Pelajar Sendiri)')}</option>
+                        <option value="ENTITY" className="bg-white dark:bg-[#13171D]">{t('makmp:admin_target_entity', 'ENTITI / KELAB (Organisasi)')}</option>
                       </select>
                     </div>
                   </div>
@@ -1802,7 +1802,7 @@ export default function MakmpAdminDashboardPage() {
                         value={customCategoryGroup}
                         onChange={(e) => setCustomCategoryGroup(e.target.value)}
                         placeholder={t('makmp:admin_custom_category_name_placeholder', 'cth: ANUGERAH INOVASI DIGITAL')}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono uppercase shadow-sm"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white font-mono uppercase shadow-sm"
                       />
                     </div>
                   )}
@@ -1813,10 +1813,10 @@ export default function MakmpAdminDashboardPage() {
                       <select
                         value={awardDocRequirementType}
                         onChange={(e) => setAwardDocRequirementType(e.target.value as any)}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                       >
-                        <option value="CERTIFICATES" className="bg-white dark:bg-slate-900">{t('makmp:admin_cert_of_achievement', 'Sijil Pencapaian')}</option>
-                        <option value="REPORT_AND_EVIDENCE" className="bg-white dark:bg-slate-900">{t('makmp:admin_report_and_evidence_opt', 'Laporan & Bukti')}</option>
+                        <option value="CERTIFICATES" className="bg-white dark:bg-[#13171D]">{t('makmp:admin_cert_of_achievement', 'Sijil Pencapaian')}</option>
+                        <option value="REPORT_AND_EVIDENCE" className="bg-white dark:bg-[#13171D]">{t('makmp:admin_report_and_evidence_opt', 'Laporan & Bukti')}</option>
                       </select>
                     </div>
 
@@ -1828,7 +1828,7 @@ export default function MakmpAdminDashboardPage() {
                         max={20}
                         value={awardMaxCertificates}
                         onChange={(e) => setAwardMaxCertificates(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                       />
                     </div>
 
@@ -1840,7 +1840,7 @@ export default function MakmpAdminDashboardPage() {
                         max={50}
                         value={awardMaxMerit}
                         onChange={(e) => setAwardMaxMerit(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                       />
                     </div>
                   </div>
@@ -1852,13 +1852,13 @@ export default function MakmpAdminDashboardPage() {
                       value={awardDocInstructions}
                       onChange={(e) => setAwardDocInstructions(e.target.value)}
                       placeholder={t('makmp:admin_doc_instructions_placeholder', 'cth: Sertakan salinan sijil pencapaian peringkat antarabangsa atau kebangsaan...')}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                     />
                   </div>
 
                   {awardDocRequirementType === 'REPORT_AND_EVIDENCE' && (
-                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-sky-400/30 dark:border-sky-500/30 space-y-3">
-                      <div className="text-[11px] font-bold text-sky-600 dark:text-sky-400">{t('makmp:admin_template_config_title', 'Konfigurasi Templat Laporan Rasmi')}</div>
+                    <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-sky-400/30 dark:border-sky-500/30 space-y-3">
+                      <div className="text-xs font-bold text-sky-600 dark:text-sky-400">{t('makmp:admin_template_config_title', 'Konfigurasi Templat Laporan Rasmi')}</div>
                       <div>
                         <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">{t('makmp:admin_template_title_label', 'Tajuk Templat Laporan')}</label>
                         <input
@@ -1866,7 +1866,7 @@ export default function MakmpAdminDashboardPage() {
                           value={awardTemplateName}
                           onChange={(e) => setAwardTemplateName(e.target.value)}
                           placeholder={t('makmp:admin_template_title_placeholder', 'cth: Templat Laporan Inkubator Keusahawanan')}
-                          className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                          className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                         />
                       </div>
                       <div>
@@ -1876,10 +1876,10 @@ export default function MakmpAdminDashboardPage() {
                           value={awardTemplateUrl}
                           onChange={(e) => setAwardTemplateUrl(e.target.value)}
                           placeholder="https://docs.google.com/..."
-                          className="w-full px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-mono text-xs shadow-sm"
+                          className="w-full px-3 py-2 rounded-xl bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white font-mono text-xs shadow-sm"
                         />
                         {!awardTemplateUrl.trim() && (
-                          <p className="flex items-start gap-1.5 mt-1.5 text-[11px] text-rose-600 dark:text-rose-300 leading-relaxed">
+                          <p className="flex items-start gap-1.5 mt-1.5 text-xs text-rose-600 dark:text-rose-300 leading-relaxed">
                             <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                             <span>
                               {t('makmp:admin_no_template_set_desc', 'Tiada templat ditetapkan — pelajar akan diminta muat naik laporan dalam format sendiri (banner "Muat Turun Templat" tidak akan dipaparkan).')}
@@ -1899,7 +1899,7 @@ export default function MakmpAdminDashboardPage() {
                         max={100}
                         value={awardSortOrder}
                         onChange={(e) => setAwardSortOrder(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                       />
                     </div>
 
@@ -1909,18 +1909,18 @@ export default function MakmpAdminDashboardPage() {
                           type="checkbox"
                           checked={awardIsActive}
                           onChange={(e) => setAwardIsActive(e.target.checked)}
-                          className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:ring-amber-500"
+                          className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-[#0E1116] border-slate-300 dark:border-[#252B35] focus:ring-amber-500"
                         />
                         <span className="text-slate-800 dark:text-white font-semibold text-xs">{t('makmp:admin_activate_for_application', 'Aktifkan untuk Permohonan')}</span>
                       </label>
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-[#252B35]">
                     <button
                       type="button"
                       onClick={() => setIsAwardModalOpen(false)}
-                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
+                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-700 dark:text-slate-300 transition"
                     >
                       {t('common:cancel', 'Batal')}
                     </button>
@@ -1941,8 +1941,8 @@ export default function MakmpAdminDashboardPage() {
           {/* ================================================================ */}
           {isCategoryModalOpen && (
             <div className="fixed inset-0 z-50 bg-black/70  flex items-center justify-center p-4">
-              <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+              <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] space-y-4 shadow-2xl">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#252B35]">
                   <h3 className="font-bold text-base text-slate-900 dark:text-white">
                     {editingCategory ? t('makmp:admin_update_base_cat_modal_title', 'Kemaskini Kategori Asas') : t('makmp:admin_add_base_cat_modal_title', 'Tambah Kategori Asas')}
                   </h3>
@@ -1964,7 +1964,7 @@ export default function MakmpAdminDashboardPage() {
                       value={catName}
                       onChange={(e) => setCatName(e.target.value)}
                       placeholder={t('makmp:admin_cat_name_placeholder', 'cth: Anugerah Tokoh Siswa')}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                     />
                   </div>
 
@@ -1977,7 +1977,7 @@ export default function MakmpAdminDashboardPage() {
                         max={15}
                         value={catMaxCert}
                         onChange={(e) => setCatMaxCert(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                       />
                     </div>
                     <div>
@@ -1988,7 +1988,7 @@ export default function MakmpAdminDashboardPage() {
                         max={50}
                         value={catMaxMerit}
                         onChange={(e) => setCatMaxMerit(Number(e.target.value))}
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                        className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                       />
                     </div>
                   </div>
@@ -1998,13 +1998,13 @@ export default function MakmpAdminDashboardPage() {
                     <select
                       value={catScope}
                       onChange={(e) => setCatScope(e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                     >
-                      <option value="UMUM" className="bg-white dark:bg-slate-900">{t('makmp:admin_dept_scope_all', 'UMUM (Semua Jabatan)')}</option>
-                      <option value="AKADEMIK" className="bg-white dark:bg-slate-900">AKADEMIK</option>
-                      <option value="HEP" className="bg-white dark:bg-slate-900">HEP</option>
-                      <option value="KEUSAHAWANAN" className="bg-white dark:bg-slate-900">KEUSAHAWANAN</option>
-                      <option value="SUKAN" className="bg-white dark:bg-slate-900">SUKAN</option>
+                      <option value="UMUM" className="bg-white dark:bg-[#13171D]">{t('makmp:admin_dept_scope_all', 'UMUM (Semua Jabatan)')}</option>
+                      <option value="AKADEMIK" className="bg-white dark:bg-[#13171D]">AKADEMIK</option>
+                      <option value="HEP" className="bg-white dark:bg-[#13171D]">HEP</option>
+                      <option value="KEUSAHAWANAN" className="bg-white dark:bg-[#13171D]">KEUSAHAWANAN</option>
+                      <option value="SUKAN" className="bg-white dark:bg-[#13171D]">SUKAN</option>
                     </select>
                   </div>
 
@@ -2015,7 +2015,7 @@ export default function MakmpAdminDashboardPage() {
                       value={catDesc}
                       onChange={(e) => setCatDesc(e.target.value)}
                       placeholder={t('makmp:admin_cat_desc_placeholder', 'Syarat kelayakan kategori ini...')}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                     />
                   </div>
 
@@ -2025,17 +2025,17 @@ export default function MakmpAdminDashboardPage() {
                         type="checkbox"
                         checked={catIsActive}
                         onChange={(e) => setCatIsActive(e.target.checked)}
-                        className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:ring-amber-500"
+                        className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-[#0E1116] border-slate-300 dark:border-[#252B35] focus:ring-amber-500"
                       />
                       <span className="text-slate-800 dark:text-white font-semibold text-xs">{t('common:active', 'Aktif')}</span>
                     </label>
                   </div>
 
-                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-[#252B35]">
                     <button
                       type="button"
                       onClick={() => setIsCategoryModalOpen(false)}
-                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#1B2028] text-slate-700 dark:text-slate-300"
                     >
                       {t('common:cancel', 'Batal')}
                     </button>
@@ -2088,8 +2088,8 @@ export default function MakmpAdminDashboardPage() {
               return (
                 <div
                   key={pin.id}
-                  className={`p-5 rounded-2xl bg-white dark:bg-slate-900 border space-y-4 shadow-sm flex flex-col justify-between transition ${
-                    pin.is_active ? 'border-slate-200 dark:border-slate-800' : 'border-rose-300 dark:border-rose-900/40 opacity-70'
+                  className={`p-5 rounded-2xl bg-white dark:bg-[#13171D] border space-y-4 shadow-sm flex flex-col justify-between transition ${
+                    pin.is_active ? 'border-slate-200 dark:border-[#252B35]' : 'border-rose-300 dark:border-rose-900/40 opacity-70'
                   }`}
                 >
                   <div className="space-y-3">
@@ -2101,7 +2101,7 @@ export default function MakmpAdminDashboardPage() {
                       <button
                         type="button"
                         onClick={() => handleTogglePin(pin.id, pin.is_active)}
-                        className={`text-[10px] font-bold px-2 py-0.5 rounded-full transition ${
+                        className={`text-xs font-bold px-2 py-0.5 rounded-full transition ${
                           pin.is_active
                             ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20'
                             : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20'
@@ -2112,8 +2112,8 @@ export default function MakmpAdminDashboardPage() {
                     </div>
 
                     {/* Assigned Categories / Awards Badges */}
-                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
-                      <div className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 flex items-center justify-between">
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200/80 dark:border-[#252B35] space-y-2">
+                      <div className="text-xs uppercase font-bold text-slate-400 dark:text-slate-500 flex items-center justify-between">
                         <span>{t('makmp:admin_review_assignment_label', 'Tugasan Semakan:')}</span>
                         <span className="text-slate-500 dark:text-slate-400 font-mono">
                           {isAll
@@ -2123,7 +2123,7 @@ export default function MakmpAdminDashboardPage() {
                       </div>
                       <div className="flex flex-wrap gap-1.5 max-h-28 overflow-y-auto pr-1">
                         {isAll ? (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center">
+                          <span className="px-2 py-0.5 rounded text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 inline-flex items-center">
                             <Star className="w-3.5 h-3.5 text-amber-500 mr-1" />
                             {t('makmp:admin_all_cats_and_awards_full', 'Semua Kategori & Anugerah (Akses Penuh)')}
                           </span>
@@ -2135,7 +2135,7 @@ export default function MakmpAdminDashboardPage() {
                             return (
                               <span
                                 key={i}
-                                className={`px-2 py-0.5 rounded text-[10px] font-medium border max-w-[220px] truncate ${
+                                className={`px-2 py-0.5 rounded text-xs font-medium border max-w-[220px] truncate ${
                                   isGroup
                                     ? 'bg-purple-500/10 text-purple-600 dark:text-purple-300 border-purple-500/30 font-semibold'
                                     : 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/20'
@@ -2154,10 +2154,10 @@ export default function MakmpAdminDashboardPage() {
                     </div>
 
                     {/* PIN Code Display Box */}
-                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between">
+                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200/80 dark:border-[#252B35] flex items-center justify-between">
                       <div>
-                        <div className="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-semibold">Kod PIN</div>
-                        <div className="font-mono text-xl font-extrabold text-amber-600 dark:text-amber-400 tracking-wider">
+                        <div className="text-xs text-slate-400 dark:text-slate-500 uppercase font-semibold">Kod PIN</div>
+                        <div className="font-mono text-xl font-bold text-amber-600 dark:text-amber-400 tracking-wider">
                           {pin.pin_code}
                         </div>
                       </div>
@@ -2165,7 +2165,7 @@ export default function MakmpAdminDashboardPage() {
                       <button
                         type="button"
                         onClick={() => handleCopyJuryLink(pin.pin_code)}
-                        className="px-3 py-1.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-white border border-slate-200 dark:border-transparent transition flex items-center gap-1.5 shadow-xs"
+                        className="px-3 py-1.5 rounded-lg bg-white dark:bg-[#1B2028] hover:bg-slate-100 dark:hover:bg-[#252B35] text-xs font-semibold text-slate-700 dark:text-white border border-slate-200 dark:border-transparent transition flex items-center gap-1.5 shadow-xs"
                       >
                         {copiedPin === pin.pin_code ? (
                           <>
@@ -2183,11 +2183,11 @@ export default function MakmpAdminDashboardPage() {
                   </div>
 
                   {/* PIN Card Actions Footer */}
-                  <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                  <div className="flex items-center justify-end gap-1.5 pt-2 border-t border-slate-100 dark:border-[#252B35]">
                     <button
                       type="button"
                       onClick={() => handleOpenEditPin(pin)}
-                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
+                      className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1 transition"
                     >
                       <Edit2 className="w-3 h-3 text-amber-500 dark:text-amber-400" />
                       <span>{t('common:update', 'Kemaskini')}</span>
@@ -2211,8 +2211,8 @@ export default function MakmpAdminDashboardPage() {
           {/* ================================================================ */}
           {isPinModalOpen && (
             <div className="fixed inset-0 z-50 bg-black/70  flex items-center justify-center p-4 overflow-y-auto">
-              <div className="w-full max-w-lg p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
-                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+              <div className="w-full max-w-lg p-6 rounded-2xl bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+                <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#252B35]">
                   <h3 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
                     <KeyRound className="w-4 h-4 text-amber-500 dark:text-amber-400" />
                     <span>{editingPin ? t('makmp:admin_update_pin_modal_title', 'Kemaskini Tugasan Juri & PIN') : t('makmp:admin_create_pin_modal_title', 'Jana Kod PIN Juri MAKMP')}</span>
@@ -2235,7 +2235,7 @@ export default function MakmpAdminDashboardPage() {
                       value={juryName}
                       onChange={(e) => setJuryName(e.target.value)}
                       placeholder="cth: Ts. Dr. Ahmad bin Zulkifli"
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                     />
                   </div>
 
@@ -2246,7 +2246,7 @@ export default function MakmpAdminDashboardPage() {
                       value={juryOrg}
                       onChange={(e) => setJuryOrg(e.target.value)}
                       placeholder={t('makmp:admin_jury_org_placeholder', 'cth: Jabatan Kejuruteraan Elektrik (JKE) / HEP')}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white focus:outline-none focus:border-amber-500 shadow-sm"
                     />
                   </div>
 
@@ -2257,7 +2257,7 @@ export default function MakmpAdminDashboardPage() {
                         {t('makmp:admin_assigned_awards_label', 'Tugasan Anugerah / Kategori Semakan *')}
                       </label>
                       <div className="flex items-center gap-2">
-                        <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                        <span className="text-xs text-amber-600 dark:text-amber-400 font-medium">
                           {selectedJuryCategories.includes('ALL')
                             ? t('makmp:admin_all_awards_full_access', 'Akses Penuh Semua Anugerah')
                             : t('makmp:admin_tasks_selected', '{{count}} Tugasan Dipilih', { count: selectedJuryCategories.length })}
@@ -2266,7 +2266,7 @@ export default function MakmpAdminDashboardPage() {
                           <button
                             type="button"
                             onClick={() => setSelectedJuryCategories([])}
-                            className="text-[10px] text-slate-500 hover:text-rose-500 underline transition"
+                            className="text-xs text-slate-500 hover:text-rose-500 underline transition"
                           >
                             {t('common:clear', 'Kosongkan')}
                           </button>
@@ -2281,7 +2281,7 @@ export default function MakmpAdminDashboardPage() {
                       className={`w-full p-3 rounded-xl border flex items-center justify-between text-left transition shadow-xs ${
                         selectedJuryCategories.includes('ALL')
                           ? 'bg-amber-500/10 border-amber-500 text-amber-700 dark:text-amber-300'
-                          : 'bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700'
+                          : 'bg-slate-50 dark:bg-[#0E1116] border-slate-200 dark:border-[#252B35] text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-[#333B48]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
@@ -2295,12 +2295,12 @@ export default function MakmpAdminDashboardPage() {
                             <Star className="w-3.5 h-3.5 text-amber-500 mr-1" />
                             {t('makmp:admin_all_cats_and_awards_upper', 'SEMUA KATEGORI & ANUGERAH (Akses Penuh)')}
                           </div>
-                          <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                          <div className="text-xs text-slate-500 dark:text-slate-400">
                             {t('makmp:admin_officer_can_review_all', 'Pegawai ini boleh menyemak semua {{count}} anugerah rasmi tanpa had', { count: awards.length || 18 })}
                           </div>
                         </div>
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
+                      <span className="text-xs font-bold px-2 py-0.5 rounded bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30">
                         {t('makmp:admin_primary_option', 'Pilihan Utama')}
                       </span>
                     </button>
@@ -2308,7 +2308,7 @@ export default function MakmpAdminDashboardPage() {
                     {/* Option 2: Hierarchical Award Checklist */}
                     <div className="space-y-2 pt-1">
                       <div className="flex items-center justify-between gap-2">
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-medium">
+                        <div className="text-xs text-slate-500 dark:text-slate-400 font-medium">
                           {t('makmp:admin_specific_awards_prompt', 'Atau peruntukkan anugerah / kategori spesifik bagi pegawai ini:')}
                         </div>
                       </div>
@@ -2321,7 +2321,7 @@ export default function MakmpAdminDashboardPage() {
                           value={juryCategorySearch}
                           onChange={(e) => setJuryCategorySearch(e.target.value)}
                           placeholder={t('makmp:admin_search_award_or_group_placeholder', 'Cari nama anugerah atau kumpulan... (cth: Keusahawanan, Siswa, Sukan)')}
-                          className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-sm"
+                          className="w-full pl-8 pr-8 py-1.5 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:border-amber-500 shadow-sm"
                         />
                         {juryCategorySearch && (
                           <button
@@ -2337,7 +2337,7 @@ export default function MakmpAdminDashboardPage() {
                       {/* Grouped Awards Accordion / List */}
                       <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
                         {filteredGroupedAwards.length === 0 ? (
-                          <div className="p-4 text-center text-xs text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-950 rounded-xl border border-slate-200 dark:border-slate-800">
+                          <div className="p-4 text-center text-xs text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-[#0E1116] rounded-xl border border-slate-200 dark:border-[#252B35]">
                             {t('makmp:admin_no_matching_awards', 'Tiada anugerah sepadan dengan carian "{{query}}".', { query: juryCategorySearch })}
                           </div>
                         ) : (
@@ -2348,10 +2348,10 @@ export default function MakmpAdminDashboardPage() {
                             return (
                               <div
                                 key={groupName}
-                                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 overflow-hidden shadow-xs"
+                                className="rounded-xl border border-slate-200 dark:border-[#252B35] bg-slate-50/70 dark:bg-[#0E1116]/90 overflow-hidden shadow-xs"
                               >
                                 {/* Group Header Bar */}
-                                <div className="p-2.5 bg-slate-100/90 dark:bg-slate-900/90 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-2">
+                                <div className="p-2.5 bg-slate-100/90 dark:bg-[#13171D]/95 border-b border-slate-200/80 dark:border-[#252B35] flex items-center justify-between gap-2">
                                   <div className="flex items-center gap-2 min-w-0">
                                     <button
                                       type="button"
@@ -2371,7 +2371,7 @@ export default function MakmpAdminDashboardPage() {
                                         {groupName}
                                       </span>
                                     </button>
-                                    <span className="text-[10px] text-slate-400 dark:text-slate-500 shrink-0">
+                                    <span className="text-xs text-slate-400 dark:text-slate-500 shrink-0">
                                       {'(' + groupAwards.length + ' ' + t('makmp:admin_awards_count_suffix', 'anugerah') + ')'}
                                     </span>
                                   </div>
@@ -2379,10 +2379,10 @@ export default function MakmpAdminDashboardPage() {
                                   <button
                                     type="button"
                                     onClick={() => handleToggleGroup(groupName)}
-                                    className={`text-[10px] font-semibold px-2 py-0.5 rounded transition shrink-0 ${
+                                    className={`text-xs font-semibold px-2 py-0.5 rounded transition shrink-0 ${
                                       isGroupSelected
                                         ? 'bg-rose-500/10 text-rose-600 dark:text-rose-300 hover:bg-rose-500/20'
-                                        : 'bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-amber-700 dark:text-amber-300 border border-slate-200 dark:border-transparent'
+                                        : 'bg-white dark:bg-[#1B2028] hover:bg-slate-50 dark:hover:bg-[#252B35] text-amber-700 dark:text-amber-300 border border-slate-200 dark:border-transparent'
                                     }`}
                                   >
                                     {isGroupSelected ? t('makmp:admin_unselect_group', 'Nyahpilih Kumpulan') : t('makmp:admin_select_all_group', 'Pilih Semua Kumpulan')}
@@ -2390,7 +2390,7 @@ export default function MakmpAdminDashboardPage() {
                                 </div>
 
                                 {/* List of Awards under this group */}
-                                <div className="p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-white/40 dark:bg-slate-950/40">
+                                <div className="p-2 grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-white/40 dark:bg-[#0E1116]/70">
                                   {groupAwards.map((aw) => {
                                     const isChecked = isAwardSelected(aw);
                                     return (
@@ -2401,7 +2401,7 @@ export default function MakmpAdminDashboardPage() {
                                         className={`p-2 rounded-lg border text-left flex items-start gap-2 transition ${
                                           isChecked
                                             ? 'bg-amber-500/10 border-amber-500/40 text-slate-900 dark:text-white'
-                                            : 'bg-white dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-800/60 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200'
+                                            : 'bg-white dark:bg-[#13171D]/80 border-slate-200/60 dark:border-[#252B35]/80 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#1B2028] hover:text-slate-900 dark:hover:text-slate-200'
                                         }`}
                                       >
                                         {isChecked ? (
@@ -2410,11 +2410,11 @@ export default function MakmpAdminDashboardPage() {
                                           <Square className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 shrink-0 mt-0.5" />
                                         )}
                                         <div className="min-w-0 flex-1">
-                                          <div className="text-[11px] font-medium leading-tight text-slate-900 dark:text-white truncate" title={aw.name}>
+                                          <div className="text-xs font-medium leading-tight text-slate-900 dark:text-white truncate" title={aw.name}>
                                             {aw.name}
                                           </div>
-                                          <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-400 dark:text-slate-500">
-                                            <span className="px-1 py-0.2 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                                          <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-400 dark:text-slate-500">
+                                            <span className="px-1 py-0.2 rounded bg-slate-100 dark:bg-[#1B2028] text-slate-600 dark:text-slate-400">
                                               {aw.target_type === 'ENTITY' ? t('makmp:admin_entity_club_badge', 'ENTITI / KELAB') : t('makmp:admin_individual_badge', 'INDIVIDU')}
                                             </span>
                                             <span>Maks {aw.max_merit || 50}m</span>
@@ -2431,7 +2431,7 @@ export default function MakmpAdminDashboardPage() {
 
                         {/* Fallback / Kategori Asas jika ada kategori yang belum dipetakan ke anugerah */}
                         {categories.length > 0 && groupedAwards.length === 0 && (
-                          <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-950/70 p-2.5 space-y-2">
+                          <div className="rounded-xl border border-slate-200 dark:border-[#252B35] bg-slate-50/70 dark:bg-[#0E1116]/90 p-2.5 space-y-2">
                             <div className="text-xs font-bold text-slate-700 dark:text-slate-300">
                               {t('makmp:admin_classic_base_cats', 'Kategori Asas (Klasik):')}
                             </div>
@@ -2449,7 +2449,7 @@ export default function MakmpAdminDashboardPage() {
                                     className={`p-2 rounded-lg border text-left flex items-center gap-2 transition ${
                                       isChecked
                                         ? 'bg-amber-500/10 border-amber-500/40 text-slate-900 dark:text-white'
-                                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
+                                        : 'bg-white dark:bg-[#13171D] border-slate-200 dark:border-[#252B35] text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#1B2028]'
                                     }`}
                                   >
                                     {isChecked ? (
@@ -2457,7 +2457,7 @@ export default function MakmpAdminDashboardPage() {
                                     ) : (
                                       <Square className="w-3.5 h-3.5 text-slate-400 dark:text-slate-600 shrink-0" />
                                     )}
-                                    <span className="text-[11px] font-medium truncate">{c.name}</span>
+                                    <span className="text-xs font-medium truncate">{c.name}</span>
                                   </button>
                                 );
                               })}
@@ -2477,11 +2477,11 @@ export default function MakmpAdminDashboardPage() {
                     </div>
                   )}
 
-                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-800">
+                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-[#252B35]">
                     <button
                       type="button"
                       onClick={() => setIsPinModalOpen(false)}
-                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
+                      className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-700 dark:text-slate-300 transition"
                     >
                       {t('common:cancel', 'Batal')}
                     </button>
@@ -2504,8 +2504,8 @@ export default function MakmpAdminDashboardPage() {
       {/* ==================================================================== */}
       {activeSub && (
         <div className="fixed inset-0 z-50 bg-black/70  flex items-center justify-center p-4 overflow-y-auto">
-          <div className="w-full max-w-4xl p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
+          <div className="w-full max-w-4xl p-6 rounded-2xl bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] space-y-5 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#252B35]">
               <div>
                 <span className="font-mono text-xs text-amber-600 dark:text-amber-400 font-bold">
                   {activeSub.tracking_code}
@@ -2514,29 +2514,29 @@ export default function MakmpAdminDashboardPage() {
               </div>
               <button
                 onClick={() => setActiveSub(null)}
-                className="p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-white"
+                className="p-1.5 rounded-lg bg-slate-100 dark:bg-[#1B2028] text-slate-400 hover:text-slate-700 dark:hover:text-white"
               >
                 ✕
               </button>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">{t('makmp:admin_matric_no_label', 'No. Matrik:')}</span>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200/80 dark:border-[#252B35]">
+                <span className="text-xs uppercase font-bold text-slate-400 dark:text-slate-500">{t('makmp:admin_matric_no_label', 'No. Matrik:')}</span>
                 <div className="font-mono font-bold text-amber-600 dark:text-amber-400 mt-0.5">{activeSub.matric_no}</div>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">{t('makmp:admin_dept_sem_label', 'Jabatan & Sem:')}</span>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200/80 dark:border-[#252B35]">
+                <span className="text-xs uppercase font-bold text-slate-400 dark:text-slate-500">{t('makmp:admin_dept_sem_label', 'Jabatan & Sem:')}</span>
                 <div className="font-bold text-slate-900 dark:text-white mt-0.5">
                   {getJabatanLabel(activeSub.department)} (Sem {activeSub.semester || 1})
                 </div>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">Telefon:</span>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200/80 dark:border-[#252B35]">
+                <span className="text-xs uppercase font-bold text-slate-400 dark:text-slate-500">Telefon:</span>
                 <div className="font-bold text-slate-900 dark:text-white mt-0.5">{activeSub.phone}</div>
               </div>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80">
-                <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500">{t('makmp:admin_overall_status_label', 'Status Keseluruhan:')}</span>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200/80 dark:border-[#252B35]">
+                <span className="text-xs uppercase font-bold text-slate-400 dark:text-slate-500">{t('makmp:admin_overall_status_label', 'Status Keseluruhan:')}</span>
                 <div className="font-bold text-amber-600 dark:text-amber-400 mt-0.5">{activeSub.status} (+{activeSub.total_merit_awarded}m)</div>
               </div>
             </div>
@@ -2556,12 +2556,12 @@ export default function MakmpAdminDashboardPage() {
                     return (
                       <div
                         key={awApp.id || idx}
-                        className="p-4 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3"
+                        className="p-4 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] space-y-3"
                       >
-                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 dark:border-slate-800/80 pb-2.5">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200/80 dark:border-[#252B35] pb-2.5">
                           <div>
                             <div className="flex items-center gap-2">
-                              <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20">
+                              <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20">
                                 {awApp.award?.category_group}
                               </span>
                               <span className="font-bold text-sm text-slate-900 dark:text-white">{awApp.award?.name}</span>
@@ -2576,7 +2576,7 @@ export default function MakmpAdminDashboardPage() {
                           <div className="flex items-center gap-2">
                             <span
                               className={cn(
-                                'px-2 py-0.5 rounded-full text-[10px] font-bold',
+                                'px-2 py-0.5 rounded-full text-xs font-bold',
                                 awApp.status === 'DISAHKAN'
                                   ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
                                   : awApp.status === 'DITOLAK'
@@ -2599,7 +2599,7 @@ export default function MakmpAdminDashboardPage() {
                                   e.stopPropagation();
                                   handleUnlockAward(awApp.id, awApp.award?.name);
                                 }}
-                                className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-[10px] font-bold hover:bg-amber-500/20 transition flex items-center gap-1 disabled:opacity-50"
+                                className="px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-300 text-xs font-bold hover:bg-amber-500/20 transition flex items-center gap-1 disabled:opacity-50"
                               >
                                 {unlockingAwardId === awApp.id ? t('jpp:makmp_reopening', 'Membuka...') : (<><Unlock className="w-3 h-3 inline mr-1" />{t('jpp:makmp_reopen_review', 'Buka Semula')}</>)}
                               </button>
@@ -2610,18 +2610,18 @@ export default function MakmpAdminDashboardPage() {
                         {/* Sejarah buka semula award ini */}
                         {reviewLog.filter((l) => l.awardId === awApp.id).length > 0 && (
                           <div className="space-y-1.5 pt-1">
-                            <div className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                            <div className="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
                               {t('makmp:admin_reopen_history_label', 'Sejarah Buka Semula:')}
                             </div>
                             {reviewLog
                               .filter((l) => l.awardId === awApp.id)
                               .map((log, li) => (
-                                <div key={log.id || li} className="text-[11px] text-slate-600 dark:text-slate-400 flex items-start gap-2">
+                                <div key={log.id || li} className="text-xs text-slate-600 dark:text-slate-400 flex items-start gap-2">
                                   <span className="text-amber-600 dark:text-amber-400 font-mono shrink-0">#{log.unlock_count}</span>
                                   <span>
                                     {(log.jury_name || log.admin_name || t('makmp:admin_role_admin', 'Pentadbir')) + ' \u2014 ' + log.previous_status + ' \u2192 ' + t('makmp:admin_status_in_review', 'DALAM_SEMAKAN')}
                                     {log.reason ? (' \u2022 "' + log.reason + '"') : ''}
-                                    <span className="block text-[10px] text-slate-400 dark:text-slate-600">
+                                    <span className="block text-xs text-slate-400 dark:text-slate-600">
                                       {new Date(log.created_at).toLocaleString('ms-MY')}
                                     </span>
                                   </span>
@@ -2632,7 +2632,7 @@ export default function MakmpAdminDashboardPage() {
 
                         {/* Documents for this award */}
                         <div className="space-y-2">
-                          <div className="text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+                          <div className="text-xs font-semibold text-slate-600 dark:text-slate-400">
                             {t('makmp:admin_attached_docs_label', 'Dokumen / Laporan Disertakan')} ({awItems.length}):
                           </div>
                           {awItems.length === 0 ? (
@@ -2641,11 +2641,11 @@ export default function MakmpAdminDashboardPage() {
                             awItems.map((doc, dIdx) => (
                               <div
                                 key={doc.id || dIdx}
-                                className="p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 flex items-center justify-between gap-2 text-xs shadow-xs"
+                                className="p-2.5 rounded-lg bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] flex items-center justify-between gap-2 text-xs shadow-xs"
                               >
                                 <div className="flex items-center gap-2 truncate">
                                   <span className={cn(
-                                    'px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider',
+                                    'px-2 py-0.5 rounded text-xs font-bold uppercase tracking-wider',
                                     doc.document_type === 'LAPORAN'
                                       ? 'bg-sky-500/20 text-sky-600 dark:text-sky-300 border border-sky-500/30'
                                       : doc.document_type === 'BUKTI_SOKONGAN'
@@ -2656,7 +2656,7 @@ export default function MakmpAdminDashboardPage() {
                                   </span>
                                   <span className="text-slate-900 dark:text-white font-medium truncate">{doc.nama_pencapaian}</span>
                                   {doc.document_type === 'LAPORAN' && doc.report_score > 0 && (
-                                    <span className="px-1.5 py-0.5 rounded bg-sky-500/20 border border-sky-500/30 text-sky-600 dark:text-sky-300 font-bold text-[9px] whitespace-nowrap">
+                                    <span className="px-1.5 py-0.5 rounded bg-sky-500/20 border border-sky-500/30 text-sky-600 dark:text-sky-300 font-bold text-xs whitespace-nowrap">
                                       {doc.report_score}/100 → +{Math.round(doc.report_score / 10)}m
                                     </span>
                                   )}
@@ -2666,7 +2666,7 @@ export default function MakmpAdminDashboardPage() {
                                   href={doc.drive_view_url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="px-2.5 py-1 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 font-semibold text-xs flex items-center gap-1 shrink-0"
+                                  className="px-2.5 py-1 rounded bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-amber-600 dark:text-amber-400 font-semibold text-xs flex items-center gap-1 shrink-0"
                                 >
                                   <ExternalLink className="w-3.5 h-3.5" />
                                   <span>{t('makmp:admin_open_doc_btn', 'Buka Dokumen')}</span>
@@ -2689,13 +2689,13 @@ export default function MakmpAdminDashboardPage() {
                   {activeSub.items?.map((item, i) => (
                     <div
                       key={item.id}
-                      className="p-3 rounded-xl bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-3 text-xs shadow-xs"
+                      className="p-3 rounded-xl bg-white dark:bg-[#0E1116] border border-slate-200/80 dark:border-[#252B35] flex items-center justify-between gap-3 text-xs shadow-xs"
                     >
                       <div>
                         <div className="font-bold text-slate-900 dark:text-white">
                           {i + 1}. {item.nama_pencapaian}
                         </div>
-                        <div className="text-[11px] text-slate-500 dark:text-slate-400">
+                        <div className="text-xs text-slate-500 dark:text-slate-400">
                           {item.peringkat} • {item.pencapaian_type}
                         </div>
                       </div>
@@ -2704,7 +2704,7 @@ export default function MakmpAdminDashboardPage() {
                         href={item.drive_view_url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-amber-600 dark:text-amber-400 text-xs font-semibold flex items-center gap-1 shrink-0"
+                        className="px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-amber-600 dark:text-amber-400 text-xs font-semibold flex items-center gap-1 shrink-0"
                       >
                         <ExternalLink className="w-3.5 h-3.5" />
                         <span>{t('makmp:admin_open_cert_btn', 'Buka Sijil')}</span>
@@ -2742,29 +2742,29 @@ export default function MakmpAdminDashboardPage() {
               <div
                 key={ed.id}
                 className={`p-4 rounded-2xl border ${
-                  ed.is_active ? 'border-amber-500/30 bg-amber-500/5' : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/60 opacity-75'
+                  ed.is_active ? 'border-amber-500/30 bg-amber-500/5' : 'border-slate-200 dark:border-[#252B35] bg-white dark:bg-[#13171D]/80 opacity-75'
                 } shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-3`}
               >
                 <div className="space-y-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h4 className="font-bold text-slate-900 dark:text-white text-sm">{ed.title}</h4>
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                    <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-slate-100 dark:bg-[#1B2028] text-slate-700 dark:text-slate-300">
                       {ed.year}
                     </span>
                     {ed.is_active ? (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300 border border-emerald-500/20">
                         {t('makmp:admin_session_open', 'Sesi Dibuka')}
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/20">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-rose-500/15 text-rose-600 dark:text-rose-300 border border-rose-500/20">
                         {t('makmp:admin_session_closed', 'Sesi Ditutup')}
                       </span>
                     )}
                   </div>
                   {ed.description && (
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">{ed.description}</p>
+                    <p className="text-xs text-slate-500 dark:text-slate-400">{ed.description}</p>
                   )}
-                  <div className="flex items-center gap-1.5 text-[11px] text-slate-700 dark:text-slate-300">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-700 dark:text-slate-300">
                     <CalendarClock className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
                     <span>
                       {t('makmp:admin_closing_date_prefix', 'Tarikh tutup:') + ' '}
@@ -2791,14 +2791,14 @@ export default function MakmpAdminDashboardPage() {
                     </button>
                     <button
                       onClick={() => handleOpenEditEdition(ed)}
-                      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition"
+                      className="p-2 rounded-xl bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-700 dark:text-slate-300 transition"
                       title={t('makmp:admin_update_edition_title', 'Kemaskini edisi')}
                     >
                       <Edit2 className="w-4 h-4" />
                     </button>
                     <button
                       onClick={() => handleDeleteEdition(ed)}
-                      className="p-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-rose-500/20 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-300 transition"
+                      className="p-2 rounded-xl bg-slate-100 dark:bg-[#1B2028] hover:bg-rose-500/20 text-slate-700 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-300 transition"
                       title={t('makmp:admin_delete_edition_title', 'Padam edisi')}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -2819,8 +2819,8 @@ export default function MakmpAdminDashboardPage() {
       {/* Modal Edisi (Create & Edit) */}
       {isEditionModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/70  flex items-center justify-center p-4">
-          <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 space-y-4 shadow-2xl">
-            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
+          <div className="w-full max-w-md p-6 rounded-2xl bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] space-y-4 shadow-2xl">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-[#252B35]">
               <h3 className="font-bold text-base text-slate-900 dark:text-white">
                 {editingEdition ? t('makmp:admin_update_edition_modal_title', 'Kemaskini Edisi') : t('makmp:admin_new_edition_btn', 'Edisi Baharu')}
               </h3>
@@ -2842,7 +2842,7 @@ export default function MakmpAdminDashboardPage() {
                   value={editionTitle}
                   onChange={(e) => setEditionTitle(e.target.value)}
                   placeholder={t('makmp:admin_edition_title_placeholder', 'cth: Majlis Anugerah Kecemerlangan POLISAS 2027')}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                 />
               </div>
 
@@ -2855,7 +2855,7 @@ export default function MakmpAdminDashboardPage() {
                     max={2100}
                     value={editionYear}
                     onChange={(e) => setEditionYear(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                   />
                 </div>
                 <div>
@@ -2864,7 +2864,7 @@ export default function MakmpAdminDashboardPage() {
                     type="datetime-local"
                     value={editionDeadline}
                     onChange={(e) => setEditionDeadline(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                   />
                 </div>
               </div>
@@ -2876,7 +2876,7 @@ export default function MakmpAdminDashboardPage() {
                   value={editionDesc}
                   onChange={(e) => setEditionDesc(e.target.value)}
                   placeholder={t('makmp:admin_edition_desc_placeholder', 'Penerangan ringkas edisi ini...')}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white shadow-sm"
+                  className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] text-slate-900 dark:text-white shadow-sm"
                 />
               </div>
 
@@ -2886,17 +2886,17 @@ export default function MakmpAdminDashboardPage() {
                     type="checkbox"
                     checked={editionIsActive}
                     onChange={(e) => setEditionIsActive(e.target.checked)}
-                    className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-slate-950 border-slate-300 dark:border-slate-800 focus:ring-amber-500"
+                    className="w-4 h-4 rounded text-amber-500 bg-white dark:bg-[#0E1116] border-slate-300 dark:border-[#252B35] focus:ring-amber-500"
                   />
                   <span className="text-slate-800 dark:text-white font-semibold text-xs">{t('makmp:admin_session_open_active', 'Sesi Dibuka (aktif)')}</span>
                 </label>
               </div>
 
-              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200 dark:border-[#252B35]">
                 <button
                   type="button"
                   onClick={() => setIsEditionModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  className="px-4 py-2 rounded-xl bg-slate-100 dark:bg-[#1B2028] text-slate-700 dark:text-slate-300"
                 >
                   {t('common:cancel', 'Batal')}
                 </button>

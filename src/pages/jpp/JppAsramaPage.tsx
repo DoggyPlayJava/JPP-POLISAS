@@ -94,8 +94,8 @@ function ToggleBtn({ label, status, loading, onToggle }: { label: string; status
       onClick={onToggle}
       disabled={loading}
       className={cn(
-        "flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all active:scale-95 shadow-sm whitespace-nowrap",
-        status ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20" : "bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300"
+        "flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all active:scale-95 shadow-sm whitespace-nowrap",
+        status ? "bg-emerald-500 hover:bg-emerald-600 text-white shadow-emerald-500/20" : "bg-slate-200 dark:bg-[#1B2028] hover:bg-slate-300 dark:hover:bg-[#252B35] text-slate-600 dark:text-slate-300"
       )}
     >
       {loading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Power className="w-3 h-3" />}
@@ -452,7 +452,7 @@ export function JppAsramaPage() {
       <div className="min-h-screen flex items-center justify-center p-8">
         <div className="text-center space-y-3">
           <AlertCircle className="w-12 h-12 text-rose-400 mx-auto" />
-          <p className="font-black text-slate-700 dark:text-slate-200">{t('jpp:asrama_access_restricted', 'Akses Terhad')}</p>
+          <p className="font-bold text-slate-700 dark:text-slate-200">{t('jpp:asrama_access_restricted', 'Akses Terhad')}</p>
         </div>
       </div>
     );
@@ -478,13 +478,13 @@ export function JppAsramaPage() {
               <Building2 className="w-5 h-5 text-violet-600 dark:text-violet-400" />
             </div>
             <div>
-              <h1 className="font-black text-base text-slate-900 dark:text-white leading-none">
+              <h1 className="font-bold text-base text-slate-900 dark:text-white leading-none">
                 {t('jpp:asrama_admin_title', 'Pengurusan Penginapan Asrama (KAMSIS)')}
               </h1>
-              <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1">
+              <p className="text-xs text-slate-500 dark:text-white/40 mt-1">
                 {t('jpp:asrama_admin_subtitle', 'Pengurusan penginapan asrama, semakan rayuan, dan kuota KAMSIS.')}
               </p>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mt-0.5 flex items-center gap-1.5 flex-wrap">
                 Sesi
                 <input
                   key={activeSession}
@@ -504,7 +504,7 @@ export function JppAsramaPage() {
                     } catch { toast.error(t('jpp:asrama_session_switch_fail', 'Gagal tukar sesi.'), { id: toastId }); }
                   }}
                   onKeyDown={(e) => { if (e.key === 'Enter') (e.target as HTMLInputElement).blur(); }}
-                  className="w-[90px] bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 py-0.5 text-[10px] font-black text-violet-600 dark:text-violet-300 text-center focus:outline-none focus:border-violet-500/50 hover:bg-violet-500/20 transition-colors"
+                  className="w-[90px] bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 py-0.5 text-xs font-semibold text-violet-600 dark:text-violet-300 text-center focus:outline-none focus:border-violet-500/50 hover:bg-violet-500/20 transition-colors"
                 />
                 ·
                 <select
@@ -521,11 +521,11 @@ export function JppAsramaPage() {
                       toast.success(t('jpp:asrama_semester_switched', 'Semester KAMSIS ditukar ke Sem {{val}}', { val }), { id: toastId });
                     } catch { toast.error(t('jpp:asrama_semester_switch_fail', 'Gagal tukar semester.'), { id: toastId }); }
                   }}
-                  className="bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 py-0.5 text-[10px] font-black text-violet-600 dark:text-violet-300 cursor-pointer hover:bg-violet-500/20 transition-colors"
+                  className="bg-violet-500/10 border border-violet-500/20 rounded-lg px-2 py-0.5 text-xs font-semibold text-violet-600 dark:text-violet-300 cursor-pointer hover:bg-violet-500/20 transition-colors"
                 >
-                  <option value="1" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:semester_1', 'Semester 1')}</option>
-                  <option value="2" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:semester_2', 'Semester 2')}</option>
-                  <option value="3" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:semester_3_short', 'Semester 3 (Pendek)')}</option>
+                  <option value="1" className="bg-white dark:bg-[#13171D] text-slate-900 dark:text-white">{t('jpp:semester_1', 'Semester 1')}</option>
+                  <option value="2" className="bg-white dark:bg-[#13171D] text-slate-900 dark:text-white">{t('jpp:semester_2', 'Semester 2')}</option>
+                  <option value="3" className="bg-white dark:bg-[#13171D] text-slate-900 dark:text-white">{t('jpp:semester_3_short', 'Semester 3 (Pendek)')}</option>
                 </select>
               </p>
             </div>
@@ -533,7 +533,7 @@ export function JppAsramaPage() {
           <div className="flex gap-2 w-full sm:w-auto">
             <button
               onClick={() => setShowSettingsModal(true)}
-              className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-xs font-black transition-all active:scale-95 flex-1 justify-center sm:flex-none"
+              className="flex items-center gap-2 px-3 py-2.5 rounded-xl bg-slate-100 dark:bg-[#1B2028] hover:bg-slate-200 dark:hover:bg-[#252B35] text-slate-600 dark:text-slate-300 text-xs font-semibold transition-all active:scale-95 flex-1 justify-center sm:flex-none"
             >
               <Settings className="w-3.5 h-3.5" />
               <span>{t('jpp:form', 'Borang')}</span>
@@ -553,32 +553,32 @@ export function JppAsramaPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-5">
         {/* ── Stat cards ─────────────────────────────────────────── */}
         <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 flex items-center gap-3">
+          <div className="bg-white dark:bg-[#13171D] rounded-2xl p-4 border border-slate-200/60 dark:border-[#252B35]/80 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-blue-500/10 flex items-center justify-center flex-shrink-0"><GraduationCap className="w-4 h-4 text-blue-500" /></div>
             <div>
-              <p className="font-black text-xl leading-none text-blue-500">{students.length}</p>
-              <p className="text-[10px] font-bold text-slate-500 mt-0.5">{t('jpp:all_students', 'Semua Pelajar')}</p>
+              <p className="font-bold text-xl leading-none text-blue-500">{students.length}</p>
+              <p className="text-xs font-bold text-slate-500 mt-0.5">{t('jpp:all_students', 'Semua Pelajar')}</p>
             </div>
           </div>
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 flex items-center gap-3">
+          <div className="bg-white dark:bg-[#13171D] rounded-2xl p-4 border border-slate-200/60 dark:border-[#252B35]/80 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center flex-shrink-0"><FileText className="w-4 h-4 text-amber-500" /></div>
             <div>
-              <p className="font-black text-xl leading-none text-amber-500">{totalPemohon}</p>
-              <p className="text-[10px] font-bold text-slate-500 mt-0.5">{t('jpp:asrama_new_applications', 'Permohonan Baru')}</p>
+              <p className="font-bold text-xl leading-none text-amber-500">{totalPemohon}</p>
+              <p className="text-xs font-bold text-slate-500 mt-0.5">{t('jpp:asrama_new_applications', 'Permohonan Baru')}</p>
             </div>
           </div>
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 flex items-center gap-3">
+          <div className="bg-white dark:bg-[#13171D] rounded-2xl p-4 border border-slate-200/60 dark:border-[#252B35]/80 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-slate-500/10 flex items-center justify-center flex-shrink-0"><Home className="w-4 h-4 text-slate-500" /></div>
             <div>
-              <p className="font-black text-xl leading-none text-slate-500">{totalLuar}</p>
-              <p className="text-[10px] font-bold text-slate-500 mt-0.5">Luar Kampus</p>
+              <p className="font-bold text-xl leading-none text-slate-500">{totalLuar}</p>
+              <p className="text-xs font-bold text-slate-500 mt-0.5">Luar Kampus</p>
             </div>
           </div>
-          <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 flex items-center gap-3">
+          <div className="bg-white dark:bg-[#13171D] rounded-2xl p-4 border border-slate-200/60 dark:border-[#252B35]/80 flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-violet-500/10 flex items-center justify-center flex-shrink-0"><Star className="w-4 h-4 text-violet-500" /></div>
             <div>
-              <p className="font-black text-xl leading-none text-violet-500">{totalRecommended}</p>
-              <p className="text-[10px] font-bold text-slate-500 mt-0.5">Disyorkan</p>
+              <p className="font-bold text-xl leading-none text-violet-500">{totalRecommended}</p>
+              <p className="text-xs font-bold text-slate-500 mt-0.5">Disyorkan</p>
             </div>
           </div>
         </motion.div>
@@ -595,9 +595,9 @@ export function JppAsramaPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as TabKey)}
-              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-widest whitespace-nowrap transition-colors ${activeTab === tab.id
+              className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-widest whitespace-nowrap transition-colors ${activeTab === tab.id
                   ? 'bg-violet-500 text-white shadow-lg shadow-violet-500/20'
-                  : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  : 'bg-white dark:bg-[#13171D] text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-[#252B35]/80 hover:bg-slate-50 dark:hover:bg-[#1B2028]'
                 }`}
             >
               {tab.label}
@@ -606,25 +606,25 @@ export function JppAsramaPage() {
         </div>
 
         {/* ── Filters ─────────────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 p-4 flex flex-wrap gap-3 items-center">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-[#13171D] rounded-2xl border border-slate-200/60 dark:border-[#252B35]/80 p-4 flex flex-wrap gap-3 items-center">
           <Filter className="w-4 h-4 text-slate-400 flex-shrink-0" />
           <div className="relative flex-1 min-w-[160px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 pointer-events-none" />
-            <input type="text" placeholder={t('jpp:asrama_search_placeholder', 'Cari nama...')} value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30" />
+            <input type="text" placeholder={t('jpp:asrama_search_placeholder', 'Cari nama...')} value={search} onChange={e => setSearch(e.target.value)} className="w-full pl-8 pr-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1B2028]/70 border border-slate-200 dark:border-[#252B35] text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30" />
           </div>
-          <select value={filterTahap} onChange={e => setFilterTahap(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30">
-            <option value="Semua" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:all_levels', 'Semua Tahap')}</option>
-            <option value="Junior" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Junior</option><option value="Senior" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Senior</option><option value="Asasi" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">Asasi</option>
+          <select value={filterTahap} onChange={e => setFilterTahap(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1B2028]/70 border border-slate-200 dark:border-[#252B35] text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30">
+            <option value="Semua" className="bg-white dark:bg-[#13171D] text-slate-900 dark:text-white">{t('jpp:all_levels', 'Semua Tahap')}</option>
+            <option value="Junior" className="bg-white dark:bg-[#13171D] text-slate-900 dark:text-white">Junior</option><option value="Senior" className="bg-white dark:bg-[#13171D] text-slate-900 dark:text-white">Senior</option><option value="Asasi" className="bg-white dark:bg-[#13171D] text-slate-900 dark:text-white">Asasi</option>
           </select>
-          <select value={filterProg} onChange={e => setFilterProg(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30">
-            <option value="Semua" className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{t('jpp:all_programmes', 'Semua Program')}</option>
-            {availableProgs.map(code => <option key={code} value={code} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{code}</option>)}
+          <select value={filterProg} onChange={e => setFilterProg(e.target.value)} className="px-3 py-2 rounded-xl bg-slate-50 dark:bg-[#1B2028]/70 border border-slate-200 dark:border-[#252B35] text-xs font-bold text-slate-700 dark:text-slate-200 outline-none focus:ring-2 focus:ring-violet-500/30">
+            <option value="Semua" className="bg-white dark:bg-[#13171D] text-slate-900 dark:text-white">{t('jpp:all_programmes', 'Semua Program')}</option>
+            {availableProgs.map(code => <option key={code} value={code} className="bg-white dark:bg-[#13171D] text-slate-900 dark:text-white">{code}</option>)}
           </select>
         </motion.div>
 
         {/* ── Table (desktop) ─────────────────────────────────────── */}
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="hidden md:block bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden">
-          <div className="px-6 py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between">
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="hidden md:block bg-white dark:bg-[#13171D] rounded-2xl border border-slate-200/60 dark:border-[#252B35]/80 overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100 dark:border-[#252B35] flex items-center justify-between">
             <h3 className="font-bold text-sm text-slate-800 dark:text-slate-200">
               {t('jpp:asrama_residents_list', 'Senarai Penghuni Asrama')}
             </h3>
@@ -632,51 +632,51 @@ export function JppAsramaPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
-                <tr className="border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-800/20">
-                  <th className="text-left px-4 py-3 font-black uppercase tracking-widest text-slate-400 w-10">#</th>
-                  <th className="text-left px-4 py-3 font-black uppercase tracking-widest text-slate-400"><button className="flex items-center gap-1 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" onClick={() => handleSort('nama')}>{t('jpp:asrama_th_name', 'Nama')} <SortIcon k="nama" /></button></th>
-                  <th className="text-left px-4 py-3 font-black uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_cohort', 'Kohort')}</th>
-                  <th className="text-center px-3 py-3 font-black uppercase tracking-widest text-emerald-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('hpnm')}>{t('jpp:asrama_th_cgpa', 'HPNM')} <SortIcon k="hpnm" /></button></th>
-                  <th className="text-center px-3 py-3 font-black uppercase tracking-widest text-sky-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('pencapaian')}><Award className="w-3 h-3" /> {t('jpp:asrama_th_achievements', 'Pencapaian')} <SortIcon k="pencapaian" /></button></th>
-                  <th className="text-center px-3 py-3 font-black uppercase tracking-widest text-amber-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('aktiviti')}><Zap className="w-3 h-3" /> {t('jpp:asrama_th_activities', 'Aktiviti')} <SortIcon k="aktiviti" /></button></th>
+                <tr className="border-b border-slate-200/80 dark:border-[#252B35] bg-slate-50/50 dark:bg-[#1B2028]/40">
+                  <th className="text-left px-4 py-3 font-semibold uppercase tracking-widest text-slate-400 w-10">#</th>
+                  <th className="text-left px-4 py-3 font-semibold uppercase tracking-widest text-slate-400"><button className="flex items-center gap-1 hover:text-slate-600 dark:hover:text-slate-200 transition-colors" onClick={() => handleSort('nama')}>{t('jpp:asrama_th_name', 'Nama')} <SortIcon k="nama" /></button></th>
+                  <th className="text-left px-4 py-3 font-semibold uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_cohort', 'Kohort')}</th>
+                  <th className="text-center px-3 py-3 font-semibold uppercase tracking-widest text-emerald-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('hpnm')}>{t('jpp:asrama_th_cgpa', 'HPNM')} <SortIcon k="hpnm" /></button></th>
+                  <th className="text-center px-3 py-3 font-semibold uppercase tracking-widest text-sky-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('pencapaian')}><Award className="w-3 h-3" /> {t('jpp:asrama_th_achievements', 'Pencapaian')} <SortIcon k="pencapaian" /></button></th>
+                  <th className="text-center px-3 py-3 font-semibold uppercase tracking-widest text-amber-500"><button className="flex items-center gap-1 mx-auto" onClick={() => handleSort('aktiviti')}><Zap className="w-3 h-3" /> {t('jpp:asrama_th_activities', 'Aktiviti')} <SortIcon k="aktiviti" /></button></th>
 
                   {activeTab === 'pemohon' || activeTab === 'rayuan' ? (
                     <>
-                      <th className="text-left px-4 py-3 font-black uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_extra_info', 'Maklumat Tambahan')}</th>
-                      <th className="text-center px-4 py-3 font-black uppercase tracking-widest text-violet-500">Disyorkan</th>
-                      <th className="text-center px-4 py-3 font-black uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_status_action', 'Status / Tindakan')}</th>
+                      <th className="text-left px-4 py-3 font-semibold uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_extra_info', 'Maklumat Tambahan')}</th>
+                      <th className="text-center px-4 py-3 font-semibold uppercase tracking-widest text-violet-500">Disyorkan</th>
+                      <th className="text-center px-4 py-3 font-semibold uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_status_action', 'Status / Tindakan')}</th>
                     </>
                   ) : (
                     <>
-                      <th className="text-center px-4 py-3 font-black uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_residency_status', 'Status Residensi')}</th>
-                      <th className="text-center px-4 py-3 font-black uppercase tracking-widest text-violet-500">Disyorkan</th>
+                      <th className="text-center px-4 py-3 font-semibold uppercase tracking-widest text-slate-400">{t('jpp:asrama_th_residency_status', 'Status Residensi')}</th>
+                      <th className="text-center px-4 py-3 font-semibold uppercase tracking-widest text-violet-500">Disyorkan</th>
                     </>
                   )}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((s, i) => (
-                  <tr key={s.id} className={`border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 ${s.isRecommended ? 'bg-violet-50/40 dark:bg-violet-900/10' : ''}`}>
-                    <td className="px-4 py-3 font-black text-slate-400">{i + 1}</td>
+                  <tr key={s.id} className={`border-b border-slate-100 dark:border-[#252B35]/70 hover:bg-slate-50 dark:hover:bg-[#1B2028]/50 ${s.isRecommended ? 'bg-violet-50/40 dark:bg-violet-900/10' : ''}`}>
+                    <td className="px-4 py-3 font-bold text-slate-400">{i + 1}</td>
                     <td className="px-4 py-3">
                       <p className="font-bold text-slate-800 dark:text-slate-100 leading-tight">{s.full_name}</p>
-                      <p className="text-[10px] text-slate-500 mt-0.5">{s.matric_no} • {s.programme_code}</p>
+                      <p className="text-xs text-slate-500 mt-0.5">{s.matric_no} • {s.programme_code}</p>
                     </td>
                     <td className="px-4 py-3 text-slate-600 dark:text-slate-300 font-bold">{getCohortLabel(s, intakeConfig)}</td>
-                    <td className="px-3 py-3 text-center font-black text-emerald-600 dark:text-emerald-400">{s.latest_hpnm?.toFixed(2) ?? '—'}</td>
-                    <td className="px-3 py-3 text-center font-black text-sky-600 dark:text-sky-400">{s.merit_pencapaian > 0 ? s.merit_pencapaian : '—'}</td>
-                    <td className="px-3 py-3 text-center font-black text-amber-600 dark:text-amber-400">{s.merit_aktiviti > 0 ? s.merit_aktiviti : '—'}</td>
+                    <td className="px-3 py-3 text-center font-bold text-emerald-600 dark:text-emerald-400">{s.latest_hpnm?.toFixed(2) ?? '—'}</td>
+                    <td className="px-3 py-3 text-center font-bold text-sky-600 dark:text-sky-400">{s.merit_pencapaian > 0 ? s.merit_pencapaian : '—'}</td>
+                    <td className="px-3 py-3 text-center font-bold text-amber-600 dark:text-amber-400">{s.merit_aktiviti > 0 ? s.merit_aktiviti : '—'}</td>
 
                     {activeTab === 'pemohon' || activeTab === 'rayuan' ? (
                       <>
-                        <td className="px-4 py-3 text-[10px] text-slate-500 font-mono">
+                        <td className="px-4 py-3 text-xs text-slate-500 font-mono">
                           {s.kamsis_extra_data && Object.keys(s.kamsis_extra_data).length > 0
                             ? Object.entries(s.kamsis_extra_data).map(([k, v]) => <div key={k}><span className="font-bold text-slate-400">{k}:</span> {String(v)}</div>)
                             : t('jpp:asrama_none', 'Tiada')
                           }
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <button onClick={() => toggleRecommend(s)} disabled={recLoading === s.id} className={`w-8 h-8 rounded-xl flex items-center justify-center mx-auto transition-all active:scale-90 ${s.isRecommended ? 'bg-violet-500/15 text-violet-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-300'}`}>
+                          <button onClick={() => toggleRecommend(s)} disabled={recLoading === s.id} className={`w-8 h-8 rounded-xl flex items-center justify-center mx-auto transition-all active:scale-90 ${s.isRecommended ? 'bg-violet-500/15 text-violet-500' : 'bg-slate-100 dark:bg-[#1B2028] text-slate-300'}`}>
                             {recLoading === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Star className={`w-3.5 h-3.5 ${s.isRecommended ? 'fill-violet-500' : ''}`} />}
                           </button>
                         </td>
@@ -684,23 +684,23 @@ export function JppAsramaPage() {
                           {s.kamsis_status === 'PENDING' ? (
                             isSuperAdmin ? (
                               <div className="flex items-center justify-center gap-2">
-                                <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_approve', 'Lulus')}</button>
-                                <button onClick={() => updateStatus(s, 'REJECTED')} className="px-3 py-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
+                                <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded text-xs font-semibold uppercase transition-colors">{t('jpp:asrama_action_approve', 'Lulus')}</button>
+                                <button onClick={() => updateStatus(s, 'REJECTED')} className="px-3 py-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded text-xs font-semibold uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
                               </div>
                             ) : (
-                              <span className="px-2 py-1 rounded bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] font-black uppercase">{t('jpp:asrama_pending_approval', 'Menunggu Kelulusan')}</span>
+                              <span className="px-2 py-1 rounded bg-slate-100 dark:bg-[#1B2028] text-slate-400 text-xs font-semibold uppercase">{t('jpp:asrama_pending_approval', 'Menunggu Kelulusan')}</span>
                             )
                           ) : s.kamsis_status === 'APPEALING' ? (
                             isSuperAdmin ? (
                               <div className="flex items-center justify-center gap-2">
-                                <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_accept_appeal', 'Terima Rayuan')}</button>
-                                <button onClick={() => updateStatus(s, 'APPEAL_REJECTED')} className="px-3 py-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_reject_appeal', 'Tolak Rayuan')}</button>
+                                <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded text-xs font-semibold uppercase transition-colors">{t('jpp:asrama_accept_appeal', 'Terima Rayuan')}</button>
+                                <button onClick={() => updateStatus(s, 'APPEAL_REJECTED')} className="px-3 py-1 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded text-xs font-semibold uppercase transition-colors">{t('jpp:asrama_reject_appeal', 'Tolak Rayuan')}</button>
                               </div>
                             ) : (
-                              <span className="px-2 py-1 rounded bg-amber-500/15 text-amber-500 text-[10px] font-black uppercase">{t('jpp:asrama_appeal_processing', 'Rayuan Diproses')}</span>
+                              <span className="px-2 py-1 rounded bg-amber-500/15 text-amber-500 text-xs font-semibold uppercase">{t('jpp:asrama_appeal_processing', 'Rayuan Diproses')}</span>
                             )
                           ) : (
-                            <span className={`px-2 py-1 rounded text-[10px] font-black uppercase ${s.kamsis_status === 'APPROVED' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'}`}>
+                            <span className={`px-2 py-1 rounded text-xs font-semibold uppercase ${s.kamsis_status === 'APPROVED' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'}`}>
                               {s.kamsis_status === 'APPEAL_REJECTED' ? t('jpp:asrama_appeal_rejected_caps', 'RAYUAN DITOLAK') : s.kamsis_status}
                             </span>
                           )}
@@ -710,15 +710,15 @@ export function JppAsramaPage() {
                       <>
                         <td className="px-4 py-3 text-center">
                           {s.klk_status === 'LUAR' ? (
-                            <span className="px-2 py-0.5 bg-slate-500/15 text-slate-400 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_off_campus', 'Luar Kampus')}</span>
+                            <span className="px-2 py-0.5 bg-slate-500/15 text-slate-400 text-xs font-semibold rounded-md uppercase">{t('jpp:asrama_off_campus', 'Luar Kampus')}</span>
                           ) : s.klk_status === 'DALAM' ? (
-                            <span className="px-2 py-0.5 bg-violet-500/15 text-violet-400 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_on_campus', 'Asrama')}</span>
+                            <span className="px-2 py-0.5 bg-violet-500/15 text-violet-400 text-xs font-semibold rounded-md uppercase">{t('jpp:asrama_on_campus', 'Asrama')}</span>
                           ) : (
-                            <span className="px-2 py-0.5 bg-amber-500/15 text-amber-500 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_not_answered', 'Belum Jawab')}</span>
+                            <span className="px-2 py-0.5 bg-amber-500/15 text-amber-500 text-xs font-semibold rounded-md uppercase">{t('jpp:asrama_not_answered', 'Belum Jawab')}</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-center">
-                          <button onClick={() => toggleRecommend(s)} disabled={recLoading === s.id} className={`w-8 h-8 rounded-xl flex items-center justify-center mx-auto transition-all active:scale-90 ${s.isRecommended ? 'bg-violet-500/15 text-violet-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-300'}`}>
+                          <button onClick={() => toggleRecommend(s)} disabled={recLoading === s.id} className={`w-8 h-8 rounded-xl flex items-center justify-center mx-auto transition-all active:scale-90 ${s.isRecommended ? 'bg-violet-500/15 text-violet-500' : 'bg-slate-100 dark:bg-[#1B2028] text-slate-300'}`}>
                             {recLoading === s.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Star className={`w-3.5 h-3.5 ${s.isRecommended ? 'fill-violet-500' : ''}`} />}
                           </button>
                         </td>
@@ -735,32 +735,32 @@ export function JppAsramaPage() {
         <div className="md:hidden space-y-3">
           {filtered.map((s, i) => (
             <div key={s.id} className={cn(
-              "bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/60 dark:border-slate-800/60 flex flex-col gap-3",
+              "bg-white dark:bg-[#13171D] rounded-2xl p-4 border border-slate-200/60 dark:border-[#252B35]/80 flex flex-col gap-3",
               s.isRecommended && "bg-violet-50/40 dark:bg-violet-900/10 border-violet-200/50 dark:border-violet-800/50"
             )}>
                <div className="flex justify-between items-start gap-2">
                  <div>
                    <p className="font-bold text-slate-800 dark:text-slate-100 leading-tight">{s.full_name}</p>
-                   <p className="text-[10px] text-slate-500 mt-0.5">{s.matric_no} • {s.programme_code}</p>
+                   <p className="text-xs text-slate-500 mt-0.5">{s.matric_no} • {s.programme_code}</p>
                  </div>
                  <div className="text-right flex-shrink-0">
-                   <p className="text-[10px] font-bold text-slate-400">HPNM</p>
-                   <p className="font-black text-emerald-600 dark:text-emerald-400">{s.latest_hpnm?.toFixed(2) ?? '—'}</p>
+                   <p className="text-xs font-bold text-slate-400">HPNM</p>
+                   <p className="font-bold text-emerald-600 dark:text-emerald-400">{s.latest_hpnm?.toFixed(2) ?? '—'}</p>
                  </div>
                </div>
 
-               <div className="flex gap-4 border-y border-slate-100 dark:border-slate-800/50 py-3">
+               <div className="flex gap-4 border-y border-slate-100 dark:border-[#252B35]/70 py-3">
                  <div className="flex-1">
-                   <p className="text-[10px] font-bold text-slate-400">{t('jpp:asrama_achievement', 'Pencapaian')}</p>
-                   <p className="font-black text-sky-600 dark:text-sky-400">{s.merit_pencapaian > 0 ? s.merit_pencapaian : '—'}</p>
+                   <p className="text-xs font-bold text-slate-400">{t('jpp:asrama_achievement', 'Pencapaian')}</p>
+                   <p className="font-bold text-sky-600 dark:text-sky-400">{s.merit_pencapaian > 0 ? s.merit_pencapaian : '—'}</p>
                  </div>
                  <div className="flex-1">
-                   <p className="text-[10px] font-bold text-slate-400">{t('jpp:asrama_activity', 'Aktiviti')}</p>
-                   <p className="font-black text-amber-600 dark:text-amber-400">{s.merit_aktiviti > 0 ? s.merit_aktiviti : '—'}</p>
+                   <p className="text-xs font-bold text-slate-400">{t('jpp:asrama_activity', 'Aktiviti')}</p>
+                   <p className="font-bold text-amber-600 dark:text-amber-400">{s.merit_aktiviti > 0 ? s.merit_aktiviti : '—'}</p>
                  </div>
                  <div className="flex-1 text-right">
-                   <p className="text-[10px] font-bold text-slate-400">{t('jpp:asrama_cohort', 'Kohort')}</p>
-                   <p className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{getCohortLabel(s, intakeConfig)}</p>
+                   <p className="text-xs font-bold text-slate-400">{t('jpp:asrama_cohort', 'Kohort')}</p>
+                   <p className="text-xs font-bold text-slate-600 dark:text-slate-300">{getCohortLabel(s, intakeConfig)}</p>
                  </div>
                </div>
 
@@ -770,51 +770,51 @@ export function JppAsramaPage() {
                        s.kamsis_status === 'PENDING' ? (
                           isSuperAdmin ? (
                              <div className="flex items-center gap-2">
-                               <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_approve', 'Lulus')}</button>
-                               <button onClick={() => updateStatus(s, 'REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
+                               <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-xs font-semibold uppercase transition-colors">{t('jpp:asrama_action_approve', 'Lulus')}</button>
+                               <button onClick={() => updateStatus(s, 'REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-xs font-semibold uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
                              </div>
                           ) : (
-                             <span className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-400 text-[10px] font-black uppercase">{t('jpp:asrama_pending_approval', 'Menunggu Kelulusan')}</span>
+                             <span className="px-2.5 py-1 rounded-md bg-slate-100 dark:bg-[#1B2028] text-slate-400 text-xs font-semibold uppercase">{t('jpp:asrama_pending_approval', 'Menunggu Kelulusan')}</span>
                           )
                        ) : s.kamsis_status === 'APPEALING' ? (
                           isSuperAdmin ? (
                              <div className="flex items-center gap-2">
-                               <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_accept', 'Terima')}</button>
-                               <button onClick={() => updateStatus(s, 'APPEAL_REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-[10px] font-black uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
+                               <button onClick={() => updateStatus(s, 'APPROVED')} className="px-3 py-1.5 bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-white rounded-lg text-xs font-semibold uppercase transition-colors">{t('jpp:asrama_accept', 'Terima')}</button>
+                               <button onClick={() => updateStatus(s, 'APPEAL_REJECTED')} className="px-3 py-1.5 bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white rounded-lg text-xs font-semibold uppercase transition-colors">{t('jpp:asrama_action_reject', 'Tolak')}</button>
                              </div>
                           ) : (
-                             <span className="px-2.5 py-1 rounded-md bg-amber-500/15 text-amber-500 text-[10px] font-black uppercase">{t('jpp:asrama_appeal_processing', 'Rayuan Diproses')}</span>
+                             <span className="px-2.5 py-1 rounded-md bg-amber-500/15 text-amber-500 text-xs font-semibold uppercase">{t('jpp:asrama_appeal_processing', 'Rayuan Diproses')}</span>
                           )
                        ) : (
-                          <span className={`px-2.5 py-1 rounded-md text-[10px] font-black uppercase ${s.kamsis_status === 'APPROVED' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'}`}>
+                          <span className={`px-2.5 py-1 rounded-md text-xs font-semibold uppercase ${s.kamsis_status === 'APPROVED' ? 'bg-emerald-500/15 text-emerald-500' : 'bg-rose-500/15 text-rose-500'}`}>
                             {s.kamsis_status === 'APPEAL_REJECTED' ? t('jpp:asrama_appeal_rejected_caps', 'RAYUAN DITOLAK') : s.kamsis_status}
                           </span>
                        )
                     ) : (
                        s.klk_status === 'LUAR' ? (
-                          <span className="px-2.5 py-1 bg-slate-500/15 text-slate-400 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_off_campus', 'Luar Kampus')}</span>
+                          <span className="px-2.5 py-1 bg-slate-500/15 text-slate-400 text-xs font-semibold rounded-md uppercase">{t('jpp:asrama_off_campus', 'Luar Kampus')}</span>
                        ) : s.klk_status === 'DALAM' ? (
-                          <span className="px-2.5 py-1 bg-violet-500/15 text-violet-400 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_on_campus', 'Asrama')}</span>
+                          <span className="px-2.5 py-1 bg-violet-500/15 text-violet-400 text-xs font-semibold rounded-md uppercase">{t('jpp:asrama_on_campus', 'Asrama')}</span>
                        ) : (
-                          <span className="px-2.5 py-1 bg-amber-500/15 text-amber-500 text-[10px] font-black rounded-md uppercase">{t('jpp:asrama_not_answered', 'Belum Jawab')}</span>
+                          <span className="px-2.5 py-1 bg-amber-500/15 text-amber-500 text-xs font-semibold rounded-md uppercase">{t('jpp:asrama_not_answered', 'Belum Jawab')}</span>
                        )
                     )}
                   </div>
 
-                  <button onClick={() => toggleRecommend(s)} disabled={recLoading === s.id} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 ${s.isRecommended ? 'bg-violet-500/15 text-violet-500' : 'bg-slate-100 dark:bg-slate-800 text-slate-300'}`}>
+                  <button onClick={() => toggleRecommend(s)} disabled={recLoading === s.id} className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all active:scale-90 ${s.isRecommended ? 'bg-violet-500/15 text-violet-500' : 'bg-slate-100 dark:bg-[#1B2028] text-slate-300'}`}>
                     {recLoading === s.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className={`w-4 h-4 ${s.isRecommended ? 'fill-violet-500' : ''}`} />}
                   </button>
                </div>
                
                {(activeTab === 'pemohon' || activeTab === 'rayuan') && s.kamsis_extra_data && Object.keys(s.kamsis_extra_data).length > 0 && (
-                  <div className="pt-3 mt-1 border-t border-slate-100 dark:border-slate-800/50 text-[10px] text-slate-500 font-mono">
+                  <div className="pt-3 mt-1 border-t border-slate-100 dark:border-[#252B35]/70 text-xs text-slate-500 font-mono">
                      {Object.entries(s.kamsis_extra_data).map(([k, v]) => <div key={k}><span className="font-bold text-slate-400">{k}:</span> {String(v)}</div>)}
                   </div>
                )}
             </div>
           ))}
           {filtered.length === 0 && (
-            <div className="text-center py-8 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/60 dark:border-slate-800/60">
+            <div className="text-center py-8 bg-white dark:bg-[#13171D] rounded-2xl border border-slate-200/60 dark:border-[#252B35]/80">
               <p className="text-sm font-bold text-slate-500">{t('jpp:asrama_no_students_found', 'Tiada rekod pelajar.')}</p>
             </div>
           )}

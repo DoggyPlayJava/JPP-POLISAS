@@ -47,15 +47,15 @@ function StatCard({
           <Icon className="w-4 h-4" style={{ color }} />
         </div>
         {subtitle && (
-          <span className="text-[10px] font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC]/70 dark:border-[#252B35] px-2 py-0.5 rounded-full truncate">
+          <span className="text-xs font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC]/70 dark:border-[#252B35] px-2 py-0.5 rounded-full truncate">
             {subtitle}
           </span>
         )}
       </div>
-      <p className="text-2xl font-black font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9] leading-none tracking-tight">
+      <p className="text-2xl font-bold font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9] leading-none tracking-tight">
         {value}
       </p>
-      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-[#3B635C] dark:text-[#94A0B2] mt-1.5">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.15em] text-[#3B635C] dark:text-[#94A0B2] mt-1.5">{label}</p>
     </motion.div>
   );
 }
@@ -132,7 +132,7 @@ function UnitCard({
 
           {/* Status badge */}
           <div className={cn(
-            'px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border',
+            'px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-widest border',
             cfg.isActive && !isLocked
               ? 'bg-[#EBF7F4] dark:bg-emerald-500/15 border-[#B8E4DC] dark:border-emerald-500/25 text-[#0F766E] dark:text-emerald-400'
               : cfg.isActive
@@ -150,7 +150,7 @@ function UnitCard({
 
         <div className="flex-1">
           <h3 className={cn(
-            'font-black text-base leading-tight',
+            'font-bold text-base leading-tight',
             canOpen ? 'text-[#0B2420] dark:text-[#F1F5F9]' : 'text-[#3B635C] dark:text-[#94A0B2]'
           )}>
             {unitTitle}
@@ -161,14 +161,14 @@ function UnitCard({
         </div>
 
         {unitMetric && (
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F6FBF9] dark:bg-[#1B2028] border border-[#B8E4DC]/70 dark:border-[#252B35] text-[10px] font-bold text-[#0B2420] dark:text-[#F1F5F9] w-fit">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#F6FBF9] dark:bg-[#1B2028] border border-[#B8E4DC]/70 dark:border-[#252B35] text-xs font-bold text-[#0B2420] dark:text-[#F1F5F9] w-fit">
             <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: cfg.color }} />
             {unitMetric}
           </div>
         )}
 
         {canOpen && (
-          <div className="mt-auto pt-1 flex items-center gap-1.5 text-[11px] font-black uppercase tracking-widest text-[#0F766E] dark:text-[#2DD4BF] transition-colors">
+          <div className="mt-auto pt-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-widest text-[#0F766E] dark:text-[#2DD4BF] transition-colors">
             <span>{t('jpp:home_btn_open_module', 'Buka Modul')}</span>
             <ArrowUpRight className="w-3.5 h-3.5 transition-transform duration-150 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
           </div>
@@ -192,11 +192,11 @@ function TakwimCard({ event, delay }: { event: any; delay: number; key?: React.K
     >
       <div className={cn(
         'w-2 h-2 rounded-full flex-shrink-0',
-        isOngoing ? 'bg-emerald-500 dark:bg-emerald-400 animate-pulse shadow-[0_0_8px_rgba(52,211,153,0.7)]' : 'bg-slate-300 dark:bg-white/20'
+        isOngoing ? 'bg-emerald-600 dark:bg-[#2DD4BF]' : 'bg-slate-300 dark:bg-white/20'
       )} />
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-black text-slate-800 dark:text-white/80 truncate">{event.title}</p>
-        <p className="text-[10px] text-slate-500 dark:text-white/35 font-bold mt-0.5">
+        <p className="text-xs font-semibold text-slate-800 dark:text-white/80 truncate">{event.title}</p>
+        <p className="text-xs text-slate-500 dark:text-white/35 font-bold mt-0.5">
           {event.start_date
             ? format(new Date(event.start_date), 'dd MMM yyyy', { locale: ms })
             : '—'
@@ -204,7 +204,7 @@ function TakwimCard({ event, delay }: { event: any; delay: number; key?: React.K
         </p>
       </div>
       {isOngoing && (
-        <span className="text-[8px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 px-2 py-0.5 rounded-full flex-shrink-0">
+        <span className="text-xs font-semibold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 px-2 py-0.5 rounded-full flex-shrink-0">
           Aktif
         </span>
       )}
@@ -324,7 +324,7 @@ export function JppHomePage() {
           {/* Badge */}
           <div className="flex items-center gap-2 flex-wrap">
             <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-widest shadow-sm dark:shadow-none text-[#0F766E] dark:text-[#2DD4BF]"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold uppercase tracking-widest shadow-sm dark:shadow-none text-[#0F766E] dark:text-[#2DD4BF]"
               style={{
                 background: hexToRgba(themeColor, 0.14),
                 borderColor: hexToRgba(themeColor, 0.3),
@@ -339,14 +339,14 @@ export function JppHomePage() {
               <span>{posLabel}</span>
               {jppUnit && <span className="opacity-60">· {jppUnit}</span>}
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/20">
+            <span className="text-xs font-semibold uppercase tracking-widest text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/15 px-2.5 py-1 rounded-full border border-emerald-500/20">
               {t('jpp:cockpit_title')}
             </span>
           </div>
 
           {/* Greeting */}
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight text-slate-900 dark:text-white">
-            Selamat datang, <span className="text-emerald-600 dark:text-emerald-400 font-black">{displayName}</span>
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white">
+            Selamat datang, <span className="text-emerald-600 dark:text-emerald-400 font-bold">{displayName}</span>
           </h1>
           <p className="text-slate-600 dark:text-white/60 text-sm font-medium max-w-xl leading-relaxed">
             {t('jpp:cockpit_subtitle')}
@@ -358,11 +358,11 @@ export function JppHomePage() {
           <div className="flex items-center justify-between gap-2 mb-4 border-b border-[#B8E4DC]/60 dark:border-[#252B35] pb-3">
             <div className="flex items-center gap-2 min-w-0">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
-              <h2 className="text-xs font-black uppercase tracking-[0.18em] text-[#0B2420] dark:text-[#F1F5F9] truncate">
+              <h2 className="text-xs font-bold uppercase tracking-[0.18em] text-[#0B2420] dark:text-[#F1F5F9] truncate">
                 {t('jpp:server_health')}
               </h2>
             </div>
-            <span className="text-[10px] font-mono font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] px-2.5 py-0.5 rounded-full border border-[#B8E4DC] dark:border-[#252B35] whitespace-nowrap shrink-0">
+            <span className="text-xs font-mono font-bold text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] px-2.5 py-0.5 rounded-full border border-[#B8E4DC] dark:border-[#252B35] whitespace-nowrap shrink-0">
               99.98% ONLINE
             </span>
           </div>
@@ -372,10 +372,10 @@ export function JppHomePage() {
                 <Users className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
                   {t('jpp:total_students')}
                 </p>
-                <p className="text-lg font-black font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9]">
+                <p className="text-lg font-bold font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9]">
                   {isLoadingData ? '—' : stats.totalStudents.toLocaleString()}
                 </p>
               </div>
@@ -386,10 +386,10 @@ export function JppHomePage() {
                 <ShieldCheck className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
                   {t('jpp:total_staff')}
                 </p>
-                <p className="text-lg font-black font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9]">
+                <p className="text-lg font-bold font-mono tabular-nums text-[#0B2420] dark:text-[#F1F5F9]">
                   {isLoadingData ? '—' : stats.totalStaff.toLocaleString()}
                 </p>
               </div>
@@ -400,10 +400,10 @@ export function JppHomePage() {
                 <CalendarDays className="w-4 h-4" />
               </div>
               <div>
-                <p className="text-[10px] font-black uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
                   {t('jpp:active_sessions')}
                 </p>
-                <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9] truncate">
+                <p className="text-sm font-bold text-[#0B2420] dark:text-[#F1F5F9] truncate">
                   Sesi I 2026/2027
                 </p>
               </div>
@@ -435,11 +435,11 @@ export function JppHomePage() {
         {/* ── Unit Exco Grid ───────────────────────────────────────────── */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">
+            <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">
               {t('jpp:unit_governance')}
             </h2>
             {(isYDP || isMT) && (
-              <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">
+              <span className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-white/20">
                 {isYDP ? t('jpp:home_full_access', 'Akses Penuh') : `${assignedUnits.length} unit assigned`}
               </span>
             )}
@@ -448,7 +448,7 @@ export function JppHomePage() {
           {visibleUnits.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <Lock className="w-8 h-8 text-slate-300 dark:text-white/10 mb-3" />
-              <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">
+              <p className="text-xs font-semibold text-slate-400 dark:text-white/20 uppercase tracking-widest">
                 {t('jpp:home_no_units_assigned', 'Tiada unit yang di-assign')}
               </p>
             </div>
@@ -476,12 +476,12 @@ export function JppHomePage() {
         {/* ── Takwim Terkini ────────────────────────────────────────────── */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">
+            <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">
               {t('jpp:home_upcoming_activities', 'Aktiviti Akan Datang')}
             </h2>
             <button
               onClick={() => navigate('/aktiviti')}
-              className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/25 hover:text-slate-800 dark:hover:text-white/50 transition-colors flex items-center gap-1"
+              className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/25 hover:text-slate-800 dark:hover:text-white/50 transition-colors flex items-center gap-1"
             >
               {t('jpp:home_view_all', 'Lihat Semua')} <ChevronRight className="w-3 h-3" />
             </button>
@@ -490,7 +490,7 @@ export function JppHomePage() {
           {takwim.length === 0 ? (
             <div className="flex items-center gap-3 px-4 py-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/5 shadow-sm dark:shadow-none">
               <Clock className="w-4 h-4 text-slate-400 dark:text-white/15" />
-              <p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">{t('jpp:home_no_activities_scheduled', 'Tiada aktiviti dijadualkan')}</p>
+              <p className="text-xs font-semibold text-slate-400 dark:text-white/20 uppercase tracking-widest">{t('jpp:home_no_activities_scheduled', 'Tiada aktiviti dijadualkan')}</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -504,7 +504,7 @@ export function JppHomePage() {
         {/* ── Quick Actions (YDP only) ────────────────────────────────── */}
         {(isYDP) && (
           <div className="space-y-4">
-            <h2 className="text-xs font-black uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">{t('jpp:home_quick_actions', 'Tindakan Pantas')}</h2>
+            <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-slate-500 dark:text-white/40">{t('jpp:home_quick_actions', 'Tindakan Pantas')}</h2>
             <div className="grid grid-cols-2 gap-3">
               {[
                 { label: t('jpp:home_action_jpp_members', 'Ahli JPP'), icon: Users, href: '/jpp/members', color: themeColor },
@@ -520,7 +520,7 @@ export function JppHomePage() {
                     style={{ background: hexToRgba(color, 0.15) }}>
                     <Icon className="w-4 h-4" style={{ color }} />
                   </div>
-                  <span className="text-xs font-black text-slate-700 dark:text-white/60 group-hover:text-slate-900 dark:group-hover:text-white/80 transition-colors">{label}</span>
+                  <span className="text-xs font-semibold text-slate-700 dark:text-white/60 group-hover:text-slate-900 dark:group-hover:text-white/80 transition-colors">{label}</span>
                   <ExternalLink className="w-3 h-3 text-slate-400 dark:text-white/20 ml-auto flex-shrink-0 group-hover:text-slate-600 dark:group-hover:text-white/40 transition-colors" />
                 </button>
               ))}

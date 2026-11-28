@@ -296,7 +296,7 @@ export function JppLogsPage() {
   const renderDetails = (log: LogEntry) => {
     const text = log.details?.trim();
     const clubBadge = log.club_name ? (
-      <span className="inline-flex items-center ml-1.5 px-1.5 py-0.5 rounded-md bg-fuchsia-500/15 text-fuchsia-400 border border-fuchsia-500/20 text-[9px] font-black uppercase tracking-widest">
+      <span className="inline-flex items-center ml-1.5 px-1.5 py-0.5 rounded-md bg-fuchsia-500/15 text-fuchsia-400 border border-fuchsia-500/20 text-xs font-semibold uppercase tracking-widest">
         {log.club_name}
       </span>
     ) : null;
@@ -328,7 +328,7 @@ export function JppLogsPage() {
       return (
         <span className="leading-relaxed flex items-center flex-wrap gap-1">
           {parts.map((part, i) => i % 2 === 1
-            ? <span key={i} className="inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded-md bg-primary/20 text-primary border border-primary/30 text-[9px] font-black uppercase tracking-widest">#{part}</span>
+            ? <span key={i} className="inline-flex items-center mx-0.5 px-1.5 py-0.5 rounded-md bg-primary/20 text-primary border border-primary/30 text-xs font-semibold uppercase tracking-widest">#{part}</span>
             : <span key={i}>{part}</span>
           )}
           {clubBadge}
@@ -356,10 +356,10 @@ export function JppLogsPage() {
                 <ShieldAlert className="w-6 h-6" />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-[#0B2420] dark:text-[#F1F5F9] leading-tight">
+                <h1 className="text-2xl font-bold text-[#0B2420] dark:text-[#F1F5F9] leading-tight">
                   {t('jpp:audit_logs')}
                 </h1>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#3B635C] dark:text-[#94A0B2] mt-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#3B635C] dark:text-[#94A0B2] mt-1">
                   {t('jpp:activity_feed')}
                 </p>
               </div>
@@ -375,7 +375,7 @@ export function JppLogsPage() {
                 <RefreshCw className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:logs_reload_btn', 'Muat Semula')}
               </Button>
               <Button size="sm" onClick={handleAiSummary} disabled={aiLoading}
-                className="rounded-xl text-xs font-black uppercase tracking-widest bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] text-white dark:text-[#090B0E]">
+                className="rounded-xl text-xs font-semibold uppercase tracking-widest bg-[#0F766E] hover:bg-[#115E59] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] text-white dark:text-[#090B0E]">
                 <Sparkles className="w-3.5 h-3.5 mr-1.5" />
                 {aiLoading ? t('jpp:logs_generating', 'Menjana...') : t('jpp:logs_ai_summary_btn', 'Ringkasan AI')}
               </Button>
@@ -387,7 +387,7 @@ export function JppLogsPage() {
         {aiSummary && (
           <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.18 }}
             className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-6 text-sm text-[#0B2420] dark:text-[#E2E8F0] leading-relaxed font-medium shadow-surface-sm">
-            <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-4 flex items-center gap-2">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mb-4 flex items-center gap-2">
               <Sparkles className="w-3 h-3" /> {t('jpp:logs_ai_analytics_summary', 'Ringkasan Analitik AI')}
             </p>
             <div className="space-y-3 prose-p:my-2 prose-ul:my-2 prose-li:ml-4 prose-li:list-disc marker:text-[#3B635C] dark:marker:text-[#94A0B2] prose-strong:text-[#0B2420] dark:prose-strong:text-[#F1F5F9] prose-strong:font-bold">
@@ -402,7 +402,7 @@ export function JppLogsPage() {
             className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-6 space-y-4 shadow-surface-sm">
             <div className="flex items-center gap-2 text-[#0B2420] dark:text-[#F1F5F9]">
               <HardDrive className="w-4 h-4" />
-              <span className="text-xs font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{t('jpp:logs_storage_audit_dryrun_title', 'Hasil Audit Storage (Dry-Run)')}</span>
+              <span className="text-xs font-semibold uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{t('jpp:logs_storage_audit_dryrun_title', 'Hasil Audit Storage (Dry-Run)')}</span>
             </div>
             {storageResult.aborted ? (
               <p className="text-sm text-rose-600 dark:text-rose-400 font-medium">
@@ -418,8 +418,8 @@ export function JppLogsPage() {
                     { label: t('jpp:logs_mode', 'Mod'), value: storageResult.dryRun ? 'Dry-Run' : 'LIVE', color: 'text-amber-700 dark:text-amber-400' },
                   ].map(s => (
                     <div key={s.label} className="bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/70 dark:border-[#252B35] rounded-xl p-4">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{s.label}</p>
-                      <p className={`font-black font-mono tabular-nums text-xl mt-1 ${s.color}`}>{s.value}</p>
+                      <p className="text-xs font-semibold uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{s.label}</p>
+                      <p className={`font-bold font-mono tabular-nums text-xl mt-1 ${s.color}`}>{s.value}</p>
                     </div>
                   ))}
                 </div>
@@ -428,15 +428,15 @@ export function JppLogsPage() {
                     <p className="text-xs font-bold text-slate-700 dark:text-white/60">{t('jpp:logs_orphaned_files_list', 'Senarai fail orphaned (tiada rujukan DB):')}</p>
                     <div className="max-h-64 overflow-y-auto rounded-xl border border-slate-200 dark:border-white/10 divide-y divide-slate-100 dark:divide-white/5">
                       {storageResult.orphanedFiles.slice(0, 200).map((p: string, i: number) => (
-                        <div key={i} className="px-3 py-1.5 font-mono text-[11px] text-slate-600 dark:text-white/50 truncate">{p}</div>
+                        <div key={i} className="px-3 py-1.5 font-mono text-xs text-slate-600 dark:text-white/50 truncate">{p}</div>
                       ))}
                     </div>
                     {storageResult.orphanedFiles.length > 200 && (
-                      <p className="text-[11px] text-amber-600 dark:text-amber-400">
+                      <p className="text-xs text-amber-600 dark:text-amber-400">
                         {t('jpp:logs_and_more_files_truncated', '… dan {{count}} lagi fail (dipotong).', { count: storageResult.orphanedFiles.length - 200 })}
                       </p>
                     )}
-                    <p className="text-[11px] text-slate-500 dark:text-white/40">
+                    <p className="text-xs text-slate-500 dark:text-white/40">
                       {t('jpp:logs_no_files_auto_deleted_p1', 'Tiada fail dipadam secara automatik. Untuk padam fail yang disahkan tidak diperlukan, jalankan')}{' '}
                       <code className="font-mono bg-slate-100 dark:bg-white/5 px-1.5 py-0.5 rounded">node scripts/storage-cleanup.js --confirm</code>{' '}
                       {t('jpp:logs_on_server_p2', 'di pelayan.')}
@@ -456,13 +456,13 @@ export function JppLogsPage() {
             className="bg-rose-500/5 border border-rose-500/20 rounded-2xl p-5 space-y-2">
             <div className="flex items-center gap-2 text-rose-500 dark:text-rose-400">
               <AlertTriangle className="w-4 h-4" />
-              <span className="text-xs font-black uppercase tracking-widest">{t('jpp:logs_anomaly_detected_count', '{{count}} Anomali Dikesan', { count: anomalyAlerts.length })}</span>
+              <span className="text-xs font-semibold uppercase tracking-widest">{t('jpp:logs_anomaly_detected_count', '{{count}} Anomali Dikesan', { count: anomalyAlerts.length })}</span>
               <button
                 type="button"
                 onClick={() => sendAnomalyEmail(anomalyAlerts)}
                 disabled={sendingEmail}
                 className={cn(
-                  'ml-auto inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider transition-colors',
+                  'ml-auto inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-bold uppercase tracking-wider transition-colors',
                   'border-rose-500/30 text-rose-600 hover:bg-rose-500/10 dark:text-rose-300',
                   sendingEmail && 'opacity-50 cursor-wait',
                 )}
@@ -477,7 +477,7 @@ export function JppLogsPage() {
               </button>
             </div>
             {anomalyAlerts.map((a, i) => (
-              <p key={i} className="text-[11px] text-rose-600 dark:text-rose-300/70 font-medium pl-6">
+              <p key={i} className="text-xs text-rose-600 dark:text-rose-300/70 font-medium pl-6">
                 • <span className="font-bold text-rose-700 dark:text-rose-300">{a.user}</span> — {a.reason}
               </p>
             ))}
@@ -495,8 +495,8 @@ export function JppLogsPage() {
           ].map(({ icon: Icon, label, value, color, small }) => (
             <div key={label} className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-5 space-y-2 shadow-surface-sm">
               <Icon className={cn('w-4 h-4', color)} />
-              <p className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{label}</p>
-              <p className={cn('font-black font-mono tabular-nums', small ? 'text-sm truncate' : 'text-2xl', color)}>{value}</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">{label}</p>
+              <p className={cn('font-bold font-mono tabular-nums', small ? 'text-sm truncate' : 'text-2xl', color)}>{value}</p>
             </div>
           ))}
         </motion.div>
@@ -539,7 +539,7 @@ export function JppLogsPage() {
           className="border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] rounded-[2rem] overflow-hidden shadow-surface-sm">
           <div className="overflow-x-auto max-h-[65vh] rounded-[2rem] custom-scrollbar">
             <table className="w-full text-sm text-left">
-              <thead className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] bg-[#F6FBF9] dark:bg-[#0E1116] sticky top-0 z-10 border-b border-[#B8E4DC]/80 dark:border-[#252B35]">
+              <thead className="text-xs font-semibold uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] bg-[#F6FBF9] dark:bg-[#0E1116] sticky top-0 z-10 border-b border-[#B8E4DC]/80 dark:border-[#252B35]">
                 <tr>
                   <th className="px-5 py-4 whitespace-nowrap">{t('jpp:logs_th_timestamp', 'Timestamp')}</th>
                   <th className="px-5 py-4">{t('jpp:logs_header_action', 'Tindakan')}</th>
@@ -553,14 +553,14 @@ export function JppLogsPage() {
                   <tr><td colSpan={5} className="px-6 py-12 text-center text-[#3B635C] dark:text-[#94A0B2]">
                     <div className="flex flex-col items-center gap-3">
                       <RefreshCw className="w-6 h-6 animate-spin opacity-60" />
-                      <p className="text-[10px] uppercase tracking-widest font-black">{t('jpp:logs_loading_audit_trail', 'Memuat Audit Trail...')}</p>
+                      <p className="text-xs uppercase tracking-widest font-semibold">{t('jpp:logs_loading_audit_trail', 'Memuat Audit Trail...')}</p>
                     </div>
                   </td></tr>
                 ) : filteredLogs.length === 0 ? (
                   <tr><td colSpan={5} className="px-6 py-12 text-center text-[#3B635C] dark:text-[#94A0B2]">
                     <div className="flex flex-col items-center gap-3">
                       <ShieldCheck className="w-8 h-8 opacity-50" />
-                      <p className="text-[10px] uppercase tracking-widest font-black">{t('jpp:logs_no_records_found', 'Tiada rekod dijumpai')}</p>
+                      <p className="text-xs uppercase tracking-widest font-semibold">{t('jpp:logs_no_records_found', 'Tiada rekod dijumpai')}</p>
                     </div>
                   </td></tr>
                 ) : filteredLogs.map(log => {
@@ -570,16 +570,16 @@ export function JppLogsPage() {
                       <td className="px-5 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           {isAnomaly && <AlertTriangle className="w-3 h-3 text-rose-500 dark:text-rose-400 shrink-0" />}
-                          <span className="text-slate-600 dark:text-white/50 text-[11px] font-mono">{new Date(log.created_at).toLocaleString('ms-MY')}</span>
+                          <span className="text-slate-600 dark:text-white/50 text-xs font-mono">{new Date(log.created_at).toLocaleString('ms-MY')}</span>
                         </div>
                       </td>
                       <td className="px-5 py-4">
-                        <span className={cn('px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg border', actionColor(log.action_type))}>
+                        <span className={cn('px-2.5 py-1 text-xs font-semibold uppercase tracking-widest rounded-lg border', actionColor(log.action_type))}>
                           {log.action_type || 'LOG'}
                         </span>
                       </td>
                       <td className="px-5 py-4">
-                        <span className={cn('px-2.5 py-1 text-[9px] font-black uppercase tracking-widest rounded-lg border', moduleColor(log.entity_type))}>
+                        <span className={cn('px-2.5 py-1 text-xs font-semibold uppercase tracking-widest rounded-lg border', moduleColor(log.entity_type))}>
                           {log.entity_type || 'Umum'}
                         </span>
                       </td>
@@ -589,7 +589,7 @@ export function JppLogsPage() {
                             'w-6 h-6 rounded flex items-center justify-center border shrink-0',
                             log.full_name ? 'bg-indigo-500/20 border-indigo-500/30' : 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/10'
                           )}>
-                            <span className={cn('text-[9px] font-black', log.full_name ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-white/30')}>
+                            <span className={cn('text-xs font-semibold', log.full_name ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-400 dark:text-white/30')}>
                               {(log.full_name || log.metadata?.actor_label || 'S')[0].toUpperCase()}
                             </span>
                           </div>
@@ -597,7 +597,7 @@ export function JppLogsPage() {
                             <p className="text-xs font-bold text-slate-900 dark:text-white/80">
                               {log.full_name || (log.metadata?.actor_label ? String(log.metadata.actor_label) : t('common:system', 'Sistem'))}
                             </p>
-                            <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">
+                            <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30">
                               {log.role || (log.metadata?.backfill ? t('jpp:logs_old_record', 'REKOD LAMA') : 'SYSTEM')}
                             </p>
                           </div>
@@ -612,7 +612,7 @@ export function JppLogsPage() {
               </tbody>
             </table>
           </div>
-          <div className="px-6 py-3 border-t border-slate-200 dark:border-white/5 text-[10px] text-slate-400 dark:text-white/20 font-black uppercase tracking-widest">
+          <div className="px-6 py-3 border-t border-slate-200 dark:border-white/5 text-xs text-slate-400 dark:text-white/20 font-semibold uppercase tracking-widest">
             {t('jpp:logs_footer_summary', '{{showing}} rekod dipaparkan · {{total}} jumlah dimuatkan', { showing: filteredLogs.length, total: logs.length })}
           </div>
         </motion.div>

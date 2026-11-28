@@ -202,8 +202,8 @@ export function JppSettingsPage() {
                             <SettingsIcon className="w-6 h-6" />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">{t('jpp:settings_title', 'Tetapan Utama JPP')}</h1>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/40 mt-1">{t('jpp:settings_subtitle', 'Konfigurasi & parameter global portal')}</p>
+                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{t('jpp:settings_title', 'Tetapan Utama JPP')}</h1>
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-white/40 mt-1">{t('jpp:settings_subtitle', 'Konfigurasi & parameter global portal')}</p>
                         </div>
                     </div>
                 </motion.div>
@@ -211,7 +211,7 @@ export function JppSettingsPage() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }} className="space-y-6">
                     <div className="flex items-center gap-3 px-2">
                         <ShieldCheck className="w-5 h-5 text-emerald-500" />
-                        <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:settings_system_access', 'Ketetapan Sistem & Akses')}</h3>
+                        <h3 className="font-bold text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:settings_system_access', 'Ketetapan Sistem & Akses')}</h3>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Tetapan KPP telah dipindahkan ke Dashboard KPP (Laporan PDF, Had Keahlian, Takwim) */}
@@ -224,7 +224,7 @@ export function JppSettingsPage() {
                                         <KeyRound className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <p className="text-base font-black text-slate-900 dark:text-white">{t('jpp:settings_trad_reg_title', 'Traditional Registration (Emel & Kata Laluan)')}</p>
+                                        <p className="text-base font-bold text-slate-900 dark:text-white">{t('jpp:settings_trad_reg_title', 'Traditional Registration (Emel & Kata Laluan)')}</p>
                                         <p className="text-xs text-slate-500 dark:text-white/60 font-medium">{t('jpp:settings_trad_reg_desc', 'Benarkan pendaftaran menggunakan emel dan kata laluan untuk pelajar. Tutup fungsi ini waktu orientasi untuk elak database overload.')}</p>
                                     </div>
                                 </div>
@@ -253,7 +253,7 @@ export function JppSettingsPage() {
                                         <KeyRound className="w-6 h-6" />
                                     </div>
                                     <div>
-                                        <p className="text-base font-black text-slate-900 dark:text-white">{t('jpp:settings_staff_code_title', 'Kod Pendaftaran Staf')}</p>
+                                        <p className="text-base font-bold text-slate-900 dark:text-white">{t('jpp:settings_staff_code_title', 'Kod Pendaftaran Staf')}</p>
                                         <p className="text-xs text-slate-500 dark:text-white/60 font-medium">{t('jpp:settings_staff_code_desc', 'Kod rahsia yang digunakan semasa pendaftaran staf/pensyarah.')}</p>
                                     </div>
                                 </div>
@@ -261,7 +261,7 @@ export function JppSettingsPage() {
                                     <div className="bg-slate-100 dark:bg-black/30 px-4 py-3 rounded-xl font-mono text-sm font-bold text-rose-600 dark:text-rose-300 border border-slate-200 dark:border-rose-500/20 tabular-nums">
                                         {settings.staff_registration_code || '••••••••'}
                                     </div>
-                                    <button onClick={() => setIsStaffCodeModalOpen(true)} className="px-6 py-3 rounded-xl font-black text-[10px] uppercase tracking-widest bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white shadow-sm transition-all w-full sm:w-auto">
+                                    <button onClick={() => setIsStaffCodeModalOpen(true)} className="px-6 py-3 rounded-xl font-semibold text-xs uppercase tracking-widest bg-rose-600 hover:bg-rose-700 active:scale-[0.98] text-white shadow-sm transition-all w-full sm:w-auto">
                                         {t('jpp:settings_staff_code_change_btn', 'Tukar Kod')}
                                     </button>
                                 </div>
@@ -275,7 +275,7 @@ export function JppSettingsPage() {
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }} className="space-y-6">
                         <div className="flex items-center gap-3 px-2">
                             <Calendar className="w-5 h-5 text-amber-500" />
-                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:settings_intake_config_title', 'Konfigurasi Takwim Pengambilan')}</h3>
+                            <h3 className="font-bold text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:settings_intake_config_title', 'Konfigurasi Takwim Pengambilan')}</h3>
                         </div>
                         <div className="p-6 rounded-[2rem] bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] shadow-2xs space-y-6 md:col-span-2 group hover:border-slate-300 dark:hover:border-teal-400/40 transition-all">
                             <div className="flex items-start gap-4">
@@ -283,7 +283,7 @@ export function JppSettingsPage() {
                                     <Calendar className="w-6 h-6" />
                                 </div>
                                 <div>
-                                    <p className="text-base font-black text-slate-900 dark:text-white">{t('jpp:settings_intake_start_month', 'Bulan Permulaan Intake')}</p>
+                                    <p className="text-base font-bold text-slate-900 dark:text-white">{t('jpp:settings_intake_start_month', 'Bulan Permulaan Intake')}</p>
                                     <p className="text-xs text-slate-500 dark:text-white/60 font-medium mt-1">{t('jpp:settings_intake_start_month_desc', 'Tetapkan bulan mula setiap sesi pengambilan pelajar. Notifikasi semak sahaja akan dihantar kepada pentadbir sebulan sebelum tarikh ini.')}</p>
                                 </div>
                             </div>
@@ -291,7 +291,7 @@ export function JppSettingsPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Intake 1 */}
                                 <div className="space-y-2">
-                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-white/50">{t('jpp:settings_intake_1_label', 'Intake Pertama (Pertengahan Tahun)')}</p>
+                                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/50">{t('jpp:settings_intake_1_label', 'Intake Pertama (Pertengahan Tahun)')}</p>
                                     <div className="flex items-center gap-3">
                                         <select
                                             value={intake1Month}
@@ -314,7 +314,7 @@ export function JppSettingsPage() {
                                                 finally { setSavingIntake(false); }
                                             }}
                                             disabled={savingIntake}
-                                            className="px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white shadow-2xs transition-all whitespace-nowrap"
+                                            className="px-4 py-2 rounded-xl font-semibold text-xs uppercase tracking-widest bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white shadow-2xs transition-all whitespace-nowrap"
                                         >
                                             {t('jpp:settings_save_btn', 'Simpan')}
                                         </button>
@@ -323,7 +323,7 @@ export function JppSettingsPage() {
 
                                 {/* Intake 2 */}
                                 <div className="space-y-2">
-                                    <p className="text-[11px] font-black uppercase tracking-widest text-slate-500 dark:text-white/50">{t('jpp:settings_intake_2_label', 'Intake Kedua (Awal Tahun)')}</p>
+                                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/50">{t('jpp:settings_intake_2_label', 'Intake Kedua (Awal Tahun)')}</p>
                                     <div className="flex items-center gap-3">
                                         <select
                                             value={intake2Month}
@@ -346,7 +346,7 @@ export function JppSettingsPage() {
                                                 finally { setSavingIntake(false); }
                                             }}
                                             disabled={savingIntake}
-                                            className="px-4 py-2 rounded-xl font-black text-[10px] uppercase tracking-widest bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white shadow-2xs transition-all whitespace-nowrap"
+                                            className="px-4 py-2 rounded-xl font-semibold text-xs uppercase tracking-widest bg-amber-600 hover:bg-amber-700 active:scale-[0.98] text-white shadow-2xs transition-all whitespace-nowrap"
                                         >
                                             {t('jpp:settings_save_btn', 'Simpan')}
                                         </button>
@@ -354,7 +354,7 @@ export function JppSettingsPage() {
                                 </div>
                             </div>
 
-                            <p className="text-[10px] text-amber-600 dark:text-amber-400 font-medium border-t border-slate-200 dark:border-white/10 pt-4">
+                            <p className="text-xs text-amber-600 dark:text-amber-400 font-medium border-t border-slate-200 dark:border-white/10 pt-4">
                                 {t('jpp:settings_intake_notice_warning', '⚠ Ubah nilai ini SEBELUM pengambilan baharu bermula. Sistem akan menghantar notifikasi kepada pentadbir secara automatik sebulan sebelum tarikh yang ditetapkan.')}
                             </p>
                         </div>
@@ -366,7 +366,7 @@ export function JppSettingsPage() {
                     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }} className="space-y-6">
                         <div className="flex items-center gap-3 px-2">
                             <QrCode className="w-5 h-5 text-emerald-500" />
-                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:settings_qr_generator_title', 'Penjana QR Link')}</h3>
+                            <h3 className="font-bold text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:settings_qr_generator_title', 'Penjana QR Link')}</h3>
                         </div>
                         <div className="p-6 rounded-[2rem] bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] shadow-2xs hover:border-slate-300 dark:hover:border-teal-400/40 transition-all">
                             <QrLinkManager showHeader={false} />

@@ -92,7 +92,7 @@ function LocationPickerMap({ lat, lng, onChange, existingBuildings }: { lat: num
             pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.6, weight: 2 }}
           >
             <Tooltip direction="top" offset={[0, -10]} opacity={0.8}>
-              <span className="font-bold text-[10px] uppercase tracking-widest">{b.code || b.name}</span>
+              <span className="font-bold text-xs uppercase tracking-widest">{b.code || b.name}</span>
             </Tooltip>
           </CircleMarker>
         ))}
@@ -100,7 +100,7 @@ function LocationPickerMap({ lat, lng, onChange, existingBuildings }: { lat: num
           <Marker position={[lat, lng]} />
         ) : null}
       </MapContainer>
-      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60  text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
+      <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60  text-white text-xs font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
         {t('jpp:polymaps_touch_map_hint', 'Sentuh peta untuk tetapkan lokasi')}
       </div>
     </div>
@@ -193,7 +193,7 @@ function WalkwayDrawingMap({
             pathOptions={{ color: '#ef4444', fillColor: '#ef4444', fillOpacity: 0.6, weight: 1.5 }}
           >
             <Tooltip direction="top" offset={[0, -10]} opacity={0.8}>
-              <span className="font-bold text-[9px] uppercase tracking-wider">{b.code || b.name}</span>
+              <span className="font-bold text-xs uppercase tracking-wider">{b.code || b.name}</span>
             </Tooltip>
           </CircleMarker>
         ))}
@@ -231,7 +231,7 @@ function WalkwayDrawingMap({
                   }} 
                 >
                   <Tooltip direction="top" offset={[0, -5]} opacity={0.7}>
-                    <span className="text-[8px]">
+                    <span className="text-xs">
                       Titik #{cIdx + 1} ({w.name}){w.is_blocked ? ' [SEKAT]' : (w.is_covered ? ' [BERBUMBUNG]' : '')}
                     </span>
                   </Tooltip>
@@ -262,7 +262,7 @@ function WalkwayDrawingMap({
       </MapContainer>
       
       {isDrawing && (
-        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60  text-white text-[10px] font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
+        <div className="absolute top-2 left-1/2 -translate-x-1/2 z-[1000] bg-black/60  text-white text-xs font-bold px-3 py-1 rounded-full border border-white/10 pointer-events-none shadow-lg whitespace-nowrap">
           {points.length === 0 ? t('jpp:polymaps_touch_map_to_draw', 'Sentuh peta untuk mula melukis jalan') : t('jpp:polymaps_points_drawn', 'Titik dilukis: {{count}} (Sentuh peta untuk tambah)', { count: points.length })}
         </div>
       )}
@@ -1333,7 +1333,7 @@ export function JppPolyMapsAdmin() {
             <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
               <Map className="w-5 h-5 text-sky-500 dark:text-sky-400" />
             </div>
-            <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">{t('jpp:polymaps_admin_title', 'Pengurusan Peta 360 & Bangunan Kampus')}</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight">{t('jpp:polymaps_admin_title', 'Pengurusan Peta 360 & Bangunan Kampus')}</h1>
           </div>
           <p className="text-sm font-medium text-slate-600 dark:text-white/50">{t('jpp:polymaps_admin_subtitle', 'Konfigurasi koordinat GPS, panorama 360 darjah, senarai bilik dan aras lantai bangunan POLISAS.')}</p>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -1373,7 +1373,7 @@ export function JppPolyMapsAdmin() {
           <button
             type="button"
             onClick={() => setShowBulkImportModal(true)}
-            className="flex items-center justify-center gap-2 px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-black text-sm tracking-wide transition-colors shadow-lg shadow-amber-500/20"
+            className="flex items-center justify-center gap-2 px-3.5 py-2.5 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-bold text-sm tracking-wide transition-colors shadow-lg shadow-amber-500/20"
           >
             <FileSpreadsheet className="w-4 h-4" /> {t('services:polymaps_admin_btn_bulk_import', 'Import Pukal Pintar')}
           </button>
@@ -1427,7 +1427,7 @@ export function JppPolyMapsAdmin() {
           >
             <Camera className="w-4 h-4" /> {t('jpp:polymaps_tab_submissions', 'Sumbangan 360°')}
             {fieldSubmissions.filter(s => s.status === 'pending').length > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-600 text-white text-[10px] font-black flex items-center justify-center shadow-sm">
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-emerald-600 text-white text-xs font-semibold flex items-center justify-center shadow-sm">
                 {fieldSubmissions.filter(s => s.status === 'pending').length}
               </span>
             )}
@@ -1450,7 +1450,7 @@ export function JppPolyMapsAdmin() {
           >
             <AlertCircle className="w-4 h-4" /> {t('jpp:polymaps_tab_reports')}
             {reports.filter(r => r.status === 'pending').length > 0 && (
-              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-600 text-white text-[10px] font-black flex items-center justify-center shadow-sm">
+              <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-rose-600 text-white text-xs font-semibold flex items-center justify-center shadow-sm">
                 {reports.filter(r => r.status === 'pending').length}
               </span>
             )}
@@ -1492,7 +1492,7 @@ export function JppPolyMapsAdmin() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#1a1b23] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden z-[100] max-h-60 overflow-y-auto"
+                    className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#13171D] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden z-[100] max-h-60 overflow-y-auto"
                   >
                     <button
                       onClick={() => setFilterZone('all')}
@@ -1545,7 +1545,7 @@ export function JppPolyMapsAdmin() {
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#1a1b23] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden z-[100] max-h-60 overflow-y-auto"
+                    className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#13171D] border border-slate-200 dark:border-white/10 rounded-xl shadow-xl overflow-hidden z-[100] max-h-60 overflow-y-auto"
                   >
                     <button
                       onClick={() => setFilterBuilding('all')}
@@ -1617,7 +1617,7 @@ export function JppPolyMapsAdmin() {
                         ? "bg-emerald-600 text-white"
                         : pill.id === 'available'
                         ? "bg-blue-600 text-white"
-                        : "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
+                        : "bg-[#0F766E] text-white dark:bg-[#2DD4BF] dark:text-[#090B0E]"
                       : "bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-white/5 dark:hover:bg-white/10 dark:text-white/70"
                   )}
                 >
@@ -1662,7 +1662,7 @@ export function JppPolyMapsAdmin() {
                   className={cn(
                     "rounded-2xl p-5 transition-all group relative overflow-hidden flex flex-col justify-between",
                     status360 === 'active'
-                      ? "border-2 border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/25 shadow-md shadow-emerald-500/10" 
+                      ? "border-2 border-emerald-500 bg-emerald-50/70 dark:bg-[#2DD4BF]/10 shadow-md shadow-emerald-500/10" 
                       : status360 === 'available'
                       ? "border-2 border-blue-500 bg-blue-50/70 dark:bg-blue-950/25 shadow-md shadow-blue-500/10"
                       : "bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50/80 dark:hover:bg-white/[0.07] shadow-sm"
@@ -1674,22 +1674,22 @@ export function JppPolyMapsAdmin() {
                         <div className="flex items-center gap-2 flex-wrap mb-1">
                           <h3 className="font-bold text-slate-900 dark:text-white text-lg">{b.name}</h3>
                           {status360 === 'active' && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
                               <Compass className="w-3 h-3" /> {t('services:label_360_active', '360° AKTIF')}
                             </span>
                           )}
                           {status360 === 'available' && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500 text-white shadow-sm">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-blue-500 text-white shadow-sm">
                               <Compass className="w-3 h-3" /> {t('services:label_360_available_off', '360° TERSEDIA (OFF)')}
                             </span>
                           )}
                           {status360 === 'none' && (
-                            <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-white/5">
+                            <span className="px-2 py-0.5 rounded-full text-xs font-bold text-slate-400 bg-slate-100 dark:bg-white/5">
                               {t('services:label_no_3d', 'Tiada 3D')}
                             </span>
                           )}
                         </div>
-                        <span className="inline-block px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-600 dark:text-sky-400 text-[10px] font-black uppercase tracking-wider">
+                        <span className="inline-block px-2 py-0.5 rounded-md bg-sky-500/20 text-sky-600 dark:text-sky-400 text-xs font-semibold uppercase tracking-wider">
                           {b.code}
                         </span>
                       </div>
@@ -1709,7 +1709,7 @@ export function JppPolyMapsAdmin() {
                         {b.center_lat ? b.center_lat + ', ' + b.center_lng : t('services:no_gps_coordinates', 'Tiada Koordinat GPS')}
                       </div>
                       {b.description && (
-                        <p className="line-clamp-2 text-slate-500 dark:text-white/40 text-[11px] leading-relaxed">{b.description}</p>
+                        <p className="line-clamp-2 text-slate-500 dark:text-white/40 text-xs leading-relaxed">{b.description}</p>
                       )}
                     </div>
                   </div>
@@ -1725,7 +1725,7 @@ export function JppPolyMapsAdmin() {
                             setPreview360Title(t('services:preview_360_title', 'Pratonton 360°: {{name}}', { name: b.name }));
                             setPreview360Hotspots(panoramaUrl ? hotspotsByPanorama[panoramaUrl] || [] : []);
                           }}
-                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                          className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-[#1B2028] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#252B35] hover:bg-slate-50 dark:hover:bg-[#252B35] transition-colors shadow-sm"
                         >
                           <Eye className="w-3.5 h-3.5 text-sky-500" />
                           <span>{t('services:preview', 'Pratonton')}</span>
@@ -1797,7 +1797,7 @@ export function JppPolyMapsAdmin() {
                 onClick={() => setLocationViewMode('cards')}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                  locationViewMode === 'cards' ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-white/60 hover:text-slate-900"
+                  locationViewMode === 'cards' ? "bg-white dark:bg-[#1B2028] text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-white/60 hover:text-slate-900"
                 )}
               >
                 <LayoutGrid className="w-3.5 h-3.5" /> {t('services:view_cards', 'Kad')}
@@ -1807,7 +1807,7 @@ export function JppPolyMapsAdmin() {
                 onClick={() => setLocationViewMode('table')}
                 className={cn(
                   "flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
-                  locationViewMode === 'table' ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-white/60 hover:text-slate-900"
+                  locationViewMode === 'table' ? "bg-white dark:bg-[#1B2028] text-slate-900 dark:text-white shadow-sm" : "text-slate-500 dark:text-white/60 hover:text-slate-900"
                 )}
               >
                 <List className="w-3.5 h-3.5" /> {t('services:view_table', 'Jadual')}
@@ -1834,7 +1834,7 @@ export function JppPolyMapsAdmin() {
                       className={cn(
                         "rounded-2xl p-5 transition-all group relative overflow-hidden flex flex-col justify-between",
                         status360 === 'active'
-                          ? "border-2 border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/25 shadow-md shadow-emerald-500/10"
+                          ? "border-2 border-emerald-500 bg-emerald-50/70 dark:bg-[#2DD4BF]/10 shadow-md shadow-emerald-500/10"
                           : status360 === 'available'
                           ? "border-2 border-blue-500 bg-blue-50/70 dark:bg-blue-950/25 shadow-md shadow-blue-500/10"
                           : "bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-50/80 dark:hover:bg-white/[0.07] shadow-sm"
@@ -1846,17 +1846,17 @@ export function JppPolyMapsAdmin() {
                             <div className="flex items-center gap-2 flex-wrap mb-1">
                               <h3 className="font-bold text-slate-900 dark:text-white text-lg">{l.room_code}</h3>
                               {status360 === 'active' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
                                   <Compass className="w-3 h-3" /> {t('services:label_360_active', '360° AKTIF')}
                                 </span>
                               )}
                               {status360 === 'available' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500 text-white shadow-sm">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider bg-blue-500 text-white shadow-sm">
                                   <Compass className="w-3 h-3" /> {t('services:label_360_available_off', '360° TERSEDIA (OFF)')}
                                 </span>
                               )}
                               {status360 === 'none' && (
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-white/5">
+                                <span className="px-2 py-0.5 rounded-full text-xs font-bold text-slate-400 bg-slate-100 dark:bg-white/5">
                                   {t('services:label_no_3d', 'Tiada 3D')}
                                 </span>
                               )}
@@ -1886,7 +1886,7 @@ export function JppPolyMapsAdmin() {
                         </div>
 
                         {l.direction_text && (
-                          <p className="line-clamp-2 text-slate-500 dark:text-white/50 text-[11px] leading-relaxed mt-2">
+                          <p className="line-clamp-2 text-slate-500 dark:text-white/50 text-xs leading-relaxed mt-2">
                             {l.direction_text}
                           </p>
                         )}
@@ -1905,7 +1905,7 @@ export function JppPolyMapsAdmin() {
                                   setPreview360Hotspots(hotspotsByPanorama[panoramaUrl] || []);
                                 }
                               }}
-                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors shadow-sm"
+                              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold bg-white dark:bg-[#1B2028] text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-[#252B35] hover:bg-slate-50 dark:hover:bg-[#252B35] transition-colors shadow-sm"
                             >
                               <Eye className="w-3.5 h-3.5 text-sky-500" />
                               <span>{t('services:preview', 'Pratonton')}</span>
@@ -1972,7 +1972,7 @@ export function JppPolyMapsAdmin() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                    <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                       <th className="p-4">{t('services:th_class_code', 'Kod Kelas')}</th>
                       <th className="p-4">{t('services:th_status_360', 'Status 360°')}</th>
                       <th className="p-4">{t('services:th_building', 'Bangunan')}</th>
@@ -1999,7 +1999,7 @@ export function JppPolyMapsAdmin() {
                             className={cn(
                               "border-b transition-colors group",
                               status360 === 'active'
-                                ? "border-emerald-200/50 dark:border-emerald-900/30 bg-emerald-50/40 dark:bg-emerald-950/15 hover:bg-emerald-50/80 dark:hover:bg-emerald-950/30" 
+                                ? "border-emerald-200/50 dark:border-[#2DD4BF]/30 bg-emerald-50/40 dark:bg-[#2DD4BF]/10 hover:bg-emerald-50/80 dark:hover:bg-[#2DD4BF]/15" 
                                 : status360 === 'available'
                                 ? "border-blue-200/50 dark:border-blue-900/30 bg-blue-50/40 dark:bg-blue-950/15 hover:bg-blue-50/80 dark:hover:bg-blue-950/30"
                                 : "border-slate-100 dark:border-white/[0.05] hover:bg-slate-50/80 dark:hover:bg-white/[0.02]"
@@ -2010,17 +2010,17 @@ export function JppPolyMapsAdmin() {
                             </td>
                             <td className="p-4">
                               {status360 === 'active' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
                                   <Compass className="w-3.5 h-3.5" /> {t('services:label_360_active', '360° AKTIF')}
                                 </span>
                               )}
                               {status360 === 'available' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500 text-white shadow-sm">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-blue-500 text-white shadow-sm">
                                   <Compass className="w-3.5 h-3.5" /> {t('services:label_360_available_off', '360° TERSEDIA (OFF)')}
                                 </span>
                               )}
                               {status360 === 'none' && (
-                                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-400 bg-slate-100 dark:bg-white/5">
+                                <span className="px-2 py-0.5 rounded-full text-xs font-bold text-slate-400 bg-slate-100 dark:bg-white/5">
                                   {t('services:label_no_3d', 'Tiada 3D')}
                                 </span>
                               )}
@@ -2102,12 +2102,12 @@ export function JppPolyMapsAdmin() {
               <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/[0.03] p-4">
                 <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
                   <div>
-                    <h2 className="font-black text-lg">360 Directory</h2>
+                    <h2 className="font-bold text-lg">360 Directory</h2>
                     <p className="text-xs text-slate-500">{filtered.length} / {entries.length} gambar</p>
                   </div>
                   <div className="flex flex-col sm:flex-row gap-2">
                     <input value={directorySearch} onChange={(e) => setDirectorySearch(e.target.value)} placeholder="Cari nama, bilik, bangunan..." className="w-full sm:max-w-xs rounded-xl border border-slate-200 dark:border-white/10 bg-transparent px-3 py-2 text-sm" />
-                    <select value={directoryTargetBuildingId} onChange={(e) => setDirectoryTargetBuildingId(e.target.value)} aria-label="Pilih bangunan sasaran panorama" className="w-full sm:max-w-xs rounded-xl border border-slate-200 dark:border-white/10 bg-white px-3 py-2 text-sm dark:bg-slate-900"><option value="">Pilih bangunan sasaran...</option>{buildings.map((building) => <option key={building.id} value={building.id}>{building.code} · {building.name}</option>)}</select>
+                    <select value={directoryTargetBuildingId} onChange={(e) => setDirectoryTargetBuildingId(e.target.value)} aria-label="Pilih bangunan sasaran panorama" className="w-full sm:max-w-xs rounded-xl border border-slate-200 dark:border-white/10 bg-white px-3 py-2 text-sm dark:bg-[#13171D]"><option value="">Pilih bangunan sasaran...</option>{buildings.map((building) => <option key={building.id} value={building.id}>{building.code} · {building.name}</option>)}</select>
                   </div>
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Filter status panorama">
@@ -2132,7 +2132,7 @@ export function JppPolyMapsAdmin() {
                           {entry.panoramaUrl ? <img src={entry.panoramaUrl.split('#')[0]} alt={entry.label || 'Panorama 360'} loading="lazy" className="h-40 w-full object-cover bg-slate-100" /> : <div className="h-40 flex items-center justify-center bg-slate-100 text-sm text-slate-500">Tiada URL preview</div>}
                         </button>
                         <div className="space-y-2 p-3">
-                          <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-bold">{entry.label || entry.id}</p><p className="truncate text-xs text-slate-500">{building ? `${building.code} · ${building.name}` : entry.source}</p></div><span className={cn('shrink-0 rounded-full px-2 py-1 text-[10px] font-black uppercase', statusClass)}>{statusLabels[entry.status]}</span></div>
+                          <div className="flex items-start justify-between gap-2"><div className="min-w-0"><p className="truncate text-sm font-bold">{entry.label || entry.id}</p><p className="truncate text-xs text-slate-500">{building ? `${building.code} · ${building.name}` : entry.source}</p></div><span className={cn('shrink-0 rounded-full px-2 py-1 text-xs font-semibold uppercase', statusClass)}>{statusLabels[entry.status]}</span></div>
                           <div className="flex justify-between text-xs text-slate-500"><span>{entry.pinCount} pin</span><span>{entry.createdAt ? new Date(entry.createdAt).toLocaleDateString() : ''}</span></div>
                           <div className="flex flex-wrap gap-2 pt-1">
                             <button type="button" onClick={() => setUsagePanoramaUrl(entry.panoramaUrl)} className="rounded-lg border px-3 py-1.5 text-xs font-bold">Penggunaan & Edit</button>
@@ -2152,19 +2152,19 @@ export function JppPolyMapsAdmin() {
                 const usages = getPanoramaUsage(locations, Object.values(hotspotsByPanorama).flat(), buildings, usagePanoramaUrl);
                 const selected = locations.find((location) => location.id === editingUsageLocationId);
                 return <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/70 p-3" role="dialog" aria-modal="true" aria-label="Penggunaan dan edit panorama">
-                  <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-4 dark:bg-slate-900">
-                    <div className="mb-4 flex items-center justify-between"><h3 className="font-black">Penggunaan & Edit 360°</h3><button type="button" onClick={() => { setUsagePanoramaUrl(null); setEditingUsageLocationId(null); setAddingUsage(false); }} aria-label="Tutup"><X className="h-5 w-5" /></button></div>
+                  <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white p-4 dark:bg-[#13171D]">
+                    <div className="mb-4 flex items-center justify-between"><h3 className="font-bold">Penggunaan & Edit 360°</h3><button type="button" onClick={() => { setUsagePanoramaUrl(null); setEditingUsageLocationId(null); setAddingUsage(false); }} aria-label="Tutup"><X className="h-5 w-5" /></button></div>
                     <img src={usagePanoramaUrl.split('#')[0]} alt="Pratonton panorama" className="mb-4 h-44 w-full rounded-xl object-cover bg-slate-100" />
                     <h4 className="mb-2 text-sm font-bold">Digunakan untuk {usages.length} bilik/kelas</h4>
                     {usages.length ? <div className="mb-4 space-y-2"><button type="button" onClick={() => { setEditingUsageLocationId(null); setAddingUsage(true); setUsageDraft({ buildingId: directoryTargetBuildingId || buildings[0]?.id || '', floor: '1', roomCode: '' }); }} className="mb-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Tambah bilik/kelas untuk panorama</button>{usages.map((usage) => <article key={usage.locationId} className="rounded-xl border p-3 dark:border-white/10"><div className="flex items-start justify-between gap-2"><div><p className="font-bold">{usage.building} · Aras {usage.floor} · {usage.roomCode}</p><p className="text-xs text-slate-500">{usage.pins.length} pin{usage.pins.length ? `: ${usage.pins.map((pin) => `${pin.label} (yaw ${pin.yaw ?? '—'}, pitch ${pin.pitch ?? '—'})`).join('; ')}` : ''}</p></div><button type="button" onClick={() => { const loc = locations.find((item) => item.id === usage.locationId)!; setEditingUsageLocationId(loc.id); setAddingUsage(false); setUsageDraft({ buildingId: loc.building_id, floor: String(loc.floor_level ?? 1), roomCode: loc.room_code }); }} className="rounded-lg border px-3 py-1.5 text-xs font-bold">Edit bilik ini</button></div></article>)}</div> : <div className="mb-4 rounded-xl bg-slate-50 p-3 text-sm text-slate-600 dark:bg-white/5"><p>Belum dikaitkan dengan bilik.</p><button type="button" onClick={() => { setEditingUsageLocationId(null); setAddingUsage(true); setUsageDraft({ buildingId: directoryTargetBuildingId || buildings[0]?.id || '', floor: '1', roomCode: '' }); }} className="mt-2 rounded-lg bg-indigo-600 px-3 py-1.5 text-xs font-bold text-white">Tambah kaitan bilik</button></div>}
-                    {(selected || addingUsage) && <div className="space-y-3 rounded-xl border border-indigo-300 p-3 dark:border-indigo-500/40"><h4 className="font-bold">Edit satu bilik sahaja</h4><label className="block text-xs font-semibold">Bangunan<select value={usageDraft.buildingId} onChange={(e) => setUsageDraft((d) => ({ ...d, buildingId: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-slate-800">{buildings.map((b) => <option key={b.id} value={b.id}>{b.code} · {b.name}</option>)}</select></label><div className="grid grid-cols-2 gap-2"><label className="text-xs font-semibold">Aras<input value={usageDraft.floor} onChange={(e) => setUsageDraft((d) => ({ ...d, floor: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-slate-800" /></label><label className="text-xs font-semibold">Bilik/kelas<input value={usageDraft.roomCode} onChange={(e) => setUsageDraft((d) => ({ ...d, roomCode: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-slate-800" /></label></div><p className="text-xs text-emerald-700 dark:text-emerald-300">Simpan hanya ubah kaitan bilik ini. Bilik lain yang berkongsi panorama kekal.</p><div className="flex justify-end gap-2"><button type="button" onClick={() => { setEditingUsageLocationId(null); setAddingUsage(false); setUsageDraft({ buildingId: '', floor: '1', roomCode: '' }); }} className="rounded-lg border px-3 py-2 text-sm">Batal</button><button type="button" disabled={savingUsage} onClick={savePanoramaRoomUsage} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{savingUsage ? 'Menyimpan…' : 'Simpan bilik'}</button></div></div>}
+                    {(selected || addingUsage) && <div className="space-y-3 rounded-xl border border-indigo-300 p-3 dark:border-indigo-500/40"><h4 className="font-bold">Edit satu bilik sahaja</h4><label className="block text-xs font-semibold">Bangunan<select value={usageDraft.buildingId} onChange={(e) => setUsageDraft((d) => ({ ...d, buildingId: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-[#1B2028]">{buildings.map((b) => <option key={b.id} value={b.id}>{b.code} · {b.name}</option>)}</select></label><div className="grid grid-cols-2 gap-2"><label className="text-xs font-semibold">Aras<input value={usageDraft.floor} onChange={(e) => setUsageDraft((d) => ({ ...d, floor: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-[#1B2028]" /></label><label className="text-xs font-semibold">Bilik/kelas<input value={usageDraft.roomCode} onChange={(e) => setUsageDraft((d) => ({ ...d, roomCode: e.target.value }))} className="mt-1 w-full rounded-lg border p-2 text-sm dark:bg-[#1B2028]" /></label></div><p className="text-xs text-emerald-700 dark:text-emerald-300">Simpan hanya ubah kaitan bilik ini. Bilik lain yang berkongsi panorama kekal.</p><div className="flex justify-end gap-2"><button type="button" onClick={() => { setEditingUsageLocationId(null); setAddingUsage(false); setUsageDraft({ buildingId: '', floor: '1', roomCode: '' }); }} className="rounded-lg border px-3 py-2 text-sm">Batal</button><button type="button" disabled={savingUsage} onClick={savePanoramaRoomUsage} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{savingUsage ? 'Menyimpan…' : 'Simpan bilik'}</button></div></div>}
                   </div>
                 </div>;
               })()}
               {editingSubmission && (
                 <div className="fixed inset-0 z-[1300] flex items-center justify-center bg-black/70 p-3" role="dialog" aria-modal="true" aria-label="Edit pin submission pending">
-                  <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4 dark:bg-slate-900">
-                    <div className="mb-4 flex items-center justify-between gap-2"><h3 className="font-black">Edit pin submission · kekal pending</h3><button type="button" onClick={() => setEditingSubmission(null)} aria-label="Tutup"><X className="h-5 w-5" /></button></div>
+                  <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white p-4 dark:bg-[#13171D]">
+                    <div className="mb-4 flex items-center justify-between gap-2"><h3 className="font-bold">Edit pin submission · kekal pending</h3><button type="button" onClick={() => setEditingSubmission(null)} aria-label="Tutup"><X className="h-5 w-5" /></button></div>
                     <div className="space-y-3">
                       {draftSubmissionPins.map((pin, index) => (
                         <div key={`${index}-${pin.yaw}-${pin.pitch}`} className="grid grid-cols-2 gap-2 rounded-xl border p-3">
@@ -2192,7 +2192,7 @@ export function JppPolyMapsAdmin() {
               <div className="flex items-center gap-2.5">
                 <Camera className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 <div>
-                  <h3 className="text-sm font-black text-slate-900 dark:text-white">
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
                     {t('services:polymaps_sub_section_title', 'Sumbangan 360° & Pin Pintu Bilik Sukarelawan ({{count}})', { count: fieldSubmissions.length })}
                   </h3>
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -2205,7 +2205,7 @@ export function JppPolyMapsAdmin() {
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                  <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                     <th className="p-4">{t('services:polymaps_sub_th_contributor', 'Penyumbang')}</th>
                     <th className="p-4">{t('services:polymaps_sub_th_building_floor', 'Bangunan & Aras')}</th>
                     <th className="p-4">{t('services:polymaps_sub_th_pins', 'Pin Pintu Bilik')}</th>
@@ -2240,7 +2240,7 @@ export function JppPolyMapsAdmin() {
                             </span>
                           </td>
                           <td className="p-4">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-black">
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-xs font-semibold">
                               📍 {t('services:polymaps_sub_pin_summary', '{{count}} Pin ({{hint}})', {
                                 count: pinCount,
                                 hint: sub.room_code_hint || t('services:polymaps_sub_corridor_default', 'Koridor'),
@@ -2253,7 +2253,7 @@ export function JppPolyMapsAdmin() {
                           <td className="p-4">
                             <span
                               className={cn(
-                                'text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border',
+                                'text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border',
                                 sub.status === 'pending' &&
                                   'bg-amber-500/10 text-amber-500 border-amber-500/20',
                                 sub.status === 'approved' &&
@@ -2293,7 +2293,7 @@ export function JppPolyMapsAdmin() {
                                     type="button"
                                     disabled={isProcessingReport[sub.id]}
                                     onClick={() => approveFieldSubmission(sub)}
-                                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black inline-flex items-center gap-1 disabled:opacity-50"
+                                    className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold inline-flex items-center gap-1 disabled:opacity-50"
                                   >
                                     <CheckCircle2 className="w-3.5 h-3.5" /> {t('services:polymaps_sub_btn_approve', '1-Klik Lulus & Terbit')}
                                   </button>
@@ -2325,7 +2325,7 @@ export function JppPolyMapsAdmin() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                   <th className="p-4">{t('services:th_student', 'Pelajar')}</th>
                   <th className="p-4">{t('services:th_room_code_space', 'Kod Kelas / Ruang')}</th>
                   <th className="p-4">{t('services:th_suggested_building', 'Cadangan Bangunan')}</th>
@@ -2355,11 +2355,11 @@ export function JppPolyMapsAdmin() {
                             {r.room_code}
                           </span>
                           {r.report_count && r.report_count > 1 ? (
-                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 whitespace-nowrap">
+                            <span className="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 whitespace-nowrap">
                               {t('services:reports_count', '{{count}} Laporan', { count: r.report_count })}
                             </span>
                           ) : (
-                            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-white/40 whitespace-nowrap">
+                            <span className="text-xs font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-white/40 whitespace-nowrap">
                               {t('services:report_single', '1 Laporan')}
                             </span>
                           )}
@@ -2376,7 +2376,7 @@ export function JppPolyMapsAdmin() {
                       </td>
                       <td className="p-4">
                         <span className={cn(
-                          "text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border",
+                          "text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border",
                           r.status === 'pending' && "bg-amber-500/10 text-amber-500 dark:text-amber-400 border-amber-500/20",
                           r.status === 'approved' && "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
                           r.status === 'rejected' && "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20"
@@ -2521,16 +2521,16 @@ export function JppPolyMapsAdmin() {
                         <div className="flex flex-wrap items-center gap-1.5">
                           <p className="font-bold text-sm text-slate-900 dark:text-white truncate">{w.name}</p>
                           {w.is_covered && (
-                            <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-[9px] uppercase tracking-wider">{t('services:covered_badge', 'Berbumbung')}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase tracking-wider">{t('services:covered_badge', 'Berbumbung')}</span>
                           )}
                           {w.is_blocked && (
-                            <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-[9px] uppercase tracking-wider">{t('services:blocked_badge', 'Sekat')}</span>
+                            <span className="px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-600 dark:text-rose-400 font-bold text-xs uppercase tracking-wider">{t('services:blocked_badge', 'Sekat')}</span>
                           )}
                         </div>
-                        <p className="text-[10px] font-medium text-slate-500 dark:text-white/40 mt-0.5">{t('services:coord_points_count', '{{count}} titik koordinat', { count: w.coordinates.length })}</p>
+                        <p className="text-xs font-medium text-slate-500 dark:text-white/40 mt-0.5">{t('services:coord_points_count', '{{count}} titik koordinat', { count: w.coordinates.length })}</p>
 {/* Show segments on this walkway */}
                         {segments.filter(s => s.walkway_id === w.id).length > 0 && (
-                          <p className="text-[10px] font-medium text-amber-600 dark:text-amber-400 mt-0.5">
+                          <p className="text-xs font-medium text-amber-600 dark:text-amber-400 mt-0.5">
                             {t('services:seg_count_label', '{{count}} segmen aktif', { count: segments.filter(s => s.walkway_id === w.id).length })}
                           </p>
                         )}
@@ -2540,7 +2540,7 @@ export function JppPolyMapsAdmin() {
                         <button
                           onClick={() => toggleBlockWalkway(w.id, w.is_blocked || false)}
                           className={cn(
-                            "px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border",
+                            "px-2 py-1 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border",
                             w.is_blocked
                               ? "bg-rose-500/10 border-rose-500/30 text-rose-600 hover:bg-rose-500/20 dark:bg-rose-500/20 dark:border-rose-500/30 dark:text-rose-400 dark:hover:bg-rose-500/30"
                               : "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-white/50 dark:hover:bg-white/10"
@@ -2553,7 +2553,7 @@ export function JppPolyMapsAdmin() {
                         <button
                           onClick={() => toggleCoverWalkway(w.id, w.is_covered || false)}
                           className={cn(
-                            "px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all border",
+                            "px-2 py-1 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all border",
                             w.is_covered
                               ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/20 dark:bg-emerald-500/20 dark:border-emerald-500/30 dark:text-emerald-400 dark:hover:bg-emerald-500/30"
                               : "bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200 dark:bg-white/5 dark:border-white/10 dark:text-white/50 dark:hover:bg-white/10"
@@ -2565,14 +2565,14 @@ export function JppPolyMapsAdmin() {
                         {/* Segment pickers */}
                         <button
                           onClick={() => openSegmentPicker(w.id, 'block')}
-                          className="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-wider transition-all"
+                          className="px-2 py-1 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold uppercase tracking-wider transition-all"
                           title={t('services:seg_block_title', 'Sekat sebahagian laluan')}
                         >
                           <Shield className="w-3 h-3 inline mr-0.5" /> {t('services:seg_block_short', 'Segmen Sekat')}
                         </button>
                         <button
                           onClick={() => openSegmentPicker(w.id, 'cover')}
-                          className="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider transition-all"
+                          className="px-2 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold uppercase tracking-wider transition-all"
                           title={t('services:seg_cover_title', 'Tandakan sebahagian sebagai berbumbung')}
                         >
                           <Umbrella className="w-3 h-3 inline mr-0.5" /> {t('services:seg_cover_short', 'Segmen Bumbung')}
@@ -2598,7 +2598,7 @@ export function JppPolyMapsAdmin() {
         {segPicker.walkwayId && (
           <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={cancelSegmentPick} className="absolute inset-0 bg-black/60 " />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg max-h-[90vh] bg-white dark:bg-[#0f1015] border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-2xl overflow-y-auto">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg max-h-[90vh] bg-white dark:bg-[#0E1116] border border-slate-200 dark:border-white/10 rounded-3xl p-5 shadow-2xl overflow-y-auto">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   {segType === 'block'
@@ -2659,7 +2659,7 @@ export function JppPolyMapsAdmin() {
         {showBuildingModal && (
           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowBuildingModal(false)} className="absolute inset-0 bg-black/60 " />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg max-h-[90vh] bg-white dark:bg-[#0f1015] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl overflow-y-auto">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg max-h-[90vh] bg-white dark:bg-[#0E1116] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl overflow-y-auto">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-sky-500 dark:text-sky-400" />
                 {currentBuilding.id ? t('services:update_building', 'Kemaskini Bangunan') : t('services:add_building', 'Tambah Bangunan')}
@@ -2667,15 +2667,15 @@ export function JppPolyMapsAdmin() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:building_name', 'Nama Bangunan')}</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:building_name', 'Nama Bangunan')}</label>
                   <input type="text" value={currentBuilding.name || ''} onChange={e => setCurrentBuilding({...currentBuilding, name: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-sky-500/50 transition-all" placeholder={t('services:building_name_example', 'Contoh: Jabatan Kejuruteraan Elektrik')} />
                 </div>
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:code_abbreviation', 'Kod (Singkatan)')}</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:code_abbreviation', 'Kod (Singkatan)')}</label>
                   <input type="text" value={currentBuilding.code || ''} onChange={e => setCurrentBuilding({...currentBuilding, code: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-sky-500/50 transition-all" placeholder={t('services:code_example', 'Contoh: JKE')} />
                 </div>
                 <div className="relative">
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:zone_name_optional', 'Nama Zon (Pilihan)')}</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:zone_name_optional', 'Nama Zon (Pilihan)')}</label>
                   <input 
                     type="text" 
                     value={currentBuilding.zone_name || ''} 
@@ -2694,7 +2694,7 @@ export function JppPolyMapsAdmin() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#1a1b23] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-[10001] max-h-60 overflow-y-auto"
+                        className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#13171D] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-[10001] max-h-60 overflow-y-auto"
                       >
                         {Array.from(new Set(buildings.map(b => b.zone_name).filter(Boolean)))
                           .filter(zone => !currentBuilding.zone_name || (zone as string).toLowerCase().includes(currentBuilding.zone_name.toLowerCase()))
@@ -2720,17 +2720,17 @@ export function JppPolyMapsAdmin() {
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">Latitude</label>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">Latitude</label>
                     <input type="number" step="any" value={currentBuilding.center_lat || ''} onChange={e => setCurrentBuilding({...currentBuilding, center_lat: parseFloat(e.target.value)})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-sky-500/50 transition-all" placeholder="3.123456" />
                   </div>
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">Longitude</label>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">Longitude</label>
                     <input type="number" step="any" value={currentBuilding.center_lng || ''} onChange={e => setCurrentBuilding({...currentBuilding, center_lng: parseFloat(e.target.value)})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-sky-500/50 transition-all" placeholder="103.123456" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('jpp:polymaps_gps_editor', 'Koordinat GPS')}</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('jpp:polymaps_gps_editor', 'Koordinat GPS')}</label>
                   <LocationPickerMap 
                     lat={currentBuilding.center_lat || 0} 
                     lng={currentBuilding.center_lng || 0} 
@@ -2745,7 +2745,7 @@ export function JppPolyMapsAdmin() {
                     const value = currentBuilding[field];
                     return (
                       <div key={field} className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl p-3">
-                        <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-2">{label}</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-2">{label}</label>
                         {value ? (
                           <div className="relative w-full h-24 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 mb-2 group">
                             <img src={value} alt={label} className="w-full h-full object-cover" />
@@ -2766,7 +2766,7 @@ export function JppPolyMapsAdmin() {
                             ) : (
                               <UploadCloud className="w-5 h-5 text-slate-400 dark:text-white/40 mb-1" />
                             )}
-                            <span className="text-[10px] font-bold text-slate-500 dark:text-white/50">{isUploading[field] ? t('services:uploading_dots', 'Memuat naik...') : t('services:choose_image', 'Pilih Gambar')}</span>
+                            <span className="text-xs font-bold text-slate-500 dark:text-white/50">{isUploading[field] ? t('services:uploading_dots', 'Memuat naik...') : t('services:choose_image', 'Pilih Gambar')}</span>
                             <input 
                               type="file" 
                               accept="image/*" 
@@ -2776,7 +2776,7 @@ export function JppPolyMapsAdmin() {
                             />
                           </label>
                         )}
-                        <input type="url" value={value || ''} onChange={e => setCurrentBuilding({...currentBuilding, [field]: e.target.value})} className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1.5 text-[10px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-sky-500/50 transition-all" placeholder={t('services:or_paste_url', 'Atau paste URL...')} />
+                        <input type="url" value={value || ''} onChange={e => setCurrentBuilding({...currentBuilding, [field]: e.target.value})} className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2 py-1.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-sky-500/50 transition-all" placeholder={t('services:or_paste_url', 'Atau paste URL...')} />
                       </div>
                     );
                   })}
@@ -2785,7 +2785,7 @@ export function JppPolyMapsAdmin() {
                 {/* 360 Panorama Section */}
                 <div className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-white flex items-center gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-white flex items-center gap-1.5">
                       <Compass className="w-4 h-4 text-emerald-500" />
                       {t('services:image_panorama_360_label', 'Imej Panorama 360° (Equirectangular)')}
                     </label>
@@ -2793,26 +2793,26 @@ export function JppPolyMapsAdmin() {
                       const modalStatus = getBuilding360Status(currentBuilding);
                       if (modalStatus === 'active') {
                         return (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
                             <Compass className="w-3.5 h-3.5" /> {t('services:label_360_active', '360° AKTIF')}
                           </span>
                         );
                       }
                       if (modalStatus === 'available') {
                         return (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500 text-white shadow-sm">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-blue-500 text-white shadow-sm">
                             <Compass className="w-3.5 h-3.5" /> {t('services:label_360_available_off', '360° TERSEDIA (OFF)')}
                           </span>
                         );
                       }
                       return (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-200 dark:bg-white/10">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold text-slate-500 bg-slate-200 dark:bg-white/10">
                           {t('services:label_no_3d', 'Tiada 3D')}
                         </span>
                       );
                     })()}
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-white/40 mb-3">
+                  <p className="text-xs text-slate-500 dark:text-white/40 mb-3">
                     {t('services:upload_360_hint', 'Muat naik fail imej 360° (Equirectangular 2:1) atau tampal pautan URL langsung imej 360.')}
                   </p>
 
@@ -2835,7 +2835,7 @@ export function JppPolyMapsAdmin() {
                     </div>
                   ) : (
                     <label className={cn(
-                      "flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-emerald-500/30 hover:border-emerald-500 rounded-xl cursor-pointer bg-emerald-50/30 dark:bg-emerald-950/10 hover:bg-emerald-50/60 dark:hover:bg-emerald-950/20 transition-all mb-2",
+                      "flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-emerald-500/30 hover:border-emerald-500 rounded-xl cursor-pointer bg-emerald-50/30 dark:bg-[#2DD4BF]/10 hover:bg-emerald-50/60 dark:hover:bg-[#2DD4BF]/12 transition-all mb-2",
                       isUploading['panorama_360_url'] && "opacity-50 pointer-events-none"
                     )}>
                       {isUploading['panorama_360_url'] ? (
@@ -2843,7 +2843,7 @@ export function JppPolyMapsAdmin() {
                       ) : (
                         <UploadCloud className="w-5 h-5 text-emerald-500 mb-1" />
                       )}
-                      <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
                         {isUploading['panorama_360_url'] ? t('services:uploading_360_dots', 'Memuat naik 360°...') : t('services:choose_360_image', 'Pilih Gambar Panorama 360°')}
                       </span>
                       <input 
@@ -2860,7 +2860,7 @@ export function JppPolyMapsAdmin() {
                     type="url" 
                     value={currentBuilding.panorama_360_url || ''} 
                     onChange={e => setCurrentBuilding({...currentBuilding, panorama_360_url: e.target.value})} 
-                    className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-emerald-500 transition-all mb-2" 
+                    className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-emerald-500 transition-all mb-2" 
                     placeholder={t('services:paste_360_url_placeholder', 'Atau tampal URL langsung 360...')} 
                   />
 
@@ -2874,7 +2874,7 @@ export function JppPolyMapsAdmin() {
                         panoramaUrl: currentBuilding.panorama_360_url || '',
                       });
                     }}
-                    className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+                    className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     Buka Perakam 360° Berpandu & Editor Pin Pintu Bilik
@@ -2898,7 +2898,7 @@ export function JppPolyMapsAdmin() {
                   {currentBuilding.is_facility && (
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2 border-t border-slate-200 dark:border-white/10">
                       <div>
-                        <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('jpp:polymaps_facility_category', 'Kategori Fasiliti')}</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('jpp:polymaps_facility_category', 'Kategori Fasiliti')}</label>
                         <input 
                           type="text"
                           list="facility-suggestions"
@@ -2914,11 +2914,11 @@ export function JppPolyMapsAdmin() {
                         </datalist>
                       </div>
                       <div>
-                        <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:open_time_label', 'Buka (08:00)')}</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:open_time_label', 'Buka (08:00)')}</label>
                         <input type="time" value={currentBuilding.op_start || ''} onChange={e => setCurrentBuilding({...currentBuilding, op_start: e.target.value})} className="w-full bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-500/50 transition-all" />
                       </div>
                       <div>
-                        <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:close_time_label', 'Tutup (17:00)')}</label>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:close_time_label', 'Tutup (17:00)')}</label>
                         <input type="time" value={currentBuilding.op_end || ''} onChange={e => setCurrentBuilding({...currentBuilding, op_end: e.target.value})} className="w-full bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-sky-500/50 transition-all" />
                       </div>
                     </div>
@@ -2926,7 +2926,7 @@ export function JppPolyMapsAdmin() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:description_label', 'Penerangan')}</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:description_label', 'Penerangan')}</label>
                   <textarea rows={2} value={currentBuilding.description || ''} onChange={e => setCurrentBuilding({...currentBuilding, description: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-sky-500/50 transition-all resize-none" placeholder={t('services:brief_info_placeholder', 'Maklumat ringkas...')} />
                 </div>
               </div>
@@ -2947,7 +2947,7 @@ export function JppPolyMapsAdmin() {
         {showLocationModal && (
           <div className="fixed inset-0 z-[10000] flex items-center justify-center p-4">
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowLocationModal(false)} className="absolute inset-0 bg-black/60 " />
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg max-h-[90vh] bg-white dark:bg-[#0f1015] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl overflow-y-auto">
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }} className="relative w-full max-w-lg max-h-[90vh] bg-white dark:bg-[#0E1116] border border-slate-200 dark:border-white/10 rounded-3xl p-6 shadow-2xl overflow-y-auto">
               <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2">
                 <Navigation className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
                 {currentLocation.id ? t('services:update_location', 'Kemaskini Lokasi') : t('services:add_location', 'Tambah Lokasi')}
@@ -2955,7 +2955,7 @@ export function JppPolyMapsAdmin() {
               
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:building_label', 'Bangunan')}</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:building_label', 'Bangunan')}</label>
                   <div className="relative">
                     <input 
                       type="text"
@@ -2986,7 +2986,7 @@ export function JppPolyMapsAdmin() {
                           initial={{ opacity: 0, y: -10 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -10 }}
-                          className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#1a1b23] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-[10001] max-h-60 overflow-y-auto"
+                          className="absolute left-0 right-0 top-full mt-2 bg-white dark:bg-[#13171D] border border-slate-200 dark:border-white/10 rounded-xl shadow-2xl overflow-hidden z-[10001] max-h-60 overflow-y-auto"
                         >
                           {buildings
                             .filter(b => 
@@ -3021,7 +3021,7 @@ export function JppPolyMapsAdmin() {
                 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:class_code_multiple_label', 'Kod Kelas/Bilik (Boleh masuk banyak, pisah koma)')}</label>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:class_code_multiple_label', 'Kod Kelas/Bilik (Boleh masuk banyak, pisah koma)')}</label>
                     <input
                       type="text"
                       value={currentLocation.room_code || ''}
@@ -3043,7 +3043,7 @@ export function JppPolyMapsAdmin() {
                   </div>
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40">{t('services:floor_level_label', 'Aras (Tingkat)')}</label>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40">{t('services:floor_level_label', 'Aras (Tingkat)')}</label>
                       <button
                         type="button"
                         onClick={() => {
@@ -3057,7 +3057,7 @@ export function JppPolyMapsAdmin() {
                           }));
                           toast.success(t('services:polymaps_admin_auto_infer_toast', 'Aras, Kata Kunci & Panduan Arah dijana secara pintar!'));
                         }}
-                        className="text-[10px] font-black text-indigo-600 dark:text-indigo-400 inline-flex items-center gap-1 hover:underline"
+                        className="text-xs font-semibold text-indigo-600 dark:text-indigo-400 inline-flex items-center gap-1 hover:underline"
                       >
                         <Sparkles className="w-3 h-3" /> {t('services:polymaps_admin_auto_infer', 'Auto-Teka')}
                       </button>
@@ -3068,28 +3068,28 @@ export function JppPolyMapsAdmin() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:open_time_optional_label', 'Waktu Buka (Pilihan)')}</label>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:open_time_optional_label', 'Waktu Buka (Pilihan)')}</label>
                     <input type="time" value={currentLocation.op_start || ''} onChange={e => setCurrentLocation({...currentLocation, op_start: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500/50 transition-all" />
                   </div>
                   <div>
-                    <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:close_time_optional_label', 'Waktu Tutup (Pilihan)')}</label>
+                    <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:close_time_optional_label', 'Waktu Tutup (Pilihan)')}</label>
                     <input type="time" value={currentLocation.op_end || ''} onChange={e => setCurrentLocation({...currentLocation, op_end: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:border-indigo-500/50 transition-all" />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:specific_indoor_directions_label', 'Panduan Arah Spesifik (Dalam Bangunan)')}</label>
-                  <p className="text-[10px] text-slate-500 dark:text-white/30 mb-2 font-medium">{t('services:indoor_directions_tips', "Tips: Tekan 'Enter' untuk baris baharu jika ingin jadikan ia panduan Langkah-Demi-Langkah (Step-by-Step).")}</p>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:specific_indoor_directions_label', 'Panduan Arah Spesifik (Dalam Bangunan)')}</label>
+                  <p className="text-xs text-slate-500 dark:text-white/30 mb-2 font-medium">{t('services:indoor_directions_tips', "Tips: Tekan 'Enter' untuk baris baharu jika ingin jadikan ia panduan Langkah-Demi-Langkah (Step-by-Step).")}</p>
                   <textarea rows={4} value={currentLocation.direction_text || ''} onChange={e => setCurrentLocation({...currentLocation, direction_text: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50 transition-all resize-none leading-relaxed" placeholder={t('services:indoor_directions_placeholder', 'Contoh:\nNaik tangga utama.\nBelok ke kanan lorong makmal.\nBilik di hujung sekali.')} />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:search_tags_label', 'Tags Carian (Pisah dengan koma)')}</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-1">{t('services:search_tags_label', 'Tags Carian (Pisah dengan koma)')}</label>
                   <input type="text" value={currentLocation.search_tags || ''} onChange={e => setCurrentLocation({...currentLocation, search_tags: e.target.value})} className="w-full bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50 transition-all" placeholder={t('services:search_tags_placeholder', 'Cth: Makmal Komputer, JTM, Lab')} />
                 </div>
 
                 <div className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl p-3">
-                  <label className="block text-xs font-black uppercase tracking-wider text-slate-600 dark:text-white/40 mb-2">{t('services:room_image_optional_label', 'Gambar Lokasi/Pintu Bilik (Pilihan)')}</label>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-white/40 mb-2">{t('services:room_image_optional_label', 'Gambar Lokasi/Pintu Bilik (Pilihan)')}</label>
                   {currentLocation.image_url ? (
                     <div className="relative w-full h-32 rounded-lg overflow-hidden border border-slate-200 dark:border-white/10 mb-2 group">
                       <img src={currentLocation.image_url} alt={t('services:room_image_alt', 'Gambar Bilik')} className="w-full h-full object-cover" />
@@ -3126,7 +3126,7 @@ export function JppPolyMapsAdmin() {
                 {/* 360 Panorama Section for Location */}
                 <div className="bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-white flex items-center gap-1.5">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-700 dark:text-white flex items-center gap-1.5">
                       <Compass className="w-4 h-4 text-emerald-500" />
                       {t('services:room_360_panorama_optional_label', 'Imej Panorama 360° Bilik / Ruang Ini (Pilihan)')}
                     </label>
@@ -3134,26 +3134,26 @@ export function JppPolyMapsAdmin() {
                       const modalStatus = getLocation360Status(currentLocation);
                       if (modalStatus === 'active') {
                         return (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-emerald-500 text-white shadow-sm">
                             <Compass className="w-3.5 h-3.5" /> {t('services:label_360_active', '360° AKTIF')}
                           </span>
                         );
                       }
                       if (modalStatus === 'available') {
                         return (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-500 text-white shadow-sm">
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-blue-500 text-white shadow-sm">
                             <Compass className="w-3.5 h-3.5" /> {t('services:label_360_available_off', '360° TERSEDIA (OFF)')}
                           </span>
                         );
                       }
                       return (
-                        <span className="px-2 py-0.5 rounded-full text-[9px] font-bold text-slate-500 bg-slate-200 dark:bg-white/10">
+                        <span className="px-2 py-0.5 rounded-full text-xs font-bold text-slate-500 bg-slate-200 dark:bg-white/10">
                           {t('services:label_no_3d', 'Tiada 3D')}
                         </span>
                       );
                     })()}
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-white/40 mb-3">
+                  <p className="text-xs text-slate-500 dark:text-white/40 mb-3">
                     {t('services:room_360_panorama_hint', 'Jika bilik ini mempunyai sudut pandangan 360° khas, muat naik imej atau tampal pautan di sini.')}
                   </p>
 
@@ -3176,7 +3176,7 @@ export function JppPolyMapsAdmin() {
                     </div>
                   ) : (
                     <label className={cn(
-                      "flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-emerald-500/30 hover:border-emerald-500 rounded-xl cursor-pointer bg-emerald-50/30 dark:bg-emerald-950/10 hover:bg-emerald-50/60 dark:hover:bg-emerald-950/20 transition-all mb-2",
+                      "flex flex-col items-center justify-center w-full h-24 border-2 border-dashed border-emerald-500/30 hover:border-emerald-500 rounded-xl cursor-pointer bg-emerald-50/30 dark:bg-[#2DD4BF]/10 hover:bg-emerald-50/60 dark:hover:bg-[#2DD4BF]/12 transition-all mb-2",
                       isUploading['panorama_360_url'] && "opacity-50 pointer-events-none"
                     )}>
                       {isUploading['panorama_360_url'] ? (
@@ -3184,7 +3184,7 @@ export function JppPolyMapsAdmin() {
                       ) : (
                         <UploadCloud className="w-5 h-5 text-emerald-500 mb-1" />
                       )}
-                      <span className="text-[10px] font-bold text-slate-700 dark:text-slate-200">
+                      <span className="text-xs font-bold text-slate-700 dark:text-slate-200">
                         {isUploading['panorama_360_url'] ? t('services:uploading_360_dots', 'Memuat naik 360°...') : t('services:choose_room_360_image', 'Pilih Gambar Panorama 360° Bilik')}
                       </span>
                       <input 
@@ -3201,7 +3201,7 @@ export function JppPolyMapsAdmin() {
                     type="url" 
                     value={currentLocation.panorama_360_url || ''} 
                     onChange={e => setCurrentLocation({...currentLocation, panorama_360_url: e.target.value})} 
-                    className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-[10px] text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-emerald-500 transition-all mb-2" 
+                    className="w-full bg-white dark:bg-black/40 border border-slate-200 dark:border-white/10 rounded-lg px-2.5 py-1.5 text-xs text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-emerald-500 transition-all mb-2" 
                     placeholder={t('services:paste_360_url_short_placeholder', 'Atau paste URL 360...')} 
                   />
 
@@ -3217,7 +3217,7 @@ export function JppPolyMapsAdmin() {
                         floorLevel: String(currentLocation.floor_level || '1'),
                       });
                     }}
-                    className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+                    className="w-full py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 shadow-sm transition-colors"
                   >
                     <Camera className="w-3.5 h-3.5" />
                     Rakam 360° & Letak Pin Pintu Bilik Ini
@@ -3244,9 +3244,9 @@ export function JppPolyMapsAdmin() {
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
-              className="w-full max-w-4xl bg-slate-900 rounded-3xl overflow-hidden border border-white/20 shadow-2xl flex flex-col max-h-[90vh]"
+              className="w-full max-w-4xl bg-[#13171D] rounded-3xl overflow-hidden border border-[#252B35] shadow-surface-lg flex flex-col max-h-[90vh]"
             >
-              <div className="p-4 bg-slate-950 border-b border-white/10 flex items-center justify-between">
+              <div className="p-4 bg-[#0E1116] border-b border-[#252B35] flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
                   <span className="p-2 rounded-xl bg-emerald-500/20 text-emerald-400">
                     <Compass className="w-5 h-5" />
@@ -3255,7 +3255,7 @@ export function JppPolyMapsAdmin() {
                     <h3 className="font-bold text-white text-base leading-tight">
                       {preview360Title || t('services:preview_360_default_title', 'Pratonton 360° Street View')}
                     </h3>
-                    <p className="text-[11px] text-slate-400">
+                    <p className="text-xs text-slate-400">
                       {t('services:preview_360_instructions', 'Seret untuk pusing 360°, cubit/skrol untuk zum.')}
                     </p>
                   </div>
@@ -3279,7 +3279,7 @@ export function JppPolyMapsAdmin() {
                 />
               </div>
 
-              <div className="p-4 bg-slate-950 border-t border-white/10 flex items-center justify-between text-xs text-slate-400">
+              <div className="p-4 bg-[#0E1116] border-t border-[#252B35] flex items-center justify-between text-xs text-[#94A0B2]">
                 <span className="font-medium">Enjin WebGL Pannellum 2.5.6</span>
                 <button
                   type="button"

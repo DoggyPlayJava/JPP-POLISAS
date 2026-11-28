@@ -5744,6 +5744,16 @@ Garis panduan wajib bagi semua kerja UI akan datang (termasuk halaman awam, port
   - **Kebersihan Kuiri & Pemeliharaan Logik:** Menggantikan kesemua `.select('*')` kepada senarai kolum eksplisit sambil mengekalkan 100% panggilan RPC atomik (`verify_and_complete_foodbank_pickup`, `verify_and_complete_foodbank_pickup_by_qr`, `release_foodbank_stock`, `allocate_foodbank_stock_from_aggregate`, `transfer_foodbank_stock`), pengiraan bajet RM70k, RBAC `isExecutiveAdmin` vs pegawai kaunter, `exportXlsx`, `sendNotificationToUser`, `buildFoodBankEmail`/`sendEmail`, `FoodBankQrPassModal`, dan `ConfirmDialog`.
   - Mematuhi skala tipografi 4-berat (`font-normal`..`font-bold`, sifar `font-black`/`font-extrabold`, minimum `text-xs`) merentas semua fail Fasa A.
 
+---
+
+## 50. Elevasi JPP HQ Fasa B — Sapuan Token *Obsidian Carbon* & Disiplin Tipografi 4-Berat (Nov 2026)
+
+- **Penyelarasan Token Mod Gelap *Obsidian Carbon* (4 Halaman Pentadbiran Sekunder — Sifar Perubahan Logik):**
+  - `src/pages/jpp/units/MakmpAdminDashboardPage.tsx`, `src/pages/jpp/JppAsramaPage.tsx`, `src/pages/jpp/PolyServicesAdmin.tsx`, dan `src/pages/jpp/JppPolyMapsAdmin.tsx`: menggantikan kesemua permukaan gelap legasi (`dark:bg-slate-950/900/800`, `dark:border-slate-800/700`, `dark:bg-[#1a1b23]`/`#0f1015`, `dark:bg-emerald-950/*`, dan modal pratonton 360° gelap) kepada tangga *Obsidian Carbon* seragam (`#0E1116` input/kepala jadual/krom, `#13171D` kad/modal, `#1B2028` cip/hover, `#252B35` sempadan, `#2DD4BF` aksen terpilih) tanpa menyentuh logik muat naik/mampatan 360° PolyMaps atau kuiri pangkalan data.
+- **Disiplin Tipografi 4-Berat & Kebersihan Permukaan Merentas 8 Halaman Teras Kokpit JPP HQ:**
+  - `JppHomePage.tsx`, `JppOverviewPage.tsx`, `JppMembersPage.tsx`, `JppTakwimPage.tsx`, `JppUsersPage.tsx`, `JppLogsPage.tsx`, `JppNexusPage.tsx`, dan `JppSettingsPage.tsx`: menghapuskan semua `font-black`/`font-extrabold` kepada `font-bold`/`font-semibold` dan menggantikan teks mikro `text-[8px]`–`text-[11px]` kepada `text-xs` minimum boleh baca.
+  - Membersihkan baki kebocoran kecil: membuang kilauan neon `shadow-[0_0_8px_rgba(52,211,153,0.7)]` & titik `animate-pulse` pada `JppHomePage.tsx`, menggantikan 4 baki `dark:bg-[#0f0f13]` kepada `dark:bg-[#13171D]` pada `JppMembersPage.tsx`, serta menukar baki `dark:bg-slate-900`/`dark:border-slate-800` kepada *Obsidian Carbon* pada `JppTakwimPage.tsx`, sambil mengekalkan 100% kontrak `jppCockpitEarthyMinimal.test.ts` (sifar emoji mentah & sifar sengkang `—`/`–`) dan `JppPhase2Redesign.test.tsx`.
+
 
 
 

@@ -273,8 +273,8 @@ export function JppNexusPage() {
                             <Brain className="w-5 h-5" style={{ color: themeColor }} />
                         </div>
                         <div>
-                            <h1 className="text-2xl font-black text-slate-900 dark:text-white leading-tight">{t('jpp:nexus_title', 'Nexus Analytics & Master Switches')}</h1>
-                            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500 dark:text-white/30">{t('jpp:nexus_subtitle', 'Kawalan utama penggunaan AI & Token')}</p>
+                            <h1 className="text-2xl font-bold text-slate-900 dark:text-white leading-tight">{t('jpp:nexus_title', 'Nexus Analytics & Master Switches')}</h1>
+                            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500 dark:text-white/30">{t('jpp:nexus_subtitle', 'Kawalan utama penggunaan AI & Token')}</p>
                         </div>
                     </div>
                 </motion.div>
@@ -290,22 +290,22 @@ export function JppNexusPage() {
                             <div className="relative z-10 space-y-8 flex flex-col justify-between h-full">
                                 <div className="flex items-start justify-between">
                                     <div>
-                                        <h3 className="font-black text-2xl tracking-tighter text-white">{t('jpp:nexus_metrics_title', 'Metrik Nexus AI')}</h3>
-                                        <p className="text-[10px] font-black text-indigo-300 uppercase tracking-widest mt-1">{t('jpp:nexus_metrics_subtitle', 'Guna Pakai Token Bulan ini')}</p>
+                                        <h3 className="font-bold text-2xl tracking-tighter text-white">{t('jpp:nexus_metrics_title', 'Metrik Nexus AI')}</h3>
+                                        <p className="text-xs font-semibold text-indigo-300 uppercase tracking-widest mt-1">{t('jpp:nexus_metrics_subtitle', 'Guna Pakai Token Bulan ini')}</p>
                                     </div>
                                     <div className="px-3 py-1.5 bg-white/5  rounded-xl border border-white/10">
-                                        <p className="text-[9px] font-black uppercase text-indigo-200 tracking-widest">{t('jpp:nexus_smart_system', 'Sistem Pintar v2.0')}</p>
+                                        <p className="text-xs font-semibold uppercase text-indigo-200 tracking-widest">{t('jpp:nexus_smart_system', 'Sistem Pintar v2.0')}</p>
                                     </div>
                                 </div>
 
                                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 items-end">
                                     <div className="space-y-6">
                                         <div>
-                                            <p className="text-5xl font-black tracking-tighter text-white font-mono tabular-nums">{(settings.ai_total_tokens || 0).toLocaleString()}</p>
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-300/60 mt-1">{t('jpp:nexus_tokens_generated', 'Token Dijana')}</p>
+                                            <p className="text-5xl font-bold tracking-tighter text-white font-mono tabular-nums">{(settings.ai_total_tokens || 0).toLocaleString()}</p>
+                                            <p className="text-xs font-bold uppercase tracking-widest text-indigo-300/60 mt-1">{t('jpp:nexus_tokens_generated', 'Token Dijana')}</p>
                                         </div>
                                         <div className="space-y-3">
-                                            <div className="flex justify-between text-[10px] font-black text-indigo-200 uppercase tracking-tight">
+                                            <div className="flex justify-between text-xs font-semibold text-indigo-200 uppercase tracking-tight">
                                                 <span>{t('jpp:nexus_global_token_limit', 'Had Token Global')}</span>
                                                 <div className="flex items-center gap-2">
                                                     <span className="text-white font-mono tabular-nums">{(Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)).toFixed(1)}%</span>
@@ -316,26 +316,26 @@ export function JppNexusPage() {
                                             <div className="h-3 rounded-full bg-black/40 border border-white/5 overflow-hidden">
                                                 <div className="h-full bg-emerald-500 relative transition-all duration-500 rounded-full" style={{ width: `${Math.min(((settings.ai_total_tokens || 0) / (settings.ai_token_limit || 1000000)) * 100, 100)}%` }}></div>
                                             </div>
-                                            <p className="text-[9px] font-medium text-indigo-300/50 uppercase tracking-widest font-mono tabular-nums">{t('jpp:nexus_server_capacity', 'Kapasiti Server: {{count}} Token', { count: (settings.ai_token_limit || 1000000).toLocaleString() })}</p>
+                                            <p className="text-xs font-medium text-indigo-300/50 uppercase tracking-widest font-mono tabular-nums">{t('jpp:nexus_server_capacity', 'Kapasiti Server: {{count}} Token', { count: (settings.ai_token_limit || 1000000).toLocaleString() })}</p>
                                         </div>
                                     </div>
                                     
                                     <div className="grid grid-cols-2 gap-3">
                                         <div className="bg-black/20  rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
                                             <Sparkles className="w-4 h-4 text-amber-400 mb-2" />
-                                            <p className="text-xl font-black text-white font-mono tabular-nums">
+                                            <p className="text-xl font-bold text-white font-mono tabular-nums">
                                                 {settings.ai_total_tokens
                                                     ? Math.round(settings.ai_total_tokens / 480).toLocaleString()
                                                     : '—'}
                                             </p>
-                                            <p className="text-[8px] font-black text-indigo-300/70 uppercase tracking-widest mt-1">{t('jpp:nexus_est_calls', 'Anggaran Panggilan')}</p>
+                                            <p className="text-xs font-semibold text-indigo-300/70 uppercase tracking-widest mt-1">{t('jpp:nexus_est_calls', 'Anggaran Panggilan')}</p>
                                         </div>
                                         <div className="bg-black/20  rounded-2xl p-4 border border-white/5 hover:border-white/10 transition-colors">
                                             <Activity className={`w-4 h-4 mb-2 ${settings.allow_ai_chat ? 'text-emerald-400' : 'text-rose-400'}`} />
-                                            <p className={`text-xl font-black uppercase ${settings.allow_ai_chat ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                            <p className={`text-xl font-bold uppercase ${settings.allow_ai_chat ? 'text-emerald-400' : 'text-rose-400'}`}>
                                                 {settings.allow_ai_chat ? t('jpp:nexus_status_active', 'Aktif') : t('jpp:nexus_status_disabled', 'Ditutup')}
                                             </p>
-                                            <p className="text-[8px] font-black text-indigo-300/70 uppercase tracking-widest mt-1">{t('jpp:nexus_ai_status', 'Status AI Chat')}</p>
+                                            <p className="text-xs font-semibold text-indigo-300/70 uppercase tracking-widest mt-1">{t('jpp:nexus_ai_status', 'Status AI Chat')}</p>
                                         </div>
                                     </div>
                                 </div>
@@ -348,21 +348,21 @@ export function JppNexusPage() {
                                 <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center border border-indigo-500/20">
                                     <Lock className="w-5 h-5" />
                                 </div>
-                                <h4 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_master_controls', 'Master Controls')}</h4>
+                                <h4 className="font-bold text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_master_controls', 'Master Controls')}</h4>
                                 
                                 <div className="space-y-3 relative z-10 w-full sm:w-auto overflow-hidden">
                                     <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-slate-200 dark:border-white/5 transition-colors">
-                                        <p className="text-xs font-black text-slate-900 dark:text-white">{t('jpp:nexus_ai_chat_hub', 'AI Chat Hub')}</p>
+                                        <p className="text-xs font-semibold text-slate-900 dark:text-white">{t('jpp:nexus_ai_chat_hub', 'AI Chat Hub')}</p>
                                         <button onClick={() => toggleSetting('allow_ai_chat', settings.allow_ai_chat)}
-                                            className={cn('rounded-full font-black text-[9px] w-12 h-7 uppercase tracking-widest transition-all',
+                                            className={cn('rounded-full font-semibold text-xs w-12 h-7 uppercase tracking-widest transition-all',
                                                 settings.allow_ai_chat ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400' : 'bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400')}>
                                             {settings.allow_ai_chat ? 'ON' : 'OFF'}
                                         </button>
                                     </div>
                                     <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-white/[0.02] hover:bg-slate-100 dark:hover:bg-white/[0.04] border border-slate-200 dark:border-white/5 transition-colors">
-                                        <p className="text-xs font-black text-slate-900 dark:text-white">{t('jpp:nexus_ai_budget_engine', 'Enjin Bajet AI')}</p>
+                                        <p className="text-xs font-semibold text-slate-900 dark:text-white">{t('jpp:nexus_ai_budget_engine', 'Enjin Bajet AI')}</p>
                                         <button onClick={() => toggleSetting('allow_ai_budget', settings.allow_ai_budget)}
-                                            className={cn('rounded-full font-black text-[9px] w-12 h-7 uppercase tracking-widest transition-all',
+                                            className={cn('rounded-full font-semibold text-xs w-12 h-7 uppercase tracking-widest transition-all',
                                                 settings.allow_ai_budget ? 'bg-indigo-500/20 border border-indigo-500/30 text-indigo-600 dark:text-indigo-400' : 'bg-rose-500/20 border border-rose-500/30 text-rose-600 dark:text-rose-400')}>
                                             {settings.allow_ai_budget ? 'ON' : 'OFF'}
                                         </button>
@@ -371,7 +371,7 @@ export function JppNexusPage() {
                             </div>
                             <div className="pt-6 flex flex-col sm:flex-row sm:items-center gap-2 text-amber-600 dark:text-amber-500/60 w-full">
                                 <AlertTriangle className="w-4 h-4 flex-shrink-0" />
-                                <span className="text-[9px] font-black uppercase tracking-wider leading-relaxed">{t('jpp:nexus_stay_active_warning', 'Kekal Aktif Kecuali Kecemasan')}</span>
+                                <span className="text-xs font-semibold uppercase tracking-wider leading-relaxed">{t('jpp:nexus_stay_active_warning', 'Kekal Aktif Kecuali Kecemasan')}</span>
                             </div>
                         </div>
                     </div>
@@ -382,22 +382,22 @@ export function JppNexusPage() {
                         <div className="md:col-span-2 p-8 rounded-[2.5rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm text-slate-900 dark:text-white">
                             <div className="flex items-center gap-2 mb-8">
                                 <Sparkles className="w-4 h-4 text-indigo-500 dark:text-indigo-400" />
-                                <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_token_economics_title', 'Ekonomi Token & Kos Perkhidmatan')}</h3>
+                                <h3 className="font-bold text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_token_economics_title', 'Ekonomi Token & Kos Perkhidmatan')}</h3>
                             </div>
                             
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-8">
                                 <div className="space-y-4">
-                                    <h4 className="text-[9px] font-black uppercase text-indigo-600 dark:text-indigo-400 tracking-[0.2em]">{t('jpp:nexus_monthly_pass_distribution', 'Pengagihan Pas Bulanan')}</h4>
+                                    <h4 className="text-xs font-bold uppercase text-indigo-600 dark:text-indigo-400 tracking-[0.2em]">{t('jpp:nexus_monthly_pass_distribution', 'Pengagihan Pas Bulanan')}</h4>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-500/5 hover:bg-indigo-100 dark:hover:bg-indigo-500/10 border border-indigo-200 dark:border-indigo-500/10 transition-colors">
-                                            <span className="text-xs font-black text-slate-900 dark:text-white">{t('jpp:nexus_tier_pro', 'PRO Tier')}</span>
+                                            <span className="text-xs font-semibold text-slate-900 dark:text-white">{t('jpp:nexus_tier_pro', 'PRO Tier')}</span>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-mono text-indigo-600 dark:text-indigo-300 font-bold">{settings.ai_token_settings?.pro_tier_tokens ?? 1000}</span>
                                                 <button onClick={() => updateAiTokenAllowance('pro_tier_tokens', 'PRO')} className="text-slate-400 hover:text-indigo-600 dark:text-white/20 dark:hover:text-indigo-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 border border-slate-200 dark:border-white/5 transition-colors">
-                                            <span className="text-xs font-black text-slate-700 dark:text-white/70">{t('jpp:nexus_tier_free', 'FREE Tier')}</span>
+                                            <span className="text-xs font-semibold text-slate-700 dark:text-white/70">{t('jpp:nexus_tier_free', 'FREE Tier')}</span>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-mono text-slate-600 dark:text-white/50 font-bold">{settings.ai_token_settings?.free_tier_tokens ?? 200}</span>
                                                 <button onClick={() => updateAiTokenAllowance('free_tier_tokens', 'PERCUMA')} className="text-slate-400 hover:text-slate-900 dark:text-white/20 dark:hover:text-white"><SettingsIcon className="w-3.5 h-3.5" /></button>
@@ -406,17 +406,17 @@ export function JppNexusPage() {
                                     </div>
                                 </div>
                                 <div className="space-y-4">
-                                    <h4 className="text-[9px] font-black uppercase text-amber-600 dark:text-amber-400 tracking-[0.2em]">{t('jpp:nexus_ai_operating_costs', 'Kos Operasi AI')}</h4>
+                                    <h4 className="text-xs font-bold uppercase text-amber-600 dark:text-amber-400 tracking-[0.2em]">{t('jpp:nexus_ai_operating_costs', 'Kos Operasi AI')}</h4>
                                     <div className="space-y-3">
                                         <div className="flex items-center justify-between p-4 rounded-2xl bg-amber-50 dark:bg-amber-500/5 hover:bg-amber-100 dark:hover:bg-amber-500/10 border border-amber-200 dark:border-amber-500/10 transition-colors">
-                                            <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_pro_work_paper', 'Kertas Kerja PRO')}</span>
+                                            <span className="text-xs font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_pro_work_paper', 'Kertas Kerja PRO')}</span>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-mono text-amber-600 dark:text-amber-400 font-bold">{settings.ai_token_settings?.costs?.pro_kertas_kerja ?? 50} Tk</span>
                                                 <button onClick={() => updateAiTokenCost('pro_kertas_kerja', t('jpp:nexus_feature_pro_paper', 'Janaan Kertas Kerja Pro'))} className="text-slate-400 hover:text-amber-600 dark:text-white/20 dark:hover:text-amber-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                             </div>
                                         </div>
                                         <div className="flex items-center justify-between p-4 rounded-2xl bg-cyan-50 dark:bg-cyan-500/5 hover:bg-cyan-100 dark:hover:bg-cyan-500/10 border border-cyan-200 dark:border-cyan-500/10 transition-colors">
-                                            <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_flash_work_paper', 'Kertas Kerja FLASH')}</span>
+                                            <span className="text-xs font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_flash_work_paper', 'Kertas Kerja FLASH')}</span>
                                             <div className="flex items-center gap-3">
                                                 <span className="font-mono text-cyan-600 dark:text-cyan-400 font-bold">{settings.ai_token_settings?.costs?.flash_kertas_kerja ?? 20} Tk</span>
                                                 <button onClick={() => updateAiTokenCost('flash_kertas_kerja', t('jpp:nexus_feature_flash_paper', 'Janaan Kertas Kerja Flash'))} className="text-slate-400 hover:text-cyan-600 dark:text-white/20 dark:hover:text-cyan-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
@@ -427,14 +427,14 @@ export function JppNexusPage() {
                             </div>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-6 border-t border-slate-200 dark:border-white/[0.06]">
                                 <div className="flex items-center justify-between p-4 rounded-2xl bg-rose-50 dark:bg-rose-500/5 hover:bg-rose-100 dark:hover:bg-rose-500/10 border border-rose-200 dark:border-rose-500/10 transition-colors">
-                                    <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_club_report', 'Analisis Laporan Kelab')}</span>
+                                    <span className="text-xs font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_club_report', 'Analisis Laporan Kelab')}</span>
                                     <div className="flex items-center gap-3">
                                         <span className="font-mono text-rose-600 dark:text-rose-400 font-bold">{settings.ai_token_settings?.costs?.analisis ?? 5} Tk</span>
                                         <button onClick={() => updateAiTokenCost('analisis', t('jpp:nexus_feature_report_analysis', 'Analisis Laporan'))} className="text-slate-400 hover:text-rose-600 dark:text-white/20 dark:hover:text-rose-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
                                     </div>
                                 </div>
                                 <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-500/5 hover:bg-emerald-100 dark:hover:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/10 transition-colors">
-                                    <span className="text-[11px] font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_grammar_check', 'Semakan Tatabahasa')}</span>
+                                    <span className="text-xs font-bold text-slate-900 dark:text-white">{t('jpp:nexus_cost_grammar_check', 'Semakan Tatabahasa')}</span>
                                     <div className="flex items-center gap-3">
                                         <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{settings.ai_token_settings?.costs?.semak_ejaan === 0 ? t('jpp:nexus_cost_free', 'Percuma') : t('jpp:nexus_cost_tokens', '{{cost}} Tk', { cost: settings.ai_token_settings?.costs?.semak_ejaan })}</span>
                                         <button onClick={() => updateAiTokenCost('semak_ejaan', t('jpp:nexus_cost_grammar_check', 'Semakan Tatabahasa'))} className="text-slate-400 hover:text-emerald-600 dark:text-white/20 dark:hover:text-emerald-400"><SettingsIcon className="w-3.5 h-3.5" /></button>
@@ -448,27 +448,27 @@ export function JppNexusPage() {
                             <div className="space-y-6">
                                 <div className="flex items-center gap-2">
                                     <ShieldCheck className="w-4 h-4 text-rose-500" />
-                                    <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_anti_spam_title', 'Had Anti-Spam')}</h3>
+                                    <h3 className="font-bold text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_anti_spam_title', 'Had Anti-Spam')}</h3>
                                 </div>
                                 <div className="p-5 rounded-3xl bg-amber-50 dark:bg-amber-500/5 border border-amber-200 dark:border-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/10 transition-all">
                                     <div className="flex justify-between items-center mb-4">
                                         <div className="flex items-center gap-2 text-amber-600 dark:text-amber-500">
                                             <AlertTriangle className="w-3.5 h-3.5" />
-                                            <p className="text-[9px] font-black uppercase tracking-widest">{t('jpp:nexus_early_warning', 'Amaran Awal')}</p>
+                                            <p className="text-xs font-semibold uppercase tracking-widest">{t('jpp:nexus_early_warning', 'Amaran Awal')}</p>
                                         </div>
-                                        <button onClick={() => updateSpamThreshold('warning')} className="text-[9px] font-black text-amber-600 dark:text-amber-500 hover:text-amber-500 dark:hover:text-amber-400">{t('jpp:nexus_adjust_btn', 'LARAS')}</button>
+                                        <button onClick={() => updateSpamThreshold('warning')} className="text-xs font-semibold text-amber-600 dark:text-amber-500 hover:text-amber-500 dark:hover:text-amber-400">{t('jpp:nexus_adjust_btn', 'LARAS')}</button>
                                     </div>
-                                    <p className="text-3xl font-black text-amber-600 dark:text-amber-500 tabular-nums">{settings.ai_rate_limit?.warning_threshold || 50}</p>
+                                    <p className="text-3xl font-bold text-amber-600 dark:text-amber-500 tabular-nums">{settings.ai_rate_limit?.warning_threshold || 50}</p>
                                 </div>
                                 <div className="p-5 rounded-3xl bg-rose-50 dark:bg-rose-500/5 border border-rose-200 dark:border-rose-500/10 hover:bg-rose-100 dark:hover:bg-rose-500/10 transition-all">
                                     <div className="flex justify-between items-center mb-4">
                                         <div className="flex items-center gap-2 text-rose-600 dark:text-rose-500">
                                             <Lock className="w-3.5 h-3.5" />
-                                            <p className="text-[9px] font-black uppercase tracking-widest">{t('jpp:nexus_api_block', 'Sekatan API')}</p>
+                                            <p className="text-xs font-semibold uppercase tracking-widest">{t('jpp:nexus_api_block', 'Sekatan API')}</p>
                                         </div>
-                                        <button onClick={() => updateSpamThreshold('block')} className="text-[9px] font-black text-rose-600 dark:text-rose-500 hover:text-rose-500 dark:hover:text-rose-400">{t('jpp:nexus_adjust_btn', 'LARAS')}</button>
+                                        <button onClick={() => updateSpamThreshold('block')} className="text-xs font-semibold text-rose-600 dark:text-rose-500 hover:text-rose-500 dark:hover:text-rose-400">{t('jpp:nexus_adjust_btn', 'LARAS')}</button>
                                     </div>
-                                    <p className="text-3xl font-black text-rose-600 dark:text-rose-500 tabular-nums">{settings.ai_rate_limit?.block_threshold || 65}</p>
+                                    <p className="text-3xl font-bold text-rose-600 dark:text-rose-500 tabular-nums">{settings.ai_rate_limit?.block_threshold || 65}</p>
                                 </div>
                             </div>
                         </div>
@@ -478,46 +478,46 @@ export function JppNexusPage() {
                     <div className="p-8 rounded-[2.5rem] border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-sm text-slate-900 dark:text-white">
                         <div className="flex items-center gap-3 mb-6">
                             <Shield className="w-5 h-5 text-indigo-500 dark:text-indigo-400" />
-                            <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_suspicious_title', 'Pemantauan Akaun Suspicious')}</h3>
-                            <span className="px-2.5 py-1 text-[9px] font-black bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white rounded-full">{t('jpp:nexus_detected_count', '{{count}} dikesan', { count: suspiciousUsers.length })}</span>
+                            <h3 className="font-bold text-xs uppercase tracking-[0.2em] text-slate-500 dark:text-white/40">{t('jpp:nexus_suspicious_title', 'Pemantauan Akaun Suspicious')}</h3>
+                            <span className="px-2.5 py-1 text-xs font-semibold bg-slate-100 dark:bg-white/10 text-slate-700 dark:text-white rounded-full">{t('jpp:nexus_detected_count', '{{count}} dikesan', { count: suspiciousUsers.length })}</span>
                         </div>
                         {suspiciousUsers.length === 0 ? (
                             <div className="py-16 text-center">
                                 <div className="w-16 h-16 rounded-[1.5rem] bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-500 flex items-center justify-center mx-auto mb-4">
                                     <CheckCheck className="w-8 h-8" />
                                 </div>
-                                <p className="text-sm font-black text-slate-900 dark:text-white">{t('jpp:nexus_system_under_control', 'Sistem Di Bawah Kawalan')}</p>
-                                <p className="text-[10px] uppercase tracking-widest text-slate-500 dark:text-white/30 mt-2">{t('jpp:nexus_no_suspicious', 'Tiada akaun dikesan menyalahgunakan Nexus AI setakat ini.')}</p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-white">{t('jpp:nexus_system_under_control', 'Sistem Di Bawah Kawalan')}</p>
+                                <p className="text-xs uppercase tracking-widest text-slate-500 dark:text-white/30 mt-2">{t('jpp:nexus_no_suspicious', 'Tiada akaun dikesan menyalahgunakan Nexus AI setakat ini.')}</p>
                             </div>
                         ) : (
                             <div className="space-y-3">
                                 {suspiciousUsers.map(u => (
                                     <div key={u.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 bg-slate-50 dark:bg-white/[0.01] hover:bg-slate-100 dark:hover:bg-white/[0.03] border border-slate-200 dark:border-white/5 rounded-2xl transition-colors">
                                         <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-white/5 flex items-center justify-center font-black text-slate-600 dark:text-white/50">
+                                            <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-white/5 flex items-center justify-center font-bold text-slate-600 dark:text-white/50">
                                                 {(u.full_name || u.email || '?')[0].toUpperCase()}
                                             </div>
                                             <div>
                                                 <div className="flex items-center gap-2 mb-1">
                                                     <p className="text-sm font-bold text-slate-900 dark:text-white">{u.full_name || u.email}</p>
-                                                    <span className={cn("px-2 py-0.5 text-[8px] font-black uppercase tracking-widest rounded-md",
+                                                    <span className={cn("px-2 py-0.5 text-xs font-semibold uppercase tracking-widest rounded-md",
                                                         u.ai_status === 'permanent_ban' ? 'bg-rose-500 text-white' : 
                                                         u.ai_status === 'flagged' ? 'bg-orange-500 text-white' : 'bg-amber-500 text-black'
                                                     )}>
                                                         {u.ai_status.replace('_', ' ')}
                                                     </span>
                                                 </div>
-                                                <p className="text-[10px] text-slate-500 dark:text-white/40">{t('jpp:nexus_daily_frequency', 'Kekerapan Harian:')} <span className="text-slate-900 dark:text-white font-bold">{u.ai_daily_usage} {t('jpp:nexus_ping_unit', 'ping')}</span></p>
+                                                <p className="text-xs text-slate-500 dark:text-white/40">{t('jpp:nexus_daily_frequency', 'Kekerapan Harian:')} <span className="text-slate-900 dark:text-white font-bold">{u.ai_daily_usage} {t('jpp:nexus_ping_unit', 'ping')}</span></p>
                                             </div>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             {(u.ai_status === 'flagged' || u.ai_status === 'permanent_ban' || u.ai_status === 'warned') && (
-                                                <button onClick={() => setBanConfirmState({ open: true, userId: u.id, action: 'unban', userName: u.full_name })} className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
+                                                <button onClick={() => setBanConfirmState({ open: true, userId: u.id, action: 'unban', userName: u.full_name })} className="px-4 py-2 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 hover:bg-emerald-500/20 text-xs font-semibold uppercase tracking-widest transition-colors">
                                                     {t('jpp:nexus_restore_access', 'Pulihkan Akses')}
                                                 </button>
                                             )}
                                             {u.ai_status !== 'permanent_ban' && (
-                                                <button onClick={() => setBanConfirmState({ open: true, userId: u.id, action: 'permanent_ban', userName: u.full_name })} className="px-4 py-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 text-[9px] font-black uppercase tracking-widest transition-colors">
+                                                <button onClick={() => setBanConfirmState({ open: true, userId: u.id, action: 'permanent_ban', userName: u.full_name })} className="px-4 py-2 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 hover:bg-rose-500/20 text-xs font-semibold uppercase tracking-widest transition-colors">
                                                     {t('jpp:nexus_permanent_ban', 'Sekat Berterusan')}
                                                 </button>
                                             )}

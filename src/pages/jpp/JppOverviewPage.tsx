@@ -58,13 +58,13 @@ function BigStatCard({
         >
           <Icon className="w-5 h-5" style={{ color }} />
         </div>
-        <span className="text-[10px] font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">
+        <span className="text-xs font-semibold uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2]">
           Sistem
         </span>
       </div>
-      <p className="text-3xl font-black text-[#0B2420] dark:text-[#F1F5F9] leading-none font-mono tabular-nums">{value}</p>
-      <p className="text-xs font-black uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mt-1">{label}</p>
-      {sub && <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2] mt-1">{sub}</p>}
+      <p className="text-3xl font-bold text-[#0B2420] dark:text-[#F1F5F9] leading-none font-mono tabular-nums">{value}</p>
+      <p className="text-xs font-semibold uppercase tracking-widest text-[#3B635C] dark:text-[#94A0B2] mt-1">{label}</p>
+      {sub && <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-1">{sub}</p>}
     </motion.div>
   );
 }
@@ -152,8 +152,8 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
               <BellRing className="w-5 h-5 text-[#0F172A] dark:text-[#F1F5F9]" />
             </div>
             <div>
-              <h2 className="text-lg font-black text-[#0F172A] dark:text-[#F1F5F9] leading-tight">{t('jpp:overview_notif_subs_list', 'Senarai Langganan Notifikasi')}</h2>
-              <p className="text-[10px] text-[#475569] dark:text-[#94A0B2] font-bold uppercase tracking-widest">{subs.length} {t('jpp:overview_active_devices', 'peranti aktif')}</p>
+              <h2 className="text-lg font-bold text-[#0F172A] dark:text-[#F1F5F9] leading-tight">{t('jpp:overview_notif_subs_list', 'Senarai Langganan Notifikasi')}</h2>
+              <p className="text-xs text-[#475569] dark:text-[#94A0B2] font-bold uppercase tracking-widest">{subs.length} {t('jpp:overview_active_devices', 'peranti aktif')}</p>
             </div>
           </div>
           <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-[#0F766E]/10 dark:hover:bg-white/10 text-[#475569] dark:text-white/50 hover:text-[#0F172A] dark:hover:text-white transition-colors">
@@ -182,7 +182,7 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     <div className="w-12 h-12 shrink-0 rounded-2xl bg-white dark:bg-black/30 border border-[#B8E4DC]/80 dark:border-white/10 flex items-center justify-center relative">
                       <DeviceIcon className="w-5 h-5 text-[#475569] dark:text-white/50" />
                       {s.device_hint && (
-                        <div className="absolute -bottom-1 text-[8px] font-black px-1.5 py-0.5 rounded-md bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-white/20 text-[#0F172A] dark:text-white uppercase truncate max-w-[40px] shadow-sm">
+                        <div className="absolute -bottom-1 text-xs font-semibold px-1.5 py-0.5 rounded-md bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-white/20 text-[#0F172A] dark:text-white uppercase truncate max-w-[40px] shadow-sm">
                           {s.device_hint}
                         </div>
                       )}
@@ -191,15 +191,15 @@ function PushSubscribersModal({ isOpen, onClose }: { isOpen: boolean; onClose: (
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-bold text-[#0F172A] dark:text-white truncate">{p?.full_name || t('jpp:overview_unknown_user', 'Pengguna Tidak Diketahui')}</p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[10px] text-[#475569] dark:text-white/40">{p?.matric_no}</span>
+                        <span className="text-xs text-[#475569] dark:text-white/40">{p?.matric_no}</span>
                         <span className="w-1 h-1 rounded-full bg-[#B8E4DC] dark:bg-white/20" />
-                        <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">{p?.role}</span>
+                        <span className="text-xs text-emerald-600 dark:text-emerald-400 font-bold">{p?.role}</span>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-4 shrink-0">
                       <div className="text-right hidden sm:block">
-                        <p className="text-[10px] text-[#475569]/70 dark:text-white/30">{t('jpp:overview_subscribed_at', 'Dilanggan pada')}</p>
+                        <p className="text-xs text-[#475569]/70 dark:text-white/30">{t('jpp:overview_subscribed_at', 'Dilanggan pada')}</p>
                         <p className="text-xs text-[#475569] dark:text-white/60 font-medium">
                           {new Date(s.created_at).toLocaleDateString('ms-MY', { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
@@ -378,11 +378,11 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
           <ClipboardList className="w-5 h-5" style={{ color: themeColor }} />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-[#0F172A] dark:text-[#F1F5F9] leading-tight">{t('jpp:overview_profile_audit_title', 'Semakan Pindaan Profil')}</h2>
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#475569] dark:text-[#94A0B2]">{t('jpp:overview_profile_audit_subtitle', 'Kelulusan pindaan no. matrik & semester pelajar')}</p>
+          <h2 className="text-2xl font-bold text-[#0F172A] dark:text-[#F1F5F9] leading-tight">{t('jpp:overview_profile_audit_title', 'Semakan Pindaan Profil')}</h2>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#475569] dark:text-[#94A0B2]">{t('jpp:overview_profile_audit_subtitle', 'Kelulusan pindaan no. matrik & semester pelajar')}</p>
         </div>
         {pendingCount > 0 && (
-          <span className="ml-auto px-3 py-1.5 rounded-full text-xs font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">{pendingCount} PENDING</span>
+          <span className="ml-auto px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/20">{pendingCount} PENDING</span>
         )}
       </div>
 
@@ -393,7 +393,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
               key={tab.key}
               onClick={() => setFilter(tab.key)}
               className={cn(
-                'flex-1 py-3 text-[11px] font-black uppercase tracking-widest transition-all',
+                'flex-1 py-3 text-xs font-semibold uppercase tracking-widest transition-all',
                 filter === tab.key ? 'text-[#0F172A] dark:text-[#F1F5F9] border-b-2' : 'text-[#475569] dark:text-white/30 hover:text-[#0F172A] dark:hover:text-white/60'
               )}
               style={filter === tab.key ? { borderBottomColor: themeColor, color: themeColor } : {}}
@@ -423,21 +423,21 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                       <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0" style={{ background: hexToRgba(themeColor, 0.15) }}>
                         <User className="w-3.5 h-3.5" style={{ color: themeColor }} />
                       </div>
-                      <p className="text-sm font-black text-[#0F172A] dark:text-[#F1F5F9] truncate">{req.requester?.full_name ?? '-'}</p>
-                      {req.requester?.matric_no && <span className="text-[10px] font-mono text-[#475569] dark:text-white/40 bg-[#E6F4F1] dark:bg-white/5 px-2 py-0.5 rounded-lg">{req.requester.matric_no}</span>}
+                      <p className="text-sm font-bold text-[#0F172A] dark:text-[#F1F5F9] truncate">{req.requester?.full_name ?? '-'}</p>
+                      {req.requester?.matric_no && <span className="text-xs font-mono text-[#475569] dark:text-white/40 bg-[#E6F4F1] dark:bg-white/5 px-2 py-0.5 rounded-lg">{req.requester.matric_no}</span>}
                     </div>
                     <div className="ml-9">
                       <p className="text-xs text-[#475569] dark:text-white/60 font-medium">
                         <span className="text-[#475569]/70 dark:text-white/30">Pindaan:</span>{' '}
                         <span className="font-bold text-[#0F172A] dark:text-white/80">{req.field_type === 'matric_no' ? t('jpp:matric_no', 'No. Matrik') : t('jpp:semester', 'Semester')}</span>
                         {' : '}
-                        <span className="line-through text-[#475569]/60 dark:text-white/30 font-mono text-[11px]">{req.current_value ?? '-'}</span>
+                        <span className="line-through text-[#475569]/60 dark:text-white/30 font-mono text-xs">{req.current_value ?? '-'}</span>
                         {' -> '}
-                        <span className="font-black text-[#0F172A] dark:text-white font-mono">{req.requested_value}</span>
+                        <span className="font-bold text-[#0F172A] dark:text-white font-mono">{req.requested_value}</span>
                       </p>
-                      {req.reason && <p className="text-[11px] text-[#475569] dark:text-white/40 mt-1">Sebab: {req.reason}</p>}
-                      {req.review_note && <p className="text-[11px] text-amber-600 dark:text-amber-400/80 mt-1">Nota JPP: {req.review_note}</p>}
-                      <div className="flex items-center gap-3 mt-1.5 text-[10px] text-[#475569]/70 dark:text-white/25">
+                      {req.reason && <p className="text-xs text-[#475569] dark:text-white/40 mt-1">Sebab: {req.reason}</p>}
+                      {req.review_note && <p className="text-xs text-amber-600 dark:text-amber-400/80 mt-1">Nota JPP: {req.review_note}</p>}
+                      <div className="flex items-center gap-3 mt-1.5 text-xs text-[#475569]/70 dark:text-white/25">
                         <span>Dihantar: {new Date(req.submitted_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                         {req.reviewed_at && <span>· Disemak: {new Date(req.reviewed_at).toLocaleDateString('ms-MY', { day: '2-digit', month: 'short', year: 'numeric' })}</span>}
                         {req.reviewer?.full_name && <span>· {t('jpp:by', 'oleh')} {req.reviewer.full_name}</span>}
@@ -447,10 +447,10 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
 
                   {req.status === 'PENDING' && (
                     <div className="flex gap-2 shrink-0">
-                      <button onClick={() => openModal(req, 'REJECTED')} className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all">
+                      <button onClick={() => openModal(req, 'REJECTED')} className="px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 hover:bg-red-500/20 transition-all">
                         <XCircle className="w-3.5 h-3.5 inline mr-1" />Tolak
                       </button>
-                      <button onClick={() => openModal(req, 'APPROVED')} className="px-4 py-2 rounded-xl text-[11px] font-black uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 transition-all border border-emerald-500/30">
+                      <button onClick={() => openModal(req, 'APPROVED')} className="px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 transition-all border border-emerald-500/30">
                         <CheckCircle2 className="w-3.5 h-3.5 inline mr-1" />Lulus
                       </button>
                     </div>
@@ -458,8 +458,8 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                   {req.status !== 'PENDING' && (
                     <div className="shrink-0">
                       {req.status === 'APPROVED'
-                        ? <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" />DILULUSKAN</span>
-                        : <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-[10px] font-black bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20"><XCircle className="w-3 h-3" />DITOLAK</span>
+                        ? <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20"><CheckCircle2 className="w-3 h-3" />DILULUSKAN</span>
+                        : <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/20"><XCircle className="w-3 h-3" />DITOLAK</span>
                       }
                     </div>
                   )}
@@ -487,17 +487,17 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                     {reviewModal.action === 'APPROVED' ? <CheckCircle2 className="w-5 h-5 text-emerald-500 dark:text-emerald-400" /> : <XCircle className="w-5 h-5 text-red-500 dark:text-red-400" />}
                   </div>
                   <div>
-                    <p className="font-black text-[#0F172A] dark:text-[#F1F5F9] text-sm">{reviewModal.action === 'APPROVED' ? 'Luluskan' : 'Tolak'} Permintaan Pindaan</p>
-                    <p className="text-[11px] text-[#475569] dark:text-white/40">
+                    <p className="font-bold text-[#0F172A] dark:text-[#F1F5F9] text-sm">{reviewModal.action === 'APPROVED' ? 'Luluskan' : 'Tolak'} Permintaan Pindaan</p>
+                    <p className="text-xs text-[#475569] dark:text-white/40">
                       {reviewModal.req.field_type === 'matric_no' ? t('jpp:matric_no', 'No. Matrik') : t('jpp:semester', 'Semester')}:{' '}
                       <span className="font-mono text-[#475569]/60 dark:text-white/60 line-through">{reviewModal.req.current_value}</span>
-                      {' -> '}<span className="font-mono text-[#0F172A] dark:text-white font-black">{reviewModal.req.requested_value}</span>
+                      {' -> '}<span className="font-mono text-[#0F172A] dark:text-white font-bold">{reviewModal.req.requested_value}</span>
                     </p>
-                    <p className="text-[10px] text-[#475569]/80 dark:text-white/30 mt-0.5">{t('jpp:student', 'Pelajar')}: {reviewModal.req.requester?.full_name}</p>
+                    <p className="text-xs text-[#475569]/80 dark:text-white/30 mt-0.5">{t('jpp:student', 'Pelajar')}: {reviewModal.req.requester?.full_name}</p>
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <label className="text-[11px] font-black uppercase tracking-widest text-[#475569] dark:text-white/40">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-[#475569] dark:text-white/40">
                     {reviewModal.action === 'REJECTED' ? t('jpp:overview_rejection_reason_label', 'Sebab Penolakan *') : t('jpp:overview_review_notes_optional', 'Nota Ulasan (Pilihan)')}
                   </label>
                   <textarea
@@ -505,7 +505,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                     placeholder={reviewModal.action === 'REJECTED' ? t('jpp:overview_rejection_reason_placeholder', 'Nyatakan sebab penolakan...') : t('jpp:overview_additional_note_placeholder', 'Nota tambahan (jika ada)...')}
                     className="w-full px-4 py-3 rounded-xl bg-[#F6FBF9] dark:bg-white/5 border border-[#B8E4DC]/80 dark:border-white/10 text-sm text-[#0F172A] dark:text-white placeholder:text-[#475569]/60 dark:placeholder:text-white/20 font-medium resize-none focus:outline-none focus:border-[#0F766E] dark:focus:border-white/20"
                   />
-                  <p className="text-[10px] text-[#475569]/70 dark:text-white/25">{t('jpp:overview_audit_log_note', 'Nota ini akan direkodkan dalam Audit Log dan dihantar kepada pelajar.')}</p>
+                  <p className="text-xs text-[#475569]/70 dark:text-white/25">{t('jpp:overview_audit_log_note', 'Nota ini akan direkodkan dalam Audit Log dan dihantar kepada pelajar.')}</p>
                 </div>
                 <div className="flex gap-3">
                   <button onClick={() => setReviewModal({ open: false, req: null, action: null })} disabled={processing}
@@ -513,7 +513,7 @@ function ProfileEditRequestsSection({ themeColor }: { themeColor: string }) {
                     {t('jpp:cancel', 'Batal')}
                   </button>
                   <button onClick={handleReview} disabled={processing || (reviewModal.action === 'REJECTED' && !reviewNote.trim())}
-                    className={cn('flex-1 h-11 rounded-xl font-black text-xs uppercase tracking-wider transition-all disabled:opacity-40',
+                    className={cn('flex-1 h-11 rounded-xl font-semibold text-xs uppercase tracking-wider transition-all disabled:opacity-40',
                       reviewModal.action === 'APPROVED' ? 'bg-emerald-500 hover:bg-emerald-400 text-white' : 'bg-red-600 hover:bg-red-500 text-white')}>
                     {processing ? <><Loader2 className="w-4 h-4 animate-spin inline mr-1" />{t('jpp:processing', 'Memproses...')}</> : reviewModal.action === 'APPROVED' ? t('jpp:overview_confirm_approve', 'Sahkan Kelulusan') : t('jpp:overview_confirm_reject', 'Sahkan Penolakan')}
                   </button>
@@ -654,7 +654,7 @@ export function JppOverviewPage() {
       return (
         <div className="bg-[#0B2420] border border-[#1E4D45] rounded-xl p-3 shadow-xl ">
           <p className="text-[#99CBC2] text-xs font-bold mb-1">{label}</p>
-          <p className="text-[#F6FBF9] font-black text-lg">
+          <p className="text-[#F6FBF9] font-bold text-lg">
             {payload[0].value} <span className="text-xs font-medium text-[#99CBC2]/70">pelajar</span>
           </p>
         </div>
@@ -688,10 +688,10 @@ export function JppOverviewPage() {
               <BarChart3 className="w-5 h-5" style={{ color: themeColor }} />
             </div>
             <div>
-              <h1 className="text-2xl font-black text-[#0F172A] dark:text-[#F1F5F9] leading-tight">
+              <h1 className="text-2xl font-bold text-[#0F172A] dark:text-[#F1F5F9] leading-tight">
                 {t('jpp:overview_title', 'Analisis Prestasi Rentas-Kelab')}
               </h1>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#475569] dark:text-[#94A0B2]">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#475569] dark:text-[#94A0B2]">
                 {t('jpp:overview_subtitle', 'Indeks komprehensif, metrik kesihatan, dan pematuhan program semua kelab mahasiswa POLISAS.')}
               </p>
             </div>
@@ -736,18 +736,18 @@ export function JppOverviewPage() {
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4">
                   <div>
-                    <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#475569] dark:text-[#94A0B2] mb-1">{t('jpp:overview_student_reg_trend', 'Trend Pendaftaran Pelajar')}</h2>
-                    <p className="text-2xl font-black text-[#0F172A] dark:text-[#F1F5F9]">
+                    <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-[#475569] dark:text-[#94A0B2] mb-1">{t('jpp:overview_student_reg_trend', 'Trend Pendaftaran Pelajar')}</h2>
+                    <p className="text-2xl font-bold text-[#0F172A] dark:text-[#F1F5F9]">
                       <span className="font-mono tabular-nums">{(stats?.totalStudents ?? 0).toLocaleString()}</span> <span className="text-xs text-[#475569] dark:text-[#94A0B2]/70 font-medium font-sans">{t('jpp:overview_total_students_label', 'jumlah pelajar')}</span>
                     </p>
-                    <p className="text-[11px] text-[#475569]/80 dark:text-white/30 font-medium mt-0.5">
+                    <p className="text-xs text-[#475569]/80 dark:text-white/30 font-medium mt-0.5">
                       {t('jpp:overview_newly_registered_days', '{{count}} baru mendaftar dalam {{days}} hari', { count: chartData.reduce((acc, curr) => acc + curr.count, 0), days: timeRange === '7d' ? '7' : '30' })}
                     </p>
                   </div>
                   <div className="flex items-center bg-[#E6F4F1] dark:bg-white/5 rounded-xl p-1 shrink-0">
                     <button
                       onClick={() => setTimeRange('7d')}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
+                      className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                         timeRange === '7d' ? 'bg-white dark:bg-white/10 text-[#0F172A] dark:text-white shadow-sm dark:shadow-none' : 'text-[#475569] dark:text-white/30 hover:text-[#0F172A] dark:hover:text-white/60'
                       }`}
                     >
@@ -755,7 +755,7 @@ export function JppOverviewPage() {
                     </button>
                     <button
                       onClick={() => setTimeRange('30d')}
-                      className={`px-4 py-1.5 rounded-lg text-xs font-black transition-all ${
+                      className={`px-4 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                         timeRange === '30d' ? 'bg-white dark:bg-white/10 text-[#0F172A] dark:text-white shadow-sm dark:shadow-none' : 'text-[#475569] dark:text-white/30 hover:text-[#0F172A] dark:hover:text-white/60'
                       }`}
                     >
@@ -807,7 +807,7 @@ export function JppOverviewPage() {
                 transition={{ delay: 0.5 }}
                 className="rounded-[1.75rem] border border-[#B8E4DC]/80 dark:border-[#252B35] bg-white dark:bg-[#13171D] p-6 flex flex-col shadow-[0_4px_20px_rgba(15,118,110,0.06)] dark:shadow-none"
               >
-                <h2 className="text-xs font-black uppercase tracking-[0.25em] text-[#475569] dark:text-[#94A0B2] mb-2">{t('jpp:overview_welfare_ticket_status', 'Status Tiket Kebajikan')}</h2>
+                <h2 className="text-xs font-bold uppercase tracking-[0.25em] text-[#475569] dark:text-[#94A0B2] mb-2">{t('jpp:overview_welfare_ticket_status', 'Status Tiket Kebajikan')}</h2>
                 
                 <div className="flex-1 min-h-[200px] w-full flex items-center justify-center relative mt-4">
                   {ticketStats.every(t => t.value === 0) ? (
@@ -843,10 +843,10 @@ export function JppOverviewPage() {
                   {/* Center Text for Donut */}
                   {!ticketStats.every(t => t.value === 0) && (
                     <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                      <span className="text-3xl font-black text-[#0F172A] dark:text-[#F1F5F9] leading-none font-mono tabular-nums">
+                      <span className="text-3xl font-bold text-[#0F172A] dark:text-[#F1F5F9] leading-none font-mono tabular-nums">
                         {(stats?.totalTickets ?? 0).toLocaleString()}
                       </span>
-                      <span className="text-[9px] uppercase tracking-widest font-black text-[#475569] dark:text-white/30 mt-1">
+                      <span className="text-xs uppercase tracking-widest font-semibold text-[#475569] dark:text-white/30 mt-1">
                         Tiket
                       </span>
                     </div>
@@ -859,7 +859,7 @@ export function JppOverviewPage() {
                     {ticketStats.map(stat => (
                       <div key={stat.name} className="flex items-center gap-2">
                         <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stat.color }} />
-                        <span className="text-xs font-black text-[#475569] dark:text-[#94A0B2]">{stat.name}</span>
+                        <span className="text-xs font-semibold text-[#475569] dark:text-[#94A0B2]">{stat.name}</span>
                       </div>
                     ))}
                   </div>
