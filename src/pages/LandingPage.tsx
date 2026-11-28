@@ -12,12 +12,9 @@ import { LandingStats } from '@/components/landing/LandingStats';
 import { LandingCta } from '@/components/landing/LandingCta';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 
-// ── Palette Tokens (05 Earthy Minimal / Neo-Campus) ───────────
-// #0B2420: Primary Ink (Deep Pine-Teal)
-// #0D9488: Accent Teal (Mineral Teal Highlight)
-// #B8E4DC: Hairline Border (Mineral Mist)
-// #0F766E: Primary CTA (Deep Mineral Teal)
-// #F6FBF9: Background Canvas (Crisp Alabaster)
+// ── Palette Tokens (Semambu Mineral Teal & Crisp Alabaster / Obsidian Carbon) ──
+// Light: #F6FBF9 canvas, #FFFFFF cards, #B8E4DC borders, #0B2420 ink, #3B635C secondary, #0F766E accent
+// Dark:  #090B0E canvas, #0E1116 chrome, #13171D cards, #252B35 borders, #F1F5F9 ink, #94A0B2 secondary, #2DD4BF accent
 
 export type { CampusStats };
 export { useCampusStats };
@@ -51,6 +48,14 @@ export const CtaSection: React.FC = () => <LandingCta />;
 
 export const Footer: React.FC = () => <LandingFooter />;
 
+const POLISAS_DEPARTMENTS = [
+  { code: 'JKA', key: 'landing_dept_jka', fallback: 'Kejuruteraan Awam' },
+  { code: 'JKM', key: 'landing_dept_jkm', fallback: 'Kejuruteraan Mekanikal' },
+  { code: 'JKE', key: 'landing_dept_jke', fallback: 'Kejuruteraan Elektrik' },
+  { code: 'JP', key: 'landing_dept_jp', fallback: 'Perdagangan' },
+  { code: 'JTMK', key: 'landing_dept_jtmk', fallback: 'Teknologi Maklumat' },
+];
+
 // ── Komponen Utama Halaman Pendaratan (<LandingPage />) ────────
 export const LandingPage: React.FC = () => {
   const { t } = useTranslation(['portal', 'common']);
@@ -61,13 +66,42 @@ export const LandingPage: React.FC = () => {
       {/* 1. Bar Navigasi Kapsul Terapung */}
       <LandingNavbar />
 
-      {/* 2. Hero Berpusat & Mockup Dwi-Perspektif (Laptop + Telefon Pintar) */}
+      {/* 2. Hero Editorial & Pratonton Portal v2 Dwi-Peranti */}
       <LandingHero stats={stats} />
 
-      {/* 3. Ticker Tape Berputar (Data Masa Nyata Kampus) */}
-      <LandingTicker stats={stats} />
+      {/* 3. Jalur Ekosistem Institusi Statik (Sifar Gelung Marquee & Sifar Ulangan KPI) */}
+      <section
+        id="ekosistem"
+        aria-label={t('portal:nav_ecosystem', 'Ekosistem')}
+        className="w-full bg-white dark:bg-[#0E1116] border-y border-[#B8E4DC] dark:border-[#252B35] py-5 px-4 md:px-6 relative z-20 scroll-mt-24"
+      >
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <span className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2] shrink-0">
+            {t('portal:landing_ecosystem_scope', 'Ekosistem Digital Rasmi · 5 Jabatan Akademik')}
+          </span>
+          <div className="flex flex-wrap items-center justify-center md:justify-end gap-2">
+            {POLISAS_DEPARTMENTS.map((dept) => {
+              const rawLabel = t(`portal:${dept.key}`, dept.fallback);
+              const cleanName = rawLabel.replace(new RegExp(`^${dept.code}\\s*[•·\\-:]?\\s*`, 'i'), '');
+              return (
+                <span
+                  key={dept.code}
+                  className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F6FBF9] dark:bg-[#13171D] border border-[#B8E4DC]/90 dark:border-[#252B35] text-xs font-medium text-[#0B2420] dark:text-[#F1F5F9]"
+                >
+                  <span className="font-mono font-semibold text-[#0F766E] dark:text-[#2DD4BF]">
+                    {dept.code}
+                  </span>
+                  <span className="text-[#3B635C] dark:text-[#94A0B2] hidden sm:inline">
+                    {cleanName}
+                  </span>
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      </section>
 
-      {/* 4. "Sehari di POLISAS" Interaktif Time Switcher (08:00 Pagi -> 21:00 Malam) */}
+      {/* 4. "Sehari di POLISAS" Aliran Naratif Kampus (08:00 Pagi -> 21:00 Malam) */}
       <CampusDayTimeline />
 
       {/* 5. Seksyen Bento Modul (5 Ekosistem Teras) */}
@@ -76,13 +110,13 @@ export const LandingPage: React.FC = () => {
       {/* 6. Teras Kepintaran Buatan Nexus (Audit Kertas Kerja Pantas) */}
       <LandingNexusAI />
 
-      {/* 7. Statistik & Impak Sebenar Kampus */}
+      {/* 7. Statistik & Impak Sebenar Kampus (Satu-satunya Seksyen KPI Berautoriti) */}
       <LandingStats stats={stats} />
 
       {/* 8. Gerakan Seruan Tindakan (CTA Bersatu) */}
       <LandingCta />
 
-      {/* 9. Pengaki Halaman Rasmi */}
+      {/* 9. Pengaki Halaman Institusi Rasmi */}
       <LandingFooter />
     </div>
   );

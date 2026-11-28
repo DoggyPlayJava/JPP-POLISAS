@@ -5707,6 +5707,27 @@ Memandangkan telefon pintar seperti iPhone mengehadkan mod *Panorama* kamera asa
   - `PolySuaraMobileDrawer` kini menggunakan jarak selamat `pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))]`, `overscroll-contain`, dan lengkung laci gaya Apple/Emil (`[0.32, 0.72, 0, 1]`).
   - Membaiki kebocoran bahasa Inggeris pada gesaan karangan pantas mudah alih dengan menambah kekunci pariti 100% `suara_quick_compose_short`, `suara_filter_short`, `suara_open_search`, `suara_clear_search`, dan `suara_drawer_preferences` dalam kedua-dua `src/locales/en/services.json` dan `src/locales/ms/services.json`.
 
+---
+
+## 48. Naik Taraf Pembedahan Halaman Pendaratan (`/`) & Disiplin Tipografi + Permukaan (Nov 2026)
+
+- **Naik Taraf Komponen Halaman Pendaratan (`src/pages/LandingPage.tsx`, `src/components/landing/*`):**
+  - **`LandingNavbar.tsx`:** Memasang `<ThemeToggle />` bersebelahan `<LanguageToggle />` pada desktop dan mudah alih, membaiki kontras pautan laci mudah alih dalam Mod Gelap (`dark:text-[#F1F5F9] dark:hover:bg-[#1B2028]`), dan menggantikan logo `<div onClick>` kepada `<button type="button">` dengan cincin fokus (`focus-visible:ring-2`).
+  - **`LandingHero.tsx` & `public/GAMBAR/Portal View Laptop.png`:** Membuang elemen templat AI berlebihan di lajur kiri (avatar inisial palsu `FA`/`NR`/`AI`, penarafan palsu `★ 4.9`, susunan 5 pil jabatan, dan kad KPI berulang) supaya tajuk, subteks, CTA, dan bahagian atas pratonton produk duduk kemas di atas lipatan skrin pada `393×852` dan `1440×900`; menukar pentas perkakasan Mod Gelap kepada tangga *Obsidian Carbon* tulen (`dark:bg-[#13171D] dark:border-[#252B35]`); dan menggantikan tangkapan ultrawide terpotong dengan tangkapan langsung Portal v2 nisbah `16:10` (`1440×900`).
+  - **`LandingBento.tsx`:** Menukar bekas pratonton daripada petak `aspect-square` sempit kepada pratonton lebar penuh (`aspect-[16/10]`) supaya baris kelab `e-Aktiviti`, label `Jadual & Navigasi PolyMaps` (`e-Akademik`), dan produk `PolyMart` tidak lagi terpotong; menggantikan carta bar animasi tiruan `e-Keusahawanan` dengan kad ringkasan POS gerai siswa yang realistik; serta menghapuskan permukaan hijau gelap dalam Mod Gelap.
+  - **`CampusDayTimeline.tsx` & `LandingStats.tsx`:** Membuang kesemua `blur-xs`, `blur-xl`, `animate-ping`, dan `animate-pulse`, menukar bingkai gelap dan kad statistik kepada *Obsidian Carbon* (`dark:bg-[#13171D] dark:border-[#252B35]`), dan menyeragamkan `LandingStats` sebagai satu-satunya seksyen KPI berautoriti bagi menghapuskan ulangan metrik merentas seksyen.
+  - **`LandingPage.tsx`, `LandingNexusAI.tsx`, `LandingCta.tsx` & `LandingFooter.tsx`:** Menggantikan jalur *marquee* berputar di `#ekosistem` pada halaman utama dengan jalur ekosistem institusi statik 5 jabatan (`JKA`, `JKM`, `JKE`, `JP`, `JTMK`) tanpa gelung GPU berterusan (eksport `TickerTape` dikekalkan untuk keserasian undur), menaik taraf `LandingFooter` kepada 4 lajur institusi POLISAS Semambu, dan menambah 22 kekunci i18n berpariti 100% dalam `src/locales/en/portal.json` serta `src/locales/ms/portal.json`.
+
+### Disiplin Tipografi & Permukaan (*Typography & Surface Discipline*)
+
+Garis panduan wajib bagi semua kerja UI akan datang (termasuk halaman awam, portal pelajar, dan papan pemuka admin):
+
+1. **Skala Berat 4-Tahap Sahaja (`400 / 500 / 600 / 700`):** Gunakan `font-normal` (teks badan), `font-medium` (label/metadata), `font-semibold` (subtajuk, butang, kapsul), dan `font-bold` (tajuk utama & angka KPI). Elakkan penggunaan `font-black` (900) dan `font-extrabold` (800) pada UI baharu atau yang dinaik taraf.
+2. **Saiz Teks Minimum Boleh Baca (`text-xs` / `12px`):** Elakkan teks mikro sewenang-wenangnya (`text-[7px]` hingga `text-[11px]`). Label *uppercase* wajib mempunyai jarak huruf (`tracking-wider` atau `tracking-widest`), angka metrik wajib memakai `font-mono tabular-nums`, dan tajuk utama memakai `[text-wrap:balance]`.
+3. **Krom Neutral & Pariti Permukaan *Obsidian Carbon*:** Biarkan kandungan produk membawa identiti visual; krom pelayar/kad kekal neutral. Dalam Mod Gelap, setiap bekas berlatar gelap mesti menggunakan tangga *Obsidian Carbon* (`#090B0E` kanvas, `#0E1116` krom/inset, `#13171D` kad, `#1B2028` cip/hover, `#252B35` sempadan, `#F1F5F9` teks utama, `#94A0B2` teks sekunder, `#2DD4BF` aksen) — sifar kebocoran hijau gelap (`#0B2420` / `#061714` / `#1E4D45`).
+4. **Sifar Kesan Kabur GPU & Gelung Animasi:** Dilarang sama sekali menggunakan `backdrop-blur`, `blur-xs`/`xl`/`2xl`/`3xl`, `animate-ping`, `animate-pulse`, atau `animate-bounce`. Kedalaman datang daripada sempadan seni bina yang tajam dan bayangan berlapis CSS (`shadow-surface-sm/md/lg`), dengan peralihan kompositor `transform`/`opacity` `<= 240ms`.
+
+
 
 
 

@@ -137,14 +137,14 @@ describe('Task 3: Dual-Perspective Hero Showcase Component', () => {
     expect(html).toContain('/GAMBAR/Portal View Laptop.png');
     expect(html).toContain('/GAMBAR/Polymart View Phone.png');
 
-    // Live stat badges
-    expect(html).toContain('Pesanan Selesai');
-    expect(html).toContain('21 Kelab Berdaftar');
-    expect(html).toContain('1,083+ Rekod Siswa');
-
-    // Audience pills & CTA
+    // Interactive lenses & uncluttered editorial hero (zero fake initials / star ratings)
+    expect(html).toContain('Portal Hab');
+    expect(html).toContain('PolyMart');
+    expect(html).toContain('PolyMaps');
     expect(html).toContain('Mahasiswa POLISAS');
     expect(html).toContain('Jelajah Hari Kampus');
+    expect(html).not.toContain('★ 4.9');
+    expect(html).toContain('dark:bg-[#13171D]');
   });
 });
 
@@ -199,8 +199,8 @@ describe('Task 5: "Student Campus Day" Interactive Timeline Switcher', () => {
     expect(html).toContain('/GAMBAR/Polymap View Phone.png');
     expect(html).toContain('Navigasi PolyMaps');
     expect(html).toContain('Paparan Utama');
-    expect(html).toContain('1,080+');
-    expect(html).toContain('Jadual Siswa Aktif');
+    expect(html).not.toContain('blur-xs');
+    expect(html).not.toContain('animate-ping');
 
     // All 4 phases have authentic secondary screenshots defined
     expect(CAMPUS_DAY_PHASES.length).toBe(4);
@@ -352,14 +352,16 @@ describe('Task 8: Mobile Header Slimness, Academic Badges & Bilingual Support', 
     // AI slop capsule removed
     expect(html).not.toContain('Sistem Aktif');
 
-    // Language toggle present
+    // Language toggle and Theme toggle present
     expect(html).toMatch(/BM|EN/);
+    expect(html).toMatch(/Tukar Tema|Change Theme/i);
 
     // Primary CTA is hidden on mobile screens
     expect(html).toContain('hidden lg:flex');
   });
 
-  it('renders all 5 POLISAS academic departments and lively floating chips in LandingHero', async () => {
+  it('renders all 5 POLISAS academic departments in static #ekosistem strip without cluttering LandingHero', async () => {
+    const { LandingPage } = await import('@/pages/LandingPage');
     const { LandingHero } = await import('@/components/landing/LandingHero');
     const { MemoryRouter } = await import('react-router-dom');
 
@@ -371,22 +373,27 @@ describe('Task 8: Mobile Header Slimness, Academic Badges & Bilingual Support', 
       ordersCount: 344,
     };
 
-    const html = renderToString(
+    const pageHtml = renderToString(
+      <MemoryRouter>
+        <LandingPage />
+      </MemoryRouter>
+    );
+
+    // 5 POLISAS academic departments in institutional ecosystem strip
+    expect(pageHtml).toContain('JKA');
+    expect(pageHtml).toContain('JKM');
+    expect(pageHtml).toContain('JKE');
+    expect(pageHtml).toContain('JP');
+    expect(pageHtml).toContain('JTMK');
+
+    // Hero remains editorial and free of fake avatar/rating clutter
+    const heroHtml = renderToString(
       <MemoryRouter>
         <LandingHero stats={stats} />
       </MemoryRouter>
     );
-
-    // 5 POLISAS academic departments
-    expect(html).toContain('JKA');
-    expect(html).toContain('JKM');
-    expect(html).toContain('JKE');
-    expect(html).toContain('JP');
-    expect(html).toContain('JTMK');
-
-    // Lively floating chips
-    expect(html).toContain('1,080+ Siswa Aktif');
-    expect(html).toContain('Pesanan PolyMart Terus');
+    expect(heroHtml).not.toContain('★ 4.9');
+    expect(heroHtml).toContain('Terokai Portal Pelajar');
   });
 
   it('provides matching English and Malay translation keys for the landing page', async () => {
@@ -425,10 +432,10 @@ describe('Task 8: Mobile Header Slimness, Academic Badges & Bilingual Support', 
 
     const html = renderToString(<LandingStats stats={stats} />);
 
-    // Rounded executive container with ambient glow
-    expect(html).toContain('rounded-[2.5rem] md:rounded-[3.5rem] bg-[#0B2420]');
-    expect(html).toContain('bg-[#14B8A6]/15 rounded-full blur-xl');
-    expect(html).toContain('bg-[#0D9488]/10 rounded-full blur-xl');
+    // Rounded executive container with Obsidian Dark parity and zero GPU blur/pulse leaks
+    expect(html).toContain('bg-[#0B2420] dark:bg-[#13171D]');
+    expect(html).not.toContain('blur-xl');
+    expect(html).not.toContain('animate-pulse');
 
     // Font-mono tabular-nums for numeric telemetry
     expect(html).toContain('font-mono tabular-nums');

@@ -35,11 +35,7 @@ export const CAMPUS_DAY_PHASES: DayPhase[] = [
       'Navigasi terus ke pintu dewan dan makmal di PolyMaps',
       'Paparan waktu rehat & waktu solat teratur',
     ],
-    tagColor: '#0D9488',
-    metric: {
-      value: '1,080+',
-      label: 'Jadual Siswa Aktif',
-    },
+    tagColor: '#0F766E',
   },
   {
     id: 'noon',
@@ -60,10 +56,6 @@ export const CAMPUS_DAY_PHASES: DayPhase[] = [
       'Sokongan keusahawanan siswa & kelab POLISAS',
     ],
     tagColor: '#0F766E',
-    metric: {
-      value: '340+',
-      label: 'Pesanan Selesai Kampus',
-    },
   },
   {
     id: 'evening',
@@ -83,11 +75,7 @@ export const CAMPUS_DAY_PHASES: DayPhase[] = [
       'Pengurusan juri pertandingan & penilaian berpusat EMS',
       'Pemberian markah merit kokurikulum MakMP secara automatik',
     ],
-    tagColor: '#0B2420',
-    metric: {
-      value: '21',
-      label: 'Kelab Rasmi Beroperasi',
-    },
+    tagColor: '#0F766E',
   },
   {
     id: 'night',
@@ -107,11 +95,7 @@ export const CAMPUS_DAY_PHASES: DayPhase[] = [
       'Radar prihatin Food Bank untuk siswa yang memerlukan',
       'Bimbingan pintar Nexus AI untuk bantuan soalan lazim kebajikan',
     ],
-    tagColor: '#0D9488',
-    metric: {
-      value: '100%',
-      label: 'Tindakan Responsif JPP',
-    },
+    tagColor: '#0F766E',
   },
 ];
 
@@ -137,8 +121,9 @@ const LightboxModal: React.FC<LightboxModalProps> = ({ src, alt, title, onClose 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
       onClick={onClose}
-      className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-3 sm:p-6"
+      className="fixed inset-0 z-50 bg-black/85 flex items-center justify-center p-3 sm:p-6 overscroll-contain"
       role="dialog"
       aria-modal="true"
       aria-label={title}
@@ -147,31 +132,32 @@ const LightboxModal: React.FC<LightboxModalProps> = ({ src, alt, title, onClose 
         initial={{ scale: 0.96, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.96, opacity: 0 }}
+        transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
         onClick={(e) => e.stopPropagation()}
-        className="relative max-w-5xl w-full max-h-[85dvh] bg-[#0B2420] rounded-2xl sm:rounded-3xl border border-[#B8E4DC]/30 shadow-2xl overflow-hidden flex flex-col"
+        className="relative max-w-5xl w-full max-h-[85dvh] bg-[#0B2420] dark:bg-[#13171D] rounded-2xl sm:rounded-3xl border border-[#1E4D45] dark:border-[#252B35] shadow-surface-lg overflow-hidden flex flex-col"
       >
-        <div className="px-4 sm:px-6 py-3.5 bg-[#081C18] border-b border-[#B8E4DC]/20 flex items-center justify-between text-white flex-shrink-0">
+        <div className="px-4 sm:px-6 py-3.5 bg-[#081C18] dark:bg-[#0E1116] border-b border-[#1E4D45] dark:border-[#252B35] flex items-center justify-between text-white flex-shrink-0">
           <div className="flex items-center gap-2.5 min-w-0 pr-4">
-            <span className="w-2.5 h-2.5 rounded-full bg-[#2DD4BF] flex-shrink-0" />
-            <span className="text-xs sm:text-sm font-bold text-[#F6FBF9] truncate">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#2DD4BF] flex-shrink-0" aria-hidden="true" />
+            <span className="text-xs sm:text-sm font-semibold text-[#F6FBF9] dark:text-[#F1F5F9] truncate">
               {title}
             </span>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-[#F6FBF9] transition-colors cursor-pointer flex-shrink-0"
+            className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 dark:bg-[#1B2028] dark:hover:bg-[#252B35] text-[#F6FBF9] dark:text-[#F1F5F9] transition-colors cursor-pointer flex-shrink-0"
             aria-label={t('portal:timeline_close_preview', 'Tutup Pratonton')}
           >
-            <X className="w-4 h-4" />
+            <X className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="p-3 sm:p-6 overflow-auto flex items-center justify-center bg-[#061714]/95 max-h-[calc(85dvh-56px)]">
+        <div className="p-3 sm:p-6 overflow-auto flex items-center justify-center bg-[#061714] dark:bg-[#090B0E] max-h-[calc(85dvh-56px)]">
           <img
             src={src}
             alt={alt}
-            className="max-w-full max-h-[75dvh] w-auto h-auto object-contain rounded-xl shadow-2xl border border-[#B8E4DC]/20"
+            className="max-w-full max-h-[75dvh] w-auto h-auto object-contain rounded-xl shadow-surface-lg border border-white/10 dark:border-[#252B35]"
           />
         </div>
       </motion.div>
@@ -183,7 +169,6 @@ interface StoryCardProps {
   phase: DayPhase;
   position: 'left' | 'right';
   icon: React.ElementType;
-  accentColor: string;
   onOpenLightbox: (data: { src: string; alt: string; title: string }) => void;
 }
 
@@ -196,156 +181,98 @@ const StoryCard: React.FC<StoryCardProps> = ({
   phase,
   position,
   icon: Icon,
-  accentColor,
   onOpenLightbox,
 }) => {
   const { t } = useTranslation(['portal', 'common']);
   const [activeView, setActiveView] = useState<'primary' | 'secondary'>('primary');
   const primaryImg = phase.image;
   const secondaryImg = phase.secondaryImage;
-  const currentImg = activeView === 'primary' ? primaryImg : (secondaryImg || primaryImg);
+  const currentImg = activeView === 'primary' ? primaryImg : secondaryImg || primaryImg;
   const companionImg = activeView === 'primary' ? secondaryImg : primaryImg;
   const activeIsPhone = isPhoneScreenshot(currentImg);
 
+  const openCurrentLightbox = () =>
+    onOpenLightbox({
+      src: currentImg,
+      alt: phase.imageAlt,
+      title: `${phase.title} • ${
+        activeView === 'primary'
+          ? t('portal:timeline_view_primary', 'Paparan Utama')
+          : phase.secondaryLabel || t('portal:timeline_view_secondary', 'Pratonton')
+      }`,
+    });
+
   return (
     <div id={phase.id} className="relative scroll-mt-28">
-      {/* ── MOBILE TRACKER CONNECTOR & GLOWING DOT ── */}
-      {/* Horizontal connector line linking Mobile Spine (left: 24px) to Card left (64px) */}
-      <div className="lg:hidden absolute top-8 -left-10 w-10 h-0.5 bg-[#B8E4DC]/80 z-10" />
+      {/* ── MOBILE TRACKER CONNECTOR & CRISP NODE (ZERO BLUR / ZERO PING) ── */}
+      <div className="lg:hidden absolute top-8 -left-10 w-10 h-0.5 bg-[#B8E4DC] dark:bg-[#252B35] z-10" aria-hidden="true" />
 
-      {/* Mobile Glowing Tracker Dot sitting EXACTLY on spine (at -40px from card left = 24px container left) */}
-      <div className="lg:hidden absolute top-8 -left-10 -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center">
-        <motion.div
-          initial={{ scale: 0.75, opacity: 0.5 }}
-          animate={typeof window === 'undefined' ? { scale: 1, opacity: 1 } : undefined}
-          {...(typeof window !== 'undefined' ? { whileInView: { scale: 1, opacity: 1 }, viewport: { once: true, margin: "-60px" } } : {})}
-          transition={{ duration: 0.4 }}
-          className="relative flex items-center justify-center"
-        >
-          {/* Glowing Ambient Halo */}
-          <span
-            className="absolute -inset-1.5 rounded-full opacity-40 blur-xs"
-            style={{ backgroundColor: accentColor }}
-          />
-          {/* Subtle Pulse Ping */}
-          <span
-            className="absolute -inset-1 rounded-full animate-ping opacity-25"
-            style={{ backgroundColor: accentColor }}
-          />
-          {/* Tracker Node */}
-          <div
-            className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white dark:bg-[#13171D] border-2 flex items-center justify-center shadow-surface-sm relative z-10"
-            style={{ borderColor: accentColor }}
-          >
-            <div
-              className="w-2 sm:w-2.5 h-2 sm:h-2.5 rounded-full"
-              style={{ backgroundColor: accentColor }}
-            />
-          </div>
-        </motion.div>
+      <div className="lg:hidden absolute top-8 -left-10 -translate-x-1/2 -translate-y-1/2 z-20 flex items-center justify-center" aria-hidden="true">
+        <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-white dark:bg-[#13171D] border-2 border-[#0F766E] dark:border-[#2DD4BF] flex items-center justify-center shadow-surface-sm">
+          <div className="w-2 h-2 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
+        </div>
       </div>
 
-      {/* ── DESKTOP TRACKER CONNECTOR & DOT ── */}
-      {/* Left Card: horizontal connector line to spine center (-right-10 = 40px width) */}
+      {/* ── DESKTOP TRACKER CONNECTOR & NODE ── */}
       {position === 'left' && (
         <>
-          <div className="hidden lg:block absolute top-12 -right-10 w-10 h-0.5 bg-[#B8E4DC]/80 dark:bg-[#252B35] z-10" />
-          <div className="hidden lg:flex absolute top-12 -right-10 translate-x-1/2 -translate-y-1/2 z-20 items-center justify-center">
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0.6 }}
-              animate={typeof window === 'undefined' ? { scale: 1, opacity: 1 } : undefined}
-              {...(typeof window !== 'undefined' ? { whileInView: { scale: 1, opacity: 1 }, viewport: { once: true, margin: "-60px" } } : {})}
-              transition={{ duration: 0.25 }}
-              className="relative flex items-center justify-center"
-            >
-              <div
-                className="w-6 h-6 rounded-full bg-white dark:bg-[#13171D] border-2 flex items-center justify-center shadow-surface-sm relative z-10"
-                style={{ borderColor: accentColor }}
-              >
-                <div
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: accentColor }}
-                />
-              </div>
-            </motion.div>
+          <div className="hidden lg:block absolute top-12 -right-10 w-10 h-0.5 bg-[#B8E4DC] dark:bg-[#252B35] z-10" aria-hidden="true" />
+          <div className="hidden lg:flex absolute top-12 -right-10 translate-x-1/2 -translate-y-1/2 z-20 items-center justify-center" aria-hidden="true">
+            <div className="w-6 h-6 rounded-full bg-white dark:bg-[#13171D] border-2 border-[#0F766E] dark:border-[#2DD4BF] flex items-center justify-center shadow-surface-sm">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
+            </div>
           </div>
         </>
       )}
 
-      {/* Right Card: horizontal connector line to spine center (-left-10 = 40px width) */}
       {position === 'right' && (
         <>
-          <div className="hidden lg:block absolute top-12 -left-10 w-10 h-0.5 bg-[#B8E4DC]/80 dark:bg-[#252B35] z-10" />
-          <div className="hidden lg:flex absolute top-12 -left-10 -translate-x-1/2 -translate-y-1/2 z-20 items-center justify-center">
-            <motion.div
-              initial={{ scale: 0.85, opacity: 0.6 }}
-              animate={typeof window === 'undefined' ? { scale: 1, opacity: 1 } : undefined}
-              {...(typeof window !== 'undefined' ? { whileInView: { scale: 1, opacity: 1 }, viewport: { once: true, margin: "-60px" } } : {})}
-              transition={{ duration: 0.25 }}
-              className="relative flex items-center justify-center"
-            >
-              <div
-                className="w-6 h-6 rounded-full bg-white dark:bg-[#13171D] border-2 flex items-center justify-center shadow-surface-sm relative z-10"
-                style={{ borderColor: accentColor }}
-              >
-                <div
-                  className="w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: accentColor }}
-                />
-              </div>
-            </motion.div>
+          <div className="hidden lg:block absolute top-12 -left-10 w-10 h-0.5 bg-[#B8E4DC] dark:bg-[#252B35] z-10" aria-hidden="true" />
+          <div className="hidden lg:flex absolute top-12 -left-10 -translate-x-1/2 -translate-y-1/2 z-20 items-center justify-center" aria-hidden="true">
+            <div className="w-6 h-6 rounded-full bg-white dark:bg-[#13171D] border-2 border-[#0F766E] dark:border-[#2DD4BF] flex items-center justify-center shadow-surface-sm">
+              <div className="w-2.5 h-2.5 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
+            </div>
           </div>
         </>
       )}
 
-      {/* Main Card Frame with Smooth Slide-In Scroll Animation */}
+      {/* Main Card Frame */}
       <motion.div
-        initial={{ opacity: 0, x: position === 'left' ? -20 : 20, y: 16 }}
-        animate={typeof window === 'undefined' ? { opacity: 1, x: 0, y: 0 } : undefined}
-        {...(typeof window !== 'undefined' ? { whileInView: { opacity: 1, x: 0, y: 0 }, viewport: { once: true, margin: "-60px" } } : {})}
-        transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
-        className="rounded-3xl p-6 md:p-8 bg-white dark:bg-[#13171D] border border-[#B8E4DC] dark:border-[#252B35] shadow-surface-md relative overflow-hidden transition-[border-color,box-shadow] duration-200 hover:shadow-surface-lg group"
+        initial={{ opacity: 0, y: 12 }}
+        animate={typeof window === 'undefined' ? { opacity: 1, y: 0 } : undefined}
+        {...(typeof window !== 'undefined'
+          ? { whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: '-40px' } }
+          : {})}
+        transition={{ duration: 0.22, ease: [0.23, 1, 0.32, 1] }}
+        className="rounded-3xl p-5 sm:p-7 bg-white dark:bg-[#13171D] border border-[#B8E4DC] dark:border-[#252B35] shadow-surface-sm relative overflow-hidden transition-[border-color,box-shadow] duration-200 hover:shadow-surface-md group"
       >
-        {/* Top Card Meta: Time pill, badge, floating round icon */}
+        {/* Top Card Meta */}
         <div className="flex items-start justify-between gap-4 mb-4 relative z-10">
           <div className="flex flex-wrap items-center gap-2">
-            <span
-              className="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider text-white shadow-2xs font-mono"
-              style={{ backgroundColor: phase.tagColor }}
-            >
+            <span className="px-3 py-1 rounded-full text-xs font-semibold tracking-wide text-white dark:text-[#090B0E] bg-[#0F766E] dark:bg-[#2DD4BF] font-mono">
               {phase.time}
             </span>
-            <span
-              className="text-xs font-bold"
-              style={{ color: accentColor }}
-            >
+            <span className="text-xs font-semibold text-[#0F766E] dark:text-[#2DD4BF]">
               {phase.badge}
             </span>
           </div>
 
-          <div
-            className="w-12 h-12 rounded-2xl flex items-center justify-center shadow-xs border transition-transform duration-200 group-hover:scale-105 flex-shrink-0"
-            style={{
-              backgroundColor: `${accentColor}18`,
-              borderColor: `${accentColor}35`,
-              color: accentColor,
-            }}
-          >
-            <Icon className="w-5 h-5" />
+          <div className="w-11 h-11 rounded-2xl flex items-center justify-center bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC]/80 dark:border-[#252B35] text-[#0F766E] dark:text-[#2DD4BF] transition-transform duration-200 group-hover:scale-105 flex-shrink-0">
+            <Icon className="w-5 h-5" aria-hidden="true" />
           </div>
         </div>
 
         {/* Title & Copy */}
         <div className="mb-3 relative z-10">
-          <div className="text-[11px] font-bold uppercase tracking-wider text-[#0F766E] dark:text-[#2DD4BF] mb-1">
+          <div className="text-xs font-semibold text-[#0F766E] dark:text-[#2DD4BF] mb-1">
             {phase.subtitle}
           </div>
-          <h4 className="text-2xl sm:text-3xl font-black text-[#0B2420] dark:text-[#F1F5F9] tracking-tight leading-snug">
+          <h4 className="text-xl sm:text-2xl font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight leading-snug">
             {phase.title}
           </h4>
         </div>
 
-        <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] font-medium leading-relaxed mb-5 relative z-10">
+        <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] font-normal leading-relaxed mb-4 relative z-10">
           {phase.description}
         </p>
 
@@ -353,47 +280,32 @@ const StoryCard: React.FC<StoryCardProps> = ({
         <div className="space-y-2 mb-5 relative z-10">
           {phase.highlights.map((highlight, idx) => (
             <div key={idx} className="flex items-start gap-2.5">
-              <CheckCircle2
-                className="w-4 h-4 flex-shrink-0 mt-0.5"
-                style={{ color: accentColor }}
-              />
-              <span className="text-xs sm:text-sm font-semibold text-[#0B2420] dark:text-[#E2E8F0]">
+              <CheckCircle2 className="w-4 h-4 flex-shrink-0 mt-0.5 text-[#0F766E] dark:text-[#2DD4BF]" aria-hidden="true" />
+              <span className="text-xs sm:text-sm font-medium text-[#0B2420] dark:text-[#F1F5F9]">
                 {highlight}
               </span>
             </div>
           ))}
         </div>
 
-        {/* Metric Pill */}
-        {phase.metric && (
-          <div className="p-3.5 rounded-2xl bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] inline-flex items-center gap-3.5 mb-6 shadow-2xs relative z-10">
-            <div className="text-2xl font-black text-[#0B2420] dark:text-[#F1F5F9] font-mono tabular-nums leading-none">
-              {phase.metric.value}
-            </div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-[#0F766E] dark:text-[#2DD4BF] leading-tight">
-              {phase.metric.label}
-            </div>
-          </div>
-        )}
-
         {/* Screenshot Header Controls: Perspective Switcher & Zoom */}
-        <div className="pt-2 border-t border-[#B8E4DC]/50 dark:border-[#252B35] relative z-10">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35]">
+        <div className="pt-3.5 border-t border-[#B8E4DC]/60 dark:border-[#252B35] relative z-10">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-1 p-1 rounded-xl bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35]">
               <button
                 type="button"
                 onClick={() => setActiveView('primary')}
                 className={cn(
-                  "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1.5",
+                  'px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5',
                   activeView === 'primary'
-                    ? "bg-[#0B2420] dark:bg-[#2DD4BF] text-[#F6FBF9] dark:text-[#090B0E] shadow-2xs"
-                    : "text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]"
+                    ? 'bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] shadow-2xs'
+                    : 'text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]'
                 )}
               >
                 {isPhoneScreenshot(primaryImg) ? (
-                  <Smartphone className="w-3 h-3" />
+                  <Smartphone className="w-3.5 h-3.5" aria-hidden="true" />
                 ) : (
-                  <Laptop className="w-3 h-3" />
+                  <Laptop className="w-3.5 h-3.5" aria-hidden="true" />
                 )}
                 <span>{t('portal:timeline_view_primary', 'Paparan Utama')}</span>
               </button>
@@ -403,16 +315,16 @@ const StoryCard: React.FC<StoryCardProps> = ({
                   type="button"
                   onClick={() => setActiveView('secondary')}
                   className={cn(
-                    "px-2.5 py-1 rounded-lg text-[10px] font-bold transition-colors cursor-pointer flex items-center gap-1.5",
+                    'px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer flex items-center gap-1.5',
                     activeView === 'secondary'
-                      ? "bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] shadow-2xs"
-                      : "text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]"
+                      ? 'bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] shadow-2xs'
+                      : 'text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]'
                   )}
                 >
                   {isPhoneScreenshot(secondaryImg) ? (
-                    <Smartphone className="w-3 h-3" />
+                    <Smartphone className="w-3.5 h-3.5" aria-hidden="true" />
                   ) : (
-                    <Sparkles className="w-3 h-3" />
+                    <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
                   )}
                   <span>{phase.secondaryLabel || t('portal:timeline_view_secondary', 'Paparan Tambahan')}</span>
                 </button>
@@ -421,117 +333,108 @@ const StoryCard: React.FC<StoryCardProps> = ({
 
             <button
               type="button"
-              onClick={() =>
-                onOpenLightbox({
-                  src: currentImg,
-                  alt: phase.imageAlt,
-                  title: `${phase.title} • ${activeView === 'primary' ? t('portal:timeline_view_primary', 'Paparan Utama') : (phase.secondaryLabel || t('portal:timeline_view_secondary', 'Pratonton'))}`,
-                })
-              }
-              className="inline-flex items-center gap-1 text-[10px] font-bold text-[#0F766E] dark:text-[#2DD4BF] hover:text-[#0B2420] dark:hover:text-[#F1F5F9] cursor-pointer transition-colors px-2 py-1 rounded-lg hover:bg-[#F6FBF9] dark:hover:bg-[#1B2028]"
+              onClick={openCurrentLightbox}
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F766E] dark:text-[#2DD4BF] hover:text-[#0B2420] dark:hover:text-[#F1F5F9] cursor-pointer transition-colors px-2 py-1 rounded-lg hover:bg-[#F6FBF9] dark:hover:bg-[#1B2028]"
             >
-              <Maximize2 className="w-3 h-3" />
+              <Maximize2 className="w-3.5 h-3.5" aria-hidden="true" />
               <span className="hidden sm:inline">{t('portal:timeline_zoom_fullscreen', 'Zum Skrin Penuh')}</span>
             </button>
           </div>
 
-          {/* Screenshot Display: Smartphone Mockup OR Laptop Browser Frame based on natural aspect ratio */}
+          {/* Screenshot Display */}
           {activeIsPhone ? (
-            /* ── SMARTPHONE FRAME (Native Mobile Scale, Un-squished) ── */
-            <div className="relative w-full max-w-[270px] sm:max-w-xs mx-auto py-3">
-              <div className="bg-[#061714] p-2.5 sm:p-3 rounded-[2.5rem] shadow-xl border border-[#B8E4DC]/60">
-                <div
-                  className="relative aspect-[9/18] bg-black rounded-[2rem] overflow-hidden group/img cursor-pointer"
-                  onClick={() =>
-                    onOpenLightbox({
-                      src: currentImg,
-                      alt: phase.imageAlt,
-                      title: `${phase.title} • ${activeView === 'primary' ? t('portal:timeline_view_primary', 'Paparan Utama') : (phase.secondaryLabel || t('portal:timeline_view_secondary', 'Pratonton'))}`,
-                    })
-                  }
+            <div className="relative w-full max-w-[260px] sm:max-w-[280px] mx-auto py-2">
+              <div className="bg-[#061714] dark:bg-[#090B0E] p-2.5 rounded-[2.25rem] shadow-surface-lg border border-[#1E4D45] dark:border-[#252B35]">
+                <button
+                  type="button"
+                  onClick={openCurrentLightbox}
+                  className="block w-full relative aspect-[9/18] bg-black rounded-[1.75rem] overflow-hidden group/img cursor-pointer"
+                  aria-label={`${phase.title} — ${t('portal:timeline_zoom', 'Zum')}`}
                 >
                   <img
                     src={currentImg}
                     alt={phase.imageAlt}
-                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover/img:scale-102"
+                    width={390}
+                    height={780}
+                    className="w-full h-full object-cover object-top transition-transform duration-200 group-hover/img:scale-[1.02]"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="px-3 py-1 rounded-full bg-black/75 text-white text-[10px] font-bold flex items-center gap-1">
-                      <Maximize2 className="w-3 h-3" /> {t('portal:timeline_zoom', 'Zum')}
+                  <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                    <span className="px-3 py-1 rounded-full bg-black/80 text-white text-xs font-semibold flex items-center gap-1.5">
+                      <Maximize2 className="w-3.5 h-3.5" aria-hidden="true" /> {t('portal:timeline_zoom', 'Zum')}
                     </span>
                   </div>
-                </div>
+                </button>
               </div>
 
-              {/* Floating secondary companion preview badge */}
               {companionImg && (
-                <div
+                <button
+                  type="button"
                   onClick={() => setActiveView(activeView === 'primary' ? 'secondary' : 'primary')}
-                  className="absolute -bottom-2 -right-3 w-32 sm:w-36 rounded-xl overflow-hidden border-2 border-white shadow-xl bg-white cursor-pointer hover:scale-105 transition-transform group/float z-10"
+                  className="absolute -bottom-2 -right-3 w-32 sm:w-36 rounded-xl overflow-hidden border-2 border-white dark:border-[#252B35] shadow-surface-lg bg-white dark:bg-[#13171D] cursor-pointer hover:scale-[1.03] transition-transform duration-200 group/float z-10 text-left"
                 >
-                  <div className="px-2 py-0.5 bg-[#0B2420] text-[10px] font-semibold text-[#B8E4DC] flex items-center justify-between gap-1">
-                    <span className="truncate">{activeView === 'primary' ? (phase.secondaryLabel || t('portal:timeline_view_secondary', 'Katalog')) : t('portal:timeline_view_primary', 'Paparan Utama')}</span>
-                    <span className="text-[#2DD4BF] group-hover/float:underline text-[10px] shrink-0">{t('portal:timeline_switch', 'Tukar')}</span>
+                  <div className="px-2 py-1 bg-[#0B2420] dark:bg-[#0E1116] text-xs font-medium text-[#B8E4DC] dark:text-[#94A0B2] flex items-center justify-between gap-1">
+                    <span className="truncate">
+                      {activeView === 'primary'
+                        ? phase.secondaryLabel || t('portal:timeline_view_secondary', 'Katalog')
+                        : t('portal:timeline_view_primary', 'Paparan Utama')}
+                    </span>
                   </div>
                   <img
                     src={companionImg}
                     alt="Companion preview"
+                    width={240}
+                    height={360}
                     className="w-full h-auto object-cover"
+                    loading="lazy"
                   />
-                </div>
+                </button>
               )}
             </div>
           ) : (
-            /* ── LAPTOP BROWSER FRAME (Crisp 16:10 Desktop Proportions) ── */
             <div className="relative w-full">
-              <div className="w-full bg-[#0B2420] rounded-t-2xl pt-2 px-2 shadow-lg border border-[#0B2420]">
+              <div className="w-full bg-[#0B2420] dark:bg-[#0E1116] rounded-2xl pt-2 px-2 pb-2 shadow-surface-md border border-[#1E4D45] dark:border-[#252B35]">
                 {/* Top Browser Bar */}
-                <div className="bg-[#081C18] rounded-t-xl px-3 py-1.5 flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
+                <div className="bg-[#081C18] dark:bg-[#13171D] rounded-t-xl px-3 py-1.5 flex items-center justify-between border-b border-white/5 dark:border-[#252B35]">
+                  <div className="flex items-center gap-1.5" aria-hidden="true">
                     <div className="w-2 h-2 rounded-full bg-[#2DD4BF]" />
-                    <div className="w-2 h-2 rounded-full bg-[#B8E4DC]" />
+                    <div className="w-2 h-2 rounded-full bg-[#B8E4DC]/60 dark:bg-[#252B35]" />
                     <div className="w-2 h-2 rounded-full bg-[#0D9488]" />
                   </div>
-                  <span className="text-[9px] sm:text-[10px] font-mono text-[#B8E4DC] truncate max-w-[200px] sm:max-w-xs">
+                  <span className="text-xs font-mono text-[#B8E4DC] dark:text-[#94A0B2] truncate max-w-[220px] sm:max-w-xs">
                     jpp-polisas.edu.my • {phase.badge}
                   </span>
-                  <div className="w-4" />
+                  <div className="w-4" aria-hidden="true" />
                 </div>
 
                 {/* Screenshot Container */}
-                <div
-                  className="relative aspect-[16/10] bg-[#F6FBF9] rounded-b-lg overflow-hidden border border-[#081C18] group/img cursor-pointer"
-                  onClick={() =>
-                    onOpenLightbox({
-                      src: currentImg,
-                      alt: phase.imageAlt,
-                      title: `${phase.title} • ${activeView === 'primary' ? t('portal:timeline_view_primary', 'Paparan Utama') : (phase.secondaryLabel || t('portal:timeline_view_secondary', 'Pratonton'))}`,
-                    })
-                  }
+                <button
+                  type="button"
+                  onClick={openCurrentLightbox}
+                  className="block w-full relative aspect-[16/10] bg-[#F6FBF9] dark:bg-[#090B0E] rounded-b-lg overflow-hidden group/img cursor-pointer"
+                  aria-label={`${phase.title} — ${t('portal:timeline_click_to_zoom', 'Klik untuk zum paparan penuh')}`}
                 >
                   <img
                     src={currentImg}
                     alt={phase.imageAlt}
-                    className="w-full h-full object-cover object-top transition-transform duration-500 group-hover/img:scale-102"
+                    width={1280}
+                    height={800}
+                    className="w-full h-full object-cover object-top transition-transform duration-200 group-hover/img:scale-[1.02]"
                     loading="lazy"
                   />
-                  <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center">
-                    <span className="px-3 py-1.5 rounded-full bg-black/75 text-white text-[11px] font-bold flex items-center gap-1.5">
-                      <Maximize2 className="w-3.5 h-3.5" /> {t('portal:timeline_click_to_zoom', 'Klik untuk zum paparan penuh')}
+                  <div className="absolute inset-0 bg-black/25 opacity-0 group-hover/img:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                    <span className="px-3 py-1.5 rounded-full bg-black/80 text-white text-xs font-semibold flex items-center gap-1.5">
+                      <Maximize2 className="w-3.5 h-3.5" aria-hidden="true" />
+                      {t('portal:timeline_click_to_zoom', 'Klik untuk zum paparan penuh')}
                     </span>
                   </div>
-                </div>
-
-                {/* Laptop Base */}
-                <div className="h-2 bg-[#061714] rounded-b-lg flex items-center justify-center">
-                  <div className="w-12 h-0.5 bg-[#0B2420] rounded-full" />
-                </div>
+                </button>
               </div>
 
-              {/* Overlapping Phone Badge (for Desktop cards with mobile companion, like Card 1 PolyMaps) */}
+              {/* Overlapping Companion Preview */}
               {secondaryImg && (
-                <div
+                <button
+                  type="button"
                   onClick={() => {
                     if (isPhoneScreenshot(secondaryImg)) {
                       onOpenLightbox({
@@ -544,24 +447,24 @@ const StoryCard: React.FC<StoryCardProps> = ({
                     }
                   }}
                   className={cn(
-                    "absolute -bottom-3 -right-2 sm:-right-4 z-20 rounded-xl overflow-hidden border-2 border-white shadow-xl bg-white cursor-pointer hover:scale-105 transition-all group/float",
-                    phase.id === 'morning' ? "w-28 sm:w-36" : "w-32 sm:w-44"
+                    'absolute -bottom-3 -right-2 sm:-right-3 z-20 rounded-xl overflow-hidden border-2 border-white dark:border-[#252B35] shadow-surface-lg bg-white dark:bg-[#13171D] cursor-pointer hover:scale-[1.03] transition-transform duration-200 group/float text-left',
+                    phase.id === 'morning' ? 'w-28 sm:w-36' : 'w-32 sm:w-44'
                   )}
                 >
-                  <div className="px-2 py-0.5 bg-[#0B2420] text-[8px] font-bold text-[#B8E4DC] flex items-center justify-between">
+                  <div className="px-2 py-1 bg-[#0B2420] dark:bg-[#0E1116] text-xs font-medium text-[#B8E4DC] dark:text-[#94A0B2] flex items-center justify-between gap-1">
                     <span className="truncate">{phase.secondaryLabel || t('portal:timeline_view_secondary', 'Pratonton')}</span>
-                    <span className="text-[#2DD4BF] group-hover/float:underline text-[7px] ml-1">
-                      {isPhoneScreenshot(secondaryImg) ? t('portal:timeline_zoom', 'Zum') : t('portal:timeline_switch', 'Tukar')}
-                    </span>
                   </div>
-                  <div className="overflow-hidden max-h-36 sm:max-h-44 bg-[#061714]">
+                  <div className="overflow-hidden max-h-32 sm:max-h-40 bg-[#061714] dark:bg-[#090B0E]">
                     <img
                       src={secondaryImg}
                       alt={phase.secondaryLabel || 'Secondary Preview'}
+                      width={240}
+                      height={320}
                       className="w-full h-auto object-cover object-top"
+                      loading="lazy"
                     />
                   </div>
-                </div>
+                </button>
               )}
             </div>
           )}
@@ -594,10 +497,6 @@ export const CampusDayTimeline: React.FC = () => {
           t('portal:timeline_phase_morning_h2', CAMPUS_DAY_PHASES[0].highlights[1]),
           t('portal:timeline_phase_morning_h3', CAMPUS_DAY_PHASES[0].highlights[2]),
         ],
-        metric: {
-          value: CAMPUS_DAY_PHASES[0].metric?.value || '1,080+',
-          label: t('portal:timeline_phase_morning_metric_label', CAMPUS_DAY_PHASES[0].metric?.label || 'Jadual Siswa Aktif'),
-        },
       },
       {
         ...CAMPUS_DAY_PHASES[1],
@@ -612,10 +511,6 @@ export const CampusDayTimeline: React.FC = () => {
           t('portal:timeline_phase_noon_h2', CAMPUS_DAY_PHASES[1].highlights[1]),
           t('portal:timeline_phase_noon_h3', CAMPUS_DAY_PHASES[1].highlights[2]),
         ],
-        metric: {
-          value: CAMPUS_DAY_PHASES[1].metric?.value || '340+',
-          label: t('portal:timeline_phase_noon_metric_label', CAMPUS_DAY_PHASES[1].metric?.label || 'Pesanan Selesai Kampus'),
-        },
       },
       {
         ...CAMPUS_DAY_PHASES[2],
@@ -630,10 +525,6 @@ export const CampusDayTimeline: React.FC = () => {
           t('portal:timeline_phase_evening_h2', CAMPUS_DAY_PHASES[2].highlights[1]),
           t('portal:timeline_phase_evening_h3', CAMPUS_DAY_PHASES[2].highlights[2]),
         ],
-        metric: {
-          value: CAMPUS_DAY_PHASES[2].metric?.value || '21',
-          label: t('portal:timeline_phase_evening_metric_label', CAMPUS_DAY_PHASES[2].metric?.label || 'Kelab Rasmi Beroperasi'),
-        },
       },
       {
         ...CAMPUS_DAY_PHASES[3],
@@ -648,36 +539,29 @@ export const CampusDayTimeline: React.FC = () => {
           t('portal:timeline_phase_night_h2', CAMPUS_DAY_PHASES[3].highlights[1]),
           t('portal:timeline_phase_night_h3', CAMPUS_DAY_PHASES[3].highlights[2]),
         ],
-        metric: {
-          value: CAMPUS_DAY_PHASES[3].metric?.value || '100%',
-          label: t('portal:timeline_phase_night_metric_label', CAMPUS_DAY_PHASES[3].metric?.label || 'Tindakan Responsif JPP'),
-        },
       },
     ];
   }, [t]);
 
   return (
-    <section id="hari-kampus" className="py-24 md:py-32 px-4 md:px-6 bg-[#F6FBF9] dark:bg-[#090B0E] relative z-20 overflow-hidden">
-      {/* Decorative Organic Ambient Halos (zero filter blur) */}
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-[radial-gradient(circle,rgba(13,148,136,0.06)_0%,transparent_70%)] rounded-full pointer-events-none" />
-
+    <section id="hari-kampus" className="py-16 md:py-24 px-4 md:px-6 bg-[#F6FBF9] dark:bg-[#090B0E] relative z-20 overflow-hidden scroll-mt-24">
       <div className="max-w-7xl mx-auto relative">
-        {/* Section Header (The OpenLearning Signature Style) */}
-        <div className="text-center max-w-3xl mx-auto mb-14 md:mb-20">
+        {/* Section Header */}
+        <div className="text-center max-w-3xl mx-auto mb-12 md:mb-16">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white dark:bg-[#13171D] border border-[#B8E4DC] dark:border-[#252B35] shadow-2xs mb-4">
-            <Sparkles className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
-            <span className="text-[10px] md:text-xs font-bold uppercase tracking-widest text-[#0B2420] dark:text-[#F1F5F9]">
+            <Sparkles className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" aria-hidden="true" />
+            <span className="text-xs font-semibold uppercase tracking-widest text-[#0B2420] dark:text-[#F1F5F9]">
               {t('portal:landing_timeline_badge', 'PENGALAMAN EKOSISTEM MAHASISWA')}
             </span>
           </div>
 
-          <h2 className="text-3xl sm:text-5xl md:text-6xl font-black text-[#0B2420] dark:text-[#F1F5F9] tracking-tight mb-4 leading-[1.05]">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-[-0.025em] mb-4 leading-[1.08] [text-wrap:balance]">
             {t('portal:landing_timeline_exp_title', 'The POLISAS Experience:')}
-            <span className="block text-2xl sm:text-4xl md:text-5xl font-extrabold text-[#0F766E] dark:text-[#2DD4BF] mt-1.5">
+            <span className="block text-2xl sm:text-3xl md:text-4xl font-semibold text-[#0F766E] dark:text-[#2DD4BF] mt-1.5">
               {t('portal:landing_timeline_title', 'Sehari Bersama Ekosistem POLISAS')}
             </span>
           </h2>
-          <p className="text-sm md:text-base text-[#3B635C] dark:text-[#94A0B2] font-medium leading-relaxed max-w-2xl mx-auto">
+          <p className="text-sm md:text-base text-[#3B635C] dark:text-[#94A0B2] font-normal leading-relaxed max-w-2xl mx-auto">
             {t(
               'portal:landing_timeline_subtitle',
               'Satu ruang pintar di mana teknologi moden dan kehidupan kampus berpadu untuk memacu kecemerlangan mahasiswa'
@@ -687,116 +571,89 @@ export const CampusDayTimeline: React.FC = () => {
 
         {/* ── TIMELINE SPINE & ALTERNATING CARDS GRID ── */}
         <div className="relative">
-          {/* Desktop Central Spine Line (runs through the exact middle of the 2-column grid) */}
-          <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 top-4 bottom-8 w-0.5 bg-gradient-to-b from-[#0D9488]/30 via-[#14B8A6]/40 to-[#0B2420]/30 dark:to-[#252B35] pointer-events-none z-10" />
+          {/* Desktop Central Spine Line */}
+          <div className="hidden lg:block absolute left-1/2 -translate-x-1/2 top-4 bottom-8 w-0.5 bg-gradient-to-b from-[#0D9488]/30 via-[#14B8A6]/40 to-[#B8E4DC]/40 dark:to-[#252B35] pointer-events-none z-10" aria-hidden="true" />
 
-          {/* Mobile Left Spine Line (docked at left-6 = 24px) */}
-          <div className="lg:hidden absolute left-6 top-4 bottom-8 w-0.5 bg-gradient-to-b from-[#0D9488]/30 via-[#14B8A6]/40 to-[#0B2420]/30 dark:to-[#252B35] pointer-events-none z-10" />
+          {/* Mobile Left Spine Line */}
+          <div className="lg:hidden absolute left-6 top-4 bottom-8 w-0.5 bg-gradient-to-b from-[#0D9488]/30 via-[#14B8A6]/40 to-[#B8E4DC]/40 dark:to-[#252B35] pointer-events-none z-10" aria-hidden="true" />
 
-          {/* Desktop Center Spine Node "&" Badge (OpenLearning Signature connecting element) */}
-          <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 top-5 z-20 items-center justify-center">
-            <div className="w-12 h-12 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] font-serif font-black text-2xl flex items-center justify-center shadow-surface-sm border-2 border-white dark:border-[#090B0E] ring-4 ring-[#F6FBF9] dark:ring-[#090B0E]">
-              &
+          {/* Desktop Center Spine Node "&" Badge */}
+          <div className="hidden lg:flex absolute left-1/2 -translate-x-1/2 top-4 z-20 items-center justify-center" aria-hidden="true">
+            <div className="w-11 h-11 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] font-serif font-bold text-xl flex items-center justify-center shadow-surface-sm border-2 border-white dark:border-[#090B0E] ring-4 ring-[#F6FBF9] dark:ring-[#090B0E]">
+              &amp;
             </div>
           </div>
 
-          {/* ── SECTION MARKERS HEADER (Flanking the Spine: Confident & Connected) ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-20 gap-y-6 mb-10 md:mb-14 relative">
-            {/* Top-Left Section Marker: Pintar & Berdaya */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={typeof window === 'undefined' ? { opacity: 1, y: 0 } : undefined}
-              {...(typeof window !== 'undefined' ? { whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-60px" } } : {})}
-              transition={{ duration: 0.24 }}
-              className="pl-16 lg:pl-0"
-            >
-              <div className="inline-flex items-center gap-2 text-xs font-bold font-mono tracking-widest text-[#0F766E] dark:text-[#2DD4BF] uppercase mb-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
+          {/* ── SECTION MARKERS HEADER ── */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-20 gap-y-6 mb-8 md:mb-12 relative">
+            <div className="pl-16 lg:pl-0">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold font-mono tracking-wider text-[#0F766E] dark:text-[#2DD4BF] uppercase mb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" aria-hidden="true" />
                 {t('portal:landing_phase_01_tag', 'Fasa 01 • Pembelajaran & Kemudahan')}
               </div>
-              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
                 {t('portal:landing_phase_01_title', 'Pintar & Berdaya')}
               </h3>
-              <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] mt-2 font-medium max-w-md">
+              <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] mt-1.5 font-normal max-w-md">
                 {t(
                   'portal:landing_phase_01_desc',
                   'Pendedahan akademik pintar & keusahawanan kampus di hujung jari bermula awal pagi.'
                 )}
               </p>
-            </motion.div>
+            </div>
 
-            {/* Top-Right Section Marker: Terhubung & Prihatin */}
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={typeof window === 'undefined' ? { opacity: 1, y: 0 } : undefined}
-              {...(typeof window !== 'undefined' ? { whileInView: { opacity: 1, y: 0 }, viewport: { once: true, margin: "-60px" } } : {})}
-              transition={{ duration: 0.24 }}
-              className="pl-16 lg:pl-0"
-            >
-              {/* Mobile '&' separator node */}
-              <div className="lg:hidden flex items-center gap-3 py-4 -ml-16 pl-2">
-                <div className="w-10 h-10 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] font-serif font-black text-xl flex items-center justify-center shadow-surface-sm border-2 border-white dark:border-[#090B0E] ring-2 ring-[#F6FBF9] dark:ring-[#090B0E] z-20 flex-shrink-0">
-                  &
+            <div className="pl-16 lg:pl-0">
+              <div className="lg:hidden flex items-center gap-3 py-3 -ml-16 pl-2" aria-hidden="true">
+                <div className="w-9 h-9 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF] text-white dark:text-[#090B0E] font-serif font-bold text-lg flex items-center justify-center shadow-surface-sm border-2 border-white dark:border-[#090B0E] ring-2 ring-[#F6FBF9] dark:ring-[#090B0E] z-20 flex-shrink-0">
+                  &amp;
                 </div>
                 <div className="h-px bg-[#B8E4DC] dark:bg-[#252B35] flex-1" />
               </div>
 
-              <div className="inline-flex items-center gap-2 text-xs font-bold font-mono tracking-widest text-[#0F766E] dark:text-[#2DD4BF] uppercase mb-1.5">
-                <span className="w-2 h-2 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" />
+              <div className="inline-flex items-center gap-2 text-xs font-semibold font-mono tracking-wider text-[#0F766E] dark:text-[#2DD4BF] uppercase mb-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#0F766E] dark:bg-[#2DD4BF]" aria-hidden="true" />
                 {t('portal:landing_phase_02_tag', 'Fasa 02 • Kepimpinan & Kebajikan')}
               </div>
-              <h3 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
+              <h3 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
                 {t('portal:landing_phase_02_title', 'Terhubung & Prihatin')}
               </h3>
-              <p className="text-xs sm:text-sm text-[#3B635C] dark:text-[#94A0B2] mt-2 font-medium max-w-md">
+              <p className="text-sm text-[#3B635C] dark:text-[#94A0B2] mt-1.5 font-normal max-w-md">
                 {t(
                   'portal:landing_phase_02_desc',
                   'Tadbir urus 21 kelab & EMS berpusat disokong rangkaian keselamatan kebajikan 24/7.'
                 )}
               </p>
-            </motion.div>
+            </div>
           </div>
 
           {/* ── ALTERNATING STORY CARDS TWO-COLUMN GRID ── */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-20 gap-y-12 lg:gap-y-16 relative">
-            {/* ── LEFT COLUMN: Pintar & Berdaya (Card 1 & Card 2) ── */}
-            <div className="space-y-12 lg:space-y-16 pl-16 lg:pl-0 relative">
-              {/* Card 1: Teroka (Discover) */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-20 gap-y-10 lg:gap-y-12 relative">
+            <div className="space-y-10 lg:space-y-12 pl-16 lg:pl-0 relative">
               <StoryCard
                 phase={localizedPhases[0]}
                 position="left"
                 icon={Compass}
-                accentColor="#0D9488"
                 onOpenLightbox={setLightboxImage}
               />
-
-              {/* Card 2: Muamalat (PolyMart & JPP Pay) */}
               <StoryCard
                 phase={localizedPhases[1]}
                 position="left"
                 icon={ShoppingBag}
-                accentColor="#0F766E"
                 onOpenLightbox={setLightboxImage}
               />
             </div>
 
-            {/* ── RIGHT COLUMN: Terhubung & Prihatin (Card 3 & Card 4) ── */}
-            <div className="space-y-12 lg:space-y-16 pl-16 lg:pl-0 relative lg:pt-16">
-              {/* Card 3: Pimpin (Kelab & EMS) */}
+            <div className="space-y-10 lg:space-y-12 pl-16 lg:pl-0 relative lg:pt-12">
               <StoryCard
                 phase={localizedPhases[2]}
                 position="right"
                 icon={Shield}
-                accentColor="#0B2420"
                 onOpenLightbox={setLightboxImage}
               />
-
-              {/* Card 4: Peduli (Kebajikan & Food Bank) */}
               <StoryCard
                 phase={localizedPhases[3]}
                 position="right"
                 icon={HeartHandshake}
-                accentColor="#0D9488"
                 onOpenLightbox={setLightboxImage}
               />
             </div>
