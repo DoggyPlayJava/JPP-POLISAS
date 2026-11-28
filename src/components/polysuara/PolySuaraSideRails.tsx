@@ -1,5 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
+import { changeLanguage } from '@/lib/i18n';
+import { useTheme } from '@/contexts/ThemeContext';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Bookmark,
@@ -11,15 +13,15 @@ import {
   HeartHandshake,
   HelpCircle,
   MessageSquarePlus,
+  Moon,
   Search,
   ShieldCheck,
   Sparkles,
+  Sun,
   UserCheck,
   X,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { LanguageToggle } from '@/components/ui/LanguageToggle';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 
 export type FeedSortMode = 'LATEST' | 'TRENDING' | 'JPP_REPLIED' | 'MINE' | 'BOOKMARKS';
 export type FeedFormatFilter = 'ALL' | 'QNA' | 'SHOUTOUT' | 'DEBATE';
@@ -282,7 +284,9 @@ export function PolySuaraMobileDrawer({
   activeTag,
   onSelectTag,
 }: PolySuaraMobileDrawerProps) {
-  const { t } = useTranslation(['services', 'common']);
+  const { t, i18n } = useTranslation(['services', 'common']);
+  const { theme, setTheme } = useTheme();
+  const activeLanguage = i18n.language?.startsWith('ms') ? 'ms' : 'en';
 
   const drawerViews: Array<{ id: FeedSortMode; label: string; icon: React.ComponentType<{ className?: string }>; count?: number }> = [
     { id: 'LATEST', label: t('services:suara_sort_newest', 'Terkini'), icon: Clock },
@@ -308,7 +312,7 @@ export function PolySuaraMobileDrawer({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-[#090B0E]/75 z-[99950] lg:hidden"
+            className="fixed inset-0 bg-[#090B0E]/75 z-[130] lg:hidden"
           />
           <motion.aside
             initial={{ x: '-100%' }}
@@ -316,7 +320,7 @@ export function PolySuaraMobileDrawer({
             exit={{ x: '-100%' }}
             transition={{ duration: 0.24, ease: [0.32, 0.72, 0, 1] }}
             aria-label={t('services:suara_channels_filters_btn', 'Saluran & Tapis')}
-            className="fixed inset-y-0 left-0 w-[84vw] max-w-xs bg-white dark:bg-[#13171D] border-r border-[#B8E4DC]/80 dark:border-[#252B35] z-[99955] lg:hidden flex flex-col overflow-y-auto overscroll-contain px-5 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] pb-28 space-y-5 text-[#0B2420] dark:text-[#F1F5F9]"
+            className="fixed inset-y-0 left-0 w-[84vw] max-w-xs bg-white dark:bg-[#13171D] border-r border-[#B8E4DC]/80 dark:border-[#252B35] z-[140] lg:hidden flex flex-col overflow-y-auto overscroll-contain px-5 pt-[calc(1rem+var(--sat,env(safe-area-inset-top,0px)))] pb-28 space-y-5 text-[#0B2420] dark:text-[#F1F5F9]"
           >
             <div className="flex items-center justify-between pb-3 border-b border-[#B8E4DC]/60 dark:border-[#252B35]">
               <span className="font-bold text-base text-[#0B2420] dark:text-[#F1F5F9]">
@@ -475,13 +479,69 @@ export function PolySuaraMobileDrawer({
               </button>
             </div>
 
-            <div className="pt-3 border-t border-[#B8E4DC]/60 dark:border-[#252B35] flex items-center justify-between gap-2">
+            <div className="pt-3 border-t border-[#B8E4DC]/60 dark:border-[#252B35] flex flex-col items-start gap-2">
               <span className="text-xs font-bold text-[#3B635C] dark:text-[#94A0B2]">
                 {t('services:suara_drawer_preferences', 'Paparan & Bahasa')}
               </span>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <LanguageToggle />
-                <ThemeToggle />
+              <div className="w-full flex items-center justify-between gap-2">
+                <div
+                  role="group"
+                  aria-label={t('services:suara_drawer_preferences', 'Paparan & Bahasa')}
+                  className="inline-flex min-h-[36px] items-center rounded-full border border-[#B8E4DC] dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#0E1116] p-0.5"
+                >
+                  {(['ms', 'en'] as const).map((lang) => (
+                    <button
+                      key={lang}
+                      type="button"
+                      aria-pressed={activeLanguage === lang}
+                      onClick={() => void changeLanguage(lang)}
+                      className={cn(
+                        'min-h-[36px] min-w-10 rounded-full px-2.5 text-xs font-bold transition-colors active:scale-[0.97] cursor-pointer',
+                        activeLanguage === lang
+                          ? 'bg-white dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] shadow-surface-sm'
+                          : 'text-[#3B635C] dark:text-[#94A0B2]'
+                      )}
+                    >
+                      {lang === 'ms' ? 'BM' : 'EN'}
+                    </button>
+                  ))}
+                </div>
+                <div
+                  role="group"
+                  aria-label={t('common:change_theme', 'Tukar Tema')}
+                  className="inline-flex min-h-[36px] items-center rounded-full border border-[#B8E4DC] dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#0E1116] p-0.5"
+                >
+                  <button
+                    type="button"
+                    aria-label={t('common:light_mode', 'Cerah')}
+                    aria-pressed={theme === 'light'}
+                    onClick={() => setTheme('light')}
+                    className={cn(
+                      'min-h-[36px] rounded-full px-2.5 inline-flex items-center gap-1 text-xs font-bold transition-colors active:scale-[0.97] cursor-pointer',
+                      theme === 'light'
+                        ? 'bg-white dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] shadow-surface-sm'
+                        : 'text-[#3B635C] dark:text-[#94A0B2]'
+                    )}
+                  >
+                    <Sun className="w-3.5 h-3.5 shrink-0" />
+                    <span>{t('common:light_mode', 'Cerah')}</span>
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={t('common:dark_mode', 'Gelap')}
+                    aria-pressed={theme === 'dark'}
+                    onClick={() => setTheme('dark')}
+                    className={cn(
+                      'min-h-[36px] rounded-full px-2.5 inline-flex items-center gap-1 text-xs font-bold transition-colors active:scale-[0.97] cursor-pointer',
+                      theme === 'dark'
+                        ? 'bg-white dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] shadow-surface-sm'
+                        : 'text-[#3B635C] dark:text-[#94A0B2]'
+                    )}
+                  >
+                    <Moon className="w-3.5 h-3.5 shrink-0" />
+                    <span>{t('common:dark_mode', 'Gelap')}</span>
+                  </button>
+                </div>
               </div>
             </div>
           </motion.aside>

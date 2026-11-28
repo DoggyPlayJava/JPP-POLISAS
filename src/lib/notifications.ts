@@ -5,8 +5,9 @@
 
 import { supabase } from './supabase';
 import { API_BASE_URL } from './utils';
+import { isLegacyAnimalCodename, normalizePolySuaraCodename } from './polySuaraHelpers';
 
-export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART' | 'KAMSIS' | 'KLK' | 'POLYRIDER' | 'POLYTASK' | 'POLYSUARA' | 'POLYRENT';
+export type NotificationModule = 'EKPP' | 'KEBAJIKAN' | 'AKADEMIK' | 'KEUSAHAWANAN' | 'JPP' | 'SYSTEM' | 'POLYMART' | 'KAMSIS' | 'KLK' | 'POLYRIDER' | 'POLYTASK' | 'POLYSUARA' | 'POLYRENT' | 'MAKMP' | 'FOODBANK';
 
 export interface NotificationPayload {
   title: string;
@@ -32,6 +33,388 @@ export interface AppNotification {
   target_role?: string | null;
   is_read: boolean;
   created_at: string;
+}
+
+// ─── Smart fallback link berdasarkan modul ────────────────────────────────────
+export const NOTIFICATION_MODULE_FALLBACK: Record<NotificationModule, string> = {
+  KEBAJIKAN:    '/kebajikan',
+  EKPP:         '/laporan',
+  AKADEMIK:     '/akademik',
+  KEUSAHAWANAN: '/keusahawanan',
+  JPP:          '/portal',
+  SYSTEM:       '/dashboard',
+  POLYMART:     '/polymart',
+  KAMSIS:       '/dashboard',
+  KLK:          '/klk',
+  POLYRIDER:    '/polyrider',
+  POLYTASK:     '/polytask',
+  POLYSUARA:    '/polysuara',
+  POLYRENT:     '/polyrent',
+  MAKMP:        '/makmp/status',
+  FOODBANK:     '/kebajikan/foodbank',
+};
+
+/**
+ * Shared deep-link resolver used by NotificationBell, NotifikasiPage, and Web Push.
+ * Upgrades legacy ?id= links, enriches generic module links with reference_id deep-links,
+ * and preserves all query parameters (?post=, &comment=, ?order=, ?businessId=, ?code=, ?tab=).
+ */
+export function resolveNotificationLink(
+  notif: Pick<AppNotification, 'link' | 'module' | 'type' | 'reference_id'> & { title?: string | null }
+): string | null {
+  const rawLink = (notif.link || '').trim();
+  const refId = (notif.reference_id || '').trim();
+  const mod = (notif.module || 'SYSTEM').toUpperCase() as NotificationModule;
+  const typeLower = (notif.type || '').toLowerCase();
+
+  if (rawLink) {
+    // 1. PolySuara deep-link normalization: /polysuara?id=<x> -> /polysuara?post=<x>
+    if (rawLink.startsWith('/polysuara')) {
+      const [pathname, queryStr = ''] = rawLink.split('?');
+      const params = new URLSearchParams(queryStr);
+      const legacyId = params.get('id');
+      if (legacyId && !params.get('post')) {
+        params.delete('id');
+        params.set('post', legacyId);
+      }
+      if (!params.get('post') && refId) {
+        params.set('post', refId);
+      }
+      const nextQs = params.toString();
+      return nextQs ? `${pathname}?${nextQs}` : pathname;
+    }
+
+    // 2. Kebajikan chat notifications previously pointed to generic /kebajikan/buat-aduan
+    if (rawLink === '/kebajikan/buat-aduan' && refId) {
+      const titleLower = (notif.title || '').toLowerCase();
+      const isExcoTarget = titleLower.includes('komen baru') || titleLower.includes('new comment') || titleLower.includes('aduan baru');
+      return isExcoTarget ? `/kebajikan/tiket/${refId}` : `/kebajikan/aduan/${refId}`;
+    }
+
+    // 3. PolyMart orders & chat enrichment when reference_id exists
+    if (rawLink === '/polymart/pesanan-saya' && refId) {
+      return `/polymart/pesanan-saya?order=${encodeURIComponent(refId)}`;
+    }
+    if (rawLink === '/polymart/vendor' && refId) {
+      return `/polymart/vendor?order=${encodeURIComponent(refId)}`;
+    }
+    if (rawLink === '/polymart' && typeLower.includes('chat') && refId) {
+      return `/polymart/mesej?chat=${encodeURIComponent(refId)}`;
+    }
+
+    // 4. PolyTask generic link + reference_id -> job detail
+    if (rawLink === '/polytask' && refId) {
+      return `/polytask/job/${encodeURIComponent(refId)}`;
+    }
+
+    return rawLink;
+  }
+
+  // Fallback when link is absent but reference_id exists
+  if (mod === 'POLYSUARA' && refId) {
+    return `/polysuara?post=${encodeURIComponent(refId)}`;
+  }
+  if (mod === 'POLYTASK' && refId) {
+    return `/polytask/job/${encodeURIComponent(refId)}`;
+  }
+  if (mod === 'KEBAJIKAN' && refId) {
+    return `/kebajikan/aduan/${encodeURIComponent(refId)}`;
+  }
+  if (mod === 'POLYMART' && refId) {
+    if (typeLower.includes('chat')) return `/polymart/mesej?chat=${encodeURIComponent(refId)}`;
+    return `/polymart/pesanan-saya?order=${encodeURIComponent(refId)}`;
+  }
+  if (mod === 'MAKMP' && refId) {
+    return `/makmp/status?code=${encodeURIComponent(refId)}`;
+  }
+
+  return NOTIFICATION_MODULE_FALLBACK[mod] ?? null;
+}
+
+function sanitizeLegacyAnimalMentions(text: string): string {
+  if (!text) return '';
+  let out = text.replace(/hantu\s+tanpa\s+nama/gi, 'Korra');
+  // Replace "Kucing Oren baru luah..." / "Harimau Berani just shared..." patterns
+  const prefixMatch = out.match(/^([^\w\s]*\s*)([A-Za-z]+(?:\s+[A-Za-z]+){0,2})(\s+(?:baru\s+luah|just\s+shared|telah\s+memadamkan|deleted))/i);
+  if (prefixMatch && isLegacyAnimalCodename(prefixMatch[2])) {
+    const persona = normalizePolySuaraCodename(prefixMatch[2]).displayName;
+    out = `${prefixMatch[1]}${persona}${out.slice(prefixMatch[0].length - prefixMatch[3].length)}`;
+  }
+  return out;
+}
+
+/**
+ * Translates known system/PolySuara/Kebajikan/PolyMart/MAKMP/EKPP/Akademik/PolyTask/PolyRider
+ * notification titles & messages into the viewer's active language ('en' or 'ms').
+ * Also ensures zero legacy animal codenames appear in PolySuara notifications.
+ */
+export function localizeNotification(
+  notif: Pick<AppNotification, 'title' | 'message' | 'module' | 'type'>,
+  _t?: any,
+  lang = 'ms'
+): { title: string; message: string } {
+  const isEn = (lang || 'ms').toLowerCase().startsWith('en');
+  const rawTitle = sanitizeLegacyAnimalMentions(String(notif.title || ''));
+  const rawMessage = sanitizeLegacyAnimalMentions(String(notif.message || ''));
+  const type = String(notif.type || '').toUpperCase();
+  const cleanTitle = rawTitle.replace(/^[^\p{L}\p{N}\[]+/u, '').trim();
+
+  // ── 1. PolySuara interaction & broadcast notifications ──
+  if (notif.module === 'POLYSUARA' || ['COMMENT', 'COMMENT_REPLY', 'UPVOTE_MILESTONE', 'DOWNVOTE_WARNING', 'AUTO_HIDE', 'NEW_CONFESSION'].includes(type)) {
+    // Reply to comment (check BEFORE comment so "balasan ... ulasan" matches reply first)
+    if (type === 'COMMENT_REPLY' || /balasan\s+(?:baru|baharu)|new\s+reply/i.test(cleanTitle)) {
+      const quoted = rawMessage.match(/"([^"]*)"/)?.[1];
+      if (isEn) {
+        return {
+          title: 'New Reply',
+          message: quoted !== undefined ? `Someone replied to your comment: "${quoted}"` : rawMessage.replace(/^Seseorang membalas ulasan anda:\s*/i, 'Someone replied to your comment: '),
+        };
+      }
+      return {
+        title: 'Balasan Baharu',
+        message: quoted !== undefined ? `Seseorang membalas ulasan anda: "${quoted}"` : rawMessage.replace(/^Someone replied to your comment:\s*/i, 'Seseorang membalas ulasan anda: '),
+      };
+    }
+
+    // Comment on confession
+    if (type === 'COMMENT' || /ulasan\s+(?:baru|baharu)|new\s+comment/i.test(cleanTitle)) {
+      const quoted = rawMessage.match(/"([^"]*)"/)?.[1];
+      if (isEn) {
+        return {
+          title: 'New Comment',
+          message: quoted !== undefined ? `Someone commented on your post: "${quoted}"` : rawMessage.replace(/^Seseorang mengulas luahan anda:\s*/i, 'Someone commented on your post: '),
+        };
+      }
+      return {
+        title: 'Ulasan Baharu',
+        message: quoted !== undefined ? `Seseorang mengulas luahan anda: "${quoted}"` : rawMessage.replace(/^Someone commented on your (?:confession|post):\s*/i, 'Seseorang mengulas luahan anda: '),
+      };
+    }
+
+    // Upvote milestone
+    if (type === 'UPVOTE_MILESTONE' || /perkembangan popular|popular milestone|sedang hangat|trending/i.test(cleanTitle)) {
+      const count = rawMessage.match(/\b(\d+)\b/)?.[1] || rawTitle.match(/\b(\d+)\b/)?.[1];
+      if (isEn) {
+        return {
+          title: 'Popular Post on PolySuara',
+          message: count ? `Your post has reached ${count} upvotes from campus students!` : 'Your post is gaining support!',
+        };
+      }
+      return {
+        title: 'Luahan PolySuara Hangat',
+        message: count ? `Luahan anda telah mencapai ${count} sokongan daripada warga kampus!` : 'Luahan anda semakin mendapat sokongan!',
+      };
+    }
+
+    // Downvote warning
+    if (type === 'DOWNVOTE_WARNING' || /kritikan komuniti|amaran maklum balas komuniti|community feedback/i.test(cleanTitle)) {
+      const count = rawMessage.match(/\b(\d+)\b/)?.[1];
+      if (isEn) {
+        return {
+          title: 'Community Feedback Alert',
+          message: count ? `Your post received ${count} community downvotes.` : 'Your post received multiple community downvotes. Please review community guidelines.',
+        };
+      }
+      return {
+        title: 'Amaran Maklum Balas Komuniti',
+        message: count ? `Luahan anda telah ditentang oleh ${count} orang.` : 'Luahan anda menerima banyak undi kurang bersetuju. Sila semak garis panduan komuniti.',
+      };
+    }
+
+    // Auto-hide
+    if (type === 'AUTO_HIDE' || /luahan\s+(?:polysuara\s+)?disembunyikan|(?:confession|post)\s+hidden/i.test(cleanTitle)) {
+      if (isEn) {
+        return {
+          title: 'PolySuara Post Hidden',
+          message: 'Your post was automatically hidden after reaching the community moderation threshold.',
+        };
+      }
+      return {
+        title: 'Luahan Disembunyikan',
+        message: 'Luahan anda telah disembunyikan secara automatik oleh komuniti kerana menerima banyak bantahan.',
+      };
+    }
+
+    // New confession broadcast (supports both legacy "baru luah sesuatu" & upgraded "berkongsi di PolySuara")
+    const baruLuahMatch = cleanTitle.match(/^(.+?)\s+(?:baru luah sesuatu|berkongsi di polysuara)$/i);
+    if (baruLuahMatch) {
+      const persona = normalizePolySuaraCodename(baruLuahMatch[1]).displayName;
+      return {
+        title: isEn ? `${persona} shared on PolySuara` : `${persona} berkongsi di PolySuara`,
+        message: rawMessage,
+      };
+    }
+    const justSharedMatch = cleanTitle.match(/^(.+?)\s+(?:just shared a confession|shared on polysuara)$/i);
+    if (justSharedMatch) {
+      const persona = normalizePolySuaraCodename(justSharedMatch[1]).displayName;
+      return {
+        title: isEn ? `${persona} shared on PolySuara` : `${persona} berkongsi di PolySuara`,
+        message: rawMessage,
+      };
+    }
+  }
+
+  // ── 2. PolyMart orders & chat ──
+  if (notif.module === 'POLYMART') {
+    if (isEn) {
+      const tLower = cleanTitle.toLowerCase();
+      if (tLower.includes('bayaran disahkan')) {
+        return {
+          title: '[PolyMart] Payment Verified',
+          message: rawMessage.replace(/Bayaran untuk tempahan anda telah disahkan.*?Pesanan sedang diproses!/i, 'Your payment has been verified. Your order is now being processed!'),
+        };
+      }
+      if (tLower.includes('resit ditolak')) {
+        return {
+          title: '[PolyMart] Receipt Rejected',
+          message: 'Your payment receipt was rejected. Please upload a valid receipt.',
+        };
+      }
+      if (tLower.includes('pesanan siap diambil') || tLower.includes('sedia diambil')) {
+        return {
+          title: '[PolyMart] Order Ready for Pickup',
+          message: rawMessage
+            .replace(/^Pesanan anda\s*/i, 'Your order ')
+            .replace(/sudah siap\.?\s*Sila datang ambil!?/i, 'is ready. Please come collect it!'),
+        };
+      }
+      if (tLower.includes('pesanan selesai')) {
+        return {
+          title: '[PolyMart] Order Completed',
+          message: 'Thank you for shopping at PolyMart!',
+        };
+      }
+      if (tLower.includes('pesanan dibatalkan')) {
+        return {
+          title: '[PolyMart] Order Cancelled',
+          message: rawMessage.replace(/^Pesanan anda dibatalkan/i, 'Your order has been cancelled'),
+        };
+      }
+      if (tLower.includes('pesanan disahkan')) {
+        return {
+          title: '[PolyMart] Order Confirmed',
+          message: rawMessage.replace(/^Pesanan anda telah disahkan/i, 'Your order has been confirmed'),
+        };
+      }
+      if (tLower.includes('mesej baru dari pelanggan') || tLower.includes('mesej sembang peniaga')) {
+        return {
+          title: cleanTitle.replace(/Mesej Baru dari Pelanggan/i, 'New Message from Customer').replace(/Mesej Sembang Peniaga!?/i, 'New Customer Message'),
+          message: rawMessage.replace(/Menghantar pautan produk/i, 'Sent a product link'),
+        };
+      }
+      if (tLower.includes('mesej baru dari ') || tLower.includes('mesej dari ')) {
+        return {
+          title: cleanTitle.replace(/Mesej Baru dari /i, 'New Message from ').replace(/Mesej dari /i, 'Message from '),
+          message: rawMessage.replace(/Menghantar pautan produk/i, 'Sent a product link'),
+        };
+      }
+    }
+  }
+
+  // ── 3. Kebajikan & FoodBank ──
+  if (notif.module === 'KEBAJIKAN' || notif.module === 'FOODBANK') {
+    if (isEn) {
+      if (/aduan baru/i.test(cleanTitle)) {
+        return {
+          title: cleanTitle.replace(/Aduan Baru/i, 'New Welfare Ticket'),
+          message: rawMessage
+            .replace(/dikemukakan oleh/i, 'submitted by')
+            .replace(/Kategori:/i, 'Category:')
+            .replace(/Sila semak dan ambil tindakan\.?/i, 'Please review and take action.'),
+        };
+      }
+      if (/komen baru tiket/i.test(cleanTitle)) {
+        return {
+          title: cleanTitle.replace(/Komen Baru Tiket/i, 'New Comment on Ticket'),
+          message: rawMessage.replace(/Menghantar pautan tiket/i, 'Sent a ticket link'),
+        };
+      }
+      if (/maklumbalas tiket|maklum balas tiket/i.test(cleanTitle)) {
+        return {
+          title: cleanTitle.replace(/Maklum\s?balas Tiket/i, 'Ticket Reply'),
+          message: rawMessage.replace(/Menghantar pautan tiket/i, 'Sent a ticket link'),
+        };
+      }
+      if (/status aduan|tiket dikemaskini/i.test(cleanTitle)) {
+        return {
+          title: cleanTitle.replace(/Status Aduan/i, 'Ticket Status').replace(/Tiket Dikemaskini/i, 'Ticket Updated'),
+          message: rawMessage,
+        };
+      }
+    }
+  }
+
+  // ── 4. MAKMP & Akademik ──
+  if (notif.module === 'MAKMP' || type === 'MAKMP' || notif.module === 'AKADEMIK') {
+    if (isEn) {
+      if (/dicalonkan 3 teratas makmp/i.test(cleanTitle)) {
+        return {
+          title: 'Congratulations! Top 3 MAKMP Finalist',
+          message: rawMessage
+            .replace(/Tahniah! Anda telah dicalonkan sebagai antara 3 teratas bagi anugerah/i, 'Congratulations! You have been shortlisted in the Top 3 for')
+            .replace(/Sila lengkapkan maklumat diri anda di portal\.?/i, 'Please complete your profile details in the portal.'),
+        };
+      }
+      if (/permohonan makmp disahkan|pencalonan makmp disahkan/i.test(cleanTitle)) {
+        return {
+          title: 'MAKMP Nomination Verified',
+          message: rawMessage.replace(/Permohonan MAKMP anda telah disahkan/i, 'Your MAKMP nomination has been verified'),
+        };
+      }
+      if (/permohonan makmp ditolak|pencalonan makmp ditolak/i.test(cleanTitle)) {
+        return {
+          title: 'MAKMP Nomination Rejected',
+          message: rawMessage.replace(/Permohonan MAKMP anda ditolak/i, 'Your MAKMP nomination was rejected'),
+        };
+      }
+      if (/dalam semakan/i.test(cleanTitle)) {
+        return {
+          title: cleanTitle.replace(/Dalam Semakan/i, 'Under Review'),
+          message: rawMessage,
+        };
+      }
+    }
+  }
+
+  // ── 5. EKPP / Club Portal & System ──
+  if (isEn) {
+    if (/permohonan diluluskan/i.test(cleanTitle)) {
+      return {
+        title: 'Application Approved',
+        message: rawMessage
+          .replace(/Tahniah! Permohonan anda untuk menyertai /i, 'Congratulations! Your application to join ')
+          .replace(/ telah diluluskan\.?/i, ' has been approved.'),
+      };
+    }
+    if (/permohonan ditolak/i.test(cleanTitle)) {
+      return {
+        title: 'Application Rejected',
+        message: rawMessage
+          .replace(/Dukacita dimaklumkan permohonan anda untuk menyertai /i, 'We regret to inform you that your application to join ')
+          .replace(/ telah ditolak\.?/i, ' was not approved.'),
+      };
+    }
+    if (/laporan diluluskan/i.test(cleanTitle)) {
+      return {
+        title: 'Report Approved',
+        message: rawMessage,
+      };
+    }
+    if (/laporan perlu pembetulan|laporan ditolak/i.test(cleanTitle)) {
+      return {
+        title: cleanTitle.replace(/Laporan Perlu Pembetulan/i, 'Report Needs Revision').replace(/Laporan Ditolak/i, 'Report Rejected'),
+        message: rawMessage,
+      };
+    }
+    if (/pengumuman baru|hebahan rasmi/i.test(cleanTitle)) {
+      return {
+        title: cleanTitle.replace(/Pengumuman Baru/i, 'New Announcement').replace(/Hebahan Rasmi/i, 'Official Broadcast'),
+        message: rawMessage,
+      };
+    }
+  }
+
+  return { title: rawTitle, message: rawMessage };
 }
 
 // ─── Insert notifikasi (service-role via server + fallback direct) ───────────
@@ -80,6 +463,7 @@ async function firePush(user_id: string, payload: NotificationPayload): Promise<
     const { data: { session } } = await supabase.auth.getSession();
     if (!session?.access_token) return;
 
+    const resolvedLink = resolveNotificationLink(payload) || '/portal';
     await Promise.allSettled(
       subs.map(async (sub) => {
         try {
@@ -93,7 +477,7 @@ async function firePush(user_id: string, payload: NotificationPayload): Promise<
               subscription: { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
               title: payload.title,
               body:  payload.message,
-              data:  { url: payload.link || '/portal', link: payload.link, module: payload.module, type: payload.type },
+              data:  { url: resolvedLink, link: resolvedLink, module: payload.module, type: payload.type },
             })
           });
 

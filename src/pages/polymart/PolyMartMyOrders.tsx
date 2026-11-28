@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import QRCode from 'react-qr-code';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
@@ -317,7 +318,7 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
               message: t('commerce:cancellation_request_msg', 'Pembeli meminta pembatalan pesanan {{product}}. Sebab: {{reason}}', { product: order.business_products?.name, reason: finalReason }),
               type: 'polymart_cancellation_request',
               module: 'POLYMART',
-              link: '/polymart/vendor',
+              link: `/polymart/vendor?order=${order.id}`,
               reference_id: order.id,
             });
           }
@@ -382,7 +383,7 @@ function CancelModal({ order, onClose }: { order: Order; onClose: (cancelled: bo
 }
 
 
-function OrderCard({ order, onReview, onCancel }: { key?: any; order: Order; onReview: (o: Order) => void; onCancel: (o: Order) => void }) {
+function OrderCard({ order, onReview, onCancel, highlighted = false }: { key?: any; order: Order; onReview: (o: Order) => void; onCancel: (o: Order) => void; highlighted?: boolean }) {
   const { t } = useTranslation(['commerce', 'common']);
   const navigate = useNavigate();
   const statusConfig: Record<OrderStatus, { label: string; color: string; bg: string; icon: React.FC<any> }> = {
@@ -407,9 +408,13 @@ function OrderCard({ order, onReview, onCancel }: { key?: any; order: Order; onR
   return (
     <motion.div
       layout
+      data-order-id={order.id}
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-border/50 bg-card overflow-hidden"
+      className={cn(
+        'rounded-2xl border border-border/50 bg-card overflow-hidden transition-shadow',
+        highlighted && 'ring-2 ring-[#0F766E] dark:ring-[#2DD4BF]'
+      )}
     >
       {/* Status bar */}
       <div className="flex items-center gap-2 px-3.5 py-2.5" style={{ background: cfg.bg }}>
@@ -578,6 +583,10 @@ function OrderCard({ order, onReview, onCancel }: { key?: any; order: Order; onR
 export function PolyMartMyOrders() {
   const { t } = useTranslation(['commerce', 'common']);
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const deepLinkOrderId = searchParams.get('order') || searchParams.get('id');
+  const lastDeepLinkedOrderRef = useRef<string | null>(null);
+  const [highlightedOrderId, setHighlightedOrderId] = useState<string | null>(null);
   const statusTabs: { key: OrderStatus | 'all'; label: string; icon: React.FC<any> }[] = [
     { key: 'all',       label: t('commerce:tab_all', 'Semua'),    icon: ListFilter },
     { key: 'PENDING',   label: t('commerce:tab_pending', 'Menunggu'), icon: Clock },
@@ -630,6 +639,33 @@ export function PolyMartMyOrders() {
   }, [user]);
 
   useEffect(() => { loadOrders(); }, [loadOrders]);
+
+  // Support notification deep-link /polymart/pesanan-saya?order=<id>
+  useEffect(() => {
+    if (!deepLinkOrderId || loading || lastDeepLinkedOrderRef.current === deepLinkOrderId) return;
+    if (!orders.some((o) => o.id === deepLinkOrderId)) return;
+
+    lastDeepLinkedOrderRef.current = deepLinkOrderId;
+    setActiveTab('all');
+    const timer = setTimeout(() => {
+      const safeId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+        ? CSS.escape(deepLinkOrderId)
+        : deepLinkOrderId.replace(/"/g, '\\"');
+      const el = document.querySelector(`[data-order-id="${safeId}"]`);
+      if (el && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setHighlightedOrderId(deepLinkOrderId);
+    }, 180);
+
+    return () => clearTimeout(timer);
+  }, [deepLinkOrderId, loading, orders]);
+
+  useEffect(() => {
+    if (!highlightedOrderId) return;
+    const clearTimer = setTimeout(() => setHighlightedOrderId(null), 4200);
+    return () => clearTimeout(clearTimer);
+  }, [highlightedOrderId]);
 
   // Auto-refresh bila pengguna kembali ke tab ini (visibilitychange)
   // Lebih bijak dari setInterval — hanya fire bila pengguna benar-benar aktif semula
@@ -772,6 +808,7 @@ export function PolyMartMyOrders() {
                 <OrderCard
                   key={order.id}
                   order={order}
+                  highlighted={highlightedOrderId === order.id}
                   onReview={o => !reviewedIds.has(o.id) && setReviewTarget(o)}
                   onCancel={o => setCancelTarget(o)}
                 />

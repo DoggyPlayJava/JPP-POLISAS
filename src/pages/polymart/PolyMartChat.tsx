@@ -9,13 +9,21 @@ export function PolyMartChat() {
 
   useEffect(() => {
     const businessId = searchParams.get('businessId');
+    const buyerId = searchParams.get('buyerId');
+    const chatId = searchParams.get('chat');
     // Redirect to main PolyMart page
     navigate('/polymart', { replace: true });
     
     // Dispatch event to open the unified inbox or a specific chat inline inside the floating widget
     setTimeout(() => {
       if (businessId) {
-        window.dispatchEvent(new CustomEvent('open-polymart-chat', { detail: { businessId } }));
+        window.dispatchEvent(new CustomEvent('open-polymart-chat', {
+          detail: {
+            businessId,
+            ...(buyerId ? { buyerId } : {}),
+            ...(chatId ? { chatId } : {}),
+          },
+        }));
       } else {
         window.dispatchEvent(new CustomEvent('open-inbox'));
       }

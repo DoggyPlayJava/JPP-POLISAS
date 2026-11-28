@@ -335,274 +335,172 @@ export function checkEmpathyNudge(content?: string | null): EmpathyNudgeResult {
   return { triggered: false, reasonKey: null };
 }
 
-const ANIMAL_AVATAR_MAP: Record<string, AnimalAvatar> = {
-  hantu: {
-    emoji: '🦉',
-    bgClass: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
-    textClass: 'text-purple-600 dark:text-purple-400',
-  },
-  arnab: {
-    emoji: '🐇',
-    bgClass: 'bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-300',
-    textClass: 'text-pink-600 dark:text-pink-400',
-  },
-  koala: {
-    emoji: '🐨',
-    bgClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
-    textClass: 'text-emerald-600 dark:text-emerald-400',
-  },
-  helang: {
-    emoji: '🦅',
-    bgClass: 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300',
-    textClass: 'text-sky-600 dark:text-sky-400',
-  },
-  rusa: {
-    emoji: '🦌',
-    bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-600/20 dark:text-emerald-300',
-    textClass: 'text-emerald-700 dark:text-emerald-400',
-  },
-  otter: {
-    emoji: '🦦',
-    bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-600/20 dark:text-cyan-300',
-    textClass: 'text-cyan-700 dark:text-cyan-400',
-  },
-  zirafah: {
-    emoji: '🦒',
-    bgClass: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/20 dark:text-yellow-300',
-    textClass: 'text-yellow-700 dark:text-yellow-400',
-  },
-  kucing: {
-    emoji: '🐱',
-    bgClass: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
-    textClass: 'text-amber-600 dark:text-amber-400',
-  },
-  harimau: {
-    emoji: '🐯',
-    bgClass: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300',
-    textClass: 'text-orange-600 dark:text-orange-400',
-  },
-  elang: {
-    emoji: '🦅',
-    bgClass: 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300',
-    textClass: 'text-sky-600 dark:text-sky-400',
-  },
-  singa: {
-    emoji: '🦁',
-    bgClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300',
-    textClass: 'text-yellow-600 dark:text-yellow-400',
-  },
-  serigala: {
-    emoji: '🐺',
-    bgClass: 'bg-slate-200 text-slate-700 dark:bg-slate-700/40 dark:text-slate-200',
-    textClass: 'text-slate-600 dark:text-slate-300',
-  },
-  kuda: {
-    emoji: '🐴',
-    bgClass: 'bg-stone-200 text-stone-700 dark:bg-stone-700/40 dark:text-stone-300',
-    textClass: 'text-stone-600 dark:text-stone-400',
-  },
-  beruang: {
-    emoji: '🐻',
-    bgClass: 'bg-amber-200 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-    textClass: 'text-amber-700 dark:text-amber-300',
-  },
-  kancil: {
-    emoji: '🦌',
-    bgClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
-    textClass: 'text-emerald-600 dark:text-emerald-400',
-  },
-  gajah: {
-    emoji: '🐘',
-    bgClass: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/20 dark:text-indigo-300',
-    textClass: 'text-indigo-600 dark:text-indigo-400',
-  },
-  tupai: {
-    emoji: '🐿️',
-    bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-600/20 dark:text-orange-300',
-    textClass: 'text-orange-700 dark:text-orange-400',
-  },
-  kura: {
-    emoji: '🐢',
-    bgClass: 'bg-green-100 text-green-700 dark:bg-green-500/20 dark:text-green-300',
-    textClass: 'text-green-600 dark:text-green-400',
-  },
-  lumba: {
-    emoji: '🐬',
-    bgClass: 'bg-cyan-100 text-cyan-700 dark:bg-cyan-500/20 dark:text-cyan-300',
-    textClass: 'text-cyan-600 dark:text-cyan-400',
-  },
-  burung: {
-    emoji: '🦜',
-    bgClass: 'bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300',
-    textClass: 'text-teal-600 dark:text-teal-400',
-  },
-  panda: {
-    emoji: '🐼',
-    bgClass: 'bg-zinc-200 text-zinc-800 dark:bg-zinc-700/50 dark:text-zinc-200',
-    textClass: 'text-zinc-700 dark:text-zinc-300',
-  },
-  musang: {
-    emoji: '🦊',
-    bgClass: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
-    textClass: 'text-red-600 dark:text-red-400',
-  },
-  landak: {
-    emoji: '🦔',
-    bgClass: 'bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300',
-    textClass: 'text-violet-600 dark:text-violet-400',
-  },
-};
+const LEGACY_ANIMAL_KEYWORDS: string[] = [
+  'kucing',
+  'harimau',
+  'helang',
+  'elang',
+  'singa',
+  'serigala',
+  'kuda',
+  'beruang',
+  'kancil',
+  'gajah',
+  'tupai',
+  'kura',
+  'lumba',
+  'burung',
+  'panda',
+  'musang',
+  'landak',
+  'arnab',
+  'koala',
+  'rusa',
+  'otter',
+  'zirafah',
+  'hantu',
+];
 
 export interface FriendlyPersona {
   displayName: string;
   name: string;
   emoji: string;
   bgClass: string;
+  textClass: string;
+  franchise: string;
 }
 
 /**
- * 16 distinct Malaysian campus animal personas for anonymous student interaction.
+ * 70 curated fictional character personas across 7 franchises (10 characters per series)
+ * for anonymous student interaction. Strictly zero legacy animal codenames or ghost icons.
  */
 export const FRIENDLY_ANON_PERSONAS: FriendlyPersona[] = [
-  {
-    displayName: 'Kucing Oren',
-    name: 'Kucing Oren',
-    emoji: '🐱',
-    bgClass: 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-300',
-  },
-  {
-    displayName: 'Tupai Laju',
-    name: 'Tupai Laju',
-    emoji: '🐿️',
-    bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-600/20 dark:text-orange-300',
-  },
-  {
-    displayName: 'Panda Comel',
-    name: 'Panda Comel',
-    emoji: '🐼',
-    bgClass: 'bg-zinc-200 text-zinc-800 dark:bg-zinc-700/50 dark:text-zinc-200',
-  },
-  {
-    displayName: 'Arnab Pantas',
-    name: 'Arnab Pantas',
-    emoji: '🐇',
-    bgClass: 'bg-pink-100 text-pink-700 dark:bg-pink-500/20 dark:text-pink-300',
-  },
-  {
-    displayName: 'Musang Cerdik',
-    name: 'Musang Cerdik',
-    emoji: '🦊',
-    bgClass: 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
-  },
-  {
-    displayName: 'Koala Tenang',
-    name: 'Koala Tenang',
-    emoji: '🐨',
-    bgClass: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300',
-  },
-  {
-    displayName: 'Helang Biru',
-    name: 'Helang Biru',
-    emoji: '🦅',
-    bgClass: 'bg-sky-100 text-sky-700 dark:bg-sky-500/20 dark:text-sky-300',
-  },
-  {
-    displayName: 'Rusa Riang',
-    name: 'Rusa Riang',
-    emoji: '🦌',
-    bgClass: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-600/20 dark:text-emerald-300',
-  },
-  {
-    displayName: 'Singa Santai',
-    name: 'Singa Santai',
-    emoji: '🦁',
-    bgClass: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-500/20 dark:text-yellow-300',
-  },
-  {
-    displayName: 'Beruang Madu',
-    name: 'Beruang Madu',
-    emoji: '🐻',
-    bgClass: 'bg-amber-200 text-amber-800 dark:bg-amber-900/40 dark:text-amber-200',
-  },
-  {
-    displayName: 'Kancil Bijak',
-    name: 'Kancil Bijak',
-    emoji: '🦌',
-    bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-600/20 dark:text-teal-300',
-  },
-  {
-    displayName: 'Otter Ceria',
-    name: 'Otter Ceria',
-    emoji: '🦦',
-    bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-600/20 dark:text-cyan-300',
-  },
-  {
-    displayName: 'Harimau Berani',
-    name: 'Harimau Berani',
-    emoji: '🐯',
-    bgClass: 'bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-300',
-  },
-  {
-    displayName: 'Zirafah Tinggi',
-    name: 'Zirafah Tinggi',
-    emoji: '🦒',
-    bgClass: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-600/20 dark:text-yellow-300',
-  },
-  {
-    displayName: 'Kucing Hitam',
-    name: 'Kucing Hitam',
-    emoji: '🐈‍⬛',
-    bgClass: 'bg-slate-300 text-slate-900 dark:bg-slate-700 dark:text-slate-100',
-  },
-  {
-    displayName: 'Burung Hantu',
-    name: 'Burung Hantu',
-    emoji: '🦉',
-    bgClass: 'bg-purple-100 text-purple-700 dark:bg-purple-500/20 dark:text-purple-300',
-  },
+  // 1. The Legend of Korra (10)
+  { displayName: 'Korra', name: 'Korra', emoji: 'K', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', textClass: 'text-teal-700 dark:text-teal-300', franchise: 'The Legend of Korra' },
+  { displayName: 'Mako', name: 'Mako', emoji: 'M', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', textClass: 'text-teal-700 dark:text-teal-300', franchise: 'The Legend of Korra' },
+  { displayName: 'Bolin', name: 'Bolin', emoji: 'B', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', textClass: 'text-teal-700 dark:text-teal-300', franchise: 'The Legend of Korra' },
+  { displayName: 'Asami', name: 'Asami', emoji: 'A', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', textClass: 'text-teal-700 dark:text-teal-300', franchise: 'The Legend of Korra' },
+  { displayName: 'Tenzin', name: 'Tenzin', emoji: 'T', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', textClass: 'text-teal-700 dark:text-teal-300', franchise: 'The Legend of Korra' },
+  { displayName: 'Lin Beifong', name: 'Lin Beifong', emoji: 'LB', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', textClass: 'text-teal-700 dark:text-teal-300', franchise: 'The Legend of Korra' },
+  { displayName: 'Jinora', name: 'Jinora', emoji: 'J', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', textClass: 'text-teal-700 dark:text-teal-300', franchise: 'The Legend of Korra' },
+  { displayName: 'Kuvira', name: 'Kuvira', emoji: 'K', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', textClass: 'text-teal-700 dark:text-teal-300', franchise: 'The Legend of Korra' },
+  { displayName: 'Varrick', name: 'Varrick', emoji: 'V', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', textClass: 'text-teal-700 dark:text-teal-300', franchise: 'The Legend of Korra' },
+  { displayName: 'Zaheer', name: 'Zaheer', emoji: 'Z', bgClass: 'bg-teal-100 text-teal-800 dark:bg-teal-500/20 dark:text-teal-200', textClass: 'text-teal-700 dark:text-teal-300', franchise: 'The Legend of Korra' },
+
+  // 2. Avatar: The Last Airbender (10)
+  { displayName: 'Aang', name: 'Aang', emoji: 'A', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', textClass: 'text-sky-700 dark:text-sky-300', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Katara', name: 'Katara', emoji: 'K', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', textClass: 'text-sky-700 dark:text-sky-300', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Sokka', name: 'Sokka', emoji: 'S', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', textClass: 'text-sky-700 dark:text-sky-300', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Toph', name: 'Toph', emoji: 'T', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', textClass: 'text-sky-700 dark:text-sky-300', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Zuko', name: 'Zuko', emoji: 'Z', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', textClass: 'text-sky-700 dark:text-sky-300', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Iroh', name: 'Iroh', emoji: 'I', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', textClass: 'text-sky-700 dark:text-sky-300', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Azula', name: 'Azula', emoji: 'A', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', textClass: 'text-sky-700 dark:text-sky-300', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Suki', name: 'Suki', emoji: 'S', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', textClass: 'text-sky-700 dark:text-sky-300', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Appa', name: 'Appa', emoji: 'A', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', textClass: 'text-sky-700 dark:text-sky-300', franchise: 'Avatar: The Last Airbender' },
+  { displayName: 'Momo', name: 'Momo', emoji: 'M', bgClass: 'bg-sky-100 text-sky-800 dark:bg-sky-500/20 dark:text-sky-200', textClass: 'text-sky-700 dark:text-sky-300', franchise: 'Avatar: The Last Airbender' },
+
+  // 3. One Piece (10)
+  { displayName: 'Monkey D. Luffy', name: 'Monkey D. Luffy', emoji: 'MDL', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', textClass: 'text-red-700 dark:text-red-300', franchise: 'One Piece' },
+  { displayName: 'Roronoa Zoro', name: 'Roronoa Zoro', emoji: 'RZ', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', textClass: 'text-red-700 dark:text-red-300', franchise: 'One Piece' },
+  { displayName: 'Nami', name: 'Nami', emoji: 'N', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', textClass: 'text-red-700 dark:text-red-300', franchise: 'One Piece' },
+  { displayName: 'Usopp', name: 'Usopp', emoji: 'U', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', textClass: 'text-red-700 dark:text-red-300', franchise: 'One Piece' },
+  { displayName: 'Sanji', name: 'Sanji', emoji: 'S', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', textClass: 'text-red-700 dark:text-red-300', franchise: 'One Piece' },
+  { displayName: 'Tony Tony Chopper', name: 'Tony Tony Chopper', emoji: 'TTC', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', textClass: 'text-red-700 dark:text-red-300', franchise: 'One Piece' },
+  { displayName: 'Nico Robin', name: 'Nico Robin', emoji: 'NR', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', textClass: 'text-red-700 dark:text-red-300', franchise: 'One Piece' },
+  { displayName: 'Franky', name: 'Franky', emoji: 'F', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', textClass: 'text-red-700 dark:text-red-300', franchise: 'One Piece' },
+  { displayName: 'Brook', name: 'Brook', emoji: 'B', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', textClass: 'text-red-700 dark:text-red-300', franchise: 'One Piece' },
+  { displayName: 'Jinbe', name: 'Jinbe', emoji: 'J', bgClass: 'bg-red-100 text-red-800 dark:bg-red-500/20 dark:text-red-200', textClass: 'text-red-700 dark:text-red-300', franchise: 'One Piece' },
+
+  // 4. Sword Art Online (10)
+  { displayName: 'Kirito', name: 'Kirito', emoji: 'K', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', textClass: 'text-violet-700 dark:text-violet-300', franchise: 'Sword Art Online' },
+  { displayName: 'Asuna', name: 'Asuna', emoji: 'A', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', textClass: 'text-violet-700 dark:text-violet-300', franchise: 'Sword Art Online' },
+  { displayName: 'Yui', name: 'Yui', emoji: 'Y', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', textClass: 'text-violet-700 dark:text-violet-300', franchise: 'Sword Art Online' },
+  { displayName: 'Sinon', name: 'Sinon', emoji: 'S', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', textClass: 'text-violet-700 dark:text-violet-300', franchise: 'Sword Art Online' },
+  { displayName: 'Leafa', name: 'Leafa', emoji: 'L', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', textClass: 'text-violet-700 dark:text-violet-300', franchise: 'Sword Art Online' },
+  { displayName: 'Klein', name: 'Klein', emoji: 'K', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', textClass: 'text-violet-700 dark:text-violet-300', franchise: 'Sword Art Online' },
+  { displayName: 'Eugeo', name: 'Eugeo', emoji: 'E', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', textClass: 'text-violet-700 dark:text-violet-300', franchise: 'Sword Art Online' },
+  { displayName: 'Alice Zuberg', name: 'Alice Zuberg', emoji: 'AZ', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', textClass: 'text-violet-700 dark:text-violet-300', franchise: 'Sword Art Online' },
+  { displayName: 'Yuuki Konno', name: 'Yuuki Konno', emoji: 'YK', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', textClass: 'text-violet-700 dark:text-violet-300', franchise: 'Sword Art Online' },
+  { displayName: 'Agil', name: 'Agil', emoji: 'A', bgClass: 'bg-violet-100 text-violet-800 dark:bg-violet-500/20 dark:text-violet-200', textClass: 'text-violet-700 dark:text-violet-300', franchise: 'Sword Art Online' },
+
+  // 5. Harry Potter (10)
+  { displayName: 'Harry Potter', name: 'Harry Potter', emoji: 'HP', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', textClass: 'text-amber-700 dark:text-amber-300', franchise: 'Harry Potter' },
+  { displayName: 'Hermione Granger', name: 'Hermione Granger', emoji: 'HG', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', textClass: 'text-amber-700 dark:text-amber-300', franchise: 'Harry Potter' },
+  { displayName: 'Ron Weasley', name: 'Ron Weasley', emoji: 'RW', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', textClass: 'text-amber-700 dark:text-amber-300', franchise: 'Harry Potter' },
+  { displayName: 'Albus Dumbledore', name: 'Albus Dumbledore', emoji: 'AD', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', textClass: 'text-amber-700 dark:text-amber-300', franchise: 'Harry Potter' },
+  { displayName: 'Severus Snape', name: 'Severus Snape', emoji: 'SS', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', textClass: 'text-amber-700 dark:text-amber-300', franchise: 'Harry Potter' },
+  { displayName: 'Luna Lovegood', name: 'Luna Lovegood', emoji: 'LL', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', textClass: 'text-amber-700 dark:text-amber-300', franchise: 'Harry Potter' },
+  { displayName: 'Neville Longbottom', name: 'Neville Longbottom', emoji: 'NL', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', textClass: 'text-amber-700 dark:text-amber-300', franchise: 'Harry Potter' },
+  { displayName: 'Draco Malfoy', name: 'Draco Malfoy', emoji: 'DM', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', textClass: 'text-amber-700 dark:text-amber-300', franchise: 'Harry Potter' },
+  { displayName: 'Minerva McGonagall', name: 'Minerva McGonagall', emoji: 'MM', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', textClass: 'text-amber-700 dark:text-amber-300', franchise: 'Harry Potter' },
+  { displayName: 'Sirius Black', name: 'Sirius Black', emoji: 'SB', bgClass: 'bg-amber-100 text-amber-800 dark:bg-amber-500/20 dark:text-amber-200', textClass: 'text-amber-700 dark:text-amber-300', franchise: 'Harry Potter' },
+
+  // 6. BoBoiBoy (10)
+  { displayName: 'BoBoiBoy', name: 'BoBoiBoy', emoji: 'BBB', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', textClass: 'text-orange-700 dark:text-orange-300', franchise: 'BoBoiBoy' },
+  { displayName: 'Yaya', name: 'Yaya', emoji: 'Y', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', textClass: 'text-orange-700 dark:text-orange-300', franchise: 'BoBoiBoy' },
+  { displayName: 'Ying', name: 'Ying', emoji: 'Y', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', textClass: 'text-orange-700 dark:text-orange-300', franchise: 'BoBoiBoy' },
+  { displayName: 'Gopal', name: 'Gopal', emoji: 'G', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', textClass: 'text-orange-700 dark:text-orange-300', franchise: 'BoBoiBoy' },
+  { displayName: 'Fang', name: 'Fang', emoji: 'F', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', textClass: 'text-orange-700 dark:text-orange-300', franchise: 'BoBoiBoy' },
+  { displayName: 'Ochobot', name: 'Ochobot', emoji: 'O', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', textClass: 'text-orange-700 dark:text-orange-300', franchise: 'BoBoiBoy' },
+  { displayName: 'Papa Zola', name: 'Papa Zola', emoji: 'PZ', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', textClass: 'text-orange-700 dark:text-orange-300', franchise: 'BoBoiBoy' },
+  { displayName: 'Tok Aba', name: 'Tok Aba', emoji: 'TA', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', textClass: 'text-orange-700 dark:text-orange-300', franchise: 'BoBoiBoy' },
+  { displayName: 'Adu Du', name: 'Adu Du', emoji: 'AD', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', textClass: 'text-orange-700 dark:text-orange-300', franchise: 'BoBoiBoy' },
+  { displayName: 'Kapten Kaizo', name: 'Kapten Kaizo', emoji: 'KK', bgClass: 'bg-orange-100 text-orange-800 dark:bg-orange-500/20 dark:text-orange-200', textClass: 'text-orange-700 dark:text-orange-300', franchise: 'BoBoiBoy' },
+
+  // 7. Ejen Ali (10)
+  { displayName: 'Ejen Ali', name: 'Ejen Ali', emoji: 'EA', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-200', textClass: 'text-cyan-700 dark:text-cyan-300', franchise: 'Ejen Ali' },
+  { displayName: 'Ejen Alicia', name: 'Ejen Alicia', emoji: 'AL', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-200', textClass: 'text-cyan-700 dark:text-cyan-300', franchise: 'Ejen Ali' },
+  { displayName: 'Ejen Bakar', name: 'Ejen Bakar', emoji: 'EB', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-200', textClass: 'text-cyan-700 dark:text-cyan-300', franchise: 'Ejen Ali' },
+  { displayName: 'Ejen Rizwan', name: 'Ejen Rizwan', emoji: 'ER', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-200', textClass: 'text-cyan-700 dark:text-cyan-300', franchise: 'Ejen Ali' },
+  { displayName: 'Ejen Khai', name: 'Ejen Khai', emoji: 'EK', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-200', textClass: 'text-cyan-700 dark:text-cyan-300', franchise: 'Ejen Ali' },
+  { displayName: 'Ejen Iman', name: 'Ejen Iman', emoji: 'EI', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-200', textClass: 'text-cyan-700 dark:text-cyan-300', franchise: 'Ejen Ali' },
+  { displayName: 'Ejen Moon', name: 'Ejen Moon', emoji: 'EM', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-200', textClass: 'text-cyan-700 dark:text-cyan-300', franchise: 'Ejen Ali' },
+  { displayName: 'Ejen Rudy', name: 'Ejen Rudy', emoji: 'RY', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-200', textClass: 'text-cyan-700 dark:text-cyan-300', franchise: 'Ejen Ali' },
+  { displayName: 'Ejen Geetha', name: 'Ejen Geetha', emoji: 'EG', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-200', textClass: 'text-cyan-700 dark:text-cyan-300', franchise: 'Ejen Ali' },
+  { displayName: 'General Rama', name: 'General Rama', emoji: 'GR', bgClass: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-500/20 dark:text-cyan-200', textClass: 'text-cyan-700 dark:text-cyan-300', franchise: 'Ejen Ali' },
 ];
 
 const DEFAULT_AVATAR: AnimalAvatar = {
-  emoji: '👻',
-  bgClass: 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400',
-  textClass: 'text-slate-500 dark:text-slate-400',
+  emoji: FRIENDLY_ANON_PERSONAS[0].emoji,
+  bgClass: FRIENDLY_ANON_PERSONAS[0].bgClass,
+  textClass: FRIENDLY_ANON_PERSONAS[0].textClass,
 };
 
-/**
- * Derives dynamic animal avatar and styling from anonymous codename.
- * e.g. "Kucing Misteri" -> 🐱, "Harimau Berani" -> 🐯, "Musang Pantas" -> 🦊
- * Fallback to 👻 if codename is absent or unrecognized.
- */
-export function getAnimalAvatarFromCodename(codename?: string): AnimalAvatar {
-  if (!codename || typeof codename !== 'string') {
-    return DEFAULT_AVATAR;
+function hashPersonaIndex(input: string): number {
+  let hash = 0;
+  const lower = input.toLowerCase();
+  for (let i = 0; i < lower.length; i++) {
+    hash = (hash * 31 + lower.charCodeAt(i)) >>> 0;
   }
-
-  const normalized = codename.trim().toLowerCase();
-  for (const [key, avatar] of Object.entries(ANIMAL_AVATAR_MAP)) {
-    if (normalized.includes(key)) {
-      return avatar;
-    }
-  }
-
-  return DEFAULT_AVATAR;
+  return hash % FRIENDLY_ANON_PERSONAS.length;
 }
 
 /**
- * Deterministically maps anonymous hashes (e.g. "Anon-eb689", "anon-12345", hashes)
- * into friendly Malaysian campus animal personas.
- * Preserves existing animal names (e.g. "Burung Pantas [Penulis]") while stripping [Penulis] tags.
+ * Checks whether a codename contains any legacy animal word (e.g. "Kucing Oren", "Burung Hantu").
  */
-export function getFriendlyAnonName(
-  codename?: string,
+export function isLegacyAnimalCodename(codename?: string | null): boolean {
+  if (!codename || typeof codename !== 'string') return false;
+  const lower = codename.toLowerCase();
+  return LEGACY_ANIMAL_KEYWORDS.some((kw) => new RegExp(`\\b${kw}`, 'i').test(lower));
+}
+
+/**
+ * Normalizes any PolySuara codename (Anon-xxxxx hashes, legacy animal codenames from older DB rows,
+ * or modern fictional personas) into a clean fictional persona display name, emblem, and styling.
+ * Guarantees zero animal names ever appear in the UI.
+ */
+export function normalizePolySuaraCodename(
+  codename?: string | null,
   isOP?: boolean
-): { displayName: string; name: string; emoji: string; bgClass: string; isOP?: boolean } {
+): { displayName: string; name: string; emoji: string; bgClass: string; textClass: string; isOP: boolean } {
   if (!codename || typeof codename !== 'string' || !codename.trim()) {
+    const fallbackPersona = FRIENDLY_ANON_PERSONAS[0];
     return {
-      displayName: t('services:anonymous_student', 'Pelajar Anon'),
-      name: t('services:anonymous_student', 'Pelajar Anon'),
-      emoji: '👻',
-      bgClass: DEFAULT_AVATAR.bgClass,
+      displayName: fallbackPersona.displayName,
+      name: fallbackPersona.displayName,
+      emoji: fallbackPersona.emoji,
+      bgClass: fallbackPersona.bgClass,
+      textClass: fallbackPersona.textClass,
       isOP: Boolean(isOP),
     };
   }
@@ -612,48 +510,96 @@ export function getFriendlyAnonName(
   const cleanName = codename.replace(/\[Penulis\]/gi, '').trim();
 
   if (!cleanName) {
+    const fallbackPersona = FRIENDLY_ANON_PERSONAS[0];
     return {
-      displayName: t('services:anonymous_student', 'Pelajar Anon'),
-      name: t('services:anonymous_student', 'Pelajar Anon'),
-      emoji: '👻',
-      bgClass: DEFAULT_AVATAR.bgClass,
+      displayName: fallbackPersona.displayName,
+      name: fallbackPersona.displayName,
+      emoji: fallbackPersona.emoji,
+      bgClass: fallbackPersona.bgClass,
+      textClass: fallbackPersona.textClass,
       isOP: isOriginalPoster,
     };
   }
 
-  // Check if codename matches Anon-xxxxx, anon_xxxxx, or random alphanumeric hash/hex
+  // Exact match to one of the curated fictional personas
+  const exactPersona = FRIENDLY_ANON_PERSONAS.find(
+    (p) => p.displayName.toLowerCase() === cleanName.toLowerCase()
+  );
+  if (exactPersona) {
+    return {
+      displayName: exactPersona.displayName,
+      name: exactPersona.displayName,
+      emoji: exactPersona.emoji,
+      bgClass: exactPersona.bgClass,
+      textClass: exactPersona.textClass,
+      isOP: isOriginalPoster,
+    };
+  }
+
+  // Deterministically remap Anon-xxxxx hashes, UUID/hex hashes, OR legacy animal codenames
   const isAnonHash =
     /^anon[-_]?[a-z0-9_-]*$/i.test(cleanName) ||
     /^[0-9a-f]{8,}(-[0-9a-f]{4,})*$/i.test(cleanName);
 
-  if (isAnonHash) {
-    // Deterministic polynomial rolling hash over string characters
-    let hash = 0;
-    const lower = cleanName.toLowerCase();
-    for (let i = 0; i < lower.length; i++) {
-      hash = (hash * 31 + lower.charCodeAt(i)) >>> 0;
-    }
-    const personaIndex = hash % FRIENDLY_ANON_PERSONAS.length;
-    const persona = FRIENDLY_ANON_PERSONAS[personaIndex];
-
+  if (isAnonHash || isLegacyAnimalCodename(cleanName)) {
+    const persona = FRIENDLY_ANON_PERSONAS[hashPersonaIndex(cleanName)];
     return {
       displayName: persona.displayName,
       name: persona.displayName,
       emoji: persona.emoji,
       bgClass: persona.bgClass,
+      textClass: persona.textClass,
       isOP: isOriginalPoster,
     };
   }
 
-  // Codename is already a named animal or custom identity (e.g. "Burung Pantas")
-  const avatar = getAnimalAvatarFromCodename(cleanName);
-
+  // Non-animal custom persona: preserve label with deterministic emblem & styling
+  const styledPersona = FRIENDLY_ANON_PERSONAS[hashPersonaIndex(cleanName)];
   return {
     displayName: cleanName,
     name: cleanName,
-    emoji: avatar.emoji,
-    bgClass: avatar.bgClass,
+    emoji: styledPersona.emoji,
+    bgClass: styledPersona.bgClass,
+    textClass: styledPersona.textClass,
     isOP: isOriginalPoster,
+  };
+}
+
+/**
+ * Derives non-animal persona emblem and styling from an anonymous codename.
+ * Deterministically maps legacy animal codenames and Anon hashes to curated fictional personas.
+ */
+export function getAnimalAvatarFromCodename(codename?: string): AnimalAvatar {
+  if (!codename || typeof codename !== 'string' || !codename.trim()) {
+    return DEFAULT_AVATAR;
+  }
+  const cleanName = codename.replace(/\[Penulis\]/gi, '').trim();
+  if (!cleanName || /^pelajar anon$/i.test(cleanName) || /^anonymous student$/i.test(cleanName)) {
+    return DEFAULT_AVATAR;
+  }
+  const normalized = normalizePolySuaraCodename(cleanName);
+  return {
+    emoji: normalized.emoji,
+    bgClass: normalized.bgClass,
+    textClass: normalized.textClass,
+  };
+}
+
+/**
+ * Deterministically maps anonymous hashes (e.g. "Anon-eb689") and legacy animal codenames
+ * into curated fictional campus personas while stripping [Penulis] tags and preserving OP status.
+ */
+export function getFriendlyAnonName(
+  codename?: string,
+  isOP?: boolean
+): { displayName: string; name: string; emoji: string; bgClass: string; isOP?: boolean } {
+  const persona = normalizePolySuaraCodename(codename, isOP);
+  return {
+    displayName: persona.displayName,
+    name: persona.name,
+    emoji: persona.emoji,
+    bgClass: persona.bgClass,
+    isOP: persona.isOP,
   };
 }
 

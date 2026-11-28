@@ -13,6 +13,7 @@ import {
   extractStickerToken,
   embedStickerToken,
   cleanConfessionText,
+  getFriendlyAnonName,
   POLISAS_CAMPUS_STICKERS,
 } from '@/lib/polySuaraHelpers';
 import { PolySuaraStickerBadge } from '@/components/polysuara/PolySuaraStickerBadge';
@@ -55,6 +56,7 @@ vi.mock('@/hooks/usePushNotifications', () => ({
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
+  useSearchParams: () => [new URLSearchParams(), vi.fn()],
 }));
 
 vi.mock('@/contexts/ThemeContext', () => ({
@@ -399,8 +401,11 @@ describe('PolySuara Comments Suite (TDD)', () => {
         }],
       }));
 
-      // Tombstone message with exact text and styling
-      expect(html).toContain('Tupai Laju telah memadamkan ruangan ini');
+      // Legacy animal codename 'Tupai Laju' is deterministically remapped to a fictional persona
+      const remappedName = getFriendlyAnonName('Tupai Laju').displayName;
+      expect(remappedName).not.toContain('Tupai');
+      expect(html).not.toContain('Tupai Laju');
+      expect(html).toContain(`${remappedName} telah memadamkan ruangan ini`);
       expect(html).toContain('text-[#3B635C] dark:text-[#94A0B2] italic text-xs');
 
       // Reply and Like actions are disabled on deleted comment

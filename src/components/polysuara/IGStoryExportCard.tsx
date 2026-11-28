@@ -1,8 +1,8 @@
 import React from 'react';
 import { format } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { enUS, ms } from 'date-fns/locale';
 import { useTranslation } from 'react-i18next';
-import { cleanConfessionText, hasSpoilerImageToken } from '@/lib/polySuaraHelpers';
+import { cleanConfessionText, hasSpoilerImageToken, normalizePolySuaraCodename } from '@/lib/polySuaraHelpers';
 
 interface ConfessionExport {
   id: string;
@@ -20,9 +20,11 @@ interface Props {
 }
 
 export function IGStoryExportCard({ confession, elementId }: Props) {
-  const { t } = useTranslation(['services', 'common']);
+  const { t, i18n } = useTranslation(['services', 'common']);
+  const dateLocale = i18n.language?.startsWith('en') ? enUS : ms;
   const cleanText = cleanConfessionText(confession.content);
   const isSpoilerImage = hasSpoilerImageToken(confession.content);
+  const persona = normalizePolySuaraCodename(confession.codename);
 
   return (
     <div
@@ -125,7 +127,7 @@ export function IGStoryExportCard({ confession, elementId }: Props) {
             }}
           >
             <span style={{ fontSize: '18px', fontWeight: 700, color: '#2DD4BF' }}>
-              {confession.codename || t('services:anon_student', 'Pelajar Anon')}
+              {persona.displayName || t('services:anon_student', 'Pelajar Anon')}
             </span>
             <span
               style={{
@@ -135,7 +137,7 @@ export function IGStoryExportCard({ confession, elementId }: Props) {
                 textTransform: 'uppercase',
               }}
             >
-              {format(new Date(confession.created_at), 'dd MMM yyyy', { locale: ms })}
+              {format(new Date(confession.created_at), 'dd MMM yyyy', { locale: dateLocale })}
             </span>
           </div>
 

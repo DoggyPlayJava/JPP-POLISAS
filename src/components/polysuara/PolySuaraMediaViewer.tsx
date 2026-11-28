@@ -13,8 +13,8 @@ import {
   ZoomOut,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
-import { ms } from 'date-fns/locale';
-import { cleanConfessionText, getAnimalAvatarFromCodename } from '@/lib/polySuaraHelpers';
+import { enUS, ms } from 'date-fns/locale';
+import { cleanConfessionText, normalizePolySuaraCodename } from '@/lib/polySuaraHelpers';
 
 export interface PolySuaraMediaViewerProps {
   imageUrl: string | null;
@@ -35,7 +35,8 @@ export function PolySuaraMediaViewer({
   onToggleHeart,
   onCopyLink,
 }: PolySuaraMediaViewerProps) {
-  const { t } = useTranslation(['services', 'common']);
+  const { t, i18n } = useTranslation(['services', 'common']);
+  const dateLocale = i18n.language?.startsWith('en') ? enUS : ms;
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const dragStartRef = useRef<{ x: number; y: number; originX: number; originY: number } | null>(null);
@@ -101,7 +102,7 @@ export function PolySuaraMediaViewer({
     dragStartRef.current = null;
   };
 
-  const avatar = confession ? getAnimalAvatarFromCodename(confession.codename) : null;
+  const persona = confession ? normalizePolySuaraCodename(confession.codename) : null;
   const cleanText = confession ? cleanConfessionText(confession.content || '') : '';
 
   return createPortal(
@@ -209,16 +210,16 @@ export function PolySuaraMediaViewer({
         <aside className="hidden lg:flex w-[360px] shrink-0 flex-col bg-white dark:bg-[#13171D] text-[#0B2420] dark:text-[#F1F5F9] border-l border-[#B8E4DC]/30 dark:border-[#252B35] h-[100dvh]">
           <div className="p-4 border-b border-[#B8E4DC]/60 dark:border-[#252B35] flex items-center justify-between gap-2">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028] flex items-center justify-center text-base shrink-0">
-                {avatar?.emoji || '👻'}
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${persona?.bgClass || 'bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF]'}`}>
+                {persona?.emoji || 'K'}
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold truncate">
-                  {confession.codename || t('services:anon_student', 'Pelajar Anon')}
+                  {persona?.displayName || t('services:anon_student', 'Pelajar Anon')}
                 </p>
                 {confession.created_at && (
-                  <p className="text-[11px] text-[#3B635C] dark:text-[#94A0B2]">
-                    {formatDistanceToNow(new Date(confession.created_at), { addSuffix: true, locale: ms })}
+                  <p className="text-xs text-[#3B635C] dark:text-[#94A0B2]">
+                    {formatDistanceToNow(new Date(confession.created_at), { addSuffix: true, locale: dateLocale })}
                   </p>
                 )}
               </div>
@@ -296,7 +297,7 @@ export function PolySuaraMediaViewer({
         >
           <div className="min-w-0 flex-1">
             <p className="text-xs font-bold text-[#2DD4BF] truncate">
-              {confession.codename || t('services:anon_student', 'Pelajar Anon')}
+              {persona?.displayName || t('services:anon_student', 'Pelajar Anon')}
             </p>
             {cleanText && (
               <p className="text-xs text-[#EBF7F4] line-clamp-1">{cleanText}</p>

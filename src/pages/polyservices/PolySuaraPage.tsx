@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import {
   Send, Shield, AlertTriangle, MessageSquare, ThumbsDown, Flame, EyeOff, Search,
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import { cn } from '@/lib/utils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { sendNotificationToKebajikanExco } from '@/lib/notifications';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -206,10 +206,12 @@ export function PolySuaraPage({
   initialMyConfessions,
 }: PolySuaraPageProps = {}) {
   const { t, i18n } = useTranslation(['services', 'common']);
+  const dateLocale = i18n.language?.startsWith('en') ? enUS : ms;
   const { profile } = useAuth();
   const canReplyJpp = ['JPP', 'SUPER_ADMIN_JPP', 'ADMIN', 'SUPER_ADMIN'].includes(profile?.role || '');
   const { isSubscribed, requestPermission, unsubscribe } = usePushNotifications();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Core state
   const [confessions, setConfessions] = useState<any[]>(initialConfessions || []);
@@ -344,7 +346,9 @@ export function PolySuaraPage({
   } | null>(null);
   const [hasNewWhispers, setHasNewWhispers] = useState(false);
   const lastVisibilityCheckRef = useRef<number>(Date.now());
-  const deepLinkHandledRef = useRef<boolean>(false);
+  const lastHandledDeepLinkRef = useRef<string | null>(null);
+  const [pendingTargetCommentId, setPendingTargetCommentId] = useState<string | null>(null);
+  const [highlightedCommentId, setHighlightedCommentId] = useState<string | null>(null);
 
   // Share / export
   const [shareLoadingId, setShareLoadingId] = useState<string | null>(null);
@@ -765,25 +769,36 @@ export function PolySuaraPage({
     }
   };
 
-  // Support deep link /polysuara?post=<id>
+  // Reactive deep link support: /polysuara?post=<id>&comment=<comment_id> (and legacy ?id=<id>)
+  const deepLinkPostId = searchParams.get('post') || searchParams.get('id');
+  const deepLinkCommentId = searchParams.get('comment');
+
   useEffect(() => {
-    if (typeof window === 'undefined' || !profile || deepLinkHandledRef.current || loading) return;
-    const postId = new URLSearchParams(window.location.search).get('post');
-    if (!postId) return;
-    deepLinkHandledRef.current = true;
-    const existing = confessions.find(c => c.id === postId);
+    if (typeof window === 'undefined' || !profile || !deepLinkPostId) return;
+    const deepLinkKey = `${deepLinkPostId}:${deepLinkCommentId || ''}`;
+    if (lastHandledDeepLinkRef.current === deepLinkKey) return;
+
+    const existing = confessions.find(c => c.id === deepLinkPostId);
+    if (!existing && loading) return;
+
+    lastHandledDeepLinkRef.current = deepLinkKey;
+    if (deepLinkCommentId) {
+      setPendingTargetCommentId(deepLinkCommentId);
+    }
+
     if (existing) {
       setActiveConfessionForComments(existing);
       fetchComments(existing.id);
       setCommentDrawerOpen(true);
       return;
     }
+
     const deepLinkBaseCols = 'id, content, category, upvotes, downvotes, comments_count, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, vote_count, polysuara_poll_votes(user_id)))';
     const requestedDeepLinkEscalation = supportsEscalationCols;
     supabase
       .from('polysuara_confessions')
       .select(requestedDeepLinkEscalation ? `${deepLinkBaseCols}, escalated_ticket_id, escalated_ticket_no` : deepLinkBaseCols)
-      .eq('id', postId)
+      .eq('id', deepLinkPostId)
       .maybeSingle()
       .then(async ({ data, error }) => {
         let resolvedData = data;
@@ -792,7 +807,7 @@ export function PolySuaraPage({
           const retry = await supabase
             .from('polysuara_confessions')
             .select(deepLinkBaseCols)
-            .eq('id', postId)
+            .eq('id', deepLinkPostId)
             .maybeSingle();
           resolvedData = retry.data;
         }
@@ -803,7 +818,51 @@ export function PolySuaraPage({
           setCommentDrawerOpen(true);
         }
       });
-  }, [profile, loading, confessions]);
+  }, [profile, loading, confessions, deepLinkPostId, deepLinkCommentId]);
+
+  // Auto-scroll and briefly highlight the target comment once comments finish loading
+  useEffect(() => {
+    if (!commentDrawerOpen || commentsLoading || !pendingTargetCommentId) return;
+    if (!comments.some(c => c.id === pendingTargetCommentId)) return;
+
+    const targetId = pendingTargetCommentId;
+    const scrollTimer = setTimeout(() => {
+      const safeId = typeof CSS !== 'undefined' && typeof CSS.escape === 'function'
+        ? CSS.escape(targetId)
+        : targetId.replace(/"/g, '\\"');
+      const el = document.querySelector(`[data-comment-id="${safeId}"]`);
+      if (el && typeof el.scrollIntoView === 'function') {
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      setHighlightedCommentId(targetId);
+      setPendingTargetCommentId(null);
+    }, 180);
+
+    return () => clearTimeout(scrollTimer);
+  }, [commentDrawerOpen, commentsLoading, comments, pendingTargetCommentId]);
+
+  // Auto-clear comment highlight ring cleanly after 4.2s
+  useEffect(() => {
+    if (!highlightedCommentId) return;
+    const clearTimer = setTimeout(() => {
+      setHighlightedCommentId(null);
+    }, 4200);
+    return () => clearTimeout(clearTimer);
+  }, [highlightedCommentId]);
+
+  const closeCommentDrawer = useCallback(() => {
+    setCommentDrawerOpen(false);
+    setPendingTargetCommentId(null);
+    setHighlightedCommentId(null);
+    lastHandledDeepLinkRef.current = null;
+    if (searchParams.has('post') || searchParams.has('id') || searchParams.has('comment')) {
+      const next = new URLSearchParams(searchParams);
+      next.delete('post');
+      next.delete('id');
+      next.delete('comment');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const handleIntentSelect = (intent: 'STANDARD' | 'QNA' | 'SHOUTOUT' | 'DEBATE') => {
     setComposeIntent(intent);
@@ -1684,10 +1743,12 @@ export function PolySuaraPage({
     return (
       <div
         key={comment.id}
+        data-comment-id={comment.id}
         className={cn(
           "border-b border-[#B8E4DC]/50 dark:border-[#252B35] py-3.5 px-4 transition-colors",
           isBestAnswer && "bg-[#EBF7F4]/70 dark:bg-[#1B2028]/50",
-          depth > 1 && "border-b-0 py-1.5 px-0 bg-transparent dark:bg-transparent"
+          depth > 1 && "border-b-0 py-1.5 px-0 bg-transparent dark:bg-transparent",
+          highlightedCommentId === comment.id && "ring-2 ring-[#0F766E] dark:ring-[#2DD4BF] bg-[#EBF7F4]/80 dark:bg-[#1B2028] rounded-2xl"
         )}
       >
         {isBestAnswer && (
@@ -1700,7 +1761,7 @@ export function PolySuaraPage({
           {/* Persona Avatar Squircle */}
           <div
             className={cn(
-              "w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 text-sm shadow-xs select-none",
+              "w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center shrink-0 text-sm font-bold tracking-tight shadow-xs select-none",
               comment.is_jpp_official
                 ? "bg-[#EBF7F4] text-[#0F766E] dark:bg-[#1B2028] dark:text-[#2DD4BF]"
                 : persona.bgClass
@@ -1733,7 +1794,7 @@ export function PolySuaraPage({
                 )}
                 <span className="text-[10px] text-[#B8E4DC] dark:text-[#252B35] select-none">•</span>
                 <span className="text-[11px] text-[#3B635C] dark:text-[#94A0B2]">
-                  {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: ms })}
+                  {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: dateLocale })}
                 </span>
               </div>
             </div>
@@ -2309,7 +2370,7 @@ export function PolySuaraPage({
               </div>
             ) : (
               <>
-                {/* Flat Facebook-Style Mobile Quick-Compose Row / Elevated Desktop Capsule */}
+                {/* Mobile Framed Quick-Compose Box / Elevated Desktop Capsule */}
                 <div
                   onClick={() => setComposeModalOpen(true)}
                   onKeyDown={(e) => {
@@ -2318,16 +2379,16 @@ export function PolySuaraPage({
                       setComposeModalOpen(true);
                     }
                   }}
-                  className="bg-transparent sm:bg-white sm:dark:bg-[#13171D] border-b sm:border border-[#B8E4DC]/60 sm:border-[#B8E4DC]/80 dark:border-[#252B35] sm:hover:border-[#0F766E]/50 sm:dark:hover:border-[#2DD4BF]/50 rounded-none sm:rounded-3xl py-2.5 px-1 sm:p-4 mb-0 sm:mb-4 sm:shadow-xs flex items-center justify-between gap-3 cursor-pointer group transition-colors"
+                  className="bg-white dark:bg-[#13171D] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl sm:rounded-3xl shadow-surface-sm px-3.5 py-3.5 sm:p-4 mt-3 mb-2 sm:mt-0 sm:mb-4 min-h-[60px] flex items-center justify-between gap-3 active:scale-[0.99] transition-[transform,border-color] duration-150 cursor-pointer group"
                   role="button"
                   tabIndex={0}
                   aria-label={t('services:write_new_confession_aria', 'Tulis luahan kampus baharu')}
                 >
                   <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
-                    <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-full sm:rounded-xl bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                    <div className="w-10 h-10 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                       <MessageSquare className="w-4 h-4" />
                     </div>
-                    <span className="text-sm text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0B2420] dark:group-hover:text-[#F1F5F9] font-medium truncate">
+                    <span className="text-[15px] font-medium text-[#0B2420]/75 dark:text-[#CBD5E1] group-hover:text-[#0B2420] dark:group-hover:text-[#F1F5F9] truncate">
                       <span className="sm:hidden">{t('services:suara_quick_compose_short', 'Ada luahan kampus?')}</span>
                       <span className="hidden sm:inline">{t('services:suara_quick_compose_placeholder', 'Ada luahan atau rahsia kampus? Kongsi secara rahsia...')}</span>
                     </span>
@@ -2335,9 +2396,9 @@ export function PolySuaraPage({
                   <div className="flex items-center gap-2 shrink-0">
                     <span
                       aria-hidden="true"
-                      className="sm:hidden w-8 h-8 rounded-full inline-flex items-center justify-center text-[#3B635C] dark:text-[#94A0B2] group-hover:text-[#0F766E] dark:group-hover:text-[#2DD4BF] transition-colors"
+                      className="sm:hidden w-9 h-9 rounded-full bg-[#F6FBF9] dark:bg-[#0E1116] inline-flex items-center justify-center text-[#0F766E] dark:text-[#2DD4BF] transition-colors"
                     >
-                      <ImageIcon className="w-4 h-4" />
+                      <ImageIcon className="w-[18px] h-[18px]" />
                     </span>
                     <span className="hidden sm:inline-flex text-xs font-bold text-white dark:text-[#090B0E] bg-[#0F766E] dark:bg-[#2DD4BF] px-3.5 py-1.5 rounded-full items-center gap-1 group-hover:opacity-90 transition-opacity whitespace-nowrap">
                       <span>{t('suara_post_confession_btn', 'Luahkan')}</span>
@@ -2364,7 +2425,7 @@ export function PolySuaraPage({
                 )}
 
                 {/* Pure-Text Threads-Style 3-Tab Underline Bar */}
-                <div className="border-b border-[#B8E4DC]/80 dark:border-[#252B35] mb-1 sm:mb-4">
+                <div className="border-b border-[#B8E4DC]/80 dark:border-[#252B35] mb-3.5 sm:mb-4">
                   <div className="grid grid-cols-3 sm:flex sm:items-center sm:gap-2 w-full sm:w-auto">
                     {([
                       { id: 'LATEST', label: t('suara_sort_newest', 'Terkini'), icon: Clock },
@@ -2806,7 +2867,7 @@ export function PolySuaraPage({
                   </h2>
                 </div>
 
-                <div className="space-y-0 sm:space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {loading ? (
                     <div className="space-y-4 py-2">
                       <div className="flex items-center gap-2 text-[#3B635C] dark:text-[#94A0B2] px-1">
@@ -3230,7 +3291,7 @@ export function PolySuaraPage({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                onClick={() => setCommentDrawerOpen(false)}
+                onClick={closeCommentDrawer}
                 className="fixed inset-0 bg-[#090B0E]/75 z-[990]"
               />
               <motion.div
@@ -3242,7 +3303,7 @@ export function PolySuaraPage({
               >
               {/* Drawer drag indicator/Header */}
               <div className="flex flex-col items-center py-3.5 border-b border-[#B8E4DC]/60 dark:border-[#252B35] shrink-0">
-                <div className="w-12 h-1 bg-[#B8E4DC] dark:bg-[#252B35] rounded-full mb-3 cursor-pointer" onClick={() => setCommentDrawerOpen(false)} />
+                <div className="w-12 h-1 bg-[#B8E4DC] dark:bg-[#252B35] rounded-full mb-3 cursor-pointer" onClick={closeCommentDrawer} />
                 <div className="flex items-center justify-between w-full px-5 sm:px-6">
                   <h3 className="text-base sm:text-lg font-bold text-[#0B2420] dark:text-[#F1F5F9] flex items-center gap-2">
                     <MessageCircle className="w-5 h-5 text-[#0F766E] dark:text-[#2DD4BF]" />
@@ -3282,7 +3343,7 @@ export function PolySuaraPage({
 
                     <button
                       type="button"
-                      onClick={() => setCommentDrawerOpen(false)}
+                      onClick={closeCommentDrawer}
                       className="w-8 h-8 rounded-full bg-[#F6FBF9] dark:bg-[#0E1116] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-white flex items-center justify-center transition-colors text-xs font-bold cursor-pointer"
                       aria-label={t('services:close_comments', 'Tutup ulasan')}
                     >
@@ -3295,7 +3356,7 @@ export function PolySuaraPage({
               {/* Confession Preview */}
               <div className="bg-[#F6FBF9] dark:bg-[#0E1116] border-b border-[#B8E4DC]/60 dark:border-[#252B35] p-4 text-xs px-5 sm:px-6 text-[#0B2420] dark:text-[#F1F5F9] shrink-0">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <Ghost className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
+                  <Sparkles className="w-3.5 h-3.5 text-[#0F766E] dark:text-[#2DD4BF]" />
                   <span className="font-bold text-[#0B2420] dark:text-[#F1F5F9]">
                     {getFriendlyAnonName(activeConfessionForComments.codename).displayName}
                   </span>

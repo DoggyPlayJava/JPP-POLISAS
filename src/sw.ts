@@ -97,7 +97,7 @@ registerRoute(
 // API/Supabase — Hanya cache GET requests untuk Takwim & Announcements
 // POST/PATCH/DELETE TIDAK BOLEH di-cache
 registerRoute(
-  ({ url, request }) => 
+  ({ url, request }) =>
     request.method === 'GET' &&
     (url.pathname.includes('/rest/v1/takwim_pusat') || url.pathname.includes('/rest/v1/announcements')),
   new NetworkFirst({
@@ -118,18 +118,18 @@ self.addEventListener('push', (event: PushEvent) => {
     payload = { title: event.data.text() };
   }
 
-  const title = payload.title ?? t("sw:system_notification", "Notifikasi Sistem", "System Notification");
-  const targetUrl = payload.data?.url ?? '/portal';
-  
+  const title = payload.title ?? t('sw:system_notification', 'Notifikasi Sistem', 'System Notification');
+  const targetUrl = payload.data?.url ?? payload.data?.link ?? '/portal';
+
   const options: NotificationOptions = {
-    body: payload.body ?? t("sw:new_notification", "Anda mempunyai satu notifikasi baru.", "You have a new notification."),
+    body: payload.body ?? t('sw:new_notification', 'Anda mempunyai satu notifikasi baru.', 'You have a new notification.'),
     icon: payload.icon ?? '/jpp-app-icon.png',
     // Android memerlukan icon monokrom lutsinar untuk badge, kita guna jpp-logo sementara belum ada khas
     badge: payload.badge ?? '/jpp-app-icon.png',
     // @ts-ignore
     image: payload.image, // Gambar banner besar
     vibrate: [200, 100, 200, 100, 200], // Premium vibration pattern
-    data: { url: targetUrl, ...payload.data },
+    data: { ...payload.data, url: targetUrl, link: targetUrl },
     requireInteraction: true, // Biar user dismiss sendiri
     actions: payload.actions, // Butang aksi di bawah
     tag: payload.tag ?? 'jpp-notification', // Kumpulan notifikasi supaya tak spam
@@ -139,7 +139,7 @@ self.addEventListener('push', (event: PushEvent) => {
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
-// ── Notification click handler ────────────────────────────────────────────────
+// ── Notification click handler (preserves full path + query string e.g. ?post=...&comment=...) ──
 self.addEventListener('notificationclick', (event: NotificationEvent) => {
   event.notification.close();
 
@@ -149,25 +149,43 @@ self.addEventListener('notificationclick', (event: NotificationEvent) => {
   }
 
   // Jika ada action khusus URL (contoh id: 'open-action')
-  let targetUrl = event.notification?.data?.url ?? '/portal';
-  
+  let rawTarget = event.notification?.data?.url ?? event.notification?.data?.link ?? '/portal';
+
   // Custom logic jika action perlukan laluan (route) berbeza
   if (event.action && event.notification?.data?.[event.action]) {
-    targetUrl = event.notification.data[event.action];
+    rawTarget = event.notification.data[event.action];
+  }
+
+  let resolvedUrl = `${self.location.origin}/portal`;
+  try {
+    const parsed = new URL(String(rawTarget), self.location.origin);
+    // Keep same-origin deep links safe; preserve pathname + search + hash verbatim
+    resolvedUrl = parsed.origin === self.location.origin
+      ? `${self.location.origin}${parsed.pathname}${parsed.search}${parsed.hash}`
+      : parsed.href;
+  } catch {
+    resolvedUrl = `${self.location.origin}/portal`;
   }
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // If app is already open, focus it and navigate
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(async (clientList) => {
+      // Prefer an existing app window on the same origin, focus it and navigate with full query params
       for (const client of clientList) {
-        if ('focus' in client) {
-          client.focus();
-          if ('navigate' in client) (client as WindowClient).navigate(targetUrl);
+        if ('focus' in client && client.url.startsWith(self.location.origin)) {
+          await client.focus();
+          if ('navigate' in client) {
+            try {
+              await (client as WindowClient).navigate(resolvedUrl);
+              return;
+            } catch {
+              // Fall through to openWindow if navigate is restricted
+            }
+          }
           return;
         }
       }
-      // Otherwise open new window
-      return self.clients.openWindow(targetUrl);
+      // Otherwise open new window preserving full deep-link URL
+      return self.clients.openWindow(resolvedUrl);
     })
   );
 });

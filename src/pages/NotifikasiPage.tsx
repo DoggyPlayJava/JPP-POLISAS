@@ -5,7 +5,12 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '@/components/ui/button';
 import { useNotificationStore } from '@/store/useNotificationStore';
 import { useAuth } from '@/contexts/AuthContext';
-import type { AppNotification, NotificationModule } from '@/lib/notifications';
+import {
+  resolveNotificationLink,
+  localizeNotification,
+  type AppNotification,
+  type NotificationModule,
+} from '@/lib/notifications';
 import { formatDistanceToNow, format, isToday, isYesterday } from 'date-fns';
 import { ms, enUS } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -13,43 +18,26 @@ import { cn } from '@/lib/utils';
 import { BottomNav } from '@/components/layout/BottomNav';
 import { FloatingAiChat } from '@/components/ai/FloatingAiChat';
 
-const MODULE_FALLBACK: Record<NotificationModule, string> = {
-  KEBAJIKAN:    '/kebajikan',
-  EKPP:         '/laporan',
-  AKADEMIK:     '/akademik',
-  KEUSAHAWANAN: '/keusahawanan',
-  JPP:          '/portal',
-  SYSTEM:       '/dashboard',
-  POLYMART:     '/polymart',
-  KAMSIS:       '/dashboard',
-  KLK:          '/klk',
-  POLYRIDER:    '/polyrider',
-  POLYTASK:     '/polytask',
-  POLYSUARA:    '/polysuara',
-  POLYRENT:     '/polyrent',
-};
-
-function getNotifLink(notif: AppNotification): string | null {
-  if (notif.link) return notif.link;
-  return MODULE_FALLBACK[notif.module] ?? null;
-}
-
 // ─── Single Notif Row ──────────────────────────────────────────────────────────
 function NotifRow({
   notif,
   onRead,
   config,
   dateLocale,
+  lang,
 }: {
   notif: AppNotification;
   onRead: () => void;
   config: { label: string; color: string; bg: string; dot: string; emoji: string };
-  dateLocale: any;
+  dateLocale: typeof ms | typeof enUS;
+  lang: string;
   key?: React.Key;
 }) {
+  const { t } = useTranslation(['portal', 'common']);
   const isUnread = !notif.is_read;
   const cfg = config;
-  const hasLink = !!getNotifLink(notif);
+  const hasLink = !!resolveNotificationLink(notif);
+  const localized = localizeNotification(notif, t, lang);
 
   return (
     <motion.div
@@ -68,7 +56,7 @@ function NotifRow({
       {/* Module icon */}
       <div
         className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base mt-0.5"
-        style={{ background: cfg.bg }}
+        style={{ background: cfg.bg, color: cfg.color }}
       >
         {cfg.emoji}
       </div>
@@ -77,7 +65,7 @@ function NotifRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-1">
           <span
-            className="text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full"
+            className="text-xs font-semibold uppercase tracking-wider px-2.5 py-0.5 rounded-full"
             style={{ background: cfg.bg, color: cfg.color }}
           >
             {cfg.label}
@@ -90,12 +78,12 @@ function NotifRow({
           'text-sm leading-snug mb-1',
           isUnread ? 'font-bold text-[#0B2420] dark:text-[#F1F5F9]' : 'font-medium text-[#3B635C] dark:text-[#94A0B2]'
         )}>
-          {notif.title}
+          {localized.title}
         </p>
         <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] leading-relaxed line-clamp-2 mb-1.5">
-          {notif.message}
+          {localized.message}
         </p>
-        <p className="text-[11px] text-[#3B635C]/75 dark:text-[#94A0B2]/65 font-medium">
+        <p className="text-xs text-[#3B635C]/75 dark:text-[#94A0B2]/65 font-medium">
           {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: dateLocale })}
         </p>
       </div>
@@ -114,7 +102,11 @@ function NotifRow({
 }
 
 // ─── Module Filter Chip ────────────────────────────────────────────────────────
-const ALL_MODULES: NotificationModule[] = ['KEBAJIKAN', 'EKPP', 'AKADEMIK', 'KEUSAHAWANAN', 'JPP', 'SYSTEM', 'POLYMART', 'KAMSIS', 'KLK', 'POLYRIDER', 'POLYTASK', 'POLYSUARA', 'POLYRENT'];
+const ALL_MODULES: NotificationModule[] = [
+  'KEBAJIKAN', 'EKPP', 'AKADEMIK', 'KEUSAHAWANAN', 'JPP', 'SYSTEM',
+  'POLYMART', 'KAMSIS', 'KLK', 'POLYRIDER', 'POLYTASK', 'POLYSUARA',
+  'POLYRENT', 'MAKMP', 'FOODBANK',
+];
 
 function FilterChip({
   module,
@@ -137,7 +129,7 @@ function FilterChip({
     <button
       onClick={onClick}
       className={cn(
-        'flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] rounded-full text-[11px] font-bold transition-all border cursor-pointer',
+        'flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] rounded-full text-xs font-semibold transition-all border cursor-pointer',
         active
           ? 'bg-[#0F766E] text-white border-[#0F766E] dark:bg-[#2DD4BF] dark:text-[#090B0E] dark:border-[#2DD4BF] shadow-xs'
           : 'bg-white dark:bg-[#13171D] text-[#3B635C] dark:text-[#94A0B2] border-[#B8E4DC]/80 dark:border-[#252B35] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028]'
@@ -147,7 +139,7 @@ function FilterChip({
       {module === 'ALL' ? <Bell className="w-3.5 h-3.5 shrink-0" /> : <span>{cfg?.emoji}</span>} {module === 'ALL' ? allLabel : cfg?.label}
       {count > 0 && (
         <span className={cn(
-          'px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none',
+          'px-1.5 py-0.5 rounded-full text-xs font-bold leading-none',
           active ? 'bg-black/15 dark:bg-white/20' : 'bg-[#EBF7F4] dark:bg-white/10'
         )}>
           {count}
@@ -160,7 +152,7 @@ function FilterChip({
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export function NotifikasiPage() {
   const { t, i18n } = useTranslation(['portal', 'common']);
-  const dateLocale = i18n.language?.startsWith('en') ? enUS : ms;
+  const dateLocale    = i18n.language?.startsWith('en') ? enUS : ms;
   const navigate      = useNavigate();
   const { user }      = useAuth();
   const notifs        = useNotificationStore(state => state.notifs);
@@ -173,24 +165,26 @@ export function NotifikasiPage() {
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
   const moduleConfig = useMemo<Record<NotificationModule, { label: string; color: string; bg: string; dot: string; emoji: string }>>(() => ({
-    KEBAJIKAN:    { label: t('portal:module_kebajikan_title', 'e-Kebajikan'),  color: '#0F766E', bg: 'rgba(15,118,110,0.12)',   dot: '#0F766E', emoji: '🩺' },
-    EKPP:         { label: t('portal:module_ekpp_title', 'Sistem Kelab'),      color: '#B45309', bg: 'rgba(245,158,11,0.14)',   dot: '#D97706', emoji: '🏛️' },
-    AKADEMIK:     { label: t('portal:module_akademik_title', 'e-Akademik'),    color: '#4338CA', bg: 'rgba(99,102,241,0.12)',   dot: '#4F46E5', emoji: '📚' },
-    KEUSAHAWANAN: { label: t('portal:module_keusahawanan_title', 'e-Keusahawanan'), color: '#C2410C', bg: 'rgba(249,115,22,0.12)',   dot: '#EA580C', emoji: '🛒' },
-    JPP:          { label: 'JPP HQ',       color: '#B91C1C', bg: 'rgba(239,68,68,0.10)',    dot: '#DC2626', emoji: '🏅' },
-    SYSTEM:       { label: t('portal:system_title', 'Sistem'),            color: '#475569', bg: 'rgba(148,163,184,0.14)', dot: '#64748B', emoji: '⚙️' },
-    POLYMART:     { label: 'PolyMart',     color: '#B45309', bg: 'rgba(245,158,11,0.14)',   dot: '#D97706', emoji: '🛍️' },
-    KAMSIS:       { label: 'i-KAMSIS',     color: '#6D28D9', bg: 'rgba(139,92,246,0.12)',   dot: '#7C3AED', emoji: '🏠' },
-    KLK:          { label: 'KLK',          color: '#0F766E', bg: 'rgba(20,184,166,0.12)',   dot: '#0D9488', emoji: '🏢' },
-    POLYRIDER:    { label: 'PolyRider',    color: '#B45309', bg: 'rgba(245,158,11,0.14)',   dot: '#D97706', emoji: '🏍️' },
-    POLYTASK:     { label: 'PolyTask',     color: '#6D28D9', bg: 'rgba(139,92,246,0.12)',   dot: '#7C3AED', emoji: '📋' },
-    POLYSUARA:    { label: 'PolySuara',    color: '#BE123C', bg: 'rgba(244,63,94,0.12)',    dot: '#E11D48', emoji: '👻' },
-    POLYRENT:     { label: 'PolyRent',     color: '#047857', bg: 'rgba(16,185,129,0.12)',   dot: '#059669', emoji: '🏡' },
+    KEBAJIKAN:    { label: t('portal:module_kebajikan_title', 'e-Kebajikan'),        color: '#0F766E', bg: 'rgba(15,118,110,0.12)',   dot: '#0F766E', emoji: '🩺' },
+    EKPP:         { label: t('portal:module_ekpp_title', 'Sistem Kelab'),            color: '#B45309', bg: 'rgba(245,158,11,0.14)',   dot: '#D97706', emoji: '🏛️' },
+    AKADEMIK:     { label: t('portal:module_akademik_title', 'e-Akademik'),          color: '#4338CA', bg: 'rgba(99,102,241,0.12)',   dot: '#4F46E5', emoji: '📚' },
+    KEUSAHAWANAN: { label: t('portal:module_keusahawanan_title', 'e-Keusahawanan'),  color: '#C2410C', bg: 'rgba(249,115,22,0.12)',   dot: '#EA580C', emoji: '🛒' },
+    JPP:          { label: 'JPP HQ',                                                  color: '#B91C1C', bg: 'rgba(239,68,68,0.10)',    dot: '#DC2626', emoji: '🏅' },
+    SYSTEM:       { label: t('common:module_system', 'Sistem'),                       color: '#475569', bg: 'rgba(148,163,184,0.14)', dot: '#64748B', emoji: '⚙️' },
+    POLYMART:     { label: 'PolyMart',                                                color: '#B45309', bg: 'rgba(245,158,11,0.14)',   dot: '#D97706', emoji: '🛍️' },
+    KAMSIS:       { label: 'i-KAMSIS',                                                color: '#6D28D9', bg: 'rgba(139,92,246,0.12)',   dot: '#7C3AED', emoji: '🏠' },
+    KLK:          { label: 'KLK',                                                     color: '#0F766E', bg: 'rgba(20,184,166,0.12)',   dot: '#0D9488', emoji: '🏢' },
+    POLYRIDER:    { label: 'PolyRider',                                               color: '#B45309', bg: 'rgba(245,158,11,0.14)',   dot: '#D97706', emoji: '🏍️' },
+    POLYTASK:     { label: 'PolyTask',                                                color: '#6D28D9', bg: 'rgba(139,92,246,0.12)',   dot: '#7C3AED', emoji: '📋' },
+    POLYSUARA:    { label: 'PolySuara',                                               color: '#BE123C', bg: 'rgba(244,63,94,0.12)',    dot: '#E11D48', emoji: '✦' },
+    POLYRENT:     { label: 'PolyRent',                                                color: '#047857', bg: 'rgba(16,185,129,0.12)',   dot: '#059669', emoji: '🏡' },
+    MAKMP:        { label: 'MAKMP',                                                   color: '#B45309', bg: 'rgba(245,158,11,0.14)',   dot: '#D97706', emoji: '🏆' },
+    FOODBANK:     { label: 'Food Bank',                                               color: '#0F766E', bg: 'rgba(15,118,110,0.12)',   dot: '#0F766E', emoji: '🍱' },
   }), [t]);
 
   const handleNotifClick = async (notif: AppNotification) => {
     if (!notif.is_read) await markRead(notif.id);
-    const link = getNotifLink(notif);
+    const link = resolveNotificationLink(notif);
     if (link) navigate(link);
   };
 
@@ -230,6 +224,7 @@ export function NotifikasiPage() {
 
   // Which modules are actually present
   const activeModules = ALL_MODULES.filter(m => (moduleCount[m] ?? 0) > 0);
+  void user;
 
   return (
     <div className="min-h-[100dvh] bg-[#F6FBF9] dark:bg-[#090B0E] text-[#0B2420] dark:text-[#F1F5F9]">
@@ -246,7 +241,7 @@ export function NotifikasiPage() {
             </button>
 
             <div className="flex-1">
-              <h1 className="text-base font-black text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
+              <h1 className="text-base font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
                 {t('portal:notifications_title', 'Notifikasi')}
               </h1>
               <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] font-medium">
@@ -261,7 +256,7 @@ export function NotifikasiPage() {
                 size="sm"
                 disabled={isMarkingAll}
                 onClick={markAllRead}
-                className="h-9 gap-1.5 text-[11px] font-bold bg-[#EBF7F4] hover:bg-[#D5EFEA] dark:bg-[#1B2028] dark:hover:bg-[#232933] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#252B35] rounded-xl shadow-none px-3.5"
+                className="h-9 gap-1.5 text-xs font-semibold bg-[#EBF7F4] hover:bg-[#D5EFEA] dark:bg-[#1B2028] dark:hover:bg-[#232933] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#252B35] rounded-xl shadow-none px-3.5"
               >
                 {isMarkingAll ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -299,7 +294,7 @@ export function NotifikasiPage() {
             <button
               onClick={() => setShowUnreadOnly(v => !v)}
               className={cn(
-                'flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] rounded-full text-[11px] font-bold transition-all border cursor-pointer',
+                'flex-shrink-0 flex items-center gap-1.5 px-3.5 py-2 min-h-[36px] rounded-full text-xs font-semibold transition-all border cursor-pointer',
                 showUnreadOnly
                   ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400 border-rose-500/30'
                   : 'bg-white dark:bg-[#13171D] text-[#3B635C] dark:text-[#94A0B2] border-[#B8E4DC]/80 dark:border-[#252B35] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028]'
@@ -308,7 +303,7 @@ export function NotifikasiPage() {
               <Filter className="w-3 h-3" />
               {t('portal:filter_unread', 'Belum Baca')}
               {unreadCount > 0 && (
-                <span className="bg-rose-500/20 text-rose-600 dark:text-rose-300 px-1.5 py-0.5 rounded-full text-[10px] leading-none">{unreadCount}</span>
+                <span className="bg-rose-500/20 text-rose-600 dark:text-rose-300 px-1.5 py-0.5 rounded-full text-xs leading-none">{unreadCount}</span>
               )}
             </button>
           </div>
@@ -323,7 +318,7 @@ export function NotifikasiPage() {
               <Bell className="w-8 h-8 text-[#0F766E] dark:text-[#2DD4BF]" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-black text-[#0B2420] dark:text-[#F1F5F9]">
+              <p className="text-sm font-bold text-[#0B2420] dark:text-[#F1F5F9]">
                 {showUnreadOnly ? t('portal:no_unread_notifications', 'Tiada notifikasi belum dibaca') : t('portal:no_notifications', 'Tiada notifikasi')}
               </p>
               <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-1">
@@ -349,7 +344,7 @@ export function NotifikasiPage() {
               >
                 {/* Date group label */}
                 <div className="px-5 py-2.5 mt-2">
-                  <p className="text-[11px] font-bold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2]">
                     {group.label}
                   </p>
                 </div>
@@ -363,6 +358,7 @@ export function NotifikasiPage() {
                       onRead={handleRead}
                       config={moduleConfig[n.module] ?? moduleConfig.SYSTEM}
                       dateLocale={dateLocale}
+                      lang={i18n.language || 'ms'}
                     />
                   );
                 })}

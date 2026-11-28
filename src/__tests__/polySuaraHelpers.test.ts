@@ -17,6 +17,8 @@ import {
   checkEmpathyNudge,
   FRIENDLY_ANON_PERSONAS,
   getFriendlyAnonName,
+  isLegacyAnimalCodename,
+  normalizePolySuaraCodename,
   isWithin1Hour,
 } from '../lib/polySuaraHelpers';
 
@@ -132,35 +134,45 @@ describe('polySuaraHelpers', () => {
     });
   });
 
-  describe('getAnimalAvatarFromCodename', () => {
-    it('matches "Kucing Misteri" and returns emoji 🐱', () => {
-      const avatar = getAnimalAvatarFromCodename('Kucing Misteri');
-      expect(avatar.emoji).toBe('🐱');
-      expect(avatar.bgClass).toBeTruthy();
-      expect(avatar.textClass).toBeTruthy();
+  describe('getAnimalAvatarFromCodename (70-Character Fictional Monogram Avatars)', () => {
+    it('maps curated fictional characters across franchises to monogram initials and color tokens', () => {
+      const korra = getAnimalAvatarFromCodename('Korra');
+      expect(korra.emoji).toBe('K');
+      expect(korra.bgClass).toContain('teal');
+      expect(korra.textClass).toBeTruthy();
+
+      const luffy = getAnimalAvatarFromCodename('Monkey D. Luffy');
+      expect(luffy.emoji).toBe('MDL');
+      expect(luffy.bgClass).toContain('red');
+
+      const bbb = getAnimalAvatarFromCodename('BoBoiBoy');
+      expect(bbb.emoji).toBe('BBB');
+      expect(bbb.bgClass).toContain('orange');
+
+      const ali = getAnimalAvatarFromCodename('Ejen Ali');
+      expect(ali.emoji).toBe('EA');
+      expect(ali.bgClass).toContain('cyan');
     });
 
-    it('matches "Harimau Berani" and returns emoji 🐯', () => {
-      const avatar = getAnimalAvatarFromCodename('Harimau Berani');
-      expect(avatar.emoji).toBe('🐯');
+    it('deterministically remaps legacy animal codenames to non-animal character monograms', () => {
+      const forbiddenAnimalIcons = ['🐱', '🐯', '🦊', '🦁', '🦅', '🐼', '🦜', '🐻', '🐘', '🐰', '🐿️', '🐨', '🦌', '🦦', '🦒', '🦉', '👻'];
+      const samples = ['Kucing Misteri', 'Harimau Berani', 'Musang Pantas', 'Singa Garang', 'Elang Terbang', 'Panda Comel'];
+
+      for (const sample of samples) {
+        const a1 = getAnimalAvatarFromCodename(sample);
+        const a2 = getAnimalAvatarFromCodename(sample);
+        expect(a1.emoji).toBe(a2.emoji);
+        expect(forbiddenAnimalIcons).not.toContain(a1.emoji);
+        expect(a1.bgClass).toBeTruthy();
+        expect(a1.textClass).toBeTruthy();
+      }
     });
 
-    it('matches "Musang Pantas" and returns emoji 🦊', () => {
-      const avatar = getAnimalAvatarFromCodename('Musang Pantas');
-      expect(avatar.emoji).toBe('🦊');
-    });
-
-    it('matches additional known animals like Singa and Elang', () => {
-      expect(getAnimalAvatarFromCodename('Singa Garang').emoji).toBe('🦁');
-      expect(getAnimalAvatarFromCodename('Elang Terbang').emoji).toBe('🦅');
-      expect(getAnimalAvatarFromCodename('Panda Comel').emoji).toBe('🐼');
-    });
-
-    it('returns fallback 👻 when codename is missing, empty or generic', () => {
-      expect(getAnimalAvatarFromCodename(undefined).emoji).toBe('👻');
-      expect(getAnimalAvatarFromCodename('').emoji).toBe('👻');
-      expect(getAnimalAvatarFromCodename('Pelajar Anon').emoji).toBe('👻');
-      expect(getAnimalAvatarFromCodename('Unknown X').emoji).toBe('👻');
+    it('returns non-ghost fictional monogram fallback K when codename is missing or empty', () => {
+      expect(getAnimalAvatarFromCodename(undefined).emoji).toBe('K');
+      expect(getAnimalAvatarFromCodename('').emoji).toBe('K');
+      expect(getAnimalAvatarFromCodename('Pelajar Anon').emoji).toBeTruthy();
+      expect(getAnimalAvatarFromCodename('Pelajar Anon').emoji).not.toBe('👻');
     });
   });
 
@@ -239,54 +251,55 @@ describe('polySuaraHelpers', () => {
     });
   });
 
-  describe('FRIENDLY_ANON_PERSONAS constant', () => {
-    it('has at least 16 distinct Malaysian campus animal personas with required fields', () => {
+  describe('FRIENDLY_ANON_PERSONAS constant (70 Fictional Characters across 7 Series — Zero Legacy Animals)', () => {
+    it('has exactly 70 distinct characters (10 per franchise across 7 series) with monogram initials and zero animal codenames', () => {
       expect(FRIENDLY_ANON_PERSONAS).toBeDefined();
-      expect(FRIENDLY_ANON_PERSONAS.length).toBeGreaterThanOrEqual(16);
+      expect(FRIENDLY_ANON_PERSONAS).toHaveLength(70);
 
-      const requiredAnimals = [
-        'Kucing Oren',
-        'Tupai Laju',
-        'Panda Comel',
-        'Arnab Pantas',
-        'Musang Cerdik',
-        'Koala Tenang',
-        'Helang Biru',
-        'Rusa Riang',
-        'Singa Santai',
-        'Beruang Madu',
-        'Kancil Bijak',
-        'Otter Ceria',
-        'Harimau Berani',
-        'Zirafah Tinggi',
-        'Kucing Hitam',
-        'Burung Hantu',
-      ];
+      const countsByFranchise = FRIENDLY_ANON_PERSONAS.reduce<Record<string, number>>((acc, p) => {
+        acc[p.franchise] = (acc[p.franchise] || 0) + 1;
+        return acc;
+      }, {});
 
-      const names = FRIENDLY_ANON_PERSONAS.map((p) => p.displayName);
-      requiredAnimals.forEach((requiredName) => {
-        expect(names).toContain(requiredName);
+      expect(countsByFranchise).toEqual({
+        'The Legend of Korra': 10,
+        'Avatar: The Last Airbender': 10,
+        'One Piece': 10,
+        'Sword Art Online': 10,
+        'Harry Potter': 10,
+        'BoBoiBoy': 10,
+        'Ejen Ali': 10,
       });
+
+      const uniqueNames = new Set(FRIENDLY_ANON_PERSONAS.map((p) => p.displayName));
+      expect(uniqueNames.size).toBe(70);
+
+      // Verify flagship characters from each series
+      for (const flagship of ['Korra', 'Aang', 'Monkey D. Luffy', 'Kirito', 'Harry Potter', 'BoBoiBoy', 'Ejen Ali']) {
+        expect(uniqueNames.has(flagship)).toBe(true);
+      }
 
       FRIENDLY_ANON_PERSONAS.forEach((persona) => {
         expect(persona.displayName).toBeTruthy();
-        expect(persona.emoji).toBeTruthy();
+        expect(persona.franchise).toBeTruthy();
+        expect(isLegacyAnimalCodename(persona.displayName)).toBe(false);
+        expect(persona.emoji).toMatch(/^[A-Z]{1,3}$/);
         expect(persona.bgClass).toBeTruthy();
       });
     });
   });
 
-  describe('getFriendlyAnonName', () => {
-    it('deterministically maps an Anon hash to a friendly animal persona', () => {
+  describe('getFriendlyAnonName & normalizePolySuaraCodename', () => {
+    it('deterministically maps an Anon hash to a fictional character persona', () => {
       const result1 = getFriendlyAnonName('Anon-eb689');
       const result2 = getFriendlyAnonName('Anon-eb689');
 
       expect(result1.displayName).toBeTruthy();
       expect(result1.displayName).not.toContain('Anon');
-      expect(result1.emoji).toBeTruthy();
+      expect(isLegacyAnimalCodename(result1.displayName)).toBe(false);
+      expect(result1.emoji).toMatch(/^[A-Z]{1,3}$/);
       expect(result1.bgClass).toBeTruthy();
 
-      // Determinism test: calling multiple times must return the identical persona
       expect(result1.displayName).toBe(result2.displayName);
       expect(result1.emoji).toBe(result2.emoji);
       expect(result1.bgClass).toBe(result2.bgClass);
@@ -316,29 +329,50 @@ describe('polySuaraHelpers', () => {
       expect(normalResult.isOP).toBe(false);
     });
 
-    it('preserves existing named animals and strips [Penulis] while using appropriate emoji', () => {
-      const namedResult = getFriendlyAnonName('Burung Pantas [Penulis]');
-      expect(namedResult.displayName).toBe('Burung Pantas');
-      expect(namedResult.emoji).toBe('🦜');
-      expect(namedResult.isOP).toBe(true);
+    it('deterministically remaps legacy animal codenames to the 70-character roster and preserves OP status', () => {
+      const personaNames = FRIENDLY_ANON_PERSONAS.map((p) => p.displayName);
 
-      const namedWithoutOp = getFriendlyAnonName('Harimau Perkasa');
-      expect(namedWithoutOp.displayName).toBe('Harimau Perkasa');
-      expect(namedWithoutOp.emoji).toBe('🐯');
-      expect(namedWithoutOp.isOP).toBe(false);
+      const opAnimal = getFriendlyAnonName('Burung Pantas [Penulis]');
+      expect(personaNames).toContain(opAnimal.displayName);
+      expect(opAnimal.displayName).not.toContain('Burung');
+      expect(opAnimal.displayName).not.toContain('[Penulis]');
+      expect(opAnimal.isOP).toBe(true);
+
+      const legacyTiger = normalizePolySuaraCodename('Harimau Perkasa');
+      expect(personaNames).toContain(legacyTiger.displayName);
+      expect(legacyTiger.displayName).not.toContain('Harimau');
+      expect(legacyTiger.isOP).toBe(false);
+
+      const legacyGhost = normalizePolySuaraCodename('Hantu Tanpa Nama');
+      expect(personaNames).toContain(legacyGhost.displayName);
+      expect(legacyGhost.displayName).not.toContain('Hantu');
+
+      // Curated fictional characters stay intact with their franchise monogram
+      const korra = normalizePolySuaraCodename('Korra [Penulis]');
+      expect(korra.displayName).toBe('Korra');
+      expect(korra.emoji).toBe('K');
+      expect(korra.isOP).toBe(true);
+
+      const bbb = normalizePolySuaraCodename('BoBoiBoy');
+      expect(bbb.displayName).toBe('BoBoiBoy');
+      expect(bbb.emoji).toBe('BBB');
+
+      const ali = normalizePolySuaraCodename('Ejen Ali');
+      expect(ali.displayName).toBe('Ejen Ali');
+      expect(ali.emoji).toBe('EA');
     });
 
-    it('gracefully handles missing, empty, or undefined codenames', () => {
+    it('gracefully handles missing, empty, or undefined codenames with Korra fallback', () => {
       const emptyResult = getFriendlyAnonName('');
-      expect(emptyResult.displayName).toBe('Pelajar Anon');
-      expect(emptyResult.emoji).toBe('👻');
+      expect(emptyResult.displayName).toBe('Korra');
+      expect(emptyResult.emoji).toBe('K');
 
       const undefinedResult = getFriendlyAnonName(undefined);
-      expect(undefinedResult.displayName).toBe('Pelajar Anon');
-      expect(undefinedResult.emoji).toBe('👻');
+      expect(undefinedResult.displayName).toBe('Korra');
+      expect(undefinedResult.emoji).toBe('K');
 
       const nullResult = getFriendlyAnonName(null as unknown as string, true);
-      expect(nullResult.displayName).toBe('Pelajar Anon');
+      expect(nullResult.displayName).toBe('Korra');
       expect(nullResult.isOP).toBe(true);
     });
   });

@@ -131,6 +131,238 @@ const supabaseAdmin = supabaseUrl && supabaseServiceKey
     : null;
 
 // ==========================================
+// Notification Localization & PolySuara Persona Helpers
+// ==========================================
+const FICTIONAL_POLYSUARA_PERSONAS = [
+    // 1. The Legend of Korra (10)
+    'Korra', 'Mako', 'Bolin', 'Asami', 'Tenzin',
+    'Lin Beifong', 'Jinora', 'Kuvira', 'Varrick', 'Zaheer',
+    // 2. Avatar: The Last Airbender (10)
+    'Aang', 'Katara', 'Sokka', 'Toph', 'Zuko',
+    'Iroh', 'Azula', 'Suki', 'Appa', 'Momo',
+    // 3. One Piece (10)
+    'Monkey D. Luffy', 'Roronoa Zoro', 'Nami', 'Usopp', 'Sanji',
+    'Tony Tony Chopper', 'Nico Robin', 'Franky', 'Brook', 'Jinbe',
+    // 4. Sword Art Online (10)
+    'Kirito', 'Asuna', 'Yui', 'Sinon', 'Leafa',
+    'Klein', 'Eugeo', 'Alice Zuberg', 'Yuuki Konno', 'Agil',
+    // 5. Harry Potter (10)
+    'Harry Potter', 'Hermione Granger', 'Ron Weasley', 'Albus Dumbledore', 'Severus Snape',
+    'Luna Lovegood', 'Neville Longbottom', 'Draco Malfoy', 'Minerva McGonagall', 'Sirius Black',
+    // 6. BoBoiBoy (10)
+    'BoBoiBoy', 'Yaya', 'Ying', 'Gopal', 'Fang',
+    'Ochobot', 'Papa Zola', 'Tok Aba', 'Adu Du', 'Kapten Kaizo',
+    // 7. Ejen Ali (10)
+    'Ejen Ali', 'Ejen Alicia', 'Ejen Bakar', 'Ejen Rizwan', 'Ejen Khai',
+    'Ejen Iman', 'Ejen Moon', 'Ejen Rudy', 'Ejen Geetha', 'General Rama',
+];
+
+const LEGACY_POLYSUARA_ANIMAL_REGEX = /\b(kucing|harimau|singa|serigala|musang|burung|helang|elang|panda|beruang|gajah|arnab|tupai|koala|rusa|kancil|otter|zirafah|dugong|penyu|buaya|kuda|kambing|lembu|ayam|itik|ikan|ketam|udang|sotong|katak|monyet|beruk|orangutan|badak|tapir|seladang|civet|tenuk|landak|pelanduk|kelawar|hantu|ghost)\b/i;
+
+function hashStringUnsigned(str) {
+    let hash = 0;
+    const lower = String(str || '').toLowerCase();
+    for (let i = 0; i < lower.length; i++) {
+        hash = (hash * 31 + lower.charCodeAt(i)) >>> 0;
+    }
+    return hash;
+}
+
+function normalizePolySuaraCodenameServer(rawCodename) {
+    const cleaned = String(rawCodename || '').replace(/\s*\[Penulis\]\s*/gi, '').trim();
+    if (!cleaned) {
+        return FICTIONAL_POLYSUARA_PERSONAS[0];
+    }
+    const exactMatch = FICTIONAL_POLYSUARA_PERSONAS.find(
+        (name) => name.toLowerCase() === cleaned.toLowerCase()
+    );
+    if (exactMatch) return exactMatch;
+
+    if (/^anon[-_\s]?[a-z0-9_-]*$/i.test(cleaned) || /^pelajar\s+anon$/i.test(cleaned) || LEGACY_POLYSUARA_ANIMAL_REGEX.test(cleaned)) {
+        return FICTIONAL_POLYSUARA_PERSONAS[hashStringUnsigned(cleaned) % FICTIONAL_POLYSUARA_PERSONAS.length];
+    }
+    return cleaned;
+}
+
+function stripPolySuaraTokensServer(rawText) {
+    return String(rawText || '')
+        .replace(/\[sticker:[^\]]+\]\s*/gi, '')
+        .replace(/\[spoiler-img\]\s*/gi, '')
+        .replace(/\s+/g, ' ')
+        .trim();
+}
+
+function normalizePolySuaraLinkServer(link, referenceId, commentId) {
+    let postId = referenceId ? String(referenceId).trim() : '';
+    let resolvedCommentId = commentId ? String(commentId).trim() : '';
+
+    if (link && typeof link === 'string') {
+        try {
+            const parsed = new URL(link, 'https://jpp.local');
+            if (parsed.pathname === '/polysuara') {
+                postId = parsed.searchParams.get('post') || parsed.searchParams.get('id') || postId;
+                resolvedCommentId = parsed.searchParams.get('comment') || resolvedCommentId;
+            }
+        } catch {
+            // Fall back to referenceId below
+        }
+    }
+
+    if (postId) {
+        const params = new URLSearchParams();
+        params.set('post', postId);
+        if (resolvedCommentId) params.set('comment', resolvedCommentId);
+        return `/polysuara?${params.toString()}`;
+    }
+
+    return link && typeof link === 'string' && link.startsWith('/') ? link : '/polysuara';
+}
+
+/**
+ * Single batched lookup of preferred_language ('en' | 'ms') for a list of user IDs.
+ * Chunks at 500 IDs with Promise.all so large broadcasts never execute N+1 queries
+ * or hit PostgREST URL length ceilings.
+ */
+async function fetchRecipientLanguages(userIds) {
+    const langMap = new Map();
+    if (!supabaseAdmin || !Array.isArray(userIds) || userIds.length === 0) return langMap;
+
+    const uniqueIds = [...new Set(userIds.filter(Boolean))];
+    if (uniqueIds.length === 0) return langMap;
+
+    const CHUNK_SIZE = 500;
+    const chunks = [];
+    for (let i = 0; i < uniqueIds.length; i += CHUNK_SIZE) {
+        chunks.push(uniqueIds.slice(i, i + CHUNK_SIZE));
+    }
+
+    const results = await Promise.all(
+        chunks.map((ids) =>
+            supabaseAdmin
+                .from('profiles')
+                .select('id, preferred_language')
+                .in('id', ids)
+        )
+    );
+
+    for (const { data } of results) {
+        for (const row of data || []) {
+            const lang = String(row.preferred_language || 'ms').toLowerCase().startsWith('en') ? 'en' : 'ms';
+            langMap.set(row.id, lang);
+        }
+    }
+    return langMap;
+}
+
+function localizePolySuaraInteractionServer({ lang, type, title, message, meta }) {
+    const isEn = lang === 'en';
+    const eventType = String(meta?.eventType || type || '').toUpperCase();
+    const cleanPreview = stripPolySuaraTokensServer(meta?.preview || '');
+
+    if (eventType === 'COMMENT_REPLY') {
+        const preview = cleanPreview || (String(message || '').match(/"([^"]+)"/)?.[1] || '');
+        if (isEn) {
+            return {
+                title: 'New reply to your PolySuara comment',
+                message: preview ? `Someone replied to your comment: "${preview}"` : 'Someone replied to your comment on PolySuara.',
+            };
+        }
+        return {
+            title: 'Balasan baharu pada ulasan PolySuara anda',
+            message: preview ? `Seseorang membalas ulasan anda: "${preview}"` : 'Seseorang membalas ulasan anda di PolySuara.',
+        };
+    }
+
+    if (eventType === 'COMMENT') {
+        const preview = cleanPreview || (String(message || '').match(/"([^"]+)"/)?.[1] || '');
+        if (isEn) {
+            return {
+                title: 'New comment on your PolySuara post',
+                message: preview ? `Someone commented on your post: "${preview}"` : 'Someone commented on your PolySuara post.',
+            };
+        }
+        return {
+            title: 'Ulasan baharu pada luahan PolySuara anda',
+            message: preview ? `Seseorang mengulas luahan anda: "${preview}"` : 'Seseorang mengulas luahan PolySuara anda.',
+        };
+    }
+
+    if (eventType === 'UPVOTE_MILESTONE') {
+        const count = Number(meta?.count) || Number((String(message || '').match(/(\d+)/) || [])[1]) || 10;
+        if (isEn) {
+            return {
+                title: 'Your PolySuara post is trending!',
+                message: `Your post has reached ${count} upvotes from campus students.`,
+            };
+        }
+        return {
+            title: 'Luahan PolySuara anda sedang hangat!',
+            message: `Luahan anda telah mencapai ${count} sokongan daripada warga kampus.`,
+        };
+    }
+
+    if (eventType === 'DOWNVOTE_WARNING') {
+        if (isEn) {
+            return {
+                title: 'Community Feedback Alert',
+                message: 'Your PolySuara post received multiple community downvotes. Please review community guidelines.',
+            };
+        }
+        return {
+            title: 'Amaran Maklum Balas Komuniti',
+            message: 'Luahan PolySuara anda menerima banyak undi kurang bersetuju. Sila semak garis panduan komuniti.',
+        };
+    }
+
+    if (eventType === 'AUTO_HIDE') {
+        if (isEn) {
+            return {
+                title: 'PolySuara Post Hidden by Community',
+                message: 'Your post was automatically hidden after reaching the community downvote threshold.',
+            };
+        }
+        return {
+            title: 'Luahan PolySuara Disembunyikan Komuniti',
+            message: 'Luahan anda disembunyikan secara automatik selepas mencapai had undi kurang bersetuju komuniti.',
+        };
+    }
+
+    return {
+        title: String(title || (isEn ? 'PolySuara Update' : 'Kemaskini PolySuara')),
+        message: String(message || ''),
+    };
+}
+
+function localizeMakmpNotificationServer({ lang, title, message }) {
+    if (lang !== 'en') return { title, message };
+    const tLower = String(title || '').toLowerCase();
+    const codeMatch = String(message || '').match(/\(([A-Z0-9-]+)\)/i);
+    const code = codeMatch ? codeMatch[1] : '';
+    const awardMatch = String(message || '').match(/"([^"]+)"/);
+    const award = awardMatch ? awardMatch[1] : 'MAKMP';
+
+    if (tLower.includes('disahkan') || tLower.includes('tahniah')) {
+        return {
+            title: 'MAKMP Application Approved',
+            message: `Your MAKMP application for "${award}"${code ? ` (${code})` : ''} has been verified and approved. Check the portal for details.`,
+        };
+    }
+    if (tLower.includes('ditolak')) {
+        return {
+            title: 'MAKMP Application Update',
+            message: `Your MAKMP application for "${award}"${code ? ` (${code})` : ''} was not approved. Please review the notes on the status page.`,
+        };
+    }
+    if (tLower.includes('semakan')) {
+        return {
+            title: 'MAKMP Application Under Review',
+            message: `Your MAKMP application for "${award}"${code ? ` (${code})` : ''} is currently under review by the committee.`,
+        };
+    }
+    return { title, message };
+}
+
+// ==========================================
 // Error Tracker: rekod error/crash ke system_error_events (in-app observability)
 // ==========================================
 async function recordError({ error_type, message, stack, endpoint, method, status_code, severity, user_agent, ip, filename }) {
@@ -621,28 +853,41 @@ app.post('/api/kebajikan-new-ticket-notify', requireWebhookSecret, async (req, r
         }
 
         const RESEND_API_KEY = process.env.RESEND_API_KEY;
+        const ticketDeepLink = `https://jpp.cipher-node.org/kebajikan/tiket/${id}`;
         if (RESEND_API_KEY) {
             const { data: excoUsers } = await supabaseAdmin
                 .from("profiles")
-                .select("email, full_name")
+                .select("id, email, full_name, preferred_language")
                 .eq("role", "JPP")
                 .eq("jpp_unit", "KEBAJIKAN");
-        
-            for (const exco of excoUsers ?? []) {
-                fetch("https://api.resend.com/emails", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${RESEND_API_KEY}`,
-                        "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                        from: "E-Kebajikan <kebajikan@cipher-node.org>",
-                        to: exco.email,
-                        subject: `[E-Kebajikan] Aduan Baru: ${ticket_no}`,
-                        html: `<p>Salam, ${exco.full_name}.<br/>Aduan baru <strong>${ticket_no}</strong> telah diterima.<br/><strong>${title}</strong><br/>Sila log masuk ke sistem untuk mengambil tindakan.</p>`,
-                    }),
-                });
-            }
+
+            await Promise.allSettled(
+                (excoUsers ?? [])
+                    .filter((exco) => Boolean(exco.email))
+                    .map((exco) => {
+                        const isEn = String(exco.preferred_language || 'ms').toLowerCase().startsWith('en');
+                        const subject = isEn
+                            ? `[E-Welfare] New Welfare Ticket: ${ticket_no}`
+                            : `[E-Kebajikan] Aduan Baru: ${ticket_no}`;
+                        const html = isEn
+                            ? `<p>Hello, ${exco.full_name}.<br/>A new welfare ticket <strong>${ticket_no}</strong> has been submitted by ${full_name} (${category}).<br/><strong>${title}</strong><br/><a href="${ticketDeepLink}">Review ticket now</a></p>`
+                            : `<p>Salam, ${exco.full_name}.<br/>Aduan baru <strong>${ticket_no}</strong> telah diterima daripada ${full_name} (${category}).<br/><strong>${title}</strong><br/><a href="${ticketDeepLink}">Semak tiket sekarang</a></p>`;
+
+                        return fetch("https://api.resend.com/emails", {
+                            method: "POST",
+                            headers: {
+                                "Authorization": `Bearer ${RESEND_API_KEY}`,
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                from: "E-Kebajikan <kebajikan@cipher-node.org>",
+                                to: exco.email,
+                                subject,
+                                html,
+                            }),
+                        });
+                    })
+            );
         }
 
         return res.status(200).json({ success: true, ticket_no, notif_created: !notifErr });
@@ -666,16 +911,26 @@ app.post('/api/makmp-notify', requireWebhookSecret, async (req, res) => {
             return res.status(400).json({ error: 'recipientId, title, and message are required.' });
         }
 
+        const resolvedLink = link || '/makmp/status';
+        // Single profile query for recipient preferred_language + email details
+        const { data: prof } = await supabaseAdmin
+            .from('profiles')
+            .select('email, full_name, matric_no, preferred_language')
+            .eq('id', recipientId)
+            .maybeSingle();
+        const recipientLang = String(prof?.preferred_language || 'ms').toLowerCase().startsWith('en') ? 'en' : 'ms';
+        const localized = localizeMakmpNotificationServer({ lang: recipientLang, title, message });
+
         // 1. In-app notification
         const { error: notifErr } = await supabaseAdmin
             .from('notifications')
             .insert({
                 user_id: recipientId,
-                title,
-                message,
+                title: localized.title,
+                message: localized.message,
                 type: type || 'MAKMP',
                 module: 'MAKMP',
-                link: link || '/makmp/status',
+                link: resolvedLink,
                 reference_id: referenceId || null,
                 is_read: false
             });
@@ -697,13 +952,13 @@ app.post('/api/makmp-notify', requireWebhookSecret, async (req, res) => {
             if (vapidPublicKey && vapidPrivateKey) {
                 webpush.setVapidDetails(process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org', vapidPublicKey, vapidPrivateKey);
                 const pushPayload = JSON.stringify({
-                    title,
-                    body: message,
+                    title: localized.title,
+                    body: localized.message,
                     icon: '/icon-192-maskable.png',
                     badge: '/icon-192-maskable.png',
                     tag: 'makmp-status',
                     renotify: true,
-                    data: { url: link || '/makmp/status', module: 'MAKMP', type: type || 'MAKMP' }
+                    data: { url: resolvedLink, link: resolvedLink, module: 'MAKMP', type: type || 'MAKMP' }
                 });
                 const BATCH_SIZE = 20;
                 for (let i = 0; i < subs.length; i += BATCH_SIZE) {
@@ -735,11 +990,6 @@ app.post('/api/makmp-notify', requireWebhookSecret, async (req, res) => {
             const isApproved = (title || '').toLowerCase().includes('disahkan') || (title || '').toLowerCase().includes('tahniah');
             const isRejected = (title || '').toLowerCase().includes('ditolak');
             if ((isApproved || isRejected) && referenceId) {
-                const { data: prof } = await supabaseAdmin
-                    .from('profiles')
-                    .select('email, full_name, matric_no')
-                    .eq('id', recipientId)
-                    .maybeSingle();
                 const email = prof?.email;
                 if (email) {
                     // Dapatkan anugerah + sebab penolakan + merit
@@ -1353,39 +1603,48 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
             notifReason = 'fallback_3h';
         }
 
-        // ── 4. Build dynamic notification content ────────────────────────────
-        const CATEGORY_META = {
-            UMUM:       { emoji: '💭' },
-            AKADEMIK:   { emoji: '📚' },
-            FASILITI:   { emoji: '🏢' },
-            KAMSIS:     { emoji: '🏠' },
-            KAUNSELING: { emoji: '💙' },
+        // ── 4. Build dynamic localized notification content (MS + EN) ────────
+        const HOOKS_MS = {
+            UMUM:       ['Ada cerita baharu di PolySuara kampus', 'Seseorang berkongsi pandangan di PolySuara', 'Jom baca perbincangan hangat hari ini'],
+            AKADEMIK:   ['Ada perkongsian baharu tentang akademik kampus', 'Perbincangan akademik baharu di PolySuara'],
+            FASILITI:   ['Ada maklum balas baharu tentang kemudahan kampus', 'Perkongsian isu fasiliti di PolySuara'],
+            KAMSIS:     ['Cerita baharu dari kehidupan kamsis kampus', 'Perbincangan warga asrama di PolySuara'],
+            KAUNSELING: ['Seseorang perlukan kata sokongan anda hari ini', 'Kongsi sokongan anda di PolySuara'],
         };
 
-        const HOOKS = {
-            UMUM:       ['Seseorang ada benda nak luahkan... 👀', 'Ada cerita baru dalam PolySuara 👻', 'Ada yang berani luah perasaan 🔥', 'Jom tengok apa yang tular hari ni'],
-            AKADEMIK:   ['Ada confession pasal kehidupan akademik 📚', 'Rasa struggle sorang? Baca ni dulu 💪', 'Kau je ke rasa macam tu? 👀'],
-            FASILITI:   ['Ada yang nak luah pasal kemudahan kolej 🏢', 'Masalah fasiliti? Ada yang dah luahkan 🔧'],
-            KAMSIS:     ['Gossip asrama incoming 🏠👀', 'Cerita dari dalam asrama... 🌙', 'Life asrama ni memang macam-macam 😅'],
-            KAUNSELING: ['Seseorang perlukan sokongan anda 💙', 'Jangan rasa sorang... baca ni 🤍'],
+        const HOOKS_EN = {
+            UMUM:       ['A new campus story was shared on PolySuara', 'Someone just shared a thought on PolySuara', 'See what students are discussing today'],
+            AKADEMIK:   ['New academic discussion on PolySuara', 'Someone shared a thought about campus academics'],
+            FASILITI:   ['New campus facilities feedback on PolySuara', 'Someone raised a facility topic on PolySuara'],
+            KAMSIS:     ['New hostel life story on PolySuara', 'Students are talking about kamsis life'],
+            KAUNSELING: ['Someone could use your encouragement today', 'Share a supportive word on PolySuara'],
         };
 
         const cat = confessionToNotify.category || 'UMUM';
-        const meta = CATEGORY_META[cat] || CATEGORY_META.UMUM;
-        const hooks = HOOKS[cat] || HOOKS.UMUM;
-        const hook = hooks[Math.floor(Math.random() * hooks.length)];
+        const hooksMs = HOOKS_MS[cat] || HOOKS_MS.UMUM;
+        const hooksEn = HOOKS_EN[cat] || HOOKS_EN.UMUM;
+        const hookIndex = Math.floor(Math.random() * hooksMs.length);
+        const hookMs = hooksMs[hookIndex % hooksMs.length];
+        const hookEn = hooksEn[hookIndex % hooksEn.length];
 
-        const ghost = confessionToNotify.codename || 'Hantu Tanpa Nama';
-        const rawContent = confessionToNotify.content || '';
-        const preview = rawContent.length > 0
-            ? rawContent.length > 80 ? rawContent.slice(0, 80) + '...' : rawContent
+        const personaName = normalizePolySuaraCodenameServer(confessionToNotify.codename);
+        const cleanedContent = stripPolySuaraTokensServer(confessionToNotify.content || '');
+        const preview = cleanedContent.length > 0
+            ? (cleanedContent.length > 80 ? cleanedContent.slice(0, 80) + '...' : cleanedContent)
             : null;
 
         const isTrending = notifReason === 'quality_threshold';
-        const notifTitle = isTrending
-            ? `🔥 Trending di PolySuara (${confessionToNotify.upvotes} sokong)`
-            : `${meta.emoji} ${ghost} baru luah sesuatu`;
-        const notifBody = preview || hook;
+        const postUrl = `/polysuara?post=${confessionToNotify.id}`;
+
+        const notifTitleMs = isTrending
+            ? `Trending di PolySuara (${confessionToNotify.upvotes} sokong)`
+            : `${personaName} berkongsi di PolySuara`;
+        const notifBodyMs = preview || hookMs;
+
+        const notifTitleEn = isTrending
+            ? `Trending on PolySuara (${confessionToNotify.upvotes} upvotes)`
+            : `${personaName} shared on PolySuara`;
+        const notifBodyEn = preview || hookEn;
 
         // ── 5. Setup VAPID ────────────────────────────────────────────────────
         const vapidSubject = process.env.VAPID_SUBJECT || 'mailto:jpp@cipher-node.org';
@@ -1398,16 +1657,12 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
         }
         webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
-        // ── 6. Fetch opt-out list ─────────────────────────────────────────────
-        const { data: optOutRows } = await supabaseAdmin
-            .from('polysuara_notif_optout')
-            .select('user_id');
+        // ── 6. Fetch opt-out list + push subscriptions in parallel ────────────
+        const [{ data: optOutRows }, { data: allSubs, error: subsError }] = await Promise.all([
+            supabaseAdmin.from('polysuara_notif_optout').select('user_id'),
+            supabaseAdmin.from('push_subscriptions').select('id, user_id, endpoint, p256dh, auth'),
+        ]);
         const optOutIds = new Set(optOutRows?.map(r => r.user_id) || []);
-
-        // ── 7. Fetch all push subscriptions ──────────────────────────────────
-        const { data: allSubs, error: subsError } = await supabaseAdmin
-            .from('push_subscriptions')
-            .select('id, user_id, endpoint, p256dh, auth');
 
         if (subsError) throw new Error(subsError.message);
         if (!allSubs || allSubs.length === 0) {
@@ -1423,16 +1678,28 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
             return res.status(200).json({ success: true, sent: 0, message: 'Tiada subscriber eligible.' });
         }
 
-        // ── 9. Send in batches ────────────────────────────────────────────────
-        const pushPayload = JSON.stringify({
-            title: notifTitle,
-            body: notifBody,
+        // ── 9. Batched language lookup (ZERO N+1) & send in batches ───────────
+        const recipientLangMap = await fetchRecipientLanguages(eligibleSubs.map(s => s.user_id));
+
+        const payloadMs = JSON.stringify({
+            title: notifTitleMs,
+            body: notifBodyMs,
             icon: '/icon-192-maskable.png',
             badge: '/icon-192-maskable.png',
-            tag: 'polysuara-new-confession',
+            tag: `polysuara-post-${confessionToNotify.id}`,
             renotify: true,
             requireInteraction: false,
-            data: { url: '/polysuara', link: '/polysuara', module: 'POLYSUARA', type: 'NEW_CONFESSION' },
+            data: { url: postUrl, link: postUrl, module: 'POLYSUARA', type: 'NEW_CONFESSION' },
+        });
+        const payloadEn = JSON.stringify({
+            title: notifTitleEn,
+            body: notifBodyEn,
+            icon: '/icon-192-maskable.png',
+            badge: '/icon-192-maskable.png',
+            tag: `polysuara-post-${confessionToNotify.id}`,
+            renotify: true,
+            requireInteraction: false,
+            data: { url: postUrl, link: postUrl, module: 'POLYSUARA', type: 'NEW_CONFESSION' },
         });
 
         let sent = 0;
@@ -1445,9 +1712,10 @@ app.post('/api/polysuara-new-confession-notify', requireWebhookSecret, async (re
             await Promise.allSettled(
                 batch.map(async (sub) => {
                     try {
+                        const subPayload = recipientLangMap.get(sub.user_id) === 'en' ? payloadEn : payloadMs;
                         await webpush.sendNotification(
                             { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
-                            pushPayload
+                            subPayload
                         );
                         sent++;
                     } catch (e) {
@@ -1485,23 +1753,42 @@ app.post('/api/polysuara-interaction-notify', requireWebhookSecret, async (req, 
     try {
         if (!supabaseAdmin) throw new Error('Supabase Admin Client not initialized.');
 
-        const { recipientId, title, message, type, link, referenceId } = req.body;
+        const { recipientId, title, message, type, link, referenceId, meta } = req.body;
 
-        if (!recipientId || !title || !message) {
-            return res.status(400).json({ error: 'recipientId, title, and message are required.' });
+        if (!recipientId || (!title && !meta?.eventType)) {
+            return res.status(400).json({ error: 'recipientId and title (or meta.eventType) are required.' });
         }
 
-        // 1. Masukkan notifikasi in-app
+        const [langMap, { data: subs, error: subsError }] = await Promise.all([
+            fetchRecipientLanguages([recipientId]),
+            supabaseAdmin
+                .from('push_subscriptions')
+                .select('id, user_id, endpoint, p256dh, auth')
+                .eq('user_id', recipientId),
+        ]);
+        if (subsError) throw subsError;
+
+        const recipientLang = langMap.get(recipientId) || 'ms';
+        const finalLink = normalizePolySuaraLinkServer(link, referenceId || meta?.confessionId, meta?.commentId);
+        const localized = localizePolySuaraInteractionServer({
+            lang: recipientLang,
+            type,
+            title,
+            message,
+            meta,
+        });
+
+        // 1. Masukkan notifikasi in-app (dalam bahasa pilihan penerima)
         const { error: notifErr } = await supabaseAdmin
             .from('notifications')
             .insert({
                 user_id: recipientId,
-                title,
-                message,
+                title: localized.title,
+                message: localized.message,
                 type: type || 'POLYSUARA',
                 module: 'POLYSUARA',
-                link: link || '/polysuara',
-                reference_id: referenceId,
+                link: finalLink,
+                reference_id: referenceId || meta?.confessionId || null,
                 is_read: false
             });
 
@@ -1509,14 +1796,7 @@ app.post('/api/polysuara-interaction-notify', requireWebhookSecret, async (req, 
             console.error('[polysuara-interaction-notify] In-app insert error:', notifErr.message);
         }
 
-        // 2. Dapatkan push subscriptions untuk penerima
-        const { data: subs, error: subsError } = await supabaseAdmin
-            .from('push_subscriptions')
-            .select('id, user_id, endpoint, p256dh, auth')
-            .eq('user_id', recipientId);
-
-        if (subsError) throw subsError;
-
+        // 2. Hantar push notification dalam bahasa pilihan penerima
         let sent = 0;
         let failed = 0;
         const staleIds = [];
@@ -1530,13 +1810,13 @@ app.post('/api/polysuara-interaction-notify', requireWebhookSecret, async (req, 
                 webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
                 const pushPayload = JSON.stringify({
-                    title,
-                    body: message,
+                    title: localized.title,
+                    body: localized.message,
                     icon: '/icon-192-maskable.png',
                     badge: '/icon-192-maskable.png',
-                    tag: 'polysuara-interaction',
+                    tag: `polysuara-interaction-${referenceId || meta?.confessionId || 'feed'}`,
                     renotify: true,
-                    data: { url: link || '/polysuara', link: link || '/polysuara', module: 'POLYSUARA', type: type || 'POLYSUARA' }
+                    data: { url: finalLink, link: finalLink, module: 'POLYSUARA', type: type || 'POLYSUARA' }
                 });
 
                 const BATCH_SIZE = 20;
@@ -1599,33 +1879,39 @@ app.post('/api/polymart-chat-notify', requireWebhookSecret, async (req, res) => 
         if (convErr) throw new Error(convErr.message);
         if (!conv) return res.status(200).json({ success: true, skipped: 'conversation not found' });
 
-        const messagePreview = String(content || '').replace(/\s+/g, ' ').trim().slice(0, 80) || 'Mesej baharu';
+        const rawMsg = String(content || '').replace(/\s+/g, ' ').trim();
+        const isProductCard = rawMsg.startsWith('[PRODUCT_CARD:');
+        const messagePreviewMs = isProductCard ? 'Menghantar pautan produk' : (rawMsg.slice(0, 80) || 'Mesej baharu');
+        const messagePreviewEn = isProductCard ? 'Sent a product link' : (rawMsg.slice(0, 80) || 'New message');
 
         let recipients = [];
-        let title = '';
+        let titleMs = '';
+        let titleEn = '';
         const isCustomerMsg = sender_id === conv.buyer_id;
 
         if (isCustomerMsg) {
-            // Hantar ke staff vendor berkenaan sahaja
-            const { data: biz, error: bizErr } = await supabaseAdmin
-                .from('keusahawanan_businesses')
-                .select('owner_id, name')
-                .eq('id', conv.vendor_business_id)
-                .maybeSingle();
+            // Hantar ke staff vendor berkenaan sahaja (parallel query)
+            const [{ data: biz, error: bizErr }, { data: members, error: memErr }] = await Promise.all([
+                supabaseAdmin
+                    .from('keusahawanan_businesses')
+                    .select('owner_id, name')
+                    .eq('id', conv.vendor_business_id)
+                    .maybeSingle(),
+                supabaseAdmin
+                    .from('student_business_memberships')
+                    .select('user_id')
+                    .eq('business_id', conv.vendor_business_id)
+                    .eq('status', 'ACTIVE'),
+            ]);
             if (bizErr) throw new Error(bizErr.message);
-
-            const { data: members, error: memErr } = await supabaseAdmin
-                .from('student_business_memberships')
-                .select('user_id')
-                .eq('business_id', conv.vendor_business_id)
-                .eq('status', 'ACTIVE');
             if (memErr) throw new Error(memErr.message);
 
             recipients = [...new Set([
                 ...(members || []).map(m => m.user_id),
                 ...(biz?.owner_id ? [biz.owner_id] : []),
             ])];
-            title = `💬 Mesej Baru dari Pelanggan${biz?.name ? ` (${biz.name})` : ''}`;
+            titleMs = `Mesej Baru dari Pelanggan${biz?.name ? ` (${biz.name})` : ''}`;
+            titleEn = `New Message from Customer${biz?.name ? ` (${biz.name})` : ''}`;
         } else {
             // Staff hantar -> customer itu sahaja
             recipients = [conv.buyer_id];
@@ -1635,7 +1921,8 @@ app.post('/api/polymart-chat-notify', requireWebhookSecret, async (req, res) => 
                 .eq('id', conv.vendor_business_id)
                 .maybeSingle();
             if (bizErr) throw new Error(bizErr.message);
-            title = `💬 Mesej Baru dari ${biz?.name || 'Vendor'}`;
+            titleMs = `Mesej Baru dari ${biz?.name || 'Vendor'}`;
+            titleEn = `New Message from ${biz?.name || 'Vendor'}`;
         }
 
         if (recipients.length === 0) {
@@ -1650,24 +1937,38 @@ app.post('/api/polymart-chat-notify', requireWebhookSecret, async (req, res) => 
         }
         webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
 
-        const { data: subs, error: subsError } = await supabaseAdmin
-            .from('push_subscriptions')
-            .select('id, user_id, endpoint, p256dh, auth')
-            .in('user_id', recipients);
+        const [langMap, { data: subs, error: subsError }] = await Promise.all([
+            fetchRecipientLanguages(recipients),
+            supabaseAdmin
+                .from('push_subscriptions')
+                .select('id, user_id, endpoint, p256dh, auth')
+                .in('user_id', recipients),
+        ]);
         if (subsError) throw new Error(subsError.message);
         if (!subs || subs.length === 0) {
             return res.status(200).json({ success: true, sent: 0, message: 'Tiada subscription.' });
         }
 
-        const payload = JSON.stringify({
-            title,
-            body: messagePreview,
+        const chatUrl = `/polymart/mesej?businessId=${encodeURIComponent(conv.vendor_business_id)}&buyerId=${encodeURIComponent(conv.buyer_id)}&chat=${encodeURIComponent(conversation_id)}`;
+        const payloadMs = JSON.stringify({
+            title: titleMs,
+            body: messagePreviewMs,
             icon: '/icon-192-maskable.png',
             badge: '/icon-192-maskable.png',
             tag: `polymart-chat-${conversation_id}`,
             renotify: true,
             requireInteraction: false,
-            data: { url: '/polymart' },
+            data: { url: chatUrl, link: chatUrl, module: 'POLYMART', type: 'polymart_chat_msg' },
+        });
+        const payloadEn = JSON.stringify({
+            title: titleEn,
+            body: messagePreviewEn,
+            icon: '/icon-192-maskable.png',
+            badge: '/icon-192-maskable.png',
+            tag: `polymart-chat-${conversation_id}`,
+            renotify: true,
+            requireInteraction: false,
+            data: { url: chatUrl, link: chatUrl, module: 'POLYMART', type: 'polymart_chat_msg' },
         });
 
         let sent = 0;
@@ -1680,7 +1981,8 @@ app.post('/api/polymart-chat-notify', requireWebhookSecret, async (req, res) => 
                     keys: { p256dh: sub.p256dh, auth: sub.auth },
                 };
                 try {
-                    await webpush.sendNotification(subscription, payload);
+                    const subPayload = langMap.get(sub.user_id) === 'en' ? payloadEn : payloadMs;
+                    await webpush.sendNotification(subscription, subPayload);
                     sent++;
                 } catch (e) {
                     failed++;
@@ -1695,7 +1997,7 @@ app.post('/api/polymart-chat-notify', requireWebhookSecret, async (req, res) => 
             console.log(`[polymart-chat-notify] Removed ${staleIds.length} stale subscription(s).`);
         }
 
-        console.log(`[polymart-chat-notify] "${title}" -> Sent: ${sent}/${subs.length}, Failed: ${failed}, Recipients: ${recipients.length}`);
+        console.log(`[polymart-chat-notify] "${titleMs}" -> Sent: ${sent}/${subs.length}, Failed: ${failed}, Recipients: ${recipients.length}`);
         return res.status(200).json({ success: true, sent, failed, total: subs.length, recipients: recipients.length });
 
     } catch (error) {
@@ -1720,8 +2022,16 @@ app.post('/api/makmp-winner-notify', requireWebhookSecret, async (req, res) => {
             return res.status(400).json({ error: 'submissionId is required.' });
         }
 
-        const title = '🎉 Tahniah! Anda Dicalonkan 3 Teratas MAKMP';
-        const message = `Tahniah! Anda telah dicalonkan sebagai antara 3 teratas bagi anugerah "${awardName || 'MAKMP'}" (${trackingCode || ''}). Sila lengkapkan maklumat diri anda di portal.`;
+        const langMap = recipientId ? await fetchRecipientLanguages([recipientId]) : new Map();
+        const isEn = langMap.get(recipientId) === 'en';
+        const winnerLink = '/makmp/status?code=' + (trackingCode || '');
+
+        const title = isEn
+            ? 'Congratulations! Shortlisted Top 3 MAKMP'
+            : 'Tahniah! Anda Dicalonkan 3 Teratas MAKMP';
+        const message = isEn
+            ? `Congratulations! You have been shortlisted among the Top 3 finalists for "${awardName || 'MAKMP'}" (${trackingCode || ''}). Please complete your details in the portal.`
+            : `Tahniah! Anda telah dicalonkan sebagai antara 3 teratas bagi anugerah "${awardName || 'MAKMP'}" (${trackingCode || ''}). Sila lengkapkan maklumat diri anda di portal.`;
 
         // 1. In-app notification (hanya jika ada user_id)
         if (recipientId) {
@@ -1733,7 +2043,7 @@ app.post('/api/makmp-winner-notify', requireWebhookSecret, async (req, res) => {
                     message,
                     type: 'MAKMP',
                     module: 'MAKMP',
-                    link: '/makmp/status?code=' + (trackingCode || ''),
+                    link: winnerLink,
                     reference_id: submissionId,
                     is_read: false
                 });
@@ -1761,7 +2071,7 @@ app.post('/api/makmp-winner-notify', requireWebhookSecret, async (req, res) => {
                         badge: '/icon-192-maskable.png',
                         tag: 'makmp-winner',
                         renotify: true,
-                        data: { url: '/makmp/status?code=' + (trackingCode || ''), module: 'MAKMP', type: 'MAKMP' }
+                        data: { url: winnerLink, link: winnerLink, module: 'MAKMP', type: 'MAKMP' }
                     });
                     await Promise.allSettled(
                         subs.map(async (sub) => {

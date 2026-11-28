@@ -469,7 +469,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
             ...msg,
             type: `polymart_order_${newStatus.toLowerCase()}`,
             module: 'POLYMART',
-            link: '/polymart/pesanan-saya',
+            link: `/polymart/pesanan-saya?order=${order.id}`,
             reference_id: order.id,
           });
         }
@@ -539,7 +539,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
           message: t('commerce:notif_payment_verified_msg', 'Bayaran untuk tempahan anda telah disahkan. Pesanan sedang diproses!'),
           type: 'polymart_payment_verified',
           module: 'POLYMART',
-          link: '/polymart/pesanan-saya',
+          link: `/polymart/pesanan-saya?order=${reviewOrder.id}`,
           reference_id: reviewOrder.id,
         });
       }
@@ -600,7 +600,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
           message: t('commerce:notif_receipt_rejected_msg', 'Resit pembayaran anda telah ditolak. Sila muat naik semula resit yang sah.'),
           type: 'polymart_receipt_rejected',
           module: 'POLYMART',
-          link: '/polymart/pesanan-saya',
+          link: `/polymart/pesanan-saya?order=${reviewOrder.id}`,
           reference_id: reviewOrder.id,
         });
       }
@@ -679,7 +679,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
               message: t('commerce:notif_bulk_payment_verified_msg', 'Bayaran untuk tempahan anda telah disahkan secara pukal. Pesanan sedang diproses! Sedia pada: {{pickupTime}}', { pickupTime: group.pickup_time ?? t('commerce:will_be_notified', 'Akan dimaklumkan') }),
               type: 'polymart_payment_verified',
               module: 'POLYMART',
-              link: '/polymart/pesanan-saya',
+              link: `/polymart/pesanan-saya?order=${group.id}`,
               reference_id: group.id,
             });
           }
@@ -756,7 +756,7 @@ export const VendorOrdersPipeline: React.FC<VendorOrdersPipelineProps> = ({
               message: t('commerce:notif_order_ready_msg', 'Pesanan anda ({{itemsDesc}}) sudah siap. Sila datang ambil!', { itemsDesc }),
               type: 'polymart_order_ready',
               module: 'POLYMART',
-              link: '/polymart/pesanan-saya',
+              link: `/polymart/pesanan-saya?order=${group.id}`,
               reference_id: group.id,
             });
           }

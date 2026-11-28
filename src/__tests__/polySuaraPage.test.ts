@@ -30,6 +30,7 @@ vi.mock('@/hooks/usePushNotifications', () => ({
 
 vi.mock('react-router-dom', () => ({
   useNavigate: () => vi.fn(),
+  useSearchParams: () => [new URLSearchParams(), vi.fn()],
 }));
 
 vi.mock('@/contexts/ThemeContext', () => ({
@@ -101,6 +102,7 @@ import {
   extractStickerToken,
   embedStickerToken,
   getAnimalAvatarFromCodename,
+  normalizePolySuaraCodename,
   aggregateReactions,
   POLISAS_CAMPUS_STICKERS,
   REACTION_EMOJIS,
@@ -160,8 +162,32 @@ describe('PolySuaraPage Suite', () => {
       // Pelekat sticker trigger should NOT be in the composer
       expect(html).not.toContain('<span>Pelekat</span>');
 
-      // Quick-compose capsule styling (flat hairline row on mobile, rounded capsule on sm+)
-      expect(html).toContain('rounded-none sm:rounded-3xl');
+      // Quick-compose capsule styling (framed mobile card with min-h-[60px], rounded capsule on sm+)
+      expect(html).toContain('min-h-[60px]');
+      expect(html).toContain('rounded-2xl sm:rounded-3xl');
+    });
+
+    it('keeps mobile composer and confession cards distinct with a separate moderation row', () => {
+      const html = renderToString(React.createElement(PolySuaraPage));
+      const page = fs.readFileSync(path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx'), 'utf-8');
+      const card = fs.readFileSync(path.resolve(__dirname, '../components/polysuara/PolySuaraConfessionCard.tsx'), 'utf-8');
+      expect(page).toContain('space-y-3 sm:space-y-4');
+      expect(html).toContain('min-h-[60px]');
+      expect(card).toContain('rounded-2xl sm:rounded-[2rem]');
+      expect(card).toContain('moderation-actions');
+      expect(card).toContain('border-[#B8E4DC]/30 dark:border-[#252B35]/50');
+    });
+
+    it('keeps drawer controls above app chrome and uses direct segmented preferences', () => {
+      const rails = fs.readFileSync(path.resolve(__dirname, '../components/polysuara/PolySuaraSideRails.tsx'), 'utf-8');
+      const theme = fs.readFileSync(path.resolve(__dirname, '../components/ui/ThemeToggle.tsx'), 'utf-8');
+      expect(rails).toContain('z-[130]');
+      expect(rails).toContain('z-[140]');
+      expect(rails).toContain('changeLanguage(lang)');
+      expect(rails).toContain('setTheme(');
+      expect(rails).toContain("t('common:light_mode'");
+      expect(rails).toContain("t('common:dark_mode'");
+      expect(theme).toContain('z-[99999]');
     });
 
     it('defines composeModalOpen state and centered modal dialog structure in PolySuaraPage', () => {
@@ -264,17 +290,28 @@ describe('PolySuaraPage Suite', () => {
       expect(extracted.cleanContent).toBe(userText);
     });
 
-    it('derives dynamic animal avatar and colors from anonymous codename', () => {
-      const kucingAvatar = getAnimalAvatarFromCodename('Kucing Misteri');
-      expect(kucingAvatar.emoji).toBe('🐱');
-      expect(kucingAvatar.bgClass).toContain('amber');
+    it('derives dynamic fictional character monogram and colors from anonymous codename (zero animal icons)', () => {
+      const korraAvatar = getAnimalAvatarFromCodename('Korra');
+      expect(korraAvatar.emoji).toBe('K');
+      expect(korraAvatar.bgClass).toContain('teal');
 
-      const harimauAvatar = getAnimalAvatarFromCodename('Harimau Berani');
-      expect(harimauAvatar.emoji).toBe('🐯');
-      expect(harimauAvatar.bgClass).toContain('orange');
+      const bbbAvatar = getAnimalAvatarFromCodename('BoBoiBoy');
+      expect(bbbAvatar.emoji).toBe('BBB');
+      expect(bbbAvatar.bgClass).toContain('orange');
+
+      const aliAvatar = getAnimalAvatarFromCodename('Ejen Ali');
+      expect(aliAvatar.emoji).toBe('EA');
+      expect(aliAvatar.bgClass).toContain('cyan');
+
+      const legacyCatAvatar = getAnimalAvatarFromCodename('Kucing Misteri');
+      expect(legacyCatAvatar.emoji).not.toBe('🐱');
+      expect(legacyCatAvatar.emoji).not.toBe('👻');
+
+      const legacyTigerAvatar = getAnimalAvatarFromCodename('Harimau Berani');
+      expect(legacyTigerAvatar.emoji).not.toBe('🐯');
 
       const defaultAvatar = getAnimalAvatarFromCodename(undefined);
-      expect(defaultAvatar.emoji).toBe('👻');
+      expect(defaultAvatar.emoji).toBe('K');
     });
 
     it('aggregates raw reactions into summary list for PolySuaraReactions action bar', () => {
@@ -367,7 +404,8 @@ describe('PolySuaraPage Suite', () => {
       expect(cardContent).toContain('Share2');
       expect(cardContent).toContain('Bookmark');
       expect(cardContent).toContain('onToggleBookmark');
-      expect(cardContent).toContain('border-t border-[#B8E4DC]/50 dark:border-[#252B35]');
+      expect(cardContent).toContain('border-[#B8E4DC]/35 dark:border-[#252B35]/60');
+      expect(cardContent).toContain('moderation-actions');
       expect(pageContent).toContain('<PolySuaraQuickReportModal');
       expect(pageContent).toContain('<PolySuaraMediaViewer');
     });
@@ -615,8 +653,11 @@ describe('PolySuaraPage Suite', () => {
         initialMyConfessions: new Set([confessionId]),
       }));
 
-      // Tombstone message with exact text and styling
-      expect(html).toContain('Musang Cerdik telah memadamkan ruangan ini');
+      // Legacy animal codename 'Musang Cerdik' is deterministically remapped to a fictional persona
+      const remappedName = normalizePolySuaraCodename('Musang Cerdik').displayName;
+      expect(remappedName).not.toContain('Musang');
+      expect(html).not.toContain('Musang Cerdik');
+      expect(html).toContain(`${remappedName} telah memadamkan ruangan ini`);
       expect(html).toContain('text-[#3B635C] dark:text-[#94A0B2] italic text-sm');
 
       // Actions are disabled on deleted confessions

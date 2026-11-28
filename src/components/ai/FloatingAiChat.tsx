@@ -1557,6 +1557,7 @@ export function FloatingAiChat() {
         // Push notification
         try {
           const isUserBuyer = selectedChat.originalData.buyer_id === profile.id;
+          const polyMartChatLink = `/polymart/mesej?businessId=${encodeURIComponent(selectedChat.originalData.vendor_business_id)}&buyerId=${encodeURIComponent(selectedChat.originalData.buyer_id)}&chat=${encodeURIComponent(selectedChat.id)}`;
           if (isUserBuyer) {
             // Sender is buyer, recipient is vendor business
             const { sendNotificationToBusinessVendor } = await import('@/lib/notifications');
@@ -1565,7 +1566,7 @@ export function FloatingAiChat() {
               message: t('portal:ai_notif_vendor_msg', `${profile.full_name || 'Pembeli'}: ${content.startsWith('[PRODUCT_CARD:') ? 'Menghantar pautan produk' : content}`),
               type: 'polymart_chat_msg',
               module: 'POLYMART',
-              link: `/polymart`,
+              link: polyMartChatLink,
               reference_id: selectedChat.id,
               actor_name: profile.full_name,
             });
@@ -1577,7 +1578,7 @@ export function FloatingAiChat() {
               message: content.startsWith('[PRODUCT_CARD:') ? t('portal:ai_sent_product_link', 'Menghantar pautan produk') : content,
               type: 'polymart_chat_msg',
               module: 'POLYMART',
-              link: `/polymart`,
+              link: polyMartChatLink,
               reference_id: selectedChat.id,
               actor_name: selectedChat.title,
             });
@@ -1637,7 +1638,7 @@ export function FloatingAiChat() {
               message: t('portal:ai_notif_exco_ticket_msg', `${profile.full_name || 'Pelajar'}: ${content.startsWith('[TICKET_CARD:') ? 'Menghantar pautan tiket' : content}`),
               type: 'kebajikan_ticket_comment',
               module: 'KEBAJIKAN',
-              link: `/kebajikan/buat-aduan`,
+              link: `/kebajikan/tiket/${selectedChat.id}`,
               reference_id: selectedChat.id,
               actor_name: profile.full_name,
             });
@@ -1650,7 +1651,7 @@ export function FloatingAiChat() {
                 message: t('portal:ai_notif_user_ticket_msg', `${profile.full_name || 'Urusetia'}: ${content.startsWith('[TICKET_CARD:') ? 'Menghantar pautan tiket' : content}`),
                 type: 'kebajikan_ticket_comment',
                 module: 'KEBAJIKAN',
-                link: `/kebajikan/buat-aduan`,
+                link: `/kebajikan/aduan/${selectedChat.id}`,
                 reference_id: selectedChat.id,
                 actor_name: profile.full_name,
               });

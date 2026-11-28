@@ -1,64 +1,48 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Bell, ChevronRight, CheckCheck, Loader2, ArrowRight } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
 import { useNotificationStore } from '@/store/useNotificationStore';
-import type { AppNotification } from '@/lib/notifications';
+import {
+  resolveNotificationLink,
+  localizeNotification,
+  type AppNotification,
+  type NotificationModule,
+} from '@/lib/notifications';
 import { formatDistanceToNow } from 'date-fns';
-import { ms } from 'date-fns/locale';
+import { ms, enUS } from 'date-fns/locale';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import type { NotificationModule } from '@/lib/notifications';
-
-// ─── Smart fallback link berdasarkan modul ────────────────────────────────────
-const MODULE_FALLBACK: Record<NotificationModule, string> = {
-  KEBAJIKAN:    '/kebajikan',
-  EKPP:         '/laporan',
-  AKADEMIK:     '/akademik',
-  KEUSAHAWANAN: '/keusahawanan',
-  JPP:          '/portal',
-  SYSTEM:       '/dashboard',
-  POLYMART:     '/polymart',
-  KAMSIS:       '/dashboard',
-  KLK:          '/klk',
-  POLYRIDER:    '/polyrider',
-  POLYTASK:     '/polytask',
-  POLYSUARA:    '/polysuara',
-  POLYRENT:     '/polyrent',
-};
-
-function getNotifLink(notif: AppNotification): string | null {
-  if (notif.link) return notif.link;
-  return MODULE_FALLBACK[notif.module] ?? null;
-}
 
 // ─── Module badge config (Dual-Theme WCAG AA) ──────────────────────────────────
-const MODULE_CONFIG: Record<NotificationModule, { label?: string; badgeClass: string; dotClass: string }> = {
-  KEBAJIKAN:    { label: 'E-Kebajikan',  badgeClass: 'bg-teal-500/12 text-teal-800 dark:text-[#2DD4BF]',       dotClass: 'bg-teal-600 dark:bg-[#2DD4BF]' },
-  EKPP:         {                        badgeClass: 'bg-amber-500/12 text-amber-800 dark:text-amber-300',     dotClass: 'bg-amber-600 dark:bg-amber-400' },
-  AKADEMIK:     { label: 'E-Akademik',   badgeClass: 'bg-indigo-500/12 text-indigo-700 dark:text-indigo-300',  dotClass: 'bg-indigo-600 dark:bg-indigo-400' },
-  KEUSAHAWANAN: { label: 'Keusahawanan', badgeClass: 'bg-orange-500/12 text-orange-800 dark:text-orange-300',  dotClass: 'bg-orange-600 dark:bg-orange-400' },
-  JPP:          { label: 'JPP HQ',       badgeClass: 'bg-teal-600/12 text-[#0F766E] dark:text-[#2DD4BF]',      dotClass: 'bg-[#0F766E] dark:bg-[#2DD4BF]' },
-  SYSTEM:       { label: 'Sistem',       badgeClass: 'bg-slate-500/12 text-slate-700 dark:text-slate-300',     dotClass: 'bg-slate-500 dark:bg-slate-400' },
-  POLYMART:     { label: 'PolyMart',     badgeClass: 'bg-amber-500/12 text-amber-800 dark:text-amber-300',     dotClass: 'bg-amber-600 dark:bg-amber-400' },
-  KAMSIS:       { label: 'i-KAMSIS',     badgeClass: 'bg-violet-500/12 text-violet-700 dark:text-violet-300',  dotClass: 'bg-violet-600 dark:bg-violet-400' },
-  KLK:          { label: 'KLK',          badgeClass: 'bg-teal-500/12 text-teal-800 dark:text-teal-300',        dotClass: 'bg-teal-600 dark:bg-teal-400' },
-  POLYRIDER:    { label: 'PolyRider',    badgeClass: 'bg-amber-500/12 text-amber-800 dark:text-amber-300',     dotClass: 'bg-amber-600 dark:bg-amber-400' },
-  POLYTASK:     { label: 'PolyTask',     badgeClass: 'bg-violet-500/12 text-violet-700 dark:text-violet-300',  dotClass: 'bg-violet-600 dark:bg-violet-400' },
-  POLYSUARA:    { label: 'PolySuara',    badgeClass: 'bg-rose-500/12 text-rose-700 dark:text-rose-300',        dotClass: 'bg-rose-600 dark:bg-rose-400' },
-  POLYRENT:     { label: 'PolyRent',     badgeClass: 'bg-emerald-500/12 text-emerald-800 dark:text-emerald-300', dotClass: 'bg-emerald-600 dark:bg-emerald-400' },
+const MODULE_CONFIG: Record<NotificationModule, { labelKey?: string; fallback: string; badgeClass: string; dotClass: string }> = {
+  KEBAJIKAN:    { labelKey: 'common:module_kebajikan',    fallback: 'E-Kebajikan',  badgeClass: 'bg-teal-500/12 text-teal-800 dark:text-[#2DD4BF]',         dotClass: 'bg-teal-600 dark:bg-[#2DD4BF]' },
+  EKPP:         { labelKey: 'common:club_portal',         fallback: 'Portal Kelab', badgeClass: 'bg-amber-500/12 text-amber-800 dark:text-amber-300',       dotClass: 'bg-amber-600 dark:bg-amber-400' },
+  AKADEMIK:     { labelKey: 'common:module_akademik',     fallback: 'E-Akademik',   badgeClass: 'bg-indigo-500/12 text-indigo-700 dark:text-indigo-300',    dotClass: 'bg-indigo-600 dark:bg-indigo-400' },
+  KEUSAHAWANAN: { labelKey: 'common:module_keusahawanan', fallback: 'Keusahawanan', badgeClass: 'bg-orange-500/12 text-orange-800 dark:text-orange-300',    dotClass: 'bg-orange-600 dark:bg-orange-400' },
+  JPP:          {                                         fallback: 'JPP HQ',       badgeClass: 'bg-teal-600/12 text-[#0F766E] dark:text-[#2DD4BF]',        dotClass: 'bg-[#0F766E] dark:bg-[#2DD4BF]' },
+  SYSTEM:       { labelKey: 'common:module_system',       fallback: 'Sistem',       badgeClass: 'bg-slate-500/12 text-slate-700 dark:text-slate-300',       dotClass: 'bg-slate-500 dark:bg-slate-400' },
+  POLYMART:     {                                         fallback: 'PolyMart',     badgeClass: 'bg-amber-500/12 text-amber-800 dark:text-amber-300',       dotClass: 'bg-amber-600 dark:bg-amber-400' },
+  KAMSIS:       {                                         fallback: 'i-KAMSIS',     badgeClass: 'bg-violet-500/12 text-violet-700 dark:text-violet-300',    dotClass: 'bg-violet-600 dark:bg-violet-400' },
+  KLK:          {                                         fallback: 'KLK',          badgeClass: 'bg-teal-500/12 text-teal-800 dark:text-teal-300',          dotClass: 'bg-teal-600 dark:bg-teal-400' },
+  POLYRIDER:    {                                         fallback: 'PolyRider',    badgeClass: 'bg-amber-500/12 text-amber-800 dark:text-amber-300',       dotClass: 'bg-amber-600 dark:bg-amber-400' },
+  POLYTASK:     {                                         fallback: 'PolyTask',     badgeClass: 'bg-violet-500/12 text-violet-700 dark:text-violet-300',    dotClass: 'bg-violet-600 dark:bg-violet-400' },
+  POLYSUARA:    {                                         fallback: 'PolySuara',    badgeClass: 'bg-rose-500/12 text-rose-700 dark:text-rose-300',          dotClass: 'bg-rose-600 dark:bg-rose-400' },
+  POLYRENT:     {                                         fallback: 'PolyRent',     badgeClass: 'bg-emerald-500/12 text-emerald-800 dark:text-emerald-300', dotClass: 'bg-emerald-600 dark:bg-emerald-400' },
+  MAKMP:        {                                         fallback: 'MAKMP',        badgeClass: 'bg-amber-500/12 text-amber-800 dark:text-amber-300',       dotClass: 'bg-amber-600 dark:bg-amber-400' },
+  FOODBANK:     {                                         fallback: 'Food Bank',    badgeClass: 'bg-teal-500/12 text-teal-800 dark:text-[#2DD4BF]',         dotClass: 'bg-teal-600 dark:bg-[#2DD4BF]' },
 };
 
 function ModuleBadge({ module }: { module: NotificationModule }) {
   const { t } = useTranslation('common');
   const cfg = MODULE_CONFIG[module] ?? MODULE_CONFIG.SYSTEM;
-  const label = module === 'EKPP' ? t('common:club_portal', 'Portal Kelab') : (cfg.label ?? '');
+  const label = cfg.labelKey ? t(cfg.labelKey, cfg.fallback) : cfg.fallback;
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full',
+        'inline-flex items-center gap-1 text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full',
         cfg.badgeClass
       )}
     >
@@ -68,9 +52,23 @@ function ModuleBadge({ module }: { module: NotificationModule }) {
   );
 }
 
-function NotifItem({ notif, onRead }: { notif: AppNotification; onRead: () => void; key?: React.Key }) {
+function NotifItem({
+  notif,
+  onRead,
+  dateLocale,
+  lang,
+}: {
+  notif: AppNotification;
+  onRead: () => void;
+  dateLocale: typeof ms | typeof enUS;
+  lang: string;
+  key?: React.Key;
+}) {
+  const { t } = useTranslation(['common', 'portal']);
   const isUnread = !notif.is_read;
-  const hasLink = !!getNotifLink(notif);
+  const hasLink = !!resolveNotificationLink(notif);
+  const localized = localizeNotification(notif, t, lang);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -4 }}
@@ -97,13 +95,13 @@ function NotifItem({ notif, onRead }: { notif: AppNotification; onRead: () => vo
             'text-xs leading-snug mb-0.5',
             isUnread ? 'font-bold text-foreground' : 'font-medium text-foreground/85'
           )}>
-            {notif.title}
+            {localized.title}
           </p>
-          <p className="text-[11px] text-muted-foreground leading-relaxed line-clamp-2">
-            {notif.message}
+          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+            {localized.message}
           </p>
-          <p className="text-[10px] text-muted-foreground/80 font-medium mt-1.5 uppercase tracking-wider">
-            {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: ms })}
+          <p className="text-xs text-muted-foreground/80 font-medium mt-1.5">
+            {formatDistanceToNow(new Date(notif.created_at), { addSuffix: true, locale: dateLocale })}
           </p>
         </div>
         {hasLink && (
@@ -115,17 +113,20 @@ function NotifItem({ notif, onRead }: { notif: AppNotification; onRead: () => vo
 }
 
 export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'light' }) {
-  const { t } = useTranslation('common');
+  const { t, i18n } = useTranslation(['common', 'portal']);
+  const dateLocale    = i18n.language?.startsWith('en') ? enUS : ms;
   const notifs        = useNotificationStore(state => state.notifs);
   const unreadCount   = useNotificationStore(state => state.unreadCount);
   const isMarkingAll  = useNotificationStore(state => state.isMarkingAll);
   const markRead      = useNotificationStore(state => state.markRead);
   const markAllRead   = useNotificationStore(state => state.markAllRead);
   const navigate      = useNavigate();
+  const [open, setOpen] = useState(false);
 
   const handleNotifClick = (notif: AppNotification) => {
+    setOpen(false);
     void markRead(notif.id);
-    const link = getNotifLink(notif);
+    const link = resolveNotificationLink(notif);
     if (link) navigate(link);
   };
 
@@ -138,7 +139,7 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
   const isDark = variant === 'dark';
 
   return (
-    <Popover>
+    <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="ghost"
@@ -160,7 +161,7 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.92 }}
                 transition={{ duration: 0.15, ease: [0.23, 1, 0.32, 1] }}
-                className="absolute -top-1 -right-1 w-[18px] h-[18px] bg-rose-500 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-surface-sm"
+                className="absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-rose-500 text-white text-xs font-bold leading-none rounded-full flex items-center justify-center shadow-surface-sm"
               >
                 {unreadCount > 9 ? '9+' : unreadCount}
               </motion.span>
@@ -177,10 +178,12 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/70 bg-muted/40 dark:bg-[#0E1116]">
           <div className="flex items-center gap-2">
             <Bell className="w-3.5 h-3.5 text-muted-foreground" />
-            <p className="text-[11px] font-black uppercase tracking-widest text-foreground">Notifikasi</p>
+            <p className="text-xs font-bold uppercase tracking-wider text-foreground">
+              {t('common:notifications', 'Notifikasi')}
+            </p>
             {unreadCount > 0 && (
-              <span className="text-[10px] font-bold bg-rose-500/15 text-rose-700 dark:text-rose-300 px-1.5 py-0.5 rounded-full">
-                {unreadCount} baharu
+              <span className="text-xs font-semibold bg-rose-500/15 text-rose-700 dark:text-rose-300 px-2 py-0.5 rounded-full">
+                {t('common:new_count_badge', { count: unreadCount, defaultValue: `${unreadCount} baharu` })}
               </span>
             )}
           </div>
@@ -189,7 +192,7 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
               onClick={markAllRead}
               disabled={isMarkingAll}
               className={cn(
-                'flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider transition-colors',
+                'flex items-center gap-1 text-xs font-semibold transition-colors cursor-pointer',
                 isMarkingAll
                   ? 'text-muted-foreground/50 cursor-not-allowed'
                   : 'text-muted-foreground hover:text-primary'
@@ -197,12 +200,12 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
             >
               {isMarkingAll ? (
                 <>
-                  <Loader2 className="w-2.5 h-2.5 animate-spin" />
+                  <Loader2 className="w-3 h-3 animate-spin" />
                   <span>{t('common:saving', 'Menyimpan...')}</span>
                 </>
               ) : (
                 <>
-                  <CheckCheck className="w-2.5 h-2.5" />
+                  <CheckCheck className="w-3 h-3" />
                   <span>{t('common:read_all', 'Baca semua')}</span>
                 </>
               )}
@@ -221,17 +224,29 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
             <AnimatePresence initial={false}>
               {todayNotifs.length > 0 && (
                 <React.Fragment key="today">
-                  <p className="px-4 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{t('common:today', 'Hari Ini')}</p>
+                  <p className="px-4 pt-3 pb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('common:today', 'Hari Ini')}</p>
                   {todayNotifs.map((n, i) => (
-                    <NotifItem key={n.id || `today-${i}`} notif={n} onRead={() => handleNotifClick(n)} />
+                    <NotifItem
+                      key={n.id || `today-${i}`}
+                      notif={n}
+                      onRead={() => handleNotifClick(n)}
+                      dateLocale={dateLocale}
+                      lang={i18n.language || 'ms'}
+                    />
                   ))}
                 </React.Fragment>
               )}
               {olderNotifs.length > 0 && (
                 <React.Fragment key="older">
-                  <p className="px-4 pt-3 pb-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{t('common:previous', 'Sebelumnya')}</p>
+                  <p className="px-4 pt-3 pb-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">{t('common:previous', 'Sebelumnya')}</p>
                   {olderNotifs.map((n, i) => (
-                    <NotifItem key={n.id || `older-${i}`} notif={n} onRead={() => handleNotifClick(n)} />
+                    <NotifItem
+                      key={n.id || `older-${i}`}
+                      notif={n}
+                      onRead={() => handleNotifClick(n)}
+                      dateLocale={dateLocale}
+                      lang={i18n.language || 'ms'}
+                    />
                   ))}
                 </React.Fragment>
               )}
@@ -243,11 +258,14 @@ export function NotificationBell({ variant = 'light' }: { variant?: 'dark' | 'li
         {notifs.length > 0 && (
           <div className="border-t border-border/70 px-4 py-2.5 bg-muted/25 dark:bg-[#0E1116]/60">
             <button
-              onClick={() => navigate('/notifikasi')}
-              className="w-full flex items-center justify-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors py-0.5"
+              onClick={() => {
+                setOpen(false);
+                navigate('/notifikasi');
+              }}
+              className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-primary transition-colors py-0.5 cursor-pointer"
             >
               <span>{t('common:view_all_notifications', 'Lihat Semua Notifikasi')}</span>
-              <ArrowRight className="w-2.5 h-2.5" />
+              <ArrowRight className="w-3 h-3" />
             </button>
           </div>
         )}
