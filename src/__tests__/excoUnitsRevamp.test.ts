@@ -42,13 +42,14 @@ describe('JPP EXCO Units Revamp — Kontrak Sistem & Integriti Dashboard', () =>
     }
   });
 
-  it('unit Multimedia, Kolaborasi, dan KLS menggunakan token tabular numbers font-mono tabular-nums font-black', () => {
+  it('unit Multimedia, Kolaborasi, dan KLS menggunakan token tabular numbers font-mono tabular-nums font-bold', () => {
     const targetUnits = ['MultimediaUnitDashboard.tsx', 'KolaborasiUnitDashboard.tsx', 'KlsUnitDashboard.tsx', 'KppUnitDashboard.tsx'];
     for (const file of targetUnits) {
       const content = readFileSync(join(UNITS_DIR, file), 'utf8');
       expect(content, `${file} mesti mengandungi class font-mono`).toContain('font-mono');
       expect(content, `${file} mesti mengandungi class tabular-nums`).toContain('tabular-nums');
-      expect(content, `${file} mesti mengandungi class font-black`).toContain('font-black');
+      expect(content, `${file} mesti mengandungi class font-bold`).toContain('font-bold');
+      expect(content, `${file} tidak boleh menggunakan font-black`).not.toContain('font-black');
     }
   });
 

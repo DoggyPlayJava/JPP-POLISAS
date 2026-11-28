@@ -47,8 +47,8 @@ function StatCard({ label, value, icon: Icon, color, delay = 0, onClick }: any) 
         <Icon className="w-4 h-4" style={{ color }} />
       </div>
       <div>
-        <p className="text-3xl font-black text-slate-900 dark:text-white leading-none">{value}</p>
-        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-500 dark:text-white/35 mt-1">{label}</p>
+        <p className="text-3xl font-bold text-slate-900 dark:text-white leading-none">{value}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.15em] text-slate-500 dark:text-white/35 mt-1">{label}</p>
       </div>
     </motion.div>
   );
@@ -144,10 +144,10 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
       <div className="space-y-4 py-6">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="h-28 rounded-[1.5rem] bg-slate-200/60 dark:bg-white/[0.03] animate-pulse border border-slate-200 dark:border-white/[0.04]" />
+            <div key={i} className="h-28 rounded-[1.5rem] bg-slate-200/60 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.04]" />
           ))}
         </div>
-        <div className="h-48 rounded-[2rem] bg-slate-200/60 dark:bg-white/[0.03] animate-pulse border border-slate-200 dark:border-white/[0.04]" />
+        <div className="h-48 rounded-[2rem] bg-slate-200/60 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.04]" />
       </div>
     );
   }
@@ -199,16 +199,16 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
         >
           <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
           <div className="flex-1">
-            <p className="text-xs font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest">
+            <p className="text-xs font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-widest">
               {t('jpp:generic_reports_rejected', '{{count}} laporan ditolak', { count: stats.laporanDitolak })}
             </p>
-            <p className="text-[11px] text-rose-700/70 dark:text-rose-300/60 font-medium mt-0.5">
+            <p className="text-xs text-rose-700/70 dark:text-rose-300/60 font-medium mt-0.5">
               {t('jpp:generic_check_rejection_note', 'Sila semak nota penolakan dan kemukakan semula laporan.')}
             </p>
           </div>
           <button
             onClick={() => navigate(`/exco/${unitLower}/laporan`)}
-            className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-colors shrink-0"
+            className="text-xs font-semibold uppercase tracking-wider text-rose-600 dark:text-rose-400 hover:text-rose-700 dark:hover:text-rose-300 transition-colors shrink-0"
           >
             {t('jpp:generic_review_arrow', 'Semak →')}
           </button>
@@ -221,10 +221,10 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
         {/* Aktiviti terkini */}
         <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-sm p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('jpp:generic_recent_activities', 'Aktiviti Terkini')}</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">{t('jpp:generic_recent_activities', 'Aktiviti Terkini')}</h3>
             <button
               onClick={() => navigate(`/exco/${unitLower}/aktiviti`)}
-              className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 transition-opacity hover:opacity-70"
+              className="text-xs font-semibold uppercase tracking-widest flex items-center gap-1 transition-opacity hover:opacity-70"
               style={{ color: themeColor }}
             >
               {t('jpp:generic_all', 'Semua')} <ArrowRight className="w-3 h-3" />
@@ -233,11 +233,11 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
 
           {recentActivities.length === 0 ? (
             <div className="py-8 text-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">{t('jpp:generic_no_activities_yet', 'Tiada aktiviti lagi')}</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-white/15">{t('jpp:generic_no_activities_yet', 'Tiada aktiviti lagi')}</p>
               {(isExco || isSuperAdmin) && (
                 <button
                   onClick={() => navigate(`/exco/${unitLower}/aktiviti`)}
-                  className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/25 hover:text-slate-800 dark:hover:text-white/50 underline underline-offset-2 mt-2 transition-all"
+                  className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/25 hover:text-slate-800 dark:hover:text-white/50 underline underline-offset-2 mt-2 transition-all"
                 >
                   {t('jpp:generic_add_activity', 'Tambah Aktiviti')}
                 </button>
@@ -257,16 +257,16 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
                       style={{ background: sc.color }}
                     />
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black text-slate-900 dark:text-white leading-tight line-clamp-1">{act.title}</p>
+                      <p className="text-xs font-semibold text-slate-900 dark:text-white leading-tight line-clamp-1">{act.title}</p>
                       <div className="flex items-center gap-3 mt-1">
                         {act.start_date && (
-                          <span className="text-[10px] text-slate-400 dark:text-white/25 font-bold flex items-center gap-1">
+                          <span className="text-xs text-slate-400 dark:text-white/25 font-bold flex items-center gap-1">
                             <Calendar className="w-2.5 h-2.5" />
                             {formatDate(act.start_date)}
                           </span>
                         )}
                         {act.location && (
-                          <span className="text-[10px] text-slate-400 dark:text-white/25 font-bold flex items-center gap-1 truncate">
+                          <span className="text-xs text-slate-400 dark:text-white/25 font-bold flex items-center gap-1 truncate">
                             <MapPin className="w-2.5 h-2.5 shrink-0" />
                             <span className="truncate">{act.location}</span>
                           </span>
@@ -274,7 +274,7 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
                       </div>
                     </div>
                     <span
-                      className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full shrink-0"
+                      className="text-xs font-semibold uppercase px-2 py-0.5 rounded-full shrink-0"
                       style={{ background: sc.bg, color: sc.color }}
                     >
                       {sc.label}
@@ -289,10 +289,10 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
         {/* Laporan terkini */}
         <div className="rounded-[2rem] bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] shadow-sm p-5 space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">{t('jpp:generic_recent_reports', 'Laporan Terkini')}</h3>
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-white/40">{t('jpp:generic_recent_reports', 'Laporan Terkini')}</h3>
             <button
               onClick={() => navigate(isMT ? `/jpp/semak-laporan-exco/${unitLower}` : `/exco/${unitLower}/laporan`)}
-              className="text-[10px] font-black uppercase tracking-widest flex items-center gap-1 transition-opacity hover:opacity-70"
+              className="text-xs font-semibold uppercase tracking-widest flex items-center gap-1 transition-opacity hover:opacity-70"
               style={{ color: themeColor }}
             >
               {t('jpp:generic_all', 'Semua')} <ArrowRight className="w-3 h-3" />
@@ -301,7 +301,7 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
 
           {recentReports.length === 0 ? (
             <div className="py-8 text-center">
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/15">{t('jpp:generic_no_reports_yet', 'Tiada laporan lagi')}</p>
+              <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-white/15">{t('jpp:generic_no_reports_yet', 'Tiada laporan lagi')}</p>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -319,11 +319,11 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
                       <FileText className="w-3.5 h-3.5" style={{ color: themeColor }} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-black text-slate-900 dark:text-white line-clamp-1 leading-tight">{r.file_name}</p>
-                      <p className="text-[10px] text-slate-400 dark:text-white/25 font-bold mt-0.5">{formatDate(r.created_at)}</p>
+                      <p className="text-xs font-semibold text-slate-900 dark:text-white line-clamp-1 leading-tight">{r.file_name}</p>
+                      <p className="text-xs text-slate-400 dark:text-white/25 font-bold mt-0.5">{formatDate(r.created_at)}</p>
                     </div>
                     <span
-                      className="text-[9px] font-black uppercase px-2 py-0.5 rounded-full shrink-0"
+                      className="text-xs font-semibold uppercase px-2 py-0.5 rounded-full shrink-0"
                       style={{ background: sc.bg, color: sc.color }}
                     >
                       {sc.label}
@@ -338,7 +338,7 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
 
       {/* ── Quick actions ─── */}
       <div>
-        <p className="text-[9px] font-black uppercase tracking-[0.25em] text-slate-400 dark:text-white/25 mb-3">{t('jpp:generic_quick_actions', 'Tindakan Pantas')}</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-400 dark:text-white/25 mb-3">{t('jpp:generic_quick_actions', 'Tindakan Pantas')}</p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {/* Exco: Tambah Aktiviti + Jana Laporan */}
           {(isExco || isSuperAdmin) && (
@@ -374,7 +374,7 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
 
       {/* ── Status bar ─── */}
       <div className="rounded-2xl px-5 py-4 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] shadow-sm flex flex-wrap gap-6 items-center">
-        <div className="text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/25 shrink-0">{t('jpp:generic_status_label', 'Status')}</div>
+        <div className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 dark:text-white/25 shrink-0">{t('jpp:generic_status_label', 'Status')}</div>
         {[
           { label: t('jpp:generic_status_planning', 'Perancangan'), value: stats.perancangan, color: '#60a5fa' },
           { label: t('jpp:generic_status_active', 'Aktif'),       value: stats.aktif,       color: '#34d399' },
@@ -383,13 +383,13 @@ export function ExcoGenericDashboard({ excoUnit, themeColor, excoLabel, initialL
         ].map(s => (
           <div key={s.label} className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full" style={{ background: s.color }} />
-            <span className="text-[10px] font-black text-slate-500 dark:text-white/30">{s.label}</span>
-            <span className="text-[10px] font-black" style={{ color: s.color }}>{s.value}</span>
+            <span className="text-xs font-semibold text-slate-500 dark:text-white/30">{s.label}</span>
+            <span className="text-xs font-semibold" style={{ color: s.color }}>{s.value}</span>
           </div>
         ))}
         <button
           onClick={load}
-          className="ml-auto text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20 hover:text-slate-700 dark:hover:text-white/50 flex items-center gap-1.5 transition-all"
+          className="ml-auto text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-white/20 hover:text-slate-700 dark:hover:text-white/50 flex items-center gap-1.5 transition-all"
         >
           <RefreshCw className="w-3 h-3" /> {t('jpp:generic_refresh', 'Segarkan')}
         </button>
@@ -412,8 +412,8 @@ function QuickAction({ label, description, icon: Icon, color, onClick }: any) {
         <Icon className="w-4.5 h-4.5" style={{ color }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-xs font-black text-slate-900 dark:text-white leading-tight">{label}</p>
-        <p className="text-[10px] text-slate-500 dark:text-white/30 font-medium mt-0.5 line-clamp-1">{description}</p>
+        <p className="text-xs font-semibold text-slate-900 dark:text-white leading-tight">{label}</p>
+        <p className="text-xs text-slate-500 dark:text-white/30 font-medium mt-0.5 line-clamp-1">{description}</p>
       </div>
       <ChevronRight className="w-4 h-4 text-slate-300 dark:text-white/15 group-hover:text-slate-600 dark:group-hover:text-white/40 group-hover:translate-x-0.5 transition-all shrink-0" />
     </button>

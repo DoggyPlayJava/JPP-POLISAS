@@ -70,7 +70,7 @@ export function KamsisKlkStatsWidget({ themeColor, initialLoading = typeof windo
 
   if (loading) {
     return (
-      <div className="h-32 rounded-[2rem] border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] flex items-center justify-center animate-pulse">
+      <div className="h-32 rounded-[2rem] border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] flex items-center justify-center">
         <Loader2 className="w-6 h-6 text-slate-400 dark:text-white/20 animate-spin" />
       </div>
     );
@@ -87,10 +87,10 @@ export function KamsisKlkStatsWidget({ themeColor, initialLoading = typeof windo
             <Building2 className="w-5 h-5" style={{ color: themeColor }} />
           </div>
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-900 dark:text-white">
               {t('jpp:kamsis_widget_title', 'Status i-KAMSIS')}
             </h3>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold">
+            <p className="text-xs text-slate-500 dark:text-white/40 font-bold">
               {t('jpp:kamsis_widget_subtitle', 'Permohonan Sesi Semasa')}
             </p>
           </div>
@@ -113,10 +113,10 @@ export function KamsisKlkStatsWidget({ themeColor, initialLoading = typeof windo
             <Home className="w-5 h-5" style={{ color: '#60A5FA' }} />
           </div>
           <div>
-            <h3 className="text-xs font-black uppercase tracking-widest text-slate-900 dark:text-white">
+            <h3 className="text-xs font-bold uppercase tracking-widest text-slate-900 dark:text-white">
               {t('jpp:klk_widget_title', 'Taburan Kediaman')}
             </h3>
-            <p className="text-[10px] text-slate-500 dark:text-white/40 font-bold">
+            <p className="text-xs text-slate-500 dark:text-white/40 font-bold">
               {t('jpp:klk_widget_subtitle', 'Luar Kampus (KLK) vs Asrama')}
             </p>
           </div>
@@ -138,8 +138,8 @@ function StatMini({ label, val, color, icon: Icon }: any) {
         <Icon className="w-3.5 h-3.5" style={{ color }} />
       </div>
       <div>
-        <p className="text-lg font-black text-slate-900 dark:text-white leading-none">{val}</p>
-        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mt-1">{label}</p>
+        <p className="text-lg font-bold text-slate-900 dark:text-white leading-none">{val}</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40 mt-1">{label}</p>
       </div>
     </div>
   );

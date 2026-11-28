@@ -250,14 +250,14 @@ export function MultimediaUnitDashboard() {
         {/* Kad 1: Hebahan Aktif di Portal */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
               {t('jpp:mm_card_active_announcements', 'Hebahan Aktif')}
             </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
               <Megaphone className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-black font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
+          <div className="text-3xl font-bold font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
             {stats.activeAnnouncements}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
@@ -268,14 +268,14 @@ export function MultimediaUnitDashboard() {
         {/* Kad 2: Aset Brandkit */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
               {t('jpp:mm_card_brandkit_assets', 'Aset Brandkit')}
             </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <Palette className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-black font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
+          <div className="text-3xl font-bold font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
             {stats.brandkitAssets}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
@@ -286,14 +286,14 @@ export function MultimediaUnitDashboard() {
         {/* Kad 3: Saluran WhatsApp Blast */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
               {t('jpp:mm_card_quick_broadcast', 'Format Siaran Pantas')}
             </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
               <MessageSquare className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-black font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
+          <div className="text-3xl font-bold font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
             {t('jpp:mm_card_one_click', '1-Klik')}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
@@ -304,14 +304,14 @@ export function MultimediaUnitDashboard() {
         {/* Kad 4: Aktiviti Berdaftar */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
               {t('jpp:mm_card_unit_activities', 'Aktiviti Unit')}
             </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
               <FileText className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-black font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
+          <div className="text-3xl font-bold font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
             {stats.activitiesCount}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
@@ -321,7 +321,7 @@ export function MultimediaUnitDashboard() {
       </div>
 
       {/* ── Sub Navigation Tabs ── */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-white/[0.06] pb-3 overflow-x-auto scrollbar-none">
+      <div className="flex flex-nowrap items-center gap-2 border-b border-slate-200 dark:border-white/[0.06] pb-3 overflow-x-auto scrollbar-hide">
         {[
           { key: 'siaran', label: t('jpp:mm_tab_portal_broadcast', 'Pusat Siaran & Hebahan Portal'), icon: Megaphone },
           { key: 'brandkit', label: t('jpp:mm_tab_brandkit', 'Hab Brandkit & Aset Rasmi'), icon: Palette },
@@ -335,7 +335,7 @@ export function MultimediaUnitDashboard() {
               key={tab.key}
               onClick={() => setSubTab(tab.key as SubTab)}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap active:scale-[0.98]',
+                'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-[transform,opacity,background-color,color] duration-200 shrink-0 whitespace-nowrap active:scale-[0.98]',
                 isActive
                   ? 'bg-orange-500 text-white shadow-xs'
                   : 'bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/[0.05]'
@@ -370,9 +370,9 @@ export function MultimediaUnitDashboard() {
                     key={st}
                     onClick={() => setAnnounceFilter(st)}
                     className={cn(
-                      'px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider transition-all',
+                      'px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all',
                       announceFilter === st
-                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900'
+                        ? 'bg-[#0F766E] text-white dark:bg-[#2DD4BF] dark:text-[#090B0E]'
                         : 'bg-slate-100 dark:bg-white/[0.04] text-slate-600 dark:text-white/60 hover:bg-slate-200 dark:hover:bg-white/[0.08]'
                     )}
                   >
@@ -383,7 +383,7 @@ export function MultimediaUnitDashboard() {
 
               <button
                 onClick={() => navigate('/jpp/announcements')}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider bg-orange-500 hover:bg-orange-600 text-white transition-colors shrink-0 shadow-xs"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-orange-500 hover:bg-orange-600 text-white transition-colors shrink-0 shadow-xs"
               >
                 <span>{t('jpp:mm_manage_all_announcements', 'Urus Penuh Hebahan')}</span>
                 <ExternalLink className="w-3.5 h-3.5" />
@@ -395,7 +395,7 @@ export function MultimediaUnitDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">
                   {t('jpp:mm_announcements_list_title', 'Senarai Hebahan & Poster Siswa')}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
@@ -429,13 +429,13 @@ export function MultimediaUnitDashboard() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-black text-sm text-slate-900 dark:text-white">{ann.title}</h4>
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-white">{ann.title}</h4>
                           {ann.is_active ? (
-                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
+                            <span className="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center gap-1">
                               <CheckCircle2 className="w-3 h-3" /> {t('jpp:mm_live_on_portal', 'Live di Portal')}
                             </span>
                           ) : (
-                            <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">
+                            <span className="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">
                               {t('jpp:mm_archive_badge', 'Arkib')}
                             </span>
                           )}
@@ -498,14 +498,14 @@ export function MultimediaUnitDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">
                   {t('jpp:mm_logos_pack_title', 'Pek Logo Rasmi Institusi (Format Telus HD)')}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
                   {t('jpp:mm_logos_pack_desc', 'Gunakan aset vektor dan PNG resolusi tinggi ini untuk memastikan kualiti poster kelab mematuhi piawaian.')}
                 </p>
               </div>
-              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
+              <span className="text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20">
                 Piawaian Identiti
               </span>
             </div>
@@ -521,11 +521,11 @@ export function MultimediaUnitDashboard() {
                       <img src={logo.downloadUrl !== "#" ? logo.downloadUrl : "/polisas-logo.png"} alt={logo.name} className="w-full h-full object-contain" />
                     </div>
                     <div>
-                      <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 dark:text-orange-400">
+                      <span className="text-xs font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400">
                         {logo.category}
                       </span>
-                      <h4 className="font-black text-xs text-slate-900 dark:text-white leading-tight">{logo.name}</h4>
-                      <p className="text-[11px] font-mono text-slate-500 dark:text-white/40 mt-0.5">
+                      <h4 className="font-bold text-xs text-slate-900 dark:text-white leading-tight">{logo.name}</h4>
+                      <p className="text-xs font-mono text-slate-500 dark:text-white/40 mt-0.5">
                         {logo.format} · {logo.resolution}
                       </p>
                     </div>
@@ -535,13 +535,13 @@ export function MultimediaUnitDashboard() {
                     <a
                       href={logo.downloadUrl}
                       download
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider bg-slate-900 text-white dark:bg-white dark:text-slate-900 shrink-0 shadow-xs hover:opacity-90 active:scale-[0.98] transition-all"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-[#0F766E] text-white dark:bg-[#2DD4BF] dark:text-[#090B0E] shrink-0 shadow-xs hover:opacity-90 active:scale-[0.98] transition-all"
                     >
                       <Download className="w-3.5 h-3.5" />
                       <span>{t('jpp:mm_download_asset_btn', 'Muat Turun')}</span>
                     </a>
                   ) : (
-                    <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-white/[0.04] text-slate-400 dark:text-white/30 shrink-0 cursor-not-allowed">
+                    <span className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-slate-100 dark:bg-white/[0.04] text-slate-400 dark:text-white/30 shrink-0 cursor-not-allowed">
                       <Clock className="w-3.5 h-3.5" />
                       <span>{t('jpp:mm_coming_soon', 'Akan Datang')}</span>
                     </span>
@@ -553,7 +553,7 @@ export function MultimediaUnitDashboard() {
 
           {/* Palet Warna Rasmi Institusi */}
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
-            <h3 className="font-black text-base text-slate-900 dark:text-white mb-1">
+            <h3 className="font-bold text-base text-slate-900 dark:text-white mb-1">
               {t('jpp:mm_palette_title', 'Palet Kod Warna Rasmi JPP & Institusi')}
             </h3>
             <p className="text-xs text-slate-500 dark:text-white/40 mb-4">
@@ -573,9 +573,9 @@ export function MultimediaUnitDashboard() {
                       style={{ background: col.hex }}
                     />
                     <div>
-                      <p className="font-black text-xs text-slate-900 dark:text-white">{col.name}</p>
-                      <p className="text-[11px] font-mono text-slate-500 dark:text-white/40 mt-0.5">{col.hex}</p>
-                      <p className="text-[10px] text-slate-400 dark:text-white/30 truncate max-w-[170px] mt-0.5">{col.usage}</p>
+                      <p className="font-semibold text-xs text-slate-900 dark:text-white">{col.name}</p>
+                      <p className="text-xs font-mono text-slate-500 dark:text-white/40 mt-0.5">{col.hex}</p>
+                      <p className="text-xs text-slate-400 dark:text-white/30 truncate max-w-[170px] mt-0.5">{col.usage}</p>
                     </div>
                   </div>
                   <Copy className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-900 dark:group-hover:text-white transition-colors shrink-0" />
@@ -593,7 +593,7 @@ export function MultimediaUnitDashboard() {
             {/* Form Input */}
             <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs space-y-4">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">
                   {t('jpp:mm_program_form_title', 'Borang Butiran Program')}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
@@ -603,7 +603,7 @@ export function MultimediaUnitDashboard() {
 
               <div className="space-y-3">
                 <div>
-                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
                     {t('jpp:mm_field_program_name', 'Nama Program / Hebahan')}
                   </label>
                   <input
@@ -616,7 +616,7 @@ export function MultimediaUnitDashboard() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
                       {t('jpp:mm_field_date', 'Tarikh Pelaksanaan')}
                     </label>
                     <input
@@ -627,7 +627,7 @@ export function MultimediaUnitDashboard() {
                     />
                   </div>
                   <div>
-                    <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
+                    <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
                       {t('jpp:mm_field_time', 'Waktu Program')}
                     </label>
                     <input
@@ -640,7 +640,7 @@ export function MultimediaUnitDashboard() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
                     {t('jpp:mm_field_location', 'Lokasi / Tempat')}
                   </label>
                   <input
@@ -652,7 +652,7 @@ export function MultimediaUnitDashboard() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
                     {t('jpp:mm_field_organizer', 'Pihak Penganjur')}
                   </label>
                   <input
@@ -664,7 +664,7 @@ export function MultimediaUnitDashboard() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-white/40 mb-1 block">
                     {t('jpp:mm_field_link', 'Pautan Pendaftaran / Portal')}
                   </label>
                   <input
@@ -683,11 +683,11 @@ export function MultimediaUnitDashboard() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <Smartphone className="w-4 h-4 text-emerald-500" />
-                    <h3 className="font-black text-sm text-slate-900 dark:text-white">
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-white">
                       {t('jpp:mm_preview_whatsapp_title', 'Pratonton Teks WhatsApp')}
                     </h3>
                   </div>
-                  <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  <span className="text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                     {t('jpp:mm_ready_for_broadcast', 'Sedia Untuk Sebaran')}
                   </span>
                 </div>
@@ -699,7 +699,7 @@ export function MultimediaUnitDashboard() {
 
               <button
                 onClick={copyWhatsApp}
-                className="mt-4 w-full py-3 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs active:scale-[0.98] transition-all"
+                className="mt-4 w-full py-3 rounded-xl font-semibold text-xs uppercase tracking-wider flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs active:scale-[0.98] transition-all"
               >
                 {copiedCw ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                 <span>{copiedCw ? t('jpp:mm_text_copied', 'Teks Berjaya Disalin!') : t('jpp:mm_copy_text_btn', 'Salin Teks Ke Papan Klip')}</span>
@@ -715,7 +715,7 @@ export function MultimediaUnitDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
             <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">
                   {t('jpp:mm_records_title', 'Rekod Pentadbiran Exco Multimedia')}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
@@ -725,7 +725,7 @@ export function MultimediaUnitDashboard() {
               <button
                 onClick={loadData}
                 disabled={loading}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black uppercase tracking-wider bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-white/70 hover:bg-slate-200 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-slate-100 dark:bg-white/[0.04] text-slate-700 dark:text-white/70 hover:bg-slate-200 transition-colors"
               >
                 <RefreshCw className={cn('w-3.5 h-3.5', loading && 'animate-spin')} />
                 {t('jpp:mm_reload_records', 'Segar Semula')}
@@ -739,7 +739,7 @@ export function MultimediaUnitDashboard() {
             ) : (
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/40 mb-3">
                     {t('jpp:mm_registered_activities', 'Aktiviti Berdaftar ({{count}})', { count: activities.length })}
                   </h4>
                   {activities.length === 0 ? (
@@ -754,12 +754,12 @@ export function MultimediaUnitDashboard() {
                           className="p-3.5 rounded-xl border border-slate-200 dark:border-white/[0.04] bg-slate-50/50 dark:bg-white/[0.01] flex items-center justify-between gap-4"
                         >
                           <div>
-                            <p className="font-black text-xs text-slate-900 dark:text-white">{act.title}</p>
-                            <p className="text-[11px] font-mono text-slate-500 dark:text-white/40 mt-0.5">
+                            <p className="font-semibold text-xs text-slate-900 dark:text-white">{act.title}</p>
+                            <p className="text-xs font-mono text-slate-500 dark:text-white/40 mt-0.5">
                               {act.start_date || t('jpp:mm_date_unset', 'Tarikh belum ditetapkan')} · {act.location || t('jpp:mm_location_unset', 'Lokasi belum ditetapkan')}
                             </p>
                           </div>
-                          <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-200 dark:bg-white/[0.06] text-slate-700 dark:text-white/70">
+                          <span className="text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md bg-slate-200 dark:bg-white/[0.06] text-slate-700 dark:text-white/70">
                             {act.status}
                           </span>
                         </div>
@@ -769,7 +769,7 @@ export function MultimediaUnitDashboard() {
                 </div>
 
                 <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-white/40 mb-3">
+                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/40 mb-3">
                     {t('jpp:mm_official_reports', 'Laporan Rasmi ({{count}})', { count: reports.length })}
                   </h4>
                   {reports.length === 0 ? (
@@ -786,13 +786,13 @@ export function MultimediaUnitDashboard() {
                           <div className="flex items-center gap-2.5">
                             <FileText className="w-4 h-4 text-orange-500 shrink-0" />
                             <div>
-                              <p className="font-black text-xs text-slate-900 dark:text-white">{rep.file_name}</p>
-                              <p className="text-[11px] font-mono text-slate-500 dark:text-white/40 mt-0.5">
+                              <p className="font-semibold text-xs text-slate-900 dark:text-white">{rep.file_name}</p>
+                              <p className="text-xs font-mono text-slate-500 dark:text-white/40 mt-0.5">
                                 {rep.created_at ? t('jpp:mm_uploaded_on', 'Dimuat naik pada {{date}}', { date: format(parseISO(rep.created_at), 'dd MMM yyyy', { locale: ms }) }) : '—'}
                               </p>
                             </div>
                           </div>
-                          <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                          <span className="text-xs font-semibold uppercase tracking-wider px-2.5 py-1 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                             {rep.status}
                           </span>
                         </div>

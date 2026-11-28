@@ -5754,6 +5754,15 @@ Garis panduan wajib bagi semua kerja UI akan datang (termasuk halaman awam, port
   - `JppHomePage.tsx`, `JppOverviewPage.tsx`, `JppMembersPage.tsx`, `JppTakwimPage.tsx`, `JppUsersPage.tsx`, `JppLogsPage.tsx`, `JppNexusPage.tsx`, dan `JppSettingsPage.tsx`: menghapuskan semua `font-black`/`font-extrabold` kepada `font-bold`/`font-semibold` dan menggantikan teks mikro `text-[8px]`–`text-[11px]` kepada `text-xs` minimum boleh baca.
   - Membersihkan baki kebocoran kecil: membuang kilauan neon `shadow-[0_0_8px_rgba(52,211,153,0.7)]` & titik `animate-pulse` pada `JppHomePage.tsx`, menggantikan 4 baki `dark:bg-[#0f0f13]` kepada `dark:bg-[#13171D]` pada `JppMembersPage.tsx`, serta menukar baki `dark:bg-slate-900`/`dark:border-slate-800` kepada *Obsidian Carbon* pada `JppTakwimPage.tsx`, sambil mengekalkan 100% kontrak `jppCockpitEarthyMinimal.test.ts` (sifar emoji mentah & sifar sengkang `—`/`–`) dan `JppPhase2Redesign.test.tsx`.
 
+---
+
+## 51. Elevasi JPP HQ Fasa C — Penyeragaman 9 Papan Pemuka Unit Exco, Rel Tab Mudah Alih 1-Baris & Pariti BM Telemetri (Nov 2026)
+
+- **Penyelarasan Tipografi, Permukaan *Obsidian Carbon* & Kebersihan GPU (12 Fail Unit Exco di `src/pages/jpp/units/`):**
+  - Kesemua 9 papan pemuka unit (`AkademikUnitDashboard`, `KebajikanUnitDashboard`, `KeusahawananUnitDashboard`, `KkUnitDashboard`, `KlsUnitDashboard`, `KolaborasiUnitDashboard`, `KppUnitDashboard`, `MultimediaUnitDashboard`, `SrkUnitDashboard`) serta komponen sokongan (`ExcoGenericDashboard`, `EventCouponPanel`, `KamsisKlkStatsWidget`) telah diseragamkan kepada skala tipografi 4-berat (`font-normal`..`font-bold`, sifar `font-black`/`font-extrabold`, minimum `text-xs`), sifar `animate-ping`/`animate-pulse` hiasan, dan permukaan *Obsidian Carbon* (`#0E1116`/`#13171D`/`#252B35`/`#2DD4BF`) tanpa mengubah logik perniagaan atau kuiri Supabase.
+  - Bar tab navigasi unit (terutamanya `AkademikUnitDashboard`, `KebajikanUnitDashboard`, `KkUnitDashboard`, `KlsUnitDashboard`, `KppUnitDashboard`, `MultimediaUnitDashboard`, `KolaborasiUnitDashboard`, `KeusahawananUnitDashboard`) diseragamkan kepada rel pil satu baris boleh skrol melintang pada mudah alih (`flex flex-nowrap overflow-x-auto scrollbar-hide` dengan butang `shrink-0 whitespace-nowrap`) supaya tiada pembalutan berbilang baris pada `393×852`.
+  - Membaiki ucapan BM Telemetri `telemetry_rail_good_morning` dalam `src/locales/ms/jpp.json` kepada `"Selamat pagi,"` sambil mengekalkan pariti 100% dengan `src/locales/en/jpp.json` (`"Good morning,"`), dan mengemas kini `src/__tests__/excoUnitsRevamp.test.ts` kepada `font-bold` + penguatkuasaan sifar `font-black`.
+
 
 
 

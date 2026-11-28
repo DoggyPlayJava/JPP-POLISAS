@@ -188,7 +188,7 @@ export function EventCouponPanel() {
       <div className="flex flex-wrap items-center gap-3">
         <div className="flex items-center gap-2">
           <Ticket className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-          <p className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/40">
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 dark:text-white/40">
             {t('jpp:coupon_title', 'Kupon / Voucher Acara')}
           </p>
         </div>
@@ -196,14 +196,14 @@ export function EventCouponPanel() {
           <div className="flex items-center gap-2 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-xl px-3 h-10 shadow-sm">
             <Calendar className="w-3.5 h-3.5 text-slate-400 dark:text-white/40" />
             <select value={eventId} onChange={e => setEventId(e.target.value)}
-              className="bg-transparent text-xs font-black text-slate-900 dark:text-white outline-none max-w-[220px]">
+              className="bg-transparent text-xs font-semibold text-slate-900 dark:text-white outline-none max-w-[220px]">
               {events.map(ev => (
-                <option key={ev.id} value={ev.id} className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">{ev.title}</option>
+                <option key={ev.id} value={ev.id} className="bg-white dark:bg-[#13171D] text-slate-900 dark:text-[#F1F5F9]">{ev.title}</option>
               ))}
             </select>
           </div>
           <button onClick={openCreate}
-            className="h-10 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all">
+            className="h-10 px-4 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-semibold uppercase tracking-wider flex items-center gap-1.5 shadow-sm transition-all">
             <Plus className="w-3.5 h-3.5" /> {t('jpp:coupon_create_btn', 'Cipta Kupon')}
           </button>
           <button onClick={() => { loadCoupons(eventId); loadClaims(eventId); }}
@@ -216,29 +216,29 @@ export function EventCouponPanel() {
       {/* Statistik keseluruhan acara */}
       <div className="grid grid-cols-3 gap-4">
         <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-4 shadow-sm">
-          <p className="text-[10px] font-black uppercase tracking-widest text-amber-500 dark:text-amber-400">
+          <p className="text-xs font-semibold uppercase tracking-widest text-amber-500 dark:text-amber-400">
             {t('jpp:coupon_total_claims', 'Jumlah Claim')}
           </p>
-          <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{totalUses}</p>
-          <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1">
+          <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{totalUses}</p>
+          <p className="text-xs text-slate-500 dark:text-white/40 mt-1">
             {t('jpp:coupon_out_of_cap', 'daripada {{cap}} had', { cap: totalCap || t('jpp:coupon_unlimited', '∞') })}
           </p>
         </div>
         <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-4 shadow-sm">
-          <p className="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+          <p className="text-xs font-semibold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
             {t('jpp:coupon_discount_given', 'Nilai Diskaun Diberi')}
           </p>
-          <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{fmtRM(claimedRM)}</p>
-          <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1">
+          <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{fmtRM(claimedRM)}</p>
+          <p className="text-xs text-slate-500 dark:text-white/40 mt-1">
             {t('jpp:coupon_per_claim_note', 'jumlah RM5.00 per claim')}
           </p>
         </div>
         <div className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] rounded-2xl p-4 shadow-sm">
-          <p className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">
+          <p className="text-xs font-semibold uppercase tracking-widest text-blue-600 dark:text-blue-400">
             {t('jpp:coupon_businesses_involved', 'Perniagaan Terlibat')}
           </p>
-          <p className="text-3xl font-black text-slate-900 dark:text-white mt-1">{byBusiness.length}</p>
-          <p className="text-[10px] text-slate-500 dark:text-white/40 mt-1">
+          <p className="text-3xl font-bold text-slate-900 dark:text-white mt-1">{byBusiness.length}</p>
+          <p className="text-xs text-slate-500 dark:text-white/40 mt-1">
             {t('jpp:coupon_booths_used', 'gerai dah guna kupon')}
           </p>
         </div>
@@ -252,10 +252,10 @@ export function EventCouponPanel() {
       ) : coupons.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-white/[0.02] border border-dashed border-slate-200 dark:border-white/10 rounded-2xl shadow-sm">
           <Ticket className="w-10 h-10 text-slate-300 dark:text-white/20 mx-auto mb-3" />
-          <p className="text-sm font-black text-slate-700 dark:text-white/60">
+          <p className="text-sm font-bold text-slate-700 dark:text-white/60">
             {t('jpp:coupon_empty_for_event', 'Tiada kupon untuk {{event}}', { event: selectedEvent?.title ?? t('jpp:coupon_this_event', 'acara ini') })}
           </p>
-          <p className="text-[11px] text-slate-400 dark:text-white/30 mt-1">
+          <p className="text-xs text-slate-400 dark:text-white/30 mt-1">
             {t('jpp:coupon_empty_cta', 'Klik "Cipta Kupon" untuk buat voucher baharu')}
           </p>
         </div>
@@ -273,20 +273,20 @@ export function EventCouponPanel() {
                   </div>
                   <div className="flex-1 min-w-[160px]">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-black text-slate-900 dark:text-white tracking-wider">{c.code}</p>
+                      <p className="text-sm font-bold text-slate-900 dark:text-white tracking-wider">{c.code}</p>
                       {!c.is_active && (
-                        <span className="text-[8px] font-black uppercase bg-rose-500/15 text-rose-500 dark:text-rose-400 border border-rose-500/20 px-1.5 py-0.5 rounded-full">
+                        <span className="text-xs font-semibold uppercase bg-rose-500/15 text-rose-500 dark:text-rose-400 border border-rose-500/20 px-1.5 py-0.5 rounded-full">
                           {t('jpp:coupon_inactive_badge', 'Tidak Aktif')}
                         </span>
                       )}
                     </div>
-                    <p className="text-[10px] text-slate-500 dark:text-white/50 truncate">{c.name}{c.description ? ` — ${c.description}` : ''}</p>
+                    <p className="text-xs text-slate-500 dark:text-white/50 truncate">{c.name}{c.description ? ` — ${c.description}` : ''}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <p className="text-sm font-black text-amber-500 dark:text-amber-400">
+                    <p className="text-sm font-bold text-amber-500 dark:text-amber-400">
                       {c.discount_type === 'FIXED' ? `RM${Number(c.discount_value)}` : `${c.discount_value}%`}
                     </p>
-                    <p className="text-[9px] text-slate-500 dark:text-white/40">
+                    <p className="text-xs text-slate-500 dark:text-white/40">
                       {t('jpp:coupon_claims_count', '{{used}}/{{max}} claim', { used: c.uses_count, max: c.max_uses ?? '∞' })}
                     </p>
                   </div>
@@ -295,7 +295,7 @@ export function EventCouponPanel() {
                       <div className="h-full rounded-full bg-amber-500 transition-all"
                         style={{ width: `${c.max_uses ? pct : 8}%` }} />
                     </div>
-                    <p className="text-[8px] text-slate-400 dark:text-white/30 mt-1 text-right">
+                    <p className="text-xs text-slate-400 dark:text-white/30 mt-1 text-right">
                       {remaining != null ? t('jpp:coupon_remaining', '{{rem}} baki', { rem: remaining }) : t('jpp:coupon_unlimited_uses', 'Tanpa had')}
                     </p>
                   </div>
@@ -321,37 +321,37 @@ export function EventCouponPanel() {
                 {expanded && (
                   <div className="border-t border-slate-100 dark:border-white/[0.05] bg-slate-50/50 dark:bg-white/[0.01] px-4 py-3 space-y-3">
                     <div className="flex items-center gap-2">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                         {t('jpp:coupon_breakdown_per_store', 'Breakdown Claim per Gerai')}
                       </p>
                     </div>
                     {byBusiness.length === 0 ? (
-                      <p className="text-[11px] text-slate-400 dark:text-white/30">{t('jpp:coupon_no_claims_yet', 'Belum ada claim.')}</p>
+                      <p className="text-xs text-slate-400 dark:text-white/30">{t('jpp:coupon_no_claims_yet', 'Belum ada claim.')}</p>
                     ) : (
                       <div className="grid gap-2">
                         {byBusiness.map(b => (
                           <div key={b.business_id} className="flex items-center gap-3 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] rounded-xl px-3 py-2 shadow-xs">
                             <Store className="w-3.5 h-3.5 text-slate-400 dark:text-white/40 shrink-0" />
-                            <p className="flex-1 min-w-0 text-xs font-black text-slate-800 dark:text-white truncate">{b.business_name}</p>
-                            <span className="text-[10px] font-black text-amber-500 dark:text-amber-400">{b.count} claim</span>
-                            <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">{fmtRM(b.total_discount)}</span>
+                            <p className="flex-1 min-w-0 text-xs font-semibold text-slate-800 dark:text-white truncate">{b.business_name}</p>
+                            <span className="text-xs font-semibold text-amber-500 dark:text-amber-400">{b.count} claim</span>
+                            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">{fmtRM(b.total_discount)}</span>
                           </div>
                         ))}
                       </div>
                     )}
                     {claims.length > 0 && (
                       <div>
-                        <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">
+                        <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40 mb-2">
                           {t('jpp:coupon_claims_recent', 'Claim Terkini')}
                         </p>
                         <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1">
                           {claims.slice(0, 30).map(cl => (
-                            <div key={cl.id} className="flex items-center gap-2 text-[10px]">
+                            <div key={cl.id} className="flex items-center gap-2 text-xs">
                               <span className="text-slate-700 dark:text-white/60 truncate flex-1">{(cl as any).business?.name ?? '—'}</span>
                               <span className="text-slate-400 dark:text-white/30 shrink-0">
                                 {new Date(cl.claimed_at).toLocaleString(i18n.language.startsWith('en') ? 'en-MY' : 'ms-MY', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                               </span>
-                              <span className="text-amber-500 dark:text-amber-400 font-black shrink-0">-{fmtRM(Number(cl.discount_amount) || 0)}</span>
+                              <span className="text-amber-500 dark:text-amber-400 font-bold shrink-0">-{fmtRM(Number(cl.discount_amount) || 0)}</span>
                             </div>
                           ))}
                         </div>
@@ -371,10 +371,10 @@ export function EventCouponPanel() {
           <motion.div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/70 "
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <motion.div initial={{ scale: 0.95, y: 12 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.95, y: 12 }}
-              className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
+              className="w-full max-w-md bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] rounded-3xl p-5 space-y-4 max-h-[90vh] overflow-y-auto shadow-2xl">
               <div className="flex items-center gap-2">
                 <Ticket className="w-4 h-4 text-amber-500 dark:text-amber-400" />
-                <p className="text-sm font-black text-slate-900 dark:text-white uppercase tracking-widest">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white uppercase tracking-widest">
                   {editing ? t('jpp:coupon_modal_edit_title', 'Edit Kupon') : t('jpp:coupon_modal_create_title', 'Cipta Kupon Baharu')}
                 </p>
                 <button onClick={() => setShowModal(false)} className="ml-auto p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-white/5">
@@ -383,14 +383,14 @@ export function EventCouponPanel() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-1">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                     {t('jpp:coupon_field_code', 'Kod')}
                   </label>
                   <input value={form.code} onChange={e => setForm({ ...form, code: e.target.value.toUpperCase() })}
                     placeholder="MAHRAJAN" className={inputCls + ' mt-1'} />
                 </div>
                 <div className="col-span-1">
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                     {t('jpp:coupon_field_name', 'Nama')}
                   </label>
                   <input value={form.name} onChange={e => setForm({ ...form, name: e.target.value })}
@@ -398,7 +398,7 @@ export function EventCouponPanel() {
                 </div>
               </div>
               <div>
-                <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                   {t('jpp:coupon_field_desc', 'Penerangan')}
                 </label>
                 <input value={form.description} onChange={e => setForm({ ...form, description: e.target.value })}
@@ -406,22 +406,22 @@ export function EventCouponPanel() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                     {t('jpp:coupon_field_type', 'Jenis')}
                   </label>
                   <div className="flex gap-1.5 mt-1">
                     <button onClick={() => setForm({ ...form, discount_type: 'FIXED' })}
-                      className={`flex-1 h-10 rounded-xl text-[10px] font-black uppercase border transition-all flex items-center justify-center gap-1 ${form.discount_type === 'FIXED' ? 'bg-amber-500/15 border-amber-500/40 text-amber-500 dark:text-amber-400' : 'bg-slate-100 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40'}`}>
+                      className={`flex-1 h-10 rounded-xl text-xs font-semibold uppercase border transition-all flex items-center justify-center gap-1 ${form.discount_type === 'FIXED' ? 'bg-amber-500/15 border-amber-500/40 text-amber-500 dark:text-amber-400' : 'bg-slate-100 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40'}`}>
                       <Banknote className="w-3 h-3" /> {t('jpp:coupon_type_fixed', 'RM Tetap')}
                     </button>
                     <button onClick={() => setForm({ ...form, discount_type: 'PERCENT' })}
-                      className={`flex-1 h-10 rounded-xl text-[10px] font-black uppercase border transition-all flex items-center justify-center gap-1 ${form.discount_type === 'PERCENT' ? 'bg-amber-500/15 border-amber-500/40 text-amber-500 dark:text-amber-400' : 'bg-slate-100 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40'}`}>
+                      className={`flex-1 h-10 rounded-xl text-xs font-semibold uppercase border transition-all flex items-center justify-center gap-1 ${form.discount_type === 'PERCENT' ? 'bg-amber-500/15 border-amber-500/40 text-amber-500 dark:text-amber-400' : 'bg-slate-100 dark:bg-white/[0.03] border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/40'}`}>
                       <Percent className="w-3 h-3" /> {t('jpp:coupon_type_percent', 'Peratus')}
                     </button>
                   </div>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                     {t('jpp:coupon_field_value', 'Nilai')}
                   </label>
                   <input value={form.discount_value} onChange={e => setForm({ ...form, discount_value: e.target.value })}
@@ -431,14 +431,14 @@ export function EventCouponPanel() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                     {t('jpp:coupon_field_min_purchase', 'Minimum Belian (RM)')}
                   </label>
                   <input value={form.min_purchase} onChange={e => setForm({ ...form, min_purchase: e.target.value })}
                     type="number" min="0" step="0.01" className={inputCls + ' mt-1'} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                     {t('jpp:coupon_field_max_uses', 'Had Claim')}
                   </label>
                   <input value={form.max_uses} onChange={e => setForm({ ...form, max_uses: e.target.value })}
@@ -447,14 +447,14 @@ export function EventCouponPanel() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                     {t('jpp:coupon_field_valid_from', 'Mula (tarikh)')}
                   </label>
                   <input value={form.valid_from} onChange={e => setForm({ ...form, valid_from: e.target.value })}
                     type="date" className={inputCls + ' mt-1'} />
                 </div>
                 <div>
-                  <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+                  <label className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
                     {t('jpp:coupon_field_valid_until', 'Tamat (tarikh)')}
                   </label>
                   <input value={form.valid_until} onChange={e => setForm({ ...form, valid_until: e.target.value })}
@@ -465,17 +465,17 @@ export function EventCouponPanel() {
                 <input type="checkbox" checked={form.is_active}
                   onChange={e => setForm({ ...form, is_active: e.target.checked })}
                   className="w-4 h-4 accent-amber-500" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-700 dark:text-white/60">
+                <span className="text-xs font-semibold uppercase tracking-widest text-slate-700 dark:text-white/60">
                   {t('jpp:coupon_active_now', 'Aktif sekarang')}
                 </span>
               </label>
               <div className="flex gap-2 pt-1">
                 <button onClick={() => setShowModal(false)}
-                  className="flex-1 h-11 rounded-xl text-[10px] font-black uppercase tracking-wider bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/50 hover:bg-slate-200 dark:hover:bg-white/[0.08] transition-all">
+                  className="flex-1 h-11 rounded-xl text-xs font-semibold uppercase tracking-wider bg-slate-100 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/50 hover:bg-slate-200 dark:hover:bg-white/[0.08] transition-all">
                   {t('common:cancel', 'Batal')}
                 </button>
                 <button onClick={save}
-                  className="flex-1 h-11 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider transition-all">
+                  className="flex-1 h-11 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-semibold uppercase tracking-wider transition-all">
                   {editing ? t('jpp:coupon_save_btn', 'Simpan') : t('jpp:coupon_create_action', 'Cipta Kupon')}
                 </button>
               </div>

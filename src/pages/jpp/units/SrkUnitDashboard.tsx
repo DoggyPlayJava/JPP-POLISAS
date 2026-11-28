@@ -34,12 +34,12 @@ function CountdownUnit({ value, label }: { value: number; label: string }) {
   return (
     <div className="flex flex-col items-center">
       <div
-        className="w-14 h-14 rounded-2xl flex items-center justify-center font-black text-2xl text-slate-900 dark:text-white"
+        className="w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-2xl text-slate-900 dark:text-white"
         style={{ background: hexToRgba(SUPSAS_COLOR, 0.2), border: `1px solid ${hexToRgba(SUPSAS_COLOR, 0.35)}` }}
       >
         {String(value).padStart(2, '0')}
       </div>
-      <span className="text-[9px] font-black uppercase tracking-[0.25em] mt-1.5" style={{ color: hexToRgba(SUPSAS_COLOR, 0.8) }}>{label}</span>
+      <span className="text-xs font-semibold uppercase tracking-[0.25em] mt-1.5" style={{ color: hexToRgba(SUPSAS_COLOR, 0.8) }}>{label}</span>
     </div>
   );
 }
@@ -163,15 +163,15 @@ export function SrkUnitDashboard() {
               <Trophy className="w-5 h-5" style={{ color: SUPSAS_COLOR }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">{t('jpp:srk_portal_title', 'SUPSAS Portal')}</p>
-              <p className="text-[10px] font-medium mt-0.5" style={{ color: hexToRgba(SUPSAS_COLOR, 0.8) }}>{t('jpp:srk_portal_desc', 'Kawalan pengumuman ke Portal Pelajar')}</p>
+              <p className="text-xs font-semibold text-slate-900 dark:text-white uppercase tracking-widest">{t('jpp:srk_portal_title', 'SUPSAS Portal')}</p>
+              <p className="text-xs font-medium mt-0.5" style={{ color: hexToRgba(SUPSAS_COLOR, 0.8) }}>{t('jpp:srk_portal_desc', 'Kawalan pengumuman ke Portal Pelajar')}</p>
             </div>
             {/* Toggle */}
             <button
               onClick={handleToggle}
               disabled={loadingToggle}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-xl font-black text-xs uppercase tracking-widest transition-all',
+                'flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs uppercase tracking-widest transition-all',
                 supsasEnabled
                   ? 'text-amber-600 dark:text-amber-300 hover:bg-amber-500/20'
                   : 'text-slate-500 dark:text-white/30 hover:text-slate-800 dark:hover:text-white/60 hover:bg-slate-100 dark:hover:bg-white/10'
@@ -193,14 +193,14 @@ export function SrkUnitDashboard() {
               {supsasEnabled ? (
                 <motion.div key="on" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-start gap-3">
                   <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: SUPSAS_COLOR }} />
-                  <p className="text-[11px] text-slate-600 dark:text-white/50 leading-relaxed">
+                  <p className="text-xs text-slate-600 dark:text-white/50 leading-relaxed">
                     {t('jpp:srk_banner_active_desc', 'Banner SUPSAS sedang dipaparkan dalam Portal Pelajar. Semua pengguna yang log masuk boleh melihat pengumuman dan butang ke SUPSAS.')}
                   </p>
                 </motion.div>
               ) : (
                 <motion.div key="off" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-start gap-3">
                   <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0 text-slate-400 dark:text-white/20" />
-                  <p className="text-[11px] text-slate-500 dark:text-white/30 leading-relaxed">
+                  <p className="text-xs text-slate-500 dark:text-white/30 leading-relaxed">
                     {t('jpp:srk_banner_inactive_desc', 'SUPSAS tidak dipaparkan dalam Portal Pelajar. Aktifkan toggle untuk mula mengumumkan event. Halaman /supsas masih boleh diakses melalui pautan terus.')}
                   </p>
                 </motion.div>
@@ -227,23 +227,23 @@ export function SrkUnitDashboard() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <Clock className="w-4 h-4" style={{ color: SUPSAS_COLOR }} />
-                    <span className="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 dark:text-white/40">{t('jpp:srk_countdown', 'Countdown')}</span>
+                    <span className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500 dark:text-white/40">{t('jpp:srk_countdown', 'Countdown')}</span>
                   </div>
-                  <span className="text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full"
+                  <span className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 rounded-full"
                     style={{ background: hexToRgba(SUPSAS_COLOR, 0.12), color: SUPSAS_COLOR, border: `1px solid ${hexToRgba(SUPSAS_COLOR, 0.2)}` }}>
                     {edition?.name}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 justify-center py-2">
                   <CountdownUnit value={countdown.days}  label={t('jpp:srk_days', 'Hari')} />
-                  <span className="text-2xl font-black text-slate-300 dark:text-white/20 mb-4">:</span>
+                  <span className="text-2xl font-bold text-slate-300 dark:text-white/20 mb-4">:</span>
                   <CountdownUnit value={countdown.hours} label={t('jpp:srk_hours', 'Jam')} />
-                  <span className="text-2xl font-black text-slate-300 dark:text-white/20 mb-4">:</span>
+                  <span className="text-2xl font-bold text-slate-300 dark:text-white/20 mb-4">:</span>
                   <CountdownUnit value={countdown.mins}  label={t('jpp:srk_mins', 'Minit')} />
-                  <span className="text-2xl font-black text-slate-300 dark:text-white/20 mb-4">:</span>
+                  <span className="text-2xl font-bold text-slate-300 dark:text-white/20 mb-4">:</span>
                   <CountdownUnit value={countdown.secs}  label={t('jpp:srk_secs', 'Saat')} />
                 </div>
-                <p className="text-center text-xs font-black text-slate-600 dark:text-white/30">
+                <p className="text-center text-xs font-semibold text-slate-600 dark:text-white/30">
                   {t('jpp:srk_starts_on', 'SUPSAS bermula pada {{date}}', {
                     date: new Date(edition!.start_date!).toLocaleDateString(i18n.language.startsWith('en') ? 'en-MY' : 'ms-MY', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
                   })}
@@ -266,8 +266,8 @@ export function SrkUnitDashboard() {
                 ].map(({ label, value, icon: Icon }) => (
                   <div key={label} className="rounded-2xl p-4 text-center border border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.02] shadow-sm">
                     <Icon className="w-4 h-4 mx-auto mb-1.5" style={{ color: SUPSAS_COLOR }} />
-                    <p className="text-xl font-black text-slate-900 dark:text-white">{value}</p>
-                    <p className="text-[9px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30 mt-0.5">{label}</p>
+                    <p className="text-xl font-bold text-slate-900 dark:text-white">{value}</p>
+                    <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-white/30 mt-0.5">{label}</p>
                   </div>
                 ))}
               </motion.div>
@@ -280,7 +280,7 @@ export function SrkUnitDashboard() {
               transition={{ delay: 0.2 }}
               className="space-y-2"
             >
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-3">{t('jpp:srk_panel_title', 'Panel Pengurusan SUPSAS')}</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.3em] text-slate-400 dark:text-white/25 mb-3">{t('jpp:srk_panel_title', 'Panel Pengurusan SUPSAS')}</p>
               {[
                 { icon: Settings,     label: t('jpp:srk_link_settings', 'Tetapan Edisi'),        href: '/supsas/admin/tetapan',   desc: t('jpp:srk_link_settings_desc', 'Cipta / aktifkan edisi baru') },
                 { icon: Trophy,       label: t('jpp:srk_link_sports', 'Urus Sukan'),           href: '/supsas/admin/sukan',     desc: t('jpp:srk_link_sports_desc', 'Tambah & uruskan sukan') },
@@ -299,8 +299,8 @@ export function SrkUnitDashboard() {
                     <Icon className="w-3.5 h-3.5" style={{ color: SUPSAS_COLOR }} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-black text-slate-700 dark:text-white/70 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{label}</p>
-                    <p className="text-[9px] text-slate-400 dark:text-white/25 mt-0.5">{desc}</p>
+                    <p className="text-xs font-semibold text-slate-700 dark:text-white/70 group-hover:text-slate-900 dark:group-hover:text-white transition-colors">{label}</p>
+                    <p className="text-xs text-slate-400 dark:text-white/25 mt-0.5">{desc}</p>
                   </div>
                   <ArrowRight className="w-3.5 h-3.5 text-slate-400 dark:text-white/20 group-hover:text-slate-600 dark:group-hover:text-white/50 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
                 </button>
@@ -315,10 +315,10 @@ export function SrkUnitDashboard() {
                 className="text-center py-8 border border-dashed border-slate-300 dark:border-white/10 rounded-2xl space-y-3"
               >
                 <Trophy className="w-8 h-8 mx-auto text-slate-300 dark:text-white/10" />
-                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20">{t('jpp:srk_no_edition_title', 'Belum ada edisi SUPSAS dicipta')}</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-white/20">{t('jpp:srk_no_edition_title', 'Belum ada edisi SUPSAS dicipta')}</p>
                 <button
                   onClick={() => navigate('/supsas/admin/tetapan')}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-widest transition-all"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-widest transition-all"
                   style={{ background: hexToRgba(SUPSAS_COLOR, 0.15), color: SUPSAS_COLOR, border: `1px solid ${hexToRgba(SUPSAS_COLOR, 0.2)}` }}
                 >
                   <ExternalLink className="w-3.5 h-3.5" />

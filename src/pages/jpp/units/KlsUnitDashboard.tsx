@@ -134,10 +134,10 @@ export function KlsUnitDashboard() {
         <div className="flex items-start gap-3 p-4 rounded-2xl border border-amber-500/20 bg-amber-500/5">
           <AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-xs font-black text-amber-800 dark:text-amber-200">
+            <p className="text-xs font-semibold text-amber-800 dark:text-amber-200">
               {t('jpp:kls_db_not_ready_title', 'Pangkalan Data KLK Sedang Disediakan')}
             </p>
-            <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">
+            <p className="text-xs text-amber-700 dark:text-amber-400 mt-0.5">
               {t('jpp:kls_db_not_ready_desc', 'Jadual klk_student_residency belum bersedia sepenuhnya. Sila lawati menu tetapan untuk semakan.')}
             </p>
           </div>
@@ -149,14 +149,14 @@ export function KlsUnitDashboard() {
         {/* Kad 1: Pelajar Luar Kampus */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
               {t('jpp:kls_card_outside_students', 'Pelajar Luar Kampus')}
             </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
               <Home className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-black font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
+          <div className="text-3xl font-bold font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
             {loading ? '—' : analytics.luarCount}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
@@ -167,14 +167,14 @@ export function KlsUnitDashboard() {
         {/* Kad 2: Dalam KAMSIS */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
               {t('jpp:kls_card_in_kamsis', 'Dalam KAMSIS')}
             </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
               <Building2 className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-black font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
+          <div className="text-3xl font-bold font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
             {loading ? '—' : analytics.kamsisCount}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
@@ -185,14 +185,14 @@ export function KlsUnitDashboard() {
         {/* Kad 3: Top Hotspot Kawasan */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
               {t('jpp:kls_card_top_hotspot', 'Hotspot Utama')}
             </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
               <MapPin className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black font-mono tabular-nums text-slate-950 dark:text-white tracking-tight truncate">
+          <div className="text-2xl font-bold font-mono tabular-nums text-slate-950 dark:text-white tracking-tight truncate">
             {loading ? '—' : analytics.topKawasan}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium">
@@ -203,14 +203,14 @@ export function KlsUnitDashboard() {
         {/* Kad 4: Nisbah Residensi */}
         <div className="p-5 rounded-2xl bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] shadow-xs relative overflow-hidden group hover:border-slate-300 dark:hover:border-white/10 transition-all">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-white/40">
               {t('jpp:kls_card_ratio', 'Nisbah Luar : Kamsis')}
             </span>
             <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
               <PieChart className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-3xl font-black font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
+          <div className="text-3xl font-bold font-mono tabular-nums text-slate-950 dark:text-white tracking-tight">
             {loading ? '—' : `${analytics.luarPct} : ${analytics.kamsisPct}`}
           </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-1 font-medium font-mono tabular-nums">
@@ -220,7 +220,7 @@ export function KlsUnitDashboard() {
       </div>
 
       {/* ── Sub Navigation Tabs ── */}
-      <div className="flex items-center gap-2 border-b border-slate-200 dark:border-white/[0.06] pb-3 overflow-x-auto scrollbar-none">
+      <div className="flex flex-nowrap items-center gap-2 border-b border-slate-200 dark:border-white/[0.06] pb-3 overflow-x-auto scrollbar-hide">
         {[
           { key: 'hotspot', label: t('jpp:kls_tab_hotspot', 'Analisis Hotspot Kawasan'), icon: MapPin },
           { key: 'kamsis', label: t('jpp:kls_tab_kamsis', 'KAMSIS & Permohonan'), icon: Building2 },
@@ -233,7 +233,7 @@ export function KlsUnitDashboard() {
               key={tab.key}
               onClick={() => setActiveTab(tab.key as any)}
               className={cn(
-                'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap active:scale-[0.98]',
+                'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition-[transform,opacity,background-color,color] duration-200 shrink-0 whitespace-nowrap active:scale-[0.98]',
                 isActive
                   ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.06] text-slate-600 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/[0.05]'
@@ -252,7 +252,7 @@ export function KlsUnitDashboard() {
           <div className="rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] p-5 shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <div>
-                <h3 className="font-black text-base text-slate-900 dark:text-white">
+                <h3 className="font-bold text-base text-slate-900 dark:text-white">
                   {t('jpp:kls_breakdown_title', 'Pecahan Residensi Mengikut Kawasan')}
                 </h3>
                 <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5">
@@ -260,7 +260,7 @@ export function KlsUnitDashboard() {
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-mono tabular-nums">
+                <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 font-mono tabular-nums">
                   {t('jpp:kls_recorded_areas', '{{count}} Kawasan Direkodkan', { count: analytics.sortedKawasan.length })}
                 </span>
                 <button
@@ -294,24 +294,24 @@ export function KlsUnitDashboard() {
                     >
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2">
                         <div className="flex items-center gap-2.5">
-                          <span className="w-6 h-6 rounded-lg bg-slate-200/60 dark:bg-white/[0.06] text-slate-700 dark:text-white/70 font-mono text-xs font-black flex items-center justify-center shrink-0">
+                          <span className="w-6 h-6 rounded-lg bg-slate-200/60 dark:bg-white/[0.06] text-slate-700 dark:text-white/70 font-mono text-xs font-bold flex items-center justify-center shrink-0">
                             {index + 1}
                           </span>
                           <div>
-                            <span className="font-black text-sm text-slate-900 dark:text-white">
+                            <span className="font-bold text-sm text-slate-900 dark:text-white">
                               {kawasan.name}
                             </span>
-                            <span className="text-[11px] text-slate-500 dark:text-white/40 ml-2">
+                            <span className="text-xs text-slate-500 dark:text-white/40 ml-2">
                               ({kawasan.meta.zone} · {kawasan.meta.distance})
                             </span>
                           </div>
                         </div>
 
                         <div className="flex items-center gap-3">
-                          <span className="text-xs font-mono tabular-nums font-black text-blue-600 dark:text-blue-400">
+                          <span className="text-xs font-mono tabular-nums font-bold text-blue-600 dark:text-blue-400">
                             {t('jpp:kls_students_count', '{{count}} Pelajar', { count: kawasan.count })}
                           </span>
-                          <span className="text-[10px] font-mono tabular-nums font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-white/[0.06] text-slate-700 dark:text-white/60">
+                          <span className="text-xs font-mono tabular-nums font-bold px-2 py-0.5 rounded-md bg-slate-200 dark:bg-white/[0.06] text-slate-700 dark:text-white/60">
                             {kawasan.pct}%
                           </span>
                         </div>
@@ -350,7 +350,7 @@ export function KlsUnitDashboard() {
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex items-center justify-center mb-3">
                   <Home className="w-5 h-5" />
                 </div>
-                <h4 className="font-black text-base text-slate-900 dark:text-white">
+                <h4 className="font-bold text-base text-slate-900 dark:text-white">
                   {t('jpp:kls_polyrent_title', 'PolyRent — Portal Rumah Sewa')}
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-white/60 mt-1 leading-relaxed">
@@ -359,7 +359,7 @@ export function KlsUnitDashboard() {
               </div>
               <button
                 onClick={() => navigate('/polyrent')}
-                className="mt-4 flex items-center justify-between w-full p-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-black text-xs uppercase tracking-wider transition-colors"
+                className="mt-4 flex items-center justify-between w-full p-2.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-semibold text-xs uppercase tracking-wider transition-colors"
               >
                 <span>{t('jpp:kls_polyrent_btn', 'Buka PolyRent')}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -372,7 +372,7 @@ export function KlsUnitDashboard() {
                 <div className="w-10 h-10 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 flex items-center justify-center mb-3">
                   <Car className="w-5 h-5" />
                 </div>
-                <h4 className="font-black text-base text-slate-900 dark:text-white">
+                <h4 className="font-bold text-base text-slate-900 dark:text-white">
                   {t('jpp:kls_polyrider_title', 'PolyRider — Carpool & Mobiliti')}
                 </h4>
                 <p className="text-xs text-slate-600 dark:text-white/60 mt-1 leading-relaxed">
@@ -381,7 +381,7 @@ export function KlsUnitDashboard() {
               </div>
               <button
                 onClick={() => navigate('/polyrider-admin')}
-                className="mt-4 flex items-center justify-between w-full p-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-black text-xs uppercase tracking-wider transition-colors"
+                className="mt-4 flex items-center justify-between w-full p-2.5 rounded-xl bg-purple-500/10 hover:bg-purple-500/20 text-purple-600 dark:text-purple-400 font-semibold text-xs uppercase tracking-wider transition-colors"
               >
                 <span>{t('jpp:kls_polyrider_btn', 'Panel Pengurusan PolyRider')}</span>
                 <ArrowRight className="w-4 h-4" />
@@ -391,7 +391,7 @@ export function KlsUnitDashboard() {
 
           {/* Talian Bantuan Kecemasan Luar Kampus */}
           <div className="p-5 rounded-2xl border border-slate-200 dark:border-white/[0.06] bg-white dark:bg-white/[0.02] shadow-xs">
-            <h4 className="font-black text-sm text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+            <h4 className="font-bold text-sm text-slate-900 dark:text-white mb-3 flex items-center gap-2">
               <Shield className="w-4 h-4 text-blue-500" />
               {t('jpp:kls_emergency_helpline_title', 'Talian Bantuan Kecemasan & Keselamatan Kediaman Luar')}
             </h4>
@@ -403,7 +403,7 @@ export function KlsUnitDashboard() {
                 <p className="text-slate-500 dark:text-white/40 mt-0.5">
                   {t('jpp:kls_aduan_24h', 'Talian Aduan 24 Jam')}
                 </p>
-                <p className="font-mono tabular-nums font-black text-blue-600 dark:text-blue-400 mt-1">09-565 5300</p>
+                <p className="font-mono tabular-nums font-bold text-blue-600 dark:text-blue-400 mt-1">09-565 5300</p>
               </div>
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04]">
                 <p className="font-bold text-slate-900 dark:text-white">
@@ -412,7 +412,7 @@ export function KlsUnitDashboard() {
                 <p className="text-slate-500 dark:text-white/40 mt-0.5">
                   {t('jpp:kls_semambu_beserah_zone', 'Kawasan Semambu/Beserah')}
                 </p>
-                <p className="font-mono tabular-nums font-black text-blue-600 dark:text-blue-400 mt-1">09-544 7222</p>
+                <p className="font-mono tabular-nums font-bold text-blue-600 dark:text-blue-400 mt-1">09-544 7222</p>
               </div>
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04]">
                 <p className="font-bold text-slate-900 dark:text-white">
@@ -421,7 +421,7 @@ export function KlsUnitDashboard() {
                 <p className="text-slate-500 dark:text-white/40 mt-0.5">
                   {t('jpp:kls_im_zone', 'Kawasan IM 1 - IM 15')}
                 </p>
-                <p className="font-mono tabular-nums font-black text-blue-600 dark:text-blue-400 mt-1">09-573 3222</p>
+                <p className="font-mono tabular-nums font-bold text-blue-600 dark:text-blue-400 mt-1">09-573 3222</p>
               </div>
             </div>
           </div>
@@ -448,10 +448,10 @@ export function KlsUnitDashboard() {
               <link.icon className="w-4 h-4" style={{ color: link.color }} />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-xs font-black text-slate-800 dark:text-slate-200 truncate group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+              <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                 {link.label}
               </p>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">{link.desc}</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">{link.desc}</p>
             </div>
             <ArrowRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-300 transition-colors shrink-0" />
           </button>
@@ -459,7 +459,7 @@ export function KlsUnitDashboard() {
       </div>
 
       {/* Tahun akademik note */}
-      <p className="text-center text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/30">
+      <p className="text-center text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-white/30">
         {t('jpp:kls_current_academic_year', 'Tahun Akademik Sesi Semasa: {{year}}', { year: academicYear })}
       </p>
     </div>

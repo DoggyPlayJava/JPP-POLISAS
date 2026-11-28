@@ -2064,7 +2064,7 @@
   "telemetry_rail_attention_needed": "Perhatian diperlukan",
   "telemetry_rail_auto_resolution": "Auto Resolution",
   "telemetry_rail_cron_active": "+3% vs semalam • Cron & Snapshot Aktif",
-  "telemetry_rail_good_morning": "Good morning,",
+  "telemetry_rail_good_morning": "Selamat pagi,",
   "telemetry_rail_healthy_desc": "Sistem beroperasi pada mod kestabilan tinggi semalaman. Tiada insiden kritikal.",
   "telemetry_rail_high": "High: {{count}}",
   "telemetry_rail_medium": "Medium: {{count}}",

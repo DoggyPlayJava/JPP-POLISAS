@@ -77,8 +77,8 @@ function AsramaBanner() {
         <Building2 className="w-6 h-6" style={{ color: KK_COLOR }} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-sm font-black text-slate-900 dark:text-white leading-tight">{t('jpp:kk_hostel_ref_board', 'Papan Rujukan Asrama')}</p>
-        <p className="text-[10px] text-slate-500 dark:text-white/40 font-medium mt-1 leading-relaxed">{t('jpp:kk_hostel_ref_desc', 'Semak senarai pelajar dengan HPNM & merit untuk kelulusan permohonan kediaman sesi 2025/2026')}</p>
+        <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{t('jpp:kk_hostel_ref_board', 'Papan Rujukan Asrama')}</p>
+        <p className="text-xs text-slate-500 dark:text-white/40 font-medium mt-1 leading-relaxed">{t('jpp:kk_hostel_ref_desc', 'Semak senarai pelajar dengan HPNM & merit untuk kelulusan permohonan kediaman sesi 2025/2026')}</p>
       </div>
       <ChevronRight className="w-5 h-5 flex-shrink-0 text-slate-400 dark:text-white/20 group-hover:text-slate-600 dark:group-hover:text-white/50 group-hover:translate-x-0.5 transition-all" />
     </motion.button>
@@ -169,10 +169,10 @@ function UnitAsramaTab() {
       >
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4" style={{ color: KK_COLOR }} />
-          <p className="text-xs font-black uppercase tracking-widest" style={{ color: KK_COLOR }}>{t('jpp:kk_unit_asrama_ref_access', 'Unit Pengurusan Asrama — Akses Rujukan')}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: KK_COLOR }}>{t('jpp:kk_unit_asrama_ref_access', 'Unit Pengurusan Asrama — Akses Rujukan')}</p>
         </div>
         <p className="text-xs text-slate-500 dark:text-white/40 leading-relaxed">
-          {t('jpp:kk_unit_asrama_access_p1', 'Pengguna yang disenaraikan di sini mendapat akses ke')} <strong className="text-slate-700 dark:text-white/70">{t('jpp:kk_hostel_ref_board', 'Papan Rujukan Asrama')}</strong> ({' '}<code className="text-[10px] text-fuchsia-600 dark:text-fuchsia-400">/jpp/asrama</code>{t('jpp:kk_unit_asrama_access_p2', ') untuk membantu Exco Kediaman semak merit dan HPNM pelajar bagi tujuan kelulusan permohonan kediaman i-KAMSIS. Mereka')} <em>{t('jpp:kk_not', 'tidak')}</em> {t('jpp:kk_unit_asrama_access_p3', 'mempunyai kuasa edit data pelajar.')}
+          {t('jpp:kk_unit_asrama_access_p1', 'Pengguna yang disenaraikan di sini mendapat akses ke')} <strong className="text-slate-700 dark:text-white/70">{t('jpp:kk_hostel_ref_board', 'Papan Rujukan Asrama')}</strong> ({' '}<code className="text-xs text-fuchsia-600 dark:text-fuchsia-400">/jpp/asrama</code>{t('jpp:kk_unit_asrama_access_p2', ') untuk membantu Exco Kediaman semak merit dan HPNM pelajar bagi tujuan kelulusan permohonan kediaman i-KAMSIS. Mereka')} <em>{t('jpp:kk_not', 'tidak')}</em> {t('jpp:kk_unit_asrama_access_p3', 'mempunyai kuasa edit data pelajar.')}
         </p>
       </div>
 
@@ -181,7 +181,7 @@ function UnitAsramaTab() {
         <div
           className="rounded-[2rem] border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] p-6 space-y-4 shadow-sm"
         >
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40 flex items-center gap-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40 flex items-center gap-2">
             <UserPlus className="w-3.5 h-3.5" /> {t('jpp:kk_add_officer_btn', 'Tambah Pegawai Unit Pengurusan Asrama')}
           </p>
           <div className="relative">
@@ -192,7 +192,7 @@ function UnitAsramaTab() {
               className="w-full h-11 px-4 rounded-2xl text-sm font-medium outline-none bg-slate-50 dark:bg-white/[0.04] border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/30 focus:border-slate-300 dark:focus:border-white/30 transition-all"
             />
             {searchResults.length > 0 && (
-              <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-2xl bg-white dark:bg-[#0f0f13] border border-slate-200 dark:border-white/10 shadow-xl overflow-hidden">
+              <div className="absolute left-0 right-0 top-full mt-1 z-20 rounded-2xl bg-white dark:bg-[#13171D] border border-slate-200 dark:border-[#252B35] shadow-xl overflow-hidden">
                   {searchResults.map(u => {
                     // Tentukan jenis akaun untuk badge
                     const roleLabel =
@@ -213,27 +213,27 @@ function UnitAsramaTab() {
                         className="w-full flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors text-left border-b border-slate-100 dark:border-white/5 last:border-0"
                       >
                         <div
-                          className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black text-white flex-shrink-0"
+                          className="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-semibold text-white flex-shrink-0"
                           style={{ background: KK_COLOR }}
                         >
                           {u.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-1.5 flex-wrap">
-                            <p className="text-xs font-black text-slate-900 dark:text-white">{u.full_name}</p>
+                            <p className="text-xs font-semibold text-slate-900 dark:text-white">{u.full_name}</p>
                             <span
-                              className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full text-white"
+                              className="text-xs font-semibold uppercase px-1.5 py-0.5 rounded-full text-white"
                               style={{ background: roleBg + '99' }}
                             >
                               {roleLabel}
                             </span>
                           </div>
-                          <p className="text-[10px] text-slate-500 dark:text-white/50">
+                          <p className="text-xs text-slate-500 dark:text-white/50">
                             {u.matric_no || u.email || t('jpp:kk_no_info', 'Tiada maklumat')}
                           </p>
                         </div>
                         <span
-                          className="text-[10px] font-black uppercase px-2 py-0.5 rounded-full flex-shrink-0"
+                          className="text-xs font-semibold uppercase px-2 py-0.5 rounded-full flex-shrink-0"
                           style={{ background: hexToRgba(KK_COLOR, 0.1), color: KK_COLOR }}
                         >
                           + {t('jpp:kk_add_btn', 'Tambah')}
@@ -252,12 +252,12 @@ function UnitAsramaTab() {
         className="rounded-[2rem] border border-slate-200 dark:border-white/[0.07] bg-white dark:bg-white/[0.02] p-6 space-y-4 shadow-sm"
       >
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 dark:text-white/40">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/40">
             {t('jpp:kk_unit_asrama_list', 'Senarai Unit Pengurusan Asrama')} ({unitAdmins.length})
           </p>
           <button
             onClick={fetchUnitAdmins}
-            className="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-white/20 hover:text-slate-600 dark:hover:text-white/50 flex items-center gap-1.5 transition-all"
+            className="text-xs font-semibold uppercase tracking-widest text-slate-400 dark:text-white/20 hover:text-slate-600 dark:hover:text-white/50 flex items-center gap-1.5 transition-all"
           >
             <RefreshCw className="w-3 h-3" /> {t('jpp:kk_reload', 'Muat Semula')}
           </button>
@@ -282,20 +282,20 @@ function UnitAsramaTab() {
                 className="flex items-center gap-4 p-4 rounded-2xl bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] shadow-sm"
               >
                 <div
-                  className="w-10 h-10 rounded-2xl flex items-center justify-center font-black text-sm text-white flex-shrink-0"
+                  className="w-10 h-10 rounded-2xl flex items-center justify-center font-bold text-sm text-white flex-shrink-0"
                   style={{ background: KK_COLOR }}
                 >
                   {a.user?.full_name?.split(' ').map((n: string) => n[0]).join('').slice(0, 2)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-black text-slate-900 dark:text-white">{a.user?.full_name}</p>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">{a.user?.full_name}</p>
                   <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                    <p className="text-[10px] text-slate-500 dark:text-white/50 flex items-center gap-1.5">
+                    <p className="text-xs text-slate-500 dark:text-white/50 flex items-center gap-1.5">
                       <ShieldCheck className="w-3 h-3" style={{ color: KK_COLOR }} /> {t('jpp:kk_unit_asrama_role', 'Unit Pengurusan Asrama')}
                     </p>
                     {/* Tunjuk jenis akaun */}
                     {a.user?.role && (
-                      <span className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded-full text-slate-700 dark:text-white/70 bg-slate-100 dark:bg-white/[0.08]"
+                      <span className="text-xs font-semibold uppercase px-1.5 py-0.5 rounded-full text-slate-700 dark:text-white/70 bg-slate-100 dark:bg-white/[0.08]"
                       >
                         {a.user.role === 'SUPER_ADMIN_JPP' ? 'Super Admin' :
                          a.user.role === 'JPP' ? 'JPP' :
@@ -305,7 +305,7 @@ function UnitAsramaTab() {
                       </span>
                     )}
                     {a.user?.matric_no && (
-                      <span className="text-[9px] text-slate-400 dark:text-white/30 font-mono">{a.user.matric_no}</span>
+                      <span className="text-xs text-slate-400 dark:text-white/30 font-mono">{a.user.matric_no}</span>
                     )}
                   </div>
                 </div>
@@ -504,7 +504,7 @@ function TakwimKediamanTab() {
       <div className="rounded-[2rem] p-5 border space-y-3" style={{ borderColor: hexToRgba(KK_COLOR, 0.25), background: hexToRgba(KK_COLOR, 0.04) }}>
         <div className="flex items-center gap-2">
           <CalendarDays className="w-4 h-4" style={{ color: KK_COLOR }} />
-          <p className="text-xs font-black uppercase tracking-widest" style={{ color: KK_COLOR }}>{t('jpp:kk_takwim_title', 'Takwim Kediaman & Kerohanian')}</p>
+          <p className="text-xs font-semibold uppercase tracking-widest" style={{ color: KK_COLOR }}>{t('jpp:kk_takwim_title', 'Takwim Kediaman & Kerohanian')}</p>
         </div>
         <p className="text-xs text-slate-500 dark:text-white/40 leading-relaxed">
           {t('jpp:kk_takwim_desc_p1', 'Urus takwim khusus kelab kediaman (JPPI, AG, IS, dll.) dan aktiviti exco KK. Takwim kelab kediaman')} <strong className="text-slate-700 dark:text-white/70">{t('jpp:kk_takwim_visible_jpp', 'hanya visible untuk JPP')}</strong> {t('jpp:kk_takwim_desc_p2', '— student biasa tidak boleh melihatnya.')}
@@ -517,21 +517,21 @@ function TakwimKediamanTab() {
         <div className="flex items-center gap-4 bg-card p-5 rounded-[2rem] border border-border shadow-sm">
           <Palette className="w-5 h-5 text-muted-foreground shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{t('jpp:kk_official_color', 'Warna Rasmi KK')}</p>
-            <p className="text-[10px] text-muted-foreground">{t('jpp:kk_table_header_pdf', 'Header jadual, baris cuti & PDF.')}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">{t('jpp:kk_official_color', 'Warna Rasmi KK')}</p>
+            <p className="text-xs text-muted-foreground">{t('jpp:kk_table_header_pdf', 'Header jadual, baris cuti & PDF.')}</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <input type="color" value={colorInput} onChange={e => setColorInput(e.target.value)} className="w-11 h-11 rounded-xl border-2 border-border cursor-pointer" />
-            <div className="hidden sm:flex h-11 px-3 rounded-xl items-center font-black text-[10px] uppercase tracking-widest shadow-sm" style={{ backgroundColor: colorInput, color: getContrastColor(colorInput) }}>{colorInput}</div>
-            <Button onClick={handleSaveColor} disabled={savingColor || colorInput === themeColor} variant="outline" size="sm" className="rounded-xl h-11 px-4 font-black text-xs">{savingColor ? '...' : t('jpp:save', 'Simpan')}</Button>
+            <div className="hidden sm:flex h-11 px-3 rounded-xl items-center font-semibold text-xs uppercase tracking-widest shadow-sm" style={{ backgroundColor: colorInput, color: getContrastColor(colorInput) }}>{colorInput}</div>
+            <Button onClick={handleSaveColor} disabled={savingColor || colorInput === themeColor} variant="outline" size="sm" className="rounded-xl h-11 px-4 font-semibold text-xs">{savingColor ? '...' : t('jpp:save', 'Simpan')}</Button>
           </div>
         </div>
         {/* Session Selector */}
         <div className="flex items-center gap-4 bg-card p-5 rounded-[2rem] border border-border shadow-sm">
           <CalendarDays className="w-5 h-5 text-muted-foreground shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sesi Akademik</p>
-            <p className="text-[10px] text-muted-foreground">{t('jpp:kk_session_pdf_desc', 'Sesi yang dipaparkan dalam jadual PDF.')}</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Sesi Akademik</p>
+            <p className="text-xs text-muted-foreground">{t('jpp:kk_session_pdf_desc', 'Sesi yang dipaparkan dalam jadual PDF.')}</p>
           </div>
           <Select value={sesi} onValueChange={setSesi}>
             <SelectTrigger className="w-40 rounded-xl h-11 font-bold text-sm border-border"><SelectValue placeholder={t('jpp:kk_select_session_placeholder', 'Pilih sesi')} /></SelectTrigger>
@@ -542,23 +542,23 @@ function TakwimKediamanTab() {
 
       {/* Controls Row 2 — Action Buttons */}
       <div className="flex flex-wrap items-center gap-3">
-        <Button onClick={() => openCreate('KELAB_KEDIAMAN')} className="h-10 rounded-xl text-[10px] font-black uppercase tracking-widest" style={{ background: themeColor, color: textOnTheme }}>
+        <Button onClick={() => openCreate('KELAB_KEDIAMAN')} className="h-10 rounded-xl text-xs font-semibold uppercase tracking-widest" style={{ background: themeColor, color: textOnTheme }}>
           <Plus className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:kk_residential_club', 'Kelab Kediaman')}
         </Button>
-        <Button onClick={() => openCreate('KK')} variant="outline" className="h-10 rounded-xl text-[10px] font-black uppercase tracking-widest border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/60 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm">
+        <Button onClick={() => openCreate('KK')} variant="outline" className="h-10 rounded-xl text-xs font-semibold uppercase tracking-widest border-slate-200 dark:border-white/10 text-slate-700 dark:text-white/60 bg-white dark:bg-transparent hover:bg-slate-50 dark:hover:bg-white/5 shadow-sm">
           <Plus className="w-3.5 h-3.5 mr-1.5" /> {t('jpp:kk_exco_kk', 'Exco KK')}
         </Button>
         <div className="ml-auto">
           <Button
             disabled={!pdfReady || generatingPdf}
             onClick={handleDownloadPdf}
-            className="h-10 rounded-xl font-black tracking-widest uppercase text-[10px] shadow-lg"
+            className="h-10 rounded-xl font-semibold tracking-widest uppercase text-xs shadow-lg"
             style={{ backgroundColor: themeColor, color: textOnTheme }}
           >
             {generatingPdf ? (
               <>
                 <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                <span className="animate-pulse">{t('jpp:kk_generating_pdf', 'Menjana PDF...')}</span>
+                <span>{t('jpp:kk_generating_pdf', 'Menjana PDF...')}</span>
               </>
             ) : !pdfReady ? (
               <>
@@ -578,19 +578,19 @@ function TakwimKediamanTab() {
       {loading ? (
         <div className="py-16 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-slate-400 dark:text-white/20" /></div>
       ) : items.length === 0 ? (
-        <div className="py-16 text-center"><p className="text-xs font-black text-slate-400 dark:text-white/20 uppercase tracking-widest">{t('jpp:kk_no_takwim_entries', 'Tiada entri takwim kediaman')}</p></div>
+        <div className="py-16 text-center"><p className="text-xs font-semibold text-slate-400 dark:text-white/20 uppercase tracking-widest">{t('jpp:kk_no_takwim_entries', 'Tiada entri takwim kediaman')}</p></div>
       ) : (
         <div className="rounded-2xl border border-slate-200 dark:border-white/10 overflow-hidden bg-white dark:bg-transparent shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="bg-slate-50 dark:bg-white/[0.04]">
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_type', 'Jenis')}</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_title', 'Tajuk')}</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_club', 'Kelab')}</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_date', 'Tarikh')}</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_week', 'Minggu')}</th>
-                  <th className="px-4 py-3 text-[9px] font-black uppercase tracking-widest text-slate-500 dark:text-white/30 text-right">{t('jpp:kk_th_action', 'Tindakan')}</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_type', 'Jenis')}</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_title', 'Tajuk')}</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_club', 'Kelab')}</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_date', 'Tarikh')}</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30">{t('jpp:kk_th_week', 'Minggu')}</th>
+                  <th className="px-4 py-3 text-xs font-semibold uppercase tracking-widest text-slate-500 dark:text-white/30 text-right">{t('jpp:kk_th_action', 'Tindakan')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-white/[0.04]">
@@ -600,12 +600,12 @@ function TakwimKediamanTab() {
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/50 dark:hover:bg-white/[0.02] transition-colors">
                       <td className="px-4 py-3">
-                        <Badge className="text-[8px] font-black uppercase tracking-widest px-2 py-0.5 border-none" style={{ background: hexToRgba(color, 0.15), color }}>{cfg?.shortLabel || item.jenis}</Badge>
+                        <Badge className="text-xs font-semibold uppercase tracking-widest px-2 py-0.5 border-none" style={{ background: hexToRgba(color, 0.15), color }}>{cfg?.shortLabel || item.jenis}</Badge>
                       </td>
-                      <td className="px-4 py-3"><p className="text-xs font-black text-slate-900 dark:text-white/90">{item.tajuk}</p></td>
-                      <td className="px-4 py-3"><p className="text-[10px] text-fuchsia-600 dark:text-fuchsia-400/70 font-bold">{item.kelab_kediaman_label || '—'}</p></td>
-                      <td className="px-4 py-3 text-[11px] font-bold text-slate-600 dark:text-white/60 whitespace-nowrap">{fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ' — ' + fmtDate(item.tarikh_tamat) : ''}</td>
-                      <td className="px-4 py-3 text-xs font-black text-slate-500 dark:text-white/40 text-center">{item.bil_minggu || '—'}</td>
+                      <td className="px-4 py-3"><p className="text-xs font-semibold text-slate-900 dark:text-white/90">{item.tajuk}</p></td>
+                      <td className="px-4 py-3"><p className="text-xs text-fuchsia-600 dark:text-fuchsia-400/70 font-bold">{item.kelab_kediaman_label || '—'}</p></td>
+                      <td className="px-4 py-3 text-xs font-bold text-slate-600 dark:text-white/60 whitespace-nowrap">{fmtDate(item.tarikh_mula)}{item.tarikh_tamat && item.tarikh_tamat !== item.tarikh_mula ? ' — ' + fmtDate(item.tarikh_tamat) : ''}</td>
+                      <td className="px-4 py-3 text-xs font-semibold text-slate-500 dark:text-white/40 text-center">{item.bil_minggu || '—'}</td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-1">
                           <button onClick={() => openEdit(item)} className="w-7 h-7 rounded-lg bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white hover:bg-slate-200 dark:hover:bg-white/10 flex items-center justify-center transition-all"><Pencil className="w-3 h-3" /></button>
@@ -623,14 +623,14 @@ function TakwimKediamanTab() {
 
       {/* CRUD Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-[480px] rounded-[2rem] p-0 border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-900 overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
+        <DialogContent className="sm:max-w-[480px] rounded-[2rem] p-0 border border-slate-200 dark:border-[#252B35] bg-white dark:bg-[#13171D] overflow-hidden flex flex-col max-h-[90vh] shadow-2xl">
           <div className="p-8 space-y-5 overflow-y-auto flex-1">
             <DialogHeader>
-              <DialogTitle className="text-xl font-black tracking-tight text-slate-900 dark:text-white">{editTarget ? t('jpp:update', 'Kemaskini') : t('jpp:kk_new_entry', 'Entri Baharu')}</DialogTitle>
+              <DialogTitle className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">{editTarget ? t('jpp:update', 'Kemaskini') : t('jpp:kk_new_entry', 'Entri Baharu')}</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">Jenis</Label>
+                <Label className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50 tracking-widest">Jenis</Label>
                 <Select value={form.jenis} onValueChange={v => setForm({ ...form, jenis: v })} disabled={!!editTarget}>
                   <SelectTrigger className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold"><SelectValue /></SelectTrigger>
                   <SelectContent>
@@ -641,48 +641,48 @@ function TakwimKediamanTab() {
               </div>
               {form.jenis === 'KELAB_KEDIAMAN' && (
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_residential_club_name', 'Nama Kelab Kediaman')}</Label>
+                  <Label className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_residential_club_name', 'Nama Kelab Kediaman')}</Label>
                   <Input value={form.kelab_kediaman_label} onChange={e => setForm({ ...form, kelab_kediaman_label: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder="cth: JPPI, AG, IS..." />
                 </div>
               )}
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_title_required', 'Tajuk *')}</Label>
+                <Label className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_title_required', 'Tajuk *')}</Label>
                 <Input value={form.tajuk} onChange={e => setForm({ ...form, tajuk: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" placeholder={t('jpp:kk_activity_name_placeholder', 'Nama aktiviti...')} />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_start_date', 'Tarikh Mula')} *</Label>
+                  <Label className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_start_date', 'Tarikh Mula')} *</Label>
                   <Input type="date" value={form.tarikh_mula} onChange={e => setForm({ ...form, tarikh_mula: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_end_date', 'Tarikh Tamat')}</Label>
+                  <Label className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_end_date', 'Tarikh Tamat')}</Label>
                   <Input type="date" value={form.tarikh_tamat} onChange={e => setForm({ ...form, tarikh_tamat: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_week_count_label', 'Bil. Minggu')}</Label>
+                  <Label className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_week_count_label', 'Bil. Minggu')}</Label>
                   <Input type="number" value={form.bil_minggu} onChange={e => setForm({ ...form, bil_minggu: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_notes_label', 'Catatan')}</Label>
+                  <Label className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_notes_label', 'Catatan')}</Label>
                   <Input value={form.catatan} onChange={e => setForm({ ...form, catatan: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-bold" />
                 </div>
               </div>
               {/* Color Picker */}
               <div className="space-y-1.5">
-                <Label className="text-[10px] font-black uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_color_optional', 'Warna (Pilihan)')}</Label>
+                <Label className="text-xs font-semibold uppercase text-slate-500 dark:text-white/50 tracking-widest">{t('jpp:kk_color_optional', 'Warna (Pilihan)')}</Label>
                 <div className="flex items-center gap-3">
                   <input type="color" value={form.warna_custom || KK_COLOR} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="w-12 h-12 rounded-xl border-2 border-slate-200 dark:border-white/10 cursor-pointer bg-transparent" />
                   <Input value={form.warna_custom} onChange={e => setForm({ ...form, warna_custom: e.target.value })} className="h-12 rounded-xl bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-mono font-bold flex-1" placeholder={KK_COLOR} />
-                  {form.warna_custom && <button onClick={() => setForm({ ...form, warna_custom: '' })} className="text-[10px] font-bold text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60">{t('jpp:kk_reset_btn', 'Reset')}</button>}
+                  {form.warna_custom && <button onClick={() => setForm({ ...form, warna_custom: '' })} className="text-xs font-bold text-slate-400 dark:text-white/30 hover:text-slate-600 dark:hover:text-white/60">{t('jpp:kk_reset_btn', 'Reset')}</button>}
                 </div>
               </div>
             </div>
           </div>
           <DialogFooter className="p-6 bg-slate-50 dark:bg-white/[0.02] border-t border-slate-100 dark:border-white/5 gap-3">
             <Button variant="ghost" onClick={() => setDialogOpen(false)} className="flex-1 h-12 rounded-xl text-slate-600 dark:text-white/50 hover:bg-slate-200 dark:hover:bg-white/10">{t('jpp:cancel', 'Batal')}</Button>
-            <Button onClick={handleSave} disabled={saving} className="flex-[2] h-12 rounded-xl font-black text-[10px] uppercase tracking-widest text-white" style={{ background: KK_COLOR }}>
+            <Button onClick={handleSave} disabled={saving} className="flex-[2] h-12 rounded-xl font-semibold text-xs uppercase tracking-widest text-white" style={{ background: KK_COLOR }}>
               {saving ? t('jpp:saving', 'Menyimpan...') : editTarget ? t('jpp:update', 'Kemaskini') : t('jpp:save', 'Simpan')}
             </Button>
           </DialogFooter>
@@ -733,7 +733,7 @@ export function KkUnitDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-white tracking-tight flex items-center gap-3">
             <Building2 className="w-7 h-7" style={{ color: KK_COLOR }} />
             {t('jpp:kk_dashboard_title', 'Pusat Kawalan Unit Kelab & Perpaduan')}
           </h1>
@@ -748,10 +748,10 @@ export function KkUnitDashboard() {
 
       {/* Tabs — hanya papar jika ada hak manage */}
       {showUnitTab && (
-        <div className="flex gap-1 bg-slate-100 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] p-1 rounded-2xl overflow-x-auto">
+        <div className="flex flex-nowrap items-center gap-1 bg-slate-100 dark:bg-[#0E1116] border border-slate-200 dark:border-[#252B35] p-1 rounded-2xl overflow-x-auto scrollbar-hide">
           <button
             onClick={() => handleTabChange('dashboard')}
-            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+            className={`shrink-0 sm:flex-1 px-3.5 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-colors ${
               activeTab === 'dashboard'
                 ? 'shadow-sm'
                 : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
@@ -766,7 +766,7 @@ export function KkUnitDashboard() {
           </button>
           <button
             onClick={() => handleTabChange('unit')}
-            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+            className={`shrink-0 sm:flex-1 px-3.5 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-colors ${
               activeTab === 'unit'
                 ? 'shadow-sm'
                 : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
@@ -781,7 +781,7 @@ export function KkUnitDashboard() {
           </button>
           <button
             onClick={() => handleTabChange('merit-rasmi')}
-            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+            className={`shrink-0 sm:flex-1 px-3.5 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-colors ${
               activeTab === 'merit-rasmi'
                 ? 'shadow-sm'
                 : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
@@ -796,7 +796,7 @@ export function KkUnitDashboard() {
           </button>
           <button
             onClick={() => handleTabChange('qr')}
-            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+            className={`shrink-0 sm:flex-1 px-3.5 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-colors ${
               activeTab === 'qr'
                 ? 'shadow-sm'
                 : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
@@ -811,7 +811,7 @@ export function KkUnitDashboard() {
           </button>
           <button
             onClick={() => handleTabChange('takwim')}
-            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+            className={`shrink-0 sm:flex-1 px-3.5 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-colors ${
               activeTab === 'takwim'
                 ? 'shadow-sm'
                 : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
@@ -826,7 +826,7 @@ export function KkUnitDashboard() {
           </button>
           <button
             onClick={() => handleTabChange('demerit')}
-            className={`flex-1 flex items-center justify-center gap-2 h-10 rounded-xl text-[10px] font-black uppercase tracking-wider whitespace-nowrap transition-all ${
+            className={`shrink-0 sm:flex-1 px-3.5 flex items-center justify-center gap-2 h-10 rounded-xl text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-colors ${
               activeTab === 'demerit'
                 ? 'shadow-sm'
                 : 'text-slate-600 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
