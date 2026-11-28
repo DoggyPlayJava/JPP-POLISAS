@@ -521,7 +521,7 @@ export function normalizePolySuaraCodename(
     };
   }
 
-  // Exact match to one of the curated fictional personas
+  // Exact match to one of the 70 curated fictional character personas
   const exactPersona = FRIENDLY_ANON_PERSONAS.find(
     (p) => p.displayName.toLowerCase() === cleanName.toLowerCase()
   );
@@ -536,31 +536,16 @@ export function normalizePolySuaraCodename(
     };
   }
 
-  // Deterministically remap Anon-xxxxx hashes, UUID/hex hashes, OR legacy animal codenames
-  const isAnonHash =
-    /^anon[-_]?[a-z0-9_-]*$/i.test(cleanName) ||
-    /^[0-9a-f]{8,}(-[0-9a-f]{4,})*$/i.test(cleanName);
-
-  if (isAnonHash || isLegacyAnimalCodename(cleanName)) {
-    const persona = FRIENDLY_ANON_PERSONAS[hashPersonaIndex(cleanName)];
-    return {
-      displayName: persona.displayName,
-      name: persona.displayName,
-      emoji: persona.emoji,
-      bgClass: persona.bgClass,
-      textClass: persona.textClass,
-      isOP: isOriginalPoster,
-    };
-  }
-
-  // Non-animal custom persona: preserve label with deterministic emblem & styling
-  const styledPersona = FRIENDLY_ANON_PERSONAS[hashPersonaIndex(cleanName)];
+  // Strict allowlist: deterministically remap EVERY non-exact codename
+  // (Anon-xxxxx hashes, UUID/hex hashes, legacy animal names, or any unknown/custom string)
+  // onto the 70 curated fictional character personas so raw uncurated labels can never leak.
+  const persona = FRIENDLY_ANON_PERSONAS[hashPersonaIndex(cleanName)];
   return {
-    displayName: cleanName,
-    name: cleanName,
-    emoji: styledPersona.emoji,
-    bgClass: styledPersona.bgClass,
-    textClass: styledPersona.textClass,
+    displayName: persona.displayName,
+    name: persona.displayName,
+    emoji: persona.emoji,
+    bgClass: persona.bgClass,
+    textClass: persona.textClass,
     isOP: isOriginalPoster,
   };
 }

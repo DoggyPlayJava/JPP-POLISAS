@@ -372,9 +372,33 @@ describe('PolySuaraPage Suite', () => {
       expect(pageContent).not.toContain('window.confirm(');
     });
 
-    it('renders avatar with Mineral Teal gradient ring container', () => {
+    it('renders avatar with Mineral Teal gradient ring container using normalized persona exclusively', () => {
       expect(cardContent).toContain('bg-gradient-to-tr from-[#0F766E] via-[#14B8A6] to-[#2DD4BF]');
-      expect(cardContent).toContain('avatar.emoji');
+      expect(cardContent).toContain('persona.emoji');
+      expect(cardContent).not.toContain('getAnimalAvatarFromCodename');
+    });
+
+    it('never leaks raw unknown or unlisted animal codenames when rendering confession cards', () => {
+      const unlistedSamples = ['Kancil Baru', 'Haiwan Legacy 123', 'Buaya Pantas', 'Monyet Laju'];
+      const nowIso = new Date().toISOString();
+
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialConfessions: unlistedSamples.map((codename, idx) => ({
+          id: `conf-unlisted-${idx}`,
+          content: `Ujian normalisasi persona ${idx}`,
+          category: 'UMUM',
+          created_at: nowIso,
+          codename,
+          upvotes: 1,
+          downvotes: 0,
+          comments_count: 0,
+        })),
+      }));
+
+      for (const raw of unlistedSamples) {
+        expect(html).not.toContain(raw);
+        expect(html).toContain(normalizePolySuaraCodename(raw).displayName);
+      }
     });
 
     it('renders verified anonymous identity badge (✓) and author name', () => {

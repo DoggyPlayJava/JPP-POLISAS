@@ -178,10 +178,8 @@ function normalizePolySuaraCodenameServer(rawCodename) {
     );
     if (exactMatch) return exactMatch;
 
-    if (/^anon[-_\s]?[a-z0-9_-]*$/i.test(cleaned) || /^pelajar\s+anon$/i.test(cleaned) || LEGACY_POLYSUARA_ANIMAL_REGEX.test(cleaned)) {
-        return FICTIONAL_POLYSUARA_PERSONAS[hashStringUnsigned(cleaned) % FICTIONAL_POLYSUARA_PERSONAS.length];
-    }
-    return cleaned;
+    // Strict allowlist: EVERY non-exact codename deterministically maps into the 70-character roster
+    return FICTIONAL_POLYSUARA_PERSONAS[hashStringUnsigned(cleaned) % FICTIONAL_POLYSUARA_PERSONAS.length];
 }
 
 function stripPolySuaraTokensServer(rawText) {

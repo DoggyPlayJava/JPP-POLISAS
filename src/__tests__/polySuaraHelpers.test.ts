@@ -375,6 +375,30 @@ describe('polySuaraHelpers', () => {
       expect(nullResult.displayName).toBe('Korra');
       expect(nullResult.isOP).toBe(true);
     });
+
+    it('strictly maps unknown, legacy, and unlisted animal codenames into the 70-character roster without leaking raw text', () => {
+      const personaNames = new Set(FRIENDLY_ANON_PERSONAS.map((p) => p.displayName));
+      const unlistedSamples = [
+        'Kancil Baru',
+        'Haiwan Legacy 123',
+        'Buaya Pantas',
+        'Monyet Laju',
+        'Unknown Custom Alias',
+        'Buaya Pantas [Penulis]',
+      ];
+
+      for (const raw of unlistedSamples) {
+        const mapped1 = normalizePolySuaraCodename(raw);
+        const mapped2 = normalizePolySuaraCodename(raw);
+        const strippedRaw = raw.replace(/\s*\[Penulis\]\s*/gi, '').trim();
+
+        expect(personaNames.has(mapped1.displayName)).toBe(true);
+        expect(mapped1.displayName).not.toBe(strippedRaw);
+        expect(mapped1.displayName).toBe(mapped2.displayName);
+        expect(mapped1.emoji).toMatch(/^[A-Z]{1,3}$/);
+        expect(mapped1.isOP).toBe(raw.includes('[Penulis]'));
+      }
+    });
   });
 
   describe('isWithin1Hour', () => {

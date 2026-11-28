@@ -38,7 +38,6 @@ import {
   cleanConfessionText,
   detectPostIntent,
   extractCampusLocations,
-  getAnimalAvatarFromCodename,
   getFriendlyAnonName,
   hasSpoilerImageToken,
   isWithin1Hour,
@@ -116,7 +115,6 @@ export function PolySuaraConfessionCard({
     (confession.upvotes || 0) > 30 &&
     Date.now() - new Date(confession.created_at).getTime() < 24 * 60 * 60 * 1000;
   const persona = normalizePolySuaraCodename(confession.codename);
-  const avatar = getAnimalAvatarFromCodename(confession.codename);
   const isConfessionDeleted = Boolean(
     confession.is_deleted_by_author || confession.content === '[deleted]'
   );
@@ -178,13 +176,13 @@ export function PolySuaraConfessionCard({
                 'w-10 h-10 rounded-full flex items-center justify-center font-bold tracking-tight select-none',
                 isMine
                   ? 'bg-white dark:bg-[#13171D] text-[#0F766E] dark:text-[#2DD4BF]'
-                  : cn(avatar.bgClass, avatar.emoji.length > 2 ? 'text-[11px]' : 'text-xs')
+                  : cn(persona.bgClass, persona.emoji.length > 2 ? 'text-[11px]' : 'text-xs')
               )}
             >
               {isMine ? (
                 <UserCircle2 className="w-5 h-5 text-[#0F766E] dark:text-[#2DD4BF]" />
               ) : (
-                avatar.emoji
+                persona.emoji
               )}
             </div>
           </div>
