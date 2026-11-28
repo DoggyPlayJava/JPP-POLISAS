@@ -1078,5 +1078,14 @@
   "suara_filter_short": "Filters",
   "suara_open_search": "Search voices",
   "suara_clear_search": "Clear search",
-  "suara_drawer_preferences": "Appearance & Language"
+  "suara_drawer_preferences": "Appearance & Language",
+  "edit_confession": "Edit Confession",
+  "edit_confession_tooltip": "Edit your confession (within 1 hour)",
+  "edit_confession_title": "Edit Secret Confession",
+  "edit_confession_time_limit": "Confessions can only be edited within 1 hour of posting.",
+  "edit_confession_window_hint": "Editable within 1 hour of posting",
+  "edit_confession_save": "Save Changes",
+  "edit_confession_success": "Confession updated successfully.",
+  "edit_confession_failed": "Failed to update confession. Please try again.",
+  "edited_label": "Edited"
 }

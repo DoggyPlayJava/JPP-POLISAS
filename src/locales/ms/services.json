@@ -1078,5 +1078,14 @@
   "suara_filter_short": "Tapis",
   "suara_open_search": "Cari suara",
   "suara_clear_search": "Padam carian",
-  "suara_drawer_preferences": "Paparan & Bahasa"
+  "suara_drawer_preferences": "Paparan & Bahasa",
+  "edit_confession": "Sunting Luahan",
+  "edit_confession_tooltip": "Sunting luahan anda (dalam tempoh 1 jam)",
+  "edit_confession_title": "Sunting Luahan Rahsia",
+  "edit_confession_time_limit": "Luahan hanya boleh disunting dalam tempoh 1 jam selepas diterbitkan.",
+  "edit_confession_window_hint": "Boleh disunting dalam tempoh 1 jam selepas diterbitkan",
+  "edit_confession_save": "Simpan Perubahan",
+  "edit_confession_success": "Luahan berjaya dikemas kini.",
+  "edit_confession_failed": "Gagal mengemas kini luahan. Sila cuba lagi.",
+  "edited_label": "Disunting"
 }

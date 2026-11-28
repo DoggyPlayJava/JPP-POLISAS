@@ -20,6 +20,7 @@ import {
   MapPin,
   MessageCircle,
   MessageSquare,
+  Pencil,
   Pin,
   Share2,
   Shield,
@@ -65,6 +66,7 @@ export interface PolySuaraConfessionCardProps {
   onCopyLink: (confessionId: string) => void;
   onShareImage: (confessionId: string) => void;
   onToggleBookmark: (confessionId: string) => void;
+  onEditConfession?: (confession: any) => void;
   onDeleteConfession: (confessionId: string) => void;
   onOpenReport: (confessionId: string) => void;
   onOpenJppReply: (confession: any) => void;
@@ -97,6 +99,7 @@ export function PolySuaraConfessionCard({
   onCopyLink,
   onShareImage,
   onToggleBookmark,
+  onEditConfession,
   onDeleteConfession,
   onOpenReport,
   onOpenJppReply,
@@ -119,6 +122,8 @@ export function PolySuaraConfessionCard({
     confession.is_deleted_by_author || confession.content === '[deleted]'
   );
   const canDeleteConfession =
+    isMine && !isConfessionDeleted && isWithin1Hour(confession.created_at);
+  const canEditConfession =
     isMine && !isConfessionDeleted && isWithin1Hour(confession.created_at);
   const canShowJppReply = canReplyJpp && !confession.official_reply;
   const canShowEscalate = canReplyJpp && !isConfessionDeleted && !confession.escalated_ticket_id && Boolean(onOpenEscalate);
@@ -212,6 +217,11 @@ export function PolySuaraConfessionCard({
                 addSuffix: true,
                 locale: dateLocale,
               })}
+              {confession.edited_at && !isConfessionDeleted && (
+                <span className="ml-1.5 text-[#0F766E] dark:text-[#2DD4BF] font-medium">
+                  · {t('services:edited_label', 'Disunting')}
+                </span>
+              )}
             </p>
           </div>
         </div>
@@ -223,6 +233,21 @@ export function PolySuaraConfessionCard({
           <span className="whitespace-nowrap text-[11px] font-bold px-3 py-1 rounded-full text-[#0F766E] dark:text-[#2DD4BF] bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC]/80 dark:border-[#252B35] shrink-0">
             {getCategoryLabel(confession.category)}
           </span>
+
+          {canEditConfession && onEditConfession && (
+            <button
+              type="button"
+              onClick={() => onEditConfession(confession)}
+              title={t('services:edit_confession_tooltip', 'Sunting luahan anda (dalam tempoh 1 jam)')}
+              aria-label={t('services:edit_confession', 'Sunting Luahan')}
+              className="text-[#3B635C] hover:text-[#0F766E] dark:text-[#94A0B2] dark:hover:text-[#2DD4BF] transition-colors p-1.5 rounded-full hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] cursor-pointer flex items-center gap-1 text-xs"
+            >
+              <Pencil className="w-4 h-4" />
+              <span className="hidden sm:inline text-[11px] font-medium">
+                {t('services:edit_confession', 'Sunting Luahan')}
+              </span>
+            </button>
+          )}
 
           {canDeleteConfession && (
             <button

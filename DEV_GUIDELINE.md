@@ -5785,6 +5785,18 @@ Garis panduan wajib bagi semua kerja UI akan datang (termasuk halaman awam, port
   - `server.js` menambah `fetchRecipientLanguages(userIds)` (satu kuiri berkumpulan `.in('id', ...)` berpecah 500 — sifar N+1) dan `normalizePolySuaraCodenameServer()`, serta menaik taraf `/api/polysuara-new-confession-notify`, `/api/polysuara-interaction-notify`, `/api/kebajikan-new-ticket-notify`, `/api/polymart-chat-notify`, `/api/makmp-notify`, dan `/api/makmp-winner-notify` untuk menghantar tajuk/mesej dalam bahasa pilihan penerima (`en`/`ms`) beserta pautan dalam yang tepat.
   - `NotificationBell.tsx` dan `NotifikasiPage.tsx` menyalurkan setiap item menerusi `localizeNotification(notif, t, i18n.language)`, menggunakan `dateLocale` dinamik (`enUS`/`ms`), dan menyetempatkan tajuk, lencana `baharu`/`new`, serta semua label modul (termasuk `MAKMP` dan `FOODBANK`).
 
+---
+
+## 53. Suntingan Kendiri 1-Jam Luahan PolySuara (Nov 2026)
+
+- **Migrasi Pangkalan Data (`supabase/migrations/20261128200000_polysuara_edit_confession_1h.sql`):**
+  - Menambah kolum `edited_at TIMESTAMPTZ DEFAULT NULL` pada `public.polysuara_confessions`.
+  - Memperkenalkan RPC `SECURITY DEFINER` (`SET search_path = public`) `public.edit_own_polysuara_confession(p_confession_id UUID, p_content TEXT, p_category VARCHAR, p_hashtags TEXT[])` dengan kunci baris `FOR UPDATE`, semakan pemilikan ketat `(SELECT auth.uid()) = author_id`, had masa pelayan tepat **1 jam** (`(NOW() - created_at) <= INTERVAL '1 hour'` — selari dengan tetingkap padam 1 jam), sekatan suntingan pada luahan dipadam/diarkib, had 540 aksara, penapisan kata kesat automatik melalui trigger `trg_censor_polysuara`, serta `REVOKE EXECUTE ... FROM PUBLIC, anon` + `GRANT EXECUTE ... TO authenticated`.
+- **Antaramuka & Pariti Dwibahasa (`PolySuaraConfessionCard.tsx`, `PolySuaraPage.tsx`, `src/locales/{en,ms}/services.json`):**
+  - Butang `Sunting Luahan` / `Edit Confession` (`Pencil`) dipaparkan bersebelahan `Padam Luahan` hanya untuk pengarang dalam tempoh 1 jam pertama (`isWithin1Hour(confession.created_at)`), bersama petunjuk `· Disunting` / `· Edited` apabila `edited_at` wujud.
+  - Modal suntingan berportal (`z-[99990]` / `z-[99999]`, dwi-tema *Semambu Mineral Teal* / *Obsidian Carbon*, sifar `backdrop-blur`) membenarkan suntingan teks (had 500 aksara + amaran PII `checkEmpathyNudge`), kategori saluran, dan hashtag sambil mengekalkan token `[spoiler-img]` jika ada, serta sokongan undur berhemah jika kolum `edited_at` atau RPC belum dimigrasi.
+
+
 
 
 

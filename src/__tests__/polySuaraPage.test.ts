@@ -691,6 +691,90 @@ describe('PolySuaraPage Suite', () => {
 
       // Padam button is NOT shown on already deleted confession
       expect(html).not.toContain('Padam Luahan');
+      expect(html).not.toContain('Sunting Luahan');
+    });
+  });
+
+  describe('1-Hour Self-Edit Feature for Confessions', () => {
+    const pageFilePath = path.resolve(__dirname, '../pages/polyservices/PolySuaraPage.tsx');
+    const cardFilePath = path.resolve(__dirname, '../components/polysuara/PolySuaraConfessionCard.tsx');
+    const pageContent = fs.readFileSync(pageFilePath, 'utf-8');
+    const cardContent = fs.readFileSync(cardFilePath, 'utf-8');
+
+    it('wires 1-hour confession self-edit RPC and modal cleanly in PolySuaraPage & Card', () => {
+      expect(pageContent).toContain('handleOpenEditConfession');
+      expect(pageContent).toContain('handleSaveEditConfession');
+      expect(pageContent).toContain("edit_own_polysuara_confession");
+      expect(cardContent).toContain('canEditConfession');
+      expect(cardContent).toContain('onEditConfession');
+      expect(cardContent).toContain('confession.edited_at');
+    });
+
+    it('renders "Sunting Luahan" button when confession was created within 1 hour by author', () => {
+      const confessionId = 'conf-edit-recent-1';
+      const recentTimestamp = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialConfessions: [{
+          id: confessionId,
+          content: 'Luahan baharu yang masih boleh disunting.',
+          category: 'UMUM',
+          created_at: recentTimestamp,
+          codename: 'Korra',
+          upvotes: 3,
+          downvotes: 0,
+          comments_count: 0,
+        }],
+        initialMyConfessions: new Set([confessionId]),
+      }));
+
+      expect(html).toContain('Sunting Luahan');
+      expect(html).toContain('aria-label="Sunting Luahan"');
+    });
+
+    it('does NOT render "Sunting Luahan" button when confession is older than 1 hour', () => {
+      const confessionId = 'conf-edit-old-1';
+      const oldTimestamp = new Date(Date.now() - 90 * 60 * 1000).toISOString();
+
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialConfessions: [{
+          id: confessionId,
+          content: 'Luahan lama melebihi satu jam.',
+          category: 'UMUM',
+          created_at: oldTimestamp,
+          codename: 'Korra',
+          upvotes: 8,
+          downvotes: 0,
+          comments_count: 0,
+        }],
+        initialMyConfessions: new Set([confessionId]),
+      }));
+
+      expect(html).not.toContain('Sunting Luahan');
+      expect(html).not.toContain('aria-label="Sunting Luahan"');
+    });
+
+    it('renders "Disunting" indicator when confession has edited_at timestamp', () => {
+      const confessionId = 'conf-edited-1';
+      const createdTs = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      const editedTs = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+
+      const html = renderToString(React.createElement(PolySuaraPage, {
+        initialConfessions: [{
+          id: confessionId,
+          content: 'Luahan yang telah dikemas kini.',
+          category: 'AKADEMIK',
+          created_at: createdTs,
+          edited_at: editedTs,
+          codename: 'BoBoiBoy',
+          upvotes: 4,
+          downvotes: 0,
+          comments_count: 0,
+        }],
+        initialMyConfessions: new Set([confessionId]),
+      }));
+
+      expect(html).toContain('Disunting');
     });
   });
 });

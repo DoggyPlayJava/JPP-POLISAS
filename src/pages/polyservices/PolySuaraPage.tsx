@@ -9,7 +9,7 @@ import { ms, enUS } from 'date-fns/locale';
 import toast from 'react-hot-toast';
 import {
   Send, Shield, AlertTriangle, MessageSquare, ThumbsDown, Flame, EyeOff, Search,
-  Loader2, Image as ImageIcon, X, Pin, Check, ChevronLeft, Bell, BellRing, BarChart,
+  Loader2, Image as ImageIcon, X, Pin, Pencil, Check, ChevronLeft, Bell, BellRing, BarChart,
   XCircle, UserCircle2, CheckCircle, Clock, Share2, Ghost, Heart, Sparkles,
   MessageCircle, ShieldAlert, Bookmark, Trash2, Link2, MapPin, HeartHandshake,
   ShieldCheck, UserCheck, Focus, ArrowUp, CheckCircle2, Eye, HelpCircle,
@@ -55,6 +55,7 @@ import {
   aggregateReactions,
   getFriendlyAnonName,
   isWithin1Hour,
+  hasSpoilerImageToken,
   embedSpoilerImageToken,
   detectPostIntent,
   checkEmpathyNudge,
@@ -67,6 +68,15 @@ const FEED_PAGE_SIZE = 20;
 const BOOKMARKS_STORAGE_KEY = 'polysuara_bookmarks_v1';
 const DRAFT_STORAGE_KEY = 'polysuara_draft_v1';
 let supportsEscalationCols = true;
+let supportsEditedAtCol = true;
+
+function buildConfessionSelectCols(includeEscalation: boolean, includeEditedAt: boolean): string {
+  const baseCols = 'id, content, category, upvotes, downvotes, comments_count, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, vote_count, polysuara_poll_votes(user_id)))';
+  const extras: string[] = [];
+  if (includeEscalation) extras.push('escalated_ticket_id, escalated_ticket_no');
+  if (includeEditedAt) extras.push('edited_at');
+  return extras.length > 0 ? `${baseCols}, ${extras.join(', ')}` : baseCols;
+}
 
 export interface ConfessionVoteItem {
   id: string;
@@ -385,6 +395,14 @@ export function PolySuaraPage({
   const [authorReplyText, setAuthorReplyText] = useState('');
   const [isAuthorReplying, setIsAuthorReplying] = useState(false);
 
+  // Author 1-hour self-edit modal
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<any | null>(null);
+  const [editContent, setEditContent] = useState('');
+  const [editCategory, setEditCategory] = useState('UMUM');
+  const [editEmpathyConfirmed, setEditEmpathyConfirmed] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+
   // Quick Report modal (supports both confessions and comments)
   const [reportModalOpen, setReportModalOpen] = useState(false);
   const [reportTargetType, setReportTargetType] = useState<'CONFESSION' | 'COMMENT'>('CONFESSION');
@@ -596,11 +614,14 @@ export function PolySuaraPage({
     }
   };
 
-  const buildFeedQuery = (offset: number, includeEscalation = supportsEscalationCols) => {
-    const baseCols = 'id, content, category, upvotes, downvotes, comments_count, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, vote_count, polysuara_poll_votes(user_id)))';
+  const buildFeedQuery = (
+    offset: number,
+    includeEscalation = supportsEscalationCols,
+    includeEditedAt = supportsEditedAtCol
+  ) => {
     let query = supabase
       .from('polysuara_confessions')
-      .select(includeEscalation ? `${baseCols}, escalated_ticket_id, escalated_ticket_no` : baseCols)
+      .select(buildConfessionSelectCols(includeEscalation, includeEditedAt))
       .eq('is_archived', false);
 
     if (activeCategory !== 'SEMUA') {
@@ -665,7 +686,8 @@ export function PolySuaraPage({
       if (isInitial) setLoading(true);
       
       const requestedEscalation = supportsEscalationCols;
-      const queries: any[] = [buildFeedQuery(offset, requestedEscalation)];
+      const requestedEditedAt = supportsEditedAtCol;
+      const queries: any[] = [buildFeedQuery(offset, requestedEscalation, requestedEditedAt)];
 
       // Only fetch metadata on initial load
       if (isInitial) {
@@ -680,13 +702,24 @@ export function PolySuaraPage({
       const results = await Promise.all(queries);
       let confRes = results[0];
 
-      if (
-        confRes.error &&
-        requestedEscalation &&
-        (confRes.error.code === '42703' || confRes.error.message?.includes('escalated_ticket'))
-      ) {
-        supportsEscalationCols = false;
-        confRes = await buildFeedQuery(offset, false);
+      if (confRes.error && (confRes.error.code === '42703' || confRes.error.message?.includes('does not exist'))) {
+        let shouldRetry = false;
+        if (requestedEscalation && confRes.error.message?.includes('escalated_ticket')) {
+          supportsEscalationCols = false;
+          shouldRetry = true;
+        }
+        if (requestedEditedAt && confRes.error.message?.includes('edited_at')) {
+          supportsEditedAtCol = false;
+          shouldRetry = true;
+        }
+        if (!shouldRetry && (requestedEscalation || requestedEditedAt)) {
+          supportsEscalationCols = false;
+          supportsEditedAtCol = false;
+          shouldRetry = true;
+        }
+        if (shouldRetry) {
+          confRes = await buildFeedQuery(offset, supportsEscalationCols, supportsEditedAtCol);
+        }
       }
 
       if (confRes.error) throw confRes.error;
@@ -793,20 +826,29 @@ export function PolySuaraPage({
       return;
     }
 
-    const deepLinkBaseCols = 'id, content, category, upvotes, downvotes, comments_count, created_at, official_reply, official_reply_at, responder:replied_by(full_name), status, codename, hashtags, author_reply, author_reply_at, image_url, is_pinned, polysuara_polls(id, is_multiple_choice, polysuara_poll_options(id, option_text, vote_count, polysuara_poll_votes(user_id)))';
     const requestedDeepLinkEscalation = supportsEscalationCols;
+    const requestedDeepLinkEditedAt = supportsEditedAtCol;
     supabase
       .from('polysuara_confessions')
-      .select(requestedDeepLinkEscalation ? `${deepLinkBaseCols}, escalated_ticket_id, escalated_ticket_no` : deepLinkBaseCols)
+      .select(buildConfessionSelectCols(requestedDeepLinkEscalation, requestedDeepLinkEditedAt))
       .eq('id', deepLinkPostId)
       .maybeSingle()
       .then(async ({ data, error }) => {
         let resolvedData = data;
-        if (error && requestedDeepLinkEscalation && (error.code === '42703' || error.message?.includes('escalated_ticket'))) {
-          supportsEscalationCols = false;
+        if (error && (error.code === '42703' || error.message?.includes('does not exist'))) {
+          if (requestedDeepLinkEscalation && error.message?.includes('escalated_ticket')) {
+            supportsEscalationCols = false;
+          }
+          if (requestedDeepLinkEditedAt && error.message?.includes('edited_at')) {
+            supportsEditedAtCol = false;
+          }
+          if (!error.message?.includes('escalated_ticket') && !error.message?.includes('edited_at')) {
+            supportsEscalationCols = false;
+            supportsEditedAtCol = false;
+          }
           const retry = await supabase
             .from('polysuara_confessions')
-            .select(deepLinkBaseCols)
+            .select(buildConfessionSelectCols(supportsEscalationCols, supportsEditedAtCol))
             .eq('id', deepLinkPostId)
             .maybeSingle();
           resolvedData = retry.data;
@@ -1260,6 +1302,143 @@ export function PolySuaraPage({
     } catch (err: any) {
       console.error(err);
       toast.error(t('services:pin_status_failed', 'Gagal menukar status pin'));
+    }
+  };
+
+  const handleOpenEditConfession = (confession: any) => {
+    if (!confession) return;
+    const isAuthor = Boolean(myConfessions.has(confession.id) || (profile?.id && confession.author_id === profile.id));
+    const isDeleted = Boolean(confession.is_deleted_by_author || confession.content === '[deleted]');
+    if (!isAuthor || isDeleted || !isWithin1Hour(confession.created_at)) {
+      toast.error(t('services:edit_confession_time_limit', 'Luahan hanya boleh disunting dalam tempoh 1 jam selepas diterbitkan.'));
+      return;
+    }
+    setEditTarget(confession);
+    setEditContent(cleanConfessionText(confession.content || ''));
+    setEditCategory(confession.category || 'UMUM');
+    setEditEmpathyConfirmed(false);
+    setEditModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (!editModalOpen) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !isSavingEdit) {
+        setEditModalOpen(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [editModalOpen, isSavingEdit]);
+
+  const handleSaveEditConfession = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editTarget || !editContent.trim() || !profile) return;
+
+    if (!isWithin1Hour(editTarget.created_at)) {
+      toast.error(t('services:edit_confession_time_limit', 'Luahan hanya boleh disunting dalam tempoh 1 jam selepas diterbitkan.'));
+      setEditModalOpen(false);
+      return;
+    }
+
+    const empathyCheck = checkEmpathyNudge(editContent);
+    if (empathyCheck.triggered && !editEmpathyConfirmed) {
+      setEditEmpathyConfirmed(true);
+      return;
+    }
+
+    let nextContent = editContent.trim();
+    if (hasSpoilerImageToken(editTarget.content)) {
+      nextContent = embedSpoilerImageToken(nextContent, true);
+    }
+
+    const hashtagsMatch = nextContent.match(/#[a-zA-Z0-9_]+/g);
+    const nextHashtags = hashtagsMatch ? hashtagsMatch.map((tag) => tag.toLowerCase()) : [];
+
+    setIsSavingEdit(true);
+    try {
+      let updatedContent = nextContent;
+      let updatedCategory = editCategory;
+      let updatedHashtags = nextHashtags;
+      let updatedEditedAt = new Date().toISOString();
+
+      const { data: rpcData, error: rpcError } = await supabase.rpc('edit_own_polysuara_confession', {
+        p_confession_id: editTarget.id,
+        p_content: nextContent,
+        p_category: editCategory,
+        p_hashtags: nextHashtags,
+      });
+
+      if (rpcError) {
+        const isMissingRpc =
+          rpcError.code === '42883' ||
+          rpcError.code === 'PGRST202' ||
+          rpcError.message?.includes('edit_own_polysuara_confession');
+
+        if (!isMissingRpc) {
+          throw rpcError;
+        }
+
+        // Graceful fallback before SQL migration is applied
+        const { error: directErr } = await supabase
+          .from('polysuara_confessions')
+          .update({
+            content: nextContent,
+            category: editCategory,
+            hashtags: nextHashtags,
+          })
+          .eq('id', editTarget.id);
+
+        if (directErr) throw directErr;
+      } else if (rpcData && typeof rpcData === 'object') {
+        const row = rpcData as any;
+        updatedContent = row.content ?? nextContent;
+        updatedCategory = row.category ?? editCategory;
+        updatedHashtags = Array.isArray(row.hashtags) ? row.hashtags : nextHashtags;
+        updatedEditedAt = row.edited_at ?? updatedEditedAt;
+      }
+
+      setConfessions((prev) =>
+        prev.map((c) =>
+          c.id === editTarget.id
+            ? {
+                ...c,
+                content: updatedContent,
+                category: updatedCategory,
+                hashtags: updatedHashtags,
+                edited_at: updatedEditedAt,
+              }
+            : c
+        )
+      );
+      setActiveConfessionForComments((prev: any) =>
+        prev && prev.id === editTarget.id
+          ? {
+              ...prev,
+              content: updatedContent,
+              category: updatedCategory,
+              hashtags: updatedHashtags,
+              edited_at: updatedEditedAt,
+            }
+          : prev
+      );
+
+      queryCache.invalidate('polysuara:');
+      toast.success(t('services:edit_confession_success', 'Luahan berjaya dikemas kini.'));
+      setEditModalOpen(false);
+      setEditTarget(null);
+      setEditContent('');
+      setEditEmpathyConfirmed(false);
+    } catch (err: any) {
+      console.error('[Edit Confession Error]', err);
+      const msg = String(err?.message || '').toLowerCase();
+      if (msg.includes('expired') || msg.includes('1 hour')) {
+        toast.error(t('services:edit_confession_time_limit', 'Luahan hanya boleh disunting dalam tempoh 1 jam selepas diterbitkan.'));
+      } else {
+        toast.error(t('services:edit_confession_failed', 'Gagal mengemas kini luahan. Sila cuba lagi.'));
+      }
+    } finally {
+      setIsSavingEdit(false);
     }
   };
 
@@ -2936,6 +3115,7 @@ export function PolySuaraPage({
                             onCopyLink={handleCopyPostLink}
                             onShareImage={handleShareImage}
                             onToggleBookmark={toggleBookmark}
+                            onEditConfession={handleOpenEditConfession}
                             onDeleteConfession={handleDeleteConfession}
                             onOpenReport={(id) => {
                               setReportTargetType('CONFESSION');
@@ -3225,6 +3405,144 @@ export function PolySuaraPage({
         )}
       </AnimatePresence>
 
+      {/* Author 1-Hour Self-Edit Modal */}
+      {typeof document !== 'undefined' && createPortal(
+        <AnimatePresence>
+          {editModalOpen && editTarget && (
+            <>
+              <motion.div
+                key="edit-backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => !isSavingEdit && setEditModalOpen(false)}
+                className="fixed inset-0 bg-[#090B0E]/75 z-[99990]"
+              />
+              <div className="fixed inset-0 z-[99999] flex items-end sm:items-center justify-center sm:p-4 pointer-events-none">
+                <motion.div
+                  key="edit-modal"
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label={t('services:edit_confession_title', 'Sunting Luahan Rahsia')}
+                  initial={{ opacity: 0, y: 24, scale: 0.96 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 24, scale: 0.96 }}
+                  transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                  className="pointer-events-auto relative w-full sm:max-w-lg bg-white dark:bg-[#13171D] border-t sm:border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-t-[2.5rem] sm:rounded-3xl p-5 sm:p-6 shadow-2xl max-h-[90dvh] overflow-y-auto overscroll-contain pb-28 sm:pb-6 text-[#0B2420] dark:text-[#F1F5F9]"
+                >
+                  <div className="flex items-center justify-between pb-4 border-b border-[#B8E4DC]/60 dark:border-[#252B35] mb-4">
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="w-8 h-8 rounded-full bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0">
+                        <Pencil className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="font-bold text-base leading-tight">
+                          {t('services:edit_confession_title', 'Sunting Luahan Rahsia')}
+                        </h3>
+                        <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] flex items-center gap-1 mt-0.5">
+                          <Clock className="w-3 h-3 shrink-0" />
+                          <span>{t('services:edit_confession_window_hint', 'Boleh disunting dalam tempoh 1 jam selepas diterbitkan')}</span>
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      disabled={isSavingEdit}
+                      onClick={() => setEditModalOpen(false)}
+                      aria-label={t('common:close', 'Tutup')}
+                      className="w-8 h-8 rounded-full bg-[#F6FBF9] dark:bg-[#0E1116] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] text-[#3B635C] dark:text-[#94A0B2] flex items-center justify-center transition-colors cursor-pointer shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+
+                  <form onSubmit={handleSaveEditConfession} className="space-y-4">
+                    {/* Category selector */}
+                    <div className="flex flex-wrap gap-1.5">
+                      {CATEGORIES.map((cat) => {
+                        const active = editCategory === cat;
+                        return (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => setEditCategory(cat)}
+                            className={cn(
+                              'px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors cursor-pointer',
+                              active
+                                ? 'bg-[#0F766E] border-[#0F766E] text-white dark:bg-[#2DD4BF] dark:border-[#2DD4BF] dark:text-[#090B0E]'
+                                : 'bg-[#F6FBF9] dark:bg-[#0E1116] border-[#B8E4DC]/80 dark:border-[#252B35] text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]'
+                            )}
+                          >
+                            {categoryOptions.find((opt) => opt.key === cat)?.label || cat}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    {/* Editable content textarea */}
+                    <div>
+                      <textarea
+                        value={editContent}
+                        onChange={(e) => {
+                          setEditContent(e.target.value);
+                          if (editEmpathyConfirmed) setEditEmpathyConfirmed(false);
+                        }}
+                        placeholder={t('services:whisper_input_placeholder', 'Apa yang bermain di fikiran anda?')}
+                        maxLength={500}
+                        rows={5}
+                        required
+                        className="w-full bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC]/80 dark:border-[#252B35] rounded-2xl p-4 text-sm text-[#0B2420] dark:text-[#F1F5F9] placeholder:text-[#3B635C]/70 dark:placeholder:text-[#94A0B2]/60 focus:outline-none focus:ring-2 focus:ring-[#0F766E]/40 resize-none transition-colors"
+                      />
+                      <div className="flex items-center justify-between mt-1.5 px-1">
+                        <span className="text-xs text-[#3B635C] dark:text-[#94A0B2] font-medium">
+                          {t('services:hundred_percent_secret', '100% Rahsia')}
+                        </span>
+                        <span className="text-xs font-mono tabular-nums text-[#3B635C] dark:text-[#94A0B2]">
+                          {editContent.length}/500
+                        </span>
+                      </div>
+                    </div>
+
+                    {editEmpathyConfirmed && (
+                      <div className="rounded-2xl border border-amber-500/40 bg-amber-500/10 p-3 text-xs text-amber-800 dark:text-amber-200 flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5 text-amber-600 dark:text-amber-400" />
+                        <span>
+                          {t('services:suara_empathy_nudge_text', 'Kami mengesan maklumat peribadi (nombor telefon, matrik, atau nama penuh). Sila pastikan identiti dilindungi sebelum menghantar.')}
+                        </span>
+                      </div>
+                    )}
+
+                    <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#B8E4DC]/60 dark:border-[#252B35]">
+                      <button
+                        type="button"
+                        disabled={isSavingEdit}
+                        onClick={() => setEditModalOpen(false)}
+                        className="px-4 py-2 rounded-xl text-sm font-medium text-[#3B635C] dark:text-[#94A0B2] hover:bg-[#EBF7F4] dark:hover:bg-[#1B2028] transition-colors cursor-pointer"
+                      >
+                        {t('common:cancel', 'Batal')}
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={!editContent.trim() || isSavingEdit}
+                        className="px-5 py-2 rounded-xl bg-[#0F766E] hover:bg-[#0D9488] dark:bg-[#2DD4BF] dark:hover:bg-[#5EEAD4] disabled:bg-[#EBF7F4] dark:disabled:bg-[#1B2028] text-white dark:text-[#090B0E] disabled:text-[#3B635C]/50 dark:disabled:text-[#94A0B2]/40 text-sm font-bold transition-colors flex items-center gap-2 cursor-pointer"
+                      >
+                        {isSavingEdit ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                        <span>
+                          {editEmpathyConfirmed
+                            ? t('services:suara_empathy_send_anyway', 'Sahkan & Hantar')
+                            : t('services:edit_confession_save', 'Simpan Perubahan')}
+                        </span>
+                      </button>
+                    </div>
+                  </form>
+                </motion.div>
+              </div>
+            </>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
+
       {/* Author Reply Modal */}
       <AnimatePresence>
         {authorReplyModalOpen && (
@@ -3484,7 +3802,7 @@ export function PolySuaraPage({
       onSelectTag={(tag) => setActiveTag(tag)}
     />
 
-    {!composeModalOpen && !commentDrawerOpen && (
+    {!composeModalOpen && !commentDrawerOpen && !editModalOpen && (
       <>
         <BottomNav onOpenSidebar={() => setMobileDrawerOpen(true)} />
         <FloatingAiChat />
