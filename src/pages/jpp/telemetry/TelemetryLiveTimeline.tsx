@@ -9,9 +9,8 @@ import {
   Check,
   FileCode,
   Globe,
-  AlertTriangle,
-  Bug,
   ShieldCheck,
+  X,
 } from 'lucide-react';
 import { UnifiedTimelineEvent } from './telemetryTypes';
 import { cn } from '@/lib/utils';
@@ -20,12 +19,15 @@ import { useTranslation } from 'react-i18next';
 interface TelemetryLiveTimelineProps {
   events: UnifiedTimelineEvent[];
   loading?: boolean;
+  routeFilter?: string | null;
+  onClearRouteFilter?: () => void;
   onViewAllClick?: () => void;
 }
 
 export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
   events,
-  loading = false,
+  routeFilter = null,
+  onClearRouteFilter,
   onViewAllClick,
 }) => {
   const { t, i18n } = useTranslation(['jpp', 'common']);
@@ -33,7 +35,11 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'critical' | 'error' | 'warning'>('all');
 
-  const filteredEvents = events.filter((ev) => {
+  const routeScopedEvents = routeFilter
+    ? events.filter((ev) => (ev.pagePath || '').startsWith(routeFilter) || (ev.endpoint || '').includes(routeFilter))
+    : events;
+
+  const filteredEvents = routeScopedEvents.filter((ev) => {
     if (filter === 'critical') return ev.severity === 'CRITICAL';
     if (filter === 'error') return ev.badge === 'ERROR';
     if (filter === 'warning') return ev.severity === 'WARNING';
@@ -49,70 +55,93 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
   };
 
   const getDotStyle = (ev: UnifiedTimelineEvent) => {
-    if (ev.severity === 'CRITICAL') return 'bg-rose-500 ring-rose-200';
-    if (ev.badge === 'ERROR') return 'bg-red-500 ring-red-200';
-    if (ev.severity === 'WARNING') return 'bg-amber-500 ring-amber-200';
-    return 'bg-emerald-500 ring-emerald-200';
+    if (ev.severity === 'CRITICAL') return 'bg-rose-600 dark:bg-rose-400 ring-rose-500/20';
+    if (ev.badge === 'ERROR') return 'bg-rose-500 dark:bg-rose-400 ring-rose-500/20';
+    if (ev.severity === 'WARNING') return 'bg-amber-500 dark:bg-amber-400 ring-amber-500/20';
+    return 'bg-[#0F766E] dark:bg-[#2DD4BF] ring-[#0F766E]/20 dark:ring-[#2DD4BF]/20';
   };
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5 flex flex-col justify-between h-full">
+    <aside className="bg-white dark:bg-[#13171D] rounded-2xl border border-[#B8E4DC] dark:border-[#252B35] shadow-surface-sm p-5 flex flex-col justify-between h-full">
       {/* ── Header ── */}
       <div>
-        <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div>
-            <h3 className="text-base font-black text-slate-900 tracking-tight">
+        <div className="flex items-center justify-between gap-2 pb-3 border-b border-[#B8E4DC]/60 dark:border-[#252B35]">
+          <div className="min-w-0">
+            <h3 className="text-base font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
               {t('jpp:telemetry_timeline_title', 'Live Timeline')}
             </h3>
-            <p className="text-[10px] font-bold text-slate-400">
+            <p className="text-xs font-medium text-[#3B635C] dark:text-[#94A0B2]">
               {t('jpp:telemetry_timeline_subtitle', 'Penjejak Ralat & Halaman Bermasalah')}
             </p>
           </div>
-          <button
-            onClick={onViewAllClick}
-            className="text-xs font-black text-[#FF5B37] hover:underline flex items-center gap-1"
-          >
-            <span>{t('jpp:telemetry_timeline_view_all', 'View All')}</span>
-            <ArrowRight className="w-3 h-3" />
-          </button>
+          {onViewAllClick && (
+            <button
+              type="button"
+              onClick={onViewAllClick}
+              className="text-xs font-semibold text-[#0F766E] dark:text-[#2DD4BF] hover:underline flex items-center gap-1 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E] dark:focus-visible:ring-[#2DD4BF] rounded"
+            >
+              <span>{t('jpp:telemetry_timeline_view_all', 'View All')}</span>
+              <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
+          )}
         </div>
 
+        {/* Active Route Filter Banner */}
+        {routeFilter && onClearRouteFilter && (
+          <div className="mt-3 px-3 py-1.5 rounded-lg bg-[#EBF7F4] dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] flex items-center justify-between gap-2 text-xs">
+            <span className="font-mono font-medium text-[#0F766E] dark:text-[#2DD4BF] truncate">
+              Route: {routeFilter}
+            </span>
+            <button
+              type="button"
+              onClick={onClearRouteFilter}
+              aria-label={t('jpp:telemetry_close_btn', 'Tutup')}
+              className="p-0.5 rounded text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]"
+            >
+              <X className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+
         {/* ── Filter Pills ── */}
-        <div className="flex items-center gap-1.5 pt-3 pb-2 overflow-x-auto">
+        <div className="flex items-center gap-1.5 pt-3 pb-2 overflow-x-auto scrollbar-hide">
           {[
-            { id: 'all', label: t('jpp:telemetry_filter_all', 'Semua'), count: events.length },
+            { id: 'all', label: t('jpp:telemetry_filter_all', 'Semua'), count: routeScopedEvents.length },
             {
               id: 'critical',
               label: t('jpp:telemetry_filter_critical', 'Kritikal'),
-              count: events.filter((e) => e.severity === 'CRITICAL').length,
+              count: routeScopedEvents.filter((e) => e.severity === 'CRITICAL').length,
             },
             {
               id: 'error',
               label: t('jpp:telemetry_filter_error', 'Error'),
-              count: events.filter((e) => e.badge === 'ERROR').length,
+              count: routeScopedEvents.filter((e) => e.badge === 'ERROR').length,
             },
             {
               id: 'warning',
               label: t('jpp:telemetry_filter_warning', 'Amaran'),
-              count: events.filter((e) => e.severity === 'WARNING').length,
+              count: routeScopedEvents.filter((e) => e.severity === 'WARNING').length,
             },
           ].map((tab) => (
             <button
               key={tab.id}
+              type="button"
               onClick={() => setFilter(tab.id as any)}
               className={cn(
-                'px-2.5 py-1 rounded-lg text-[10px] font-bold whitespace-nowrap transition-all flex items-center gap-1',
+                'px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E] dark:focus-visible:ring-[#2DD4BF]',
                 filter === tab.id
-                  ? 'bg-slate-900 text-white font-black shadow-2xs'
-                  : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  ? 'bg-[#0F766E] text-white dark:bg-[#2DD4BF] dark:text-[#090B0E]'
+                  : 'bg-[#F6FBF9] dark:bg-[#1B2028] text-[#3B635C] dark:text-[#94A0B2] hover:bg-[#EBF7F4] dark:hover:bg-[#232933]'
               )}
             >
               <span>{tab.label}</span>
               {tab.count > 0 && (
                 <span
                   className={cn(
-                    'px-1 py-0.2 rounded-full text-[8px] font-mono',
-                    filter === tab.id ? 'bg-white/20 text-white' : 'bg-slate-200 text-slate-700'
+                    'px-1.5 py-0.5 rounded-full text-xs font-mono tabular-nums leading-none',
+                    filter === tab.id
+                      ? 'bg-white/20 text-white dark:bg-[#090B0E]/20 dark:text-[#090B0E]'
+                      : 'bg-white dark:bg-[#0E1116] text-[#0B2420] dark:text-[#F1F5F9]'
                   )}
                 >
                   {tab.count}
@@ -123,19 +152,19 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
         </div>
       </div>
 
-      {/* ── Event Stream with Detailed Page Badge ── */}
-      <div className="relative flex-1 py-2 my-2 overflow-y-auto max-h-[500px] pr-1">
+      {/* ── Event Stream ── */}
+      <div className="relative flex-1 py-2 my-2 overflow-y-auto overscroll-contain max-h-[500px] pr-1">
         {/* Vertical Rail Line */}
-        <div className="absolute left-[6px] top-3 bottom-6 w-[2px] bg-slate-100" />
+        <div className="absolute left-[6px] top-3 bottom-6 w-[2px] bg-[#B8E4DC]/60 dark:bg-[#252B35]" aria-hidden="true" />
 
-        <div className="space-y-4 relative z-10">
+        <div className="space-y-3.5 relative z-10">
           {displayEvents.length === 0 ? (
             <div className="text-center py-10">
-              <ShieldCheck className="w-7 h-7 text-emerald-500 mx-auto mb-1.5" />
-              <p className="text-xs font-bold text-slate-700">
+              <ShieldCheck className="w-7 h-7 text-[#0F766E] dark:text-[#2DD4BF] mx-auto mb-2" aria-hidden="true" />
+              <p className="text-xs font-semibold text-[#0B2420] dark:text-[#F1F5F9]">
                 {t('jpp:telemetry_no_errors_title', 'Tiada Ralat Dikesan')}
               </p>
-              <p className="text-[10px] text-slate-400 mt-0.5">
+              <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-1">
                 {t('jpp:telemetry_no_errors_desc', 'Semua halaman dan subsistem beroperasi dengan lancar.')}
               </p>
             </div>
@@ -145,89 +174,89 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
               const hasDetails = !!(ev.stack || ev.endpoint || ev.filename);
 
               return (
-                <div
-                  key={ev.id || i}
-                  className="flex items-start gap-2.5 pl-0 group text-left"
-                >
+                <div key={ev.id || i} className="flex items-start gap-2.5 text-left">
                   {/* Dot Node */}
-                  <div className="mt-1 flex items-center justify-center shrink-0">
-                    <span
-                      className={cn(
-                        'w-3 h-3 rounded-full ring-4 shadow-2xs',
-                        getDotStyle(ev)
-                      )}
-                    />
+                  <div className="mt-1.5 flex items-center justify-center shrink-0">
+                    <span className={cn('w-3 h-3 rounded-full ring-4', getDotStyle(ev))} aria-hidden="true" />
                   </div>
 
-                  {/* Card Container */}
+                  {/* Event Card */}
                   <div
-                    onClick={() => hasDetails && setExpandedId(isExpanded ? null : ev.id)}
                     className={cn(
-                      'min-w-0 flex-1 p-2.5 rounded-xl border transition-all cursor-pointer',
+                      'min-w-0 flex-1 p-3 rounded-xl border transition-colors',
                       isExpanded
-                        ? 'bg-slate-50 border-slate-300 shadow-xs'
-                        : 'bg-white border-slate-200/80 hover:border-slate-300 hover:bg-slate-50/50'
+                        ? 'bg-[#F6FBF9] dark:bg-[#0E1116] border-[#0F766E]/40 dark:border-[#2DD4BF]/40'
+                        : 'bg-white dark:bg-[#0E1116]/70 border-[#B8E4DC]/80 dark:border-[#252B35] hover:border-[#0F766E]/40 dark:hover:border-[#2DD4BF]/40'
                     )}
                   >
                     {/* Header: Page Badge & Time */}
-                    <div className="flex items-center justify-between gap-2 mb-1">
-                      {/* Highlighted Page Badge */}
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-black uppercase font-mono bg-blue-50 text-blue-700 border border-blue-200/80 max-w-[200px] truncate">
-                        <span>📄</span>
+                    <div className="flex flex-wrap items-center justify-between gap-1.5 mb-1.5">
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium font-mono bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] border border-[#B8E4DC] dark:border-[#252B35] max-w-[180px] truncate">
+                        <Globe className="w-3 h-3 shrink-0" aria-hidden="true" />
                         <span className="truncate">{ev.pagePath || '/'}</span>
                       </span>
 
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span
                           className={cn(
-                            'text-[8px] font-black uppercase px-1.5 py-0.5 rounded',
+                            'text-xs font-semibold uppercase px-1.5 py-0.5 rounded',
                             ev.severity === 'CRITICAL' || ev.badge === 'ERROR'
-                              ? 'bg-rose-100 text-rose-700'
-                              : 'bg-amber-100 text-amber-700'
+                              ? 'bg-rose-100 dark:bg-rose-500/20 text-rose-700 dark:text-rose-300'
+                              : ev.severity === 'WARNING'
+                              ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300'
+                              : 'bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF]'
                           )}
                         >
                           {ev.badge || ev.severity}
                         </span>
-                        <span className="text-[9px] text-slate-400 font-mono">
-                          {new Date(ev.timestamp).toLocaleTimeString(i18n.language.startsWith('en') ? 'en-MY' : 'ms-MY', {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                            second: '2-digit',
-                          })}
+                        <span className="text-xs text-[#3B635C] dark:text-[#94A0B2] font-mono tabular-nums">
+                          {new Date(ev.timestamp).toLocaleTimeString(
+                            i18n.language.startsWith('en') ? 'en-MY' : 'ms-MY',
+                            {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit',
+                            }
+                          )}
                         </span>
                       </div>
                     </div>
 
-                    {/* Friendly Page Title */}
                     {ev.pageTitle && (
-                      <p className="text-[10px] font-bold text-slate-500 mb-0.5">
+                      <p className="text-xs font-medium text-[#3B635C] dark:text-[#94A0B2] mb-0.5">
                         {ev.pageTitle}
                       </p>
                     )}
 
-                    {/* Real Error Message */}
-                    <p className="text-xs font-black text-slate-900 leading-snug break-words">
+                    <p className="text-xs font-semibold text-[#0B2420] dark:text-[#F1F5F9] leading-snug break-words">
                       {ev.title}
                     </p>
 
-                    {/* Script Filename if available */}
                     {ev.filename && (
-                      <p className="text-[9px] text-slate-400 font-mono mt-1 truncate flex items-center gap-1">
-                        <FileCode className="w-3 h-3 text-slate-400 shrink-0" />
+                      <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] font-mono mt-1 truncate flex items-center gap-1">
+                        <FileCode className="w-3.5 h-3.5 shrink-0" aria-hidden="true" />
                         <span className="truncate">{ev.filename.split('/').pop()}</span>
                       </p>
                     )}
 
-                    {/* Expand/Collapse Indicator */}
                     {hasDetails && (
-                      <div className="mt-1 flex items-center justify-between text-[9px] font-bold text-slate-400 pt-1 border-t border-slate-100">
-                        <span>{isExpanded ? t('jpp:telemetry_hide_details', 'Sembunyikan Butiran') : t('jpp:telemetry_click_for_trace', 'Klik untuk Jejak Penuh')}</span>
+                      <button
+                        type="button"
+                        aria-expanded={isExpanded}
+                        onClick={() => setExpandedId(isExpanded ? null : ev.id)}
+                        className="w-full mt-2 flex items-center justify-between text-xs font-semibold text-[#0F766E] dark:text-[#2DD4BF] pt-1.5 border-t border-[#B8E4DC]/60 dark:border-[#252B35] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E] dark:focus-visible:ring-[#2DD4BF] rounded"
+                      >
+                        <span>
+                          {isExpanded
+                            ? t('jpp:telemetry_hide_details', 'Sembunyikan Butiran')
+                            : t('jpp:telemetry_click_for_trace', 'Klik untuk Jejak Penuh')}
+                        </span>
                         {isExpanded ? (
-                          <ChevronUp className="w-3 h-3" />
+                          <ChevronUp className="w-3.5 h-3.5" aria-hidden="true" />
                         ) : (
-                          <ChevronDown className="w-3 h-3" />
+                          <ChevronDown className="w-3.5 h-3.5" aria-hidden="true" />
                         )}
-                      </div>
+                      </button>
                     )}
 
                     {/* ── Expanded Drawer ── */}
@@ -237,14 +266,16 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           exit={{ opacity: 0 }}
-                          className="mt-2.5 pt-2 border-t border-slate-200 space-y-2 text-[10px]"
+                          transition={{ duration: 0.18 }}
+                          className="mt-2.5 pt-2.5 border-t border-[#B8E4DC]/60 dark:border-[#252B35] space-y-2 text-xs"
                         >
-                          {/* Full URL Path */}
                           {ev.endpoint && (
                             <div>
-                              <span className="font-bold text-slate-500 block">{t('jpp:telemetry_page_url', 'URL Halaman:')}</span>
-                              <div className="flex items-center gap-1 mt-0.5">
-                                <code className="p-1 rounded bg-slate-100 text-slate-800 font-mono text-[9px] break-all flex-1">
+                              <span className="font-semibold text-[#3B635C] dark:text-[#94A0B2] block">
+                                {t('jpp:telemetry_page_url', 'URL Halaman:')}
+                              </span>
+                              <div className="flex items-center gap-1.5 mt-1">
+                                <code className="p-1.5 rounded bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0B2420] dark:text-[#F1F5F9] font-mono text-xs break-all flex-1">
                                   {ev.endpoint}
                                 </code>
                                 {ev.endpoint.startsWith('http') && (
@@ -252,43 +283,42 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
                                     href={ev.endpoint}
                                     target="_blank"
                                     rel="noreferrer"
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="p-1 rounded bg-slate-200 text-slate-700 hover:bg-slate-300"
+                                    className="p-1.5 rounded bg-[#EBF7F4] dark:bg-[#1B2028] text-[#0F766E] dark:text-[#2DD4BF] hover:bg-[#B8E4DC]/50 dark:hover:bg-[#232933]"
                                     title={t('jpp:telemetry_open_page_tooltip', 'Buka Halaman Ini')}
+                                    aria-label={t('jpp:telemetry_open_page_tooltip', 'Buka Halaman Ini')}
                                   >
-                                    <ExternalLink className="w-3 h-3" />
+                                    <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
                                   </a>
                                 )}
                               </div>
                             </div>
                           )}
 
-                          {/* Full Stack Trace */}
                           {ev.stack && (
                             <div>
-                              <div className="flex items-center justify-between mb-0.5">
-                                <span className="font-bold text-slate-500">{t('jpp:telemetry_call_stack', 'Call Stack:')}</span>
+                              <div className="flex items-center justify-between mb-1">
+                                <span className="font-semibold text-[#3B635C] dark:text-[#94A0B2]">
+                                  {t('jpp:telemetry_call_stack', 'Call Stack:')}
+                                </span>
                                 <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleCopy(ev.id, ev.stack || '');
-                                  }}
-                                  className="text-[9px] font-bold text-blue-600 hover:underline flex items-center gap-0.5"
+                                  type="button"
+                                  onClick={() => handleCopy(ev.id, ev.stack || '')}
+                                  className="text-xs font-semibold text-[#0F766E] dark:text-[#2DD4BF] hover:underline flex items-center gap-1"
                                 >
                                   {copiedId === ev.id ? (
                                     <>
-                                      <Check className="w-2.5 h-2.5 text-emerald-600" />
-                                      <span className="text-emerald-600">{t('jpp:telemetry_copied', 'Disalin')}</span>
+                                      <Check className="w-3.5 h-3.5" aria-hidden="true" />
+                                      <span>{t('jpp:telemetry_copied', 'Disalin')}</span>
                                     </>
                                   ) : (
                                     <>
-                                      <Copy className="w-2.5 h-2.5" />
+                                      <Copy className="w-3.5 h-3.5" aria-hidden="true" />
                                       <span>{t('jpp:telemetry_copy', 'Salin')}</span>
                                     </>
                                   )}
                                 </button>
                               </div>
-                              <pre className="p-2 rounded bg-slate-900 text-slate-200 font-mono text-[8px] max-h-32 overflow-y-auto whitespace-pre-wrap leading-tight">
+                              <pre className="p-2.5 rounded-lg bg-[#0E1116] border border-[#252B35] text-[#F1F5F9] font-mono text-xs max-h-32 overflow-y-auto overscroll-contain whitespace-pre-wrap leading-relaxed">
                                 {ev.stack}
                               </pre>
                             </div>
@@ -303,6 +333,6 @@ export const TelemetryLiveTimeline: React.FC<TelemetryLiveTimelineProps> = ({
           )}
         </div>
       </div>
-    </div>
+    </aside>
   );
 };

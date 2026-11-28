@@ -385,37 +385,63 @@ describe('Task 3: FoodBank Siswa Revamp — Smart Pantry, Sticky Capsule & QR Pa
   });
 });
 
-describe('Task 4: High-Contrast Obsidian Emerald Scanner HUD & Zero-Overflow Admin Tables (JppFoodBankAdmin.tsx)', () => {
+describe('Task 4: Architectural Obsidian/Teal Scanner & Zero-Overflow Modular Admin (JppFoodBankAdmin.tsx + foodbank/*)', () => {
   const adminPagePath = path.resolve(__dirname, '../pages/jpp/JppFoodBankAdmin.tsx');
+  const foodbankDirPath = path.resolve(__dirname, '../pages/jpp/foodbank');
 
-  it('verifies JppFoodBankAdmin.tsx file exists and exports JppFoodBankAdmin', async () => {
+  function readFoodBankModuleSources(): { file: string; content: string }[] {
+    const files: { file: string; content: string }[] = [
+      { file: 'JppFoodBankAdmin.tsx', content: fs.readFileSync(adminPagePath, 'utf-8') },
+    ];
+    if (fs.existsSync(foodbankDirPath)) {
+      for (const name of fs.readdirSync(foodbankDirPath)) {
+        if (name.endsWith('.ts') || name.endsWith('.tsx')) {
+          files.push({
+            file: `foodbank/${name}`,
+            content: fs.readFileSync(path.join(foodbankDirPath, name), 'utf-8'),
+          });
+        }
+      }
+    }
+    return files;
+  }
+
+  function readCombinedSource(): string {
+    return readFoodBankModuleSources()
+      .map((f) => f.content)
+      .join('\n');
+  }
+
+  it('verifies JppFoodBankAdmin.tsx and modular sub-components exist and export JppFoodBankAdmin', async () => {
     expect(fs.existsSync(adminPagePath)).toBe(true);
+    expect(fs.existsSync(foodbankDirPath)).toBe(true);
     const mod = await import('@/pages/jpp/JppFoodBankAdmin');
     expect(mod.JppFoodBankAdmin).toBeDefined();
     expect(typeof mod.JppFoodBankAdmin).toBe('function');
   });
 
-  it('implements High-Contrast Obsidian Emerald Scanner HUD with viewfinder, laser sweep, and neon tokens', () => {
-    const content = fs.readFileSync(adminPagePath, 'utf-8');
-    // Viewfinder border & shadow token
-    expect(content).toContain('border-2 border-emerald-500/50 shadow-[0_0_30px_rgba(16,185,129,0.25)]');
+  it('implements Architectural Obsidian/Teal Scanner viewfinder without neon glow, plus 1-tap fulfillment CTA', () => {
+    const content = readCombinedSource();
+    // Architectural Semambu Teal / Obsidian Carbon viewfinder (zero cyberpunk shadow-[0_0_*] glow)
+    expect(content).toContain('border-2 border-[#0F766E]/60 dark:border-[#2DD4BF]/60 shadow-surface-md');
+    expect(content).not.toMatch(/shadow-\[0_0_/);
     // Giant thumb button token
     expect(content).toContain('SAHKAN SERAHAN MAKANAN');
     // Haptic vibration
     expect(content).toContain('vibrate');
-    // Scanner container & laser HUD
+    // Scanner container & optical laser guide
     expect(content).toContain('foodbank-counter-qr-reader');
     expect(content).toMatch(/Laser/i);
   });
 
   it('implements fallback manual matric search input with required placeholder and instant lookup', () => {
-    const content = fs.readFileSync(adminPagePath, 'utf-8');
+    const content = readCombinedSource();
     expect(content).toContain('Cari No. Matrik secara manual...');
     expect(content).toContain('handleLookupOrVerify');
   });
 
-  it('renders High-Contrast Student Identification Card in obsidian glass with bold details and 1-tap fulfillment', () => {
-    const content = fs.readFileSync(adminPagePath, 'utf-8');
+  it('renders High-Contrast Student Identification Card with override details and 1-tap fulfillment', () => {
+    const content = readCombinedSource();
     expect(content).toContain('effectiveName');
     expect(content).toContain('effectiveMatric');
     expect(content).toContain('selected_items');
@@ -424,18 +450,20 @@ describe('Task 4: High-Contrast Obsidian Emerald Scanner HUD & Zero-Overflow Adm
   });
 
   it('wraps inventory table, applications table, and budget transaction ledger in w-full max-w-full overflow-x-auto scrollbar-hide', () => {
-    const content = fs.readFileSync(adminPagePath, 'utf-8');
+    const content = readCombinedSource();
     expect(content).toContain('w-full max-w-full overflow-x-auto scrollbar-hide');
   });
 
-  it('strictly contains zero raw banned emojis across JppFoodBankAdmin.tsx source', () => {
-    const content = fs.readFileSync(adminPagePath, 'utf-8');
-    const hasEmoji = BANNED_EMOJI_REGEX.test(content);
-    expect(hasEmoji).toBe(false);
+  it('strictly contains zero raw banned emojis and zero select(*) across JppFoodBankAdmin.tsx and foodbank/* sources', () => {
+    const sources = readFoodBankModuleSources();
+    for (const src of sources) {
+      expect(BANNED_EMOJI_REGEX.test(src.content), `${src.file} must not contain raw emojis`).toBe(false);
+      expect(src.content, `${src.file} must not use select('*')`).not.toContain(".select('*')");
+    }
   });
 
   it('preserves backend RPCs, RBAC gating, budget calculations, and export functions', () => {
-    const content = fs.readFileSync(adminPagePath, 'utf-8');
+    const content = readCombinedSource();
     expect(content).toContain('verify_and_complete_foodbank_pickup');
     expect(content).toContain('foodbank_budget_transactions');
     expect(content).toContain('OFFICIAL_BASELINE_BUDGET');

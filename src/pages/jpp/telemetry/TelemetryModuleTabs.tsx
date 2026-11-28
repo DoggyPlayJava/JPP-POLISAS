@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
 import {
   GraduationCap,
   Flag,
@@ -8,14 +7,15 @@ import {
   ShoppingBag,
   Bike,
   Briefcase,
-  Heart,
   Home,
   CalendarDays,
-  Bell,
-  Users,
   TrendingUp,
   Database,
   Zap,
+  Building2,
+  CheckCircle2,
+  AlertTriangle,
+  AlertCircle,
 } from 'lucide-react';
 import {
   AreaChart,
@@ -30,7 +30,6 @@ import {
 } from 'recharts';
 import { TelemetryData } from './telemetryTypes';
 import { hexToRgba, cn } from '@/lib/utils';
-import { formatUptime } from './telemetryUtils';
 import { useTranslation } from 'react-i18next';
 
 interface TelemetryModuleTabsProps {
@@ -38,6 +37,11 @@ interface TelemetryModuleTabsProps {
 }
 
 type TabType = 'trend' | 'campus' | 'commercial' | 'database';
+type HealthStatus = 'healthy' | 'warning' | 'critical';
+
+function stripLeadingEmoji(label: string): string {
+  return label.replace(/^[\p{Extended_Pictographic}\uFE0F\s]+/gu, '').trim();
+}
 
 function SubModuleCard({
   name,
@@ -50,38 +54,46 @@ function SubModuleCard({
   name: string;
   icon: React.ElementType;
   color: string;
-  metrics: { label: string; value: number | string }[];
-  health?: '✅' | '🟡' | '🔴';
+  metrics: { label: string; value: number | string; alert?: boolean }[];
+  health?: HealthStatus;
   statusBar?: { items: { label: string; count: number; color: string }[]; total: number };
 }) {
   return (
-    <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.06] bg-slate-50/60 dark:bg-white/[0.02] p-4 flex flex-col justify-between">
+    <div className="rounded-2xl border border-[#B8E4DC]/80 dark:border-[#252B35] bg-[#F6FBF9] dark:bg-[#0E1116] p-4 flex flex-col justify-between">
       <div>
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2.5">
+        <div className="flex items-center justify-between mb-3 gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
             <div
-              className="w-8 h-8 rounded-xl flex items-center justify-center"
-              style={{ background: hexToRgba(color, 0.15) }}
+              className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: hexToRgba(color, 0.14) }}
             >
-              <Icon className="w-4 h-4" style={{ color }} />
+              <Icon className="w-4 h-4" style={{ color }} aria-hidden="true" />
             </div>
-            <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-white/60">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#0B2420] dark:text-[#F1F5F9] truncate">
               {name}
             </span>
           </div>
-          {health && <span className="text-xs">{health}</span>}
+          {health === 'healthy' && (
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" aria-label="Healthy" />
+          )}
+          {health === 'warning' && (
+            <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" aria-label="Warning" />
+          )}
+          {health === 'critical' && (
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" aria-label="Critical" />
+          )}
         </div>
 
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {metrics.map((m, i) => (
-            <div key={i} className="flex items-center justify-between text-xs">
-              <span className="text-[10px] text-slate-500 dark:text-white/40 font-bold">{m.label}</span>
+            <div key={i} className="flex items-center justify-between text-xs gap-2">
+              <span className="text-[#3B635C] dark:text-[#94A0B2] font-medium">{m.label}</span>
               <span
                 className={cn(
-                  'font-black font-mono tabular-nums',
-                  m.value.toString().includes('⚠️') || m.value.toString().includes('🚨')
-                    ? 'text-rose-500'
-                    : 'text-slate-900 dark:text-white/80'
+                  'font-bold font-mono tabular-nums',
+                  m.alert
+                    ? 'text-rose-700 dark:text-rose-400'
+                    : 'text-[#0B2420] dark:text-[#F1F5F9]'
                 )}
               >
                 {m.value}
@@ -92,8 +104,8 @@ function SubModuleCard({
       </div>
 
       {statusBar && statusBar.total > 0 && (
-        <div className="mt-3 pt-2 border-t border-slate-200/40 dark:border-white/[0.04]">
-          <div className="h-1.5 w-full bg-slate-200/60 dark:bg-white/10 rounded-full overflow-hidden flex">
+        <div className="mt-3 pt-2.5 border-t border-[#B8E4DC]/60 dark:border-[#252B35]">
+          <div className="h-1.5 w-full bg-[#EBF7F4] dark:bg-[#1B2028] rounded-full overflow-hidden flex">
             {statusBar.items.map((item, i) => (
               <div
                 key={i}
@@ -105,11 +117,11 @@ function SubModuleCard({
               />
             ))}
           </div>
-          <div className="flex flex-wrap gap-x-2 gap-y-1 mt-1.5">
+          <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2">
             {statusBar.items.map((item, i) => (
-              <div key={i} className="flex items-center gap-1 text-[8px] font-bold text-slate-500 dark:text-white/40">
-                <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: item.color }} />
-                <span>
+              <div key={i} className="flex items-center gap-1.5 text-xs font-medium text-[#3B635C] dark:text-[#94A0B2]">
+                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} aria-hidden="true" />
+                <span className="font-mono tabular-nums">
                   {item.label} ({item.count})
                 </span>
               </div>
@@ -124,11 +136,11 @@ function SubModuleCard({
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-slate-900 text-white dark:bg-[#090B0E] border border-white/10 rounded-xl p-3 shadow-xl text-xs">
-      <p className="text-white/50 text-[10px] font-bold mb-1">{label}</p>
+    <div className="bg-[#0B2420] dark:bg-[#0E1116] text-[#F1F5F9] border border-[#1E4D45] dark:border-[#252B35] rounded-xl p-3 shadow-surface-lg text-xs">
+      <p className="text-[#94A0B2] font-medium mb-1">{label}</p>
       {payload.map((p: any, i: number) => (
-        <p key={i} className="font-black text-sm">
-          {p.value} <span className="text-[10px] text-white/40 font-medium">{p.name}</span>
+        <p key={i} className="font-bold font-mono tabular-nums text-sm">
+          {p.value} <span className="text-xs text-[#94A0B2] font-sans font-normal">{p.name}</span>
         </p>
       ))}
     </div>
@@ -141,7 +153,10 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
   const { modules: m, diagnostics: d, snapshots } = data;
 
   const snapshotChartData = (snapshots || []).map((s) => ({
-    date: new Date(s.snapshot_date).toLocaleDateString(i18n.language.startsWith('en') ? 'en-MY' : 'ms-MY', { day: '2-digit', month: 'short' }),
+    date: new Date(s.snapshot_date).toLocaleDateString(
+      i18n.language.startsWith('en') ? 'en-MY' : 'ms-MY',
+      { day: '2-digit', month: 'short' }
+    ),
     pelajar: s.m_profiles,
     kelab: s.m_clubs,
     tiket: s.m_kebajikan_tickets,
@@ -151,45 +166,59 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
 
   const kebDonut = m
     ? [
-        { name: t('jpp:telemetry_status_open', 'Terbuka'), value: m.kebajikan_breakdown?.open ?? 0, color: '#EF4444' },
-        { name: t('jpp:telemetry_status_escalated', 'Escalated'), value: m.kebajikan_breakdown?.escalated ?? 0, color: '#F59E0B' },
-        { name: t('jpp:telemetry_status_resolved', 'Selesai'), value: m.kebajikan_breakdown?.resolved ?? 0, color: '#10B981' },
+        { name: t('jpp:telemetry_status_open', 'Terbuka'), value: m.kebajikan_breakdown?.open ?? 0, color: '#E11D48' },
+        { name: t('jpp:telemetry_status_escalated', 'Escalated'), value: m.kebajikan_breakdown?.escalated ?? 0, color: '#D97706' },
+        { name: t('jpp:telemetry_status_resolved', 'Selesai'), value: m.kebajikan_breakdown?.resolved ?? 0, color: '#0F766E' },
       ]
     : [];
 
+  const tabDefinitions: { id: TabType; label: string; icon: React.ElementType }[] = [
+    { id: 'trend', label: stripLeadingEmoji(t('jpp:telemetry_tab_trend', 'Trend Sejarah')), icon: TrendingUp },
+    { id: 'campus', label: stripLeadingEmoji(t('jpp:telemetry_tab_campus', 'Kampus')), icon: Building2 },
+    { id: 'commercial', label: stripLeadingEmoji(t('jpp:telemetry_tab_commercial', 'Komersial')), icon: ShoppingBag },
+    { id: 'database', label: stripLeadingEmoji(t('jpp:telemetry_tab_database', 'DB Deep-Dive')), icon: Database },
+  ];
+
   return (
-    <div className="rounded-[2rem] border border-slate-200/90 dark:border-white/[0.07] bg-white/95 dark:bg-[#0E1118]/90 p-6 shadow-xs  space-y-5">
+    <section className="rounded-2xl border border-[#B8E4DC] dark:border-[#252B35] bg-white dark:bg-[#13171D] p-5 sm:p-6 shadow-surface-sm space-y-5">
       {/* ── Tabs Navigation ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100 dark:border-white/[0.06]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#B8E4DC]/60 dark:border-[#252B35]">
         <div>
-          <h3 className="text-sm font-black text-slate-900 dark:text-white tracking-tight">
+          <h3 className="text-base font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight">
             {t('jpp:telemetry_tabs_title', 'Metrik Mendalam Subsistem')}
           </h3>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-white/35">
+          <p className="text-xs font-medium text-[#3B635C] dark:text-[#94A0B2]">
             {t('jpp:telemetry_tabs_subtitle', 'Data Analisis & Statistik Rekod Modul')}
           </p>
         </div>
 
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200/60 dark:border-white/[0.06] overflow-x-auto">
-          {[
-            { id: 'trend', label: t('jpp:telemetry_tab_trend', '📊 Trend Sejarah') },
-            { id: 'campus', label: t('jpp:telemetry_tab_campus', '🏛️ Kampus') },
-            { id: 'commercial', label: t('jpp:telemetry_tab_commercial', '🛒 Komersial') },
-            { id: 'database', label: t('jpp:telemetry_tab_database', '⚙️ DB Deep-Dive') },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as TabType)}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-xs font-black tracking-wide whitespace-nowrap transition-all',
-                activeTab === tab.id
-                  ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-xs'
-                  : 'text-slate-500 dark:text-white/40 hover:text-slate-900 dark:hover:text-white'
-              )}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div
+          role="tablist"
+          aria-label="Tab Metrik Subsistem"
+          className="flex items-center gap-1 p-1 rounded-xl bg-[#F6FBF9] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35] overflow-x-auto scrollbar-hide"
+        >
+          {tabDefinitions.map((tab) => {
+            const TabIcon = tab.icon;
+            const isSelected = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isSelected}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-colors flex items-center gap-1.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E] dark:focus-visible:ring-[#2DD4BF]',
+                  isSelected
+                    ? 'bg-[#0F766E] text-white dark:bg-[#1B2028] dark:text-[#2DD4BF] shadow-surface-sm'
+                    : 'text-[#3B635C] dark:text-[#94A0B2] hover:text-[#0B2420] dark:hover:text-[#F1F5F9]'
+                )}
+              >
+                <TabIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -197,12 +226,12 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
       {activeTab === 'trend' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
           {/* Growth AreaChart */}
-          <div className="lg:col-span-2 rounded-2xl border border-slate-200/80 dark:border-white/[0.06] p-4 bg-slate-50/50 dark:bg-white/[0.02]">
+          <div className="lg:col-span-2 rounded-2xl border border-[#B8E4DC]/80 dark:border-[#252B35] p-4 bg-[#F6FBF9] dark:bg-[#0E1116]">
             <div className="mb-4">
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/30 block">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#0F766E] dark:text-[#2DD4BF] block">
                 {t('jpp:telemetry_growth_title', 'Pertumbuhan Rekod 30-Hari')}
               </span>
-              <p className="text-xs font-bold text-slate-600 dark:text-white/70">
+              <p className="text-xs font-medium text-[#3B635C] dark:text-[#94A0B2] mt-0.5">
                 {t('jpp:telemetry_growth_desc', 'Trafik Pelajar & Trip PolyRider daripada Snapshot Automatik')}
               </p>
             </div>
@@ -212,20 +241,20 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
                   <AreaChart data={snapshotChartData}>
                     <defs>
                       <linearGradient id="gPelajar" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#0F766E" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#0F766E" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="gTrip" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#06B6D4" stopOpacity={0.35} />
-                        <stop offset="95%" stopColor="#06B6D4" stopOpacity={0} />
+                        <stop offset="5%" stopColor="#14B8A6" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#14B8A6" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <XAxis
                       dataKey="date"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: 'currentColor', fontSize: 9, fontWeight: 700 }}
-                      className="text-slate-400 dark:text-white/30"
+                      tick={{ fill: 'currentColor', fontSize: 11, fontWeight: 500 }}
+                      className="text-[#3B635C] dark:text-[#94A0B2]"
                       dy={8}
                     />
                     <YAxis hide />
@@ -234,16 +263,16 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
                       type="monotone"
                       dataKey="pelajar"
                       name="Pelajar"
-                      stroke="#3B82F6"
+                      stroke="#0F766E"
                       strokeWidth={2}
                       fillOpacity={1}
-                      fill="url"
+                      fill="url(#gPelajar)"
                     />
                     <Area
                       type="monotone"
                       dataKey="trip"
                       name="Trip"
-                      stroke="#06B6D4"
+                      stroke="#14B8A6"
                       strokeWidth={2}
                       fillOpacity={1}
                       fill="url(#gTrip)"
@@ -253,11 +282,11 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
               </div>
             ) : (
               <div className="h-56 flex flex-col items-center justify-center text-center">
-                <TrendingUp className="w-8 h-8 text-slate-300 dark:text-white/20 mb-2" />
-                <p className="text-xs font-bold text-slate-500 dark:text-white/40">
+                <TrendingUp className="w-8 h-8 text-[#B8E4DC] dark:text-[#252B35] mb-2" aria-hidden="true" />
+                <p className="text-xs font-semibold text-[#0B2420] dark:text-[#F1F5F9]">
                   {t('jpp:telemetry_no_snapshot_title', 'Belum ada data snapshot sejarah')}
                 </p>
-                <p className="text-[10px] text-slate-400 dark:text-white/25 mt-1 max-w-xs">
+                <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-1 max-w-xs">
                   {t('jpp:telemetry_no_snapshot_desc', 'Snapshot harian dijana setiap 3:00 AM melalui cron pelayan.')}
                 </p>
               </div>
@@ -265,19 +294,19 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           </div>
 
           {/* Kebajikan Donut Chart */}
-          <div className="rounded-2xl border border-slate-200/80 dark:border-white/[0.06] p-4 bg-slate-50/50 dark:bg-white/[0.02] flex flex-col justify-between">
+          <div className="rounded-2xl border border-[#B8E4DC]/80 dark:border-[#252B35] p-4 bg-[#F6FBF9] dark:bg-[#0E1116] flex flex-col justify-between">
             <div>
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-white/30 block mb-1">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#0F766E] dark:text-[#2DD4BF] block mb-1">
                 {t('jpp:telemetry_kebajikan_donut_title', 'Pecahan Tiket Kebajikan')}
               </span>
-              <p className="text-xs font-bold text-slate-600 dark:text-white/70">
+              <p className="text-xs font-medium text-[#3B635C] dark:text-[#94A0B2]">
                 {t('jpp:telemetry_kebajikan_donut_desc', 'Status Terbuka vs Selesai')}
               </p>
             </div>
 
             <div className="h-44 w-full flex items-center justify-center">
-              {kebDonut.every((d) => d.value === 0) ? (
-                <p className="text-xs text-slate-400 dark:text-white/30">
+              {kebDonut.every((item) => item.value === 0) ? (
+                <p className="text-xs text-[#3B635C] dark:text-[#94A0B2]">
                   {t('jpp:telemetry_no_active_tickets', 'Tiada tiket aktif')}
                 </p>
               ) : (
@@ -302,12 +331,12 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
               )}
             </div>
 
-            <div className="flex justify-center gap-3 pt-2 border-t border-slate-200/60 dark:border-white/[0.04]">
-              {kebDonut.map((d) => (
-                <div key={d.name} className="flex items-center gap-1.5 text-[10px] font-bold">
-                  <div className="w-2 h-2 rounded-full" style={{ background: d.color }} />
-                  <span className="text-slate-600 dark:text-white/60">
-                    {d.name} ({d.value})
+            <div className="flex flex-wrap justify-center gap-3 pt-2 border-t border-[#B8E4DC]/60 dark:border-[#252B35]">
+              {kebDonut.map((item) => (
+                <div key={item.name} className="flex items-center gap-1.5 text-xs font-medium">
+                  <div className="w-2 h-2 rounded-full" style={{ background: item.color }} aria-hidden="true" />
+                  <span className="text-[#3B635C] dark:text-[#94A0B2] font-mono tabular-nums">
+                    {item.name} ({item.value})
                   </span>
                 </div>
               ))}
@@ -322,7 +351,7 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           <SubModuleCard
             name="e-Akademik"
             icon={GraduationCap}
-            color="#8B5CF6"
+            color="#0F766E"
             metrics={[
               { label: t('jpp:telemetry_metric_cgpa_records', 'Rekod CGPA'), value: m.akademik_cgpa || 0 },
               { label: t('jpp:telemetry_metric_student_achievements', 'Pencapaian Siswa'), value: m.akademik_pencapaian || 0 },
@@ -343,7 +372,7 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           <SubModuleCard
             name={t('jpp:telemetry_module_supsas', 'SUPSAS Sukan')}
             icon={Trophy}
-            color="#EAB308"
+            color="#D97706"
             metrics={[
               { label: t('jpp:telemetry_metric_sports_categories', 'Kategori Sukan'), value: m.supsas_sports || 0 },
               { label: t('jpp:telemetry_metric_matches', 'Perlawanan'), value: m.supsas_fixtures || 0 },
@@ -353,7 +382,7 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           <SubModuleCard
             name={t('jpp:telemetry_module_karnival', 'Karnival POLISAS')}
             icon={Tent}
-            color="#F472B6"
+            color="#0284C7"
             metrics={[
               { label: t('jpp:telemetry_metric_carnival_editions', 'Edisi Karnival'), value: m.karnival_editions || 0 },
               { label: t('jpp:telemetry_metric_booths', 'Booth Usahawan'), value: m.karnival_booths || 0 },
@@ -362,7 +391,7 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           <SubModuleCard
             name={t('jpp:telemetry_module_klk', 'KLK (Kediaman Luar)')}
             icon={Home}
-            color="#A78BFA"
+            color="#14B8A6"
             metrics={[
               { label: t('jpp:telemetry_metric_external_students', 'Pelajar Luar Berdaftar'), value: m.klk_residency || 0 },
               { label: t('jpp:telemetry_metric_sync_logs', 'Log Sinkronisasi'), value: m.klk_sync_logs || 0 },
@@ -371,7 +400,7 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           <SubModuleCard
             name={t('jpp:telemetry_module_central_calendar', 'Takwim Pusat')}
             icon={CalendarDays}
-            color="#14B8A6"
+            color="#0D9488"
             metrics={[{ label: t('jpp:telemetry_metric_calendar_events', 'Acara Kalendar'), value: m.takwim_events || 0 }]}
           />
         </div>
@@ -383,13 +412,13 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           <SubModuleCard
             name="PolyMart"
             icon={ShoppingBag}
-            color="#EC4899"
+            color="#0F766E"
             health={
-              d?.polymart?.pending_stale > 0 || (d?.polymart?.cancel_rate_pct || 0) > 60
-                ? '🔴'
+              (d?.polymart?.pending_stale || 0) > 0 || (d?.polymart?.cancel_rate_pct || 0) > 60
+                ? 'critical'
                 : (d?.polymart?.cancel_rate_pct || 0) > 35
-                ? '🟡'
-                : '✅'
+                ? 'warning'
+                : 'healthy'
             }
             metrics={[
               { label: t('jpp:telemetry_metric_total_orders', 'Jumlah Pesanan'), value: m.polymart_orders || 0 },
@@ -399,7 +428,8 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
               },
               {
                 label: 'Pending > 48j',
-                value: d?.polymart?.pending_stale > 0 ? `${d.polymart.pending_stale} ⚠️` : 0,
+                value: d?.polymart?.pending_stale || 0,
+                alert: (d?.polymart?.pending_stale || 0) > 0,
               },
             ]}
             statusBar={
@@ -418,12 +448,12 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
                       {
                         label: 'PENDING',
                         count: d.polymart.status_breakdown.PENDING || 0,
-                        color: '#F59E0B',
+                        color: '#D97706',
                       },
                       {
                         label: 'CANCELLED',
                         count: d.polymart.status_breakdown.CANCELLED || 0,
-                        color: '#EF4444',
+                        color: '#E11D48',
                       },
                     ],
                   }
@@ -434,13 +464,13 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           <SubModuleCard
             name="PolyRider"
             icon={Bike}
-            color="#06B6D4"
+            color="#0284C7"
             health={
-              d?.polyrider?.stuck_emergency > 0 || (d?.polyrider?.cancel_rate_pct || 0) > 60
-                ? '🔴'
+              (d?.polyrider?.stuck_emergency || 0) > 0 || (d?.polyrider?.cancel_rate_pct || 0) > 60
+                ? 'critical'
                 : (d?.polyrider?.cancel_rate_pct || 0) > 35
-                ? '🟡'
-                : '✅'
+                ? 'warning'
+                : 'healthy'
             }
             metrics={[
               { label: t('jpp:telemetry_metric_total_trips', 'Jumlah Trip'), value: m.polyrider_jobs || 0 },
@@ -450,7 +480,8 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
               },
               {
                 label: 'SOS Emergency Stuck',
-                value: d?.polyrider?.stuck_emergency > 0 ? `${d.polyrider.stuck_emergency} 🚨` : 0,
+                value: d?.polyrider?.stuck_emergency || 0,
+                alert: (d?.polyrider?.stuck_emergency || 0) > 0,
               },
             ]}
             statusBar={
@@ -469,12 +500,12 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
                       {
                         label: 'EMERGENCY',
                         count: d.polyrider.status_breakdown.EMERGENCY || 0,
-                        color: '#EF4444',
+                        color: '#E11D48',
                       },
                       {
                         label: 'CANCELLED',
                         count: d.polyrider.status_breakdown.CANCELLED || 0,
-                        color: '#374151',
+                        color: '#64748B',
                       },
                     ],
                   }
@@ -485,7 +516,7 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
           <SubModuleCard
             name="e-Keusahawanan"
             icon={Briefcase}
-            color="#F59E0B"
+            color="#D97706"
             metrics={[
               { label: t('jpp:telemetry_metric_business_premises', 'Premis Bisnes'), value: m.businesses || 0 },
               { label: t('jpp:telemetry_metric_product_catalog', 'Katalog Produk'), value: m.business_products || 0 },
@@ -498,80 +529,99 @@ export const TelemetryModuleTabs: React.FC<TelemetryModuleTabsProps> = ({ data }
       {/* ── Tab 4: Diagnostik Database Mendalam ── */}
       {activeTab === 'database' && (
         <div className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="rounded-xl border border-slate-200/80 dark:border-white/[0.06] p-3 bg-slate-50/50 dark:bg-white/[0.02]">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-white/30 block mb-1">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="rounded-xl border border-[#B8E4DC]/80 dark:border-[#252B35] p-4 bg-[#F6FBF9] dark:bg-[#0E1116]">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2] block mb-1">
                 {t('jpp:telemetry_cache_hit_rate', 'Cache Hit Rate')}
               </span>
-              <p className="text-xl font-black text-slate-900 dark:text-white font-mono">
+              <p className="text-xl font-bold text-[#0B2420] dark:text-[#F1F5F9] font-mono tabular-nums">
                 {d?.database?.cache_hit_rate_pct || 99}%
               </p>
-              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">{t('jpp:telemetry_threshold_hit_rate', 'Threshold: > 85%')}</p>
+              <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-0.5">
+                {t('jpp:telemetry_threshold_hit_rate', 'Threshold: > 85%')}
+              </p>
             </div>
 
-            <div className="rounded-xl border border-slate-200/80 dark:border-white/[0.06] p-3 bg-slate-50/50 dark:bg-white/[0.02]">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-white/30 block mb-1">
+            <div className="rounded-xl border border-[#B8E4DC]/80 dark:border-[#252B35] p-4 bg-[#F6FBF9] dark:bg-[#0E1116]">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2] block mb-1">
                 {t('jpp:telemetry_dead_tuples', 'Dead Tuples Bloat')}
               </span>
-              <p className="text-xl font-black text-slate-900 dark:text-white font-mono">
+              <p className="text-xl font-bold text-[#0B2420] dark:text-[#F1F5F9] font-mono tabular-nums">
                 {d?.database?.dead_tuples_pct || 0}%
               </p>
-              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">{t('jpp:telemetry_vacuum_trigger', 'Vacuum trigger: > 20%')}</p>
+              <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-0.5">
+                {t('jpp:telemetry_vacuum_trigger', 'Vacuum trigger: > 20%')}
+              </p>
             </div>
 
-            <div className="rounded-xl border border-slate-200/80 dark:border-white/[0.06] p-3 bg-slate-50/50 dark:bg-white/[0.02]">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-white/30 block mb-1">
+            <div className="rounded-xl border border-[#B8E4DC]/80 dark:border-[#252B35] p-4 bg-[#F6FBF9] dark:bg-[#0E1116]">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2] block mb-1">
                 {t('jpp:telemetry_lock_contention', 'Lock Contention')}
               </span>
-              <p className="text-xl font-black text-slate-900 dark:text-white font-mono">
+              <p className="text-xl font-bold text-[#0B2420] dark:text-[#F1F5F9] font-mono tabular-nums">
                 {d?.database?.waiting_locks || 0}
               </p>
-              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">{t('jpp:telemetry_waiting_locks', 'Locks menunggu')}</p>
+              <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-0.5">
+                {t('jpp:telemetry_waiting_locks', 'Locks menunggu')}
+              </p>
             </div>
 
-            <div className="rounded-xl border border-slate-200/80 dark:border-white/[0.06] p-3 bg-slate-50/50 dark:bg-white/[0.02]">
-              <span className="text-[9px] font-black uppercase tracking-wider text-slate-400 dark:text-white/30 block mb-1">
+            <div className="rounded-xl border border-[#B8E4DC]/80 dark:border-[#252B35] p-4 bg-[#F6FBF9] dark:bg-[#0E1116]">
+              <span className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2] block mb-1">
                 {t('jpp:telemetry_db_storage_size', 'Saiz Storan DB')}
               </span>
-              <p className="text-xl font-black text-slate-900 dark:text-white font-mono">
+              <p className="text-xl font-bold text-[#0B2420] dark:text-[#F1F5F9] font-mono tabular-nums">
                 {d?.database?.db_size_mb || 0} MB
               </p>
-              <p className="text-[9px] text-slate-400 dark:text-white/30 mt-0.5">{t('jpp:telemetry_total_postgres_size', 'Total PostgreSQL size')}</p>
+              <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] mt-0.5">
+                {t('jpp:telemetry_total_postgres_size', 'Total PostgreSQL size')}
+              </p>
             </div>
           </div>
 
-          <div className="rounded-2xl border border-violet-500/20 bg-violet-500/5 p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="rounded-2xl border border-[#B8E4DC] dark:border-[#252B35] bg-[#EBF7F4] dark:bg-[#0E1116] p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-violet-500/20 text-violet-600 dark:text-violet-400 flex items-center justify-center">
-                <Zap className="w-5 h-5" />
+              <div className="w-10 h-10 rounded-xl bg-white dark:bg-[#1B2028] border border-[#B8E4DC] dark:border-[#252B35] text-[#0F766E] dark:text-[#2DD4BF] flex items-center justify-center shrink-0">
+                <Zap className="w-5 h-5" aria-hidden="true" />
               </div>
               <div>
-                <h4 className="text-sm font-black text-slate-900 dark:text-white">
+                <h4 className="text-sm font-bold text-[#0B2420] dark:text-[#F1F5F9]">
                   {t('jpp:telemetry_watchdog_title', 'WAL & Realtime Watchdog')}
                 </h4>
-                <p className="text-xs text-slate-500 dark:text-white/50">
-                  {t('jpp:telemetry_watchdog_desc', 'Perlindungan had 2GB (2,048 MB) bagi mengelakkan database crash semasa Orientasi.')}
+                <p className="text-xs text-[#3B635C] dark:text-[#94A0B2]">
+                  {t(
+                    'jpp:telemetry_watchdog_desc',
+                    'Perlindungan had 2GB (2,048 MB) bagi mengelakkan database crash semasa Orientasi.'
+                  )}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center gap-4 text-xs font-mono">
+            <div className="flex items-center gap-5 text-xs font-mono shrink-0">
               <div>
-                <span className="text-slate-400 dark:text-white/30 block text-[9px] uppercase">{t('jpp:telemetry_replication_slot', 'Replication Slot')}</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400">
-                  {d?.database?.replication_slot_active ? t('jpp:telemetry_slot_active', '● Aktif') : t('jpp:telemetry_slot_inactive', '○ Tidak Aktif')}
+                <span className="text-[#3B635C] dark:text-[#94A0B2] block text-xs font-sans font-medium">
+                  {t('jpp:telemetry_replication_slot', 'Replication Slot')}
+                </span>
+                <span className="font-bold text-[#0F766E] dark:text-[#2DD4BF]">
+                  {d?.database?.replication_slot_active
+                    ? t('jpp:telemetry_slot_active', 'Aktif')
+                    : t('jpp:telemetry_slot_inactive', 'Tidak Aktif')}
                 </span>
               </div>
               <div>
-                <span className="text-slate-400 dark:text-white/30 block text-[9px] uppercase">{t('jpp:telemetry_realtime_tables', 'Jadual Realtime')}</span>
-                <span className="font-bold text-slate-900 dark:text-white">
-                  {t('jpp:telemetry_tables_count', '{{count}} Jadual', { count: d?.database?.realtime_tables || 0 })}
+                <span className="text-[#3B635C] dark:text-[#94A0B2] block text-xs font-sans font-medium">
+                  {t('jpp:telemetry_realtime_tables', 'Jadual Realtime')}
+                </span>
+                <span className="font-bold tabular-nums text-[#0B2420] dark:text-[#F1F5F9]">
+                  {t('jpp:telemetry_tables_count', '{{count}} Jadual', {
+                    count: d?.database?.realtime_tables || 0,
+                  })}
                 </span>
               </div>
             </div>
           </div>
         </div>
       )}
-    </div>
+    </section>
   );
 };

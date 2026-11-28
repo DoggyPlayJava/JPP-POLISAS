@@ -5727,6 +5727,23 @@ Garis panduan wajib bagi semua kerja UI akan datang (termasuk halaman awam, port
 3. **Krom Neutral & Pariti Permukaan *Obsidian Carbon*:** Biarkan kandungan produk membawa identiti visual; krom pelayar/kad kekal neutral. Dalam Mod Gelap, setiap bekas berlatar gelap mesti menggunakan tangga *Obsidian Carbon* (`#090B0E` kanvas, `#0E1116` krom/inset, `#13171D` kad, `#1B2028` cip/hover, `#252B35` sempadan, `#F1F5F9` teks utama, `#94A0B2` teks sekunder, `#2DD4BF` aksen) — sifar kebocoran hijau gelap (`#0B2420` / `#061714` / `#1E4D45`).
 4. **Sifar Kesan Kabur GPU & Gelung Animasi:** Dilarang sama sekali menggunakan `backdrop-blur`, `blur-xs`/`xl`/`2xl`/`3xl`, `animate-ping`, `animate-pulse`, atau `animate-bounce`. Kedalaman datang daripada sempadan seni bina yang tajam dan bayangan berlapis CSS (`shadow-surface-sm/md/lg`), dengan peralihan kompositor `transform`/`opacity` `<= 240ms`.
 
+---
+
+## 49. Elevasi JPP HQ Fasa A — Reka Semula Telemetri Sistem & Pengmodularan Food Bank Admin (Nov 2026)
+
+- **Telemetri Sistem Rasmi (`/jpp/telemetry` — `src/pages/jpp/JppTelemetryPage.tsx` & `src/pages/jpp/telemetry/*`):**
+  - **Penjenamaan Rasmi JPP POLISAS:** Menggantikan penjenamaan pihak ketiga `SentinelAI` (`#FF5B37`/`#FFEDE7`) dan avatar statik palsu `"HZ"` kepada identiti rasmi **JPP POLISAS System Telemetry** (*Semambu Mineral Teal* Mod Cerah & *Obsidian Carbon* `#090B0E`/`#0E1116`/`#13171D`/`#1B2028`/`#252B35`/`#2DD4BF` Mod Gelap), memaparkan nama dan inisial sebenar SuperAdmin daripada `useAuth()`.
+  - **Pariti Mod Gelap 100% & Navigasi Mudah Alih:** Menambah kelas *Obsidian Carbon* penuh pada keempat-empat sub-komponen (`TelemetryLeftRail`, `TelemetryTopologyFlow`, `TelemetryLiveTimeline`, `TelemetryQuickMetrics`) serta `TelemetryModuleTabs` (termasuk membetulkan pepijat `fill="url(#gPelajar)"` pada `AreaChart`); menggantikan bar tab `hidden md:flex` kepada bar tab pil boleh skrol melintang pada mudah alih (`393×852`); membuang krom hiasan tidak berfungsi (`ChevronDown` statik) dan menyambungkan butang loceng amaran kepada modal *Perincian Insiden & Tolak-Mata* (dengan sokongan kekunci `Escape`) serta penapis laluan interaktif antara Topologi dan *Live Timeline*.
+  - **Kebersihan GPU & Ikonografi:** Membuang kesemua `animate-ping`, `animate-pulse` titik status, gelung SVG `flowDash 1s linear infinite`, dan emoji mentah (`🌐`, `⚡`, `🛡️`, `🛒`, `📦`, `🗄️`, `📄`, `📊`, `🏛️`, `⚙️`, `✅`, `🟡`, `🔴`) — digantikan dengan penyambung Bezier seni bina statik dan ikon Lucide serta pariti 100% dalam `en/jpp.json` dan `ms/jpp.json`.
+- **Pengmodularan & Elevasi Pentadbir Food Bank (`/jpp/foodbank` — `src/pages/jpp/JppFoodBankAdmin.tsx` + `src/pages/jpp/foodbank/`):**
+  - Memecahkan fail monolit 5,611 baris kepada cangkerang orkestrasi tipis `JppFoodBankAdmin.tsx` dan 8 modul berfokus di bawah `src/pages/jpp/foodbank/`:
+    - `foodbankAdminUtils.ts`: pemalar `OFFICIAL_BASELINE_BUDGET`, unjuran kolum eksplisit Supabase (sifar `.select('*')`), token permukaan *Mineral Teal*/*Obsidian Carbon*, dan pembantu tulen (`effectiveName`, `effectiveMatric`, `getAuditActionConfig`, `formatAuditDateTime`).
+    - `FoodBankHeaderKpi.tsx`: pengepala melekat, suis buka/tutup sesi pantas (sifar `animate-ping`), 4 kad KPI bajet RM70k (`font-mono tabular-nums`), dan bar 5 tab utama.
+    - `FoodBankApplicationsTab.tsx`: panel pengimbas QR kaunter seni bina (membuang `bg-slate-950`/`bg-slate-900`/`bg-emerald-950`, kilauan neon `shadow-[0_0_*]`, dan gelung animasi laser tanpa kawalan; mengekalkan `#foodbank-counter-qr-reader`, `Html5Qrcode`, carian manual No. Matrik, kad pengenalan pelajar, butang 1-tap `SAHKAN SERAHAN MAKANAN` + getaran haptik) serta jadual permohonan sifar-overflow (`w-full max-w-full overflow-x-auto scrollbar-hide`).
+    - `FoodBankInventoryTab.tsx`, `FoodBankBudgetTab.tsx`, `FoodBankSettingsTab.tsx`, `FoodBankAuditTab.tsx` (membuang sepanduk gradien `from-slate-900 via-amber-950/40`), dan `FoodBankModals.tsx` (6 modal dengan pariti *Obsidian Carbon*, `overscroll-contain`, dan kekunci `Escape`).
+  - **Kebersihan Kuiri & Pemeliharaan Logik:** Menggantikan kesemua `.select('*')` kepada senarai kolum eksplisit sambil mengekalkan 100% panggilan RPC atomik (`verify_and_complete_foodbank_pickup`, `verify_and_complete_foodbank_pickup_by_qr`, `release_foodbank_stock`, `allocate_foodbank_stock_from_aggregate`, `transfer_foodbank_stock`), pengiraan bajet RM70k, RBAC `isExecutiveAdmin` vs pegawai kaunter, `exportXlsx`, `sendNotificationToUser`, `buildFoodBankEmail`/`sendEmail`, `FoodBankQrPassModal`, dan `ConfirmDialog`.
+  - Mematuhi skala tipografi 4-berat (`font-normal`..`font-bold`, sifar `font-black`/`font-extrabold`, minimum `text-xs`) merentas semua fail Fasa A.
+
 
 
 

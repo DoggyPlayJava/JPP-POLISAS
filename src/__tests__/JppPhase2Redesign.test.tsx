@@ -63,10 +63,19 @@ describe('JPP Phase 2 Redesign Verifications', () => {
 
   it('verifies JppFoodBankAdmin uses tabular-nums for official budget allocations', () => {
     const filePath = path.resolve(__dirname, '../pages/jpp/JppFoodBankAdmin.tsx');
-    const source = fs.readFileSync(filePath, 'utf8');
+    const foodbankDir = path.resolve(__dirname, '../pages/jpp/foodbank');
+    const sources = [fs.readFileSync(filePath, 'utf8')];
+    if (fs.existsSync(foodbankDir)) {
+      for (const name of fs.readdirSync(foodbankDir)) {
+        if (name.endsWith('.ts') || name.endsWith('.tsx')) {
+          sources.push(fs.readFileSync(path.join(foodbankDir, name), 'utf8'));
+        }
+      }
+    }
+    const combined = sources.join('\n');
 
-    expect(source).toContain('mt-1 font-mono tabular-nums');
-    expect(source).toContain('font-mono tabular-nums');
+    expect(combined).toContain('mt-1 font-mono tabular-nums');
+    expect(combined).toContain('font-mono tabular-nums');
   });
 
   it('verifies JppNexusPage and JppTelemetryPage upgrades', () => {

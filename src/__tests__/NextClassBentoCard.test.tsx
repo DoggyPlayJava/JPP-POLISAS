@@ -1,5 +1,5 @@
 import React from 'react';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { renderToString } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import {
@@ -124,9 +124,16 @@ describe('NextClassBentoCard Location Formatter', () => {
 
 describe('NextClassBentoCard Full Subject Name & Expanded Streamline', () => {
   beforeEach(() => {
+    vi.useFakeTimers();
+    // Deterministic weekday morning (Monday MYT) so tests remain green on weekends
+    vi.setSystemTime(new Date('2026-11-30T09:00:00+08:00'));
     mockStorage = {
       portal_next_class_collapsed: 'false', // Expanded view
     };
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it('renders full subject name as main headline and hides redundant duplicate course code badge', () => {

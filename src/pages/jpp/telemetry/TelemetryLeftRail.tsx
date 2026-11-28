@@ -1,19 +1,12 @@
 import React from 'react';
-import { motion } from 'framer-motion';
-import {
-  ShieldAlert,
-  ArrowRight,
-  TrendingUp,
-  AlertCircle,
-  CheckCircle2,
-  Lock,
-} from 'lucide-react';
+import { ArrowRight, TrendingUp } from 'lucide-react';
 import { TelemetryData } from './telemetryTypes';
-import { formatUptime } from './telemetryUtils';
 import { useTranslation } from 'react-i18next';
+import { cn } from '@/lib/utils';
 
 interface TelemetryLeftRailProps {
   data: TelemetryData;
+  adminName?: string;
   onRefresh: () => void;
   loading: boolean;
   totalAlertsCount: number;
@@ -22,6 +15,7 @@ interface TelemetryLeftRailProps {
 
 export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
   data,
+  adminName,
   onRefresh,
   loading,
   totalAlertsCount,
@@ -30,131 +24,159 @@ export const TelemetryLeftRail: React.FC<TelemetryLeftRailProps> = ({
   const { t } = useTranslation(['jpp', 'common']);
   const { resilience_score, resilience_rating, resilience_deductions, server } = data;
 
-  // Determine critical vs medium issues count
   const criticalCount = resilience_deductions.filter((d) => Math.abs(d.points) >= 15).length;
   const mediumCount = resilience_deductions.filter((d) => Math.abs(d.points) < 15).length;
+  const displayName = adminName?.trim() || t('jpp:telemetry_rail_admin', 'Admin');
+
+  const scoreTone =
+    resilience_score >= 85
+      ? 'bg-emerald-50 dark:bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-500/30'
+      : resilience_score >= 65
+      ? 'bg-amber-50 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 border-amber-200 dark:border-amber-500/30'
+      : 'bg-rose-50 dark:bg-rose-500/15 text-rose-700 dark:text-rose-300 border-rose-200 dark:border-rose-500/30';
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-xs p-5 space-y-6">
-      {/* ── 1. Greeting Card (Soft Peach / Sunset Gradient like SentinelAI) ── */}
-      <div className="rounded-2xl p-5 bg-gradient-to-br from-[#FFF0EB] via-[#FFE8E0] to-[#FFDDD2] border border-[#FFD2C4]/80 shadow-2xs relative overflow-hidden">
-        <h2 className="text-xl font-black text-slate-900 tracking-tight leading-tight">
+    <aside className="bg-white dark:bg-[#13171D] rounded-2xl border border-[#B8E4DC] dark:border-[#252B35] shadow-surface-sm p-5 space-y-5 h-full">
+      {/* ── 1. Greeting & Incident Review Panel (Mineral Teal / Obsidian Carbon) ── */}
+      <div className="rounded-xl p-4 sm:p-5 bg-[#EBF7F4] dark:bg-[#0E1116] border border-[#B8E4DC] dark:border-[#252B35]">
+        <h2 className="text-lg font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight leading-snug [text-wrap:balance]">
           {t('jpp:telemetry_rail_good_morning', 'Good morning,')}
           <br />
-          {t('jpp:telemetry_rail_admin', 'Admin')}
+          <span className="text-[#0F766E] dark:text-[#2DD4BF]">{displayName}</span>
         </h2>
-        <p className="text-xs text-slate-700/90 font-medium leading-relaxed mt-2.5">
+        <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] font-normal leading-relaxed mt-2">
           {totalAlertsCount > 0
-            ? t('jpp:telemetry_rail_alerts_detected', '{{count}} amaran integriti dikesan semalaman. Satu insiden memerlukan pengesahan anda.', { count: totalAlertsCount })
-            : t('jpp:telemetry_rail_healthy_desc', 'Sistem beroperasi pada mod kestabilan tinggi semalaman. Tiada insiden kritikal.')}
+            ? t(
+                'jpp:telemetry_rail_alerts_detected',
+                '{{count}} amaran integriti dikesan semalaman. Satu insiden memerlukan pengesahan anda.',
+                { count: totalAlertsCount }
+              )
+            : t(
+                'jpp:telemetry_rail_healthy_desc',
+                'Sistem beroperasi pada mod kestabilan tinggi semalaman. Tiada insiden kritikal.'
+              )}
         </p>
 
         <button
+          type="button"
           onClick={onOpenIncidentsClick || onRefresh}
           disabled={loading}
-          className="mt-4 w-full py-2.5 px-4 rounded-xl text-xs font-black text-white bg-[#FF5B37] hover:bg-[#E84E2A] active:scale-[0.98] transition-all flex items-center justify-between shadow-xs disabled:opacity-50"
+          className="mt-4 w-full py-2.5 px-4 rounded-xl text-xs font-semibold text-white dark:text-[#090B0E] bg-[#0F766E] hover:bg-[#0D665F] dark:bg-[#2DD4BF] dark:hover:bg-[#14B8A6] active:scale-[0.98] transition-[transform,opacity,background-color] duration-200 ease-apple-out flex items-center justify-between shadow-surface-sm disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0F766E] dark:focus-visible:ring-[#2DD4BF]"
         >
-          <span>{loading ? t('jpp:telemetry_rail_syncing', 'Menyegerak...') : t('jpp:telemetry_rail_review_incident', 'Review Incident')}</span>
-          <ArrowRight className="w-4 h-4 ml-1" />
+          <span>
+            {loading
+              ? t('jpp:telemetry_rail_syncing', 'Menyegerak…')
+              : t('jpp:telemetry_rail_review_incident', 'Review Incident')}
+          </span>
+          <ArrowRight className="w-4 h-4 shrink-0" aria-hidden="true" />
         </button>
       </div>
 
       {/* ── 2. Security Score (Resilience Score) ── */}
       <div>
-        <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-1">
-          <span className="text-[11px] font-black uppercase tracking-wider text-slate-400">
+        <div className="flex items-center justify-between text-xs font-semibold text-[#3B635C] dark:text-[#94A0B2] mb-1">
+          <span className="uppercase tracking-wider">
             {t('jpp:telemetry_rail_security_score', 'Security Score')}
           </span>
-          <span className="text-slate-400 font-mono">%</span>
+          <span className="font-mono">%</span>
         </div>
 
         <div className="flex items-baseline gap-1.5 my-1">
-          <span className="text-4xl font-black text-slate-900 tracking-tight tabular-nums">
+          <span className="text-4xl font-bold text-[#0B2420] dark:text-[#F1F5F9] tracking-tight font-mono tabular-nums">
             {resilience_score}
           </span>
-          <span className="text-sm font-bold text-slate-400">/100</span>
+          <span className="text-sm font-medium text-[#3B635C] dark:text-[#94A0B2] font-mono">/100</span>
         </div>
 
-        <div className="flex items-center gap-2 mt-1.5">
-          <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-200">
+        <div className="flex items-center gap-2 mt-2">
+          <span className={cn('px-2.5 py-0.5 rounded-full text-xs font-semibold border', scoreTone)}>
             {resilience_rating}
           </span>
         </div>
 
         {/* Trend Bar */}
         <div className="mt-3">
-          <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold mb-1">
-            <span className="flex items-center gap-1 text-emerald-600 font-bold">
-              <TrendingUp className="w-3 h-3" />
+          <div className="flex items-center justify-between text-xs font-medium mb-1.5">
+            <span className="flex items-center gap-1 text-[#0F766E] dark:text-[#2DD4BF] font-semibold">
+              <TrendingUp className="w-3.5 h-3.5" aria-hidden="true" />
               {t('jpp:telemetry_rail_vs_yesterday', '+2.4% vs semalam')}
             </span>
-            <span className="text-slate-400 font-mono">{resilience_score}%</span>
+            <span className="text-[#3B635C] dark:text-[#94A0B2] font-mono tabular-nums">{resilience_score}%</span>
           </div>
-          <div className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+          <div className="h-1.5 w-full bg-[#EBF7F4] dark:bg-[#1B2028] rounded-full overflow-hidden">
             <div
-              className="h-full bg-emerald-500 rounded-full transition-all duration-500"
-              style={{ width: `${resilience_score}%` }}
+              className="h-full bg-[#0F766E] dark:bg-[#2DD4BF] rounded-full"
+              style={{ width: `${Math.max(0, Math.min(100, resilience_score))}%` }}
             />
           </div>
         </div>
       </div>
 
-      <div className="border-t border-slate-100" />
+      <div className="border-t border-[#B8E4DC]/60 dark:border-[#252B35]" />
 
       {/* ── 3. Open Incidents ── */}
       <div>
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
+        <span className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2] block mb-1">
           {t('jpp:telemetry_rail_open_incidents', 'Open Incidents')}
         </span>
 
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-black text-[#EA580C] tabular-nums">
+          <span
+            className={cn(
+              'text-2xl font-bold font-mono tabular-nums',
+              resilience_deductions.length > 0
+                ? 'text-amber-700 dark:text-amber-400'
+                : 'text-[#0B2420] dark:text-[#F1F5F9]'
+            )}
+          >
             {resilience_deductions.length}
           </span>
-          <span className="text-xs font-bold text-slate-600">{t('jpp:telemetry_rail_attention_needed', 'Perhatian diperlukan')}</span>
+          <span className="text-xs font-medium text-[#3B635C] dark:text-[#94A0B2]">
+            {t('jpp:telemetry_rail_attention_needed', 'Perhatian diperlukan')}
+          </span>
         </div>
 
-        <div className="flex items-center gap-3 mt-2 text-[10px] font-bold text-slate-500">
+        <div className="flex items-center gap-4 mt-2 text-xs font-medium text-[#3B635C] dark:text-[#94A0B2]">
           <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-            {t('jpp:telemetry_rail_high', 'High: {{count}}', { count: criticalCount })}
+            <span className="w-2 h-2 rounded-full bg-rose-600 dark:bg-rose-400" aria-hidden="true" />
+            <span className="tabular-nums">{t('jpp:telemetry_rail_high', 'High: {{count}}', { count: criticalCount })}</span>
           </span>
           <span className="flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            {t('jpp:telemetry_rail_medium', 'Medium: {{count}}', { count: mediumCount })}
+            <span className="w-2 h-2 rounded-full bg-amber-500 dark:bg-amber-400" aria-hidden="true" />
+            <span className="tabular-nums">{t('jpp:telemetry_rail_medium', 'Medium: {{count}}', { count: mediumCount })}</span>
           </span>
         </div>
       </div>
 
-      <div className="border-t border-slate-100" />
+      <div className="border-t border-[#B8E4DC]/60 dark:border-[#252B35]" />
 
       {/* ── 4. Auto Resolution ── */}
       <div>
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
+        <span className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2] block mb-1">
           {t('jpp:telemetry_rail_auto_resolution', 'Auto Resolution')}
         </span>
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-black text-slate-900 tabular-nums">94%</span>
+          <span className="text-2xl font-bold text-[#0B2420] dark:text-[#F1F5F9] font-mono tabular-nums">94%</span>
         </div>
-        <p className="text-[10px] text-slate-400 font-bold mt-1">
+        <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] font-normal mt-1">
           {t('jpp:telemetry_rail_cron_active', '+3% vs semalam • Cron & Snapshot Aktif')}
         </p>
       </div>
 
-      <div className="border-t border-slate-100" />
+      <div className="border-t border-[#B8E4DC]/60 dark:border-[#252B35]" />
 
       {/* ── 5. AI Confidence & Engine ── */}
       <div>
-        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 block mb-1">
+        <span className="text-xs font-semibold uppercase tracking-wider text-[#3B635C] dark:text-[#94A0B2] block mb-1">
           {t('jpp:telemetry_rail_ai_confidence', 'AI Confidence')}
         </span>
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-black text-slate-900 tabular-nums">97%</span>
+          <span className="text-2xl font-bold text-[#0B2420] dark:text-[#F1F5F9] font-mono tabular-nums">97%</span>
         </div>
-        <p className="text-[10px] text-slate-400 font-bold mt-1">
+        <p className="text-xs text-[#3B635C] dark:text-[#94A0B2] font-normal mt-1 font-mono tabular-nums">
           {t('jpp:telemetry_rail_ai_confidence_note', 'AI model confidence tinggi • PID {{pid}}', { pid: server.pid })}
         </p>
       </div>
-    </div>
+    </aside>
   );
 };
